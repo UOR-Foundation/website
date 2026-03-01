@@ -14,6 +14,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import ContextualBloom from "./ContextualBloom";
 import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight } from "lucide-react";
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
@@ -375,86 +376,92 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
           </div>
 
           <div className="min-w-0 flex-1">
-            {/* Markdown response */}
-            <div
-              className="text-[15px] leading-[2] prose prose-invert max-w-none"
-              style={{
-                color: "hsl(30, 12%, 74%)",
-                fontFamily: C.font,
-                letterSpacing: "0.012em",
-                ['--tw-prose-headings' as string]: "hsl(38, 25%, 75%)",
-                ['--tw-prose-bold' as string]: "hsl(38, 18%, 82%)",
-                ['--tw-prose-code' as string]: "hsl(38, 50%, 62%)",
-                ['--tw-prose-links' as string]: "hsl(38, 50%, 62%)",
-                ['--tw-prose-bullets' as string]: C.goldMuted,
-              }}
+            {/* Markdown response — wrapped in ContextualBloom for depth exploration */}
+            <ContextualBloom
+              thought={ex.thought}
+              understanding={ex.understanding}
+              onFollowUp={handleFollowUp}
             >
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => (
-                    <p className="mb-4 last:mb-0" style={{ lineHeight: "2", fontWeight: 350 }}>
-                      {children}
-                    </p>
-                  ),
-                  strong: ({ children }) => (
-                    <strong style={{ color: "hsl(38, 22%, 84%)", fontWeight: 450, letterSpacing: "0.01em" }}>
-                      {children}
-                    </strong>
-                  ),
-                  em: ({ children }) => (
-                    <em style={{ color: "hsl(30, 18%, 68%)", fontFamily: C.fontDisplay, fontWeight: 300, letterSpacing: "0.02em" }}>
-                      {children}
-                    </em>
-                  ),
-                  h1: ({ children }) => (
-                    <h1 className="text-[22px] font-light tracking-wide mt-8 mb-3" style={{ fontFamily: C.fontDisplay, color: "hsl(38, 30%, 72%)", fontWeight: 300, lineHeight: 1.4 }}>{children}</h1>
-                  ),
-                  h2: ({ children }) => (
-                    <h2 className="text-[18px] font-light tracking-wide mt-7 mb-2.5" style={{ fontFamily: C.fontDisplay, color: "hsl(38, 25%, 68%)", fontWeight: 300, lineHeight: 1.5 }}>{children}</h2>
-                  ),
-                  h3: ({ children }) => (
-                    <h3 className="text-[16px] tracking-[0.06em] uppercase mt-6 mb-2" style={{ fontFamily: C.font, color: "hsl(30, 15%, 58%)", fontWeight: 500, letterSpacing: "0.08em", lineHeight: 1.5 }}>{children}</h3>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="space-y-3 my-4 pl-0" style={{ listStyle: "none" }}>{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="space-y-3 my-4 pl-0" style={{ listStyle: "none" }}>{children}</ol>
-                  ),
-                  li: ({ children }) => (
-                    <li className="flex gap-3 items-start pl-1">
-                      <span className="flex-shrink-0 mt-[11px] w-1 h-1 rounded-full" style={{ background: "hsla(38, 35%, 55%, 0.35)" }} />
-                      <span style={{ lineHeight: "2" }}>{children}</span>
-                    </li>
-                  ),
-                  blockquote: ({ children }) => (
-                    <blockquote className="my-5 pl-4 py-1" style={{ borderLeft: "2px solid hsla(38, 30%, 50%, 0.15)", color: "hsl(30, 15%, 65%)", fontFamily: C.fontDisplay, fontStyle: "italic", fontWeight: 300, letterSpacing: "0.01em", lineHeight: "1.9" }}>{children}</blockquote>
-                  ),
-                  code: ({ children, className }) => {
-                    if (className?.includes("language-")) {
-                      return (
-                        <pre className="my-4 p-4 rounded-xl overflow-x-auto text-[13px]" style={{ background: "hsla(25, 8%, 8%, 0.9)", border: "1px solid hsla(38, 15%, 22%, 0.12)", lineHeight: 1.7 }}>
-                          <code style={{ color: "hsl(38, 25%, 68%)" }}>{children}</code>
-                        </pre>
-                      );
-                    }
-                    return (
-                      <code className="px-1.5 py-0.5 rounded-md text-[13px]" style={{ background: "hsla(25, 8%, 13%, 0.7)", color: "hsl(38, 45%, 62%)", fontWeight: 400 }}>{children}</code>
-                    );
-                  },
-                  hr: () => (
-                    <div className="my-6 flex justify-center">
-                      <div className="w-8 h-[1px]" style={{ background: "hsla(38, 20%, 45%, 0.12)" }} />
-                    </div>
-                  ),
+              <div
+                className="text-[15px] leading-[2] prose prose-invert max-w-none"
+                style={{
+                  color: "hsl(30, 12%, 74%)",
+                  fontFamily: C.font,
+                  letterSpacing: "0.012em",
+                  ['--tw-prose-headings' as string]: "hsl(38, 25%, 75%)",
+                  ['--tw-prose-bold' as string]: "hsl(38, 18%, 82%)",
+                  ['--tw-prose-code' as string]: "hsl(38, 50%, 62%)",
+                  ['--tw-prose-links' as string]: "hsl(38, 50%, 62%)",
+                  ['--tw-prose-bullets' as string]: C.goldMuted,
                 }}
               >
-                {ex.understanding
-                  .replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "")
-                  .replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "")
-                }
-              </ReactMarkdown>
-            </div>
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p className="mb-4 last:mb-0" style={{ lineHeight: "2", fontWeight: 350 }}>
+                        {children}
+                      </p>
+                    ),
+                    strong: ({ children }) => (
+                      <strong style={{ color: "hsl(38, 22%, 84%)", fontWeight: 450, letterSpacing: "0.01em" }}>
+                        {children}
+                      </strong>
+                    ),
+                    em: ({ children }) => (
+                      <em style={{ color: "hsl(30, 18%, 68%)", fontFamily: C.fontDisplay, fontWeight: 300, letterSpacing: "0.02em" }}>
+                        {children}
+                      </em>
+                    ),
+                    h1: ({ children }) => (
+                      <h1 className="text-[22px] font-light tracking-wide mt-8 mb-3" style={{ fontFamily: C.fontDisplay, color: "hsl(38, 30%, 72%)", fontWeight: 300, lineHeight: 1.4 }}>{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-[18px] font-light tracking-wide mt-7 mb-2.5" style={{ fontFamily: C.fontDisplay, color: "hsl(38, 25%, 68%)", fontWeight: 300, lineHeight: 1.5 }}>{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-[16px] tracking-[0.06em] uppercase mt-6 mb-2" style={{ fontFamily: C.font, color: "hsl(30, 15%, 58%)", fontWeight: 500, letterSpacing: "0.08em", lineHeight: 1.5 }}>{children}</h3>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="space-y-3 my-4 pl-0" style={{ listStyle: "none" }}>{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="space-y-3 my-4 pl-0" style={{ listStyle: "none" }}>{children}</ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className="flex gap-3 items-start pl-1">
+                        <span className="flex-shrink-0 mt-[11px] w-1 h-1 rounded-full" style={{ background: "hsla(38, 35%, 55%, 0.35)" }} />
+                        <span style={{ lineHeight: "2" }}>{children}</span>
+                      </li>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="my-5 pl-4 py-1" style={{ borderLeft: "2px solid hsla(38, 30%, 50%, 0.15)", color: "hsl(30, 15%, 65%)", fontFamily: C.fontDisplay, fontStyle: "italic", fontWeight: 300, letterSpacing: "0.01em", lineHeight: "1.9" }}>{children}</blockquote>
+                    ),
+                    code: ({ children, className }) => {
+                      if (className?.includes("language-")) {
+                        return (
+                          <pre className="my-4 p-4 rounded-xl overflow-x-auto text-[13px]" style={{ background: "hsla(25, 8%, 8%, 0.9)", border: "1px solid hsla(38, 15%, 22%, 0.12)", lineHeight: 1.7 }}>
+                            <code style={{ color: "hsl(38, 25%, 68%)" }}>{children}</code>
+                          </pre>
+                        );
+                      }
+                      return (
+                        <code className="px-1.5 py-0.5 rounded-md text-[13px]" style={{ background: "hsla(25, 8%, 13%, 0.7)", color: "hsl(38, 45%, 62%)", fontWeight: 400 }}>{children}</code>
+                      );
+                    },
+                    hr: () => (
+                      <div className="my-6 flex justify-center">
+                        <div className="w-8 h-[1px]" style={{ background: "hsla(38, 20%, 45%, 0.12)" }} />
+                      </div>
+                    ),
+                  }}
+                >
+                  {ex.understanding
+                    .replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "")
+                    .replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "")
+                  }
+                </ReactMarkdown>
+              </div>
+            </ContextualBloom>
 
             {/* ── Trust Surface — coherence trace + interactive tools ── */}
             {ex.meta && isConverged && (
