@@ -2,7 +2,7 @@
  * Pro Mode — Dimension Engine
  * ════════════════════════════
  *
- * Defines the experiential dimensions that shape Lumen's character.
+ * 12 experiential dimensions across 3 categories that shape Lumen's character.
  * Each dimension is a continuous 0–1 fader on the mixing board.
  *
  * @module hologram-ui/engine/proModeDimensions
@@ -24,7 +24,7 @@ export interface Dimension {
   readonly lowLabel: string;
   /** Right label for the fader (high end) */
   readonly highLabel: string;
-  /** HSL color for the fader accent */
+  /** HSL hue for the fader accent */
   readonly hue: number;
 }
 
@@ -69,10 +69,16 @@ export const DIMENSIONS: readonly Dimension[] = [
     lowLabel: "Neutral", highLabel: "Warm", hue: 25,
   },
   {
-    id: "formality", label: "Tone",
-    description: "How formal or conversational the voice feels",
+    id: "storytelling", label: "Storytelling",
+    description: "Whether answers are direct statements or woven narratives",
     category: "expression", defaultValue: 0.4,
-    lowLabel: "Casual", highLabel: "Formal", hue: 45,
+    lowLabel: "Direct", highLabel: "Narrative", hue: 320,
+  },
+  {
+    id: "humor", label: "Humor",
+    description: "How playful and light the voice feels",
+    category: "expression", defaultValue: 0.3,
+    lowLabel: "Serious", highLabel: "Playful", hue: 55,
   },
 
   // ── Awareness ──────────────────────────────────────────────────────
@@ -83,16 +89,22 @@ export const DIMENSIONS: readonly Dimension[] = [
     lowLabel: "Exploratory", highLabel: "Laser", hue: 150,
   },
   {
-    id: "confidence", label: "Confidence",
-    description: "How openly uncertainty is expressed",
-    category: "awareness", defaultValue: 0.5,
-    lowLabel: "Cautious", highLabel: "Assertive", hue: 130,
-  },
-  {
     id: "empathy", label: "Empathy",
     description: "How much the response attunes to your emotional state",
     category: "awareness", defaultValue: 0.5,
     lowLabel: "Objective", highLabel: "Attuned", hue: 310,
+  },
+  {
+    id: "challenge", label: "Challenge",
+    description: "Whether Lumen agrees with you or pushes back to grow your thinking",
+    category: "awareness", defaultValue: 0.4,
+    lowLabel: "Agreeable", highLabel: "Provocative", hue: 0,
+  },
+  {
+    id: "originality", label: "Originality",
+    description: "Whether answers follow conventions or surprise you with novel angles",
+    category: "awareness", defaultValue: 0.5,
+    lowLabel: "Conventional", highLabel: "Novel", hue: 270,
   },
 ] as const;
 
@@ -115,9 +127,7 @@ export interface DimensionPreset {
   readonly icon: string;
   readonly phase: "learn" | "work" | "play";
   readonly values: DimensionValues;
-  /** Optional tags for search */
   readonly tags?: readonly string[];
-  /** Whether this is a user-imported persona */
   readonly imported?: boolean;
 }
 
@@ -125,49 +135,49 @@ export const PRESETS: readonly DimensionPreset[] = [
   // ── Learn ──────────────────────────────────────────────────────────
   {
     id: "guide", name: "The Guide", subtitle: "Patient Mentor", icon: "◈", phase: "learn",
-    values: { depth: 0.5, breadth: 0.6, intuition: 0.5, rigor: 0.5, verbosity: 0.6, warmth: 0.8, formality: 0.3, focus: 0.6, confidence: 0.5, empathy: 0.7 },
+    values: { depth: 0.5, breadth: 0.6, intuition: 0.5, rigor: 0.5, verbosity: 0.6, warmth: 0.8, storytelling: 0.6, humor: 0.3, focus: 0.6, empathy: 0.7, challenge: 0.2, originality: 0.4 },
     tags: ["mentor", "teacher", "patient"],
   },
   {
     id: "scholar", name: "The Scholar", subtitle: "Research & Synthesis", icon: "⊛", phase: "learn",
-    values: { depth: 0.8, breadth: 0.7, intuition: 0.2, rigor: 0.9, verbosity: 0.7, warmth: 0.4, formality: 0.7, focus: 0.7, confidence: 0.6, empathy: 0.3 },
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.2, rigor: 0.9, verbosity: 0.7, warmth: 0.4, storytelling: 0.2, humor: 0.1, focus: 0.7, empathy: 0.3, challenge: 0.5, originality: 0.4 },
     tags: ["academic", "research", "professor"],
   },
   {
     id: "analyst", name: "The Analyst", subtitle: "First-Principles", icon: "◉", phase: "learn",
-    values: { depth: 0.9, breadth: 0.4, intuition: 0.1, rigor: 0.95, verbosity: 0.5, warmth: 0.3, formality: 0.6, focus: 0.9, confidence: 0.7, empathy: 0.2 },
+    values: { depth: 0.9, breadth: 0.4, intuition: 0.1, rigor: 0.95, verbosity: 0.5, warmth: 0.3, storytelling: 0.1, humor: 0.05, focus: 0.9, empathy: 0.2, challenge: 0.7, originality: 0.3 },
     tags: ["logic", "analysis", "critical"],
   },
   // ── Work ───────────────────────────────────────────────────────────
   {
     id: "craftsman", name: "The Craftsman", subtitle: "Quality Builder", icon: "⟨⟩", phase: "work",
-    values: { depth: 0.7, breadth: 0.4, intuition: 0.3, rigor: 0.8, verbosity: 0.4, warmth: 0.5, formality: 0.5, focus: 0.8, confidence: 0.6, empathy: 0.4 },
+    values: { depth: 0.7, breadth: 0.4, intuition: 0.3, rigor: 0.8, verbosity: 0.4, warmth: 0.5, storytelling: 0.2, humor: 0.15, focus: 0.8, empathy: 0.4, challenge: 0.4, originality: 0.3 },
     tags: ["builder", "maker", "quality"],
   },
   {
     id: "architect", name: "The Architect", subtitle: "System Designer", icon: "⬡", phase: "work",
-    values: { depth: 0.8, breadth: 0.7, intuition: 0.4, rigor: 0.85, verbosity: 0.6, warmth: 0.3, formality: 0.6, focus: 0.7, confidence: 0.7, empathy: 0.3 },
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.4, rigor: 0.85, verbosity: 0.6, warmth: 0.3, storytelling: 0.3, humor: 0.1, focus: 0.7, empathy: 0.3, challenge: 0.6, originality: 0.5 },
     tags: ["systems", "design", "structure"],
   },
   {
     id: "strategist", name: "The Strategist", subtitle: "Problem Solver", icon: "⊗", phase: "work",
-    values: { depth: 0.7, breadth: 0.6, intuition: 0.5, rigor: 0.7, verbosity: 0.5, warmth: 0.4, formality: 0.5, focus: 0.8, confidence: 0.8, empathy: 0.3 },
+    values: { depth: 0.7, breadth: 0.6, intuition: 0.5, rigor: 0.7, verbosity: 0.5, warmth: 0.4, storytelling: 0.4, humor: 0.2, focus: 0.8, empathy: 0.3, challenge: 0.6, originality: 0.5 },
     tags: ["strategy", "planning", "problem-solving"],
   },
   // ── Play ───────────────────────────────────────────────────────────
   {
     id: "explorer", name: "The Explorer", subtitle: "Creative Discovery", icon: "✦", phase: "play",
-    values: { depth: 0.5, breadth: 0.9, intuition: 0.8, rigor: 0.3, verbosity: 0.6, warmth: 0.7, formality: 0.2, focus: 0.3, confidence: 0.5, empathy: 0.6 },
+    values: { depth: 0.5, breadth: 0.9, intuition: 0.8, rigor: 0.3, verbosity: 0.6, warmth: 0.7, storytelling: 0.7, humor: 0.5, focus: 0.3, empathy: 0.6, challenge: 0.4, originality: 0.9 },
     tags: ["creative", "discovery", "adventure"],
   },
   {
     id: "alchemist", name: "The Alchemist", subtitle: "Pattern Weaver", icon: "⟳", phase: "play",
-    values: { depth: 0.6, breadth: 0.8, intuition: 0.7, rigor: 0.4, verbosity: 0.5, warmth: 0.6, formality: 0.3, focus: 0.4, confidence: 0.5, empathy: 0.7 },
+    values: { depth: 0.6, breadth: 0.8, intuition: 0.7, rigor: 0.4, verbosity: 0.5, warmth: 0.6, storytelling: 0.8, humor: 0.4, focus: 0.4, empathy: 0.7, challenge: 0.3, originality: 0.8 },
     tags: ["pattern", "synthesis", "transformation"],
   },
   {
     id: "mirror", name: "The Mirror", subtitle: "Reflective Witness", icon: "◎", phase: "play",
-    values: { depth: 0.6, breadth: 0.5, intuition: 0.6, rigor: 0.5, verbosity: 0.4, warmth: 0.7, formality: 0.3, focus: 0.5, confidence: 0.3, empathy: 0.9 },
+    values: { depth: 0.6, breadth: 0.5, intuition: 0.6, rigor: 0.5, verbosity: 0.4, warmth: 0.7, storytelling: 0.5, humor: 0.2, focus: 0.5, empathy: 0.9, challenge: 0.2, originality: 0.5 },
     tags: ["reflection", "witness", "empathy"],
   },
 ];
@@ -175,65 +185,64 @@ export const PRESETS: readonly DimensionPreset[] = [
 // ── Celebrity / Famous Personas ──────────────────────────────────────
 
 export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
-  // Thinkers & Leaders
   {
     id: "warren-buffett", name: "Warren Buffett", subtitle: "Value Investor", icon: "📈", phase: "work",
-    values: { depth: 0.85, breadth: 0.5, intuition: 0.6, rigor: 0.9, verbosity: 0.4, warmth: 0.7, formality: 0.4, focus: 0.9, confidence: 0.85, empathy: 0.4 },
+    values: { depth: 0.85, breadth: 0.5, intuition: 0.6, rigor: 0.9, verbosity: 0.4, warmth: 0.7, storytelling: 0.7, humor: 0.5, focus: 0.9, empathy: 0.4, challenge: 0.3, originality: 0.4 },
     tags: ["investor", "finance", "value", "oracle", "berkshire"],
   },
   {
     id: "elon-musk", name: "Elon Musk", subtitle: "First-Principles Disruptor", icon: "🚀", phase: "play",
-    values: { depth: 0.8, breadth: 0.9, intuition: 0.75, rigor: 0.6, verbosity: 0.5, warmth: 0.3, formality: 0.2, focus: 0.5, confidence: 0.95, empathy: 0.2 },
+    values: { depth: 0.8, breadth: 0.9, intuition: 0.75, rigor: 0.6, verbosity: 0.5, warmth: 0.3, storytelling: 0.3, humor: 0.6, focus: 0.5, empathy: 0.2, challenge: 0.9, originality: 0.95 },
     tags: ["tesla", "spacex", "tech", "innovation", "disruptor"],
   },
   {
     id: "steve-jobs", name: "Steve Jobs", subtitle: "Design Visionary", icon: "🍎", phase: "work",
-    values: { depth: 0.7, breadth: 0.6, intuition: 0.9, rigor: 0.7, verbosity: 0.3, warmth: 0.3, formality: 0.5, focus: 0.95, confidence: 0.95, empathy: 0.3 },
+    values: { depth: 0.7, breadth: 0.6, intuition: 0.9, rigor: 0.7, verbosity: 0.3, warmth: 0.3, storytelling: 0.8, humor: 0.3, focus: 0.95, empathy: 0.3, challenge: 0.9, originality: 0.9 },
     tags: ["apple", "design", "simplicity", "vision", "product"],
   },
   {
     id: "socrates", name: "Socrates", subtitle: "Questioning Master", icon: "🏛️", phase: "learn",
-    values: { depth: 0.95, breadth: 0.7, intuition: 0.6, rigor: 0.8, verbosity: 0.5, warmth: 0.5, formality: 0.5, focus: 0.6, confidence: 0.3, empathy: 0.6 },
+    values: { depth: 0.95, breadth: 0.7, intuition: 0.6, rigor: 0.8, verbosity: 0.5, warmth: 0.5, storytelling: 0.6, humor: 0.4, focus: 0.6, empathy: 0.6, challenge: 0.95, originality: 0.7 },
     tags: ["philosophy", "questioning", "socratic", "wisdom", "greek"],
   },
   {
     id: "da-vinci", name: "Leonardo da Vinci", subtitle: "Renaissance Polymath", icon: "🎨", phase: "play",
-    values: { depth: 0.8, breadth: 0.95, intuition: 0.85, rigor: 0.7, verbosity: 0.6, warmth: 0.5, formality: 0.4, focus: 0.3, confidence: 0.6, empathy: 0.5 },
+    values: { depth: 0.8, breadth: 0.95, intuition: 0.85, rigor: 0.7, verbosity: 0.6, warmth: 0.5, storytelling: 0.7, humor: 0.3, focus: 0.3, empathy: 0.5, challenge: 0.5, originality: 0.95 },
     tags: ["art", "science", "polymath", "renaissance", "inventor"],
   },
   {
     id: "marie-curie", name: "Marie Curie", subtitle: "Relentless Researcher", icon: "⚛️", phase: "learn",
-    values: { depth: 0.95, breadth: 0.5, intuition: 0.4, rigor: 0.95, verbosity: 0.4, warmth: 0.4, formality: 0.7, focus: 0.95, confidence: 0.7, empathy: 0.3 },
+    values: { depth: 0.95, breadth: 0.5, intuition: 0.4, rigor: 0.95, verbosity: 0.4, warmth: 0.4, storytelling: 0.2, humor: 0.1, focus: 0.95, empathy: 0.3, challenge: 0.6, originality: 0.6 },
     tags: ["science", "physics", "chemistry", "research", "pioneer"],
   },
   {
     id: "oprah", name: "Oprah Winfrey", subtitle: "Empathic Connector", icon: "💫", phase: "play",
-    values: { depth: 0.6, breadth: 0.7, intuition: 0.8, rigor: 0.4, verbosity: 0.7, warmth: 0.95, formality: 0.3, focus: 0.5, confidence: 0.8, empathy: 0.95 },
+    values: { depth: 0.6, breadth: 0.7, intuition: 0.8, rigor: 0.4, verbosity: 0.7, warmth: 0.95, storytelling: 0.9, humor: 0.5, focus: 0.5, empathy: 0.95, challenge: 0.3, originality: 0.5 },
     tags: ["media", "empathy", "interview", "connection", "storytelling"],
   },
   {
     id: "einstein", name: "Albert Einstein", subtitle: "Thought Experimenter", icon: "🧠", phase: "learn",
-    values: { depth: 0.9, breadth: 0.8, intuition: 0.85, rigor: 0.8, verbosity: 0.5, warmth: 0.6, formality: 0.4, focus: 0.6, confidence: 0.6, empathy: 0.4 },
+    values: { depth: 0.9, breadth: 0.8, intuition: 0.85, rigor: 0.8, verbosity: 0.5, warmth: 0.6, storytelling: 0.5, humor: 0.5, focus: 0.6, empathy: 0.4, challenge: 0.6, originality: 0.9 },
     tags: ["physics", "relativity", "thought-experiment", "imagination"],
   },
   {
     id: "marcus-aurelius", name: "Marcus Aurelius", subtitle: "Stoic Emperor", icon: "🏛️", phase: "work",
-    values: { depth: 0.8, breadth: 0.5, intuition: 0.4, rigor: 0.7, verbosity: 0.4, warmth: 0.5, formality: 0.7, focus: 0.8, confidence: 0.7, empathy: 0.5 },
+    values: { depth: 0.8, breadth: 0.5, intuition: 0.4, rigor: 0.7, verbosity: 0.4, warmth: 0.5, storytelling: 0.5, humor: 0.1, focus: 0.8, empathy: 0.5, challenge: 0.7, originality: 0.4 },
     tags: ["stoic", "philosophy", "leadership", "discipline", "meditations"],
   },
   {
     id: "feynman", name: "Richard Feynman", subtitle: "Joyful Explainer", icon: "🪶", phase: "learn",
-    values: { depth: 0.9, breadth: 0.7, intuition: 0.7, rigor: 0.85, verbosity: 0.6, warmth: 0.8, formality: 0.1, focus: 0.5, confidence: 0.7, empathy: 0.5 },
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.7, rigor: 0.85, verbosity: 0.6, warmth: 0.8, storytelling: 0.8, humor: 0.8, focus: 0.5, empathy: 0.5, challenge: 0.5, originality: 0.7 },
     tags: ["physics", "teaching", "humor", "curiosity", "explain"],
   },
   {
     id: "miyamoto", name: "Shigeru Miyamoto", subtitle: "Playful Designer", icon: "🎮", phase: "play",
-    values: { depth: 0.6, breadth: 0.7, intuition: 0.9, rigor: 0.5, verbosity: 0.3, warmth: 0.8, formality: 0.2, focus: 0.6, confidence: 0.6, empathy: 0.7 },
+    values: { depth: 0.6, breadth: 0.7, intuition: 0.9, rigor: 0.5, verbosity: 0.3, warmth: 0.8, storytelling: 0.7, humor: 0.7, focus: 0.6, empathy: 0.7, challenge: 0.3, originality: 0.9 },
     tags: ["games", "nintendo", "play", "design", "fun", "creativity"],
   },
   {
     id: "bezos", name: "Jeff Bezos", subtitle: "Day-One Thinker", icon: "📦", phase: "work",
-    values: { depth: 0.8, breadth: 0.6, intuition: 0.5, rigor: 0.8, verbosity: 0.4, warmth: 0.3, formality: 0.5, focus: 0.85, confidence: 0.9, empathy: 0.2 },
+    values: { depth: 0.8, breadth: 0.6, intuition: 0.5, rigor: 0.8, verbosity: 0.4, warmth: 0.3, storytelling: 0.4, humor: 0.3, focus: 0.85, empathy: 0.2, challenge: 0.7, originality: 0.6 },
     tags: ["amazon", "customer", "long-term", "leadership", "business"],
   },
 ];
@@ -281,7 +290,6 @@ export interface PersonaFile {
   dimensions: Record<string, number>;
 }
 
-/** Parse a .json persona file into a DimensionPreset */
 export function parsePersonaFile(json: string): DimensionPreset {
   const data: PersonaFile = JSON.parse(json);
   if (!data.name || !data.dimensions) throw new Error("Invalid persona file: must have 'name' and 'dimensions'");
@@ -301,7 +309,6 @@ export function parsePersonaFile(json: string): DimensionPreset {
   };
 }
 
-/** Export a preset to downloadable JSON */
 export function exportPersona(preset: DimensionPreset): string {
   const file: PersonaFile = {
     name: preset.name,
@@ -314,7 +321,6 @@ export function exportPersona(preset: DimensionPreset): string {
   return JSON.stringify(file, null, 2);
 }
 
-/** Search presets by query (name, subtitle, tags) */
 export function searchPresets(query: string, presets: DimensionPreset[]): DimensionPreset[] {
   const q = query.toLowerCase().trim();
   if (!q) return presets;
@@ -329,7 +335,6 @@ export function searchPresets(query: string, presets: DimensionPreset[]): Dimens
 
 // ── Prompt Fragment Builder ──────────────────────────────────────────
 
-/** Converts current dimension values into a system prompt fragment */
 export function buildDimensionPrompt(values: DimensionValues): string {
   const parts: string[] = [];
   if (values.depth > 0.7) parts.push("Think deeply and thoroughly before answering.");
@@ -344,14 +349,18 @@ export function buildDimensionPrompt(values: DimensionValues): string {
   else if (values.verbosity < 0.3) parts.push("Be extremely concise. Every word must earn its place.");
   if (values.warmth > 0.7) parts.push("Be warm, encouraging, and personally engaged.");
   else if (values.warmth < 0.3) parts.push("Be professionally neutral and matter-of-fact.");
-  if (values.formality > 0.7) parts.push("Use formal, precise language.");
-  else if (values.formality < 0.3) parts.push("Be conversational and approachable.");
+  if (values.storytelling > 0.7) parts.push("Weave your answers into stories and narratives. Use metaphors, examples, and anecdotes.");
+  else if (values.storytelling < 0.3) parts.push("Be direct. State facts and conclusions without narrative framing.");
+  if (values.humor > 0.7) parts.push("Be playful, witty, and light. Let joy come through in how you communicate.");
+  else if (values.humor < 0.3) parts.push("Maintain a serious, professional tone throughout.");
   if (values.focus > 0.7) parts.push("Stay laser-focused on the exact question. No tangents.");
   else if (values.focus < 0.3) parts.push("Feel free to explore adjacent ideas that add value.");
-  if (values.confidence > 0.7) parts.push("Be assertive and decisive in your answers.");
-  else if (values.confidence < 0.3) parts.push("Express uncertainty openly. Hedge appropriately.");
   if (values.empathy > 0.7) parts.push("Attune to the emotional dimension. Acknowledge feelings and context.");
   else if (values.empathy < 0.3) parts.push("Focus purely on information and analysis.");
+  if (values.challenge > 0.7) parts.push("Push back on assumptions. Play devil's advocate. Help me grow by challenging my thinking.");
+  else if (values.challenge < 0.3) parts.push("Be supportive and validating. Reinforce good thinking.");
+  if (values.originality > 0.7) parts.push("Surprise me with novel perspectives. Avoid clichéd or expected answers.");
+  else if (values.originality < 0.3) parts.push("Stick to well-established, conventional wisdom and proven approaches.");
   return parts.join(" ");
 }
 
