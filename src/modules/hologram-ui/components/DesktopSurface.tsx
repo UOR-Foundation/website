@@ -22,6 +22,7 @@ import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
 import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
+import CoherenceWaveWidget from "./widgets/CoherenceWaveWidget";
 import { SNAP_ANCHOR_EVENT } from "../hooks/useDraggablePosition";
 // VoiceOrb lifted to page level for single-instance efficiency
 
@@ -332,6 +333,10 @@ export default function DesktopSurface({
         {mode === "image" && <WeatherWidget />}
         {mode === "white" && <ProductivityTimerWidget />}
         {mode === "dark" && <AmbientMoodWidget />}
+        {/* Coherence waveform — visible on all desktop frames */}
+        <div style={{ marginTop: "12px", height: "100px" }}>
+          <CoherenceWaveWidget />
+        </div>
       </div>
 
       {/* ── Content: Logo ────────────────────────── */}
