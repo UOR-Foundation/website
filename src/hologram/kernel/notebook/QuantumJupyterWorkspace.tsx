@@ -24,7 +24,7 @@ import {
   Save, Scissors, Copy, ClipboardPaste, Square, FastForward,
   StopCircle, SkipForward, ChevronUp, Search, Keyboard,
   Eye, EyeOff, Hash, MoreHorizontal, Settings,
-  Sun, Moon,
+  Sun, Moon, History as HistoryIcon,
 } from "lucide-react";
 import {
   createKernel,
@@ -43,6 +43,7 @@ import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
 import { NotebookDiffView } from "./NotebookDiffView";
+import { VersionHistoryPanel, useNotebookVersioning } from "./NotebookVersionHistory";
 
 /* ── Python Syntax Highlighter ────────────────────────────────────────────── */
 
@@ -1884,6 +1885,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const [showGoToLine, setShowGoToLine] = useState(false);
   const [goToLineValue, setGoToLineValue] = useState("");
   const [diffRemote, setDiffRemote] = useState<NotebookDocument | null>(null);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const versioning = useNotebookVersioning(notebook.id);
   const notebookNameRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -2106,7 +2109,9 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
   const saveNotebook = useCallback(() => {
     setLastSaved(new Date());
-  }, []);
+    // Auto-save snapshot to Data Bank
+    versioning.saveSnapshot(notebook, true).catch(() => {});
+  }, [notebook, versioning]);
 
   const downloadAsIpynb = useCallback(() => {
     const ipynb = {
@@ -2572,6 +2577,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const viewMenuItems: MenuItem[] = [
     { label: showLineNumbers ? "Hide Line Numbers" : "Show Line Numbers", shortcut: "L", action: () => setShowLineNumbers(v => !v) },
     { label: sidebarOpen ? "Hide Sidebar" : "Show Sidebar", action: () => setSidebarOpen(v => !v) },
+    { label: showVersionHistory ? "Hide Version History" : "Show Version History", action: () => setShowVersionHistory(v => !v) },
     { divider: true, label: "" },
     { label: "Collapse Selected Cell", shortcut: "O", action: () => activeCell && toggleCollapse(activeCell) },
   ];
@@ -2724,6 +2730,16 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             {editMode ? "Edit" : "Command"}
           </span>
 
+          {/* Version history toggle */}
+          <button
+            onClick={() => setShowVersionHistory(v => !v)}
+            className="p-1.5 rounded transition-colors"
+            title="Version History"
+            style={{ color: showVersionHistory ? t.gold : t.textMuted, background: showVersionHistory ? t.goldBg : "transparent" }}
+          >
+            <HistoryIcon size={15} />
+          </button>
+
           {/* Theme toggle */}
           <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
 
@@ -2873,6 +2889,24 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
               ))}
             </div>
           </div>
+
+          {/* Version History Panel */}
+          {showVersionHistory && (
+            <VersionHistoryPanel
+              notebookId={notebook.id}
+              currentNotebook={notebook}
+              onRestore={(nb) => {
+                setNotebook(nb);
+                setKernel(createKernel());
+                setShowVersionHistory(false);
+              }}
+              onDiff={(remote) => {
+                setDiffRemote(remote);
+                setShowVersionHistory(false);
+              }}
+              onClose={() => setShowVersionHistory(false)}
+            />
+          )}
         </div>
 
         {/* Developer Precision Bar */}
