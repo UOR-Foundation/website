@@ -437,7 +437,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
             className="text-[11px] tracking-[0.25em] uppercase"
             style={{ color: "hsla(38, 15%, 65%, 0.3)" }}
           >
-            Queue
+            Lumen
           </span>
         </div>
 

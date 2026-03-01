@@ -557,7 +557,7 @@ export default function DesktopSurface({
                 backdropFilter: "blur(12px)",
                 WebkitBackdropFilter: "blur(12px)",
               }}
-              aria-label="Open Queue reasoning interface"
+              aria-label="Open Lumen reasoning interface"
             >
               <span
                 className="flex items-center gap-2 tracking-[0.18em] uppercase transition-all duration-300 group-hover/conv:tracking-[0.22em]"
@@ -582,7 +582,7 @@ export default function DesktopSurface({
                     animation: "heartbeat-love 2.4s ease-in-out infinite",
                   }}
                 />
-                Queue
+                Lumen
               </span>
             </button>
           </div>
