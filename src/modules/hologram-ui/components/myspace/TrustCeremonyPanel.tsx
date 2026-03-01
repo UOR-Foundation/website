@@ -11,6 +11,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, UserPlus, Users, Shield, ShieldCheck,
   Check, X, Clock, Fingerprint, Loader2, Link2, Sparkles,
+  Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -206,6 +207,45 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
       toast.error("Verification ceremony failed");
     } finally {
       setProcessingId(null);
+      setCeremonyActive(null);
+    }
+  }, [user, generateAttestation, loadData]);
+
+  // ── Upgrade trust level ──────────────────────────────────────────────
+  const [upgradingId, setUpgradingId] = useState<string | null>(null);
+
+  const upgradeTrust = useCallback(async (conn: TrustConnection) => {
+    if (!user || conn.trust_level >= 5) return;
+    setUpgradingId(conn.id);
+    setCeremonyActive(conn.id);
+
+    // Simulate renewal ceremony
+    await new Promise(r => setTimeout(r, 1800));
+
+    try {
+      const peerId = conn.requester_id === user.id ? conn.responder_id : conn.requester_id;
+      const newAttestation = await generateAttestation(user.id, peerId);
+      const combined = `${conn.ceremony_cid}:${newAttestation}:level-${conn.trust_level + 1}`;
+      const encoded = new TextEncoder().encode(combined);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const newCid = hashArray.map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+
+      const { error } = await supabase
+        .from("trust_connections")
+        .update({
+          trust_level: conn.trust_level + 1,
+          ceremony_cid: `bafy...${newCid.slice(0, 16)}`,
+        })
+        .eq("id", conn.id);
+
+      if (error) throw error;
+      toast.success(`Trust upgraded to level ${conn.trust_level + 1}`);
+      loadData();
+    } catch {
+      toast.error("Upgrade ceremony failed");
+    } finally {
+      setUpgradingId(null);
       setCeremonyActive(null);
     }
   }, [user, generateAttestation, loadData]);
@@ -460,32 +500,98 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
                 </button>
               </div>
             ) : (
-              connections.map(conn => (
-                <div
-                  key={conn.id}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
-                  style={{ background: KP.card, border: `1px solid ${KP.cardBorder}` }}
-                >
+            connections.map(conn => {
+                const level = conn.trust_level || 1;
+                const maxLevel = 5;
+                const isUpgrading = upgradingId === conn.id;
+                const isCeremonyHere = ceremonyActive === conn.id;
+
+                return (
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
-                    style={{ background: `${KP.green}12`, border: `1px solid ${KP.green}25` }}
+                    key={conn.id}
+                    className="rounded-xl overflow-hidden"
+                    style={{ background: KP.card, border: `1px solid ${KP.cardBorder}` }}
                   >
-                    {conn.peer_glyph || conn.peer_name?.[0]?.toUpperCase() || "?"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: KP.text }}>
-                      {conn.peer_name || "Anonymous"}
-                    </p>
-                    {conn.peer_handle && (
-                      <p className="text-xs truncate" style={{ color: KP.dim }}>@{conn.peer_handle}</p>
+                    <div className="flex items-center gap-3 px-4 py-3.5">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
+                        style={{ background: `${KP.green}12`, border: `1px solid ${KP.green}25` }}
+                      >
+                        {conn.peer_glyph || conn.peer_name?.[0]?.toUpperCase() || "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: KP.text }}>
+                          {conn.peer_name || "Anonymous"}
+                        </p>
+                        {conn.peer_handle && (
+                          <p className="text-xs truncate" style={{ color: KP.dim }}>@{conn.peer_handle}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: KP.green }} />
+                        <span className="text-[10px] font-medium" style={{ color: KP.green }}>L{level}</span>
+                      </div>
+                    </div>
+
+                    {/* Trust stars + upgrade */}
+                    <div className="px-4 py-3 flex items-center justify-between" style={{ borderTop: `1px solid ${KP.border}` }}>
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: maxLevel }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className="w-4 h-4"
+                            style={{
+                              color: i < level ? KP.gold : `${KP.dim}40`,
+                              fill: i < level ? KP.gold : "transparent",
+                            }}
+                          />
+                        ))}
+                        <span className="text-[10px] ml-2" style={{ color: KP.dim }}>
+                          Trust Level {level}/{maxLevel}
+                        </span>
+                      </div>
+                      {level < maxLevel && (
+                        <button
+                          onClick={() => upgradeTrust(conn)}
+                          disabled={isUpgrading}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-opacity hover:opacity-80 cursor-pointer"
+                          style={{ background: `${KP.gold}12`, color: KP.gold, border: `1px solid ${KP.gold}20` }}
+                        >
+                          {isUpgrading ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-3 h-3" />
+                          )}
+                          Renew Ceremony
+                        </button>
+                      )}
+                      {level >= maxLevel && (
+                        <span className="text-[10px] font-semibold" style={{ color: KP.gold }}>
+                          ✦ Maximum Trust
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Ceremony animation for upgrades */}
+                    {isCeremonyHere && (
+                      <div className="px-4 py-4 flex flex-col items-center gap-2" style={{ borderTop: `1px solid ${KP.border}` }}>
+                        <div className="relative w-14 h-14">
+                          <div className="absolute inset-0 rounded-full animate-ping" style={{ background: `${KP.gold}15` }} />
+                          <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ background: `${KP.gold}10`, border: `2px solid ${KP.gold}40` }}>
+                            <Fingerprint className="w-6 h-6 animate-pulse" style={{ color: KP.gold }} />
+                          </div>
+                        </div>
+                        <p className="text-xs font-medium animate-pulse" style={{ color: KP.gold }}>
+                          Renewal ceremony in progress…
+                        </p>
+                        <p className="text-[10px]" style={{ color: KP.dim }}>
+                          Upgrading to Level {level + 1} via fresh ZK attestation
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5" style={{ color: KP.green }} />
-                    <span className="text-[10px] font-medium" style={{ color: KP.green }}>Verified</span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
