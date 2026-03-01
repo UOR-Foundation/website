@@ -42,6 +42,7 @@ import { createState, simulateCircuit, realisticNoise, measure } from "@/hologra
 import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
+import { NotebookDiffView } from "./NotebookDiffView";
 
 /* ── Python Syntax Highlighter ────────────────────────────────────────────── */
 
@@ -1882,6 +1883,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const [cursorPos, setCursorPos] = useState<{ ln: number; col: number; sel: number }>({ ln: 1, col: 1, sel: 0 });
   const [showGoToLine, setShowGoToLine] = useState(false);
   const [goToLineValue, setGoToLineValue] = useState("");
+  const [diffRemote, setDiffRemote] = useState<NotebookDocument | null>(null);
   const notebookNameRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -2528,6 +2530,18 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
     }},
     { divider: true, label: "" },
     { label: "Save", shortcut: "⌘S", action: saveNotebook },
+    { label: "Pull from Cloud…", action: () => {
+      // Simulate fetching a remote version with some changes for diff review
+      const remote: NotebookDocument = JSON.parse(JSON.stringify(notebook));
+      remote.metadata.modified_at = new Date().toISOString();
+      // Apply simulated remote changes for demo
+      if (remote.cells.length > 0) {
+        const first = remote.cells[0];
+        remote.cells[0] = { ...first, source: first.source + "\n# Updated from cloud" };
+      }
+      remote.cells.push(createCell("code", "# New cell added from cloud\nprint('synced!')"));
+      setDiffRemote(remote);
+    }},
     { divider: true, label: "" },
     { label: "Download as .ipynb", action: downloadAsIpynb },
     { label: "Download as .py", action: downloadAsPy },
@@ -2591,6 +2605,23 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
     { divider: true, label: "" },
     { label: "About Hologram Notebook", action: () => {} },
   ];
+
+  // ── Diff view overlay ──
+  if (diffRemote) {
+    return (
+      <NbThemeCtx.Provider value={t}>
+        <NotebookDiffView
+          localNotebook={notebook}
+          remoteNotebook={diffRemote}
+          onAccept={(remote) => {
+            setNotebook(remote);
+            setDiffRemote(null);
+          }}
+          onReject={() => setDiffRemote(null)}
+        />
+      </NbThemeCtx.Provider>
+    );
+  }
 
   return (
     <NbThemeCtx.Provider value={t}>
