@@ -240,6 +240,131 @@ function extractSources(understanding: string, claims: any[]): { text: string; t
   return sources.slice(0, 5);
 }
 
+// ── Sentence-Level Diff ──────────────────────────────────────────────
+
+/** Strip internal metadata tags from response text */
+function cleanForDiff(text: string): string {
+  return text
+    .replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "")
+    .replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/(?<!\*)\*(?!\*)/g, "")
+    .trim();
+}
+
+/** Split text into sentences (respecting abbreviations) */
+function splitSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+(?=[A-Z"])/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+}
+
+/** Compute longest common subsequence of sentences */
+function lcs(a: string[], b: string[]): Set<string> {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  // Backtrack to get matched sentences
+  const matched = new Set<string>();
+  let i = m, j = n;
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) { matched.add(a[i - 1]); i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+    else j--;
+  }
+  return matched;
+}
+
+type DiffLine = { type: "same" | "removed" | "added"; text: string };
+
+function computeSentenceDiff(original: string, remixed: string): DiffLine[] {
+  const origSentences = splitSentences(original);
+  const remixSentences = splitSentences(remixed);
+  const common = lcs(origSentences, remixSentences);
+
+  const lines: DiffLine[] = [];
+  const origUsed = new Set<number>();
+  const remixUsed = new Set<number>();
+
+  // Walk both lists, emitting removed/same/added in order
+  let oi = 0, ri = 0;
+  while (oi < origSentences.length || ri < remixSentences.length) {
+    if (oi < origSentences.length && ri < remixSentences.length && origSentences[oi] === remixSentences[ri]) {
+      lines.push({ type: "same", text: origSentences[oi] });
+      oi++; ri++;
+    } else if (oi < origSentences.length && !common.has(origSentences[oi])) {
+      lines.push({ type: "removed", text: origSentences[oi] });
+      oi++;
+    } else if (ri < remixSentences.length && !common.has(remixSentences[ri])) {
+      lines.push({ type: "added", text: remixSentences[ri] });
+      ri++;
+    } else if (oi < origSentences.length) {
+      lines.push({ type: "removed", text: origSentences[oi] });
+      oi++;
+    } else {
+      lines.push({ type: "added", text: remixSentences[ri] });
+      ri++;
+    }
+  }
+  return lines;
+}
+
+function SentenceDiff({ original, remixed }: { original: string; remixed: string }) {
+  const lines = computeSentenceDiff(original, remixed);
+  const stats = {
+    same: lines.filter(l => l.type === "same").length,
+    removed: lines.filter(l => l.type === "removed").length,
+    added: lines.filter(l => l.type === "added").length,
+  };
+
+  return (
+    <div className="space-y-1">
+      {lines.map((line, i) => (
+        <div
+          key={i}
+          className="rounded-lg px-3 py-1.5 text-[12px] leading-[1.85] transition-all duration-200"
+          style={{
+            fontFamily: C.font,
+            fontWeight: 350,
+            ...(line.type === "same" ? {
+              color: "hsla(30, 12%, 70%, 0.55)",
+              background: "transparent",
+            } : line.type === "removed" ? {
+              color: "hsla(0, 25%, 72%, 0.65)",
+              background: "hsla(0, 40%, 30%, 0.08)",
+              borderLeft: "2px solid hsla(0, 50%, 55%, 0.25)",
+              textDecoration: "line-through",
+              textDecorationColor: "hsla(0, 40%, 55%, 0.2)",
+            } : {
+              color: "hsla(152, 25%, 78%, 0.75)",
+              background: "hsla(152, 35%, 30%, 0.08)",
+              borderLeft: "2px solid hsla(152, 45%, 50%, 0.3)",
+            }),
+          }}
+        >
+          <span className="text-[8px] uppercase tracking-wider mr-2 font-semibold" style={{
+            color: line.type === "same" ? "hsla(30, 10%, 50%, 0.2)"
+              : line.type === "removed" ? "hsla(0, 40%, 55%, 0.35)"
+              : "hsla(152, 40%, 55%, 0.4)",
+          }}>
+            {line.type === "removed" ? "−" : line.type === "added" ? "+" : "·"}
+          </span>
+          {line.text}
+        </div>
+      ))}
+      {/* Summary footer */}
+      <div className="flex items-center gap-3 pt-2 mt-1" style={{ borderTop: "1px solid hsla(200, 12%, 20%, 0.06)" }}>
+        <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 50%, 0.25)" }}>{stats.same} unchanged</span>
+        {stats.removed > 0 && <span className="text-[9px] font-mono" style={{ color: "hsla(0, 40%, 55%, 0.35)" }}>−{stats.removed} removed</span>}
+        {stats.added > 0 && <span className="text-[9px] font-mono" style={{ color: "hsla(152, 40%, 55%, 0.4)" }}>+{stats.added} added</span>}
+      </div>
+    </div>
+  );
+}
+
 // ── Trust Arc ────────────────────────────────────────────────────────
 function TrustArc({ score, grade }: { score: number; grade?: string }) {
   const radius = 18;
@@ -516,71 +641,41 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProp
                       className="overflow-hidden"
                     >
                       <div
-                        className="mt-3 grid grid-cols-2 gap-3 p-3 rounded-xl"
+                        className="mt-3 p-4 rounded-xl"
                         style={{
                           background: "hsla(25, 8%, 7%, 0.4)",
                           border: "1px solid hsla(200, 20%, 25%, 0.08)",
                         }}
                       >
-                        {/* Original */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 mb-2.5 pb-2" style={{ borderBottom: "1px solid hsla(38, 15%, 25%, 0.08)" }}>
+                        {/* Legend */}
+                        <div className="flex items-center gap-4 mb-3 pb-2" style={{ borderBottom: "1px solid hsla(200, 15%, 25%, 0.08)" }}>
+                          <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full" style={{ background: "hsla(38, 40%, 55%, 0.4)" }} />
                             <span className="text-[9px] tracking-[0.12em] uppercase" style={{ color: "hsla(38, 30%, 60%, 0.5)" }}>
-                              {ex.remixOriginalMix || "Original mix"}
+                              {ex.remixOriginalMix || "Original"}
                             </span>
                           </div>
-                          <div
-                            className="text-[12px] leading-[1.9] prose prose-invert max-w-none opacity-60"
-                            style={{
-                              color: "hsl(30, 10%, 65%)",
-                              fontFamily: C.font,
-                            }}
-                          >
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => <p className="mb-2 last:mb-0" style={{ lineHeight: "1.9", fontWeight: 350 }}>{children}</p>,
-                                strong: ({ children }) => <strong style={{ color: "hsl(38, 18%, 75%)", fontWeight: 450 }}>{children}</strong>,
-                              }}
-                            >
-                              {ex.remixOriginal.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "").slice(0, 800)}
-                            </ReactMarkdown>
-                            {ex.remixOriginal.length > 800 && (
-                              <p className="text-[10px] mt-1" style={{ color: "hsla(38, 15%, 55%, 0.3)" }}>…truncated</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Divider */}
-
-                        {/* Remixed */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 mb-2.5 pb-2" style={{ borderBottom: "1px solid hsla(200, 20%, 30%, 0.1)" }}>
+                          <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full" style={{ background: "hsla(200, 50%, 60%, 0.6)" }} />
                             <span className="text-[9px] tracking-[0.12em] uppercase" style={{ color: "hsla(200, 40%, 65%, 0.6)" }}>
                               {ex.mixLabel || "Remixed"}
                             </span>
                           </div>
-                          <div
-                            className="text-[12px] leading-[1.9] prose prose-invert max-w-none"
-                            style={{
-                              color: "hsl(30, 12%, 74%)",
-                              fontFamily: C.font,
-                            }}
-                          >
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => <p className="mb-2 last:mb-0" style={{ lineHeight: "1.9", fontWeight: 350 }}>{children}</p>,
-                                strong: ({ children }) => <strong style={{ color: "hsl(38, 20%, 82%)", fontWeight: 450 }}>{children}</strong>,
-                              }}
-                            >
-                              {ex.understanding.replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "").replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "").slice(0, 800)}
-                            </ReactMarkdown>
-                            {ex.understanding.length > 800 && (
-                              <p className="text-[10px] mt-1" style={{ color: "hsla(200, 30%, 55%, 0.3)" }}>…truncated</p>
-                            )}
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <span className="inline-block w-3 h-[3px] rounded-sm" style={{ background: "hsla(0, 50%, 55%, 0.25)" }} />
+                            <span className="text-[8px]" style={{ color: "hsla(0, 30%, 55%, 0.4)" }}>Removed</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-block w-3 h-[3px] rounded-sm" style={{ background: "hsla(152, 45%, 50%, 0.25)" }} />
+                            <span className="text-[8px]" style={{ color: "hsla(152, 30%, 55%, 0.4)" }}>Added</span>
                           </div>
                         </div>
+
+                        {/* Sentence-level diff */}
+                        <SentenceDiff
+                          original={cleanForDiff(ex.remixOriginal)}
+                          remixed={cleanForDiff(ex.understanding)}
+                        />
                       </div>
                     </motion.div>
                   )}
