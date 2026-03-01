@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal, Beaker, Atom, Code2,
+  Terminal, Beaker, Atom, Code2, ChevronDown, Server,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -143,6 +143,9 @@ export default function DesktopOsSidebar({
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [genesisOpen, setGenesisOpen] = useState(false);
+  const [systemOpen, setSystemOpen] = useState(() => {
+    try { return localStorage.getItem("uor:sidebar:system-open") !== "false"; } catch { return true; }
+  });
   const { textSize, setTextSize } = useTextSize();
 
   // Text size changes flow through kernel automatically via useTextSize
@@ -458,44 +461,86 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[13px] font-light tracking-wide">Inbox</span>}
           </button>
         </IconTooltip>
-        <IconTooltip label="Memory" show={!expanded}>
-          <button
-            onClick={() => collapseAndDo(() => onOpenMemory?.())}
-            onMouseEnter={() => onHoverPanel?.("memory")}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-            }`}
-            style={{ color: "var(--sb-text)" }}
-          >
-            <Database className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[13px] font-light tracking-wide">Storage</span>}
-          </button>
-        </IconTooltip>
-        <IconTooltip label="Compute" show={!expanded}>
-          <button
-            onClick={() => collapseAndDo(() => onOpenCompute?.())}
-            onMouseEnter={() => onHoverPanel?.("compute")}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-            }`}
-            style={{ color: "var(--sb-text)" }}
-          >
-            <Cpu className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[13px] font-light tracking-wide">Compute</span>}
-          </button>
-        </IconTooltip>
-        <IconTooltip label="Settings" show={!expanded}>
-          <button
-            onClick={() => collapseAndDo(() => navigate("/settings"))}
-            className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
-              !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
-            }`}
-            style={{ color: "var(--sb-text)" }}
-          >
-            <Settings className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
-            {expanded && <span className="text-[13px] font-light tracking-wide">Settings</span>}
-          </button>
-        </IconTooltip>
+        {/* ── System sub-section (collapsible) ──────────────── */}
+        {(() => {
+          const toggleSystem = () => {
+            setSystemOpen(prev => {
+              const next = !prev;
+              try { localStorage.setItem("uor:sidebar:system-open", String(next)); } catch {}
+              return next;
+            });
+          };
+          return (
+            <>
+              <IconTooltip label="System" show={!expanded}>
+                <button
+                  onClick={toggleSystem}
+                  className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                    !expanded ? "justify-center px-0 py-2" : "px-3.5 py-2"
+                  }`}
+                  style={{ color: "var(--sb-muted)" }}
+                >
+                  <Server className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                  {expanded && (
+                    <>
+                      <span className="text-[11px] font-medium uppercase tracking-widest flex-1 text-left" style={{ color: "var(--sb-muted)" }}>System</span>
+                      <ChevronDown
+                        className="w-3 h-3 shrink-0 transition-transform duration-200"
+                        strokeWidth={1.5}
+                        style={{
+                          color: "var(--sb-muted)",
+                          transform: systemOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                        }}
+                      />
+                    </>
+                  )}
+                </button>
+              </IconTooltip>
+              {(systemOpen || !expanded) && (
+                <div className={expanded ? "pl-2" : ""}>
+                  <IconTooltip label="Storage" show={!expanded}>
+                    <button
+                      onClick={() => collapseAndDo(() => onOpenMemory?.())}
+                      onMouseEnter={() => onHoverPanel?.("memory")}
+                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
+                      }`}
+                      style={{ color: "var(--sb-text)" }}
+                    >
+                      <Database className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                      {expanded && <span className="text-[13px] font-light tracking-wide">Storage</span>}
+                    </button>
+                  </IconTooltip>
+                  <IconTooltip label="Compute" show={!expanded}>
+                    <button
+                      onClick={() => collapseAndDo(() => onOpenCompute?.())}
+                      onMouseEnter={() => onHoverPanel?.("compute")}
+                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
+                      }`}
+                      style={{ color: "var(--sb-text)" }}
+                    >
+                      <Cpu className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                      {expanded && <span className="text-[13px] font-light tracking-wide">Compute</span>}
+                    </button>
+                  </IconTooltip>
+                  <IconTooltip label="Settings" show={!expanded}>
+                    <button
+                      onClick={() => collapseAndDo(() => navigate("/settings"))}
+                      className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                        !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3"
+                      }`}
+                      style={{ color: "var(--sb-text)" }}
+                    >
+                      <Settings className="w-4 h-4" strokeWidth={1.3} style={{ color: "var(--sb-muted)" }} />
+                      {expanded && <span className="text-[13px] font-light tracking-wide">Settings</span>}
+                    </button>
+                  </IconTooltip>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* ── Genesis Dot — kernel heartbeat summary ────────── */}
