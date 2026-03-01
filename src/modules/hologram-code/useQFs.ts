@@ -114,6 +114,8 @@ export interface QFsHandle {
   rootCid: string | null;
   /** Whether Q-FS is initialized */
   ready: boolean;
+  /** Clear persisted data and re-seed default workspace files */
+  resetWorkspace: () => void;
 }
 
 // ── Workspace seed files ────────────────────────────────────────────────────
@@ -721,5 +723,37 @@ export function useQFs(): QFsHandle {
 
   const rootCid = fsRef.current?.getRootCid() ?? null;
 
-  return { tree, readFile, writeFile, createFile, mkdir, rm, stats, rootCid, ready };
+  const resetWorkspace = useCallback(() => {
+    // Clear persisted data
+    localStorage.removeItem(QFS_STORAGE_KEY);
+    localStorage.removeItem(QFS_VERSION_KEY);
+
+    // Re-initialize Q-FS with seed files
+    const mmu = new QMmu();
+    const fs = new QFs(mmu);
+    fs.mkfs(0);
+
+    for (const seed of SEED_FILES) {
+      const { dirs, file } = parsePath(seed.path);
+      let currentPath = "/";
+      for (const dir of dirs) {
+        const existing = fs.ls(currentPath);
+        if (!existing.some(e => e.name === dir && e.type === "directory")) {
+          fs.mkdir(currentPath, dir, 0);
+        }
+        currentPath = currentPath === "/" ? `/${dir}` : `${currentPath}/${dir}`;
+      }
+      if (file) {
+        fs.createFile(currentPath, file, encodeUtf8(seed.content), 0);
+      }
+    }
+
+    fsRef.current = fs;
+    mmuRef.current = mmu;
+    persistToLocal(fs);
+    setVersion(v => v + 1);
+    console.log("⬡ Q-FS: Workspace reset to defaults");
+  }, []);
+
+  return { tree, readFile, writeFile, createFile, mkdir, rm, stats, rootCid, ready, resetWorkspace };
 }
