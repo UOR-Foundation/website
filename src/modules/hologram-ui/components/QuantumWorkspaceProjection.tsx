@@ -21,7 +21,8 @@ export default function QuantumWorkspaceProjection({ open, preload, onClose }: P
       backdropColor="hsla(220, 15%, 4%, 0.5)"
       beamGradient="linear-gradient(to bottom, hsla(200, 60%, 50%, 0.0), hsla(200, 60%, 50%, 0.3), hsla(200, 60%, 50%, 0.0))"
     >
-      <div className="flex-1 overflow-hidden" style={{ background: "hsl(220, 12%, 8%)" }}>
+      {/* Background controlled by workspace theme */}
+      <div className="flex-1 overflow-hidden">
         <QuantumWorkspace onClose={onClose} />
       </div>
     </ProjectionShell>
