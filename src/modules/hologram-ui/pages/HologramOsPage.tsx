@@ -22,7 +22,7 @@ import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import KernelBoot from "@/modules/hologram-os/components/KernelBoot";
 import HologramClaimOverlay from "@/modules/hologram-ui/components/HologramClaimOverlay";
-import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
+import ConvergenceChat from "@/modules/hologram-ui/components/lumen/ConvergenceChat";
 import BrowserProjection from "@/modules/hologram-ui/components/BrowserProjection";
 import ComputeProjection from "@/modules/hologram-ui/components/ComputeProjection";
 import MemoryProjection from "@/modules/hologram-ui/components/MemoryProjection";
@@ -476,25 +476,24 @@ export default function HologramOsPage() {
             className="h-full overflow-hidden"
             style={{
               width: lumenPanel.width ? `${lumenPanel.width}px` : "340px",
-              transform: chatOpen ? "translateX(0) translateZ(0)" : "translateX(100%) translateZ(0)",
+              transform: chatOpen ? "translate3d(0, 0, 0)" : "translate3d(100%, 0, 0)",
               opacity: chatOpen ? 1 : 0,
               transition: lumenPanel.isResizing
                 ? "none"
-                : "transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 120ms ease",
+                : chatOpen
+                  ? "transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease"
+                  : "transform 140ms cubic-bezier(0.4, 0, 0.2, 1), opacity 100ms ease",
               willChange: chatOpen || chatPrewarmed ? "transform, opacity" : "auto",
               contain: "layout style paint",
             }}
           >
-            <HologramAiChat
-              open={chatOpen}
+            <ConvergenceChat
+              embedded
               onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
-              onPhaseChange={triadicActivity.setActivePhase}
-              creatorStage={triadicActivity.creatorStage}
-              replayGuideKey={0}
-              initialPrompt={chatPrompt}
-              panelWidth={lumenPanel.width}
-              resizeHandleProps={lumenPanel.resizeHandleProps}
-              isResizing={lumenPanel.isResizing}
+              onExpand={() => {
+                k.setChatOpen(false);
+                k.openPanel("convergence");
+              }}
             />
           </div>
         </div>
