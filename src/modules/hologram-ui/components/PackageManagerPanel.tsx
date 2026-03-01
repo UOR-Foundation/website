@@ -123,6 +123,7 @@ function InstalledTab() {
   const [activeTier, setActiveTier] = useState<string | null>(null);
   const [invokedResult, setInvokedResult] = useState<{ name: string; result: HologramProjection } | null>(null);
   const [expandedPkg, setExpandedPkg] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const packages = useMemo<PackageEntry[]>(() => {
     const entries: PackageEntry[] = [];
@@ -172,6 +173,62 @@ function InstalledTab() {
     }
   }, []);
 
+  const exportJsonLd = useCallback(() => {
+    setExporting(true);
+    // Use requestAnimationFrame to let spinner render before blocking
+    requestAnimationFrame(() => {
+      try {
+        const hologram = project(DEMO_INPUT);
+        const projections = hologram.projections;
+
+        const jsonld = {
+          "@context": {
+            "@vocab": "https://uor.foundation/ns/hologram#",
+            "uor": "https://uor.foundation/ns/",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "fidelity": { "@id": "uor:fidelity", "@type": "xsd:string" },
+            "spec": { "@id": "uor:specification", "@type": "@id" },
+            "value": { "@id": "uor:projectedValue", "@type": "xsd:string" },
+            "lossWarning": { "@id": "uor:lossWarning", "@type": "xsd:string" },
+          },
+          "@type": "HologramProjectionManifest",
+          "@id": `urn:uor:hologram:${DEMO_HEX.slice(0, 16)}`,
+          "sourceIdentity": {
+            "@type": "CanonicalIdentity",
+            "cid": DEMO_CID,
+            "sha256hex": DEMO_HEX,
+          },
+          "projectedAt": new Date().toISOString(),
+          "totalProjections": Object.keys(projections).length,
+          "losslessCount": Object.values(projections).filter(p => p.fidelity === "lossless").length,
+          "lossyCount": Object.values(projections).filter(p => p.fidelity === "lossy").length,
+          "projections": Object.entries(projections).map(([name, p]) => ({
+            "@type": "Projection",
+            "name": name,
+            "value": p.value,
+            "fidelity": p.fidelity,
+            "spec": p.spec,
+            ...(p.lossWarning ? { lossWarning: p.lossWarning } : {}),
+          })),
+        };
+
+        const blob = new Blob([JSON.stringify(jsonld, null, 2)], { type: "application/ld+json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `hologram-projections-${DEMO_HEX.slice(0, 8)}.jsonld`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Export failed:", err);
+      } finally {
+        setExporting(false);
+      }
+    });
+  }, []);
+
   const lossless = packages.filter(p => p.fidelity === "lossless").length;
   const lossy = packages.length - lossless;
 
@@ -191,6 +248,23 @@ function InstalledTab() {
           <span className="w-2 h-2 rounded-full" style={{ background: KP.green }} />
           <span className="text-[11px]" style={{ color: KP.muted }}>{packages.length} installed</span>
         </div>
+        <div className="flex-1" />
+        <button
+          onClick={exportJsonLd}
+          disabled={exporting}
+          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg transition-colors"
+          style={{
+            background: "hsla(38, 60%, 55%, 0.12)",
+            color: KP.gold,
+            border: `1px solid hsla(38, 60%, 55%, 0.2)`,
+            opacity: exporting ? 0.5 : 1,
+            cursor: exporting ? "wait" : "pointer",
+          }}
+          title="Export all projection results as a JSON-LD document"
+        >
+          {exporting ? <IconLoader2 size={13} className="animate-spin" /> : <IconDownload size={13} />}
+          Export JSON-LD
+        </button>
       </div>
 
       {/* Search + tier chips */}
