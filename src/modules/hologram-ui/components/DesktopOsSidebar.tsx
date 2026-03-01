@@ -11,7 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Home, LayoutGrid, User, Globe, Cpu, Database,
+  Home, LayoutGrid, Fingerprint, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
   Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package, FolderOpen,
   Wrench,
@@ -181,7 +181,7 @@ interface NavItem { label: string; icon: React.ElementType; path?: string; panel
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",     icon: Home,       path: "/hologram-console" },
-  { label: "My Space", icon: User,       panel: "myspace" },
+  { label: "My Space", icon: Fingerprint, panel: "myspace" },
   { label: "Apps",     icon: LayoutGrid, panel: "apps" },
 ];
 
