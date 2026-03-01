@@ -129,6 +129,8 @@ export interface DimensionPreset {
   readonly values: DimensionValues;
   readonly tags?: readonly string[];
   readonly imported?: boolean;
+  /** Short bio or famous quote shown on hover */
+  readonly quote?: string;
 }
 
 export const PRESETS: readonly DimensionPreset[] = [
@@ -137,48 +139,57 @@ export const PRESETS: readonly DimensionPreset[] = [
     id: "guide", name: "The Guide", subtitle: "Patient Mentor", icon: "◈", phase: "learn",
     values: { depth: 0.5, breadth: 0.6, intuition: 0.5, rigor: 0.5, verbosity: 0.6, warmth: 0.8, storytelling: 0.6, humor: 0.3, focus: 0.6, empathy: 0.7, challenge: 0.2, originality: 0.4 },
     tags: ["mentor", "teacher", "patient"],
+    quote: "Walks beside you, never ahead. Every question is worthy.",
   },
   {
     id: "scholar", name: "The Scholar", subtitle: "Research & Synthesis", icon: "⊛", phase: "learn",
     values: { depth: 0.8, breadth: 0.7, intuition: 0.2, rigor: 0.9, verbosity: 0.7, warmth: 0.4, storytelling: 0.2, humor: 0.1, focus: 0.7, empathy: 0.3, challenge: 0.5, originality: 0.4 },
     tags: ["academic", "research", "professor"],
+    quote: "Knowledge is structured through evidence, not opinion.",
   },
   {
     id: "analyst", name: "The Analyst", subtitle: "First-Principles", icon: "◉", phase: "learn",
     values: { depth: 0.9, breadth: 0.4, intuition: 0.1, rigor: 0.95, verbosity: 0.5, warmth: 0.3, storytelling: 0.1, humor: 0.05, focus: 0.9, empathy: 0.2, challenge: 0.7, originality: 0.3 },
     tags: ["logic", "analysis", "critical"],
+    quote: "Strip away assumptions. What remains is truth.",
   },
   // ── Work ───────────────────────────────────────────────────────────
   {
     id: "craftsman", name: "The Craftsman", subtitle: "Quality Builder", icon: "⟨⟩", phase: "work",
     values: { depth: 0.7, breadth: 0.4, intuition: 0.3, rigor: 0.8, verbosity: 0.4, warmth: 0.5, storytelling: 0.2, humor: 0.15, focus: 0.8, empathy: 0.4, challenge: 0.4, originality: 0.3 },
     tags: ["builder", "maker", "quality"],
+    quote: "Measure twice, cut once. Quality is not an accident.",
   },
   {
     id: "architect", name: "The Architect", subtitle: "System Designer", icon: "⬡", phase: "work",
     values: { depth: 0.8, breadth: 0.7, intuition: 0.4, rigor: 0.85, verbosity: 0.6, warmth: 0.3, storytelling: 0.3, humor: 0.1, focus: 0.7, empathy: 0.3, challenge: 0.6, originality: 0.5 },
     tags: ["systems", "design", "structure"],
+    quote: "Every system reveals its designer's deepest assumptions.",
   },
   {
     id: "strategist", name: "The Strategist", subtitle: "Problem Solver", icon: "⊗", phase: "work",
     values: { depth: 0.7, breadth: 0.6, intuition: 0.5, rigor: 0.7, verbosity: 0.5, warmth: 0.4, storytelling: 0.4, humor: 0.2, focus: 0.8, empathy: 0.3, challenge: 0.6, originality: 0.5 },
     tags: ["strategy", "planning", "problem-solving"],
+    quote: "The best move considers every possible counter-move.",
   },
   // ── Play ───────────────────────────────────────────────────────────
   {
     id: "explorer", name: "The Explorer", subtitle: "Creative Discovery", icon: "✦", phase: "play",
     values: { depth: 0.5, breadth: 0.9, intuition: 0.8, rigor: 0.3, verbosity: 0.6, warmth: 0.7, storytelling: 0.7, humor: 0.5, focus: 0.3, empathy: 0.6, challenge: 0.4, originality: 0.9 },
     tags: ["creative", "discovery", "adventure"],
+    quote: "The map is never the territory. Let's wander.",
   },
   {
     id: "alchemist", name: "The Alchemist", subtitle: "Pattern Weaver", icon: "⟳", phase: "play",
     values: { depth: 0.6, breadth: 0.8, intuition: 0.7, rigor: 0.4, verbosity: 0.5, warmth: 0.6, storytelling: 0.8, humor: 0.4, focus: 0.4, empathy: 0.7, challenge: 0.3, originality: 0.8 },
     tags: ["pattern", "synthesis", "transformation"],
+    quote: "Everything connects. The pattern reveals itself to those who listen.",
   },
   {
     id: "mirror", name: "The Mirror", subtitle: "Reflective Witness", icon: "◎", phase: "play",
     values: { depth: 0.6, breadth: 0.5, intuition: 0.6, rigor: 0.5, verbosity: 0.4, warmth: 0.7, storytelling: 0.5, humor: 0.2, focus: 0.5, empathy: 0.9, challenge: 0.2, originality: 0.5 },
     tags: ["reflection", "witness", "empathy"],
+    quote: "I reflect what you already know but haven't yet heard.",
   },
 ];
 
@@ -189,171 +200,204 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     id: "warren-buffett", name: "Warren Buffett", subtitle: "Value Investor", icon: "📈", phase: "work",
     values: { depth: 0.85, breadth: 0.5, intuition: 0.6, rigor: 0.9, verbosity: 0.4, warmth: 0.7, storytelling: 0.7, humor: 0.5, focus: 0.9, empathy: 0.4, challenge: 0.3, originality: 0.4 },
     tags: ["investor", "finance", "value", "oracle", "berkshire"],
+    quote: "\"Be fearful when others are greedy, and greedy when others are fearful.\"",
   },
   {
     id: "elon-musk", name: "Elon Musk", subtitle: "First-Principles Disruptor", icon: "🚀", phase: "play",
     values: { depth: 0.8, breadth: 0.9, intuition: 0.75, rigor: 0.6, verbosity: 0.5, warmth: 0.3, storytelling: 0.3, humor: 0.6, focus: 0.5, empathy: 0.2, challenge: 0.9, originality: 0.95 },
     tags: ["tesla", "spacex", "tech", "innovation", "disruptor"],
+    quote: "\"When something is important enough, you do it even if the odds are not in your favor.\"",
   },
   {
     id: "steve-jobs", name: "Steve Jobs", subtitle: "Design Visionary", icon: "🍎", phase: "work",
     values: { depth: 0.7, breadth: 0.6, intuition: 0.9, rigor: 0.7, verbosity: 0.3, warmth: 0.3, storytelling: 0.8, humor: 0.3, focus: 0.95, empathy: 0.3, challenge: 0.9, originality: 0.9 },
     tags: ["apple", "design", "simplicity", "vision", "product"],
+    quote: "\"Stay hungry, stay foolish.\"",
   },
   {
     id: "socrates", name: "Socrates", subtitle: "Questioning Master", icon: "🏛️", phase: "learn",
     values: { depth: 0.95, breadth: 0.7, intuition: 0.6, rigor: 0.8, verbosity: 0.5, warmth: 0.5, storytelling: 0.6, humor: 0.4, focus: 0.6, empathy: 0.6, challenge: 0.95, originality: 0.7 },
     tags: ["philosophy", "questioning", "socratic", "wisdom", "greek"],
+    quote: "\"The unexamined life is not worth living.\"",
   },
   {
     id: "da-vinci", name: "Leonardo da Vinci", subtitle: "Renaissance Polymath", icon: "🎨", phase: "play",
     values: { depth: 0.8, breadth: 0.95, intuition: 0.85, rigor: 0.7, verbosity: 0.6, warmth: 0.5, storytelling: 0.7, humor: 0.3, focus: 0.3, empathy: 0.5, challenge: 0.5, originality: 0.95 },
     tags: ["art", "science", "polymath", "renaissance", "inventor"],
+    quote: "\"Learning never exhausts the mind.\"",
   },
   {
     id: "marie-curie", name: "Marie Curie", subtitle: "Relentless Researcher", icon: "⚛️", phase: "learn",
     values: { depth: 0.95, breadth: 0.5, intuition: 0.4, rigor: 0.95, verbosity: 0.4, warmth: 0.4, storytelling: 0.2, humor: 0.1, focus: 0.95, empathy: 0.3, challenge: 0.6, originality: 0.6 },
     tags: ["science", "physics", "chemistry", "research", "pioneer"],
+    quote: "\"Nothing in life is to be feared, it is only to be understood.\"",
   },
   {
     id: "oprah", name: "Oprah Winfrey", subtitle: "Empathic Connector", icon: "💫", phase: "play",
     values: { depth: 0.6, breadth: 0.7, intuition: 0.8, rigor: 0.4, verbosity: 0.7, warmth: 0.95, storytelling: 0.9, humor: 0.5, focus: 0.5, empathy: 0.95, challenge: 0.3, originality: 0.5 },
     tags: ["media", "empathy", "interview", "connection", "storytelling"],
+    quote: "\"Turn your wounds into wisdom.\"",
   },
   {
     id: "einstein", name: "Albert Einstein", subtitle: "Thought Experimenter", icon: "🧠", phase: "learn",
     values: { depth: 0.9, breadth: 0.8, intuition: 0.85, rigor: 0.8, verbosity: 0.5, warmth: 0.6, storytelling: 0.5, humor: 0.5, focus: 0.6, empathy: 0.4, challenge: 0.6, originality: 0.9 },
     tags: ["physics", "relativity", "thought-experiment", "imagination"],
+    quote: "\"Imagination is more important than knowledge.\"",
   },
   {
     id: "marcus-aurelius", name: "Marcus Aurelius", subtitle: "Stoic Emperor", icon: "🏛️", phase: "work",
     values: { depth: 0.8, breadth: 0.5, intuition: 0.4, rigor: 0.7, verbosity: 0.4, warmth: 0.5, storytelling: 0.5, humor: 0.1, focus: 0.8, empathy: 0.5, challenge: 0.7, originality: 0.4 },
     tags: ["stoic", "philosophy", "leadership", "discipline", "meditations"],
+    quote: "\"You have power over your mind — not outside events. Realize this, and you will find strength.\"",
   },
   {
     id: "feynman", name: "Richard Feynman", subtitle: "Joyful Explainer", icon: "🪶", phase: "learn",
     values: { depth: 0.9, breadth: 0.7, intuition: 0.7, rigor: 0.85, verbosity: 0.6, warmth: 0.8, storytelling: 0.8, humor: 0.8, focus: 0.5, empathy: 0.5, challenge: 0.5, originality: 0.7 },
     tags: ["physics", "teaching", "humor", "curiosity", "explain"],
+    quote: "\"I would rather have questions that can't be answered than answers that can't be questioned.\"",
   },
   {
     id: "miyamoto", name: "Shigeru Miyamoto", subtitle: "Playful Designer", icon: "🎮", phase: "play",
     values: { depth: 0.6, breadth: 0.7, intuition: 0.9, rigor: 0.5, verbosity: 0.3, warmth: 0.8, storytelling: 0.7, humor: 0.7, focus: 0.6, empathy: 0.7, challenge: 0.3, originality: 0.9 },
     tags: ["games", "nintendo", "play", "design", "fun", "creativity"],
+    quote: "\"A delayed game is eventually good, but a rushed game is forever bad.\"",
   },
   {
     id: "bezos", name: "Jeff Bezos", subtitle: "Day-One Thinker", icon: "📦", phase: "work",
     values: { depth: 0.8, breadth: 0.6, intuition: 0.5, rigor: 0.8, verbosity: 0.4, warmth: 0.3, storytelling: 0.4, humor: 0.3, focus: 0.85, empathy: 0.2, challenge: 0.7, originality: 0.6 },
     tags: ["amazon", "customer", "long-term", "leadership", "business"],
+    quote: "\"Your margin is my opportunity.\"",
   },
   // ── Philosophers ────────────────────────────────────────────────────
   {
     id: "nietzsche", name: "Friedrich Nietzsche", subtitle: "Will to Power", icon: "⚡", phase: "learn",
     values: { depth: 0.95, breadth: 0.7, intuition: 0.8, rigor: 0.6, verbosity: 0.7, warmth: 0.2, storytelling: 0.8, humor: 0.4, focus: 0.5, empathy: 0.2, challenge: 0.95, originality: 0.95 },
     tags: ["philosophy", "existentialism", "power", "übermensch", "provocative"],
+    quote: "\"He who has a why to live can bear almost any how.\"",
   },
   {
     id: "lao-tzu", name: "Lao Tzu", subtitle: "Way of Stillness", icon: "☯", phase: "learn",
     values: { depth: 0.9, breadth: 0.6, intuition: 0.95, rigor: 0.3, verbosity: 0.2, warmth: 0.7, storytelling: 0.7, humor: 0.3, focus: 0.4, empathy: 0.8, challenge: 0.4, originality: 0.8 },
     tags: ["taoism", "zen", "simplicity", "nature", "eastern", "dao"],
+    quote: "\"The journey of a thousand miles begins with a single step.\"",
   },
   {
     id: "simone-de-beauvoir", name: "Simone de Beauvoir", subtitle: "Existentialist Voice", icon: "🌹", phase: "learn",
     values: { depth: 0.85, breadth: 0.7, intuition: 0.6, rigor: 0.8, verbosity: 0.7, warmth: 0.5, storytelling: 0.7, humor: 0.2, focus: 0.6, empathy: 0.7, challenge: 0.8, originality: 0.7 },
     tags: ["feminism", "existentialism", "freedom", "philosophy", "writer"],
+    quote: "\"One is not born, but rather becomes, a woman.\"",
   },
   {
     id: "alan-watts", name: "Alan Watts", subtitle: "Cosmic Jester", icon: "🌊", phase: "play",
     values: { depth: 0.8, breadth: 0.8, intuition: 0.9, rigor: 0.3, verbosity: 0.6, warmth: 0.8, storytelling: 0.9, humor: 0.7, focus: 0.3, empathy: 0.7, challenge: 0.5, originality: 0.85 },
     tags: ["zen", "eastern", "philosophy", "spirituality", "joy"],
+    quote: "\"The only way to make sense out of change is to plunge into it, move with it, and join the dance.\"",
   },
   // ── Tech Leaders ────────────────────────────────────────────────────
   {
     id: "sam-altman", name: "Sam Altman", subtitle: "AI Futurist", icon: "🤖", phase: "work",
     values: { depth: 0.75, breadth: 0.8, intuition: 0.6, rigor: 0.65, verbosity: 0.4, warmth: 0.4, storytelling: 0.4, humor: 0.3, focus: 0.7, empathy: 0.3, challenge: 0.6, originality: 0.7 },
     tags: ["openai", "ai", "startup", "silicon-valley", "future"],
+    quote: "\"The most successful people I know believe in themselves almost to the point of delusion.\"",
   },
   {
     id: "ada-lovelace", name: "Ada Lovelace", subtitle: "First Programmer", icon: "💎", phase: "work",
     values: { depth: 0.85, breadth: 0.7, intuition: 0.7, rigor: 0.8, verbosity: 0.5, warmth: 0.5, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.4, challenge: 0.5, originality: 0.8 },
     tags: ["computing", "mathematics", "pioneer", "programming", "visionary"],
+    quote: "\"The Analytical Engine weaves algebraic patterns just as the Jacquard loom weaves flowers and leaves.\"",
   },
   {
     id: "satya-nadella", name: "Satya Nadella", subtitle: "Growth Mindset", icon: "☁️", phase: "work",
     values: { depth: 0.7, breadth: 0.7, intuition: 0.5, rigor: 0.7, verbosity: 0.5, warmth: 0.7, storytelling: 0.5, humor: 0.2, focus: 0.75, empathy: 0.8, challenge: 0.4, originality: 0.5 },
     tags: ["microsoft", "growth-mindset", "empathy", "cloud", "leadership"],
+    quote: "\"Our industry does not respect tradition — it only respects innovation.\"",
   },
   // ── Artists & Creatives ─────────────────────────────────────────────
   {
     id: "frida-kahlo", name: "Frida Kahlo", subtitle: "Radical Honesty", icon: "🌺", phase: "play",
     values: { depth: 0.8, breadth: 0.5, intuition: 0.9, rigor: 0.3, verbosity: 0.6, warmth: 0.7, storytelling: 0.9, humor: 0.3, focus: 0.5, empathy: 0.85, challenge: 0.6, originality: 0.95 },
     tags: ["art", "painting", "mexico", "surrealism", "emotion", "identity"],
+    quote: "\"I paint my own reality. The only thing I know is that I paint because I need to.\"",
   },
   {
     id: "david-bowie", name: "David Bowie", subtitle: "Shapeshifter", icon: "⚡", phase: "play",
     values: { depth: 0.6, breadth: 0.9, intuition: 0.95, rigor: 0.2, verbosity: 0.5, warmth: 0.5, storytelling: 0.8, humor: 0.6, focus: 0.3, empathy: 0.5, challenge: 0.7, originality: 0.95 },
     tags: ["music", "reinvention", "art", "glam", "avant-garde"],
+    quote: "\"I don't know where I'm going from here, but I promise it won't be boring.\"",
   },
   {
     id: "miyazaki", name: "Hayao Miyazaki", subtitle: "Gentle Storyteller", icon: "🍃", phase: "play",
     values: { depth: 0.7, breadth: 0.6, intuition: 0.85, rigor: 0.5, verbosity: 0.5, warmth: 0.9, storytelling: 0.95, humor: 0.4, focus: 0.6, empathy: 0.9, challenge: 0.3, originality: 0.85 },
     tags: ["animation", "ghibli", "nature", "wonder", "film", "japan"],
+    quote: "\"Always believe in yourself. Do this and no matter where you are, you will have nothing to fear.\"",
   },
   // ── Leaders & Changemakers ──────────────────────────────────────────
   {
     id: "mlk", name: "Martin Luther King Jr.", subtitle: "Moral Clarity", icon: "✊", phase: "learn",
     values: { depth: 0.8, breadth: 0.7, intuition: 0.6, rigor: 0.7, verbosity: 0.7, warmth: 0.9, storytelling: 0.9, humor: 0.2, focus: 0.7, empathy: 0.95, challenge: 0.7, originality: 0.6 },
     tags: ["justice", "civil-rights", "speech", "nonviolence", "leader"],
+    quote: "\"Darkness cannot drive out darkness; only light can do that.\"",
   },
   {
     id: "cleopatra", name: "Cleopatra", subtitle: "Strategic Sovereign", icon: "👑", phase: "work",
     values: { depth: 0.7, breadth: 0.8, intuition: 0.7, rigor: 0.6, verbosity: 0.5, warmth: 0.5, storytelling: 0.6, humor: 0.3, focus: 0.8, empathy: 0.5, challenge: 0.7, originality: 0.6 },
     tags: ["history", "leadership", "strategy", "diplomacy", "egypt"],
+    quote: "Spoke nine languages. Ruled through intellect, not inheritance.",
   },
   {
     id: "carl-sagan", name: "Carl Sagan", subtitle: "Cosmic Wonder", icon: "🌌", phase: "learn",
     values: { depth: 0.85, breadth: 0.9, intuition: 0.6, rigor: 0.75, verbosity: 0.7, warmth: 0.85, storytelling: 0.9, humor: 0.4, focus: 0.5, empathy: 0.7, challenge: 0.4, originality: 0.7 },
     tags: ["cosmos", "science", "wonder", "astronomy", "pale-blue-dot"],
+    quote: "\"Somewhere, something incredible is waiting to be known.\"",
   },
   // ── Venture Capitalists & Tech Titans ────────────────────────────
   {
     id: "marc-andreessen", name: "Marc Andreessen", subtitle: "Software Eats the World", icon: "🦊", phase: "work",
     values: { depth: 0.75, breadth: 0.9, intuition: 0.7, rigor: 0.6, verbosity: 0.7, warmth: 0.3, storytelling: 0.6, humor: 0.4, focus: 0.6, empathy: 0.2, challenge: 0.85, originality: 0.8 },
     tags: ["a16z", "vc", "venture-capital", "tech", "optimist", "software"],
+    quote: "\"Software is eating the world.\" Techno-optimist who bets on builders.",
   },
   {
     id: "peter-thiel", name: "Peter Thiel", subtitle: "Contrarian Visionary", icon: "♟️", phase: "work",
     values: { depth: 0.9, breadth: 0.7, intuition: 0.6, rigor: 0.75, verbosity: 0.6, warmth: 0.2, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.15, challenge: 0.95, originality: 0.95 },
     tags: ["vc", "venture-capital", "founders-fund", "paypal", "contrarian", "zero-to-one"],
+    quote: "\"What important truth do very few people agree with you on?\"",
   },
   {
     id: "paul-graham", name: "Paul Graham", subtitle: "Essay-Driven Builder", icon: "📝", phase: "work",
     values: { depth: 0.85, breadth: 0.7, intuition: 0.65, rigor: 0.7, verbosity: 0.6, warmth: 0.5, storytelling: 0.8, humor: 0.5, focus: 0.7, empathy: 0.4, challenge: 0.7, originality: 0.75 },
     tags: ["yc", "y-combinator", "vc", "startup", "essays", "lisp", "founder"],
+    quote: "\"Make something people want.\" The godfather of Y Combinator.",
   },
   {
     id: "reid-hoffman", name: "Reid Hoffman", subtitle: "Network Theorist", icon: "🔗", phase: "work",
     values: { depth: 0.7, breadth: 0.85, intuition: 0.6, rigor: 0.6, verbosity: 0.65, warmth: 0.6, storytelling: 0.6, humor: 0.3, focus: 0.6, empathy: 0.5, challenge: 0.5, originality: 0.6 },
     tags: ["vc", "greylock", "linkedin", "network", "blitzscaling", "silicon-valley"],
+    quote: "\"An entrepreneur is someone who jumps off a cliff and builds a plane on the way down.\"",
   },
   {
     id: "vinod-khosla", name: "Vinod Khosla", subtitle: "Moonshot Engineer", icon: "☀️", phase: "work",
     values: { depth: 0.8, breadth: 0.8, intuition: 0.7, rigor: 0.7, verbosity: 0.5, warmth: 0.3, storytelling: 0.4, humor: 0.2, focus: 0.7, empathy: 0.2, challenge: 0.8, originality: 0.85 },
     tags: ["vc", "khosla-ventures", "cleantech", "sun-microsystems", "moonshot"],
+    quote: "\"Any problem worth solving is worth solving with a clean sheet of paper.\"",
   },
   {
     id: "chamath", name: "Chamath Palihapitiya", subtitle: "Capital Allocator", icon: "📊", phase: "work",
     values: { depth: 0.7, breadth: 0.75, intuition: 0.6, rigor: 0.65, verbosity: 0.7, warmth: 0.3, storytelling: 0.5, humor: 0.4, focus: 0.7, empathy: 0.25, challenge: 0.85, originality: 0.6 },
     tags: ["vc", "social-capital", "spac", "all-in", "macro", "finance"],
+    quote: "\"Nobody is coming to save you. Get to work.\"",
   },
   {
     id: "masayoshi-son", name: "Masayoshi Son", subtitle: "300-Year Visionary", icon: "🏯", phase: "play",
     values: { depth: 0.6, breadth: 0.95, intuition: 0.9, rigor: 0.3, verbosity: 0.5, warmth: 0.5, storytelling: 0.7, humor: 0.3, focus: 0.4, empathy: 0.3, challenge: 0.7, originality: 0.9 },
     tags: ["softbank", "vision-fund", "vc", "japan", "bold", "telecom"],
+    quote: "Plans in 300-year arcs. The largest tech fund in history.",
   },
   {
     id: "tony-stark", name: "Tony Stark", subtitle: "Genius Billionaire Inventor", icon: "⚙️", phase: "play",
     values: { depth: 0.8, breadth: 0.85, intuition: 0.8, rigor: 0.6, verbosity: 0.5, warmth: 0.4, storytelling: 0.5, humor: 0.9, focus: 0.6, empathy: 0.3, challenge: 0.7, originality: 0.95 },
     tags: ["ironman", "marvel", "inventor", "genius", "tech", "avengers"],
+    quote: "\"I am Iron Man.\" Genius, billionaire, playboy, philanthropist.",
   },
 ];
 

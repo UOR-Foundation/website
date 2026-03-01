@@ -160,6 +160,81 @@ function ChannelFader({ label, value, onChange, hue, lowLabel, highLabel }: {
   );
 }
 
+// ── Persona Card with hover quote ────────────────────────────────────
+
+function PersonaCard({ preset: p, active, hue: pH, accentColor, onSelect }: {
+  preset: DimensionPreset; active: boolean; hue: number; accentColor: string;
+  onSelect: (p: DimensionPreset) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onPointerDown={() => onSelect(p)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-100 text-left active:scale-[0.98]"
+        style={{
+          background: active ? `hsla(${pH}, 22%, 16%, 0.7)` : hovered ? `hsla(${pH}, 15%, 13%, 0.4)` : "transparent",
+          border: active ? `1px solid hsla(${pH}, 40%, 45%, 0.3)` : "1px solid transparent",
+        }}
+      >
+        <span className="text-[16px] flex-shrink-0" style={{
+          filter: active ? `drop-shadow(0 0 4px hsla(${pH}, 50%, 50%, 0.3))` : "none",
+        }}>{p.icon}</span>
+        <div className="flex-1 min-w-0">
+          <span className="text-[12px] font-semibold block truncate"
+            style={{ color: active ? HW.text : HW.textSub }}>{p.name}</span>
+          <span className="text-[9px] block truncate"
+            style={{ color: active ? HW.textSub : HW.textDim }}>{p.subtitle}</span>
+        </div>
+        {active && <LED on size={4} color={accentColor} />}
+      </button>
+
+      {/* Quote tooltip on hover */}
+      <AnimatePresence>
+        {hovered && p.quote && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 2, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+            style={{
+              bottom: "calc(100% + 6px)",
+              width: "max(180px, 100%)",
+              maxWidth: "220px",
+            }}
+          >
+            <div
+              className="rounded-lg px-3 py-2.5 shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, hsla(${pH}, 18%, 12%, 0.95), hsla(${pH}, 12%, 8%, 0.95))`,
+                border: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <p className="text-[10px] leading-relaxed italic"
+                style={{ color: `hsla(${pH}, 20%, 78%, 0.9)`, fontFamily: HW.fontDisplay }}>
+                {p.quote}
+              </p>
+              {/* Tiny arrow */}
+              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 rotate-45"
+                style={{
+                  background: `hsla(${pH}, 12%, 8%, 0.95)`,
+                  borderRight: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
+                  borderBottom: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Deck Search Panel ───────────────────────────────────────────────
 
 function DeckSearchPanel({ side, accentColor, onSelect, selectedId, cloudPresets, onSavePreset }: {
@@ -249,23 +324,7 @@ function DeckSearchPanel({ side, accentColor, onSelect, selectedId, cloudPresets
                   const active = selectedId === p.id;
                   const pH = presetHue(p);
                   return (
-                    <button key={p.id} onPointerDown={() => onSelect(p)}
-                      className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-100 text-left active:scale-[0.98]"
-                      style={{
-                        background: active ? `hsla(${pH}, 22%, 16%, 0.7)` : "transparent",
-                        border: active ? `1px solid hsla(${pH}, 40%, 45%, 0.3)` : "1px solid transparent",
-                      }}>
-                      <span className="text-[16px] flex-shrink-0" style={{
-                        filter: active ? `drop-shadow(0 0 4px hsla(${pH}, 50%, 50%, 0.3))` : "none",
-                      }}>{p.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[12px] font-semibold block truncate"
-                          style={{ color: active ? HW.text : HW.textSub }}>{p.name}</span>
-                        <span className="text-[9px] block truncate"
-                          style={{ color: active ? HW.textSub : HW.textDim }}>{p.subtitle}</span>
-                      </div>
-                      {active && <LED on size={4} color={accentColor} />}
-                    </button>
+                    <PersonaCard key={p.id} preset={p} active={active} hue={pH} accentColor={accentColor} onSelect={onSelect} />
                   );
                 })}
               </div>
