@@ -11,6 +11,21 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
+export interface PrivacyRules {
+  name?: boolean;
+  email?: boolean;
+  avatar?: boolean;
+  bio?: boolean;
+  handle?: boolean;
+  canonicalId?: boolean;
+  cid?: boolean;
+  ipv6?: boolean;
+  glyph?: boolean;
+  ceremonyCid?: boolean;
+  trustNode?: boolean;
+  [key: string]: boolean | undefined;
+}
+
 interface Profile {
   id: string;
   displayName: string;
@@ -29,6 +44,7 @@ interface Profile {
   uorIpv6: string | null;
   uorCid: string | null;
   claimedAt: string | null;
+  privacyRules: PrivacyRules | null;
 }
 
 interface AuthState {
@@ -57,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid, claimed_at")
+      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid, claimed_at, privacy_rules")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -80,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         uorIpv6: data.uor_ipv6,
         uorCid: data.uor_cid,
         claimedAt: data.claimed_at,
+        privacyRules: data.privacy_rules as PrivacyRules | null,
       });
     } else {
       setProfile(null);

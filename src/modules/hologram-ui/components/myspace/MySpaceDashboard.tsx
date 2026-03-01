@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
+import PrivacySettingsPanel from "./PrivacySettingsPanel";
 
 interface MySpaceDashboardProps {
   onClose: () => void;
@@ -29,6 +30,7 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
   const [editBio, setEditBio] = useState(profile?.bio ?? "");
   const [editHandle, setEditHandle] = useState(profile?.handle ?? "");
   const [saving, setSaving] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +89,10 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
     const d = profile?.claimedAt ? new Date(profile.claimedAt) : new Date();
     return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   }, [profile?.claimedAt]);
+
+  if (privacyOpen) {
+    return <PrivacySettingsPanel onBack={() => setPrivacyOpen(false)} />;
+  }
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: `${KP.dim} transparent` }}>
@@ -355,10 +361,14 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
           grant it selectively through zero-knowledge proofs. They verify your claims
           without ever seeing the underlying data.
         </p>
-        <div className="flex items-center gap-2 mt-4 cursor-pointer group" style={{ color: KP.gold }}>
+        <button
+          onClick={() => setPrivacyOpen(true)}
+          className="flex items-center gap-2 mt-4 cursor-pointer group"
+          style={{ color: KP.gold, background: "none", border: "none" }}
+        >
           <span className="text-sm font-medium group-hover:opacity-80 transition-opacity">Privacy settings</span>
           <ChevronRight className="w-3.5 h-3.5" />
-        </div>
+        </button>
       </div>
 
       {/* Bottom spacer */}
