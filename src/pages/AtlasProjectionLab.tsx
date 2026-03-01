@@ -23,6 +23,7 @@ import {
   tokenize,
   detokenize,
   baselineInference,
+  computePerplexity,
   type ModelLoadStatus,
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
@@ -46,10 +47,14 @@ export default function AtlasProjectionLab() {
   // Results
   const [report, setReport] = useState<PipelineReport | null>(null);
   const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
-  const [baselineResult, setBaselineResult] = useState<{ text: string; timeMs: number; tokensPerSecond: number } | null>(null);
+  const [baselineResult, setBaselineResult] = useState<{ text: string; timeMs: number; tokensPerSecond: number; tokenIds: number[] } | null>(null);
   const [prompt, setPrompt] = useState("The universe is made of");
   const [generatedText, setGeneratedText] = useState<string>("");
   const [isRunningBaseline, setIsRunningBaseline] = useState(false);
+  const [perplexityStats, setPerplexityStats] = useState<{
+    atlas: { perplexity: number; avgNLL: number } | null;
+    baseline: { perplexity: number; avgNLL: number } | null;
+  }>({ atlas: null, baseline: null });
 
   // Refs
   const loadedModelRef = useRef<LoadedHFModel | null>(null);
@@ -157,6 +162,7 @@ export default function AtlasProjectionLab() {
     }
 
     addLog(`Generating from prompt: "${prompt}"`);
+    setPerplexityStats({ atlas: null, baseline: null });
 
     // Tokenize
     let tokenIds: number[];
@@ -203,6 +209,29 @@ export default function AtlasProjectionLab() {
           ? (baseline.timeMs / result.totalTimeMs).toFixed(1) 
           : "N/A";
         addLog(`  ⚡ Coherence speedup: ${speedup}× over standard attention`);
+
+        // Compute perplexity for both outputs
+        addLog("📊 Computing perplexity (evaluating output quality)...");
+        const atlasFullSeq = [...tokenIds, ...result.tokenIds];
+        const [atlasPpl, baselinePpl] = await Promise.all([
+          computePerplexity(loadedModelRef.current!, atlasFullSeq),
+          computePerplexity(loadedModelRef.current!, baseline.tokenIds),
+        ]);
+
+        setPerplexityStats({
+          atlas: { perplexity: atlasPpl.perplexity, avgNLL: atlasPpl.avgNLL },
+          baseline: { perplexity: baselinePpl.perplexity, avgNLL: baselinePpl.avgNLL },
+        });
+
+        addLog(`  📊 Atlas PPL: ${atlasPpl.perplexity.toFixed(1)} (NLL: ${atlasPpl.avgNLL.toFixed(3)}, ${atlasPpl.tokenCount} tokens)`);
+        addLog(`  📊 Baseline PPL: ${baselinePpl.perplexity.toFixed(1)} (NLL: ${baselinePpl.avgNLL.toFixed(3)}, ${baselinePpl.tokenCount} tokens)`);
+
+        const pplRatio = atlasPpl.perplexity / Math.max(baselinePpl.perplexity, 0.01);
+        if (pplRatio < 1.5) {
+          addLog(`  ✓ Atlas quality within ${((pplRatio - 1) * 100).toFixed(0)}% of transformer baseline`);
+        } else {
+          addLog(`  ⚠ Atlas perplexity ${pplRatio.toFixed(1)}× higher than baseline`);
+        }
       } catch (e) {
         addLog(`  Baseline comparison skipped: ${e instanceof Error ? e.message : String(e)}`);
       } finally {
@@ -414,11 +443,69 @@ export default function AtlasProjectionLab() {
 
         {/* Baseline Comparison */}
         {baselineResult && inferenceResult && (
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <IconChartBar className="w-4 h-4" />
               Coherence vs Standard Transformer
             </h2>
+
+            {/* Perplexity Summary Bar */}
+            {perplexityStats.atlas && perplexityStats.baseline && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase">Perplexity Comparison</span>
+                  <span className="text-xs text-muted-foreground">(lower = more coherent)</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <MetricCard
+                    label="Atlas PPL"
+                    value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)}
+                  />
+                  <MetricCard
+                    label="Baseline PPL"
+                    value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)}
+                  />
+                  <MetricCard
+                    label="Quality Ratio"
+                    value={
+                      perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
+                        ? "N/A"
+                        : `${(perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity).toFixed(2)}×`
+                    }
+                  />
+                </div>
+                {/* Visual perplexity bar comparison */}
+                {perplexityStats.atlas.perplexity !== Infinity && perplexityStats.baseline.perplexity !== Infinity && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-16">Atlas</span>
+                      <div className="flex-1 h-3 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{
+                            width: `${Math.min(100, (perplexityStats.baseline.perplexity / Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-foreground w-12 text-right">{perplexityStats.atlas.perplexity.toFixed(1)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-16">Baseline</span>
+                      <div className="flex-1 h-3 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-accent transition-all"
+                          style={{
+                            width: `${Math.min(100, (perplexityStats.atlas.perplexity / Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-foreground w-12 text-right">{perplexityStats.baseline.perplexity.toFixed(1)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <h3 className="text-xs font-semibold text-primary">Atlas Coherence (O(96))</h3>
@@ -428,6 +515,12 @@ export default function AtlasProjectionLab() {
                   <MetricCard label="Time" value={`${inferenceResult.totalTimeMs.toFixed(0)}ms`} />
                   <MetricCard label="H-score" value={inferenceResult.meanHScore.toFixed(3)} />
                 </div>
+                {perplexityStats.atlas && (
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <MetricCard label="Perplexity" value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)} />
+                    <MetricCard label="Avg NLL" value={perplexityStats.atlas.avgNLL === Infinity ? "∞" : perplexityStats.atlas.avgNLL.toFixed(3)} />
+                  </div>
+                )}
               </div>
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <h3 className="text-xs font-semibold text-muted-foreground">Standard Attention (O(N²))</h3>
@@ -437,6 +530,12 @@ export default function AtlasProjectionLab() {
                   <MetricCard label="Time" value={`${baselineResult.timeMs.toFixed(0)}ms`} />
                   <MetricCard label="Speedup" value={`${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×`} />
                 </div>
+                {perplexityStats.baseline && (
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <MetricCard label="Perplexity" value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)} />
+                    <MetricCard label="Avg NLL" value={perplexityStats.baseline.avgNLL === Infinity ? "∞" : perplexityStats.baseline.avgNLL.toFixed(3)} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
