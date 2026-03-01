@@ -1,14 +1,14 @@
 /**
- * ConvergenceChat — The Quantum Reasoning Interface
- * ══════════════════════════════════════════════════
+ * Queue — The Coherence Reasoning Interface
+ * ══════════════════════════════════════════
  *
- * A fundamentally different interaction. Not a chatbox —
- * a convergence field where thoughts become understanding.
+ * A fundamentally different interaction. Not a chatbox.
+ * A space where thoughts become understanding.
  *
  * Design philosophy:
  *   - The input is a thought, not a prompt
  *   - The pipeline is visible as organic process, not loading spinner
- *   - The answer emerges — it doesn't "arrive"
+ *   - The answer emerges. It doesn't "arrive"
  *   - Every exchange leaves a coherence trace
  *   - It feels like talking to yourself, but wiser
  *
@@ -437,7 +437,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
             className="text-[11px] tracking-[0.25em] uppercase"
             style={{ color: "hsla(38, 15%, 65%, 0.3)" }}
           >
-            Convergence
+            Queue
           </span>
         </div>
 
@@ -498,8 +498,8 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
                 className="text-[14px] max-w-md leading-relaxed"
                 style={{ color: "hsla(30, 10%, 55%, 0.5)" }}
               >
-                This is not a prompt. It's a thought. Express it naturally —
-                type or {voice.isSttAvailable ? "speak" : "write"}, and the reasoning will converge around it.
+                This is not a prompt. It's a thought. Express it naturally,
+                and the understanding will find its shape.
               </p>
             </motion.div>
           )}
@@ -547,146 +547,233 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
                   </div>
                 )}
 
-                {/* The understanding — left-aligned, emerges */}
+                {/* The understanding — emerges with presence */}
                 {ex.understanding && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex gap-2"
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex gap-3"
                   >
-                    {/* Coherence indicator dot */}
-                    <div
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2"
-                      style={{
-                        background: ex.meta?.grade
-                          ? gradeColor(ex.meta.grade)
-                          : "hsla(38, 40%, 55%, 0.4)",
-                      }}
-                    />
+                    {/* Coherence thread — a living line, not a dot */}
+                    <div className="flex flex-col items-center flex-shrink-0 pt-1">
+                      <div
+                        className="w-[3px] rounded-full"
+                        style={{
+                          height: "100%",
+                          minHeight: 24,
+                          background: ex.meta?.grade
+                            ? `linear-gradient(to bottom, ${gradeColor(ex.meta.grade)}, hsla(38, 20%, 30%, 0.08))`
+                            : "linear-gradient(to bottom, hsla(38, 40%, 55%, 0.3), hsla(38, 20%, 30%, 0.05))",
+                          borderRadius: 2,
+                        }}
+                      />
+                    </div>
 
                     <div className="min-w-0 flex-1">
-                      {/* Markdown response */}
+                      {/* Markdown response — human-first formatting */}
                       <div
-                        className="text-[14px] leading-[1.9] prose prose-invert max-w-none"
+                        className="text-[15px] leading-[2] prose prose-invert max-w-none"
                         style={{
-                          color: "hsl(30, 12%, 72%)",
+                          color: "hsl(30, 12%, 74%)",
                           fontFamily: C.font,
-                          letterSpacing: "0.01em",
-                          ['--tw-prose-headings' as string]: "hsl(38, 30%, 70%)",
-                          ['--tw-prose-bold' as string]: "hsl(38, 20%, 82%)",
-                          ['--tw-prose-code' as string]: "hsl(38, 60%, 60%)",
-                          ['--tw-prose-links' as string]: "hsl(38, 60%, 60%)",
+                          letterSpacing: "0.012em",
+                          ['--tw-prose-headings' as string]: "hsl(38, 25%, 75%)",
+                          ['--tw-prose-bold' as string]: "hsl(38, 18%, 82%)",
+                          ['--tw-prose-code' as string]: "hsl(38, 50%, 62%)",
+                          ['--tw-prose-links' as string]: "hsl(38, 50%, 62%)",
                           ['--tw-prose-bullets' as string]: C.goldMuted,
                         }}
                       >
                         <ReactMarkdown
                           components={{
                             p: ({ children }) => (
-                              <p className="mb-3 last:mb-0" style={{ lineHeight: "1.9" }}>{children}</p>
+                              <p
+                                className="mb-4 last:mb-0"
+                                style={{ lineHeight: "2", fontWeight: 350 }}
+                              >
+                                {children}
+                              </p>
                             ),
                             strong: ({ children }) => (
-                              <strong style={{ color: "hsl(38, 25%, 82%)", fontWeight: 500 }}>{children}</strong>
+                              <strong
+                                style={{
+                                  color: "hsl(38, 22%, 84%)",
+                                  fontWeight: 450,
+                                  letterSpacing: "0.01em",
+                                }}
+                              >
+                                {children}
+                              </strong>
                             ),
                             em: ({ children }) => (
-                              <em style={{ color: "hsl(38, 40%, 65%)", fontStyle: "italic" }}>{children}</em>
+                              <em
+                                style={{
+                                  color: "hsl(30, 18%, 68%)",
+                                  fontFamily: C.fontDisplay,
+                                  fontWeight: 300,
+                                  letterSpacing: "0.02em",
+                                }}
+                              >
+                                {children}
+                              </em>
                             ),
                             h1: ({ children }) => (
                               <h1
-                                className="text-[20px] font-normal tracking-wide mt-6 mb-2"
-                                style={{ fontFamily: C.fontDisplay, color: "hsl(38, 35%, 68%)" }}
+                                className="text-[22px] font-light tracking-wide mt-8 mb-3"
+                                style={{
+                                  fontFamily: C.fontDisplay,
+                                  color: "hsl(38, 30%, 72%)",
+                                  fontWeight: 300,
+                                  lineHeight: 1.4,
+                                }}
                               >
                                 {children}
                               </h1>
                             ),
                             h2: ({ children }) => (
                               <h2
-                                className="text-[17px] font-normal tracking-wide mt-5 mb-2"
-                                style={{ fontFamily: C.fontDisplay, color: "hsl(38, 30%, 65%)" }}
+                                className="text-[18px] font-light tracking-wide mt-7 mb-2.5"
+                                style={{
+                                  fontFamily: C.fontDisplay,
+                                  color: "hsl(38, 25%, 68%)",
+                                  fontWeight: 300,
+                                  lineHeight: 1.5,
+                                }}
                               >
                                 {children}
                               </h2>
                             ),
+                            h3: ({ children }) => (
+                              <h3
+                                className="text-[16px] tracking-[0.06em] uppercase mt-6 mb-2"
+                                style={{
+                                  fontFamily: C.font,
+                                  color: "hsl(30, 15%, 58%)",
+                                  fontWeight: 500,
+                                  letterSpacing: "0.08em",
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                {children}
+                              </h3>
+                            ),
                             ul: ({ children }) => (
-                              <ul className="space-y-2 my-3 pl-1" style={{ listStyle: "none" }}>{children}</ul>
+                              <ul className="space-y-3 my-4 pl-0" style={{ listStyle: "none" }}>{children}</ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="space-y-3 my-4 pl-0 counter-reset-item" style={{ listStyle: "none" }}>{children}</ol>
                             ),
                             li: ({ children }) => (
-                              <li className="flex gap-2.5 items-start">
-                                <span className="flex-shrink-0 mt-[10px] text-[4px]" style={{ color: C.goldMuted }}>●</span>
-                                <span style={{ lineHeight: "1.85" }}>{children}</span>
+                              <li className="flex gap-3 items-start pl-1">
+                                <span
+                                  className="flex-shrink-0 mt-[11px] w-1 h-1 rounded-full"
+                                  style={{
+                                    background: "hsla(38, 35%, 55%, 0.35)",
+                                  }}
+                                />
+                                <span style={{ lineHeight: "2" }}>{children}</span>
                               </li>
+                            ),
+                            blockquote: ({ children }) => (
+                              <blockquote
+                                className="my-5 pl-4 py-1"
+                                style={{
+                                  borderLeft: "2px solid hsla(38, 30%, 50%, 0.15)",
+                                  color: "hsl(30, 15%, 65%)",
+                                  fontFamily: C.fontDisplay,
+                                  fontStyle: "italic",
+                                  fontWeight: 300,
+                                  letterSpacing: "0.01em",
+                                  lineHeight: "1.9",
+                                }}
+                              >
+                                {children}
+                              </blockquote>
                             ),
                             code: ({ children, className }) => {
                               if (className?.includes("language-")) {
                                 return (
                                   <pre
-                                    className="my-3 p-3 rounded-lg overflow-x-auto text-[13px]"
+                                    className="my-4 p-4 rounded-xl overflow-x-auto text-[13px]"
                                     style={{
-                                      background: "hsla(25, 8%, 10%, 0.9)",
-                                      border: "1px solid hsla(38, 15%, 25%, 0.1)",
+                                      background: "hsla(25, 8%, 8%, 0.9)",
+                                      border: "1px solid hsla(38, 15%, 22%, 0.12)",
+                                      lineHeight: 1.7,
                                     }}
                                   >
-                                    <code style={{ color: "hsl(38, 30%, 70%)" }}>{children}</code>
+                                    <code style={{ color: "hsl(38, 25%, 68%)" }}>{children}</code>
                                   </pre>
                                 );
                               }
                               return (
                                 <code
-                                  className="px-1.5 py-0.5 rounded text-[13px]"
+                                  className="px-1.5 py-0.5 rounded-md text-[13px]"
                                   style={{
-                                    background: "hsla(25, 8%, 15%, 0.6)",
-                                    color: "hsl(38, 60%, 60%)",
+                                    background: "hsla(25, 8%, 13%, 0.7)",
+                                    color: "hsl(38, 45%, 62%)",
+                                    fontWeight: 400,
                                   }}
                                 >
                                   {children}
                                 </code>
                               );
                             },
+                            hr: () => (
+                              <div className="my-6 flex justify-center">
+                                <div
+                                  className="w-8 h-[1px]"
+                                  style={{ background: "hsla(38, 20%, 45%, 0.12)" }}
+                                />
+                              </div>
+                            ),
                           }}
                         >
                           {ex.understanding}
                         </ReactMarkdown>
                       </div>
 
-                      {/* Convergence trace — subtle, at the bottom */}
+                      {/* Coherence trace — quiet, at the bottom */}
                       {ex.meta && ex.pipeline.stage === "converged" && (
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ duration: 0.8, delay: 0.5 }}
-                          className="flex items-center gap-3 mt-3 pt-2"
-                          style={{ borderTop: "1px solid hsla(38, 15%, 25%, 0.06)" }}
+                          transition={{ duration: 1, delay: 0.6 }}
+                          className="flex items-center gap-3 mt-4 pt-3"
+                          style={{ borderTop: "1px solid hsla(38, 15%, 25%, 0.05)" }}
                         >
                           {ex.meta.grade && (
                             <span
-                              className="text-[9px] font-mono tracking-wider"
-                              style={{ color: gradeColor(ex.meta.grade) }}
+                              className="text-[9px] tracking-[0.15em] uppercase"
+                              style={{
+                                fontFamily: C.font,
+                                color: gradeColor(ex.meta.grade),
+                              }}
                             >
-                              {ex.meta.grade}
-                            </span>
-                          )}
-                          {ex.meta.curvature != null && (
-                            <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 50%, 0.35)" }}>
-                              κ {(ex.meta.curvature * 100).toFixed(0)}%
+                              Grade {ex.meta.grade}
                             </span>
                           )}
                           {ex.meta.converged != null && (
-                            <span className="text-[9px] font-mono" style={{ color: ex.meta.converged ? "hsla(152, 40%, 55%, 0.4)" : "hsla(30, 20%, 50%, 0.3)" }}>
-                              {ex.meta.converged ? "converged" : "open"}
-                            </span>
-                          )}
-                          {ex.meta.reward != null && (
-                            <span className="text-[9px] font-mono" style={{ color: ex.meta.reward > 0 ? "hsla(152, 40%, 55%, 0.4)" : "hsla(0, 30%, 50%, 0.3)" }}>
-                              Δ{ex.meta.reward > 0 ? "+" : ""}{ex.meta.reward.toFixed(3)}
-                            </span>
-                          )}
-                          {ex.meta.habitFired && (
-                            <span className="text-[9px] font-mono" style={{ color: "hsla(38, 45%, 60%, 0.5)" }}>
-                              ⚡ habit
+                            <span
+                              className="text-[9px] tracking-[0.1em]"
+                              style={{
+                                fontFamily: C.font,
+                                color: ex.meta.converged
+                                  ? "hsla(152, 35%, 55%, 0.35)"
+                                  : "hsla(30, 15%, 50%, 0.25)",
+                              }}
+                            >
+                              {ex.meta.converged ? "settled" : "open"}
                             </span>
                           )}
                           {ex.meta.inferenceMs != null && (
-                            <span className="text-[9px] font-mono" style={{ color: "hsla(30, 10%, 45%, 0.25)" }}>
+                            <span
+                              className="text-[9px] tracking-wider"
+                              style={{
+                                fontFamily: C.font,
+                                color: "hsla(30, 10%, 45%, 0.2)",
+                              }}
+                            >
                               {ex.meta.inferenceMs < 1000
                                 ? `${ex.meta.inferenceMs}ms`
                                 : `${(ex.meta.inferenceMs / 1000).toFixed(1)}s`}
@@ -747,7 +834,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isConverging ? "Converging…" : greeting}
+                placeholder={isConverging ? "Thinking…" : greeting}
                 disabled={isConverging}
                 rows={1}
                 className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-20 leading-relaxed block"
@@ -768,7 +855,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
                   className="text-[10px] tracking-wider"
                   style={{ color: "hsla(38, 15%, 50%, 0.2)" }}
                 >
-                  coherence · quantum
+                  coherence · queue
                 </span>
               </div>
 
@@ -888,7 +975,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
               className="text-[9px] tracking-[0.3em] uppercase"
               style={{ color: "hsla(38, 10%, 45%, 0.15)" }}
             >
-              Powered by Hologram · Coherence-based reasoning
+              Powered by Hologram · Coherence reasoning
             </span>
           </div>
         </div>
