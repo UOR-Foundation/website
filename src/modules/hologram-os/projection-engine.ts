@@ -26,6 +26,10 @@ import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from 
 import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
+import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
+
+// Re-export surface types for consumers
+export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -329,6 +333,7 @@ export class KernelProjector {
   private config: KernelConfig = { ...DEFAULT_CONFIG };
   private tickCount = 0;
   private prescience = getPrescienceEngine();
+  private surface: HolographicSurface = getHolographicSurface();
   private widgetRegistry = new Map<WidgetType, number>(); // widget → PID
   private bootEvents: BootEvent[] = [];
   private listeners = new Set<(frame: ProjectionFrame) => void>();
@@ -457,7 +462,14 @@ export class KernelProjector {
     if (this.dirty || elapsed >= interval) {
       this.dirty = false;
       this.lastFrameTime = now;
-      this.emitFrame(this.projectFrame());
+      const frame = this.projectFrame();
+
+      // ── Holographic Surface Transit ──────────────────────────────────
+      // Every frame projection passes through the surface
+      const prevH = this.surface.currentCoherence();
+      this.surface.project(prevH, frame.systemCoherence.meanH, "frame:tick");
+
+      this.emitFrame(frame);
     }
 
     this.streamRafId = requestAnimationFrame(this.streamTick);
@@ -865,6 +877,8 @@ export class KernelProjector {
     const hScore = this.cachedCoherence?.meanH ?? 0.5;
     const flowState = `${this.config.activePanel}:${this.config.palette.mode}`;
     this.prescience.recordTransition(flowState, hScore);
+    // Surface: record panel switch as positive human signal
+    this.surface.absorbHumanSignal(0.5, `panel:open:${panel}`);
     this.saveConfig();
     this.markDirty();
   }
@@ -877,6 +891,8 @@ export class KernelProjector {
     // Prescience: record return to home
     const hScore = this.cachedCoherence?.meanH ?? 0.5;
     this.prescience.recordTransition(`none:${this.config.palette.mode}`, hScore);
+    // Surface: record close
+    this.surface.absorbHumanSignal(0.3, `panel:close:${prev}`);
     this.saveConfig();
     this.markDirty();
   }
@@ -1101,6 +1117,8 @@ export class KernelProjector {
    * breathing rhythm from the cadence.
    */
   recordInteraction(): void {
+    // Surface: every human interaction is a positive coherence signal
+    this.surface.absorbHumanSignal(0.2, "breathing:interaction");
     const now = performance.now();
     const br = this.config.breathingRhythm;
     const dt = br.lastEventAt > 0 ? now - br.lastEventAt : 0;
@@ -1374,7 +1392,35 @@ export class KernelProjector {
     return this.kernel?.stage === "running";
   }
 
+  // ── Holographic Surface Accessors ───────────────────────────────────
+
+  /** Get the holographic surface instance */
+  getSurface(): HolographicSurface {
+    return this.surface;
+  }
+
+  /** Get the current surface state (coherence, gradient, health) */
+  getSurfaceState(): SurfaceState {
+    return this.surface.getState();
+  }
+
+  /** Get the coherence gradient (∂H/∂t at multiple timescales) */
+  getSurfaceGradient(): SurfaceGradient {
+    return this.surface.gradient();
+  }
+
+  /** Get recent projection receipts */
+  getSurfaceReceipts(count?: number): readonly ProjectionReceipt[] {
+    return this.surface.getReceipts(count);
+  }
+
+  /** Is the system healthy? (not in refocusing state) */
+  isSurfaceHealthy(): boolean {
+    return this.surface.getState().isHealthy;
+  }
+
   // ── Persistence ──────────────────────────────────────────────────────
+
 
   private saveConfig(): void {
     try {
