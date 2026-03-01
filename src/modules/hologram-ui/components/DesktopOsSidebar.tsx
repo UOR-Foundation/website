@@ -8,7 +8,7 @@
  *   - will-change: width for compositor-promoted expansion
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, Fingerprint, Globe, Cpu, Database,
@@ -22,6 +22,7 @@ import GenesisPopover from "./GenesisPopover";
 import { ShareTheLoveModal } from "./ShareTheLoveModal";
 import TextSizeControl from "./TextSizeControl";
 import { useTextSize, type TextSize } from "@/modules/hologram-ui/hooks/useTextSize";
+import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
@@ -247,6 +248,21 @@ export default function DesktopOsSidebar({
     try { return localStorage.getItem("uor:sidebar:tools-open") !== "false"; } catch { return true; }
   });
   const { textSize, setTextSize } = useTextSize();
+  const { aperture } = useAttentionMode();
+  const isFocused = aperture >= 0.5;
+
+  // Focus-responsive palette overrides — when focused, the sidebar becomes
+  // more ethereal: lower opacity borders, compressed contrast, lighter weight
+  const focusOverrides = useMemo((): Record<string, string> => {
+    if (!isFocused) return {};
+    const t = Math.min(1, (aperture - 0.3) / 0.7); // 0→1 over the focus range
+    return {
+      "--sb-border": `hsla(38, 10%, 50%, ${(0.06 + (1 - t) * 0.09).toFixed(3)})`,
+      "--sb-hover": `hsla(30, 12%, 95%, ${(0.03 + (1 - t) * 0.05).toFixed(3)})`,
+      "--sb-shadow": `2px 0 ${8 + (1 - t) * 8}px -4px hsla(25, 10%, 0%, ${(0.08 + (1 - t) * 0.22).toFixed(2)})`,
+      "--sb-highlight": `inset -1px 0 0 hsla(38, 20%, 70%, ${(0.02 + (1 - t) * 0.04).toFixed(3)})`,
+    };
+  }, [isFocused, aperture]);
 
   // Flyout state for collapsed mode
   const [toolsFlyoutOpen, setToolsFlyoutOpen] = useState(false);
@@ -307,20 +323,32 @@ export default function DesktopOsSidebar({
         padding-top: clamp(6px, 1.4vh, 14px) !important;
         padding-bottom: clamp(6px, 1.4vh, 14px) !important;
       }
+      /* Focus mode — crisper, lighter, more ethereal sidebar */
+      .sidebar-focused .sidebar-nav-btn {
+        letter-spacing: 0.04em;
+        transition: color 400ms ease, background 400ms ease, letter-spacing 600ms ease;
+      }
+      .sidebar-focused .sidebar-tooltip {
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     `}</style>
     <aside
-      className="sidebar-root flex flex-col h-full shrink-0 relative coherence-sidebar-pulse"
+      className={`sidebar-root flex flex-col h-full shrink-0 relative coherence-sidebar-pulse${isFocused ? " sidebar-focused" : ""}`}
       style={{
         ...paletteVars,
+        ...focusOverrides,
         width: `${w}px`,
         background: "var(--sb-bg-flat)",
         backgroundImage: "var(--sb-bg)",
         borderRight: "1px solid var(--sb-border)",
         boxShadow: "var(--sb-highlight), var(--sb-shadow)",
         willChange: "width",
-        transition: "width 200ms cubic-bezier(0.25, 0.1, 0.25, 1), background 400ms ease, border-color 400ms ease, color 400ms ease",
+        transition: "width 200ms cubic-bezier(0.25, 0.1, 0.25, 1), background 600ms ease, border-color 600ms ease, color 600ms ease, box-shadow 600ms ease, opacity 600ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
         contain: "layout style",
+        // Focus: subtle opacity reduction and thinned-out feeling
+        opacity: isFocused ? 0.88 : 1,
       } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
