@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -39,6 +39,8 @@ export interface CoherenceState {
   readonly contributions: CoherenceGradient["contributions"];
   /** Reward circuit projection — the basal ganglia signal */
   readonly reward: RewardProjection;
+  /** Stabilizer syndrome projection — the immune system signal */
+  readonly stabilizer: StabilizerProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -54,6 +56,11 @@ const DEFAULT_REWARD: RewardProjection = {
   ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0,
 };
 
+const DEFAULT_STABILIZER: StabilizerProjection = {
+  syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0,
+  totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0,
+};
+
 /**
  * useCoherence — read coherence wave state from the kernel.
  * Zero additional state — purely derived from ProjectionFrame.
@@ -64,14 +71,12 @@ export function useCoherence(): CoherenceState {
   return useMemo(() => {
     if (!frame) {
       return {
-        h: 0,
-        dh: 0,
-        phase: 0,
-        amplitude: 0,
+        h: 0, dh: 0, phase: 0, amplitude: 0,
         gradient: DEFAULT_GRADIENT,
         wave: DEFAULT_WAVE,
         contributions: DEFAULT_GRADIENT.contributions,
         reward: DEFAULT_REWARD,
+        stabilizer: DEFAULT_STABILIZER,
       };
     }
 
@@ -85,6 +90,7 @@ export function useCoherence(): CoherenceState {
       wave: frame.apertureWave,
       contributions: g.contributions,
       reward: frame.rewardProjection,
+      stabilizer: frame.stabilizerProjection,
     };
   }, [frame]);
 }
