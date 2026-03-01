@@ -987,9 +987,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           width: computedWidth,
           transform: open ? "translate3d(0, 0, 0)" : "translate3d(calc(100% + 10px), 0, 0)",
           pointerEvents: open ? "auto" : "none",
-          transition: isResizing ? "none" : "transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
-          willChange: "transform",
+          transition: isResizing ? "none" : open
+            ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+            : "transform 220ms cubic-bezier(0.16, 0.6, 0.4, 1)",
+          willChange: open ? "transform" : "auto",
           backfaceVisibility: "hidden",
+          contain: "layout style",
         }}
       >
         {/* ── Resize handle — left edge drag strip ─────────────────── */}

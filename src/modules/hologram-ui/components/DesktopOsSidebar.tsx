@@ -87,7 +87,8 @@ function SidebarFlyout({
         border: "1px solid var(--sb-border)",
         boxShadow: "8px 4px 32px -4px hsla(25, 10%, 0%, 0.4), 0 0 0 1px hsla(38, 20%, 90%, 0.04)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
-        animation: "flyout-enter 150ms ease-out",
+        animation: "flyout-enter 160ms cubic-bezier(0.22, 1, 0.36, 1)",
+        willChange: "transform, opacity",
       }}
     >
       {children}

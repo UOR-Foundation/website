@@ -186,14 +186,14 @@ export default function HologramOsPage() {
     const t = setTimeout(() => {
       setSidebarBgMode(target);
       setDepartingDesktop(null);
-    }, 2000);
+    }, 1000);
     return () => clearTimeout(t);
   }, [activeDesktop, departingDesktop, k.switchDesktop]);
 
-  // Safety: clear stuck departing state if it persists beyond 3s
+  // Safety: clear stuck departing state if it persists beyond 1.5s
   useEffect(() => {
     if (!departingDesktop) return;
-    const safety = setTimeout(() => setDepartingDesktop(null), 3000);
+    const safety = setTimeout(() => setDepartingDesktop(null), 1500);
     return () => clearTimeout(safety);
   }, [departingDesktop]);
 
@@ -403,7 +403,7 @@ export default function HologramOsPage() {
                   zIndex: desktopZ(mode),
                   clipPath: isDep ? "inset(0 100% 0 0)" : "inset(0 0 0 0)",
                   transition: isDep
-                    ? "clip-path 2000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                    ? "clip-path 1000ms cubic-bezier(0.22, 1, 0.36, 1)"
                     : "none",
                   willChange: isDep ? "clip-path" : "auto",
                 }}
