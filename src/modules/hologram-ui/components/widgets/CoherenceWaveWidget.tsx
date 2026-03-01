@@ -2,9 +2,10 @@
  * CoherenceWaveWidget — Live Kernel Heartbeat
  * ════════════════════════════════════════════
  * Visualizes the system's coherence field as three real-time waveforms:
- *   H-score (amber)  — current system coherence
- *   ∂H/∂t  (cyan)    — coherence gradient (rising/falling)
- *   Phase   (violet)  — breathing cycle position
+ *   H-score      (amber)  — current system coherence (0–1)
+ *   ∂H/∂t        (cyan)   — coherence gradient (rising/falling)
+ *   Explore/Exploit (violet) — prescience gradient exponent e^(2·dh)
+ *     >1 = exploit (sharpening), <1 = explore (widening)
  *
  * All data flows from CSS custom properties injected by the kernel's
  * surface adapter — zero React re-renders for the waveform itself.
@@ -17,22 +18,23 @@ import { useRef, useEffect, useCallback } from "react";
 
 // ── Constants ────────────────────────────────────────────────────────
 
-/** Number of samples visible in the waveform */
 const SAMPLES = 120;
-
-/** Sample interval in ms (~30fps is plenty for a dashboard) */
 const SAMPLE_MS = 33;
 
-/** Waveform colors (HSL strings) */
+/** Prescience gradient sensitivity — must match prescience-engine.ts */
+const GRADIENT_SENSITIVITY = 2.0;
+
 const COLORS = {
-  h:     "hsla(38, 55%, 60%, 0.9)",   // amber — H-score
-  dh:    "hsla(185, 50%, 55%, 0.85)",  // cyan — gradient
-  phase: "hsla(270, 40%, 60%, 0.7)",   // violet — phase
+  h:   "hsla(38, 55%, 60%, 0.9)",   // amber — H-score
+  dh:  "hsla(185, 50%, 55%, 0.85)",  // cyan — gradient
+  exp: "hsla(270, 40%, 60%, 0.7)",   // violet — explore/exploit
 } as const;
 
-const GRID_COLOR = "hsla(0, 0%, 100%, 0.04)";
-const LABEL_COLOR = "hsla(0, 0%, 100%, 0.35)";
-const ZERO_LINE = "hsla(0, 0%, 100%, 0.08)";
+const GRID = "hsla(0, 0%, 100%, 0.04)";
+const LABEL = "hsla(0, 0%, 100%, 0.35)";
+const ZERO = "hsla(0, 0%, 100%, 0.08)";
+const EXPLOIT_ZONE = "hsla(38, 40%, 50%, 0.03)";
+const EXPLORE_ZONE = "hsla(185, 40%, 50%, 0.03)";
 
 // ── Ring Buffer ──────────────────────────────────────────────────────
 
@@ -51,7 +53,6 @@ class RingBuffer {
     if (this.head === 0) this.full = true;
   }
 
-  /** Read samples oldest→newest */
   forEach(fn: (v: number, i: number) => void) {
     const len = this.full ? this.size : this.head;
     const start = this.full ? this.head : 0;
@@ -76,18 +77,16 @@ function readCSSVar(name: string, fallback: number): number {
 export default function CoherenceWaveWidget() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const buffersRef = useRef({
-    h:     new RingBuffer(SAMPLES),
-    dh:    new RingBuffer(SAMPLES),
-    phase: new RingBuffer(SAMPLES),
+    h:   new RingBuffer(SAMPLES),
+    dh:  new RingBuffer(SAMPLES),
+    exp: new RingBuffer(SAMPLES),
   });
 
-  const drawWaveform = useCallback((
+  const drawWave = useCallback((
     ctx: CanvasRenderingContext2D,
     buf: RingBuffer,
-    w: number,
-    h: number,
-    yMin: number,
-    yMax: number,
+    w: number, h: number,
+    yMin: number, yMax: number,
     color: string,
   ) => {
     if (buf.length < 2) return;
@@ -116,15 +115,15 @@ export default function CoherenceWaveWidget() {
     let raf: number;
 
     const tick = (now: number) => {
-      // Sample at ~30fps
       if (now - lastSample >= SAMPLE_MS) {
         lastSample = now;
+        const dh = readCSSVar("--coherence-dh", 0);
         bufs.h.push(readCSSVar("--h-score", 0.5));
-        bufs.dh.push(readCSSVar("--coherence-dh", 0));
-        bufs.phase.push(readCSSVar("--h-phase", 0));
+        bufs.dh.push(dh);
+        // Compute prescience exponent: e^(sensitivity × dh)
+        bufs.exp.push(Math.exp(GRADIENT_SENSITIVITY * dh));
       }
 
-      // Draw
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
       const w = rect.width * dpr;
@@ -139,59 +138,70 @@ export default function CoherenceWaveWidget() {
 
       ctx.clearRect(0, 0, cw, ch);
 
-      // Grid lines (4 horizontal)
-      ctx.strokeStyle = GRID_COLOR;
+      // ── Background zones for explore/exploit ──
+      // Exploit zone (exponent > 1 = top half of exponent waveform)
+      const expMid = ch; // exponent=1 maps to bottom when range is [0, e^2≈7.4]
+      // Simpler: shade top half as exploit, bottom as explore
+      ctx.fillStyle = EXPLOIT_ZONE;
+      ctx.fillRect(0, 0, cw, ch * 0.5);
+      ctx.fillStyle = EXPLORE_ZONE;
+      ctx.fillRect(0, ch * 0.5, cw, ch * 0.5);
+
+      // Grid
+      ctx.strokeStyle = GRID;
       ctx.lineWidth = 0.5;
       for (let i = 1; i <= 3; i++) {
         const y = (i / 4) * ch;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(cw, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
       }
 
-      // Zero line for ∂H/∂t (center)
-      ctx.strokeStyle = ZERO_LINE;
+      // Equilibrium line for exponent (exponent=1 → neutral)
+      // exponent range: ~0.13 to ~7.4 for dh ∈ [-1,1], log-displayed as [0,1]
+      // Normalized: log(exp)/log(maxExp) but simpler to use dh center line
+      ctx.strokeStyle = ZERO;
       ctx.lineWidth = 0.5;
       ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      ctx.moveTo(0, ch / 2);
-      ctx.lineTo(cw, ch / 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, ch / 2); ctx.lineTo(cw, ch / 2); ctx.stroke();
       ctx.setLineDash([]);
 
       // Waveforms
-      drawWaveform(ctx, bufs.h, cw, ch, 0, 1, COLORS.h);
-      drawWaveform(ctx, bufs.dh, cw, ch, -1, 1, COLORS.dh);
-      drawWaveform(ctx, bufs.phase, cw, ch, 0, 1, COLORS.phase);
+      drawWave(ctx, bufs.h, cw, ch, 0, 1, COLORS.h);
+      drawWave(ctx, bufs.dh, cw, ch, -1, 1, COLORS.dh);
+      // Exponent: display on log scale normalized to [0,1]
+      // log(e^(2*dh)) / log(e^2) = dh, so just use dh mapping — 
+      // but the raw exponent is more intuitive. Clamp visual range to [0, 4]
+      drawWave(ctx, bufs.exp, cw, ch, 0, 4, COLORS.exp);
 
-      // Current values (top-right)
+      // ── Current values ──
       ctx.font = "9px 'DM Sans', system-ui, sans-serif";
       ctx.textAlign = "right";
       const pad = 8;
-      const lineH = 13;
+      const lh = 13;
+
+      const expVal = bufs.exp.last;
+      const expLabel = expVal > 1.05 ? "exploit" : expVal < 0.95 ? "explore" : "neutral";
+
       const vals = [
-        { label: "H", val: bufs.h.last.toFixed(3), color: COLORS.h },
-        { label: "∂H", val: (bufs.dh.last >= 0 ? "+" : "") + bufs.dh.last.toFixed(3), color: COLORS.dh },
-        { label: "φ", val: bufs.phase.last.toFixed(2), color: COLORS.phase },
+        { sym: "H",  val: bufs.h.last.toFixed(3), color: COLORS.h },
+        { sym: "∂H", val: (bufs.dh.last >= 0 ? "+" : "") + bufs.dh.last.toFixed(3), color: COLORS.dh },
+        { sym: "β",  val: `${expVal.toFixed(2)} ${expLabel}`, color: COLORS.exp },
       ];
-      vals.forEach(({ label, val, color }, i) => {
-        const y = pad + i * lineH + 9;
+      vals.forEach(({ sym, val, color }, i) => {
         ctx.fillStyle = color;
-        ctx.fillText(`${label} ${val}`, cw - pad, y);
+        ctx.fillText(`${sym} ${val}`, cw - pad, pad + i * lh + 9);
       });
 
-      // Labels (bottom-left)
+      // ── Bottom label ──
       ctx.textAlign = "left";
-      ctx.fillStyle = LABEL_COLOR;
-      ctx.fillText("coherence field", pad, ch - pad);
+      ctx.fillStyle = LABEL;
+      ctx.fillText("coherence · prescience", pad, ch - pad);
 
       raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [drawWaveform]);
+  }, [drawWave]);
 
   return (
     <div
