@@ -1813,6 +1813,14 @@ export type Database = {
           signup_count: number
         }[]
       }
+      lookup_invite_code: {
+        Args: { lookup_code: string }
+        Returns: {
+          code: string
+          id: string
+        }[]
+      }
+      record_invite_click: { Args: { click_code: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
