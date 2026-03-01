@@ -144,6 +144,7 @@ interface DesktopSurfaceProps {
   onOpenLegal: (tab: "privacy" | "terms" | "principles") => void;
   isWidgetVisible: (id: string) => boolean;
   removeWidget: (id: string) => void;
+  onOpenConvergence: () => void;
   ambientState?: { playing: boolean; stationHue: string };
   /** Observer briefing prompt text for voice context */
   observerBriefing?: string;
@@ -170,6 +171,7 @@ export default function DesktopSurface({
   onOpenLegal,
   isWidgetVisible,
   removeWidget,
+  onOpenConvergence,
   ambientState,
   observerBriefing,
   screenContext,
@@ -539,7 +541,7 @@ export default function DesktopSurface({
             }}
           >
             <button
-              onPointerDown={() => navigate("/convergence")}
+              onPointerDown={() => onOpenConvergence()}
               className="group/conv relative px-5 py-2 rounded-full transition-all duration-500 hover:scale-[1.03] active:scale-[0.97]"
               style={{
                 background: mode === "white"

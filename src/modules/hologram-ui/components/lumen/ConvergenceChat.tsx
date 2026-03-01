@@ -73,9 +73,14 @@ interface Exchange {
   };
 }
 
-// ── Component ────────────────────────────────────────────────────────
+interface ConvergenceChatProps {
+  /** When true, renders inline (no fixed positioning) for use inside ProjectionShell */
+  embedded?: boolean;
+  /** Close callback for embedded mode */
+  onClose?: () => void;
+}
 
-export default function ConvergenceChat() {
+export default function ConvergenceChat({ embedded = false, onClose }: ConvergenceChatProps = {}) {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [input, setInput] = useState("");
   const [isConverging, setIsConverging] = useState(false);
@@ -414,7 +419,7 @@ export default function ConvergenceChat() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col"
+      className={embedded ? "flex flex-col w-full h-full" : "fixed inset-0 flex flex-col"}
       style={{ background: C.bg, fontFamily: C.font }}
     >
       {/* ── Top bar — almost invisible ─────────────────────── */}
