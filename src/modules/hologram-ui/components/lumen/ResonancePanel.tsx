@@ -23,6 +23,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import KnowledgeGraphInput from "./KnowledgeGraphInput";
 import KnowledgeGraphExplorer from "./KnowledgeGraphExplorer";
+import ResonanceTimeline from "./ResonanceTimeline";
 
 interface ResonancePanelProps {
   open: boolean;
@@ -247,6 +248,13 @@ export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
                   ))}
                 </div>
               </section>
+
+              {/* Resonance Timeline */}
+              <ResonanceTimeline
+                history={profile.history || []}
+                currentScore={diag.resonanceScore}
+                convergenceRate={diag.convergenceRate}
+              />
 
               {/* Knowledge Graph Explorer */}
               {userId && <KnowledgeGraphExplorer userId={userId} />}

@@ -87,6 +87,26 @@ export interface ResonanceProfile {
   lastCloudSyncAt: number;
   /** Profile version for conflict resolution */
   profileVersion: number;
+
+  // ── History snapshots (recorded on each Ω-loop reflection) ────────
+  /** Rolling history of resonance snapshots — max 60 entries */
+  history: ResonanceSnapshot[];
+}
+
+/** A point-in-time snapshot recorded during Ω-loop self-reflection */
+export interface ResonanceSnapshot {
+  /** Timestamp of the snapshot */
+  t: number;
+  /** Resonance score at this point */
+  r: number;
+  /** Convergence rate (delta) */
+  c: number;
+  /** Satisfaction rate */
+  s: number;
+  /** Correction rate */
+  x: number;
+  /** Observation count at time of snapshot */
+  n: number;
 }
 
 // ── Session Tracking ──────────────────────────────────────────────────
@@ -368,6 +388,8 @@ function createDefaultProfile(): ResonanceProfile {
     // Cloud sync
     lastCloudSyncAt: 0,
     profileVersion: 1,
+    // History
+    history: [],
   };
 }
 
@@ -501,6 +523,21 @@ function selfReflect(profile: ResonanceProfile): ResonanceProfile {
   profile.resonanceScore = ema(profile.resonanceScore, newScore, profile.reflectionCount);
   profile.reflectionCount += 1;
   profile.lastReflectionAt = Date.now();
+
+  // ── Record history snapshot ──────────────────────────────────────
+  if (!profile.history) profile.history = [];
+  profile.history.push({
+    t: Date.now(),
+    r: profile.resonanceScore,
+    c: profile.convergenceRate,
+    s: profile.satisfactionRate,
+    x: profile.correctionRate,
+    n: profile.observationCount,
+  });
+  // Cap at 60 entries (~600 exchanges of history)
+  if (profile.history.length > 60) {
+    profile.history = profile.history.slice(-60);
+  }
 
   return profile;
 }
