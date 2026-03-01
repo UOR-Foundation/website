@@ -174,6 +174,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   const [selectedPersona, setSelectedPersona] = useState<AgentPersona>(getDefaultPersona());
   const [activeSkill, setActiveSkill] = useState<AgentSkill | null>(null);
   const [privateSession, setPrivateSession] = useState(false);
+  const [disclosureOverrides, setDisclosureOverrides] = useState<Record<string, boolean>>({});
+  const [showDisclosurePanel, setShowDisclosurePanel] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -199,6 +201,17 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
   // ── QDisclosure: Privacy-preserving LLM context ──────────────────────
   const { profile: authProfile, user: authUser } = useAuth();
 
+  // Merge privacy rules with temporary disclosure overrides
+  // Override true = category is revealed (visible), so we set it to true in effective rules
+  const getEffectivePrivacyRules = useCallback(() => {
+    const base = authProfile?.privacyRules ?? null;
+    if (!base || Object.keys(disclosureOverrides).length === 0) return base;
+    const merged = { ...base };
+    for (const [key, revealed] of Object.entries(disclosureOverrides)) {
+      if (revealed) merged[key] = true; // true = visible/public
+    }
+    return merged;
+  }, [authProfile?.privacyRules, disclosureOverrides]);
 
   const whisper = useWhisperTranscription({
     onTranscript: useCallback((text: string) => {
@@ -348,6 +361,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     const persisted = await history.loadMessages(conv.id);
     history.setActiveConversationId(conv.id);
     setShowHistory(false);
+    setDisclosureOverrides({});
 
     const loaded: ChatMessage[] = persisted.map((m) => ({
       id: m.id,
@@ -364,6 +378,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
     history.setActiveConversationId(null);
     setShowHistory(false);
     setMessages([]);
+    setDisclosureOverrides({});
   }, [history]);
 
   // ── Cloud model selection (instant, no download) ──────────────────────
@@ -457,7 +472,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       threeWordName: authProfile?.threeWordName,
       bio: authProfile?.bio,
     };
-    const auditResult = projectForLLM(text, authProfile?.privacyRules ?? null, profileCtxForAudit);
+    const auditResult = projectForLLM(text, getEffectivePrivacyRules(), profileCtxForAudit);
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -702,7 +717,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
         const disclosure = projectConversationForLLM(
           rawMessages,
-          authProfile?.privacyRules ?? null,
+          getEffectivePrivacyRules(),
           profileCtx,
         );
 
@@ -1420,6 +1435,51 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               </div>
             )}
 
+            {/* Selective Disclosure Panel */}
+            <AnimatePresence>
+              {showDisclosurePanel && authProfile?.privacyRules && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <SelectiveDisclosurePanel
+                    privacyRules={authProfile.privacyRules}
+                    overrides={disclosureOverrides}
+                    onToggle={(key) => setDisclosureOverrides(prev => {
+                      const next = { ...prev };
+                      if (next[key]) { delete next[key]; } else { next[key] = true; }
+                      return next;
+                    })}
+                    onClose={() => setShowDisclosurePanel(false)}
+                    onReset={() => setDisclosureOverrides({})}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Active override banner */}
+            {Object.keys(disclosureOverrides).length > 0 && (
+              <div
+                className="flex items-center gap-2 px-4 py-1.5"
+                style={{ borderBottom: `1px solid hsla(152, 20%, 30%, 0.15)` }}
+              >
+                <Shield className="w-3 h-3" style={{ color: "hsl(38, 50%, 55%)" }} />
+                <span style={{ fontSize: sf(10), color: "hsl(38, 40%, 60%)", fontFamily: P.font, letterSpacing: "0.04em" }}>
+                  {Object.keys(disclosureOverrides).length} categor{Object.keys(disclosureOverrides).length === 1 ? "y" : "ies"} temporarily revealed — resets on new conversation
+                </span>
+                <button
+                  onClick={() => setDisclosureOverrides({})}
+                  className="ml-auto text-[10px] hover:opacity-80 transition-opacity"
+                  style={{ color: "hsl(0, 40%, 60%)", fontFamily: P.font, fontWeight: 600 }}
+                >
+                  Revoke all
+                </button>
+              </div>
+            )}
+
             {/* Text input area */}
             <div className="px-4 pt-3 pb-2">
               <textarea
@@ -1496,6 +1556,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                               setShowInputMenu(false);
                               fileInputRef.current?.click();
                             }},
+                            ...(authProfile?.privacyRules ? [{ icon: Shield, label: "Selective disclosure", subtitle: "Temporarily reveal categories", action: () => {
+                              setShowInputMenu(false);
+                              setShowDisclosurePanel(p => !p);
+                            }}] : []),
                           ].map((item, idx) => (
                             <button
                               key={idx}
@@ -2069,6 +2133,98 @@ function DisclosureAuditBadge({ audit }: { audit: { redactionCount: number; reda
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Selective Disclosure Panel ─────────────────────────────────────────
+import type { PrivacyRules } from "@/hooks/use-auth";
+
+function SelectiveDisclosurePanel({
+  privacyRules,
+  overrides,
+  onToggle,
+  onClose,
+  onReset,
+}: {
+  privacyRules: PrivacyRules;
+  overrides: Record<string, boolean>;
+  onToggle: (key: string) => void;
+  onClose: () => void;
+  onReset: () => void;
+}) {
+  // Only show categories that are currently private (false)
+  const privateCategories = Object.entries(privacyRules)
+    .filter(([_, v]) => v === false)
+    .map(([key]) => key);
+
+  if (privateCategories.length === 0) {
+    return (
+      <div className="px-4 py-3" style={{ background: "hsla(30, 8%, 16%, 0.8)" }}>
+        <div className="flex items-center gap-2">
+          <Eye className="w-3.5 h-3.5" style={{ color: "hsl(152, 40%, 50%)" }} />
+          <span style={{ fontSize: sf(12), color: P.text, fontFamily: P.font }}>
+            All categories are already public.
+          </span>
+          <button onClick={onClose} className="ml-auto"><X className="w-3.5 h-3.5" style={{ color: P.textDim }} /></button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="px-4 py-3 space-y-2.5"
+      style={{ background: "hsla(30, 8%, 16%, 0.8)", borderBottom: `1px solid ${P.border}` }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-3.5 h-3.5" style={{ color: P.gold }} />
+          <span style={{ fontSize: sf(11), color: P.text, fontFamily: P.font, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+            Selective Disclosure
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {Object.keys(overrides).length > 0 && (
+            <button onClick={onReset} className="text-[10px] hover:opacity-80 transition-opacity" style={{ color: "hsl(0, 40%, 60%)", fontFamily: P.font, fontWeight: 600 }}>
+              Reset
+            </button>
+          )}
+          <button onClick={onClose}><X className="w-3.5 h-3.5" style={{ color: P.textDim }} /></button>
+        </div>
+      </div>
+      <p style={{ fontSize: sf(10), color: P.textDim, fontFamily: P.font, lineHeight: 1.5 }}>
+        Temporarily reveal private categories for this conversation. Automatically re-redacted when you start a new conversation.
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {privateCategories.map(key => {
+          const isRevealed = !!overrides[key];
+          return (
+            <button
+              key={key}
+              onClick={() => onToggle(key)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+              style={{
+                background: isRevealed ? "hsla(38, 40%, 40%, 0.2)" : "hsla(30, 8%, 22%, 0.6)",
+                border: `1px solid ${isRevealed ? "hsla(38, 40%, 50%, 0.35)" : P.borderLight}`,
+              }}
+            >
+              {isRevealed
+                ? <Eye className="w-3 h-3" style={{ color: P.gold }} />
+                : <EyeOff className="w-3 h-3" style={{ color: P.textDimmer }} />
+              }
+              <span style={{
+                fontSize: sf(11),
+                color: isRevealed ? P.goldLight : P.textMuted,
+                fontFamily: P.font,
+                fontWeight: isRevealed ? 600 : 400,
+              }}>
+                {CATEGORY_LABELS[key] || key}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
