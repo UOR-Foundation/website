@@ -6,16 +6,10 @@
  * by fetching real metadata from PyPI and generating a functional
  * lens that maps capabilities into Q-Linux native operations.
  *
- * Architecture:
- *   pip install <pkg>
- *     → fetch PyPI JSON API
- *     → resolve dependency tree
- *     → generate Q-FS projection (files + lens blueprint)
- *     → spawn kernel process for the package
- *     → package is now a callable Q-Linux command
- *
  * @module qkernel/q-package-projector
  */
+
+import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -417,6 +411,9 @@ export async function installPackage(
   saveInstalled();
 
   onProgress({ phase: "complete", percent: 100, detail: `Successfully installed ${meta.name}-${meta.version}`, bar: renderBar(100) });
+  kernelLog("pip", "install", `Installed ${meta.name}==${meta.version} as ${meta.projectionType} projection`, {
+    name: meta.name, version: meta.version, type: meta.projectionType, pid, lensId, deps: depsInstalled,
+  });
   return pkg;
 }
 
