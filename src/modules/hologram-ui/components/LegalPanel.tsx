@@ -14,7 +14,7 @@ import { ChevronDown } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type LegalTab = "privacy" | "terms";
+type LegalTab = "privacy" | "terms" | "principles";
 
 interface LegalPanelProps {
   open: boolean;
@@ -126,7 +126,7 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
               className="flex items-center justify-center gap-8 pb-4"
               style={{ borderBottom: `1px solid ${P.border}` }}
             >
-              {(["privacy", "terms"] as LegalTab[]).map((t) => (
+              {(["privacy", "terms", "principles"] as LegalTab[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => {
@@ -146,7 +146,7 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
                     cursor: "pointer",
                   }}
                 >
-                  {t === "privacy" ? "Privacy Policy" : "Terms of Use"}
+                  {t === "privacy" ? "Privacy Policy" : t === "terms" ? "Terms of Use" : "Our Principles"}
                   {/* Active indicator line */}
                   <motion.div
                     className="absolute bottom-0 left-0 right-0 h-[1px]"
@@ -179,8 +179,10 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
                   >
                     {tab === "privacy" ? (
                       <PrivacyContent P={P} fontDisplay={fontDisplay} />
-                    ) : (
+                    ) : tab === "terms" ? (
                       <TermsContent P={P} fontDisplay={fontDisplay} />
+                    ) : (
+                      <PrinciplesContent P={P} fontDisplay={fontDisplay} />
                     )}
                   </motion.div>
                 </AnimatePresence>
@@ -469,5 +471,148 @@ function TermsContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontD
         </p>
       </Section>
     </article>
+  );
+}
+
+// ── Our Principles ─────────────────────────────────────────────────────────
+
+function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; fontDisplay: string }) {
+  return (
+    <article>
+      <h1
+        className="text-2xl font-light tracking-wide mb-2"
+        style={{ fontFamily: fontDisplay, color: P.heading }}
+      >
+        How Hologram Works
+      </h1>
+      <p className="text-[13px] tracking-wider uppercase mb-5" style={{ color: P.textMuted }}>
+        The short version of everything
+      </p>
+      <p
+        className="text-[16px] leading-[2] mb-12"
+        style={{ color: P.text }}
+      >
+        Most technology asks for your attention and gives you back convenience. Hologram does it the other way around. It pays attention to <em style={{ color: P.tabActive }}>you</em>, learns what matters to you, and quietly works to keep your digital life coherent, honest, and under your control. Here is why it exists, how it works, and what it actually does.
+      </p>
+
+      <Section title="Why this exists" P={P} fontDisplay={fontDisplay}>
+        <p>
+          The tools we use every day were not built for us. They were built to capture our attention, harvest our data, and optimise for engagement. The result is that most people feel more scattered, more surveilled, and less in control than ever.
+        </p>
+        <p>
+          Hologram was created because we believe your technology should serve you, not the other way around. It should protect your information by default. It should never lie to you. It should get out of your way when you are focused and be there when you need it. That is the simple idea behind everything here.
+        </p>
+      </Section>
+
+      <Section title="What makes it different" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Most systems are designed around the machine: they optimise for speed, throughput, or profit. Hologram is designed around the human. It tracks a single signal called <strong style={{ color: P.heading }}>coherence</strong>: how well aligned are you right now? Are you focused or scattered? Calm or overwhelmed? The entire system adapts to support whatever state you are in.
+        </p>
+        <p>
+          When you are in deep focus, the interface goes quiet. Animations slow down. Notifications are held back. When you are exploring or switching between tasks, it opens up and offers context. This is what we mean by "inverting attention." The system attends to your wellbeing. You do not have to attend to the system.
+        </p>
+      </Section>
+
+      <Section title="The Eight Rules" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Every action inside Hologram is governed by eight non-negotiable rules. They are built into the mathematical foundation of the system and cannot be overridden, not by us, not by any application, not by any AI. If any rule is violated, the operation is blocked and the attempt is permanently recorded.
+        </p>
+        <p>
+          These are not guidelines. They are structural guarantees.
+        </p>
+
+        <div className="mt-6 space-y-5">
+          <Principle n="01" title="Your data stays with you" P={P} fontDisplay={fontDisplay}>
+            All processing happens within your boundary. Your information is never sent anywhere without your explicit, informed choice. There is no background data collection, no silent telemetry, no analytics you did not ask for.
+          </Principle>
+
+          <Principle n="02" title="No fabrication, ever" P={P} fontDisplay={fontDisplay}>
+            Every claim the system makes is grounded in real data. If the system is uncertain, it says so. It will never generate plausible sounding answers that it cannot back up. In a world full of AI hallucinations, this is the line we refuse to cross.
+          </Principle>
+
+          <Principle n="03" title="Complete audit trails" P={P} fontDisplay={fontDisplay}>
+            Every operation the system performs is recorded in a tamper proof log. You can see exactly what happened, when, and why. Nothing runs in the dark. If it happened, there is a receipt.
+          </Principle>
+
+          <Principle n="04" title="Honesty over comfort" P={P} fontDisplay={fontDisplay}>
+            The system will never tell you what you want to hear if it is not true. If it does not know, it tells you it does not know. If the confidence is low, it tells you the confidence is low. Truth is always prioritised over a smooth experience.
+          </Principle>
+
+          <Principle n="05" title="No harmful actions" P={P} fontDisplay={fontDisplay}>
+            The system will never perform a destructive operation without your explicit confirmation. It cannot delete your data, revoke your access, or take irreversible actions on its own. You are always in the loop for anything that matters.
+          </Principle>
+
+          <Principle n="06" title="Actions match evidence" P={P} fontDisplay={fontDisplay}>
+            The system cannot take a big action based on a weak signal. If it has a little bit of data, it can make a small suggestion. It cannot make a sweeping change. The strength of any response is always proportional to the strength of the evidence behind it.
+          </Principle>
+
+          <Principle n="07" title="Trust is earned, not assumed" P={P} fontDisplay={fontDisplay}>
+            No part of the system, and no AI within it, starts with full autonomy. Every agent, every tool, every integration begins with limited permissions and earns more trust over time through demonstrated reliability. This is how trust works between people, and it is how it works here.
+          </Principle>
+
+          <Principle n="08" title="Your success is the measure" P={P} fontDisplay={fontDisplay}>
+            The system only succeeds when you do. There are no extractive incentives, no engagement traps, no dark patterns. Every feature exists because it genuinely helps you learn, create, or connect. If it does not serve you, it has no place here.
+          </Principle>
+        </div>
+      </Section>
+
+      <Section title="How it all fits together" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Under the hood, Hologram is built on a mathematical framework called the Universal Object Reference. Every piece of information you create, every file, every note, every conversation, gets a unique, permanent identity based on its actual content. This means your data is always verifiable, always portable, and never locked into one platform.
+        </p>
+        <p>
+          Your identity works the same way. Instead of usernames and passwords scattered across dozens of services, you have one sovereign identity that you control. You choose what to share, with whom, and for how long. You can prove things about yourself without revealing the underlying information. And you can revoke access at any time.
+        </p>
+      </Section>
+
+      <Section title="AI that works for you" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Hologram includes AI capabilities, but they work fundamentally differently from what you may be used to. The AI here is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
+        </p>
+        <p>
+          Most importantly, the AI optimises for your coherence, not for engagement. It is not trying to keep you scrolling or clicking. It is trying to help you think clearly, work effectively, and stay aligned with what actually matters to you. When it does not have a good answer, it stays silent rather than guessing.
+        </p>
+      </Section>
+
+      <Section title="The bottom line" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Hologram exists because we believe people deserve technology that respects them. Not technology that tolerates them while extracting value. Not technology that pretends to care while optimising for someone else's metrics.
+        </p>
+        <p>
+          Everything here is designed to be transparent, honest, and genuinely useful. The eight rules are not marketing. They are mathematical constraints embedded in the system's foundation. They cannot be turned off. They apply equally to every operation, every user, and every AI.
+        </p>
+        <p>
+          That is what makes this different. Not a promise. A proof.
+        </p>
+      </Section>
+    </article>
+  );
+}
+
+// ── Principle Item ─────────────────────────────────────────────────────────
+
+function Principle({
+  n, title, children, P, fontDisplay,
+}: {
+  n: string; title: string; children: React.ReactNode;
+  P: ReturnType<typeof palette>; fontDisplay: string;
+}) {
+  return (
+    <div className="flex gap-4 items-start">
+      <span
+        className="text-[12px] font-light mt-[2px] shrink-0"
+        style={{ color: P.tabActive, fontFamily: fontDisplay, minWidth: "20px" }}
+      >
+        {n}
+      </span>
+      <div>
+        <p className="mb-1.5" style={{ color: P.heading, fontWeight: 500 }}>
+          {title}
+        </p>
+        <p className="text-[15px] leading-[1.9]" style={{ color: P.text }}>
+          {children}
+        </p>
+      </div>
+    </div>
   );
 }
