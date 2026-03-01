@@ -19,6 +19,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import type { QFsHandle, FSNode } from "./useQFs";
+import { initializeAllProjections, registerAllInMonaco, getRegistrySummary } from "./language-projections";
 
 // Monaco types — we use `any` since Monaco is loaded dynamically
 type Monaco = any;
@@ -308,15 +309,16 @@ export function useMonacoLsp(
 
     configureTypeScriptDefaults(monaco);
 
-    // Register AI completion provider
+    // Register all 24+ custom language projections (quantum, systems, web3, etc.)
+    initializeAllProjections();
+    registerAllInMonaco(monaco);
+
+    const summary = getRegistrySummary();
+    console.log(`⬡ Language Projection Registry: ${summary.total} languages (${summary.custom} custom across ${summary.categories.join(", ")})`);
+
+    // Register AI completion provider for TypeScript
     const aiDisposable = registerAICompletionProvider(monaco, qfs);
     disposablesRef.current.push(aiDisposable);
-
-    // Also register for JavaScript
-    const jsDisposable = monaco.languages.registerCompletionItemProvider("javascript", {
-      ...aiDisposable,
-    });
-    // Note: spread doesn't work for disposables, register separately if needed
   }, [qfs]);
 
   // Sync Q-FS files into Monaco models whenever tree changes

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useQFs, type FSNode } from "./useQFs";
 import { useMonacoLsp } from "./useMonacoLsp";
+import { resolveLanguage, getRegistrySummary } from "./language-projections";
 
 // ── VS Code Dark+ Color Tokens ──────────────────────────────────────────────
 const C = {
@@ -84,17 +85,7 @@ function getFileIcon(name: string) {
 }
 
 function getLanguage(name: string): string {
-  if (name.endsWith(".ts") || name.endsWith(".tsx")) return "typescript";
-  if (name.endsWith(".js") || name.endsWith(".jsx")) return "javascript";
-  if (name.endsWith(".json")) return "json";
-  if (name.endsWith(".css")) return "css";
-  if (name.endsWith(".scss")) return "scss";
-  if (name.endsWith(".html")) return "html";
-  if (name.endsWith(".md")) return "markdown";
-  if (name.endsWith(".py")) return "python";
-  if (name.endsWith(".rs")) return "rust";
-  if (name.endsWith(".toml")) return "ini";
-  return "plaintext";
+  return resolveLanguage(name);
 }
 
 // FSNode type is now imported from useQFs
