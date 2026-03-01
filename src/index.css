@@ -468,32 +468,33 @@
 }
 
 /* ── Hologram OS keyframes (GPU-composited, declared once) ───────── */
-/* All pulsating animations synchronized to Genesis kernel frequency:
-   62 BPM = 1.94s fundamental, with double-beat at 13% and 39%.
-   Harmonics: 2× = 3.88s, 3× = 5.82s */
+/* Coherence-driven animation system:
+   --h-score (0–1) controls glow intensity & scale amplitude
+   --coherence-dh (-1 to +1) modulates breathing speed
+   --h-phase (0–1) provides breathing cycle position
+   Fallbacks ensure graceful degradation when kernel is not running. */
 
 @keyframes heartbeat-love {
-  0%   { transform: scale(1);    opacity: 0.8; }
-  13%  { transform: scale(1.45); opacity: 1; }
-  26%  { transform: scale(1);    opacity: 0.8; }
-  39%  { transform: scale(1.25); opacity: 0.95; }
-  52%  { transform: scale(1);    opacity: 0.8; }
-  100% { transform: scale(1);    opacity: 0.8; }
+  0%   { transform: scale(1);    opacity: calc(0.5 + 0.3 * var(--h-score, 0.6)); }
+  13%  { transform: scale(calc(1 + 0.45 * var(--h-score, 0.6))); opacity: 1; }
+  26%  { transform: scale(1);    opacity: calc(0.5 + 0.3 * var(--h-score, 0.6)); }
+  39%  { transform: scale(calc(1 + 0.25 * var(--h-score, 0.6))); opacity: calc(0.7 + 0.25 * var(--h-score, 0.6)); }
+  52%  { transform: scale(1);    opacity: calc(0.5 + 0.3 * var(--h-score, 0.6)); }
+  100% { transform: scale(1);    opacity: calc(0.5 + 0.3 * var(--h-score, 0.6)); }
 }
 
-/* Genesis ring ripple — expands outward and dissipates naturally.
-   Synced to heartbeat-love 2.4s period. */
+/* Genesis ring ripple — intensity scales with coherence */
 @keyframes genesis-ripple {
-  0%   { transform: scale(0.5); opacity: 0.7; }
-  70%  { transform: scale(2.2); opacity: 0; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0%   { transform: scale(0.5); opacity: calc(0.4 + 0.3 * var(--h-score, 0.6)); }
+  70%  { transform: scale(calc(1.5 + 0.7 * var(--h-score, 0.6))); opacity: 0; }
+  100% { transform: scale(calc(1.5 + 0.7 * var(--h-score, 0.6))); opacity: 0; }
 }
 
 @keyframes pill-glow-pulse {
   0%   { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
-  13%  { box-shadow: 0 0 24px hsla(38, 50%, 50%, 0.4), 0 0 48px hsla(38, 50%, 50%, 0.15); }
+  13%  { box-shadow: 0 0 calc(12px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 50%, calc(0.2 + 0.2 * var(--h-score, 0.5))), 0 0 calc(24px + 24px * var(--h-score, 0.5)) hsla(38, 50%, 50%, 0.15); }
   26%  { box-shadow: 0 0 8px hsla(38, 50%, 50%, 0.1), 0 0 16px hsla(38, 50%, 50%, 0.04); }
-  39%  { box-shadow: 0 0 16px hsla(38, 50%, 50%, 0.25), 0 0 32px hsla(38, 50%, 50%, 0.08); }
+  39%  { box-shadow: 0 0 calc(8px + 8px * var(--h-score, 0.5)) hsla(38, 50%, 50%, calc(0.12 + 0.13 * var(--h-score, 0.5))), 0 0 32px hsla(38, 50%, 50%, 0.08); }
   52%  { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
   100% { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
 }
