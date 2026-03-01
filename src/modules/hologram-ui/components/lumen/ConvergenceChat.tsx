@@ -342,6 +342,16 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       let buf = "";
       let streamedText = "";
       let done = false;
+      let pendingStreamText = "";
+      let scheduledFrame: number | null = null;
+
+      const flushStreamText = () => {
+        if (scheduledFrame != null) return;
+        scheduledFrame = requestAnimationFrame(() => {
+          scheduledFrame = null;
+          updateExchange({ understanding: pendingStreamText });
+        });
+      };
 
       while (!done) {
         const { done: d, value } = await reader.read();
@@ -360,11 +370,17 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             const c = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (c) {
               streamedText += c;
-              updateExchange({ understanding: streamedText });
+              pendingStreamText = streamedText;
+              flushStreamText();
             }
           } catch { buf = line + "\n" + buf; break; }
         }
       }
+
+      if (scheduledFrame != null) {
+        cancelAnimationFrame(scheduledFrame);
+      }
+      updateExchange({ understanding: streamedText });
 
       // ── Stage 5: Evaluate (reward circuit) ───────────────────
       setPipeline({ stage: "rewarding" });
@@ -491,30 +507,35 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
     }
   }, [isConverging, exchanges, coherence, dimensionValues, triadicMode, graphContext]);
 
+  const convergeRef = useRef(converge);
+  useEffect(() => {
+    convergeRef.current = converge;
+  }, [converge]);
+
   // ── Follow-up question listener ─────────────────────────────────
   useEffect(() => {
     const handler = (e: Event) => {
       const q = (e as CustomEvent).detail as string;
       if (q && !isConverging) {
         setInput(q);
-        setTimeout(() => converge(q), 100);
+        setTimeout(() => convergeRef.current(q), 100);
       }
     };
     window.addEventListener("lumen:follow-up", handler);
     return () => window.removeEventListener("lumen:follow-up", handler);
-  }, [isConverging, converge]);
+  }, [isConverging]);
 
   // ── Remix listener — re-run same query with current fader mix ───
   useEffect(() => {
     const handler = (e: Event) => {
       const thought = (e as CustomEvent).detail as string;
       if (thought && !isConverging) {
-        converge(thought);
+        convergeRef.current(thought);
       }
     };
     window.addEventListener("lumen:remix", handler);
     return () => window.removeEventListener("lumen:remix", handler);
-  }, [isConverging, converge]);
+  }, [isConverging]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

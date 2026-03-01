@@ -11,7 +11,7 @@
  * is always visible as a subtle arc; details unfold on interaction.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
@@ -281,7 +281,7 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────
-export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProps) {
+function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProps) {
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
@@ -810,3 +810,9 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
     </motion.div>
   );
 }
+
+export default memo(ExchangeCard, (prev, next) => (
+  prev.exchange === next.exchange &&
+  prev.isActive === next.isActive &&
+  prev.pipelineSlot === next.pipelineSlot
+));
