@@ -1,9 +1,9 @@
 /**
- * LumenFloatingPill — Global Floating Lumen AI Access
- * ════════════════════════════════════════════════════
+ * LumenFloatingPill — Global Floating Lumen Access
+ * ═════════════════════════════════════════════════
  *
  * A subtle, draggable pill that appears on every non-home page,
- * giving instant access to Lumen AI from anywhere in Hologram.
+ * giving instant access to Lumen from anywhere in Hologram.
  * Clicking opens the chat as a right-side overlay on the current page.
  * Position is persisted to localStorage.
  */
@@ -94,7 +94,7 @@ export default function LumenFloatingPill() {
             textTransform: "uppercase" as const,
           }}
         >
-          Lumen AI
+          Lumen
         </span>
       </div>
     </div>

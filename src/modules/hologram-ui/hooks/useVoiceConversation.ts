@@ -122,7 +122,7 @@ export function useVoiceConversation({
     setAudioLevel(0);
   }, [stt]);
 
-  // ── Lumen AI Stream ─────────────────────────────────────────────────
+  // ── Lumen Stream ────────────────────────────────────────────────────
 
   const queryLumen = useCallback(async (userText: string): Promise<string> => {
     conversationHistory.current.push({ role: "user", content: userText });
@@ -150,7 +150,7 @@ export function useVoiceConversation({
       signal: controller.signal,
     });
 
-    if (!res.ok || !res.body) throw new Error(`Lumen AI error: ${res.status}`);
+    if (!res.ok || !res.body) throw new Error(`Lumen error: ${res.status}`);
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();

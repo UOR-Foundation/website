@@ -224,7 +224,7 @@ export interface KernelConfig {
   };
   /** Active projection panel (exclusive — only one at a time) */
   activePanel: PanelId;
-  /** Whether the Lumen AI chat is open (independent of activePanel) */
+  /** Whether the Lumen chat is open (independent of activePanel) */
   chatOpen: boolean;
   /**
    * Attention aperture — the kernel's observer focus register.
@@ -930,7 +930,7 @@ export class KernelProjector {
     this.markDirty();
   }
 
-  /** Toggle Lumen AI chat independently */
+  /** Toggle Lumen chat independently */
   setChatOpen(open: boolean): void {
     if (this.config.chatOpen === open) return;
     this.config.chatOpen = open;

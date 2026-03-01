@@ -244,7 +244,7 @@ export default function MobileOsShell() {
           </p>
         </div>
 
-        {/* Center: Greeting + LUMEN AI circle */}
+        {/* Center: Greeting + Lumen circle */}
         <div className="flex-1 flex flex-col items-center justify-center px-8">
           {/* Greeting */}
           <div className="text-center mb-2">
@@ -274,7 +274,7 @@ export default function MobileOsShell() {
             }}
           />
 
-          {/* ── LUMEN AI Circle — the portal ────────────────── */}
+          {/* ── Lumen Circle — the portal ────────────────── */}
           <button
             onClick={handleLumenPress}
             className="relative flex items-center justify-center mb-4 active:scale-95 transition-transform duration-300"
@@ -283,7 +283,7 @@ export default function MobileOsShell() {
               height: 72,
               animation: "portal-emanate 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2.4s both",
             }}
-            aria-label="Open LUMEN AI"
+            aria-label="Open Lumen"
           >
             {/* Outer breathing ring */}
             <div
@@ -332,7 +332,7 @@ export default function MobileOsShell() {
             className="text-[14px] tracking-[0.4em] uppercase mb-2"
             style={{ color: "hsla(38, 20%, 75%, 0.5)", fontFamily: P.font }}
           >
-            LUMEN AI
+            LUMEN
           </p>
 
           {/* Typewriter whisper */}
@@ -444,7 +444,7 @@ export default function MobileOsShell() {
               ))}
             </nav>
 
-            {/* LUMEN AI shortcut at bottom of drawer */}
+            {/* Lumen shortcut at bottom of drawer */}
             <div className="px-6 pb-4 space-y-2">
               {/* Install Hologram — only if installable */}
               {pwa.canInstall && !pwa.isStandalone && (
@@ -473,7 +473,7 @@ export default function MobileOsShell() {
                 }}
               >
                 <Sparkles className="w-4 h-4" strokeWidth={1.5} />
-                <span className="text-[15px] font-light tracking-wide">Open LUMEN AI</span>
+                <span className="text-[15px] font-light tracking-wide">Open Lumen</span>
               </button>
             </div>
           </div>

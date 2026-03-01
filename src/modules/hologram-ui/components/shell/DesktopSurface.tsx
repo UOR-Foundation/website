@@ -470,7 +470,7 @@ export default function DesktopSurface({
               className="relative flex items-center justify-center cursor-pointer group"
               style={{ width: 64, height: 64, background: "none", border: "none", padding: 0 }}
               onClick={onOpenConvergence}
-              aria-label="Open Lumen AI"
+              aria-label="Open Lumen"
             >
               {/* Static monad ring — the container circle, always visible */}
               <div

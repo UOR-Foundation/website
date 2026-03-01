@@ -1,10 +1,10 @@
 /**
- * LUMEN AI Chat — In-System Intelligence Panel
- * ══════════════════════════════════════════════
+ * Lumen Chat — In-System Intelligence Panel
+ * ══════════════════════════════════════════
  *
- * A serene, focused slide-out assistant for conversing with
- * cloud AI models via the LUMEN AI engine. Warm charcoal panels,
- * gold accents, and Playfair Display typography.
+ * A serene, focused slide-out companion for conversing with
+ * Lumen. Warm charcoal panels, gold accents, and Playfair
+ * Display typography.
  *
  * @module hologram-ui/components/HologramAiChat
  */
@@ -1533,7 +1533,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                       >
                         <div className="py-1.5">
                           {[
-                            { icon: Settings, label: "LUMEN AI settings", shortcut: "Ctrl .", action: () => { setShowInputMenu(false); /* TODO: open settings */ } },
+                            { icon: Settings, label: "Lumen settings", shortcut: "Ctrl .", action: () => { setShowInputMenu(false); /* TODO: open settings */ } },
                             { icon: History, label: "History", action: () => { setShowInputMenu(false); setShowHistory(true); } },
                             { icon: BookOpen, label: "Knowledge", action: () => { setShowInputMenu(false); setShowSaved(true); } },
                             { icon: Link2, label: "Add reference", subtitle: "Paste a URL or link", action: () => {

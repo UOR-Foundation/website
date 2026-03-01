@@ -25,7 +25,7 @@ interface LumenFullscreenProps {
  * offset parent (the content area). Falls back to golden-ratio center.
  */
 function getGenesisOrigin(container: HTMLElement | null): string {
-  const dot = document.querySelector<HTMLElement>('[aria-label="Open Lumen AI"]');
+  const dot = document.querySelector<HTMLElement>('[aria-label="Open Lumen"]');
   if (!dot || !container) return "50% 58%";
 
   const dotRect = dot.getBoundingClientRect();

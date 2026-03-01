@@ -1,8 +1,8 @@
 /**
- * GlobalLumenOverlay — Right-side Lumen AI panel overlay
- * ═══════════════════════════════════════════════════════
+ * GlobalLumenOverlay — Right-side Lumen panel overlay
+ * ════════════════════════════════════════════════════
  *
- * Opens Lumen AI as a slide-out panel on any non-home page,
+ * Opens Lumen as a slide-out panel on any non-home page,
  * keeping the underlying page visible and interactive.
  * Keep-alive: mounts on first open, then stays mounted for instant re-open.
  * Uses ConvergenceChat for visual continuity with the fullscreen Lumen.

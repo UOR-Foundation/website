@@ -458,7 +458,7 @@ export default function HologramOsPage() {
           />
         </div>
 
-        {/* ══ Lumen AI Chat — GPU-accelerated slide, always mounted ═══ */}
+        {/* ══ Lumen Chat — GPU-accelerated slide, always mounted ═══ */}
         <div
           className="shrink-0 h-full"
           style={{

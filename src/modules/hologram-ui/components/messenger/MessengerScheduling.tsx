@@ -3,7 +3,7 @@
  * ══════════════════════════════════════════════════
  *
  * Create shareable booking links, manage meeting types,
- * view upcoming bookings, and let Lumen AI handle scheduling.
+ * view upcoming bookings, and let Lumen handle scheduling.
  *
  * @module hologram-ui/components/messenger/MessengerScheduling
  */
@@ -387,7 +387,7 @@ function MeetingTypesView({
         </div>
       </div>
 
-      {/* Lumen AI suggestion bar */}
+      {/* Lumen suggestion bar */}
       {onAskLumen && (
         <button
           onClick={() => onAskLumen("Analyze my calendar and messaging patterns to suggest optimal meeting types, availability windows, and buffer times. Consider my busiest days, preferred meeting lengths, and current schedule density.")}

@@ -7,7 +7,7 @@
  *   2. Whisper VAD (sovereign fallback)   — ~2-3s, no API keys
  *
  * The detected wake word triggers `onWake()` which activates
- * the Whisper STT → Lumen AI → Piper TTS voice pipeline.
+ * the Whisper STT → Lumen → Piper TTS voice pipeline.
  *
  * @module hologram-ui/hooks/useWakeWord
  */
