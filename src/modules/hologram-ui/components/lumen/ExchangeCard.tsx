@@ -443,7 +443,10 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                   ),
                 }}
               >
-                {ex.understanding}
+                {ex.understanding
+                  .replace(/\s*\{source:\s*"[^"]*"\}\s*/g, "")
+                  .replace(/\s*\[\[[A-D]\|[^\]]*\]\]\s*/g, "")
+                }
               </ReactMarkdown>
             </div>
 
