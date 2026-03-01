@@ -316,6 +316,7 @@ const FileTreeNode = memo(function FileTreeNode({
   renamingPath,
   onRenameSubmit,
   onRenameCancel,
+  onDrop,
 }: {
   node: FSNode;
   depth: number;
@@ -328,6 +329,7 @@ const FileTreeNode = memo(function FileTreeNode({
   renamingPath: string | null;
   onRenameSubmit: (oldPath: string, newName: string) => void;
   onRenameCancel: () => void;
+  onDrop: (sourcePath: string, targetFolderPath: string) => void;
 }) {
   const [expanded, setExpanded] = useState(depth === 0);
   const isFolder = node.type === "folder";
@@ -335,6 +337,7 @@ const FileTreeNode = memo(function FileTreeNode({
   const isRenaming = renamingPath === node.path;
   const renameInputRef = useRef<HTMLInputElement>(null);
   const [renameValue, setRenameValue] = useState(node.name);
+  const [dragOver, setDragOver] = useState(false);
 
   // Auto-expand folder when creating inside it
   useEffect(() => {
@@ -351,7 +354,6 @@ const FileTreeNode = memo(function FileTreeNode({
         const input = renameInputRef.current;
         if (input) {
           input.focus();
-          // Select name without extension for files
           const dotIdx = node.name.lastIndexOf(".");
           input.setSelectionRange(0, dotIdx > 0 && !isFolder ? dotIdx : node.name.length);
         }
@@ -367,6 +369,41 @@ const FileTreeNode = memo(function FileTreeNode({
       onRenameCancel();
     }
   };
+
+  // ── Drag handlers ──
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData("text/x-qfs-path", node.path);
+    e.dataTransfer.effectAllowed = "move";
+    e.stopPropagation();
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isFolder) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setDragOver(false);
+  };
+
+  const handleDropOnFolder = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const sourcePath = e.dataTransfer.getData("text/x-qfs-path");
+    if (sourcePath && sourcePath !== node.path && !node.path.startsWith(sourcePath + "/")) {
+      onDrop(sourcePath, node.path);
+      setExpanded(true);
+    }
+  };
+
+  const dropHighlight = dragOver
+    ? { background: "hsla(210, 60%, 40%, 0.25)", outline: `1px dashed ${C.accent}` }
+    : {};
 
   return (
     <div>
@@ -406,12 +443,19 @@ const FileTreeNode = memo(function FileTreeNode({
         </div>
       ) : (
         <button
+          draggable
+          onDragStart={handleDragStart}
+          onDragOver={isFolder ? handleDragOver : undefined}
+          onDragLeave={isFolder ? handleDragLeave : undefined}
+          onDrop={isFolder ? handleDropOnFolder : undefined}
           className="w-full flex items-center gap-1 text-left text-[13px] leading-[22px] select-none"
           style={{
             paddingLeft: depth * 12 + 8,
             paddingRight: 8,
             color: isActive ? C.text : C.textMuted,
             background: isActive ? C.listActive : "transparent",
+            ...dropHighlight,
+            transition: "background 0.15s, outline 0.15s",
           }}
           onClick={() => {
             if (isFolder) setExpanded(!expanded);
@@ -422,10 +466,10 @@ const FileTreeNode = memo(function FileTreeNode({
             onContextMenu(e, node);
           }}
           onMouseEnter={(e) => {
-            if (!isActive) e.currentTarget.style.background = C.listHover;
+            if (!isActive && !dragOver) e.currentTarget.style.background = C.listHover;
           }}
           onMouseLeave={(e) => {
-            if (!isActive) e.currentTarget.style.background = isActive ? C.listActive : "transparent";
+            if (!isActive && !dragOver) e.currentTarget.style.background = "transparent";
           }}
         >
           {isFolder ? (
@@ -465,6 +509,7 @@ const FileTreeNode = memo(function FileTreeNode({
               renamingPath={renamingPath}
               onRenameSubmit={onRenameSubmit}
               onRenameCancel={onRenameCancel}
+              onDrop={onDrop}
             />
           ))}
         </>
@@ -1381,6 +1426,95 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
 
   const handleRenameCancel = useCallback(() => setRenamingPath(null), []);
 
+  /** Move a file or folder into a target folder via drag-and-drop */
+  const handleMoveNode = useCallback((sourcePath: string, targetFolderPath: string) => {
+    const name = sourcePath.split("/").pop()!;
+    // Prevent dropping into self or a child of self
+    if (targetFolderPath === sourcePath || targetFolderPath.startsWith(sourcePath + "/")) return;
+    // Check if same parent (no-op)
+    const sourceParent = sourcePath.replace(/\/[^/]+$/, "") || "/";
+    if (sourceParent === targetFolderPath) return;
+
+    // Find if source is a folder
+    const findNode = (nodes: FSNode[], target: string): FSNode | null => {
+      for (const n of nodes) {
+        if (n.path === target) return n;
+        if (n.children) {
+          const found = findNode(n.children, target);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    const sourceNode = findNode(qfs.tree, sourcePath);
+    if (!sourceNode) return;
+
+    const isFolder = sourceNode.type === "folder";
+    const newBasePath = targetFolderPath === "/" ? `/${name}` : `${targetFolderPath}/${name}`;
+
+    if (isFolder) {
+      // Collect all files recursively
+      const collectFiles = (node: FSNode, base: string): { rel: string; content: string }[] => {
+        const results: { rel: string; content: string }[] = [];
+        if (node.children) {
+          for (const child of node.children) {
+            const childRel = base ? `${base}/${child.name}` : child.name;
+            if (child.type === "folder") {
+              results.push(...collectFiles(child, childRel));
+            } else {
+              results.push({ rel: childRel, content: qfs.readFile(child.path) ?? "" });
+            }
+          }
+        }
+        return results;
+      };
+
+      const files = collectFiles(sourceNode, "");
+
+      // Create new folder structure
+      qfs.mkdir(targetFolderPath, name);
+      for (const f of files) {
+        const parts = f.rel.split("/");
+        const fileName = parts.pop()!;
+        let parentDir = newBasePath;
+        for (const part of parts) {
+          try { qfs.mkdir(parentDir, part); } catch { /* exists */ }
+          parentDir = parentDir === "/" ? `/${part}` : `${parentDir}/${part}`;
+        }
+        qfs.createFile(parentDir, fileName, f.content);
+      }
+
+      // Delete old: files first, then dirs bottom-up
+      const deleteRecursive = (n: FSNode) => {
+        if (n.children) for (const c of n.children) deleteRecursive(c);
+        qfs.rm(n.path);
+      };
+      deleteRecursive(sourceNode);
+
+      // Update open files
+      setOpenFiles(prev => prev.map(f => {
+        if (f.path.startsWith(sourcePath)) {
+          const newP = newBasePath + f.path.slice(sourcePath.length);
+          return { ...f, path: newP, name: newP.split("/").pop()! };
+        }
+        return f;
+      }));
+      if (activeFilePath?.startsWith(sourcePath)) {
+        setActiveFilePath(newBasePath + activeFilePath.slice(sourcePath.length));
+      }
+    } else {
+      // Move a single file
+      const content = qfs.readFile(sourcePath) ?? "";
+      qfs.createFile(targetFolderPath, name, content);
+      qfs.rm(sourcePath);
+
+      setOpenFiles(prev => prev.map(f =>
+        f.path === sourcePath ? { ...f, path: newBasePath, name } : f
+      ));
+      if (activeFilePath === sourcePath) setActiveFilePath(newBasePath);
+    }
+  }, [qfs, activeFilePath]);
+
   const handleDeleteNode = useCallback((path: string) => {
     qfs.rm(path);
     setOpenFiles(prev => prev.filter(f => !f.path.startsWith(path)));
@@ -1663,6 +1797,12 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
             <div
               className="flex items-center gap-1 px-3 py-1 text-[11px] uppercase tracking-wider font-semibold select-none"
               style={{ color: C.text }}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const sourcePath = e.dataTransfer.getData("text/x-qfs-path");
+                if (sourcePath) handleMoveNode(sourcePath, "/");
+              }}
             >
               <ChevronDown size={12} />
               <span>hologram-workspace</span>
@@ -1689,6 +1829,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
                 renamingPath={renamingPath}
                 onRenameSubmit={handleRenameSubmit}
                 onRenameCancel={handleRenameCancel}
+                onDrop={handleMoveNode}
               />
             ))}
           </div>
