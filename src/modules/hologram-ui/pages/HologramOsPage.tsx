@@ -130,6 +130,7 @@ export default function HologramOsPage() {
     dockSide: "right",
   });
   const [chatPrompt, setChatPrompt] = useState("");
+  const [chatPrewarmed, setChatPrewarmed] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms" | "principles">("principles");
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -358,6 +359,7 @@ export default function HologramOsPage() {
           <DesktopOsSidebar
             onNewChat={() => k.setChatOpen(true)}
             onOpenChat={() => k.setChatOpen(true)}
+            onHoverChat={() => setChatPrewarmed(true)}
             onOpenBrowser={() => k.openPanel("browser")}
             onOpenCompute={() => k.openPanel("compute")}
             onOpenTerminal={() => k.openPanel("terminal")}
@@ -462,12 +464,12 @@ export default function HologramOsPage() {
             className="h-full overflow-hidden"
             style={{
               width: lumenPanel.width ? `${lumenPanel.width}px` : "340px",
-              transform: chatOpen ? "translateX(0)" : "translateX(100%)",
+              transform: chatOpen ? "translateX(0) translateZ(0)" : "translateX(100%) translateZ(0)",
               opacity: chatOpen ? 1 : 0,
               transition: lumenPanel.isResizing
                 ? "none"
                 : "transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 120ms ease",
-              willChange: "transform, opacity",
+              willChange: chatOpen || chatPrewarmed ? "transform, opacity" : "auto",
               contain: "layout style paint",
             }}
           >
