@@ -26,10 +26,15 @@ import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from 
 import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
+import {
+  RewardAccumulator, computeReward, projectReward,
+  type CoherenceSnapshot, type EpistemicGrade, type RewardSignal, type RewardProjection,
+} from "@/modules/ring-core/reward-circuit";
 import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
+export type { RewardProjection, RewardSignal, EpistemicGrade, CoherenceSnapshot as RewardCoherenceSnapshot };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -162,6 +167,7 @@ export interface ProjectionFrame {
     readonly processCount: number;
   };
   readonly coherenceGradient: CoherenceGradient;
+  readonly rewardProjection: RewardProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -334,6 +340,9 @@ export class KernelProjector {
   private tickCount = 0;
   private prescience = getPrescienceEngine();
   private surface: HolographicSurface = getHolographicSurface();
+  private rewardAccumulator = new RewardAccumulator();
+  private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
+  private lastCoherenceSnapshot: CoherenceSnapshot = { h: 0.5, dh: 0, phi: 0.5, zone: "STABLE", epistemicGrade: "D" };
   private widgetRegistry = new Map<WidgetType, number>(); // widget → PID
   private bootEvents: BootEvent[] = [];
   private listeners = new Set<(frame: ProjectionFrame) => void>();
@@ -418,7 +427,7 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}`;
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}`;
   }
 
   /**
@@ -1353,6 +1362,10 @@ export class KernelProjector {
       phase: this.apertureWavePhase,
     };
 
+    // ── Reward Projection — update snapshot for next reward computation ──
+    this.lastCoherenceSnapshot = { h: meanH, dh, phi: aperture, zone: this.cachedCoherence.zone, epistemicGrade: this.lastCoherenceSnapshot.epistemicGrade };
+    this.cachedRewardProjection = projectReward(this.rewardAccumulator);
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1367,6 +1380,7 @@ export class KernelProjector {
       apertureWave: this.cachedApertureWave,
       systemCoherence: this.cachedCoherence,
       coherenceGradient: this.cachedGradient,
+      rewardProjection: this.cachedRewardProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
@@ -1417,6 +1431,64 @@ export class KernelProjector {
   /** Is the system healthy? (not in refocusing state) */
   isSurfaceHealthy(): boolean {
     return this.surface.getState().isHealthy;
+  }
+
+  // ── Reward Circuit — Basal Ganglia Syscalls ─────────────────────────
+
+  /**
+   * Record a reward-producing action.
+   * This is the primary syscall for agents to report reasoning outcomes.
+   * The reward signal is computed from the coherence delta and enriched
+   * with limbic valence and epistemic quality.
+   *
+   * @param actionType - Category of action (e.g., 'reasoning', 'retrieval', 'navigation')
+   * @param epistemicGrade - Quality grade of the action's output
+   * @param actionLabel - Optional human-readable description
+   * @returns The computed reward signal
+   */
+  recordReward(
+    actionType: string,
+    epistemicGrade: EpistemicGrade = "D",
+    actionLabel?: string,
+  ): RewardSignal {
+    const before = this.lastCoherenceSnapshot;
+    const meanH = this.cachedCoherence?.meanH ?? 0.5;
+    const dh = this.cachedGradient?.dh ?? 0;
+    const zone = this.cachedCoherence?.zone ?? "STABLE";
+    const phi = this.config.attention.aperture;
+
+    const after: CoherenceSnapshot = { h: meanH, dh, phi, zone, epistemicGrade };
+    const raw = computeReward(before, after);
+    const signal = this.rewardAccumulator.record(raw);
+
+    // Update snapshot for next reward computation
+    this.lastCoherenceSnapshot = after;
+
+    // Feed reward temperature back into Prescience Engine
+    const rp = projectReward(this.rewardAccumulator);
+    this.prescience.setCoherenceGradient(dh * rp.temperature);
+
+    // Surface: reward is a human signal (positive reward = positive coherence signal)
+    if (signal.reward > 0) {
+      this.surface.absorbHumanSignal(Math.min(1, signal.reward * 2), `reward:${actionType}`);
+    }
+
+    kernelLog("syscall", "reward-circuit", `${actionType}: reward=${signal.reward.toFixed(4)} trend=${signal.trend}`, {
+      actionType, reward: signal.reward, trend: signal.trend, cumulative: signal.cumulative,
+    });
+
+    this.markDirty();
+    return signal;
+  }
+
+  /** Get the current reward projection (for UI consumers). */
+  getRewardProjection(): RewardProjection {
+    return this.cachedRewardProjection;
+  }
+
+  /** Get the reward accumulator stats (for dev tools). */
+  getRewardStats() {
+    return this.rewardAccumulator.stats();
   }
 
   // ── Persistence ──────────────────────────────────────────────────────

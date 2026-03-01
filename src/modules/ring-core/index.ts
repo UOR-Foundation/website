@@ -156,3 +156,12 @@ export {
   ConversationalTermEvolver,
 } from "./symbolica-enhancements";
 export type { ClaimMorphismType, TypedClaimSlot, SubScaffoldPlan } from "./symbolica-enhancements";
+// ── Phase 1: Coherence Reward Circuit ────────────────────────────────
+export {
+  computeReward, gradeDelta, RewardAccumulator, projectReward,
+} from "./reward-circuit";
+export type {
+  CoherenceSnapshot, RewardSignal, RewardTrace, RewardProjection,
+  RewardTrend,
+} from "./reward-circuit";
+// Note: EpistemicGrade is re-exported from neuro-symbolic above

@@ -1060,6 +1060,66 @@ export type Database = {
           },
         ]
       }
+      reward_traces: {
+        Row: {
+          action_label: string | null
+          action_type: string
+          agent_id: string
+          arousal: number
+          created_at: string
+          cumulative_reward: number
+          delta_h: number
+          dominance: number
+          epistemic_grade: string
+          grade_delta: number
+          h_after: number
+          h_before: number
+          id: string
+          reward: number
+          session_cid: string
+          trace_index: number
+          valence: number
+        }
+        Insert: {
+          action_label?: string | null
+          action_type?: string
+          agent_id: string
+          arousal?: number
+          created_at?: string
+          cumulative_reward?: number
+          delta_h?: number
+          dominance?: number
+          epistemic_grade?: string
+          grade_delta?: number
+          h_after?: number
+          h_before?: number
+          id?: string
+          reward?: number
+          session_cid: string
+          trace_index?: number
+          valence?: number
+        }
+        Update: {
+          action_label?: string | null
+          action_type?: string
+          agent_id?: string
+          arousal?: number
+          created_at?: string
+          cumulative_reward?: number
+          delta_h?: number
+          dominance?: number
+          epistemic_grade?: string
+          grade_delta?: number
+          h_after?: number
+          h_before?: number
+          id?: string
+          reward?: number
+          session_cid?: string
+          trace_index?: number
+          valence?: number
+        }
+        Relationships: []
+      }
       saved_responses: {
         Row: {
           claims: Json

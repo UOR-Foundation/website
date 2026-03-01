@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -37,6 +37,8 @@ export interface CoherenceState {
   readonly wave: ApertureWave;
   /** Per-field coherence contributions */
   readonly contributions: CoherenceGradient["contributions"];
+  /** Reward circuit projection — the basal ganglia signal */
+  readonly reward: RewardProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -47,6 +49,10 @@ const DEFAULT_GRADIENT: CoherenceGradient = {
 };
 
 const DEFAULT_WAVE: ApertureWave = { center: 0.3, width: 0.3, phase: 0 };
+
+const DEFAULT_REWARD: RewardProjection = {
+  ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0,
+};
 
 /**
  * useCoherence — read coherence wave state from the kernel.
@@ -65,6 +71,7 @@ export function useCoherence(): CoherenceState {
         gradient: DEFAULT_GRADIENT,
         wave: DEFAULT_WAVE,
         contributions: DEFAULT_GRADIENT.contributions,
+        reward: DEFAULT_REWARD,
       };
     }
 
@@ -77,6 +84,7 @@ export function useCoherence(): CoherenceState {
       gradient: g,
       wave: frame.apertureWave,
       contributions: g.contributions,
+      reward: frame.rewardProjection,
     };
   }, [frame]);
 }
