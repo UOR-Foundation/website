@@ -435,24 +435,7 @@ export default function HologramOsPage() {
             );
           })}
 
-          {/* ══ Page-level VoiceOrb (single instance) ═══════════════ */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 z-[400]"
-            style={{
-              bottom: "clamp(100px, 14vh, 180px)",
-              opacity: isFocus ? 0 : 1,
-              pointerEvents: isFocus ? "none" : "auto",
-              transition: "opacity 300ms",
-            }}
-          >
-            <VoiceOrb
-              personaId="hologram"
-              observerBriefing={observer.promptText}
-              screenContext={screenCtx.getPromptContext()}
-              onExchange={handleVoiceExchange}
-              chatContext={voiceChatContext}
-            />
-          </div>
+          {/* VoiceOrb removed — genesis dot is now the primary Lumen AI entry point */}
         </div>
       </div>
 
