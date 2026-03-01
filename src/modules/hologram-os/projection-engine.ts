@@ -35,6 +35,7 @@ import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection }
 import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/circuit-compiler";
 import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/projection-compositor";
 import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/kernel-supervisor";
+import { getProceduralMemory, type ProceduralMemoryEngine, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
@@ -42,6 +43,7 @@ export type { RewardProjection, RewardSignal, EpistemicGrade, CoherenceSnapshot 
 export type { StabilizerProjection };
 export type { CircuitProjection };
 export type { CompositorProjection, SupervisorProjection };
+export type { ProceduralProjection };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -178,6 +180,7 @@ export interface ProjectionFrame {
   readonly stabilizerProjection: StabilizerProjection;
   readonly circuitProjection: CircuitProjection;
   readonly compositorProjection: CompositorProjection;
+  readonly proceduralProjection: ProceduralProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -354,6 +357,7 @@ export class KernelProjector {
   private circuitEngine: CircuitEngine = getCircuitEngine();
   private compositor: ProjectionCompositor = getProjectionCompositor();
   private supervisor: KernelSupervisor = getKernelSupervisor();
+  private proceduralMemory: ProceduralMemoryEngine = getProceduralMemory();
   private rewardAccumulator = new RewardAccumulator();
   private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
   private cachedStabilizerProjection: StabilizerProjection = { syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0, totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0 };
@@ -1400,6 +1404,9 @@ export class KernelProjector {
     // ── Compositor — multi-kernel frame merger ────────────────────────
     const compositorProjection = this.compositor.project();
 
+    // ── Procedural Memory — habit ring projection ────────────────────
+    const proceduralProjection = this.proceduralMemory.project();
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1418,6 +1425,7 @@ export class KernelProjector {
       stabilizerProjection: this.cachedStabilizerProjection,
       circuitProjection: this.cachedCircuitProjection,
       compositorProjection,
+      proceduralProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
@@ -1510,12 +1518,49 @@ export class KernelProjector {
       this.surface.absorbHumanSignal(Math.min(1, signal.reward * 2), `reward:${actionType}`);
     }
 
+    // Feed into procedural memory for pattern detection
+    this.proceduralMemory.ingest({
+      actionType,
+      actionLabel: actionLabel ?? actionType,
+      reward: signal.reward,
+      epistemicGrade,
+      deltaH: signal.deltaH,
+      timestamp: Date.now(),
+    });
+
     kernelLog("syscall", "reward-circuit", `${actionType}: reward=${signal.reward.toFixed(4)} trend=${signal.trend}`, {
       actionType, reward: signal.reward, trend: signal.trend, cumulative: signal.cumulative,
     });
 
     this.markDirty();
     return signal;
+  }
+
+  /**
+   * Try to fire a procedural habit for the given action type.
+   * Returns the cached result if a matching habit exists, null otherwise.
+   * This is the "cerebellum fast-path" — bypasses the full reasoning pipeline.
+   */
+  tryHabit(actionType: string): { habitId: string; result: import("@/hologram/kernel/procedural-memory").HabitResult } | null {
+    const fired = this.proceduralMemory.tryFire(actionType);
+    if (!fired) return null;
+
+    kernelLog("syscall", "procedural-habit", `Habit fired: ${fired.habit.cachedResult.label} (fire #${fired.habit.fireCount})`, {
+      habitId: fired.habit.id, fireCount: fired.habit.fireCount, timeSavedMs: fired.habit.timeSavedMs,
+    });
+
+    this.markDirty();
+    return { habitId: fired.habit.id, result: fired.result };
+  }
+
+  /** Report feedback on a habit fire (did the reward stay positive?) */
+  reportHabitFeedback(habitId: string, reward: number): void {
+    this.proceduralMemory.reportFeedback(habitId, reward);
+  }
+
+  /** Get the procedural memory engine */
+  getProceduralMemory(): ProceduralMemoryEngine {
+    return this.proceduralMemory;
   }
 
   /** Get the current reward projection (for UI consumers). */
