@@ -31,10 +31,12 @@ import {
   type CoherenceSnapshot, type EpistemicGrade, type RewardSignal, type RewardProjection,
 } from "@/modules/ring-core/reward-circuit";
 import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
+import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/stabilizer-engine";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
 export type { RewardProjection, RewardSignal, EpistemicGrade, CoherenceSnapshot as RewardCoherenceSnapshot };
+export type { StabilizerProjection };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -168,6 +170,7 @@ export interface ProjectionFrame {
   };
   readonly coherenceGradient: CoherenceGradient;
   readonly rewardProjection: RewardProjection;
+  readonly stabilizerProjection: StabilizerProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -340,8 +343,10 @@ export class KernelProjector {
   private tickCount = 0;
   private prescience = getPrescienceEngine();
   private surface: HolographicSurface = getHolographicSurface();
+  private stabilizer: StabilizerEngine = getStabilizerEngine();
   private rewardAccumulator = new RewardAccumulator();
   private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
+  private cachedStabilizerProjection: StabilizerProjection = { syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0, totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0 };
   private lastCoherenceSnapshot: CoherenceSnapshot = { h: 0.5, dh: 0, phi: 0.5, zone: "STABLE", epistemicGrade: "D" };
   private widgetRegistry = new Map<WidgetType, number>(); // widget → PID
   private bootEvents: BootEvent[] = [];
@@ -427,7 +432,7 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}`;
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}`;
   }
 
   /**
@@ -1366,6 +1371,18 @@ export class KernelProjector {
     this.lastCoherenceSnapshot = { h: meanH, dh, phi: aperture, zone: this.cachedCoherence.zone, epistemicGrade: this.lastCoherenceSnapshot.epistemicGrade };
     this.cachedRewardProjection = projectReward(this.rewardAccumulator);
 
+    // ── Stabilizer Syndrome Engine — the immune system ──────────────────
+    // Extract syndrome, decode, and apply corrections through the surface
+    const processHScores = this.cachedProcesses.map(p => p.hScore);
+    const stabResult = this.stabilizer.tick(meanH, processHScores, dh, this.tickCount);
+    this.cachedStabilizerProjection = stabResult.projection;
+
+    // If a correction was decoded, feed it back through the holographic surface
+    if (stabResult.correction) {
+      const corrMag = stabResult.correction.magnitude;
+      this.surface.absorbHumanSignal(corrMag, `stabilizer:${stabResult.correction.label}`);
+    }
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1381,6 +1398,7 @@ export class KernelProjector {
       systemCoherence: this.cachedCoherence,
       coherenceGradient: this.cachedGradient,
       rewardProjection: this.cachedRewardProjection,
+      stabilizerProjection: this.cachedStabilizerProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
