@@ -516,6 +516,67 @@ export async function getNextTokenLogits(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Perplexity Computation
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Compute perplexity of a token sequence using the model's forward pass.
+ *
+ * Perplexity = exp( -1/N * Σ log P(token_i | context) )
+ *
+ * Lower perplexity = more predictable/coherent output.
+ */
+export async function computePerplexity(
+  loadedModel: LoadedHFModel,
+  tokenIds: number[],
+): Promise<{ perplexity: number; avgNLL: number; tokenCount: number }> {
+  if (tokenIds.length < 2) {
+    return { perplexity: Infinity, avgNLL: Infinity, tokenCount: 0 };
+  }
+
+  let totalNLL = 0;
+  let count = 0;
+
+  for (let i = 1; i < tokenIds.length; i++) {
+    const contextStart = Math.max(0, i - 32);
+    const context = tokenIds.slice(contextStart, i);
+    const targetToken = tokenIds[i];
+
+    try {
+      const logits = await getNextTokenLogits(loadedModel, context);
+      if (logits.length === 0) continue;
+
+      let maxLogit = -Infinity;
+      for (let v = 0; v < logits.length; v++) {
+        if (logits[v] > maxLogit) maxLogit = logits[v];
+      }
+
+      let sumExp = 0;
+      for (let v = 0; v < logits.length; v++) {
+        sumExp += Math.exp(logits[v] - maxLogit);
+      }
+      const logSumExp = maxLogit + Math.log(sumExp);
+
+      const logProb = (targetToken < logits.length)
+        ? logits[targetToken] - logSumExp
+        : -20;
+
+      totalNLL -= logProb;
+      count++;
+    } catch {
+      // Skip failed forward passes
+    }
+  }
+
+  if (count === 0) return { perplexity: Infinity, avgNLL: Infinity, tokenCount: 0 };
+
+  const avgNLL = totalNLL / count;
+  const perplexity = Math.exp(avgNLL);
+
+  return { perplexity, avgNLL, tokenCount: count };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Baseline Inference
 // ═══════════════════════════════════════════════════════════════
 
@@ -527,7 +588,7 @@ export async function baselineInference(
   loadedModel: LoadedHFModel,
   prompt: string,
   maxTokens: number = 32,
-): Promise<{ text: string; timeMs: number; tokensPerSecond: number }> {
+): Promise<{ text: string; timeMs: number; tokensPerSecond: number; tokenIds: number[] }> {
   const t0 = performance.now();
 
   const inputs = loadedModel.tokenizer(prompt, { return_tensors: "pt" });
@@ -540,12 +601,14 @@ export async function baselineInference(
 
   const generated = loadedModel.tokenizer.decode(output[0], { skip_special_tokens: true });
   const timeMs = performance.now() - t0;
-  const tokenCount = output[0].length - (inputs.input_ids?.length ?? 0);
+  const allTokenIds = Array.from(output[0], (v: any) => Number(v));
+  const promptLen = inputs.input_ids?.dims?.[1] ?? inputs.input_ids?.length ?? 0;
+  const tokenCount = allTokenIds.length - promptLen;
 
   return {
     text: generated,
     timeMs,
     tokensPerSecond: (tokenCount / timeMs) * 1000,
+    tokenIds: allTokenIds,
   };
 }
-
