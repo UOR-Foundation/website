@@ -107,6 +107,14 @@ export interface ResonanceSnapshot {
   x: number;
   /** Observation count at time of snapshot */
   n: number;
+  /** Per-dimension values at this point */
+  d?: {
+    expertise: number;
+    density: number;
+    formality: number;
+    warmth: number;
+    pace: number;
+  };
 }
 
 // ── Session Tracking ──────────────────────────────────────────────────
@@ -533,6 +541,13 @@ function selfReflect(profile: ResonanceProfile): ResonanceProfile {
     s: profile.satisfactionRate,
     x: profile.correctionRate,
     n: profile.observationCount,
+    d: {
+      expertise: profile.expertiseLevel,
+      density: profile.densityPreference,
+      formality: profile.formalityRegister,
+      warmth: profile.warmthPreference,
+      pace: profile.pacePreference,
+    },
   });
   // Cap at 60 entries (~600 exchanges of history)
   if (profile.history.length > 60) {
