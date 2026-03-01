@@ -398,7 +398,7 @@ export default function DesktopSurface({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "clamp(10px, 1.8vh, 24px)",
+            gap: 0,
           }}
         >
           <p
@@ -429,10 +429,10 @@ export default function DesktopSurface({
           </h1>
 
           {/* Vertical line */}
-          <div className="flex justify-center">
+          <div className="flex justify-center" style={{ marginTop: "clamp(16px, 2.5vh, 32px)" }}>
             <div
               style={{
-                height: "clamp(56px, 8vh, 130px)",
+                height: "clamp(48px, 7vh, 100px)",
                 width: 0,
                 borderLeft: `1px solid ${
                   mode === "white"
@@ -451,13 +451,13 @@ export default function DesktopSurface({
           <div
             className="flex flex-col items-center"
             style={{
-              marginTop: "clamp(6px, 1vh, 14px)",
+              marginTop: "clamp(8px, 1.2vh, 16px)",
               animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
             }}
           >
             <button
               className="relative flex items-center justify-center cursor-pointer group"
-              style={{ width: 64, height: 64, background: "none", border: "none", padding: 0 }}
+              style={{ width: 48, height: 48, background: "none", border: "none", padding: 0 }}
               onClick={onOpenChat}
               aria-label="Open Lumen AI"
             >
@@ -500,7 +500,7 @@ export default function DesktopSurface({
           <div
             className="flex flex-col items-center"
             style={{
-              marginTop: "clamp(2px, 0.5vh, 8px)",
+              marginTop: "clamp(4px, 0.8vh, 12px)",
               animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
             }}
           >
