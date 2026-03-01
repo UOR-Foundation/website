@@ -51,6 +51,8 @@ interface ContextualBloomProps {
   understanding: string;
   /** Callback when a follow-up is triggered */
   onFollowUp: (question: string) => void;
+  /** When false, bloom detection/interaction is disabled (default true) */
+  enabled?: boolean;
 }
 
 // ── Term Detection ───────────────────────────────────────────────────
@@ -366,6 +368,7 @@ export default memo(function ContextualBloom({
   thought,
   understanding,
   onFollowUp,
+  enabled = true,
 }: ContextualBloomProps) {
   const [activeBloom, setActiveBloom] = useState<ActiveBloom | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -374,8 +377,8 @@ export default memo(function ContextualBloom({
 
   // Detect terms from the raw understanding text
   useEffect(() => {
-    depthTerms.current = detectDepthTerms(understanding);
-  }, [understanding]);
+    if (enabled) depthTerms.current = detectDepthTerms(understanding);
+  }, [understanding, enabled]);
 
   const handleTermInteraction = useCallback(async (
     term: string,
@@ -473,6 +476,8 @@ export default memo(function ContextualBloom({
       });
     };
   }, [understanding, children]);
+
+  if (!enabled) return <>{children}</>;
 
   return (
     <div
