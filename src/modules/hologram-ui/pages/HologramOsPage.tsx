@@ -131,7 +131,7 @@ export default function HologramOsPage() {
   });
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
-  const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
+  const [legalTab, setLegalTab] = useState<"privacy" | "terms" | "principles">("privacy");
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const journal = useFocusJournal();
 

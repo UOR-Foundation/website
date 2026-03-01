@@ -141,7 +141,7 @@ interface DesktopSurfaceProps {
   contextHints: string[];
   onOpenChat: () => void;
   onSwitchDesktop: (m: DesktopMode) => void;
-  onOpenLegal: (tab: "privacy" | "terms") => void;
+  onOpenLegal: (tab: "privacy" | "terms" | "principles") => void;
   isWidgetVisible: (id: string) => boolean;
   removeWidget: (id: string) => void;
   ambientState?: { playing: boolean; stationHue: string };
@@ -603,7 +603,7 @@ export default function DesktopSurface({
         </button>
         <span style={{ width: "2px", height: "2px", borderRadius: "50%", background: P.legalDot }} />
         <button
-          onClick={() => navigate("/waitlist")}
+          onClick={() => onOpenLegal("principles")}
           className="transition-opacity duration-500 hover:opacity-90"
           style={{
             fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -616,7 +616,7 @@ export default function DesktopSurface({
             cursor: "pointer",
           }}
         >
-          Request Early Access
+          Our Principles
         </button>
       </div>
     </div>
