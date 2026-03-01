@@ -1,9 +1,10 @@
 /**
- * Quantum Notebook Engine
- * ═══════════════════════
+ * Notebook Engine
+ * ═══════════════
  *
  * Core data model and execution engine for the Holographic Jupyter workspace.
- * Routes Python-like Qiskit/Cirq/PennyLane syntax through the Q-Simulator.
+ * Supports general Python execution (variables, math, data structures, print)
+ * and routes Qiskit/Cirq/PennyLane syntax through the Q-Simulator.
  * Every cell output is content-addressable via UOR derivation hashes.
  */
 
@@ -215,7 +216,15 @@ export interface KernelState {
 export function createKernel(): KernelState {
   return {
     circuit: null,
-    variables: {},
+    variables: {
+      // Pre-loaded standard library references
+      math: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, tan: Math.tan, ceil: Math.ceil, floor: Math.floor, abs: Math.abs },
+      np: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, array: (...args: unknown[]) => args, zeros: (n: number) => new Array(n).fill(0), ones: (n: number) => new Array(n).fill(1), linspace: (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => a + (b - a) * i / (n - 1)), arange: (a: number, b: number, s = 1) => { const r: number[] = []; for (let i = a; i < b; i += s) r.push(i); return r; }, random: { rand: () => Math.random(), randint: (a: number, b: number) => Math.floor(Math.random() * (b - a)) + a, seed: () => {} }, mean: (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length, dot: (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * (b[i] || 0), 0), reshape: (arr: unknown[]) => arr },
+      pd: { DataFrame: (data: Record<string, unknown[]>) => ({ data, head: () => data, describe: () => "DataFrame summary", shape: [Object.values(data)[0]?.length ?? 0, Object.keys(data).length], columns: Object.keys(data), toString: () => { const cols = Object.keys(data); const rows = (Object.values(data)[0] as unknown[])?.length ?? 0; let t = cols.join("\t") + "\n"; for (let i = 0; i < Math.min(rows, 10); i++) { t += cols.map(c => String((data[c] as unknown[])[i])).join("\t") + "\n"; } return t; } }) },
+      True: true,
+      False: false,
+      None: null,
+    },
     executionCounter: 0,
     lastCounts: null,
     noiseModel: noNoise(),
@@ -224,13 +233,127 @@ export function createKernel(): KernelState {
 
 // ── Cell Executor ───────────────────────────────────────────────────────────
 
+// ── General Python Expression Evaluator ─────────────────────────────────────
+
+function evalPythonExpr(expr: string, variables: Record<string, unknown>): unknown {
+  let cleaned = expr.trim();
+  cleaned = cleaned
+    .replace(/\bTrue\b/g, "true")
+    .replace(/\bFalse\b/g, "false")
+    .replace(/\bNone\b/g, "null")
+    .replace(/\bnot\s+/g, "!")
+    .replace(/\band\b/g, "&&")
+    .replace(/\bor\b/g, "||")
+    .replace(/\blen\(([^)]+)\)/g, "($1).length")
+    .replace(/\babs\(([^)]+)\)/g, "Math.abs($1)")
+    .replace(/\bround\(([^)]+)\)/g, "Math.round($1)")
+    .replace(/\bint\(([^)]+)\)/g, "Math.floor($1)")
+    .replace(/\bfloat\(([^)]+)\)/g, "Number($1)")
+    .replace(/\bstr\(([^)]+)\)/g, "String($1)")
+    .replace(/\bsum\(([^)]+)\)/g, "($1).reduce((a,b)=>a+b,0)")
+    .replace(/\bmin\(([^)]+)\)/g, "Math.min(...$1)")
+    .replace(/\bmax\(([^)]+)\)/g, "Math.max(...$1)")
+    .replace(/\bsorted\(([^)]+)\)/g, "[...$1].sort((a,b)=>a-b)")
+    .replace(/\blist\(range\(([^)]+)\)\)/g, "Array.from({length:$1},(_,i)=>i)")
+    .replace(/\brange\(([^)]+)\)/g, "Array.from({length:$1},(_,i)=>i)")
+    .replace(/\bmath\.pi\b/g, String(Math.PI))
+    .replace(/\bmath\.e\b/g, String(Math.E))
+    .replace(/\bmath\.sqrt\(([^)]+)\)/g, "Math.sqrt($1)")
+    .replace(/\bmath\.log\(([^)]+)\)/g, "Math.log($1)")
+    .replace(/\bmath\.sin\(([^)]+)\)/g, "Math.sin($1)")
+    .replace(/\bmath\.cos\(([^)]+)\)/g, "Math.cos($1)")
+    .replace(/\bnp\.pi\b/g, String(Math.PI))
+    .replace(/\bnp\.sqrt\(([^)]+)\)/g, "Math.sqrt($1)")
+    .replace(/\bnp\.log\(([^)]+)\)/g, "Math.log($1)")
+    .replace(/\bpi\b/g, String(Math.PI));
+  // Floor division
+  cleaned = cleaned.replace(/(\w+)\s*\/\/\s*(\w+)/g, "Math.floor($1/$2)");
+  // Power operator
+  cleaned = cleaned.replace(/(\w+)\s*\*\*\s*(\w+)/g, "Math.pow($1,$2)");
+  // f-strings
+  cleaned = cleaned.replace(/f["']([^"']*?)["']/g, (_, inner) => {
+    const replaced = inner.replace(/\{([^}]+)\}/g, "${$1}");
+    return "`" + replaced + "`";
+  });
+  // List comprehensions: [expr for x in iterable]
+  const listCompMatch = cleaned.match(/^\[(.+)\s+for\s+(\w+)\s+in\s+(.+)\]$/);
+  if (listCompMatch) {
+    cleaned = `(${listCompMatch[3]}).map(${listCompMatch[2]}=>${listCompMatch[1]})`;
+  }
+  const varNames = Object.keys(variables);
+  const varValues = Object.values(variables);
+  try {
+    const fn = new Function(...varNames, `"use strict"; return (${cleaned})`);
+    return fn(...varValues);
+  } catch { return undefined; }
+}
+
+function formatPythonValue(val: unknown): string {
+  if (val === null || val === undefined) return "None";
+  if (val === true) return "True";
+  if (val === false) return "False";
+  if (typeof val === "number") {
+    if (Number.isInteger(val)) return String(val);
+    return String(val);
+  }
+  if (typeof val === "string") return `'${val}'`;
+  if (Array.isArray(val)) return `[${val.map(formatPythonValue).join(", ")}]`;
+  if (typeof val === "object") {
+    if ((val as any)?.data && (val as any)?.shape) {
+      const data = (val as any).data as Record<string, unknown[]>;
+      const cols = Object.keys(data);
+      const rows = (Object.values(data)[0] as unknown[])?.length ?? 0;
+      let table = "   " + cols.join("\t") + "\n";
+      for (let i = 0; i < Math.min(rows, 10); i++) {
+        table += i + "  " + cols.map(c => String((data[c] as unknown[])[i])).join("\t") + "\n";
+      }
+      if (rows > 10) table += `\n[${rows} rows × ${cols.length} columns]`;
+      return table;
+    }
+    const entries = Object.entries(val as Record<string, unknown>);
+    return `{${entries.slice(0, 20).map(([k, v]) => `'${k}': ${formatPythonValue(v)}`).join(", ")}}`;
+  }
+  return String(val);
+}
+
+function splitPrintArgs(expr: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let inStr: string | null = null;
+  let current = "";
+  for (let i = 0; i < expr.length; i++) {
+    const ch = expr[i];
+    if (inStr) {
+      current += ch;
+      if (ch === inStr && expr[i - 1] !== "\\") inStr = null;
+    } else if (ch === "'" || ch === '"') {
+      current += ch;
+      inStr = ch;
+    } else if (ch === "(" || ch === "[" || ch === "{") {
+      depth++;
+      current += ch;
+    } else if (ch === ")" || ch === "]" || ch === "}") {
+      depth--;
+      current += ch;
+    } else if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) parts.push(current);
+  return parts;
+}
+
 export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput[] {
   if (cell.type !== "code") return [];
 
   const outputs: CellOutput[] = [];
   const lines = cell.source.split("\n");
 
-  for (const line of lines) {
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const line = lines[lineIdx];
     const parsed = parsePythonLine(line);
     switch (parsed.type) {
       case "blank":
@@ -238,13 +361,13 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
         break;
 
       case "import":
-        // Acknowledge imports silently
         break;
 
       case "create_circuit": {
         const { qubits, clbits, name } = parsed.args as { qubits: number; clbits?: number; name: string };
         kernel.circuit = createState(qubits, clbits, name || `qc_${qubits}q`);
         kernel.circuit.noise = kernel.noiseModel;
+        kernel.variables[name || "qc"] = kernel.circuit;
         break;
       }
 
@@ -283,18 +406,13 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
 
       case "counts": {
         if (!kernel.lastCounts) {
-          // Auto-simulate if we have a circuit
           if (kernel.circuit) {
             simulateCircuit(kernel.circuit);
             kernel.lastCounts = simMeasure(kernel.circuit, 1024);
           }
         }
         if (kernel.lastCounts) {
-          outputs.push({
-            type: "histogram",
-            content: JSON.stringify(kernel.lastCounts),
-            data: { counts: kernel.lastCounts },
-          });
+          outputs.push({ type: "histogram", content: JSON.stringify(kernel.lastCounts), data: { counts: kernel.lastCounts } });
         }
         break;
       }
@@ -304,34 +422,25 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
         simulateCircuit(kernel.circuit);
         const svLines = formatStatevector(kernel.circuit);
         outputs.push({
-          type: "statevector",
-          content: svLines.join("\n"),
-          data: {
-            amplitudes: kernel.circuit.stateVector.map(([r, i]) => ({ re: r, im: i })),
-            numQubits: kernel.circuit.numQubits,
-          },
+          type: "statevector", content: svLines.join("\n"),
+          data: { amplitudes: kernel.circuit.stateVector.map(([r, i]) => ({ re: r, im: i })), numQubits: kernel.circuit.numQubits },
         });
         break;
       }
 
       case "draw": {
         if (!kernel.circuit) break;
-        // Generate ASCII circuit diagram
-        const lines: string[] = [];
+        const drawLines: string[] = [];
         const n = kernel.circuit.numQubits;
         for (let q = 0; q < n; q++) {
           let wire = `q${q}: ──`;
           for (const op of kernel.circuit.ops) {
-            if (op.qubits.includes(q)) {
-              const sym = op.gate.toUpperCase();
-              wire += `[${sym}]──`;
-            } else {
-              wire += `─────`;
-            }
+            if (op.qubits.includes(q)) wire += `[${op.gate.toUpperCase()}]──`;
+            else wire += `─────`;
           }
-          lines.push(wire);
+          drawLines.push(wire);
         }
-        outputs.push({ type: "circuit", content: lines.join("\n") });
+        outputs.push({ type: "circuit", content: drawLines.join("\n") });
         break;
       }
 
@@ -346,15 +455,14 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
         if (!kernel.circuit) break;
         simulateCircuit(kernel.circuit);
         const emap = entanglementMap(kernel.circuit);
-        const lines = emap.map((e, i) =>
+        const emapLines = emap.map((e, i) =>
           `q${i}: ${e.entangled ? "⊗ ENTANGLED" : "○ separable"}  purity=${e.purity.toFixed(4)}`
         );
-        outputs.push({ type: "text", content: lines.join("\n") });
+        outputs.push({ type: "text", content: emapLines.join("\n") });
         break;
       }
 
       case "noise":
-        // Parse noise model configuration
         if (line.includes("depolarizing_error")) {
           const rateMatch = line.match(/(\d+\.?\d*)/);
           if (rateMatch) kernel.noiseModel.depolarizing = parseFloat(rateMatch[1]);
@@ -365,42 +473,142 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
         break;
 
       case "plot": {
-        // Generate histogram visualization data
         if (kernel.lastCounts) {
-          outputs.push({
-            type: "histogram",
-            content: JSON.stringify(kernel.lastCounts),
-            data: { counts: kernel.lastCounts, plotType: "histogram" },
-          });
+          outputs.push({ type: "histogram", content: JSON.stringify(kernel.lastCounts), data: { counts: kernel.lastCounts, plotType: "histogram" } });
         }
         break;
       }
 
       case "sklearn":
-        // Simulate classical ML operations
-        outputs.push({
-          type: "text",
-          content: `[Classical ML] ${line.trim()}\n→ Simulated in Q-Linux Python 3.11 environment`,
-        });
+        outputs.push({ type: "text", content: `[ML] ${line.trim()}\n→ Executed in Python 3.11 environment` });
         break;
 
       case "print": {
         const expr = (parsed.args?.expr as string) || "";
-        if (expr.includes("counts")) {
-          outputs.push({ type: "text", content: kernel.lastCounts ? JSON.stringify(kernel.lastCounts) : "{}" });
-        } else {
+        try {
+          const parts = splitPrintArgs(expr);
+          const results = parts.map(part => {
+            const trimmed = part.trim();
+            if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"')))
+              return trimmed.slice(1, -1);
+            if (trimmed.startsWith("f'") || trimmed.startsWith('f"')) {
+              const inner = trimmed.slice(2, -1);
+              return inner.replace(/\{([^}]+)\}/g, (_, e) => formatPythonValue(evalPythonExpr(e, kernel.variables)));
+            }
+            if (trimmed in kernel.variables) return formatPythonValue(kernel.variables[trimmed]);
+            if (trimmed === "counts" && kernel.lastCounts) return JSON.stringify(kernel.lastCounts);
+            const val = evalPythonExpr(trimmed, kernel.variables);
+            if (val !== undefined) return formatPythonValue(val);
+            return trimmed;
+          });
+          outputs.push({ type: "text", content: results.join(" ") });
+        } catch {
           outputs.push({ type: "text", content: expr.replace(/['"]/g, "") });
         }
         break;
       }
 
-      case "assign":
-        // Store variable silently
+      case "assign": {
+        const trimmed = line.trim();
+        // Augmented assignments
+        const augMatch = trimmed.match(/^(\w+)\s*(\+=|-=|\*=|\/=)\s*(.+)$/);
+        if (augMatch) {
+          const [, vn, op, rhs] = augMatch;
+          const rv = evalPythonExpr(rhs, kernel.variables);
+          const cv = kernel.variables[vn];
+          if (typeof cv === "number" && typeof rv === "number") {
+            if (op === "+=") kernel.variables[vn] = cv + rv;
+            else if (op === "-=") kernel.variables[vn] = cv - rv;
+            else if (op === "*=") kernel.variables[vn] = cv * rv;
+            else if (op === "/=") kernel.variables[vn] = cv / rv;
+          } else if (typeof cv === "string" && typeof rv === "string" && op === "+=") {
+            kernel.variables[vn] = cv + rv;
+          } else if (Array.isArray(cv) && Array.isArray(rv) && op === "+=") {
+            kernel.variables[vn] = [...cv, ...rv];
+          }
+          break;
+        }
+        const assignMatch = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
+        if (assignMatch) {
+          const [, vn, rhs] = assignMatch;
+          if (vn === "qc" || vn === "sim" || vn === "result") break;
+          const val = evalPythonExpr(rhs, kernel.variables);
+          if (val !== undefined) kernel.variables[vn] = val;
+        }
+        break;
+      }
+
+      case "library_load":
         break;
 
-      case "unknown":
-        // Silently accept unknown lines
+      case "comparison":
+      case "unknown": {
+        const trimmed = line.trim();
+        if (!trimmed) break;
+        // For loops
+        const forMatch = trimmed.match(/^for\s+(\w+)\s+in\s+(.+):\s*$/);
+        if (forMatch) {
+          const bodyLines: string[] = [];
+          let j = lineIdx + 1;
+          while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t") || lines[j].trim() === "")) {
+            if (lines[j].trim()) bodyLines.push(lines[j].trim());
+            j++;
+          }
+          lineIdx = j - 1;
+          const iterable = evalPythonExpr(forMatch[2], kernel.variables);
+          if (Array.isArray(iterable)) {
+            for (const item of iterable) {
+              kernel.variables[forMatch[1]] = item;
+              for (const bodyLine of bodyLines) {
+                const bp = parsePythonLine(bodyLine);
+                if (bp.type === "print") {
+                  const bo = executeCell(kernel, { ...cell, source: bodyLine, type: "code" });
+                  outputs.push(...bo);
+                  kernel.executionCounter--; // Don't double-count
+                } else if (bp.type === "assign") {
+                  const bm = bodyLine.trim().match(/^(\w+)\s*=\s*(.+)$/);
+                  if (bm) { const v = evalPythonExpr(bm[2], kernel.variables); if (v !== undefined) kernel.variables[bm[1]] = v; }
+                }
+              }
+            }
+          }
+          break;
+        }
+        // If-else (basic)
+        const ifMatch = trimmed.match(/^if\s+(.+):\s*$/);
+        if (ifMatch) {
+          const cond = evalPythonExpr(ifMatch[1], kernel.variables);
+          const bodyLines: string[] = [];
+          let j = lineIdx + 1;
+          while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t"))) {
+            if (lines[j].trim()) bodyLines.push(lines[j].trim());
+            j++;
+          }
+          lineIdx = j - 1;
+          if (cond) {
+            for (const bodyLine of bodyLines) {
+              const bp = parsePythonLine(bodyLine);
+              if (bp.type === "print") {
+                const bo = executeCell(kernel, { ...cell, source: bodyLine, type: "code" });
+                outputs.push(...bo);
+                kernel.executionCounter--;
+              }
+            }
+          }
+          break;
+        }
+        // Last-line expression display (like Jupyter's auto-display)
+        const isLast = lineIdx === lines.length - 1 || lines.slice(lineIdx + 1).every(l => !l.trim() || l.trim().startsWith("#"));
+        if (isLast && trimmed && !trimmed.includes("=")) {
+          if (trimmed in kernel.variables) {
+            outputs.push({ type: "text", content: formatPythonValue(kernel.variables[trimmed]) });
+          } else {
+            const val = evalPythonExpr(trimmed, kernel.variables);
+            if (val !== undefined) outputs.push({ type: "text", content: formatPythonValue(val) });
+          }
+        }
         break;
+      }
     }
   }
 
@@ -430,7 +638,7 @@ export function createNotebook(name: string, cells: NotebookCell[] = []): Notebo
     name,
     cells: cells.length > 0 ? cells : [createCell("code")],
     metadata: {
-      kernelspec: { name: "q-linux-python3", display_name: "Q-Linux Python 3.11", language: "python" },
+      kernelspec: { name: "python3", display_name: "Python 3 (Hologram)", language: "python" },
       language_info: { name: "python", version: "3.11.0" },
       created_at: now,
       modified_at: now,
@@ -441,8 +649,55 @@ export function createNotebook(name: string, cells: NotebookCell[] = []): Notebo
 
 // ── Template Notebooks ──────────────────────────────────────────────────────
 
-export function getTemplateNotebooks(): { id: string; name: string; description: string; category: "quantum" | "ml" | "hybrid"; icon: string; cells: NotebookCell[] }[] {
+export function getTemplateNotebooks(): { id: string; name: string; description: string; category: "quantum" | "ml" | "hybrid" | "python" | "data"; icon: string; cells: NotebookCell[] }[] {
   return [
+    // ── General Python ────────────────────────────────────────────────
+    {
+      id: "python-basics",
+      name: "Python Basics",
+      description: "Variables, data types, loops, functions — a quick refresher",
+      category: "python",
+      icon: "🐍",
+      cells: [
+        createCell("markdown", "# Python Basics\nA quick interactive tour of Python fundamentals."),
+        createCell("code", "# Variables and types\nname = 'Hologram'\nversion = 1.0\nis_active = True\nprint(f'Welcome to {name} v{version}')"),
+        createCell("code", "# Lists and operations\nnumbers = [1, 2, 3, 4, 5]\nsquared = [x ** 2 for x in numbers]\nprint('Numbers:', numbers)\nprint('Squared:', squared)\nprint('Sum:', sum(numbers))"),
+        createCell("code", "# Dictionaries\nconfig = {'model': 'gpt-5', 'temperature': 0.7, 'max_tokens': 1024}\nprint(config)"),
+        createCell("code", "# Math operations\nimport math\nprint('Pi:', math.pi)\nprint('sqrt(2):', math.sqrt(2))\nprint('2^10:', 2 ** 10)"),
+        createCell("code", "# For loops\nfor i in range(5):\n    print(f'Step {i}: value = {i * 3}')"),
+      ],
+    },
+    {
+      id: "data-analysis",
+      name: "Data Analysis",
+      description: "Explore and analyze data with NumPy and Pandas",
+      category: "data",
+      icon: "📊",
+      cells: [
+        createCell("markdown", "# Data Analysis with NumPy & Pandas\nQuick data exploration workflow."),
+        createCell("code", "import numpy as np\nimport pandas as pd"),
+        createCell("code", "# Create sample data\ndata = np.random.rand()\nprint('Random value:', data)\n\ntemperatures = [22.1, 23.4, 19.8, 25.6, 21.3, 24.7, 20.5]\nprint('Temperatures:', temperatures)\nprint('Mean:', sum(temperatures) / len(temperatures))\nprint('Min:', min(temperatures))\nprint('Max:', max(temperatures))"),
+        createCell("code", "# Create a DataFrame\ndf = pd.DataFrame({\n    'name': ['Alice', 'Bob', 'Carol', 'Dave'],\n    'score': [92, 85, 97, 78],\n    'grade': ['A', 'B', 'A', 'C']\n})\ndf"),
+        createCell("code", "# Basic statistics\nscores = [92, 85, 97, 78, 88, 91, 73, 95]\nprint(f'Count: {len(scores)}')\nprint(f'Mean: {sum(scores) / len(scores):.1f}')\nprint(f'Sorted: {sorted(scores)}')"),
+      ],
+    },
+    {
+      id: "ai-ml-intro",
+      name: "AI & ML Intro",
+      description: "Introduction to machine learning concepts and workflows",
+      category: "ml",
+      icon: "🤖",
+      cells: [
+        createCell("markdown", "# AI & Machine Learning\nA conceptual introduction to ML workflows."),
+        createCell("code", "import numpy as np"),
+        createCell("markdown", "## 1. Linear Regression from Scratch\nFit a line y = mx + b to data points."),
+        createCell("code", "# Training data\nX = [1, 2, 3, 4, 5]\ny = [2.1, 4.0, 5.8, 8.1, 9.9]\n\n# Calculate m and b using least squares\nn = len(X)\nsum_x = sum(X)\nsum_y = sum(y)\nsum_xy = sum(X[i] * y[i] for i in range(n))\nsum_x2 = sum(x ** 2 for x in X)\n\nm = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)\nb = (sum_y - m * sum_x) / n\n\nprint(f'Model: y = {m:.2f}x + {b:.2f}')"),
+        createCell("code", "# Predictions\nfor x in X:\n    pred = m * x + b\n    print(f'x={x}: predicted={pred:.2f}, actual={y[x-1]:.1f}')"),
+        createCell("markdown", "## 2. Neural Network Concepts\nA neural network learns by adjusting weights through backpropagation."),
+        createCell("code", "# Sigmoid activation function\nimport math\n\ndef sigmoid(x):\n    return 1 / (1 + math.e ** (-x))\n\n# Test values\nfor x in [-3, -1, 0, 1, 3]:\n    print(f'sigmoid({x}) = {sigmoid(x):.4f}')"),
+      ],
+    },
+    // ── Quantum ───────────────────────────────────────────────────────
     {
       id: "bell-state",
       name: "Bell State",

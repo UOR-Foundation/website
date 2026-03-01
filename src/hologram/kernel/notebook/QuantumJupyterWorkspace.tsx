@@ -2274,8 +2274,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       <NbThemeCtx.Provider value={t}>
         <div className="h-full flex flex-col" style={{ background: t.bgSoft }}>
           <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: `1px solid ${t.border}`, background: t.bg }}>
-            <Atom size={22} style={{ color: t.gold }} />
-            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Quantum Workspace</span>
+            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Notebook</span>
+            <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ background: t.greenBg, color: t.greenText }}>Python 3.11</span>
             <div className="flex-1" />
             <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
             {onClose && <button onClick={onClose} className="p-2 rounded-lg" style={{ color: t.textMuted }}><X size={20} /></button>}
@@ -2285,10 +2285,10 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             <div className="max-w-3xl mx-auto px-8 py-12">
               <div className="text-center mb-12">
                 <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: t.textStrong }}>
-                  Quantum Workspace
+                  Notebook
                 </h1>
                 <p className="text-lg leading-relaxed max-w-lg mx-auto" style={{ color: t.textMuted }}>
-                  Run quantum computing demos, then open the same code as editable notebooks to build your own experiments.
+                  Interactive Python notebooks for AI, data science, and quantum computing — running natively in Q-Linux.
                 </p>
               </div>
 
