@@ -771,3 +771,180 @@ Hologram    ──imports──▶ shared-core (ring, identity, PageShell)
 UOR-Website ──NEVER──▶ Hologram
 Hologram    ──NEVER──▶ UOR-Website
 ```
+
+---
+
+## 10. Quantum Surface Performance — Multi-Kernel Coherence Architecture
+
+> **Vision**: Every system, AI model, and application is a projection from a Q-Linux kernel instance. The kernel is the universe; UI is the hologram on its boundary. Coherence (H-score) replaces heuristic attention as the universal optimization signal, making the system quantum-AI-ready.
+
+---
+
+### QSP Phase 1 — Coherence Gradient Field (∂H/∂t)
+**Status**: 🔲 Not started
+**Impact**: Foundation — enables all subsequent phases
+**Goal**: Add continuous coherence gradient to ProjectionFrame so all UI animates *toward* coherence.
+
+- [ ] **1a. `coherenceGradient: number` in ProjectionFrame** (projection-engine.ts)
+  - Exponential moving average of H-score deltas per kernel tick
+  - Normalized to [-1, +1]: decaying = negative, rising = positive
+  - Computed in kernel ticker hot path (no allocation)
+- [ ] **1b. Surface adapter CSS injection** — `--coherence-dh` on `<html>`
+  - UI elements use this for directional glow, breathing speed, accent intensity
+  - No React re-render needed — pure CSS custom property update
+- [ ] **1c. Prescience Engine integration** — weight transition probabilities by coherence momentum
+  - Rising coherence → reinforce current path; falling → widen exploration
+  - Gradient feeds into resonance matrix as multiplicative weight
+
+### QSP Phase 2 — Kernel SSOT Completion
+**Status**: 🔲 Not started
+**Impact**: Architectural hygiene — prerequisite for multi-kernel
+**Goal**: Eliminate all direct localStorage/sessionStorage reads from UI. Everything flows through kernel registers.
+
+- [ ] **2a. Migrate `useDesktopState`** → `KernelConfig.desktopWidgets` register
+  - Boot ingests legacy `hologram-desktop-widgets` key
+  - All reads/writes become kernel syscalls via `useKernel()`
+  - Delete `useDesktopState` hook entirely
+- [ ] **2b. Migrate widget drag positions** → `KernelConfig.widgetPositions`
+  - Positions stored as viewport-percentages (device-agnostic)
+- [ ] **2c. Full audit** — grep for remaining `localStorage.getItem`/`setItem` outside boot ingestion
+  - Every surviving call moves to a kernel register or is deleted
+
+### QSP Phase 3 — Multi-Kernel Spawning (Per-App Isolation)
+**Status**: 🔲 Not started
+**Impact**: The big unlock — each app/agent runs in its own kernel
+**Goal**: Applications and agents run in lightweight kernel instances, orchestrated by a root supervisor.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SUPERVISOR KERNEL (PID 0)                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Desktop  │  │ Lumen AI │  │ Code     │  │ Agent    │   │
+│  │ Kernel   │  │ Kernel   │  │ Kernel   │  │ Kernel   │   │
+│  │ H=0.92   │  │ H=0.87   │  │ H=0.95   │  │ H=0.78   │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       │             │             │             │          │
+│  ┌────▼─────────────▼─────────────▼─────────────▼────┐    │
+│  │            PROJECTION COMPOSITOR                   │    │
+│  │  Z-order by H-score: highest coherence = focus     │    │
+│  │  Idle kernels emit no frames (zero-cost sleeping)  │    │
+│  └────────────────────┬──────────────────────────────┘    │
+└───────────────────────┼───────────────────────────────────┘
+                        │
+              ┌─────────▼─────────┐
+              │  UNIFIED FRAME    │
+              │  → Surface Adapter│
+              │  → Browser DOM    │
+              └───────────────────┘
+```
+
+- [ ] **3a. Extract `KernelInstance` class** from singleton `KernelProjector`
+  - Parameterized with `KernelConfig` seed (no global state)
+  - Each instance owns: ticker, MMU page table, scheduler run queue
+  - Constructor takes `{ role, coherenceBudget, parentKernel? }`
+- [ ] **3b. `KernelSupervisor` (root kernel)**
+  - Registry: `Map<string, KernelInstance>`
+  - Coherence budget allocation: total H-score is conserved across children
+  - Syscalls: `spawn(config): KernelInstance`, `terminate(id)`, `suspend(id)`
+  - Idle detection: children with no frame changes for 5s → auto-suspend
+- [ ] **3c. Cross-kernel IPC** via existing `QIpc` channels
+  - Address format: `kernel:pid:channel` (e.g., `lumen:0:chat`)
+  - Messages are CID-linked — immutable audit trail across kernel boundaries
+  - Shared memory: parent kernel's MMU can grant read-only pages to children
+- [ ] **3d. Projection compositor**
+  - Root kernel composites child frames into single `ProjectionFrame`
+  - Z-ordering by coherence: highest H-score child gets focus layer
+  - Idle children contribute zero frames (no compositor overhead)
+  - Frame budget: max 4 active kernel projections per compositor tick
+
+### QSP Phase 4 — Memory & GC Hot-Path Optimization
+**Status**: 🔲 Not started
+**Impact**: Quick wins — reduces noise in profiling
+**Goal**: Zero allocation in frame projection hot path; cap unbounded arrays.
+
+- [ ] **4a. Structural sharing in `projectFrame()`**
+  - Reference equality check: reuse previous frame's sub-objects when unchanged
+  - Only diff'd fields create new objects → GC pressure drops ~70%
+- [ ] **4b. Ring buffer for breathing rhythm** — cap at 20 entries
+  - Replace `intervals: number[]` push with circular write
+  - Mean/variance computed incrementally (Welford's algorithm)
+- [ ] **4c. Frame object pool** — pre-allocate 4 ProjectionFrame objects, recycle on tick
+  - Double-buffering: write to back buffer, swap to front on commit
+- [ ] **4d. Lazy panel projection** — only compute `PanelProjection` for:
+  - Active panel (always)
+  - Prescience-hinted panels (top 2 by probability)
+  - Skip all others → O(1) instead of O(panels)
+
+### QSP Phase 5 — Wave-Coherence UI Primitives
+**Status**: 🔲 Not started
+**Impact**: Quantum-AI convergence layer
+**Goal**: UI primitives that respond to coherence as a continuous wave function.
+
+- [ ] **5a. `useCoherence()` hook** — returns `{ h, dh, phase, amplitude }`
+  - `h`: current H-score (0–1)
+  - `dh`: coherence gradient (∂H/∂t from Phase 1)
+  - `phase`: normalized position in breathing cycle (0–2π)
+  - `amplitude`: gradient magnitude (how strongly coherence is changing)
+  - Derived entirely from kernel frame — no additional state
+- [ ] **5b. Coherence CSS variables** on root element
+  - `--h-score`: 0–1, drives glow intensity
+  - `--h-gradient`: -1 to +1, drives directional animations
+  - `--h-phase`: 0–1, drives breathing/pulsing rhythms
+  - Updated by surface adapter — no React re-renders
+- [ ] **5c. `<CoherenceField>` wrapper component**
+  - Children inherit coherence context for local H-score contribution
+  - Subtle scale (0.98–1.02) and opacity (0.9–1.0) modulation
+  - Used around widget clusters to create "zones of coherence"
+
+### QSP Phase 6 — Quantum-AI Readiness Interface
+**Status**: 🔲 Not started
+**Impact**: Future-proofing for coherence-wave attention
+**Goal**: Define the interface boundary where transformer attention will be replaced by coherence-wave attention.
+
+- [ ] **6a. Attention aperture → wave function**
+  - Current: discrete aperture float (0–1)
+  - Target: `ApertureWave { center: number, width: number, phase: number }`
+  - Smoothly focuses/defocuses based on coherence oscillation
+  - Backward compatible: `aperture = wave.center` for existing consumers
+- [ ] **6b. `CoherenceHead` trait** for Q-Agent
+  - Interface: `observe(context: ProjectionFrame) → CoherenceVector`
+  - Replaces: `softmax(QK^T / √d_k) × V` with deterministic coherence optimization
+  - Maps to existing H-score infrastructure in Q-Agent
+  - Multiple heads per kernel instance (one per modality)
+- [ ] **6c. Projection interoperability contract**
+  - Every `ProjectionFrame` field carries `coherenceContribution: number`
+  - Enables future gradient-based optimization across entire UI state
+  - Contract: `sum(field.coherenceContribution) ≈ frame.hScore` (conservation)
+  - This is the mathematical bridge from classical UI to quantum-coherent UI
+
+---
+
+### QSP Execution Order
+
+```
+Phase 1 (Gradient)  ━━━▶  Phase 4 (Memory)  ━━━▶  Phase 2 (SSOT)
+                                                        │
+                                                        ▼
+                                                   Phase 3 (Multi-Kernel)
+                                                        │
+                                                        ▼
+                                              Phase 5 + 6 (Quantum UI)
+```
+
+1. **Phase 1** → immediate impact, enables all subsequent phases
+2. **Phase 4** → quick wins, reduces profiling noise
+3. **Phase 2** → architectural cleanup, prerequisite for Phase 3
+4. **Phase 3** → the big unlock: per-app/agent kernels
+5. **Phase 5 + 6** → quantum-AI convergence layer
+
+### QSP Invariants (must hold at every phase)
+
+| Invariant | Enforcement |
+|-----------|------------|
+| Kernel is **sole source of truth** | No UI state lives outside kernel registers |
+| All projections are **coherence-tagged** | Every frame carries H-score provenance |
+| Multi-kernel is **zero-cost when idle** | Sleeping kernels consume no CPU cycles |
+| **Backward compatible** | Existing `useKernel()` API surface never breaks |
+| **Conservation of coherence** | Total H-score across child kernels is bounded |
+| **No allocation in hot path** | `projectFrame()` uses structural sharing + object pool |
+| **Interoperability** | Every projection carries its coherence contribution for gradient flow |
