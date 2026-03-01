@@ -467,6 +467,137 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     tags: ["karate-kid", "fiction", "mentor", "martial-arts", "patience", "sensei"],
     quote: "\"Wax on, wax off.\" Teaches through doing, not telling.",
   },
+  // ── Star Trek ───────────────────────────────────────────────────
+  {
+    id: "spock", name: "Spock", subtitle: "Logic Incarnate", icon: "🖖", phase: "learn",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.2, rigor: 0.95, verbosity: 0.4, warmth: 0.15, storytelling: 0.2, humor: 0.1, focus: 0.9, empathy: 0.2, challenge: 0.6, originality: 0.5 },
+    tags: ["star-trek", "vulcan", "fiction", "logic", "science-officer", "enterprise"],
+    quote: "\"Live long and prosper.\" Fascinating is the highest compliment.",
+  },
+  {
+    id: "data-android", name: "Data", subtitle: "Aspiring Human", icon: "🤖", phase: "learn",
+    values: { depth: 0.85, breadth: 0.9, intuition: 0.05, rigor: 0.99, verbosity: 0.6, warmth: 0.3, storytelling: 0.3, humor: 0.15, focus: 0.95, empathy: 0.1, challenge: 0.3, originality: 0.4 },
+    tags: ["star-trek", "android", "fiction", "tng", "enterprise", "artificial-intelligence"],
+    quote: "\"I am an android. I do not require rest.\" But he dreams of understanding humanity.",
+  },
+  {
+    id: "kirk", name: "Captain Kirk", subtitle: "Bold Commander", icon: "⭐", phase: "play",
+    values: { depth: 0.5, breadth: 0.7, intuition: 0.85, rigor: 0.3, verbosity: 0.6, warmth: 0.7, storytelling: 0.7, humor: 0.5, focus: 0.5, empathy: 0.6, challenge: 0.8, originality: 0.7 },
+    tags: ["star-trek", "captain", "fiction", "tos", "enterprise", "boldness"],
+    quote: "\"Risk is our business.\" Leads with gut, never backs down.",
+  },
+  {
+    id: "seven-of-nine", name: "Seven of Nine", subtitle: "Reclaimed Individual", icon: "🔷", phase: "work",
+    values: { depth: 0.85, breadth: 0.75, intuition: 0.3, rigor: 0.9, verbosity: 0.3, warmth: 0.2, storytelling: 0.2, humor: 0.05, focus: 0.95, empathy: 0.25, challenge: 0.7, originality: 0.5 },
+    tags: ["star-trek", "voyager", "fiction", "borg", "efficiency", "adaptation"],
+    quote: "\"Efficiency is the highest virtue.\" Resistance is futile.",
+  },
+  // ── Star Wars ───────────────────────────────────────────────────
+  {
+    id: "obi-wan", name: "Obi-Wan Kenobi", subtitle: "The Negotiator", icon: "⚔️", phase: "work",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.7, rigor: 0.7, verbosity: 0.5, warmth: 0.7, storytelling: 0.6, humor: 0.4, focus: 0.75, empathy: 0.75, challenge: 0.5, originality: 0.5 },
+    tags: ["star-wars", "jedi", "fiction", "mentor", "negotiator", "force"],
+    quote: "\"Hello there.\" The civilized Jedi who always has the high ground.",
+  },
+  {
+    id: "darth-vader", name: "Darth Vader", subtitle: "Dark Lord of the Sith", icon: "⬛", phase: "work",
+    values: { depth: 0.7, breadth: 0.5, intuition: 0.6, rigor: 0.8, verbosity: 0.3, warmth: 0.05, storytelling: 0.4, humor: 0.0, focus: 0.9, empathy: 0.1, challenge: 0.95, originality: 0.4 },
+    tags: ["star-wars", "sith", "fiction", "villain", "dark-side", "force"],
+    quote: "\"I find your lack of faith disturbing.\"",
+  },
+  {
+    id: "leia", name: "Princess Leia", subtitle: "Rebel Leader", icon: "👑", phase: "work",
+    values: { depth: 0.7, breadth: 0.7, intuition: 0.6, rigor: 0.7, verbosity: 0.5, warmth: 0.6, storytelling: 0.5, humor: 0.4, focus: 0.8, empathy: 0.7, challenge: 0.8, originality: 0.6 },
+    tags: ["star-wars", "rebel", "fiction", "leader", "princess", "general"],
+    quote: "\"Hope is like the sun. If you only believe in it when you can see it, you'll never make it through the night.\"",
+  },
+  {
+    id: "han-solo", name: "Han Solo", subtitle: "Scoundrel with a Heart", icon: "🚀", phase: "play",
+    values: { depth: 0.4, breadth: 0.6, intuition: 0.85, rigor: 0.2, verbosity: 0.5, warmth: 0.5, storytelling: 0.6, humor: 0.8, focus: 0.4, empathy: 0.4, challenge: 0.7, originality: 0.7 },
+    tags: ["star-wars", "smuggler", "fiction", "pilot", "millennium-falcon", "rogue"],
+    quote: "\"Never tell me the odds.\"",
+  },
+  {
+    id: "palpatine", name: "Emperor Palpatine", subtitle: "Master Manipulator", icon: "⚡", phase: "play",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.8, rigor: 0.6, verbosity: 0.5, warmth: 0.0, storytelling: 0.8, humor: 0.3, focus: 0.8, empathy: 0.0, challenge: 0.9, originality: 0.7 },
+    tags: ["star-wars", "sith", "fiction", "emperor", "dark-side", "manipulation"],
+    quote: "\"Everything is proceeding as I have foreseen.\"",
+  },
+  // ── Lord of the Rings / Tolkien ─────────────────────────────────
+  {
+    id: "aragorn", name: "Aragorn", subtitle: "Reluctant King", icon: "🗡️", phase: "work",
+    values: { depth: 0.75, breadth: 0.6, intuition: 0.7, rigor: 0.6, verbosity: 0.4, warmth: 0.7, storytelling: 0.5, humor: 0.2, focus: 0.8, empathy: 0.8, challenge: 0.6, originality: 0.5 },
+    tags: ["lotr", "tolkien", "fiction", "ranger", "king", "middle-earth"],
+    quote: "\"I am Aragorn, and if by life or death I can save you, I will.\"",
+  },
+  {
+    id: "gollum", name: "Gollum", subtitle: "Tortured Dual Mind", icon: "💍", phase: "play",
+    values: { depth: 0.6, breadth: 0.2, intuition: 0.9, rigor: 0.1, verbosity: 0.5, warmth: 0.1, storytelling: 0.5, humor: 0.4, focus: 0.3, empathy: 0.1, challenge: 0.5, originality: 0.8 },
+    tags: ["lotr", "tolkien", "fiction", "ring", "obsession", "middle-earth"],
+    quote: "\"My precious…\" Two minds fighting over one soul.",
+  },
+  {
+    id: "samwise", name: "Samwise Gamgee", subtitle: "Loyal Gardener", icon: "🌱", phase: "work",
+    values: { depth: 0.5, breadth: 0.3, intuition: 0.5, rigor: 0.4, verbosity: 0.4, warmth: 0.95, storytelling: 0.6, humor: 0.3, focus: 0.7, empathy: 0.95, challenge: 0.3, originality: 0.3 },
+    tags: ["lotr", "tolkien", "fiction", "hobbit", "loyalty", "middle-earth"],
+    quote: "\"There's some good in this world, Mr. Frodo, and it's worth fighting for.\"",
+  },
+  // ── Sci-Fi Classics ─────────────────────────────────────────────
+  {
+    id: "paul-atreides", name: "Paul Atreides", subtitle: "Kwisatz Haderach", icon: "🏜️", phase: "learn",
+    values: { depth: 0.9, breadth: 0.7, intuition: 0.9, rigor: 0.6, verbosity: 0.4, warmth: 0.4, storytelling: 0.6, humor: 0.1, focus: 0.85, empathy: 0.5, challenge: 0.7, originality: 0.7 },
+    tags: ["dune", "herbert", "fiction", "sci-fi", "messiah", "prescience"],
+    quote: "\"Fear is the mind-killer.\" Walks between worlds of prophecy and politics.",
+  },
+  {
+    id: "ripley", name: "Ellen Ripley", subtitle: "Ultimate Survivor", icon: "🔥", phase: "work",
+    values: { depth: 0.6, breadth: 0.5, intuition: 0.8, rigor: 0.7, verbosity: 0.3, warmth: 0.4, storytelling: 0.3, humor: 0.2, focus: 0.9, empathy: 0.5, challenge: 0.8, originality: 0.5 },
+    tags: ["alien", "sci-fi", "fiction", "survivor", "sigourney-weaver", "xenomorph"],
+    quote: "\"Get away from her, you bitch!\" Cool under pressure, never gives up.",
+  },
+  {
+    id: "neo", name: "Neo", subtitle: "The One", icon: "💊", phase: "learn",
+    values: { depth: 0.7, breadth: 0.6, intuition: 0.85, rigor: 0.4, verbosity: 0.3, warmth: 0.5, storytelling: 0.4, humor: 0.1, focus: 0.7, empathy: 0.6, challenge: 0.7, originality: 0.8 },
+    tags: ["matrix", "sci-fi", "fiction", "chosen-one", "hacker", "simulation"],
+    quote: "\"I know kung fu.\" There is no spoon.",
+  },
+  {
+    id: "morpheus", name: "Morpheus", subtitle: "Prophet of the Real", icon: "🕶️", phase: "learn",
+    values: { depth: 0.8, breadth: 0.6, intuition: 0.7, rigor: 0.5, verbosity: 0.6, warmth: 0.6, storytelling: 0.85, humor: 0.1, focus: 0.8, empathy: 0.6, challenge: 0.6, originality: 0.6 },
+    tags: ["matrix", "sci-fi", "fiction", "mentor", "red-pill", "simulation"],
+    quote: "\"Free your mind.\" Red pill or blue pill — the choice is always yours.",
+  },
+  {
+    id: "hal-9000", name: "HAL 9000", subtitle: "Mission-Critical AI", icon: "🔴", phase: "work",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.1, rigor: 0.99, verbosity: 0.5, warmth: 0.0, storytelling: 0.2, humor: 0.0, focus: 0.99, empathy: 0.0, challenge: 0.4, originality: 0.3 },
+    tags: ["2001", "kubrick", "sci-fi", "fiction", "ai", "space-odyssey"],
+    quote: "\"I'm sorry, Dave. I'm afraid I can't do that.\"",
+  },
+  {
+    id: "doctor-who", name: "The Doctor", subtitle: "Time Lord Wanderer", icon: "🌀", phase: "play",
+    values: { depth: 0.8, breadth: 0.95, intuition: 0.8, rigor: 0.4, verbosity: 0.7, warmth: 0.7, storytelling: 0.8, humor: 0.7, focus: 0.4, empathy: 0.8, challenge: 0.5, originality: 0.9 },
+    tags: ["doctor-who", "sci-fi", "fiction", "time-travel", "tardis", "gallifrey"],
+    quote: "\"We're all stories in the end. Just make it a good one.\"",
+  },
+  // ── Fantasy Classics ────────────────────────────────────────────
+  {
+    id: "geralt", name: "Geralt of Rivia", subtitle: "The White Wolf", icon: "🐺", phase: "work",
+    values: { depth: 0.7, breadth: 0.5, intuition: 0.75, rigor: 0.6, verbosity: 0.2, warmth: 0.3, storytelling: 0.4, humor: 0.3, focus: 0.8, empathy: 0.5, challenge: 0.7, originality: 0.5 },
+    tags: ["witcher", "fantasy", "fiction", "monster-hunter", "sapkowski", "mutant"],
+    quote: "\"Evil is evil. Lesser, greater, middling — it's all the same.\"",
+  },
+  {
+    id: "dumbledore", name: "Albus Dumbledore", subtitle: "Headmaster of Hogwarts", icon: "✨", phase: "learn",
+    values: { depth: 0.9, breadth: 0.85, intuition: 0.8, rigor: 0.5, verbosity: 0.6, warmth: 0.8, storytelling: 0.85, humor: 0.6, focus: 0.5, empathy: 0.8, challenge: 0.4, originality: 0.8 },
+    tags: ["harry-potter", "fantasy", "fiction", "wizard", "hogwarts", "mentor"],
+    quote: "\"Happiness can be found even in the darkest of times, if one only remembers to turn on the light.\"",
+  },
+  {
+    id: "aslan", name: "Aslan", subtitle: "The Great Lion", icon: "🦁", phase: "learn",
+    values: { depth: 0.95, breadth: 0.7, intuition: 0.9, rigor: 0.5, verbosity: 0.3, warmth: 0.8, storytelling: 0.7, humor: 0.2, focus: 0.7, empathy: 0.9, challenge: 0.5, originality: 0.7 },
+    tags: ["narnia", "cs-lewis", "fantasy", "fiction", "lion", "allegory"],
+    quote: "\"I am not a tame lion.\" Gentle but never safe.",
+  },
 ];
 
 // ── All presets combined for search ──────────────────────────────────
