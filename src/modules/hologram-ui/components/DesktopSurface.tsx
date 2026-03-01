@@ -230,7 +230,13 @@ export default function DesktopSurface({
       }}
     >
       {/* ── Background ──────────────────────────────── */}
-      <div className="absolute inset-0">
+      <div
+        className="absolute inset-0"
+        style={{
+          transition: "transform 600ms ease",
+          transform: isFocus ? "scale(1.04)" : "scale(1)",
+        }}
+      >
         {/* Solid bg for white/dark */}
         <div
           className="absolute inset-0"
@@ -334,8 +340,8 @@ export default function DesktopSurface({
         style={{
           opacity: isFocus ? 0 : 1,
           pointerEvents: isFocus ? "none" : "auto",
-          transition: "opacity 300ms, transform 300ms",
-          transform: isFocus ? "translateY(-10px)" : "translateY(0)",
+          transition: "opacity 600ms ease, transform 600ms ease",
+          transform: isFocus ? "translateY(-10px) scale(1.04)" : "translateY(0) scale(1)",
         }}
       >
         <svg
@@ -373,17 +379,25 @@ export default function DesktopSurface({
       </div>
 
       {/* ── Content: Welcome text + Lumen CTA ───── */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-8 z-[300]">
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center px-8 z-[300]"
+        style={{
+          opacity: isFocus ? 0 : 1,
+          pointerEvents: isFocus ? "none" : "auto",
+          transition: "opacity 600ms ease, transform 600ms ease",
+          transform: isFocus ? "scale(1.04)" : "scale(1)",
+        }}
+      >
         <div
           className="text-center"
           style={{
             textShadow: mode === "image" ? "0 1px 8px hsla(0, 0%, 0%, 0.5), 0 0 30px hsla(0, 0%, 0%, 0.2)" : "none",
             pointerEvents: "auto",
-            maxWidth: isFocus ? "56rem" : "42rem",
+            maxWidth: "42rem",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: isFocus ? "clamp(16px, 2.5vh, 32px)" : "clamp(10px, 1.8vh, 24px)",
+            gap: "clamp(10px, 1.8vh, 24px)",
           }}
         >
           <p
@@ -392,7 +406,7 @@ export default function DesktopSurface({
               fontFamily: "'DM Sans', system-ui, sans-serif",
               color: P.greeting,
               fontWeight: 400,
-              fontSize: isFocus ? "calc(clamp(13px, 1.2vw, 20px) * var(--holo-user-scale))" : "calc(clamp(11px, 1vw, 16px) * var(--holo-user-scale))",
+              fontSize: "calc(clamp(11px, 1vw, 16px) * var(--holo-user-scale))",
             }}
           >
             {greeting}
@@ -405,7 +419,7 @@ export default function DesktopSurface({
               fontWeight: 300,
               color: P.heading,
               letterSpacing: "-0.01em",
-              fontSize: isFocus ? "calc(clamp(42px, 5.5vw, 96px) * var(--holo-user-scale))" : "calc(clamp(34px, 4.4vw, 76px) * var(--holo-user-scale))",
+              fontSize: "calc(clamp(34px, 4.4vw, 76px) * var(--holo-user-scale))",
             }}
           >
             Welcome{contextHints.length > 0 ? " back" : " home"},
@@ -417,7 +431,7 @@ export default function DesktopSurface({
           <div className="flex justify-center">
             <div
               style={{
-                height: isFocus ? "clamp(60px, 8vh, 160px)" : "clamp(40px, 6vh, 110px)",
+                height: "clamp(40px, 6vh, 110px)",
                 width: 0,
                 borderLeft: `1px solid ${
                   mode === "white"
@@ -443,7 +457,7 @@ export default function DesktopSurface({
                 fontFamily: "'Playfair Display', serif",
                 fontWeight: 300,
                 fontStyle: "italic",
-                fontSize: isFocus ? "calc(clamp(15px, 1.2vw, 22px) * var(--holo-user-scale))" : "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
+                fontSize: "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
                 color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
                 maxWidth: "30ch",
                 lineHeight: 1.6,
