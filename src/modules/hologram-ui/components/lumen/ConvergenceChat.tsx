@@ -744,293 +744,215 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         </div>
       </div>
 
-      {/* ── Input area OR Pro Mode deck ──────────────────── */}
-      {proMode ? (
-        /* Pro Mode: DJ deck slides up from bottom with embedded input */
-        <ProModeDeck
-          open={proMode}
-          onClose={() => setProMode(false)}
-          coherenceH={coherence.h ?? 0.5}
-          values={dimensionValues}
-          onChange={handleDimensionChange}
-          activePresetId={activePresetId}
-          onSelectPreset={handleSelectPreset}
-          inputSlot={
-            <div
-              className="relative rounded-xl overflow-hidden transition-all duration-300"
-              style={{
-                background: "hsla(25, 8%, 9%, 0.9)",
-                border: `1px solid hsla(38, 15%, 25%, ${input.trim() ? 0.2 : 0.08})`,
-                boxShadow: "0 2px 16px hsla(0,0%,0%,0.3)",
-              }}
-            >
-              <div className="px-4 pt-3 pb-2">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={isConverging ? "Thinking…" : "Express your thought…"}
-                  disabled={isConverging}
-                  rows={1}
-                  className="w-full bg-transparent border-none outline-none resize-none placeholder:opacity-20 leading-relaxed block"
-                  style={{
-                    color: C.text,
-                    fontFamily: C.font,
-                    fontSize: "15px",
-                    maxHeight: "100px",
-                    letterSpacing: "0.015em",
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between px-3 pb-2">
-                <span className="text-[10px] tracking-widest uppercase" style={{ color: "hsla(38, 30%, 55%, 0.3)" }}>
-                  Pro Mode Active
-                </span>
-                <div className="flex items-center gap-2">
-                  {voice.isSttAvailable && (
-                    <button
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        if (!voiceMode) { setVoiceMode(true); voice.startListening(); } else { voice.toggle(); }
-                      }}
-                      disabled={isConverging && voice.phase !== "speaking"}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300"
-                      style={{
-                        background: voice.phase === "listening" ? "hsla(38, 50%, 50%, 0.2)" : "transparent",
-                        color: voice.phase === "listening" ? "hsl(38, 55%, 65%)" : "hsla(30, 10%, 45%, 0.4)",
-                      }}
-                    >
-                      <Mic className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => converge(input)}
-                    disabled={!input.trim() || isConverging}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 disabled:opacity-10"
-                    style={{
-                      background: input.trim() ? "hsla(38, 40%, 50%, 0.15)" : "transparent",
-                      color: input.trim() ? "hsl(38, 50%, 65%)" : "hsla(30, 10%, 40%, 0.3)",
-                    }}
-                  >
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          }
-        />
-      ) : (
-        /* Standard input area */
-        <div className="flex-shrink-0 px-6 pb-8 pt-3">
-          <div style={{ maxWidth: "min(680px, 61.8%)", margin: "0 auto" }}>
-            {/* Active pipeline indicator above input */}
-            <AnimatePresence>
-              {isConverging && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex justify-center pb-4 overflow-hidden"
-                >
-                  {showcaseMode ? <ShowcasePipeline state={pipeline} /> : <ConvergencePipeline state={pipeline} />}
-                </motion.div>
-              )}
-            </AnimatePresence>
+      {/* ── Pro Mode deck unfolds above, input always stays ── */}
+      <AnimatePresence>
+        {proMode && (
+          <ProModeDeck
+            open={proMode}
+            onClose={() => setProMode(false)}
+            coherenceH={coherence.h ?? 0.5}
+            values={dimensionValues}
+            onChange={handleDimensionChange}
+            activePresetId={activePresetId}
+            onSelectPreset={handleSelectPreset}
+          />
+        )}
+      </AnimatePresence>
 
-            {/* ── Real-time style indicator ─────────────────────── */}
-            <AnimatePresence>
-              {isCustomMix && !isConverging && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                  className="flex items-center gap-2 pb-3 overflow-hidden"
-                >
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
-                    style={{ background: "hsla(38, 20%, 15%, 0.4)", border: "1px solid hsla(38, 20%, 30%, 0.1)" }}>
-                    {/* Animated color dots representing dominant dimensions */}
-                    <div className="flex gap-1">
-                      {DIMENSIONS
-                        .filter(d => Math.abs((dimensionValues[d.id] ?? d.defaultValue) - 0.5) > 0.2)
-                        .slice(0, 4)
-                        .map(d => (
-                          <motion.div
-                            key={d.id}
-                            className="w-1.5 h-1.5 rounded-full"
-                            animate={{
-                              scale: [1, 1.3, 1],
-                              opacity: [0.6, 1, 0.6],
-                            }}
-                            transition={{
-                              duration: 2 + Math.random(),
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                              delay: Math.random() * 0.5,
-                            }}
-                            style={{
-                              background: `hsl(${d.hue}, ${40 + (dimensionValues[d.id] ?? 0.5) * 30}%, ${50 + (dimensionValues[d.id] ?? 0.5) * 15}%)`,
-                              boxShadow: `0 0 4px hsla(${d.hue}, 50%, 55%, 0.3)`,
-                            }}
-                          />
-                        ))}
-                    </div>
-                    <span className="text-[10px] tracking-wide" style={{ color: "hsla(38, 25%, 65%, 0.6)" }}>
-                      {styleSummary}
-                    </span>
+      {/* ── Input area — always visible, deck unfolds around it ── */}
+      <div className="flex-shrink-0 px-6 pb-8 pt-3">
+        <div style={{ maxWidth: proMode ? "100%" : "min(680px, 61.8%)", margin: "0 auto", transition: "max-width 0.4s cubic-bezier(0.23, 1, 0.32, 1)" }}>
+          {/* Active pipeline indicator above input */}
+          <AnimatePresence>
+            {isConverging && !proMode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex justify-center pb-4 overflow-hidden"
+              >
+                {showcaseMode ? <ShowcasePipeline state={pipeline} /> : <ConvergencePipeline state={pipeline} />}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Real-time style indicator ─────────────────────── */}
+          <AnimatePresence>
+            {isCustomMix && !isConverging && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className="flex items-center gap-2 pb-3 overflow-hidden"
+              >
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+                  style={{ background: "hsla(38, 20%, 15%, 0.4)", border: "1px solid hsla(38, 20%, 30%, 0.1)" }}>
+                  {/* Animated color dots representing dominant dimensions */}
+                  <div className="flex gap-1">
+                    {DIMENSIONS
+                      .filter(d => Math.abs((dimensionValues[d.id] ?? d.defaultValue) - 0.5) > 0.2)
+                      .slice(0, 4)
+                      .map(d => (
+                        <motion.div
+                          key={d.id}
+                          className="w-1.5 h-1.5 rounded-full"
+                          animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                          transition={{ duration: 2 + Math.random(), repeat: Infinity, ease: "easeInOut", delay: Math.random() * 0.5 }}
+                          style={{
+                            background: `hsl(${d.hue}, ${40 + (dimensionValues[d.id] ?? 0.5) * 30}%, ${50 + (dimensionValues[d.id] ?? 0.5) * 15}%)`,
+                            boxShadow: `0 0 4px hsla(${d.hue}, 50%, 55%, 0.3)`,
+                          }}
+                        />
+                      ))}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <span className="text-[10px] tracking-wide" style={{ color: "hsla(38, 25%, 65%, 0.6)" }}>
+                    {styleSummary}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <div
-              className="relative rounded-2xl overflow-hidden transition-all duration-300"
-              style={{
-                background: "hsla(25, 8%, 9%, 0.8)",
-                border: `1px solid hsla(38, 15%, 25%, ${input.trim() ? 0.15 : 0.06})`,
-                boxShadow: input.trim()
+          <div
+            className="relative rounded-2xl overflow-hidden transition-all duration-300"
+            style={{
+              background: proMode ? "hsla(25, 8%, 9%, 0.95)" : "hsla(25, 8%, 9%, 0.8)",
+              border: `1px solid hsla(38, 15%, 25%, ${input.trim() ? 0.15 : 0.06})`,
+              boxShadow: proMode
+                ? "0 2px 24px hsla(25, 10%, 3%, 0.4), 0 0 0 1px hsla(38, 20%, 30%, 0.08)"
+                : input.trim()
                   ? "0 2px 24px hsla(25, 10%, 3%, 0.3), 0 0 0 1px hsla(38, 20%, 30%, 0.05)"
                   : "0 1px 8px hsla(25, 10%, 3%, 0.1)",
-              }}
-            >
-              <div className="px-4 pt-3 pb-2">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={isConverging ? "Thinking…" : greeting}
-                  disabled={isConverging}
-                  rows={1}
-                  className="w-full bg-transparent border-none outline-none resize-none placeholder:opacity-20 leading-relaxed block"
-                  style={{
-                    color: C.text,
-                    fontFamily: C.font,
-                    fontSize: "clamp(14px, 1.6vh, 17px)",
-                    maxHeight: "140px",
-                    letterSpacing: "0.015em",
-                  }}
-                />
-              </div>
-
-              {/* Bottom bar */}
-              <div className="flex items-center justify-end px-3 pb-2.5">
-                <div className="flex items-center gap-2">
-                  {/* Pro Mode magical toggle */}
-                  <button
-                    onPointerDown={() => setProMode(!proMode)}
-                    className="relative group flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all duration-300"
-                    style={{
-                      color: proMode ? C.gold : "hsla(38, 15%, 50%, 0.4)",
-                      background: proMode ? "hsla(38, 30%, 25%, 0.15)" : "transparent",
-                    }}
-                    title="Enter Pro Mode"
-                  >
-                    <MagicIcon
-                      size={14}
-                      className={`transition-transform duration-500 ${proMode ? "rotate-180" : "group-hover:rotate-12"}`}
-                    />
-                    <span
-                      className={`text-[10px] tracking-widest uppercase font-medium transition-all duration-300 ${proMode ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0 overflow-hidden"}`}
-                    >
-                      Pro
-                    </span>
-                    {!proMode && (
-                      <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                        style={{ boxShadow: "0 0 12px hsla(38, 40%, 60%, 0.1)" }}
-                      />
-                    )}
-                  </button>
-
-                  <div className="w-[1px] h-4 mx-1" style={{ background: "hsla(38, 10%, 30%, 0.15)" }} />
-
-                  {/* Voice orb / mic button */}
-                  {voice.isSttAvailable && (
-                    <button
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        if (!voiceMode) {
-                          setVoiceMode(true);
-                          voice.startListening();
-                        } else {
-                          voice.toggle();
-                        }
-                      }}
-                      disabled={isConverging && voice.phase !== "speaking"}
-                      className="relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 group"
-                      style={{
-                        background: voice.phase === "listening"
-                          ? "hsla(38, 50%, 50%, 0.2)"
-                          : voice.phase === "speaking"
-                            ? "hsla(200, 40%, 50%, 0.15)"
-                            : voiceMode
-                              ? "hsla(38, 30%, 40%, 0.1)"
-                              : "transparent",
-                        color: voice.phase === "listening"
-                          ? "hsl(38, 55%, 65%)"
-                          : voice.phase === "speaking"
-                            ? "hsl(200, 45%, 65%)"
-                            : voiceMode
-                              ? "hsl(38, 35%, 60%)"
-                              : "hsla(30, 10%, 45%, 0.4)",
-                      }}
-                      title={voice.phase === "listening" ? "Stop listening" : "Voice input"}
-                    >
-                      {voice.phase === "listening" && (
-                        <motion.div
-                          className="absolute inset-0 rounded-xl"
-                          animate={{ scale: [1, 1.3 + voice.level * 0.5, 1], opacity: [0.4, 0.1, 0.4] }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                          style={{ border: "1px solid hsla(38, 50%, 55%, 0.3)" }}
-                        />
-                      )}
-                      {voice.phase === "speaking" && (
-                        <motion.div
-                          className="absolute inset-0 rounded-xl"
-                          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.15, 0.3] }}
-                          transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-                          style={{ border: "1px solid hsla(200, 45%, 55%, 0.25)" }}
-                        />
-                      )}
-                      {voice.phase === "speaking" ? <Volume2 className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
-                  )}
-
-                  {/* Send button */}
-                  <button
-                    onClick={() => converge(input)}
-                    disabled={!input.trim() || isConverging}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 disabled:opacity-10"
-                    style={{
-                      background: input.trim() ? "hsla(38, 40%, 50%, 0.15)" : "transparent",
-                      color: input.trim() ? "hsl(38, 50%, 65%)" : "hsla(30, 10%, 40%, 0.3)",
-                    }}
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Voice transcript overlay */}
-              <AnimatePresence>
-                {voice.phase === "listening" && voice.transcript && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="px-4 pb-2">
-                    <p className="text-[13px] italic" style={{ color: "hsla(38, 30%, 65%, 0.6)" }}>{voice.transcript}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            }}
+          >
+            <div className="px-4 pt-3 pb-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={isConverging ? "Thinking…" : greeting}
+                disabled={isConverging}
+                rows={1}
+                className="w-full bg-transparent border-none outline-none resize-none placeholder:opacity-20 leading-relaxed block"
+                style={{
+                  color: C.text,
+                  fontFamily: C.font,
+                  fontSize: "clamp(14px, 1.6vh, 17px)",
+                  maxHeight: "140px",
+                  letterSpacing: "0.015em",
+                }}
+              />
             </div>
 
-            {/* Subtle attribution */}
+            {/* Bottom bar */}
+            <div className="flex items-center justify-between px-3 pb-2.5">
+              <div>
+                {proMode && (
+                  <span className="text-[10px] tracking-widest uppercase" style={{ color: "hsla(38, 30%, 55%, 0.3)" }}>
+                    Pro Mode Active
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Pro Mode magical toggle */}
+                <button
+                  onPointerDown={() => setProMode(!proMode)}
+                  className="relative group flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all duration-300"
+                  style={{
+                    color: proMode ? C.gold : "hsla(38, 15%, 50%, 0.4)",
+                    background: proMode ? "hsla(38, 30%, 25%, 0.15)" : "transparent",
+                  }}
+                  title="Enter Pro Mode"
+                >
+                  <MagicIcon
+                    size={14}
+                    className={`transition-transform duration-500 ${proMode ? "rotate-180" : "group-hover:rotate-12"}`}
+                  />
+                  <span
+                    className={`text-[10px] tracking-widest uppercase font-medium transition-all duration-300 ${proMode ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0 overflow-hidden"}`}
+                  >
+                    Pro
+                  </span>
+                  {!proMode && (
+                    <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{ boxShadow: "0 0 12px hsla(38, 40%, 60%, 0.1)" }} />
+                  )}
+                </button>
+
+                <div className="w-[1px] h-4 mx-1" style={{ background: "hsla(38, 10%, 30%, 0.15)" }} />
+
+                {/* Voice mic button */}
+                {voice.isSttAvailable && (
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      if (!voiceMode) { setVoiceMode(true); voice.startListening(); } else { voice.toggle(); }
+                    }}
+                    disabled={isConverging && voice.phase !== "speaking"}
+                    className="relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 group"
+                    style={{
+                      background: voice.phase === "listening" ? "hsla(38, 50%, 50%, 0.2)"
+                        : voice.phase === "speaking" ? "hsla(200, 40%, 50%, 0.15)"
+                        : voiceMode ? "hsla(38, 30%, 40%, 0.1)" : "transparent",
+                      color: voice.phase === "listening" ? "hsl(38, 55%, 65%)"
+                        : voice.phase === "speaking" ? "hsl(200, 45%, 65%)"
+                        : voiceMode ? "hsl(38, 35%, 60%)" : "hsla(30, 10%, 45%, 0.4)",
+                    }}
+                    title={voice.phase === "listening" ? "Stop listening" : "Voice input"}
+                  >
+                    {voice.phase === "listening" && (
+                      <motion.div className="absolute inset-0 rounded-xl"
+                        animate={{ scale: [1, 1.3 + voice.level * 0.5, 1], opacity: [0.4, 0.1, 0.4] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                        style={{ border: "1px solid hsla(38, 50%, 55%, 0.3)" }} />
+                    )}
+                    {voice.phase === "speaking" && (
+                      <motion.div className="absolute inset-0 rounded-xl"
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.15, 0.3] }}
+                        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                        style={{ border: "1px solid hsla(200, 45%, 55%, 0.25)" }} />
+                    )}
+                    {voice.phase === "speaking" ? <Volume2 className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                )}
+
+                {/* Send button */}
+                <button
+                  onClick={() => converge(input)}
+                  disabled={!input.trim() || isConverging}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 disabled:opacity-10"
+                  style={{
+                    background: input.trim() ? "hsla(38, 40%, 50%, 0.15)" : "transparent",
+                    color: input.trim() ? "hsl(38, 50%, 65%)" : "hsla(30, 10%, 40%, 0.3)",
+                  }}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Voice transcript overlay */}
+            <AnimatePresence>
+              {voice.phase === "listening" && voice.transcript && (
+                <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="px-4 pb-2">
+                  <p className="text-[13px] italic" style={{ color: "hsla(38, 30%, 65%, 0.6)" }}>{voice.transcript}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Subtle attribution */}
+          {!proMode && (
             <div className="flex justify-center mt-3">
               <span className="text-[9px] tracking-[0.3em] uppercase" style={{ color: "hsla(38, 10%, 45%, 0.15)" }}>
                 Powered by Hologram · Coherence reasoning
               </span>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
       </div>{/* end conversation column */}
 
       </div>{/* end flex row */}
