@@ -5,6 +5,11 @@
  * Initializes a Q-FS instance, seeds it with workspace files,
  * and exposes a reactive file tree + read/write operations.
  *
+ * **Persistence**: The Merkle DAG is serialized to localStorage
+ * after every mutation (debounced 500ms), so the workspace
+ * survives page reloads. Authenticated users also get cloud
+ * sync via the Data Bank.
+ *
  * Every file operation flows through Q-FS:
  *   open file  → qfs.readFile(path)  → Uint8Array → string
  *   save file  → qfs.writeFile(path) → new CID (immutable)
@@ -20,6 +25,65 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { QFs, type InodeType } from "@/hologram/kernel/q-fs";
 import { QMmu } from "@/hologram/kernel/q-mmu";
 import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
+
+// ── Persistence constants ───────────────────────────────────────────────────
+const QFS_STORAGE_KEY = "uor:qfs:workspace";
+const QFS_VERSION_KEY = "uor:qfs:version";
+const PERSIST_DEBOUNCE_MS = 500;
+const QFS_SCHEMA_VERSION = 1;
+
+interface PersistedWorkspace {
+  version: number;
+  files: { path: string; content: string }[];
+  savedAt: string;
+}
+
+/** Serialize the entire Q-FS tree into a flat file list */
+function serializeFs(fs: QFs): PersistedWorkspace {
+  const files: { path: string; content: string }[] = [];
+
+  function walk(dirPath: string): void {
+    const entries = fs.ls(dirPath);
+    for (const entry of entries) {
+      const childPath = dirPath === "/" ? `/${entry.name}` : `${dirPath}/${entry.name}`;
+      if (entry.type === "directory") {
+        walk(childPath);
+      } else {
+        const bytes = fs.readFile(childPath, 0);
+        if (bytes) {
+          files.push({ path: childPath, content: new TextDecoder().decode(bytes) });
+        }
+      }
+    }
+  }
+
+  walk("/");
+  return { version: QFS_SCHEMA_VERSION, files, savedAt: new Date().toISOString() };
+}
+
+/** Persist to localStorage */
+function persistToLocal(fs: QFs): void {
+  try {
+    const snapshot = serializeFs(fs);
+    localStorage.setItem(QFS_STORAGE_KEY, JSON.stringify(snapshot));
+    localStorage.setItem(QFS_VERSION_KEY, String(QFS_SCHEMA_VERSION));
+  } catch (e) {
+    console.warn("[Q-FS Persist] Failed to save:", e);
+  }
+}
+
+/** Load persisted workspace from localStorage */
+function loadFromLocal(): PersistedWorkspace | null {
+  try {
+    const raw = localStorage.getItem(QFS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedWorkspace;
+    if (!parsed.files || !Array.isArray(parsed.files) || parsed.files.length === 0) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -526,22 +590,27 @@ export function useQFs(): QFsHandle {
   const mmuRef = useRef<QMmu | null>(null);
   const [version, setVersion] = useState(0);
   const [ready, setReady] = useState(false);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Initialize Q-FS once
+  // Initialize Q-FS once — restore from persistence or seed defaults
   useEffect(() => {
     if (fsRef.current) return;
 
     const mmu = new QMmu();
     const fs = new QFs(mmu);
-
-    // mkfs — create root filesystem
     fs.mkfs(0);
 
-    // Seed files: ensure directories exist, then create files
-    for (const seed of SEED_FILES) {
+    // Try to restore from persisted workspace first
+    const persisted = loadFromLocal();
+    const filesToLoad = persisted ? persisted.files : SEED_FILES.map(s => ({ path: s.path, content: s.content }));
+
+    if (persisted) {
+      console.log(`⬡ Q-FS: Restoring ${persisted.files.length} files from persistent storage (saved ${persisted.savedAt})`);
+    }
+
+    for (const seed of filesToLoad) {
       const { dirs, file } = parsePath(seed.path);
 
-      // Ensure all parent directories exist
       let currentPath = "/";
       for (const dir of dirs) {
         const existing = fs.ls(currentPath);
@@ -551,7 +620,6 @@ export function useQFs(): QFsHandle {
         currentPath = currentPath === "/" ? `/${dir}` : `${currentPath}/${dir}`;
       }
 
-      // Create the file
       if (file) {
         const content = encodeUtf8(seed.content);
         fs.createFile(currentPath, file, content, 0);
@@ -562,10 +630,37 @@ export function useQFs(): QFsHandle {
     mmuRef.current = mmu;
     setReady(true);
     setVersion(1);
+
+    // If this was a fresh seed (no persistence), persist immediately
+    if (!persisted) {
+      persistToLocal(fs);
+    }
   }, []);
 
-  // Bump version to trigger tree rebuild
-  const bump = useCallback(() => setVersion(v => v + 1), []);
+  // Debounced persistence after every mutation
+  const schedulePersist = useCallback(() => {
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      if (fsRef.current) {
+        persistToLocal(fsRef.current);
+      }
+    }, PERSIST_DEBOUNCE_MS);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      // Final flush on unmount
+      if (fsRef.current) persistToLocal(fsRef.current);
+    };
+  }, []);
+
+  // Bump version to trigger tree rebuild + schedule persistence
+  const bump = useCallback(() => {
+    setVersion(v => v + 1);
+    schedulePersist();
+  }, [schedulePersist]);
 
   // Build tree from Q-FS (reactive via version)
   const tree = useMemo(() => {
