@@ -310,32 +310,20 @@ export default function BreathingWidget() {
         />
 
         {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ textRendering: "geometricPrecision" }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ textRendering: "geometricPrecision", WebkitFontSmoothing: "antialiased" as any }}>
           {running ? (
-            <div
-              className="flex items-center justify-center rounded-full"
+            <span
+              className="leading-none"
               style={{
-                width: 26,
-                height: 26,
-                transform: `scale(${orbScale})`,
-                transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                background: `radial-gradient(circle at 40% 35%, ${phase.color.replace("0.85)", "0.55)")}, ${phase.color.replace("0.85)", "0.2)")})`,
-                boxShadow: `0 0 12px 2px ${phase.color.replace("0.85)", "0.15)")}`,
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "18px",
+                color: "hsla(38, 15%, 96%, 1)",
+                fontWeight: 300,
+                letterSpacing: "0.02em",
               }}
             >
-              <span
-                className="font-light leading-none"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "15px",
-                  color: "hsla(38, 15%, 96%, 1)",
-                  fontWeight: 300,
-                  letterSpacing: "0.02em",
-                }}
-              >
-                {secondsLeft}
-              </span>
-            </div>
+              {secondsLeft}
+            </span>
           ) : (
             <span
               className="tracking-[0.2em] uppercase leading-none"
@@ -352,61 +340,67 @@ export default function BreathingWidget() {
         </div>
       </div>
 
-      {/* Label area — mode switcher when idle, phase label when running */}
-      {running ? (
-        <span
-          className="tracking-[0.35em] uppercase text-center transition-all duration-300"
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "10px",
-            color: phase.color.replace("0.85)", "0.9)"),
-            fontWeight: 500,
-          }}
-        >
-          {phase.label}
-        </span>
-      ) : (
-        <div className="flex items-center gap-3">
-          {PROTOCOLS.map((p, i) => {
-            const active = i === selectedIdx;
-            return (
-              <button
-                key={p.intent}
-                onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
-                className="transition-all duration-300"
-                style={{
-                  fontSize: "10px",
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 500,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase" as const,
-                  color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.35)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-              >
-                {p.intent}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Label row — fixed height so layout never jumps */}
+      <span
+        className="tracking-[0.35em] uppercase text-center transition-all duration-300"
+        style={{
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: "10px",
+          fontWeight: 500,
+          color: running
+            ? phase.color.replace("0.85)", "0.9)")
+            : "hsla(38, 15%, 85%, 0.75)",
+          height: 14,
+          lineHeight: "14px",
+        }}
+      >
+        {running ? phase.label : ""}
+      </span>
 
-      {/* Cycle counter — visible when running */}
-      {running && (
-        <span
-          className="tracking-[0.15em] text-center"
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "9px",
-            color: "hsla(0, 0%, 80%, 0.35)",
-          }}
-        >
-          {cycle + 1} of {protocol.cycles}
-        </span>
-      )}
+      {/* Second row — mode switcher (idle) or cycle counter (running), fixed height */}
+      <div
+        style={{ height: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        {running ? (
+          <span
+            className="tracking-[0.15em] text-center"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: "9px",
+              color: "hsla(0, 0%, 80%, 0.35)",
+            }}
+          >
+            {cycle + 1} of {protocol.cycles}
+          </span>
+        ) : (
+          <div className="flex items-center gap-3">
+            {PROTOCOLS.map((p, i) => {
+              const active = i === selectedIdx;
+              return (
+                <button
+                  key={p.intent}
+                  onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
+                  className="transition-all duration-300"
+                  style={{
+                    fontSize: "10px",
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    fontWeight: 500,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase" as const,
+                    color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.35)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {p.intent}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
