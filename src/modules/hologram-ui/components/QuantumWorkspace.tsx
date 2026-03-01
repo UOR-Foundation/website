@@ -1994,8 +1994,19 @@ export default function QuantumWorkspace({ onClose }: Props) {
               <div className="flex items-center gap-1.5">
                 <button onClick={() => { setNumQubits(Math.max(1, numQubits - 1)); setNumClbits(Math.max(1, numClbits - 1)); }}
                   className="w-6 h-6 flex items-center justify-center rounded" style={{ color: t.textMuted, border: `1px solid ${t.border}` }}><Minus size={12} /></button>
-                <span className="text-[14px] font-mono w-5 text-center font-semibold" style={{ color: t.text }}>{numQubits}</span>
-                <button onClick={() => { setNumQubits(Math.min(24, numQubits + 1)); setNumClbits(Math.min(24, numClbits + 1)); }}
+                <input
+                  type="number"
+                  min={1}
+                  max={48}
+                  value={numQubits}
+                  onChange={e => {
+                    const v = Math.max(1, Math.min(48, parseInt(e.target.value) || 1));
+                    setNumQubits(v); setNumClbits(v);
+                  }}
+                  className="w-10 h-6 text-[14px] font-mono text-center font-semibold bg-transparent outline-none rounded [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  style={{ color: t.text, border: `1px solid ${t.border}` }}
+                />
+                <button onClick={() => { setNumQubits(Math.min(48, numQubits + 1)); setNumClbits(Math.min(48, numClbits + 1)); }}
                   className="w-6 h-6 flex items-center justify-center rounded" style={{ color: t.textMuted, border: `1px solid ${t.border}` }}><Plus size={12} /></button>
               </div>
             </div>
