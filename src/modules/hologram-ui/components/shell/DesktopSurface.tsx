@@ -468,39 +468,56 @@ export default function DesktopSurface({
           >
             <button
               className="relative flex items-center justify-center cursor-pointer group"
-              style={{ width: 48, height: 48, background: "none", border: "none", padding: 0 }}
+              style={{ width: 64, height: 64, background: "none", border: "none", padding: 0 }}
               onClick={onOpenConvergence}
               aria-label="Open Lumen AI"
             >
-              {/* Ripple rings */}
-              {[0, 0.8, 1.6].map((delay, i) => (
+              {/* Static monad ring — the container circle, always visible */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: 36,
+                  height: 36,
+                  border: `1.5px solid ${
+                    mode === "white"
+                      ? "hsla(32, 35%, 45%, 0.5)"
+                      : "hsla(38, 45%, 55%, 0.35)"
+                  }`,
+                  boxShadow: mode === "white"
+                    ? "0 0 12px hsla(32, 40%, 45%, 0.1), inset 0 0 8px hsla(32, 40%, 45%, 0.05)"
+                    : `0 0 calc(10px + 8px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.08 + 0.12 * var(--h-score, 0.5))), inset 0 0 6px hsla(38, 50%, 55%, 0.04)`,
+                  transition: "border-color 0.4s ease, box-shadow 0.4s ease",
+                }}
+              />
+              {/* Ripple rings — emanate outward from the monad */}
+              {[0, 1, 2].map((i) => (
                 <div
                   key={i}
                   className="absolute rounded-full"
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     border: `1px solid ${
                       mode === "white"
-                        ? "hsla(32, 35%, 45%, 0.25)"
-                        : "hsla(38, 40%, 55%, 0.2)"
+                        ? "hsla(32, 35%, 45%, 0.3)"
+                        : "hsla(38, 45%, 55%, 0.25)"
                     }`,
-                    animation: `genesis-ripple 2.4s ease-out ${delay}s infinite`,
+                    animation: `genesis-ripple 3s ease-out ${i * 1}s infinite`,
                   }}
                 />
               ))}
-              {/* Core dot */}
+              {/* Core dot — the pulse of life */}
               <div
-                className="rounded-full transition-transform duration-200 group-hover:scale-[1.6]"
+                className="rounded-full transition-transform duration-200 group-hover:scale-[1.8]"
                 style={{
-                  width: 6,
-                  height: 6,
+                  width: 7,
+                  height: 7,
                   background: mode === "white"
-                    ? "hsla(32, 40%, 50%, 0.85)"
-                    : "hsla(38, 50%, 60%, 0.85)",
+                    ? "hsla(32, 45%, 48%, 0.9)"
+                    : "hsla(38, 55%, 58%, 0.9)",
                   boxShadow: mode === "white"
-                    ? `0 0 calc(6px + 8px * var(--h-score, 0.5)) hsla(32, 40%, 45%, calc(0.2 + 0.3 * var(--h-score, 0.5))), 0 0 4px hsla(32, 40%, 45%, 0.2)`
-                    : `0 0 calc(8px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.2 + 0.4 * var(--h-score, 0.5))), 0 0 calc(3px + 6px * var(--h-score, 0.5)) hsla(38, 50%, 55%, 0.3)`,
+                    ? `0 0 calc(8px + 10px * var(--h-score, 0.5)) hsla(32, 45%, 48%, calc(0.25 + 0.35 * var(--h-score, 0.5))), 0 0 4px hsla(32, 40%, 45%, 0.3)`
+                    : `0 0 calc(10px + 16px * var(--h-score, 0.5)) hsla(38, 55%, 55%, calc(0.25 + 0.45 * var(--h-score, 0.5))), 0 0 calc(4px + 8px * var(--h-score, 0.5)) hsla(38, 55%, 55%, 0.35)`,
                   animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
                 }}
               />
