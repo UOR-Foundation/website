@@ -477,7 +477,12 @@ export default function DesktopSurface({
               animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both",
             }}
           >
-            <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
+            <button
+              className="relative flex items-center justify-center cursor-pointer group"
+              style={{ width: 64, height: 64, background: "none", border: "none", padding: 0 }}
+              onClick={onOpenChat}
+              aria-label="Open Lumen AI"
+            >
               {/* Ripple rings — emanate outward and fade to nothing */}
               {[0, 0.8, 1.6].map((delay, i) => (
                 <div
@@ -495,9 +500,9 @@ export default function DesktopSurface({
                   }}
                 />
               ))}
-              {/* Core dot — identical to sidebar Genesis dot */}
+              {/* Core dot — click target for Lumen AI */}
               <div
-                className="rounded-full"
+                className="rounded-full transition-transform duration-200 group-hover:scale-[1.6]"
                 style={{
                   width: 6,
                   height: 6,
@@ -510,7 +515,7 @@ export default function DesktopSurface({
                   animation: "heartbeat-love 2.4s ease-in-out infinite",
                 }}
               />
-            </div>
+            </button>
           </div>
         </div>
       </div>
