@@ -64,7 +64,7 @@ import {
   streamOptimized,
 } from "@/modules/ring-core/inference-accelerator";
 import { StreamingCurvatureMonitor } from "@/modules/ring-core/symbolica-enhancements";
-import { projectConversationForLLM, type ProfileContext } from "@/modules/hologram-ui/q-disclosure-projector";
+import { projectConversationForLLM, projectForLLM, type ProfileContext } from "@/modules/hologram-ui/q-disclosure-projector";
 
 // ── Cloud AI Models (instant, no download) ─────────────────────────────────
 const CLOUD_MODELS = [
@@ -126,6 +126,11 @@ interface ChatMessage {
     inputCid?: string;
     outputCid?: string;
     inferenceSource?: "cache" | "local" | "cloud";
+    disclosureAudit?: {
+      redactionCount: number;
+      redactedCategories: string[];
+      isProjected: boolean;
+    };
     neuroSymbolic?: {
       claims: import("@/modules/ring-core/neuro-symbolic").AnnotatedClaim[];
       overallGrade: import("@/modules/ring-core/neuro-symbolic").EpistemicGrade;
@@ -439,11 +444,33 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       );
     }
 
+    // ── Compute disclosure audit for this message ──
+    const profileCtxForAudit: ProfileContext = {
+      displayName: authProfile?.displayName,
+      email: authUser?.email,
+      handle: authProfile?.handle,
+      canonicalId: authProfile?.uorCanonicalId,
+      cid: authProfile?.uorCid,
+      ipv6: authProfile?.uorIpv6,
+      glyph: authProfile?.uorGlyph,
+      ceremonyCid: authProfile?.ceremonyCid,
+      threeWordName: authProfile?.threeWordName,
+      bio: authProfile?.bio,
+    };
+    const auditResult = projectForLLM(text, authProfile?.privacyRules ?? null, profileCtxForAudit);
+
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
       content: text,
       timestamp: new Date(),
+      meta: auditResult.isProjected ? {
+        disclosureAudit: {
+          redactionCount: auditResult.redactionCount,
+          redactedCategories: auditResult.redactedCategories,
+          isProjected: auditResult.isProjected,
+        },
+      } : undefined,
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -1791,6 +1818,9 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                 >
                   {content}
                 </p>
+                {meta?.disclosureAudit?.isProjected && (
+                  <DisclosureAuditBadge audit={meta.disclosureAudit} />
+                )}
               </div>
             ) : meta?.neuroSymbolic && !isStreaming ? (
               <div style={{ fontFamily: P.font }}>
@@ -1970,6 +2000,75 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Disclosure Audit Badge ─────────────────────────────────────────────
+const CATEGORY_LABELS: Record<string, string> = {
+  name: "Display Name",
+  email: "Email Address",
+  avatar: "Avatar",
+  bio: "Bio",
+  handle: "Handle",
+  canonicalId: "Canonical ID",
+  cid: "Content ID",
+  ipv6: "IPv6 Address",
+  glyph: "Glyph",
+  ceremonyCid: "Ceremony Proof",
+  trustNode: "Trust Node",
+};
+
+function DisclosureAuditBadge({ audit }: { audit: { redactionCount: number; redactedCategories: string[]; isProjected: boolean } }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="mt-1.5">
+      <button
+        onClick={() => setExpanded(p => !p)}
+        className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+        title="View disclosure audit"
+      >
+        <Shield className="w-3 h-3" style={{ color: "hsl(152, 44%, 50%)" }} />
+        <span style={{ fontSize: sf(10), color: "hsl(152, 30%, 55%)", fontFamily: P.font, fontWeight: 600, letterSpacing: "0.05em" }}>
+          {audit.redactionCount > 0
+            ? `${audit.redactionCount} redaction${audit.redactionCount > 1 ? "s" : ""}`
+            : "QDisclosure active"}
+        </span>
+      </button>
+      {expanded && (
+        <div
+          className="mt-1.5 rounded-lg px-3 py-2.5 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200"
+          style={{
+            background: "hsla(152, 20%, 14%, 0.5)",
+            border: "1px solid hsla(152, 30%, 30%, 0.2)",
+          }}
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <Lock className="w-3 h-3" style={{ color: "hsl(152, 40%, 50%)" }} />
+            <span style={{ fontSize: sf(10), color: "hsl(152, 30%, 60%)", fontFamily: P.font, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+              Disclosure Audit
+            </span>
+          </div>
+          {audit.redactedCategories.length > 0 ? (
+            audit.redactedCategories.map(cat => (
+              <div key={cat} className="flex items-center gap-2">
+                <EyeOff className="w-3 h-3 shrink-0" style={{ color: "hsl(38, 50%, 50%)" }} />
+                <span style={{ fontSize: sf(11), color: P.textMuted, fontFamily: P.font }}>
+                  <strong style={{ color: P.text }}>{CATEGORY_LABELS[cat] || cat}</strong> — redacted via zero-knowledge projection
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center gap-2">
+              <Eye className="w-3 h-3 shrink-0" style={{ color: "hsl(152, 40%, 50%)" }} />
+              <span style={{ fontSize: sf(11), color: P.textMuted, fontFamily: P.font }}>
+                Privacy shield active. No PII detected in this message.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
