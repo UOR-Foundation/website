@@ -139,7 +139,7 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
           className="flex items-center justify-center gap-8 pb-4"
           style={{ borderBottom: `1px solid ${P.border}` }}
         >
-          {(["privacy", "terms", "principles"] as LegalTab[]).map((t) => (
+          {(["principles", "privacy", "terms"] as LegalTab[]).map((t) => (
             <button
               key={t}
               onClick={() => {
