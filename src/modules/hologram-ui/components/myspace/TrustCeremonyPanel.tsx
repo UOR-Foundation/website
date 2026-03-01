@@ -11,13 +11,14 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, UserPlus, Users, Shield, ShieldCheck,
   Check, X, Clock, Fingerprint, Loader2, Link2, Sparkles,
-  Star, GitGraph,
+  Star, GitGraph, TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import TrustGraphVisualization from "./TrustGraphVisualization";
+import TrustTimeline from "./TrustTimeline";
 
 interface TrustCeremonyPanelProps {
   onBack: () => void;
@@ -48,7 +49,7 @@ interface TrustConnection {
   peer_avatar?: string | null;
 }
 
-type Tab = "connections" | "requests" | "search" | "graph";
+type Tab = "connections" | "requests" | "search" | "graph" | "timeline";
 
 export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) {
   const { user, profile } = useAuth();
@@ -293,6 +294,7 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
           {([
             { key: "connections" as Tab, label: "Connected", icon: Users },
             { key: "graph" as Tab, label: "Graph", icon: GitGraph },
+            { key: "timeline" as Tab, label: "Timeline", icon: TrendingUp },
             { key: "requests" as Tab, label: `Requests${requestCount > 0 ? ` (${requestCount})` : ""}`, icon: Clock },
             { key: "search" as Tab, label: "Find", icon: Search },
           ]).map(t => (
@@ -323,6 +325,11 @@ export default function TrustCeremonyPanel({ onBack }: TrustCeremonyPanelProps) 
             userName={profile?.displayName}
             userGlyph={profile?.uorGlyph}
           />
+        )}
+
+        {/* ═══ TIMELINE TAB ═══ */}
+        {tab === "timeline" && (
+          <TrustTimeline connections={connections} />
         )}
 
         {/* ═══ SEARCH TAB ═══ */}

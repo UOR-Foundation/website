@@ -1205,6 +1205,44 @@ export type Database = {
         }
         Relationships: []
       }
+      trust_level_history: {
+        Row: {
+          ceremony_cid: string | null
+          changed_by: string
+          connection_id: string
+          created_at: string
+          id: string
+          new_level: number
+          previous_level: number
+        }
+        Insert: {
+          ceremony_cid?: string | null
+          changed_by: string
+          connection_id: string
+          created_at?: string
+          id?: string
+          new_level?: number
+          previous_level?: number
+        }
+        Update: {
+          ceremony_cid?: string | null
+          changed_by?: string
+          connection_id?: string
+          created_at?: string
+          id?: string
+          new_level?: number
+          previous_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_level_history_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "trust_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uor_bindings: {
         Row: {
           address: string
