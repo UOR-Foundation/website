@@ -249,26 +249,6 @@ export default function KernelBoot({
               transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             />
           )}
-
-          {/* ── Status text — subtle, below center ── */}
-          {phase !== "dark" && phase !== "project" && (
-            <motion.p
-              className="absolute text-center"
-              style={{
-                top: "calc(50% + 60px)",
-                fontSize: "11px",
-                color: "hsla(38, 10%, 68%, 0.5)",
-                letterSpacing: "0.1em",
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-                fontWeight: 400,
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              {phase === "dot" || phase === "pulse" ? "" : ""}
-            </motion.p>
-          )}
         </motion.div>
       )}
     </AnimatePresence>
