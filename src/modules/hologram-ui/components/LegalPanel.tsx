@@ -581,10 +581,28 @@ function PrinciplesContent({ P, fontDisplay }: { P: ReturnType<typeof palette>; 
 
       <Section title="AI that works for you" P={P} fontDisplay={fontDisplay}>
         <p>
-          Hologram includes AI capabilities through <strong style={{ color: P.heading }}>Lumen AI</strong>, the native co-pilot built directly into your operating environment. Unlike external AI assistants, Lumen is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
+          Hologram includes AI capabilities through <strong style={{ color: P.heading }}>Lumen AI</strong>, the native co-pilot built directly into your operating environment. The word co-pilot is deliberate: you are always in the driving seat. Lumen is intelligent, capable, and fast, but it never acts on its own. It supports your decisions. It does not make them for you.
+        </p>
+        <p>
+          Your role as a human is threefold. First, you <strong style={{ color: P.heading }}>set the intention</strong>: you decide what you want to accomplish and where the boundaries are. Second, you <strong style={{ color: P.heading }}>monitor the outcome</strong>: you check that what the AI produces actually aligns with your values, especially when questions are ambiguous or stakes are high. Third, you <strong style={{ color: P.heading }}>inject what only humans can</strong>: novelty, reframing, creative leaps, the kind of insight that no machine can originate on its own.
+        </p>
+        <p>
+          This is not just a philosophy. It is built into how the system works. Lumen is governed by the same eight rules above. It cannot fabricate information. It cannot access your data without permission. It cannot take autonomous actions beyond its trust level.
         </p>
         <p>
           Most importantly, Lumen optimises for your coherence, not for engagement. It is not trying to keep you scrolling or clicking. It is trying to help you think clearly, work effectively, and stay aligned with what actually matters to you. When it does not have a good answer, it stays silent rather than guessing.
+        </p>
+      </Section>
+
+      <Section title="Safe intelligence by design" P={P} fontDisplay={fontDisplay}>
+        <p>
+          Most approaches to AI safety rely on rules, guidelines, and usage policies. These help, but they can be bypassed, misinterpreted, or simply ignored. Hologram takes a fundamentally different approach.
+        </p>
+        <p>
+          Instead of trying to control AI behaviour with written instructions alone, Hologram confines it within a mathematical structure: a finite topological space where every operation has defined boundaries. Think of it like this: rather than putting up warning signs around a cliff edge, we built a landscape where the cliff simply does not exist. The AI cannot go somewhere the structure does not allow, regardless of what it is asked to do.
+        </p>
+        <p>
+          This is what makes Hologram's safety guarantees structural rather than behavioural. They do not depend on the AI choosing to follow rules. They are embedded in the space the AI operates within.
         </p>
       </Section>
 
