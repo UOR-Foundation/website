@@ -740,6 +740,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lumen_presets: {
+        Row: {
+          created_at: string
+          dimension_values: Json
+          icon: string
+          id: string
+          is_favorite: boolean
+          name: string
+          phase: string
+          preset_id: string
+          sort_order: number
+          subtitle: string
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dimension_values?: Json
+          icon?: string
+          id?: string
+          is_favorite?: boolean
+          name: string
+          phase?: string
+          preset_id: string
+          sort_order?: number
+          subtitle?: string
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dimension_values?: Json
+          icon?: string
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          phase?: string
+          preset_id?: string
+          sort_order?: number
+          subtitle?: string
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meeting_types: {
         Row: {
           availability_windows: Json
