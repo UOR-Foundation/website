@@ -557,6 +557,30 @@
   }
 }
 
+/* ── Legal panel tab content enter ────────────────────────────────── */
+@keyframes legal-tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Flyout popover enter ─────────────────────────────────────────── */
+@keyframes flyout-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(-6px, 0, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 /* ── Global elegant scrollbar — applies everywhere ────────────────── */
 *::-webkit-scrollbar {
   width: 6px;

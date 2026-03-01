@@ -9,8 +9,13 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import {
+  DURATION_OVERLAY_MS,
+  DURATION_BACKDROP_MS,
+  EASE_PROJECT,
+  EASE_DISMISS,
+} from "@/modules/hologram-ui/theme/projection-transitions";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,10 +48,13 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDark = bgMode === "dark";
   const P = palette(isDark);
+  const [mounted, setMounted] = useState(false);
+  const [contentKey, setContentKey] = useState(0);
 
-  // Reset tab on open
+  // Keep-alive mount + reset tab on open
   useEffect(() => {
     if (open) {
+      setMounted(true);
       setTab(initialTab);
       scrollRef.current?.scrollTo({ top: 0 });
     }
@@ -65,133 +73,136 @@ export default function LegalPanel({ open, initialTab = "privacy", onClose, bgMo
   const font = "'DM Sans', system-ui, sans-serif";
   const fontDisplay = "'Playfair Display', serif";
 
+  if (!mounted) return null;
+
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop — subtle dim */}
-          <motion.div
-            className="fixed inset-0 z-[60]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-            style={{ background: isDark ? "hsla(0, 0%, 0%, 0.5)" : "hsla(0, 0%, 0%, 0.2)" }}
+    <>
+      {/* Backdrop — pure CSS opacity */}
+      <div
+        className="fixed inset-0 z-[60]"
+        style={{
+          background: isDark ? "hsla(0, 0%, 0%, 0.5)" : "hsla(0, 0%, 0%, 0.2)",
+          opacity: open ? 1 : 0,
+          transition: `opacity ${DURATION_BACKDROP_MS}ms ease-out`,
+          pointerEvents: open ? "auto" : "none",
+        }}
+        onClick={onClose}
+      />
+
+      {/* Panel — GPU-promoted translateY from bottom */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-[61] flex flex-col"
+        style={{
+          top: "clamp(80px, 12vh, 140px)",
+          background: P.bg,
+          borderTop: `1px solid ${P.border}`,
+          borderRadius: "20px 20px 0 0",
+          fontFamily: font,
+          transform: open ? "translate3d(0, 0, 0)" : "translate3d(0, 100%, 0)",
+          opacity: open ? 1 : 0,
+          transition: open
+            ? `transform ${DURATION_OVERLAY_MS}ms ${EASE_PROJECT}, opacity ${Math.round(DURATION_OVERLAY_MS * 0.5)}ms ${EASE_PROJECT}`
+            : `transform ${DURATION_OVERLAY_MS}ms ${EASE_DISMISS}, opacity ${Math.round(DURATION_OVERLAY_MS * 0.3)}ms ease-out`,
+          pointerEvents: open ? "auto" : "none",
+          willChange: open ? "transform, opacity" : "auto",
+          contain: "layout style",
+        }}
+      >
+        {/* Handle bar + close icon */}
+        <div className="flex items-center justify-between px-6 pt-4 pb-3">
+          <div className="w-7" />
+          <button
             onClick={onClose}
-          />
-
-          {/* Panel — rises from bottom */}
-          <motion.div
-            className="fixed bottom-0 left-0 right-0 z-[61] flex flex-col"
-            style={{
-              top: "clamp(80px, 12vh, 140px)",
-              background: P.bg,
-              borderTop: `1px solid ${P.border}`,
-              borderRadius: "20px 20px 0 0",
-              fontFamily: font,
-            }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+            className="cursor-pointer group"
+            aria-label="Close"
           >
-            {/* Handle bar + close icon */}
-            <div className="flex items-center justify-between px-6 pt-4 pb-3">
-              <div className="w-7" />
-              <button
-                onClick={onClose}
-                className="cursor-pointer group"
-                aria-label="Close"
-              >
-                <div
-                  className="w-10 h-[3px] rounded-full transition-all duration-300 group-hover:w-14"
-                  style={{ background: P.handleBar }}
-                />
-              </button>
-              <button
-                onClick={onClose}
-                className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110"
-                style={{
-                  background: isDark ? "hsla(0, 0%, 100%, 0.05)" : "hsla(0, 0%, 0%, 0.04)",
-                  color: P.textMuted,
-                }}
-                aria-label="Collapse"
-              >
-                <ChevronDown size={14} strokeWidth={1.5} />
-              </button>
-            </div>
-
-            {/* Tab switcher */}
             <div
-              className="flex items-center justify-center gap-8 pb-4"
-              style={{ borderBottom: `1px solid ${P.border}` }}
-            >
-              {(["privacy", "terms", "principles"] as LegalTab[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => {
-                    setTab(t);
-                    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="relative pb-2 transition-colors duration-300"
-                  style={{
-                    fontFamily: font,
-                    fontSize: "11px",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: tab === t ? P.tabActive : P.tab,
-                    fontWeight: tab === t ? 600 : 400,
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  {t === "privacy" ? "Privacy Policy" : t === "terms" ? "Terms of Use" : "Our Principles"}
-                  {/* Active indicator line */}
-                  <motion.div
-                    className="absolute bottom-0 left-0 right-0 h-[1px]"
-                    style={{ background: P.tabActive }}
-                    initial={false}
-                    animate={{ scaleX: tab === t ? 1 : 0, opacity: tab === t ? 1 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </button>
-              ))}
-            </div>
+              className="w-10 h-[3px] rounded-full transition-all duration-300 group-hover:w-14"
+              style={{ background: P.handleBar }}
+            />
+          </button>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-300 hover:scale-110"
+            style={{
+              background: isDark ? "hsla(0, 0%, 100%, 0.05)" : "hsla(0, 0%, 0%, 0.04)",
+              color: P.textMuted,
+            }}
+            aria-label="Collapse"
+          >
+            <ChevronDown size={14} strokeWidth={1.5} />
+          </button>
+        </div>
 
-            {/* Scrollable content */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto overscroll-contain"
+        {/* Tab switcher */}
+        <div
+          className="flex items-center justify-center gap-8 pb-4"
+          style={{ borderBottom: `1px solid ${P.border}` }}
+        >
+          {(["privacy", "terms", "principles"] as LegalTab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => {
+                setTab(t);
+                setContentKey(k => k + 1);
+                scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="relative pb-2 transition-colors duration-300"
               style={{
-                scrollbarWidth: "thin",
-                scrollbarColor: `${P.border} transparent`,
+                fontFamily: font,
+                fontSize: "11px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: tab === t ? P.tabActive : P.tab,
+                fontWeight: tab === t ? 600 : 400,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
               }}
             >
-              <div className="max-w-2xl mx-auto px-8 py-10 pb-16">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={tab}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                  >
-                    {tab === "privacy" ? (
-                      <PrivacyContent P={P} fontDisplay={fontDisplay} />
-                    ) : tab === "terms" ? (
-                      <TermsContent P={P} fontDisplay={fontDisplay} />
-                    ) : (
-                      <PrinciplesContent P={P} fontDisplay={fontDisplay} />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+              {t === "privacy" ? "Privacy Policy" : t === "terms" ? "Terms of Use" : "Our Principles"}
+              {/* Active indicator line — pure CSS */}
+              <div
+                className="absolute bottom-0 left-0 right-0 h-[1px]"
+                style={{
+                  background: P.tabActive,
+                  transform: tab === t ? "scaleX(1)" : "scaleX(0)",
+                  opacity: tab === t ? 1 : 0,
+                  transition: "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease",
+                }}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* Scrollable content */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: `${P.border} transparent`,
+          }}
+        >
+          <div className="max-w-2xl mx-auto px-8 py-10 pb-16">
+            <div
+              key={contentKey}
+              style={{
+                animation: "legal-tab-enter 250ms cubic-bezier(0.22, 1, 0.36, 1) both",
+              }}
+            >
+              {tab === "privacy" ? (
+                <PrivacyContent P={P} fontDisplay={fontDisplay} />
+              ) : tab === "terms" ? (
+                <TermsContent P={P} fontDisplay={fontDisplay} />
+              ) : (
+                <PrinciplesContent P={P} fontDisplay={fontDisplay} />
+              )}
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

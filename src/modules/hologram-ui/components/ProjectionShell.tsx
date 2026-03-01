@@ -14,13 +14,15 @@
  * sliding left-to-right as if projected by the kernel.
  */
 
-import { useState, useEffect, memo, useRef, useCallback } from "react";
+import { useState, useEffect, memo, useRef } from "react";
+import {
+  DURATION_PROJECT_MS,
+  DURATION_BACKDROP_MS,
+  EASE_PROJECT,
+  EASE_DISMISS,
+} from "@/modules/hologram-ui/theme/projection-transitions";
 
 const SIDEBAR_WIDTH = 56;
-
-/** Duration in ms — matched to quantum surface 0.22s standard */
-const DURATION_MS = 220;
-const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 interface ProjectionShellProps {
   /** Panel is visible and interactive */
@@ -66,7 +68,7 @@ export default memo(function ProjectionShell({
       clearTimeout(backdropTimeout.current);
       setBackdropVisible(true);
     } else {
-      backdropTimeout.current = setTimeout(() => setBackdropVisible(false), DURATION_MS);
+      backdropTimeout.current = setTimeout(() => setBackdropVisible(false), DURATION_PROJECT_MS);
     }
     return () => clearTimeout(backdropTimeout.current);
   }, [open]);
@@ -93,7 +95,7 @@ export default memo(function ProjectionShell({
           style={{
             background: backdropColor,
             opacity: open ? 1 : 0,
-            transition: `opacity ${DURATION_MS * 0.7}ms ease-out`,
+            transition: `opacity ${DURATION_BACKDROP_MS}ms ease-out`,
             willChange: open ? "opacity" : "auto",
           }}
           onClick={onClose}
@@ -109,7 +111,9 @@ export default memo(function ProjectionShell({
           // GPU-promoted transform for smooth left-to-right projection
           transform: open ? "translate3d(0, 0, 0)" : "translate3d(-40px, 0, 0)",
           opacity: open ? 1 : 0,
-          transition: `transform ${DURATION_MS}ms ${EASE}, opacity ${open ? DURATION_MS * 0.6 : DURATION_MS * 0.4}ms ${open ? EASE : "ease-out"}`,
+          transition: open
+            ? `transform ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}, opacity ${Math.round(DURATION_PROJECT_MS * 0.6)}ms ${EASE_PROJECT}`
+            : `transform ${DURATION_PROJECT_MS}ms ${EASE_DISMISS}, opacity ${Math.round(DURATION_PROJECT_MS * 0.4)}ms ease-out`,
           pointerEvents: open ? "auto" : "none",
           willChange: open ? "transform, opacity" : "auto",
           // Isolation: prevent layout thrashing from panel content
@@ -123,7 +127,7 @@ export default memo(function ProjectionShell({
             width: open ? "2px" : "0px",
             background: beamGradient,
             opacity: open ? 1 : 0,
-            transition: `opacity ${DURATION_MS}ms ${EASE}, width ${DURATION_MS}ms ${EASE}`,
+            transition: `opacity ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}, width ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}`,
           }}
         />
 
@@ -134,7 +138,7 @@ export default memo(function ProjectionShell({
             width: "80px",
             background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.06), transparent)",
             opacity: open ? 1 : 0,
-            transition: `opacity ${DURATION_MS * 1.5}ms ${EASE}`,
+            transition: `opacity ${Math.round(DURATION_PROJECT_MS * 1.5)}ms ${EASE_PROJECT}`,
           }}
         />
 
