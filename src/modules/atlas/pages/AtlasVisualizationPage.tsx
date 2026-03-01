@@ -14,7 +14,7 @@
 
 import React, { Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom, Hexagon, GitBranch } from "lucide-react";
+import { ArrowLeft, BarChart3, Network, ArrowLeftRight, Minimize2, Atom, Hexagon, GitBranch, Box } from "lucide-react";
 
 const AtlasGraph = React.lazy(() => import("@/modules/atlas/components/AtlasGraph"));
 const ModelFingerprintPanel = React.lazy(() => import("@/modules/atlas/components/ModelFingerprintCard"));
@@ -23,8 +23,9 @@ const CompressionPanel = React.lazy(() => import("@/modules/atlas/components/Com
 const QuantumISAPanel = React.lazy(() => import("@/modules/atlas/components/QuantumISAPanel"));
 const TopologicalQubitPanel = React.lazy(() => import("@/modules/atlas/components/TopologicalQubitPanel"));
 const CircuitDiagramPanel = React.lazy(() => import("@/modules/atlas/components/CircuitDiagramPanel"));
+const AtlasManifold3D = React.lazy(() => import("@/modules/atlas/components/AtlasManifold3D"));
 
-type Tab = "graph" | "fingerprint" | "translation" | "compression" | "quantum" | "topo-qubit" | "circuit";
+type Tab = "graph" | "manifold" | "fingerprint" | "translation" | "compression" | "quantum" | "topo-qubit" | "circuit";
 
 export default function AtlasVisualizationPage() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function AtlasVisualizationPage() {
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "graph", label: "Graph", icon: <Network size={12} /> },
+    { key: "manifold", label: "3D Manifold", icon: <Box size={12} /> },
     { key: "fingerprint", label: "Fingerprint", icon: <BarChart3 size={12} /> },
     { key: "translation", label: "Translation", icon: <ArrowLeftRight size={12} /> },
     { key: "compression", label: "Compression", icon: <Minimize2 size={12} /> },
@@ -42,6 +44,7 @@ export default function AtlasVisualizationPage() {
 
   const loadingText: Record<Tab, string> = {
     graph: "Constructing 96-vertex Atlas…",
+    manifold: "Initializing 3D manifold renderer…",
     fingerprint: "Computing model fingerprints…",
     translation: "Running cross-model translations…",
     compression: "Analyzing τ-mirror symmetry…",
@@ -100,6 +103,8 @@ export default function AtlasVisualizationPage() {
         }>
           {tab === "graph" ? (
             <AtlasGraph width={1200} height={800} />
+          ) : tab === "manifold" ? (
+            <AtlasManifold3D />
           ) : (
             <div className="h-full overflow-y-auto">
               {tab === "fingerprint" ? <ModelFingerprintPanel /> :
