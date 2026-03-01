@@ -169,7 +169,7 @@ export function useSovereignty(): SovereigntyState {
   // ── Genesis Ceremony ───────────────────────────────────────────
   const runGenesis = useCallback(async (): Promise<GenesisResult | null> => {
     if (!authUser) {
-      setError("No authenticated user — cannot run genesis");
+      setError("No authenticated user. Cannot run genesis");
       return null;
     }
 
