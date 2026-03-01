@@ -644,7 +644,7 @@ export default function DesktopSurface({
             fontSize: "calc(10px * var(--holo-user-scale))",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: mode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(38, 30%, 75%, 0.75)",
+            color: P.legalText,
             background: "none",
             border: "none",
             cursor: "pointer",
