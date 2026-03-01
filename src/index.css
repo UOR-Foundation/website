@@ -487,9 +487,9 @@
 
 /* Genesis ring ripple — intensity scales with coherence */
 @keyframes genesis-ripple {
-  0%   { transform: scale(0.5); opacity: calc(0.4 + 0.3 * var(--h-score, 0.6)); }
-  70%  { transform: scale(calc(1.5 + 0.7 * var(--h-score, 0.6))); opacity: 0; }
-  100% { transform: scale(calc(1.5 + 0.7 * var(--h-score, 0.6))); opacity: 0; }
+  0%   { transform: scale(1); opacity: calc(0.35 + 0.25 * var(--h-score, 0.6)); }
+  80%  { transform: scale(calc(2.2 + 0.8 * var(--h-score, 0.6))); opacity: 0; }
+  100% { transform: scale(calc(2.2 + 0.8 * var(--h-score, 0.6))); opacity: 0; }
 }
 
 @keyframes pill-glow-pulse {
