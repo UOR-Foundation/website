@@ -629,6 +629,15 @@ export default function DesktopOsSidebar({
           </>
         )}
 
+      </div>
+
+      {/* ── Bottom: Help + Inbox + System ───────────────────── */}
+      <div className="px-2 py-3 space-y-0 shrink-0" style={{ borderTop: "1px solid var(--sb-border)" }}>
+        {/* Text Size Control — visible when expanded */}
+        {expanded && (
+          <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
+        )}
+
         {/* Share the Love — warm gradient heart */}
         <IconTooltip label="Share the Love" show={!expanded}>
           <button
@@ -662,14 +671,6 @@ export default function DesktopOsSidebar({
             {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Share the Love</span>}
           </button>
         </IconTooltip>
-      </div>
-
-      {/* ── Bottom: Help + Inbox + System ───────────────────── */}
-      <div className="px-2 py-3 space-y-0 shrink-0" style={{ borderTop: "1px solid var(--sb-border)" }}>
-        {/* Text Size Control — visible when expanded */}
-        {expanded && (
-          <TextSizeControl textSize={textSize} setTextSize={handleTextSize} bgMode={bgMode} />
-        )}
 
         {onReplayGuide && (
           <IconTooltip label={`Help (${MOD_KEY} /)`} show={!expanded}>
