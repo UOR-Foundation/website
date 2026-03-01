@@ -15,15 +15,18 @@
  * until materialized. Only enabled categories compute on demand.
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
   Globe, Shield, Coins, Users, Brain, Code2,
   Database, Image, Cloud, Cpu, Atom, FlaskConical,
   ChevronRight, ChevronDown, Eye, Zap, Check,
-  Info, Layers, ArrowRight,
+  Info, Layers, ArrowRight, Play, Copy, X,
+  CheckCircle, AlertTriangle, Loader2, LayoutGrid,
 } from "lucide-react";
 import { SPECS } from "@/modules/uns/core/hologram/specs";
+import { project, type Hologram, type HologramProjection } from "@/modules/uns/core/hologram/index";
 import type { HologramSpec } from "@/modules/uns/core/hologram/index";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Category Taxonomy ─────────────────────────────────────────────────────
 // Maps each of the 370+ projection keys into 12 human-readable domains.
@@ -227,6 +230,14 @@ export function InteroperabilityPanel({ isDark }: InteroperabilityPanelProps) {
   const [enabled, setEnabled] = useState<Set<string>>(loadEnabled);
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
 
+  // Bulk invocation state
+  const [bulkResults, setBulkResults] = useState<Map<string, HologramProjection> | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkTimeMs, setBulkTimeMs] = useState(0);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [bulkFilter, setBulkFilter] = useState("");
+
   const totalProjections = SPECS.size;
   const enabledCount = useMemo(
     () => [...enabled].reduce((sum, key) => sum + (CATEGORY_INDEX.get(key)?.length ?? 0), 0),
@@ -246,6 +257,85 @@ export function InteroperabilityPanel({ isDark }: InteroperabilityPanelProps) {
     const next = on ? new Set(CATEGORIES.map(c => c.key)) : new Set<string>();
     saveEnabled(next);
     setEnabled(next);
+  }, []);
+
+  // ── Bulk Invocation ─────────────────────────────────────────────────
+  const runBulkProjection = useCallback(async () => {
+    setBulkRunning(true);
+    setBulkError(null);
+    setBulkResults(null);
+    const t0 = performance.now();
+
+    try {
+      // Get user's canonical identity from profile
+      const { data: { session } } = await supabase.auth.getSession();
+      let identityHex: string | null = null;
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("uor_canonical_id")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (profile?.uor_canonical_id) {
+          // Extract hex from canonical ID format "uor:sha256:{hex}"
+          const parts = profile.uor_canonical_id.split(":");
+          identityHex = parts[parts.length - 1];
+        }
+      }
+
+      // Fallback: generate a demo identity from a fixed seed
+      if (!identityHex) {
+        const seed = new TextEncoder().encode("hologram:demo:identity");
+        const digest = await crypto.subtle.digest("SHA-256", seed);
+        identityHex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // Build ProjectionInput
+      const hexBytes = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        hexBytes[i] = parseInt(identityHex.substring(i * 2, i * 2 + 2), 16);
+      }
+      const input = {
+        hashBytes: hexBytes,
+        cid: `bafk${identityHex.slice(0, 52)}`,
+        hex: identityHex,
+      };
+
+      // Collect active spec keys
+      const activeKeys = new Set<string>();
+      for (const catKey of enabled) {
+        const members = CATEGORY_INDEX.get(catKey) ?? [];
+        for (const m of members) activeKeys.add(m);
+      }
+
+      // Project through all active specs
+      const results = new Map<string, HologramProjection>();
+      for (const key of activeKeys) {
+        const spec = SPECS.get(key);
+        if (!spec) continue;
+        try {
+          const value = spec.project(input);
+          const lossWarning = spec.fidelity === "lossless" ? undefined : spec.lossWarning ?? "lossy";
+          results.set(key, { value, fidelity: spec.fidelity, spec: spec.spec, ...(lossWarning ? { lossWarning } : {}) });
+        } catch {
+          results.set(key, { value: "⚠ projection error", fidelity: spec.fidelity, spec: spec.spec, lossWarning: "runtime error" });
+        }
+      }
+
+      setBulkTimeMs(Math.round(performance.now() - t0));
+      setBulkResults(results);
+    } catch (err: any) {
+      setBulkError(err?.message ?? "Bulk projection failed");
+    } finally {
+      setBulkRunning(false);
+    }
+  }, [enabled]);
+
+  const copyValue = useCallback((key: string, value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1500);
   }, []);
 
   return (
@@ -377,6 +467,139 @@ export function InteroperabilityPanel({ isDark }: InteroperabilityPanelProps) {
             </div>
           );
         })}
+      </div>
+
+      {/* ── Bulk Invocation ──────────────────────────────────────────── */}
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2.5 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <LayoutGrid size={14} className="text-primary" />
+            <span className="text-sm font-body font-medium text-foreground">
+              Bulk Project
+            </span>
+            <span className="text-[11px] text-muted-foreground font-body">
+              — invoke all {enabledCount} active projections at once
+            </span>
+          </div>
+          <button
+            onClick={runBulkProjection}
+            disabled={bulkRunning || enabledCount === 0}
+            className="flex items-center gap-1.5 text-[12px] font-body font-medium px-3 py-1.5 rounded-lg border border-border bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {bulkRunning ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Play size={13} />
+            )}
+            {bulkRunning ? "Projecting…" : "Project All"}
+          </button>
+        </div>
+
+        {bulkError && (
+          <div className="px-3 py-2 border-t border-border bg-destructive/10 text-destructive text-xs font-body">
+            {bulkError}
+          </div>
+        )}
+
+        {bulkResults && (
+          <div className="border-t border-border">
+            {/* Results header */}
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/20">
+              <div className="flex items-center gap-3 text-[11px] font-body text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <CheckCircle size={11} style={{ color: "hsl(142, 60%, 45%)" }} />
+                  {[...bulkResults.values()].filter(r => r.fidelity === "lossless").length} lossless
+                </span>
+                <span className="flex items-center gap-1">
+                  <AlertTriangle size={11} style={{ color: "hsl(45, 80%, 50%)" }} />
+                  {[...bulkResults.values()].filter(r => r.fidelity === "lossy").length} lossy
+                </span>
+                <span>•</span>
+                <span>{bulkTimeMs}ms</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter results…"
+                  value={bulkFilter}
+                  onChange={e => setBulkFilter(e.target.value)}
+                  className="text-[11px] font-body bg-background border border-border rounded-md px-2 py-1 w-[140px] outline-none text-foreground placeholder:text-muted-foreground/50"
+                />
+                <button
+                  onClick={() => { setBulkResults(null); setBulkFilter(""); }}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  title="Close results"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Results grid */}
+            <div className="max-h-[400px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+              {(() => {
+                const q = bulkFilter.toLowerCase();
+                const entries = [...bulkResults.entries()]
+                  .filter(([key, r]) => !q || key.includes(q) || r.value.toLowerCase().includes(q))
+                  .sort((a, b) => {
+                    // lossless first, then alphabetical
+                    if (a[1].fidelity !== b[1].fidelity) return a[1].fidelity === "lossless" ? -1 : 1;
+                    return a[0].localeCompare(b[0]);
+                  });
+
+                if (entries.length === 0) {
+                  return (
+                    <div className="px-3 py-6 text-center text-xs text-muted-foreground font-body">
+                      No matching projections
+                    </div>
+                  );
+                }
+
+                return entries.map(([key, result]) => (
+                  <div
+                    key={key}
+                    className="flex items-start gap-2 px-3 py-2 border-b border-border/50 hover:bg-muted/30 transition-colors group/row"
+                  >
+                    {/* Fidelity indicator */}
+                    <div className="mt-1 shrink-0">
+                      {result.fidelity === "lossless" ? (
+                        <Check size={10} style={{ color: "hsl(142, 60%, 45%)" }} />
+                      ) : (
+                        <AlertTriangle size={10} style={{ color: "hsl(45, 80%, 50%)" }} />
+                      )}
+                    </div>
+
+                    {/* Key */}
+                    <span className="text-[11px] font-mono text-primary w-[140px] shrink-0 truncate mt-0.5" title={key}>
+                      {key}
+                    </span>
+
+                    {/* Value */}
+                    <span
+                      className="text-[11px] font-mono text-muted-foreground flex-1 truncate mt-0.5 select-all"
+                      title={result.value}
+                    >
+                      {result.value}
+                    </span>
+
+                    {/* Copy button */}
+                    <button
+                      onClick={() => copyValue(key, result.value)}
+                      className="opacity-0 group-hover/row:opacity-100 transition-opacity shrink-0 text-muted-foreground hover:text-foreground"
+                      title="Copy value"
+                    >
+                      {copiedKey === key ? (
+                        <Check size={12} style={{ color: "hsl(142, 60%, 45%)" }} />
+                      ) : (
+                        <Copy size={12} />
+                      )}
+                    </button>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer — the "how" */}
