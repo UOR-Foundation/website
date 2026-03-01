@@ -145,7 +145,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: window.location.origin + "/hologram-os" },
     });
     if (error) toast.error("Could not send magic link");
     else setPhase("magic-sent");
