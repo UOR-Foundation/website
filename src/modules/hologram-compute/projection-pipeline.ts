@@ -128,6 +128,9 @@ export class AtlasProjectionPipeline {
   /** Pending logits callback — stored here so it survives engine recreation */
   private pendingLogitsCallback: ((context: number[]) => Promise<Float32Array>) | null = null;
 
+  /** Pending lm_head weights — stored here so they survive engine recreation */
+  private pendingLmHead: { weights: Float32Array; vocabSize: number; hiddenDim: number } | null = null;
+
   /** Status change listeners */
   private listeners = new Set<(status: PipelineStatus) => void>();
 
@@ -240,6 +243,16 @@ export class AtlasProjectionPipeline {
 
       this.engine.initialize(this.decomposition);
 
+      // Apply pending lm_head weights if set before engine creation
+      if (this.pendingLmHead) {
+        this.engine.setLmHead(
+          this.pendingLmHead.weights,
+          this.pendingLmHead.vocabSize,
+          this.pendingLmHead.hiddenDim,
+        );
+        console.log("[Pipeline] Applied pending lm_head to engine");
+      }
+
       // Apply pending logits callback if one was set before engine creation
       if (this.pendingLogitsCallback) {
         this.engine.setLogitsCallback(this.pendingLogitsCallback);
@@ -305,7 +318,13 @@ export class AtlasProjectionPipeline {
     return this.engine;
   }
 
-  /** Wire a real model logits callback into the engine */
+  /** Wire real lm_head weights into the engine's output projection */
+  setLmHead(weights: Float32Array, vocabSize: number, hiddenDim: number): void {
+    this.pendingLmHead = { weights, vocabSize, hiddenDim };
+    // If engine already exists, apply immediately
+    this.engine?.setLmHead(weights, vocabSize, hiddenDim);
+  }
+
   /** Wire a real model logits callback into the engine */
   setLogitsCallback(fn: (context: number[]) => Promise<Float32Array>): void {
     this.pendingLogitsCallback = fn;
