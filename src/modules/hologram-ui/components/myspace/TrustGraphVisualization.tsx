@@ -60,6 +60,7 @@ export default function TrustGraphVisualization({
   const [links, setLinks] = useState<GraphLink[]>([]);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [draggedNode, setDraggedNode] = useState<string | null>(null);
+  const [pinnedNodes, setPinnedNodes] = useState<Set<string>>(new Set());
   const [dimensions, setDimensions] = useState({ width: 400, height: 350 });
 
   // Measure container
@@ -159,13 +160,32 @@ export default function TrustGraphVisualization({
   const onNodePointerUp = useCallback(() => {
     if (!draggedNode) return;
     const node = nodesRef.current.find((n) => n.id === draggedNode);
-    if (node) {
+    if (node && !pinnedNodes.has(draggedNode)) {
       node.fx = null;
       node.fy = null;
     }
     setDraggedNode(null);
     simRef.current?.alphaTarget(0);
-  }, [draggedNode]);
+  }, [draggedNode, pinnedNodes]);
+
+  const onNodeDoubleClick = useCallback((nodeId: string) => {
+    const node = nodesRef.current.find((n) => n.id === nodeId);
+    if (!node) return;
+    setPinnedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+        node.fx = null;
+        node.fy = null;
+        simRef.current?.alpha(0.3).restart();
+      } else {
+        next.add(nodeId);
+        node.fx = node.x;
+        node.fy = node.y;
+      }
+      return next;
+    });
+  }, []);
 
   if (connections.length === 0) {
     return (
@@ -255,6 +275,7 @@ export default function TrustGraphVisualization({
           const isHovered = hoveredNode === node.id;
           const isFaded = hoveredNode && !isHovered && hoveredNode !== "me" && node.id !== "me";
           const radius = node.isCenter ? 24 : 18;
+          const isPinned = pinnedNodes.has(node.id);
 
           return (
             <g
@@ -262,12 +283,28 @@ export default function TrustGraphVisualization({
               onMouseEnter={() => !draggedNode && setHoveredNode(node.id)}
               onMouseLeave={() => !draggedNode && setHoveredNode(null)}
               onPointerDown={(e) => onNodePointerDown(e, node.id)}
+              onDoubleClick={() => onNodeDoubleClick(node.id)}
               style={{
                 cursor: draggedNode === node.id ? "grabbing" : "grab",
                 transition: "opacity 0.3s ease",
                 opacity: isFaded ? 0.25 : 1,
               }}
             >
+              {/* Pinned indicator ring */}
+              {isPinned && (
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={radius + 5}
+                  fill="none"
+                  stroke="hsl(38, 50%, 50%)"
+                  strokeWidth={1}
+                  strokeOpacity={0.5}
+                  strokeDasharray="3 3"
+                  style={{ transition: "stroke-opacity 0.3s ease" }}
+                />
+              )}
+
               {/* Glow ring for center */}
               {node.isCenter && (
                 <circle
@@ -305,6 +342,20 @@ export default function TrustGraphVisualization({
                 {node.glyph}
               </text>
 
+              {/* Pin icon indicator */}
+              {isPinned && (
+                <text
+                  x={node.x + radius - 2}
+                  y={node.y - radius + 2}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize={9}
+                  fill="hsl(38, 50%, 60%)"
+                >
+                  📌
+                </text>
+              )}
+
               {/* Name label below */}
               <text
                 x={node.x}
@@ -323,7 +374,7 @@ export default function TrustGraphVisualization({
               {!node.isCenter && node.trustLevel && node.trustLevel > 0 && (
                 <text
                   x={node.x}
-                  y={node.y - radius - 6}
+                  y={node.y - radius - (isPinned ? 12 : 6)}
                   textAnchor="middle"
                   fill="hsl(38, 50%, 50%)"
                   fontSize={8}
