@@ -308,7 +308,7 @@ export default function DesktopSurface({
 
       {/* ── Chrome: Focus Toggle — fades in focus mode, reveals on hover ── */}
       <div
-        className="absolute right-20 top-1/2 -translate-y-1/2 z-[400] group/focus-toggle"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-[400] group/focus-toggle"
         style={{
           opacity: isFocus ? 0.08 : 1,
           pointerEvents: "auto",
