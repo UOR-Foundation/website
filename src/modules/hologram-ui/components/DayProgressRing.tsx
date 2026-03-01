@@ -202,7 +202,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
                 className="font-light leading-none"
                 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: "26px",
+                  fontSize: "18px",
                   color: isWhite ? "hsla(0, 0%, 5%, 0.9)" : "hsla(38, 15%, 96%, 1)",
                   fontWeight: 300,
                   letterSpacing: "0.02em",
@@ -281,7 +281,7 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
             className="tracking-[0.35em] uppercase text-center transition-all duration-300"
             style={{
               fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontSize: "12px",
+              fontSize: "10px",
               color,
               fontWeight: 500,
             }}
@@ -293,10 +293,10 @@ export default function DayProgressRing({ balance: externalBalance, activePhase,
 
       {/* Phase legend — appears on hover */}
       <div
-        className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
+        className="absolute -top-5 left-1/2 -translate-x-1/2 flex gap-5 transition-all duration-300 pointer-events-none"
         style={{
           opacity: hovered && attention.showExpanded ? 1 : 0,
-          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "4px" : "6px"})`,
+          transform: `translateX(-50%) translateY(${hovered && attention.showExpanded ? "2px" : "4px"})`,
         }}
       >
         {PHASE_ORDER.map((phase) => {
