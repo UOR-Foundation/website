@@ -8,8 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { MetaObserver, type CoherenceZone } from "@/modules/observable/meta-observer";
-import { SystemEventBus } from "@/modules/observable/system-event-bus";
+import { MetaObserver, type CoherenceZone, SystemEventBus } from "@/modules/hologram-ui/engine/coherence";
 
 interface WidgetState {
   zone: CoherenceZone;
