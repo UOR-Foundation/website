@@ -4,12 +4,13 @@
  */
 
 import { useState } from "react";
-import { Settings, ShieldCheck, Star, Plus, ChevronRight, ExternalLink, DatabaseZap } from "lucide-react";
+import { Settings, ShieldCheck, Star, Plus, ChevronRight, ExternalLink, DatabaseZap, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpaceCard } from "./SpaceCard";
 import { SortableSection } from "./SortableSection";
 import { PrivacySettingsPanel } from "./PrivacySettingsPanel";
 import { DataBankPanel } from "./DataBankPanel";
+import { InteroperabilityPanel } from "./InteroperabilityPanel";
 
 interface ControlSectionProps {
   isDark: boolean;
@@ -110,13 +111,33 @@ export const ControlSection = ({ isDark, votes, onVote }: ControlSectionProps) =
         <DataBankPanel isDark={isDark} />
       </SpaceCard>
     ),
+    interop: (
+      <SpaceCard
+        title="Interoperability"
+        icon={<Globe className="text-foreground" size={16} />}
+        isDark={isDark}
+        moduleSlug="hologram"
+        expandedContent={
+          <div className="space-y-2">
+            <h4 className="text-foreground font-body text-sm font-semibold">About Projections</h4>
+            <p className="text-muted-foreground text-sm font-body leading-relaxed">
+              A projection is a pure, deterministic function that transforms your canonical identity into any protocol's native format. 
+              The same 256-bit hash becomes a DID, an IPFS CID, a Bitcoin address, a Python module path, or an OpenQASM circuit ID — 
+              all mathematically derived, all verifiable, all reversible where the standard allows.
+            </p>
+          </div>
+        }
+      >
+        <InteroperabilityPanel isDark={isDark} />
+      </SpaceCard>
+    ),
   };
 
   return (
     <div>
       <h2 className="text-foreground font-body text-xl font-semibold mb-6">Control Your Experience</h2>
       <SortableSection
-        initialOrder={["operations", "privacy", "databank", "marketplace"]}
+        initialOrder={["operations", "privacy", "databank", "interop", "marketplace"]}
         cards={cards}
         storageKey="uor-space-control-order"
       />
