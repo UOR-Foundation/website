@@ -59,6 +59,8 @@ export interface ProjectionPipelineConfig {
   maxLayers?: number;
   /** Holographic codec config overrides */
   codecConfig?: Partial<HolographicCodecConfig>;
+  /** Optional weight loader for real model weights */
+  weightLoader?: (layer: number, matrix: import("./atlas-model-projector").WeightMatrixType) => Float32Array | null;
 }
 
 /** Pipeline status */
@@ -164,7 +166,7 @@ export class AtlasProjectionPipeline {
 
       // Run projection (synchronous but yields via microtasks)
       await yieldThread();
-      this.decomposition = projectModel(manifest);
+      this.decomposition = projectModel(manifest, this.config.weightLoader);
 
       this.updateStatus({
         progress: 0.4,

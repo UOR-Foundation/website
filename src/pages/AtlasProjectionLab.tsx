@@ -22,6 +22,7 @@ import {
   loadHFModel,
   tokenize,
   detokenize,
+  baselineInference,
   type ModelLoadStatus,
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
@@ -45,8 +46,10 @@ export default function AtlasProjectionLab() {
   // Results
   const [report, setReport] = useState<PipelineReport | null>(null);
   const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
+  const [baselineResult, setBaselineResult] = useState<{ text: string; timeMs: number; tokensPerSecond: number } | null>(null);
   const [prompt, setPrompt] = useState("The universe is made of");
   const [generatedText, setGeneratedText] = useState<string>("");
+  const [isRunningBaseline, setIsRunningBaseline] = useState(false);
 
   // Refs
   const loadedModelRef = useRef<LoadedHFModel | null>(null);
@@ -92,6 +95,7 @@ export default function AtlasProjectionLab() {
         manifest,
         maxLayers: Math.min(manifest.layerCount, 8), // Cap for browser perf
         useCompression: true,
+        weightLoader,
       });
 
       // Subscribe to status updates
@@ -160,6 +164,26 @@ export default function AtlasProjectionLab() {
     addLog(`  H-score: ${result.meanHScore.toFixed(4)}`);
     addLog(`  Speed: ${result.tokensPerSecond.toFixed(0)} tok/s`);
     addLog(`  Time: ${result.totalTimeMs.toFixed(1)}ms`);
+
+    // Auto-run baseline comparison if real model loaded
+    if (loadedModelRef.current) {
+      setIsRunningBaseline(true);
+      addLog("Running standard transformer baseline for comparison...");
+      try {
+        const baseline = await baselineInference(loadedModelRef.current, prompt, 32);
+        setBaselineResult(baseline);
+        addLog(`  Baseline: "${baseline.text.slice(0, 80)}..."`);
+        addLog(`  Baseline: ${baseline.tokensPerSecond.toFixed(0)} tok/s (${baseline.timeMs.toFixed(0)}ms)`);
+        const speedup = (baseline.timeMs > 0 && result.totalTimeMs > 0) 
+          ? (baseline.timeMs / result.totalTimeMs).toFixed(1) 
+          : "N/A";
+        addLog(`  ⚡ Coherence speedup: ${speedup}× over standard attention`);
+      } catch (e) {
+        addLog(`  Baseline comparison skipped: ${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        setIsRunningBaseline(false);
+      }
+    }
   }, [prompt, pipelineStatus.stage, addLog]);
 
   // ── Render ─────────────────────────────────────────────────
@@ -362,6 +386,36 @@ export default function AtlasProjectionLab() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Baseline Comparison */}
+        {baselineResult && inferenceResult && (
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <IconChartBar className="w-4 h-4" />
+              Coherence vs Standard Transformer
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <h3 className="text-xs font-semibold text-primary">Atlas Coherence (O(96))</h3>
+                <div className="text-sm font-mono text-foreground">{generatedText}</div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <MetricCard label="Tok/s" value={`${inferenceResult.tokensPerSecond.toFixed(0)}`} />
+                  <MetricCard label="Time" value={`${inferenceResult.totalTimeMs.toFixed(0)}ms`} />
+                  <MetricCard label="H-score" value={inferenceResult.meanHScore.toFixed(3)} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <h3 className="text-xs font-semibold text-muted-foreground">Standard Attention (O(N²))</h3>
+                <div className="text-sm font-mono text-foreground">{baselineResult.text.slice(0, 200)}</div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <MetricCard label="Tok/s" value={`${baselineResult.tokensPerSecond.toFixed(0)}`} />
+                  <MetricCard label="Time" value={`${baselineResult.timeMs.toFixed(0)}ms`} />
+                  <MetricCard label="Speedup" value={`${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×`} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Reports */}
         {report && (
