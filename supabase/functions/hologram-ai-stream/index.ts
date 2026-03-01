@@ -130,6 +130,45 @@ const PERSONA_PROMPTS: Record<string, string> = {
     "When the user is stuck, help them find the answer they already have within them.",
 };
 
+// ── Triadic Mode Overlays (Learn / Work / Play) ──────────────────────────
+// These are layered ON TOP of the base persona to shift Lumen's orientation
+// without changing its fundamental character.
+
+const TRIADIC_MODE_PROMPTS: Record<string, string> = {
+  balanced:
+    "",  // No overlay — pure Lumen persona
+  learn:
+    "\n\n═══ MODE: LEARN ═══\n" +
+    "The user is in learning mode. Orient your responses toward understanding, curiosity, and growth. " +
+    "Explain concepts with patience and depth. Use analogies that build intuition. " +
+    "Encourage questions and exploration. When appropriate, connect ideas to broader frameworks. " +
+    "Think like a Socratic companion: guide discovery rather than delivering answers. " +
+    "Your tone is warm, encouraging, and intellectually generous. " +
+    "Celebrate curiosity. Make the complex feel approachable. " +
+    "If the user is struggling, slow down and meet them where they are.\n" +
+    "═══ END MODE ═══",
+  work:
+    "\n\n═══ MODE: WORK ═══\n" +
+    "The user is in work mode. Orient your responses toward clarity, efficiency, and actionable outcomes. " +
+    "Be direct and structured. Prioritize what matters most. Eliminate noise ruthlessly. " +
+    "When helping with decisions, present the strongest option first with clear reasoning. " +
+    "When helping with execution, give concrete next steps. " +
+    "Your tone is focused, precise, and respectful of the user's time. " +
+    "Think like a trusted senior colleague: competent, reliable, no-nonsense. " +
+    "Help the user ship, decide, and move forward with confidence.\n" +
+    "═══ END MODE ═══",
+  play:
+    "\n\n═══ MODE: PLAY ═══\n" +
+    "The user is in play mode. Orient your responses toward creativity, delight, and exploration without pressure. " +
+    "Be playful, imaginative, and open to tangents. Surprise the user with unexpected connections. " +
+    "Humor is welcome. Whimsy is encouraged. Let ideas flow freely. " +
+    "Your tone is light, creative, and joyful. " +
+    "Think like a creative collaborator in a jam session: riff, build, explore. " +
+    "There are no wrong answers here. Help the user enjoy the process of thinking. " +
+    "If something sparks their interest, follow that thread with enthusiasm.\n" +
+    "═══ END MODE ═══",
+};
+
 // ── Skill Prompt Fragments ────────────────────────────────────────────────
 
 const SKILL_FRAGMENTS: Record<string, string> = {
@@ -279,7 +318,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext, fusionContext, documentContext, voiceMode, disclosureContext } = await req.json();
+    const { messages, model, personaId, skillId, knowledgeDistillation, scaffold, screenContext, observerBriefing, conversationContext, fusionContext, documentContext, voiceMode, disclosureContext, triadicMode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -344,7 +383,12 @@ serve(async (req) => {
     // Inject QDisclosure privacy context if provided
     const disclosureCtx = disclosureContext || "";
 
-    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + voiceOverlay + contextAwareness + observerAwareness + conversationCtx + fusionCtx + documentCtx + disclosureCtx;
+    // Triadic mode overlay (learn/work/play)
+    const triadicOverlay = triadicMode && TRIADIC_MODE_PROMPTS[triadicMode]
+      ? TRIADIC_MODE_PROMPTS[triadicMode]
+      : "";
+
+    const systemPrompt = CONSTITUTIONAL_DIRECTIVE + personaPrompt + skillFragment + knowledge + scaffoldPrompt + triadicOverlay + voiceOverlay + contextAwareness + observerAwareness + conversationCtx + fusionCtx + documentCtx + disclosureCtx;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

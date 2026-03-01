@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Send, ArrowUp, Mic, MicOff, Volume2 } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import { useConvergenceVoice, type VoicePhase } from "@/modules/hologram-ui/hooks/useConvergenceVoice";
@@ -53,6 +53,15 @@ const C = {
   font: "'DM Sans', sans-serif",
   fontDisplay: "'Playfair Display', serif",
 } as const;
+
+// ── Triadic mode definitions ─────────────────────────────────────────
+type TriadicMode = "balanced" | "learn" | "work" | "play";
+
+const TRIADIC_MODES: { key: TriadicMode; label: string; icon: React.ElementType; hue: number }[] = [
+  { key: "learn", label: "Learn", icon: BookOpen, hue: 210 },
+  { key: "work", label: "Work", icon: Briefcase, hue: 38 },
+  { key: "play", label: "Play", icon: Sparkles, hue: 280 },
+];
 
 // ── Types ────────────────────────────────────────────────────────────
 interface Exchange {
@@ -92,6 +101,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const coherence = useCoherence();
   const [voiceMode, setVoiceMode] = useState(false);
+  const [triadicMode, setTriadicMode] = useState<TriadicMode>("balanced");
 
   // ── Voice integration ────────────────────────────────────────────
   const voice = useConvergenceVoice({
@@ -252,6 +262,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
           model: "google/gemini-3-flash-preview",
           personaId: "hologram",
           skillId: "reason",
+          triadicMode: triadicMode !== "balanced" ? triadicMode : undefined,
         }),
       });
 
@@ -598,12 +609,35 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
             {/* Bottom bar */}
             <div className="flex items-center justify-between px-3 pb-2.5">
               <div className="flex items-center gap-2">
-                {/* Model indicator — whisper quiet */}
+                {/* Triadic mode toggle — whisper-quiet pills */}
+                <div className="flex items-center gap-0.5 rounded-lg p-0.5" style={{ background: "hsla(25, 8%, 12%, 0.5)" }}>
+                  {TRIADIC_MODES.map(({ key, label, icon: Icon, hue }) => {
+                    const isActive = triadicMode === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setTriadicMode(prev => prev === key ? "balanced" : key)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-300"
+                        style={{
+                          background: isActive ? `hsla(${hue}, 40%, 50%, 0.12)` : "transparent",
+                          color: isActive ? `hsl(${hue}, 45%, 65%)` : "hsla(38, 15%, 50%, 0.25)",
+                        }}
+                        title={`${isActive ? "Disable" : "Switch to"} ${label} mode`}
+                      >
+                        <Icon className="w-3 h-3" strokeWidth={1.4} />
+                        <span className="text-[9px] tracking-wider uppercase" style={{ fontFamily: C.font }}>
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Active mode label */}
                 <span
-                  className="text-[10px] tracking-wider"
-                  style={{ color: "hsla(38, 15%, 50%, 0.2)" }}
+                  className="text-[9px] tracking-wider transition-all duration-300"
+                  style={{ color: "hsla(38, 15%, 50%, 0.15)" }}
                 >
-                  coherence · lumen
+                  {triadicMode === "balanced" ? "balanced" : ""}
                 </span>
               </div>
 
