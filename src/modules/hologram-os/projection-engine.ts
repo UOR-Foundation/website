@@ -25,6 +25,7 @@ import type { QKernelBoot, BootStage, GenesisProcess } from "@/modules/qkernel/q
 import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/modules/qkernel/q-boot";
 import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/modules/qkernel/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
+import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -339,6 +340,9 @@ export class KernelProjector {
   private emitBoot(event: BootEvent): void {
     this.bootEvents.push(event);
     for (const cb of this.bootListeners) cb(event);
+    kernelLog("boot", "q-boot", `[${event.stage}] ${event.label}: ${event.detail}`, {
+      stage: event.stage, progress: event.progress, passed: event.passed,
+    });
   }
 
   /** Emit a projection frame to all listeners (with diff guard) */
@@ -801,6 +805,7 @@ export class KernelProjector {
       this.config.activePanel = panel;
       this.config.chatOpen = false;
     }
+    kernelLog("projection", "panel-switch", `Opened panel: ${panel}`, { panel });
     // Prescience: record transition with current system coherence
     const hScore = this.cachedCoherence?.meanH ?? 0.5;
     const flowState = `${this.config.activePanel}:${this.config.palette.mode}`;
@@ -811,7 +816,9 @@ export class KernelProjector {
 
   /** Close the active projection panel */
   closePanel(): void {
+    const prev = this.config.activePanel;
     this.config.activePanel = "none";
+    kernelLog("projection", "panel-close", `Closed panel: ${prev}`, { panel: prev });
     // Prescience: record return to home
     const hScore = this.cachedCoherence?.meanH ?? 0.5;
     this.prescience.recordTransition(`none:${this.config.palette.mode}`, hScore);

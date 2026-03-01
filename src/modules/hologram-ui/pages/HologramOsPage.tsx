@@ -37,6 +37,7 @@ import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSh
 import LegalPanel from "@/modules/hologram-ui/components/LegalPanel";
 
 import KernelDevTools from "@/modules/hologram-os/components/KernelDevTools";
+import KernelInspector from "@/modules/hologram-os/components/KernelInspector";
 import BreathingRhythmListener from "@/modules/hologram-os/components/BreathingRhythmListener";
 import { HologramViewport, useDepthShift } from "@/modules/hologram-ui/components/HologramFrame";
 import ModularSnapGrid from "@/modules/hologram-ui/components/ModularSnapGrid";
@@ -127,7 +128,20 @@ export default function HologramOsPage() {
   const [chatPrompt, setChatPrompt] = useState("");
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<"privacy" | "terms">("privacy");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const journal = useFocusJournal();
+
+  // ── Kernel Inspector keyboard shortcut (Ctrl+Shift+I) ─────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "I") {
+        e.preventDefault();
+        setInspectorOpen(v => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   // ── Panel preloading — prescience-driven + hover-triggered ─────────────
   const [preloadedPanels, setPreloadedPanels] = useState<Set<string>>(new Set());
@@ -471,6 +485,7 @@ export default function HologramOsPage() {
       <SnapGuideOverlay />
       
       <KernelDevTools />
+      <KernelInspector visible={inspectorOpen} onClose={() => setInspectorOpen(false)} />
       <BreathingRhythmListener />
     </HologramViewport>
   );
