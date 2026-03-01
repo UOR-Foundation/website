@@ -106,6 +106,16 @@ export default function AtlasProjectionLab() {
 
       pipelineRef.current = pipeline;
 
+      // Wire real model logits callback if model is loaded
+      if (loadedModelRef.current) {
+        const loadedModel = loadedModelRef.current;
+        const { getNextTokenLogits } = await import("@/modules/hologram-compute/hf-model-bridge");
+        pipeline.setLogitsCallback(async (context: number[]) => {
+          return getNextTokenLogits(loadedModel, context.slice(-32)); // last 32 tokens for context window
+        });
+        addLog("✓ Real model lm_head wired into coherence engine");
+      }
+
       // Run the full benchmark
       addLog("Running full pipeline benchmark...");
       const benchmarkReport = await pipeline.benchmark([1, 2, 3, 4, 5], 16);
@@ -148,7 +158,7 @@ export default function AtlasProjectionLab() {
       addLog(`Pseudo-tokenized: ${tokenIds.length} tokens`);
     }
 
-    const result = pipeline.infer(tokenIds, 32);
+    const result = await pipeline.infer(tokenIds, 32);
     setInferenceResult(result);
 
     // Detokenize

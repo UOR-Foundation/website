@@ -221,6 +221,20 @@ export class AtlasProjectionPipeline {
         },
         this.engram,
       );
+
+      // Wire real lm_head weights if available from weight loader
+      if (this.config.weightLoader) {
+        const lmHead = this.config.weightLoader(manifest.layerCount, "lm_head");
+        if (lmHead && lmHead.length >= manifest.hiddenDim) {
+          const expectedSize = manifest.vocabSize * manifest.hiddenDim;
+          const actualVocab = Math.floor(lmHead.length / manifest.hiddenDim);
+          if (actualVocab > 1) {
+            this.engine.setLmHead(lmHead, actualVocab, manifest.hiddenDim);
+            console.log(`[Pipeline] Wired real lm_head: ${lmHead.length} floats → ${actualVocab} vocab × ${manifest.hiddenDim} dim`);
+          }
+        }
+      }
+
       this.engine.initialize(this.decomposition);
 
       this.updateStatus({
@@ -239,13 +253,13 @@ export class AtlasProjectionPipeline {
   /**
    * Run inference: prompt tokens → generated tokens.
    */
-  infer(promptTokens: number[], maxTokens: number = 32): InferenceResult {
+  async infer(promptTokens: number[], maxTokens: number = 32): Promise<InferenceResult> {
     if (!this.engine || this._status.stage !== "ready") {
       throw new Error("Pipeline not initialized. Call initialize() first.");
     }
 
     this.updateStatus({ stage: "inferring", message: "Generating via coherence navigation..." });
-    const result = this.engine.generate(promptTokens, maxTokens);
+    const result = await this.engine.generate(promptTokens, maxTokens);
     this.updateStatus({ stage: "ready", message: `Generated ${result.tokenIds.length} tokens at ${result.tokensPerSecond.toFixed(0)} tok/s` });
 
     return result;
@@ -259,7 +273,7 @@ export class AtlasProjectionPipeline {
 
     await this.initialize();
 
-    const benchmarkResult = this.infer(promptTokens, maxTokens);
+    const benchmarkResult = await this.infer(promptTokens, maxTokens);
 
     return {
       projectionReport: this.decomposition ? generateProjectionReport(this.decomposition) : "",
@@ -280,6 +294,11 @@ export class AtlasProjectionPipeline {
   /** Get the inference engine */
   getEngine(): CoherenceInferenceEngine | null {
     return this.engine;
+  }
+
+  /** Wire a real model logits callback into the engine */
+  setLogitsCallback(fn: (context: number[]) => Promise<Float32Array>): void {
+    this.engine?.setLogitsCallback(fn);
   }
 }
 

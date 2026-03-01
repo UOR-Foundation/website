@@ -151,6 +151,7 @@ export {
   tokenize,
   detokenize,
   baselineInference,
+  getNextTokenLogits,
   BROWSER_MODELS,
 } from "./hf-model-bridge";
 export type {
