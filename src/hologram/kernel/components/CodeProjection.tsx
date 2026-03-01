@@ -29,7 +29,9 @@ import { useNbTheme, type NbColors } from "../notebook/notebook-theme";
 
 /* ── Constants ─────────────────────────────────────────────────── */
 
-const PIP_LINE_H = 23;
+/** Fixed row height in px — shared between gutter, textarea, and highlight */
+const ROW_H = 22;
+const PIP_LINE_H = ROW_H;
 const PIP_OVERSCAN = 8;
 const FLUSH_MS = 16;
 
@@ -64,6 +66,8 @@ export interface CodeProjectionProps {
   onFocus?: () => void;
   /** Called on Escape */
   onBlur?: () => void;
+  /** Called when cursor hits the top/bottom boundary and wants to leave the cell */
+  onNavigate?: (direction: -1 | 1) => void;
   /** Max height before scrolling (default 600) */
   maxHeight?: number;
   /** Minimum rows visible (default 1) */
@@ -94,6 +98,7 @@ export const CodeProjection = memo(function CodeProjection({
   onRun,
   onFocus,
   onBlur,
+  onNavigate,
   maxHeight = 600,
   minRows = 1,
   highlighter,
@@ -340,8 +345,29 @@ export const CodeProjection = memo(function CodeProjection({
       return;
     }
 
+    // ArrowUp at first line → navigate to previous cell
+    if (e.key === "ArrowUp" && !e.altKey && !e.shiftKey && onNavigate) {
+      const lineIdx = val.slice(0, start).split("\n").length - 1;
+      if (lineIdx === 0) {
+        e.preventDefault();
+        onNavigate(-1);
+        return;
+      }
+    }
+
+    // ArrowDown at last line → navigate to next cell
+    if (e.key === "ArrowDown" && !e.altKey && !e.shiftKey && onNavigate) {
+      const allLines = val.split("\n");
+      const lineIdx = val.slice(0, start).split("\n").length - 1;
+      if (lineIdx === allLines.length - 1) {
+        e.preventDefault();
+        onNavigate(1);
+        return;
+      }
+    }
+
     requestAnimationFrame(updateActiveLine);
-  }, [readOnly, local, onChange, onRun, onBlur, flush, autoResize, updateActiveLine, language]);
+  }, [readOnly, local, onChange, onRun, onBlur, onNavigate, flush, autoResize, updateActiveLine, language]);
 
   const handleFocus = useCallback(() => {
     setFocused(true);
@@ -393,19 +419,21 @@ export const CodeProjection = memo(function CodeProjection({
         transition: "border-color 120ms ease",
       }}
     >
-      {/* Line numbers */}
+      {/* Line numbers — fixed ROW_H per line for pixel-perfect alignment */}
       {lineNumbers && (
         <div
-          className="select-none py-[5px] pr-2 text-right border-r shrink-0"
-          style={{ minWidth: 40, background: t.bgHover, borderColor: t.border }}
+          className="select-none pr-2 text-right border-r shrink-0"
+          style={{ minWidth: 40, background: t.bgHover, borderColor: t.border, paddingTop: 5, paddingBottom: 5 }}
         >
           {lines.map((_, i) => (
             <div
               key={i}
-              className="text-[12px] font-mono leading-[1.8] px-1 transition-colors duration-75"
+              className="text-[13px] font-mono px-1 flex items-center justify-end"
               style={{
+                height: ROW_H,
                 color: i === activeLine && focused ? t.gold : t.textDim,
                 fontWeight: i === activeLine && focused ? 600 : 400,
+                transition: "color 75ms",
               }}
             >
               {i + 1}
@@ -420,8 +448,8 @@ export const CodeProjection = memo(function CodeProjection({
           <div
             className="absolute left-0 right-0 pointer-events-none z-[1]"
             style={{
-              top: `calc(5px + ${activeLine} * 1.8em)`,
-              height: "1.8em",
+              top: 5 + activeLine * ROW_H,
+              height: ROW_H,
               background: `hsla(38, 50%, 55%, 0.04)`,
               transition: "top 50ms ease-out",
             }}
@@ -433,8 +461,8 @@ export const CodeProjection = memo(function CodeProjection({
           <div
             className="absolute left-0 right-0 pointer-events-none z-[2]"
             style={{
-              top: `calc(5px + ${bracketFlash} * 1.8em)`,
-              height: "1.8em",
+              top: 5 + bracketFlash * ROW_H,
+              height: ROW_H,
               background: `hsla(38, 60%, 60%, 0.1)`,
               animation: "bracket-flash 200ms ease-out forwards",
             }}
@@ -444,7 +472,7 @@ export const CodeProjection = memo(function CodeProjection({
         {/* Syntax overlay */}
         {showOverlay && (
           <pre
-            className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] pointer-events-none overflow-hidden"
+            className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono pointer-events-none overflow-hidden"
             aria-hidden="true"
             style={{
               color: t.textCode,
@@ -456,10 +484,11 @@ export const CodeProjection = memo(function CodeProjection({
               margin: 0,
               border: "none",
               background: "transparent",
+              lineHeight: `${ROW_H}px`,
             }}
           >
             {highlighted.map((h, i) => (
-              <div key={i}>{h.tokens.length > 0 ? h.tokens : "\u00A0"}</div>
+              <div key={i} style={{ height: ROW_H }}>{h.tokens.length > 0 ? h.tokens : "\u00A0"}</div>
             ))}
           </pre>
         )}
@@ -481,8 +510,8 @@ export const CodeProjection = memo(function CodeProjection({
           style={{
             color: showOverlay ? "transparent" : t.textCode,
             caretColor: t.caret,
-            lineHeight: "1.8",
-            minHeight: `calc(${Math.max(minRows, 1)} * 1.8em + 10px)`,
+            lineHeight: `${ROW_H}px`,
+            minHeight: Math.max(minRows, 1) * ROW_H + 10,
             maxHeight,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",

@@ -584,11 +584,12 @@ interface CellViewProps {
   onMoveDown: () => void;
   onToggleType: () => void;
   onToggleCollapse: () => void;
+  onNavigate: (direction: -1 | 1) => void;
 }
 
 const CellView = React.memo(function CellView({
   cell, isActive, isSelected, editMode, showLineNumbers, precisionMode,
-  onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse,
+  onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse, onNavigate,
 }: CellViewProps) {
   const t = useNbTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -767,6 +768,7 @@ const CellView = React.memo(function CellView({
                   placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
                   onRun={onRun}
                   onFocus={onEdit}
+                  onNavigate={onNavigate}
                   syntaxOverlay={showSyntaxOverlay}
                   highlighter={!isMarkdown ? highlightPython : undefined}
                   theme={t}
@@ -2748,6 +2750,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                     onMoveDown={() => moveCell(cell.id, 1)}
                     onToggleType={() => toggleCellType(cell.id)}
                     onToggleCollapse={() => toggleCollapse(cell.id)}
+                    onNavigate={(dir) => selectAdjacentCell(dir)}
                   />
                   <div className="flex items-center justify-center py-0 opacity-0 hover:opacity-100 transition-opacity" style={{ height: 16 }}>
                     <button onClick={() => addCell(cell.id, "code")} className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px]" style={{ color: t.textDim }}>
