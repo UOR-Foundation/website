@@ -182,12 +182,20 @@ export default function HologramOsPage() {
     // Kernel syscall: switch desktop mode → re-projection
     k.switchDesktop(target as DesktopMode);
 
-    // After peel animation completes
-    setTimeout(() => {
+    // After peel animation completes — with safety ceiling
+    const t = setTimeout(() => {
       setSidebarBgMode(target);
       setDepartingDesktop(null);
     }, 2000);
+    return () => clearTimeout(t);
   }, [activeDesktop, departingDesktop, k.switchDesktop]);
+
+  // Safety: clear stuck departing state if it persists beyond 3s
+  useEffect(() => {
+    if (!departingDesktop) return;
+    const safety = setTimeout(() => setDepartingDesktop(null), 3000);
+    return () => clearTimeout(safety);
+  }, [departingDesktop]);
 
   // ── Widget visibility — projected from kernel ─────────────────────────
   const isWidgetVisible = useCallback((id: string) => k.isDesktopWidgetVisible(activeDesktop, id), [k, activeDesktop]);
