@@ -19,7 +19,7 @@
  */
 
 import { useMemo } from "react";
-import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection, type CompositorProjection } from "../projection-engine";
+import { getKernelProjector, type ProjectionFrame, type CoherenceGradient, type ApertureWave, type RewardProjection, type StabilizerProjection, type CircuitProjection, type CompositorProjection, type ProceduralProjection } from "../projection-engine";
 import { useKernel } from "./useKernel";
 
 export interface CoherenceState {
@@ -45,6 +45,8 @@ export interface CoherenceState {
   readonly circuit: CircuitProjection;
   /** Compositor projection — the multi-kernel frame merger */
   readonly compositor: CompositorProjection;
+  /** Procedural memory projection — the cerebellum habit ring */
+  readonly procedural: ProceduralProjection;
 }
 
 const DEFAULT_GRADIENT: CoherenceGradient = {
@@ -77,6 +79,12 @@ const DEFAULT_COMPOSITOR: CompositorProjection = {
   zone: "convergent", foreground: "", layers: [], health: 1, totalFrames: 0,
 };
 
+const DEFAULT_PROCEDURAL: ProceduralProjection = {
+  patternCount: 0, habitCount: 0, activeHabits: 0, totalFires: 0,
+  totalTimeSavedMs: 0, meanSuccessRate: 0, lastFiredLabel: "",
+  topHabits: [], isLearning: false, accelerationFactor: 0,
+};
+
 /**
  * useCoherence — read coherence wave state from the kernel.
  * Zero additional state — purely derived from ProjectionFrame.
@@ -95,6 +103,7 @@ export function useCoherence(): CoherenceState {
         stabilizer: DEFAULT_STABILIZER,
         circuit: DEFAULT_CIRCUIT,
         compositor: DEFAULT_COMPOSITOR,
+        procedural: DEFAULT_PROCEDURAL,
       };
     }
 
@@ -111,6 +120,7 @@ export function useCoherence(): CoherenceState {
       stabilizer: frame.stabilizerProjection,
       circuit: frame.circuitProjection,
       compositor: frame.compositorProjection,
+      procedural: frame.proceduralProjection,
     };
   }, [frame]);
 }

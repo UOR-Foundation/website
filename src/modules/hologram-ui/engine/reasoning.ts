@@ -83,3 +83,14 @@ export {
   type CompositeLayer,
   type CompositorProjection,
 } from "@/hologram/kernel/projection-compositor";
+
+// ── Procedural Memory ─────────────────────────────────────────────
+export {
+  getProceduralMemory,
+  ProceduralMemoryEngine,
+  type Habit,
+  type HabitResult,
+  type ActionPattern,
+  type ProceduralProjection,
+  type HabitRingEntry,
+} from "@/hologram/kernel/procedural-memory";
