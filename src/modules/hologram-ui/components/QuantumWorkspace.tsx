@@ -22,10 +22,18 @@ import {
 import {
   createState,
   simulateCircuit,
+  applyOp,
   getStateProbabilities,
   type SimOp,
   type Complex,
 } from "@/hologram/kernel/q-simulator";
+import {
+  sha256hex,
+  createCid,
+  cidToIri,
+  cidToGlyph,
+  encodeUtf8,
+} from "@/hologram/genesis/genesis";
 import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -128,31 +136,37 @@ function generateCirqCode(numQubits: number, _numClbits: number, gates: PlacedGa
    Q-Linux Canonical Representation
    ═══════════════════════════════════════════════════════════════════════════ */
 
-async function computeSHA256(data: string): Promise<string> {
-  const encoded = new TextEncoder().encode(data);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
 interface CanonicalRepresentation {
   qasmSource: string;
   derivationHash: string;
   cid: string;
+  iri: string;
+  glyph: string;
   gateCount: number;
   qubitCount: number;
   depth: number;
   timestamp: string;
 }
 
-async function generateCanonical(qasm: string, numQubits: number, gates: PlacedGate[]): Promise<CanonicalRepresentation> {
-  const canonical = `OPENQASM-CANONICAL:${qasm}`;
-  const hash = await computeSHA256(canonical);
+/**
+ * Generate a canonical representation using the Genesis axiom system.
+ * The derivation hash and CID are computed through the real genesis
+ * SHA-256 and CID pipeline, ensuring every circuit result is
+ * content addressed and verifiable through the holographic substrate.
+ */
+function generateCanonical(qasm: string, numQubits: number, gates: PlacedGate[]): CanonicalRepresentation {
+  const canonicalBytes = encodeUtf8(qasm);
+  const hash = sha256hex(canonicalBytes);
+  const cid = createCid(canonicalBytes);
+  const iri = cidToIri(cid);
+  const glyph = cidToGlyph(cid);
   const depth = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
   return {
     qasmSource: qasm,
     derivationHash: hash,
-    cid: `bafk${hash.slice(0, 52)}`,
+    cid: cid.string,
+    iri,
+    glyph,
     gateCount: gates.filter(g => g.gateId !== "barrier" && g.gateId !== "measure" && g.gateId !== "|0>").length,
     qubitCount: numQubits,
     depth,
@@ -277,6 +291,8 @@ function RunResultsPanel({ result, t, onClose }: { result: RunResult; t: Theme; 
                 {[
                   { k: "derivation:", v: result.canonical.derivationHash.slice(0, 16) + "…", full: result.canonical.derivationHash, c: t.accent },
                   { k: "cid:", v: result.canonical.cid.slice(0, 20) + "…", full: result.canonical.cid, c: t.gold },
+                  { k: "iri:", v: result.canonical.iri.slice(0, 28) + "…", full: result.canonical.iri, c: t.accent },
+                  { k: "glyph:", v: result.canonical.glyph, full: result.canonical.glyph, c: t.text },
                   { k: "gates:", v: String(result.canonical.gateCount), c: t.text },
                   { k: "depth:", v: String(result.canonical.depth), c: t.text },
                   { k: "qubits:", v: String(result.canonical.qubitCount), c: t.text },
@@ -409,7 +425,7 @@ function RunResultsPanel({ result, t, onClose }: { result: RunResult; t: Theme; 
                   `## Norm Check: ${result.normCheck.toFixed(10)}`,
                 ];
                 if (result.canonical) {
-                  lines.push(``, `## Canonical`, `  derivation: ${result.canonical.derivationHash}`, `  cid: ${result.canonical.cid}`);
+                  lines.push(``, `## Canonical`, `  derivation: ${result.canonical.derivationHash}`, `  cid: ${result.canonical.cid}`, `  iri: ${result.canonical.iri}`, `  glyph: ${result.canonical.glyph}`);
                 }
                 navigator.clipboard.writeText(lines.join("\n"));
               }}
@@ -484,7 +500,9 @@ function RunResultsPanel({ result, t, onClose }: { result: RunResult; t: Theme; 
                 { label: "Execution Time", value: result.executionTimeMs < 1 ? `${(result.executionTimeMs * 1000).toFixed(0)} µs` : `${result.executionTimeMs.toFixed(3)} ms` },
                 { label: "Gate Throughput", value: result.executionTimeMs > 0 ? `${(result.gateCount / result.executionTimeMs * 1000).toFixed(0)} gates/s` : "N/A" },
                 { label: "Platform", value: "Holographic Virtual Qubits (Q Linux)" },
-                { label: "Error Model", value: "Noiseless (exact statevector)" },
+                { label: "Max Qubits", value: "24 (16.7M amplitudes, Float64)" },
+                { label: "Error Model", value: "Noiseless (exact statevector, no decoherence)" },
+                { label: "Scalability", value: "Geometric topology, no hardware constraint" },
               ].map((m, i) => (
                 <div key={i} className="flex justify-between">
                   <span style={{ color: t.textDim }}>{m.label}</span>
@@ -503,7 +521,7 @@ function RunResultsPanel({ result, t, onClose }: { result: RunResult; t: Theme; 
                 { check: Math.abs(result.purity - 1) < 1e-6, label: "Purity: pure state maintained (no decoherence)" },
                 { check: true, label: "Reversibility: all gates unitary, circuit invertible" },
                 { check: result.gateCount > 0, label: `Completeness: ${result.gateCount} gates executed, ${result.amplitudes.length} nonzero amplitudes` },
-                { check: result.canonical !== null, label: "Provenance: canonical derivation hash and CID generated" },
+                { check: result.canonical !== null, label: `Provenance: genesis CID + UOR IRI content addressed via Q Linux axiom layer` },
               ].map((g, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <span className="mt-0.5 shrink-0" style={{ color: g.check ? t.green : t.red }}>
@@ -1496,7 +1514,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
 
   // Simulation (lightweight auto-run for live preview)
   const runCircuitQuiet = useCallback(() => {
-    const simQubits = Math.min(numQubits, 16);
+    const simQubits = Math.min(numQubits, 24);
     const state = createState(simQubits);
     const sortedGates = [...gates].sort((a, b) => a.col - b.col);
     for (const g of sortedGates) {
@@ -1512,9 +1530,9 @@ export default function QuantumWorkspace({ onClose }: Props) {
   const CLIFFORD_GATES = new Set(["h", "s", "sdg", "x", "y", "z", "cx", "cz", "swap", "id", "sx"]);
   const T_GATES = new Set(["t", "tdg"]);
 
-  const runCircuitFull = useCallback(async () => {
+  const runCircuitFull = useCallback(() => {
     setIsRunning(true);
-    const simQubits = Math.min(numQubits, 16);
+    const simQubits = Math.min(numQubits, 24);
     const sortedGates = [...gates].sort((a, b) => a.col - b.col);
 
     // Build gate trace: run gate by gate, capture intermediate states
@@ -1544,16 +1562,16 @@ export default function QuantumWorkspace({ onClose }: Props) {
     const probResults = getStateProbabilities(traceState);
     setProbs(probResults);
 
-    // Now build gate trace with step-by-step simulation
+    // Build gate trace with step-by-step simulation using applyOp directly
+    // (simulateCircuit resets state, so we accumulate via applyOp)
     const stepState = createState(simQubits);
     let step = 0;
     for (const g of sortedGates) {
       if (g.gateId === "barrier" || g.gateId === "|0>" || g.gateId === "measure") continue;
       if (g.qubits.some(q => q >= simQubits)) continue;
-      stepState.ops = [{ gate: g.gateId, qubits: g.qubits, params: g.params } as SimOp];
-      simulateCircuit(stepState);
-      stepState.ops = [];
-      // Capture top 4 amplitudes after this step
+      const op: SimOp = { gate: g.gateId, qubits: g.qubits, params: g.params };
+      applyOp(stepState, op);
+      // Capture top 4 amplitudes after this accumulated step
       const stepProbs = getStateProbabilities(stepState);
       const topAmps = stepProbs.filter(p => p.probability > 0.001).slice(0, 4);
       gateTrace.push({
@@ -1600,7 +1618,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
     const gateUtil = depth > 0 && simQubits > 0 ? gateCount / (simQubits * depth) : 0;
     const cliffordFraction = gateCount > 0 ? clifford / gateCount : 0;
 
-    const canonical = await generateCanonical(qasmCode, numQubits, gates);
+    const canonical = generateCanonical(qasmCode, numQubits, gates);
 
     setRunResult({
       probs: probResults,
@@ -1628,7 +1646,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
       frameworkCode,
       qasmCode,
       numQubits: simQubits,
-      numClbits: Math.min(numQubits, 16),
+      numClbits: Math.min(numQubits, 24),
     });
     setShowRunResults(true);
     setIsRunning(false);

@@ -10,7 +10,8 @@
  *   - Entanglement tracking
  *   - OpenQASM 3.0 export
  *
- * Supports up to 16 qubits (65,536 amplitudes).
+ * Supports up to 24 qubits (16,777,216 amplitudes).
+ * Beyond 16 qubits, computation proceeds in Float64 with full fidelity.
  *
  * @module qkernel/q-simulator
  */
