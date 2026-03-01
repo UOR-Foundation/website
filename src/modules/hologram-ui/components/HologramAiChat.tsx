@@ -1020,9 +1020,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <div
           className="flex-1 flex flex-col h-full relative"
           style={{
-            background: "hsl(25, 10%, 7%)",
-            borderLeft: "1px solid hsla(38, 15%, 30%, 0.08)",
-            boxShadow: "-4px 0 24px hsla(25, 10%, 3%, 0.3)",
+            background: "hsl(25, 8%, 8%)",
+            borderLeft: "1px solid hsla(38, 15%, 30%, 0.05)",
           }}
         >
         {/* ── Header — whisper-quiet ────────────────────────────────── */}
@@ -1092,7 +1091,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <TrustTrendBar messages={messages} />
 
         {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 lumen-scroll">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -1210,7 +1209,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         </div>
 
         {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
-        <div className="flex justify-center px-3 pb-4 pt-1.5 flex-shrink-0 pointer-events-auto">
+        <div className="flex justify-center px-4 pb-4 pt-1 flex-shrink-0 pointer-events-auto">
           <div className="w-full max-w-2xl">
 
           {/* ── Context Awareness Chip ─────────────────────────── */}
@@ -1221,41 +1220,26 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
               return (
                 <motion.div
                   key="private"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2 px-3 py-1.5 mb-1.5 rounded-lg"
                   style={{
-                    background: "hsla(30, 10%, 15%, 0.5)",
-                    border: "1px solid hsla(38, 15%, 30%, 0.12)",
+                    background: "hsla(30, 10%, 15%, 0.35)",
+                    border: "1px solid hsla(38, 15%, 30%, 0.08)",
                   }}
                 >
-                  <EyeOff
-                    className="w-4 h-4 shrink-0"
-                    style={{ color: P.textDim }}
-                  />
-                  <span
-                    className="text-[14px] tracking-wide"
-                    style={{ color: P.textDim, fontFamily: P.font }}
-                  >
-                    Private session · Lumen is not observing
+                  <EyeOff className="w-3 h-3 shrink-0" style={{ color: P.textDimmer }} />
+                  <span className="text-[11px] tracking-wide" style={{ color: P.textDim, fontFamily: P.font }}>
+                    Private
                   </span>
                   <button
                     onClick={() => setPrivateSession(false)}
-                    className="ml-auto text-[13px] tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200"
-                    style={{
-                      color: P.goldMuted,
-                      background: "hsla(38, 30%, 40%, 0.08)",
-                      border: "1px solid hsla(38, 30%, 40%, 0.12)",
-                      fontFamily: P.font,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.15)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.08)";
-                    }}
+                    className="ml-auto text-[11px] tracking-wider px-2 py-0.5 rounded-md transition-all duration-200"
+                    style={{ color: P.goldMuted, fontFamily: P.font }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "hsla(38, 30%, 40%, 0.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
                     Resume
                   </button>
@@ -1275,141 +1259,61 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             return (
               <motion.div
                 key="observing"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2 px-3 py-1.5 mb-1.5 rounded-lg"
                 style={{
-                  background: "hsla(38, 20%, 20%, 0.3)",
-                  border: "1px solid hsla(38, 30%, 40%, 0.15)",
+                  background: "hsla(38, 20%, 20%, 0.18)",
+                  border: "1px solid hsla(38, 30%, 40%, 0.08)",
                 }}
               >
-                {/* Breathing observation dot */}
                 <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{
                     background: P.goldMuted,
-                    boxShadow: `0 0 6px hsla(38, 50%, 50%, 0.3)`,
+                    boxShadow: `0 0 4px hsla(38, 50%, 50%, 0.25)`,
                     animation: "pulse 2.4s ease-in-out infinite",
                   }}
                 />
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span
-                    className="text-[14px] tracking-wide truncate"
-                    style={{ color: P.textMuted, fontFamily: P.font }}
-                  >
-                    {selectedText ? (
-                      <>
-                        <span style={{ color: P.goldMuted }}>Observing selection</span>
-                        {" · "}
-                        <span style={{ color: P.text }}>{contextLabel}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ color: P.goldMuted }}>Observing</span>
-                        {" · "}
-                        <span style={{ color: P.text }}>{contextLabel}</span>
-                      </>
-                    )}
-                  </span>
-                  <span
-                    className="text-[12px] tracking-wide"
-                    style={{ color: P.textDimmer, fontFamily: P.font }}
-                  >
-                    Lumen sees your screen context to give better answers
-                  </span>
-                </div>
-                {/* Private session toggle */}
+                <span
+                  className="text-[11px] tracking-wide truncate flex-1"
+                  style={{ color: P.textDim, fontFamily: P.font }}
+                >
+                  {selectedText ? (
+                    <>
+                      <span style={{ color: P.goldMuted }}>Selection</span>
+                      {" · "}
+                      <span style={{ color: P.textMuted }}>{contextLabel}</span>
+                    </>
+                  ) : (
+                    <span style={{ color: P.textDimmer }}>{contextLabel}</span>
+                  )}
+                </span>
                 <button
                   onClick={() => setPrivateSession(true)}
-                  className="shrink-0 p-2 rounded-lg transition-all duration-200"
-                  style={{
-                    color: P.textDim,
-                    background: "transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "hsla(38, 15%, 30%, 0.15)";
-                    e.currentTarget.style.color = P.goldMuted;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = P.textDim;
-                  }}
-                  title="Go private — stop Lumen from observing this session"
+                  className="shrink-0 p-1 rounded-md transition-all duration-200"
+                  style={{ color: P.textDimmer, background: "transparent" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = P.goldMuted; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = P.textDimmer; }}
+                  title="Go private"
                 >
-                  <EyeOff className="w-4 h-4" />
+                  <EyeOff className="w-3 h-3" />
                 </button>
               </motion.div>
             );
           })()}
           </AnimatePresence>
 
-          {/* ── Context Topics Indicator (voice vs text) ───────── */}
-          {!privateSession && (() => {
-            const topics = history.getContextTopics();
-            if (topics.length === 0) return null;
-            const voiceCount = topics.filter(t => t.source === "voice").length;
-            const textCount = topics.filter(t => t.source === "text").length;
-            return (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mb-2 rounded-xl overflow-hidden"
-                style={{
-                  background: "hsla(30, 10%, 12%, 0.5)",
-                  border: "1px solid hsla(38, 15%, 30%, 0.1)",
-                }}
-              >
-                <details className="group">
-                  <summary
-                    className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden"
-                    style={{ fontFamily: P.font }}
-                  >
-                    <Brain className="w-3.5 h-3.5" style={{ color: P.goldMuted }} />
-                    <span className="text-[11px] tracking-wider" style={{ color: P.textDim }}>
-                      Context from
-                    </span>
-                    {voiceCount > 0 && (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] tracking-wider font-semibold" style={{ background: "hsla(0, 35%, 45%, 0.15)", color: "hsl(0, 40%, 62%)" }}>
-                        <Mic className="w-2.5 h-2.5" /> {voiceCount} voice
-                      </span>
-                    )}
-                    {textCount > 0 && (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] tracking-wider font-semibold" style={{ background: "hsla(38, 30%, 40%, 0.12)", color: P.goldMuted }}>
-                        <MessageSquare className="w-2.5 h-2.5" /> {textCount} text
-                      </span>
-                    )}
-                    <ChevronDown className="w-3 h-3 ml-auto transition-transform group-open:rotate-180" style={{ color: P.textDimmer }} />
-                  </summary>
-                  <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-                    {topics.map((t, i) => (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] tracking-wide"
-                        style={{
-                          background: t.source === "voice" ? "hsla(0, 30%, 40%, 0.1)" : "hsla(38, 20%, 30%, 0.1)",
-                          color: t.source === "voice" ? "hsl(0, 35%, 65%)" : P.textMuted,
-                          border: `1px solid ${t.source === "voice" ? "hsla(0, 30%, 40%, 0.15)" : "hsla(38, 20%, 30%, 0.12)"}`,
-                          fontFamily: P.font,
-                        }}
-                      >
-                        {t.source === "voice" ? <Mic className="w-2.5 h-2.5" /> : <MessageSquare className="w-2.5 h-2.5" />}
-                        {t.title.length > 35 ? t.title.slice(0, 35) + "…" : t.title}
-                      </span>
-                    ))}
-                  </div>
-                </details>
-              </motion.div>
-            );
-          })()}
+          {/* Context topics removed — less clutter, more focus */}
 
           <div
             className="rounded-xl overflow-visible transition-all"
             style={{
-              background: "hsla(25, 10%, 10%, 0.95)",
-              border: "1px solid hsla(38, 15%, 25%, 0.15)",
-              boxShadow: "0 2px 12px hsla(25, 10%, 5%, 0.3)",
+              background: "hsla(25, 8%, 9%, 0.9)",
+              border: "1px solid hsla(38, 15%, 25%, 0.1)",
+              boxShadow: "0 1px 8px hsla(25, 10%, 5%, 0.15)",
             }}
           >
             {/* Attachment preview strip */}
@@ -1447,7 +1351,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             )}
 
             {/* Text input area */}
-            <div className="px-4 pt-3.5 pb-2.5">
+            <div className="px-4 pt-3 pb-2">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -1456,12 +1360,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 placeholder={whisper.isRecording ? "Listening…" : whisper.isTranscribing ? "Transcribing…" : "Ask anything…"}
                 disabled={isGenerating}
                 rows={2}
-                className="w-full bg-transparent border-none outline-none resize-none text-[15px] placeholder:opacity-30 leading-loose block py-2"
+                className="w-full bg-transparent border-none outline-none resize-none text-[14px] placeholder:opacity-25 leading-relaxed block py-1"
                 style={{
                   color: P.text,
                   fontFamily: P.font,
-                  maxHeight: "120px",
-                  letterSpacing: "0.01em",
+                  maxHeight: "100px",
+                  letterSpacing: "0.015em",
                 }}
               />
             </div>
