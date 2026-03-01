@@ -38,6 +38,15 @@ const QFS_SCHEMA_VERSION = 1;
 
 export type CloudSyncState = "idle" | "syncing" | "synced" | "error" | "offline";
 
+export type FileDiffStatus = "added" | "modified" | "deleted" | "unchanged";
+
+export interface FileDiff {
+  path: string;
+  status: FileDiffStatus;
+  localContent: string | null;
+  cloudContent: string | null;
+}
+
 interface PersistedWorkspace {
   version: number;
   files: { path: string; content: string }[];
@@ -126,8 +135,12 @@ export interface QFsHandle {
   cloudSync: CloudSyncState;
   /** Push workspace to cloud (Data Bank) */
   syncToCloud: () => Promise<void>;
-  /** Pull workspace from cloud (Data Bank) */
+  /** Pull workspace from cloud (Data Bank) — replaces all files */
   syncFromCloud: () => Promise<boolean>;
+  /** Fetch cloud workspace and compute per-file diffs without applying */
+  fetchCloudDiff: () => Promise<FileDiff[] | null>;
+  /** Apply selected diffs (cherry-pick) */
+  applyDiffs: (diffs: FileDiff[]) => void;
   /** Last cloud sync timestamp */
   lastCloudSync: string | null;
 }
@@ -877,9 +890,81 @@ export function useQFs(): QFsHandle {
     }
   }, [rebuildFs, scheduleCloudSync]);
 
+  // ── Fetch cloud diff without applying ─────────────────────────────────────
+  const fetchCloudDiff = useCallback(async (): Promise<FileDiff[] | null> => {
+    const userId = userIdRef.current;
+    if (!userId || !fsRef.current) return null;
+
+    try {
+      const slot = await readSlot(userId, QFS_CLOUD_SLOT);
+      if (!slot) return null;
+
+      const cloudWs: PersistedWorkspace = JSON.parse(slot.value);
+      const localSnapshot = serializeFs(fsRef.current);
+
+      const localMap = new Map(localSnapshot.files.map(f => [f.path, f.content]));
+      const cloudMap = new Map(cloudWs.files.map(f => [f.path, f.content]));
+
+      const diffs: FileDiff[] = [];
+      const allPaths = new Set([...localMap.keys(), ...cloudMap.keys()]);
+
+      for (const path of allPaths) {
+        const local = localMap.get(path) ?? null;
+        const cloud = cloudMap.get(path) ?? null;
+
+        if (local === null && cloud !== null) {
+          diffs.push({ path, status: "added", localContent: null, cloudContent: cloud });
+        } else if (local !== null && cloud === null) {
+          diffs.push({ path, status: "deleted", localContent: local, cloudContent: null });
+        } else if (local !== cloud) {
+          diffs.push({ path, status: "modified", localContent: local, cloudContent: cloud });
+        }
+        // skip unchanged
+      }
+
+      return diffs;
+    } catch (e) {
+      console.warn("⬡ Q-FS Cloud: Diff fetch failed:", e);
+      return null;
+    }
+  }, []);
+
+  // ── Apply selected diffs (cherry-pick) ────────────────────────────────────
+  const applyDiffs = useCallback((diffs: FileDiff[]) => {
+    if (!fsRef.current) return;
+
+    for (const diff of diffs) {
+      if (diff.status === "added" || diff.status === "modified") {
+        // Ensure parent directories exist
+        const parts = diff.path.split("/").filter(Boolean);
+        let dir = "/";
+        for (let i = 0; i < parts.length - 1; i++) {
+          const next = dir === "/" ? `/${parts[i]}` : `${dir}/${parts[i]}`;
+          try { fsRef.current.mkdir(dir, parts[i], 0); } catch { /* exists */ }
+          dir = next;
+        }
+        const fileName = parts[parts.length - 1];
+        const parentDir = dir;
+        // Try write first (existing file), else create
+        const wrote = fsRef.current.writeFile(diff.path, encodeUtf8(diff.cloudContent!), 0);
+        if (!wrote) {
+          try { fsRef.current.createFile(parentDir, fileName, encodeUtf8(diff.cloudContent!), 0); } catch { /* skip */ }
+        }
+      } else if (diff.status === "deleted") {
+        try { fsRef.current.rm(diff.path, 0); } catch { /* skip */ }
+      }
+    }
+
+    bump();
+    persistToLocal(fsRef.current!);
+    setLastCloudSync(new Date().toISOString());
+    setCloudSync("synced");
+    console.log(`⬡ Q-FS Cloud: Cherry-picked ${diffs.length} changes`);
+  }, [bump]);
+
   return {
     tree, readFile, writeFile, createFile, mkdir, rm,
     stats, rootCid, ready, resetWorkspace,
-    cloudSync, syncToCloud, syncFromCloud, lastCloudSync,
+    cloudSync, syncToCloud, syncFromCloud, fetchCloudDiff, applyDiffs, lastCloudSync,
   };
 }
