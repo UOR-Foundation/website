@@ -15,6 +15,15 @@ interface Profile {
   id: string;
   displayName: string;
   avatarUrl: string | null;
+  bio: string | null;
+  handle: string | null;
+  coverImageUrl: string | null;
+  threeWordName: string | null;
+  ceremonyCid: string | null;
+  trustNodeCid: string | null;
+  disclosurePolicyCid: string | null;
+  pqcAlgorithm: string | null;
+  collapseIntact: boolean | null;
   uorCanonicalId: string | null;
   uorGlyph: string | null;
   uorIpv6: string | null;
@@ -47,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid")
+      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -56,6 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.id,
         displayName: data.display_name ?? "User",
         avatarUrl: data.avatar_url,
+        bio: data.bio,
+        handle: data.handle,
+        coverImageUrl: data.cover_image_url,
+        threeWordName: data.three_word_name,
+        ceremonyCid: data.ceremony_cid,
+        trustNodeCid: data.trust_node_cid,
+        disclosurePolicyCid: data.disclosure_policy_cid,
+        pqcAlgorithm: data.pqc_algorithm,
+        collapseIntact: data.collapse_intact,
         uorCanonicalId: data.uor_canonical_id,
         uorGlyph: data.uor_glyph,
         uorIpv6: data.uor_ipv6,
