@@ -734,6 +734,9 @@ export class KernelProjector {
     const kernelHash = await hashFn(kernelPayload);
     const kernelCid = await cidFn(kernelHash);
 
+    const { getConstitutionCid: getConstCid } = await import("@/hologram/genesis/axiom-constitution");
+    const constitutionCid = getConstCid().string;
+
     this.kernel = {
       stage: "running",
       post: postResult,
@@ -742,6 +745,7 @@ export class KernelProjector {
       genesis,
       bootTimeMs: performance.now() - t0,
       kernelCid,
+      constitutionCid,
     };
 
     // Final boot event

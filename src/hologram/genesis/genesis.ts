@@ -60,6 +60,21 @@ export {
 } from "./axiom-signal";
 
 export {
+  EIGHT_LAWS,
+  verifyConstitution,
+  getConstitutionCid,
+  getConstitutionHash,
+  getConstitutionDocument,
+  getConstitutionalAttestation,
+  constitutionalCheck,
+  fullConstitutionalScan,
+  getViolationLog,
+  type ConstitutionalLaw,
+  type ConstitutionalPredicate,
+  type ConstitutionalViolation,
+} from "./axiom-constitution";
+
+export {
   buildArtifact, serializeArtifact, stringifyArtifact,
   deserializeArtifact, verifyArtifact, toBlob,
   type UorArtifact, type DerivationNode, type ArtifactVerification,
