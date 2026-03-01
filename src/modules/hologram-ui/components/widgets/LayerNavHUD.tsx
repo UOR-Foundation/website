@@ -8,8 +8,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { GripVertical } from "lucide-react";
-import { getLayerLabel, type LayerNavState } from "../hooks/useLayerNav";
-import { useDraggablePosition } from "../hooks/useDraggablePosition";
+import { getLayerLabel, type LayerNavState } from "../../hooks/useLayerNav";
+import { useDraggablePosition } from "../../hooks/useDraggablePosition";
 
 const LAYERS = [0, 1, 2, 3];
 

@@ -1,34 +1,33 @@
 /**
- * Hologram UI — Tabler-Inspired Visual Projection Components
- * ═══════════════════════════════════════════════════════════
+ * Hologram UI — Component Barrel
+ * ═══════════════════════════════
  *
- * The first "visual projection" in the UOR hologram system.
- * Every other projection maps hash → protocol string.
- * This module maps hash → perceivable React component tree.
+ * Organized into architectural sub-directories:
  *
- * That IS what a hologram literally is: projecting abstract
- * data into a form that can be perceived and interacted with.
- *
- * Design philosophy:
- *   - Tabler's layout patterns + Tailwind's design system
- *   - No Bootstrap dependency — pure Tailwind semantic tokens
- *   - Every component accepts UOR data structures directly
- *   - @tabler/icons-react for the icon system (5000+ MIT icons)
+ *   shell/        — Core OS scaffolding (ProjectionShell, DesktopSurface, HologramFrame)
+ *   projections/  — Functional application views (BrowserProjection, CodeProjection, etc.)
+ *   panels/       — Content panels rendered inside projections (AppsPanel, HologramMessenger, etc.)
+ *   widgets/      — Desktop-integrated tools (CoherenceWidget, DayProgressRing, etc.)
+ *   overlays/     — Visual guides and vignettes (FocusVignette, SnapGuideOverlay, etc.)
+ *   lumen/        — AI-centric interface (HologramAiChat, VoiceOrb, GlobalLumenOverlay)
  *
  * @module hologram-ui/components
  */
 
+// ── Core UI Primitives (re-exported from core/ui) ──────────────────────────
 export { StatCard, type StatCardProps } from "@/modules/core/ui/StatCard";
 export { DataTable, type DataTableProps, type DataTableColumn } from "@/modules/core/ui/DataTable";
 export { MetricBar, type MetricBarProps } from "@/modules/core/ui/MetricBar";
 export { InfoCard, type InfoCardProps } from "@/modules/core/ui/InfoCard";
 export { DashboardGrid } from "@/modules/core/ui/DashboardGrid";
-export { PageShell, type PageShellProps } from "./PageShell";
 
-// ── Dynamic Projection (Phase 2 — Visual Hologram Renderer) ────────────────
-export { DynamicProjection, MultiProjection } from "./DynamicProjection";
-export type { DynamicProjectionProps, MultiProjectionProps } from "./DynamicProjection";
+// ── Shell (Core OS Scaffolding) ────────────────────────────────────────────
+export { PageShell, type PageShellProps } from "./shell/PageShell";
+
+// ── Projections (Phase 2 — Visual Hologram Renderers) ──────────────────────
+export { DynamicProjection, MultiProjection } from "./projections/DynamicProjection";
+export type { DynamicProjectionProps, MultiProjectionProps } from "./projections/DynamicProjection";
 
 // ── Frame System (Composable Layer Architecture) ───────────────────────────
-export { default as HologramFrame, HologramViewport, OverlayFrame, useHologramFrame, useDepthShift, frameRegistry, IDENTITY_TRANSFORM } from "./HologramFrame";
-export type { FrameLayer, FrameDescriptor, Transform3D } from "./HologramFrame";
+export { default as HologramFrame, HologramViewport, OverlayFrame, useHologramFrame, useDepthShift, frameRegistry, IDENTITY_TRANSFORM } from "./shell/HologramFrame";
+export type { FrameLayer, FrameDescriptor, Transform3D } from "./shell/HologramFrame";
