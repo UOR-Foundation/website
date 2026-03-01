@@ -86,6 +86,7 @@ const ConsoleTrust = lazy(() => import("@/modules/console/pages/ConsoleTrust"));
 const ConsoleAgents = lazy(() => import("@/modules/console/pages/ConsoleAgents"));
 const AppConsoleOverview = lazy(() => import("@/modules/console/pages/AppConsoleOverview"));
 const AppConsoleApps = lazy(() => import("@/modules/console/pages/AppConsoleApps"));
+const AppStorePage = lazy(() => import("@/modules/console/pages/AppStorePage"));
 const AppConsoleDetail = lazy(() => import("@/modules/console/pages/AppConsoleDetail"));
 const AppConsoleDiscovery = lazy(() => import("@/modules/console/pages/AppConsoleDiscovery"));
 const ConsoleYourSpace = lazy(() => import("@/modules/console/pages/ConsoleYourSpace"));
@@ -236,7 +237,8 @@ const App = () => {
               <Route path="store" element={<ConsoleStore />} />
               <Route path="trust" element={<ConsoleTrust />} />
               <Route path="agents" element={<ConsoleAgents />} />
-              <Route path="apps" element={<AppConsoleApps />} />
+              <Route path="apps" element={<AppStorePage />} />
+              <Route path="deploy" element={<AppConsoleApps />} />
               <Route path="app-detail/:canonicalId" element={<AppConsoleDetail />} />
               <Route path="run/:canonicalId" element={<AppConsoleRunner />} />
               <Route path="discovery" element={<AppConsoleDiscovery />} />
