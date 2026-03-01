@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal, Beaker, Atom,
+  Terminal, Beaker, Atom, Code2,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -130,6 +130,7 @@ export default function DesktopOsSidebar({
   onOpenMessenger,
   onOpenJupyter,
   onOpenQuantumWorkspace,
+  onOpenCode,
   onGoHome,
   onReplayGuide,
   onHoverPanel,
@@ -397,6 +398,22 @@ export default function DesktopOsSidebar({
             >
               <Atom className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(200, 60%, 60%)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Quantum Lab</span>}
+            </button>
+          </IconTooltip>
+        )}
+        {/* Code */}
+        {onOpenCode && (
+          <IconTooltip label="Code" show={!expanded}>
+            <button
+              onClick={() => collapseAndDo(onOpenCode)}
+              onMouseEnter={() => onHoverPanel?.("code")}
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
+              }`}
+              style={{ color: "var(--sb-text)" }}
+            >
+              <Code2 className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(210, 80%, 60%)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Code</span>}
             </button>
           </IconTooltip>
         )}

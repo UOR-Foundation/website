@@ -339,6 +339,7 @@ export default function HologramOsPage() {
             onOpenMessenger={() => k.openPanel("messenger")}
             onOpenJupyter={() => k.openPanel("jupyter")}
             onOpenQuantumWorkspace={() => k.openPanel("quantum-workspace")}
+            onOpenCode={() => k.openPanel("code")}
             onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             onHoverPanel={handleHoverPanel}
