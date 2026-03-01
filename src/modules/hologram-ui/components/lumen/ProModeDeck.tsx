@@ -557,10 +557,12 @@ interface ProModeDeckProps {
   activePresetId: string | null;
   onSelectPreset: (preset: DimensionPreset) => void;
   inputSlot?: React.ReactNode;
+  /** Called whenever Deck A or B persona selection changes */
+  onDeckChange?: (deckA: DimensionPreset | null, deckB: DimensionPreset | null, crossfader: number) => void;
 }
 
 export default memo(function ProModeDeck({
-  open, onClose, coherenceH, values, onChange, activePresetId, onSelectPreset, inputSlot,
+  open, onClose, coherenceH, values, onChange, activePresetId, onSelectPreset, inputSlot, onDeckChange,
 }: ProModeDeckProps) {
   const [deckAPreset, setDeckAPreset] = useState<DimensionPreset | null>(null);
   const [deckBPreset, setDeckBPreset] = useState<DimensionPreset | null>(null);
@@ -578,6 +580,11 @@ export default memo(function ProModeDeck({
     if (crossfader < 0.1 && deckAPreset) onSelectPreset(deckAPreset);
     else if (crossfader > 0.9 && deckBPreset) onSelectPreset(deckBPreset);
   }, [deckAPreset, deckBPreset, crossfader, manualOverride]);
+
+  // Notify parent of persona/crossfader changes
+  useEffect(() => {
+    onDeckChange?.(deckAPreset, deckBPreset, crossfader);
+  }, [deckAPreset, deckBPreset, crossfader, onDeckChange]);
 
   const handleFaderChange = useCallback((dimId: string, v: number) => {
     setManualOverride(true);

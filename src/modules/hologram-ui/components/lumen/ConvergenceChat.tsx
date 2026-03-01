@@ -131,6 +131,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const { remixes: savedRemixes, saveRemix, removeRemix, isSaved: isRemixSaved } = useSavedRemixes();
   const [dimensionValues, setDimensionValues] = useState<DimensionValues>(getDefaultValues());
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const deckPersonasRef = useRef<{ a: DimensionPreset | null; b: DimensionPreset | null; mix: number }>({ a: null, b: null, mix: 0.5 });
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
   const [graphContext, setGraphContext] = useState<GraphContext | null>(null);
   const lastExchangeTimestampRef = useRef<number>(0);
@@ -334,6 +335,27 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         allMessages.push({ role: "system", content: dimPrompt });
       }
 
+      // Build deck persona context from Deck A / Deck B selections
+      const { a: deckA, b: deckB, mix: deckMix } = deckPersonasRef.current;
+      let deckPersonaContext: string | undefined;
+      if (deckA || deckB) {
+        const parts: string[] = [];
+        if (deckA) {
+          const weight = deckMix < 0.5 ? "primary" : deckMix > 0.8 ? "minor" : "secondary";
+          parts.push(`Deck A (${weight} influence): "${deckA.name}" — ${deckA.subtitle}. ${deckA.quote || ""}`);
+        }
+        if (deckB) {
+          const weight = deckMix > 0.5 ? "primary" : deckMix < 0.2 ? "minor" : "secondary";
+          parts.push(`Deck B (${weight} influence): "${deckB.name}" — ${deckB.subtitle}. ${deckB.quote || ""}`);
+        }
+        if (deckA && deckB) {
+          const aPct = Math.round((1 - deckMix) * 100);
+          const bPct = Math.round(deckMix * 100);
+          parts.push(`Crossfader blend: ${aPct}% Deck A / ${bPct}% Deck B.`);
+        }
+        deckPersonaContext = parts.join("\n");
+      }
+
       const resp = await fetch(STREAM_URL, {
         method: "POST",
         headers: {
@@ -348,6 +370,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           triadicMode: triadicMode !== "balanced" ? triadicMode : undefined,
           resonanceContext: compileResonanceDirective(loadResonanceProfile()),
           graphContext: graphContext?.contextFragment || undefined,
+          deckPersonaContext,
         }),
       });
 
@@ -783,6 +806,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             onChange={handleDimensionChange}
             activePresetId={activePresetId}
             onSelectPreset={handleSelectPreset}
+            onDeckChange={(a, b, mix) => { deckPersonasRef.current = { a, b, mix }; }}
           />
         )}
       </AnimatePresence>
