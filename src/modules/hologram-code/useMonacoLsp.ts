@@ -265,6 +265,198 @@ function registerAICompletionProvider(
   });
 }
 
+/**
+ * Register AI Code Action Provider (lightbulb menu)
+ * Shows refactor, explain, and docstring actions when code is selected.
+ */
+function registerAICodeActionProvider(
+  monaco: Monaco,
+): IDisposable {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  return monaco.languages.registerCodeActionProvider("typescript", {
+    provideCodeActions(model: any, range: any) {
+      // Only show when there's a non-empty selection
+      const selectedText = model.getValueInRange(range);
+      if (!selectedText || selectedText.trim().length < 3) {
+        return { actions: [], dispose() {} };
+      }
+
+      const filePath = model.uri.path;
+      const language = model.getLanguageId?.() || "typescript";
+
+      const makeAction = (
+        title: string,
+        actionId: string,
+        kind: string,
+      ) => ({
+        title,
+        kind,
+        diagnostics: [],
+        isPreferred: actionId === "refactor",
+        command: {
+          id: `hologram.ai.${actionId}`,
+          title,
+          arguments: [{ selectedCode: selectedText, filePath, language, range, model }],
+        },
+      });
+
+      return {
+        actions: [
+          makeAction("✨ AI: Refactor Selection", "refactor", "refactor.rewrite"),
+          makeAction("💡 AI: Explain Code", "explain", "source.explain"),
+          makeAction("📝 AI: Generate Docstring", "docstring", "source.docstring"),
+        ],
+        dispose() {},
+      };
+    },
+  });
+}
+
+/**
+ * Register editor commands for AI code actions
+ */
+function registerAICommands(monaco: Monaco, editorGetter: () => any): IDisposable[] {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  const disposables: IDisposable[] = [];
+
+  const callAI = async (action: string, args: any) => {
+    const { selectedCode, filePath, language, range } = args;
+    const editor = editorGetter();
+
+    try {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/hologram-code-ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ action, selectedCode, filePath, language }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Request failed" }));
+        showInlineMessage(editor, monaco, range, `⚠ ${err.error || "AI request failed"}`, "warning");
+        return;
+      }
+
+      const data = await resp.json();
+
+      if (action === "refactor" && data.refactored) {
+        // Apply refactored code as an edit
+        editor.executeEdits("ai-refactor", [{
+          range,
+          text: data.refactored,
+        }]);
+        if (data.explanation) {
+          showInlineMessage(editor, monaco, range, `✨ ${data.explanation}`, "info");
+        }
+      } else if (action === "explain" && data.explanation) {
+        showInlineMessage(editor, monaco, range, data.explanation, "info");
+      } else if (action === "docstring" && data.docstring) {
+        // Insert docstring above the selection
+        const insertLine = range.startLineNumber;
+        const indent = editor.getModel().getLineContent(insertLine).match(/^(\s*)/)?.[1] || "";
+        const docLines = data.docstring.split("\n").map((l: string) => indent + l).join("\n");
+        editor.executeEdits("ai-docstring", [{
+          range: {
+            startLineNumber: insertLine,
+            startColumn: 1,
+            endLineNumber: insertLine,
+            endColumn: 1,
+          },
+          text: docLines + "\n",
+        }]);
+      }
+    } catch (err) {
+      console.error(`AI ${action} error:`, err);
+      showInlineMessage(editor, monaco, range, "⚠ AI request failed. Try again.", "warning");
+    }
+  };
+
+  // Register commands that the code actions invoke
+  for (const action of ["refactor", "explain", "docstring"]) {
+    const d = monaco.editor.registerCommand(
+      `hologram.ai.${action}`,
+      (_: any, args: any) => callAI(action, args),
+    );
+    disposables.push(d);
+  }
+
+  return disposables;
+}
+
+/**
+ * Show an inline message widget in the editor (for explain results, errors, etc.)
+ */
+function showInlineMessage(
+  editor: any,
+  monaco: any,
+  range: any,
+  message: string,
+  type: "info" | "warning" = "info",
+) {
+  // Use Monaco's built-in "zone widget" pattern via content widgets
+  const id = `ai-msg-${Date.now()}`;
+  const bgColor = type === "warning" ? "#3d2b00" : "#1a2a3a";
+  const borderColor = type === "warning" ? "#cca700" : "#3794ff";
+  const textColor = type === "warning" ? "#cca700" : "#9cdcfe";
+
+  const domNode = document.createElement("div");
+  domNode.id = id;
+  domNode.style.cssText = `
+    background: ${bgColor};
+    border: 1px solid ${borderColor};
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: ${textColor};
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 600px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100;
+    position: relative;
+  `;
+
+  // Close button
+  const closeBtn = document.createElement("span");
+  closeBtn.textContent = "✕";
+  closeBtn.style.cssText = `
+    position: absolute; top: 4px; right: 8px; cursor: pointer;
+    color: #858585; font-size: 12px;
+  `;
+  closeBtn.onclick = () => editor.removeContentWidget(widget);
+  domNode.appendChild(closeBtn);
+
+  // Message text
+  const textNode = document.createElement("div");
+  textNode.style.cssText = "padding-right: 16px;";
+  textNode.textContent = message;
+  domNode.appendChild(textNode);
+
+  const widget = {
+    getId: () => id,
+    getDomNode: () => domNode,
+    getPosition: () => ({
+      position: { lineNumber: range.endLineNumber + 1, column: 1 },
+      preference: [monaco.editor.ContentWidgetPositionPreference.BELOW],
+    }),
+  };
+
+  editor.addContentWidget(widget);
+
+  // Auto-dismiss after 12 seconds
+  setTimeout(() => {
+    try { editor.removeContentWidget(widget); } catch {}
+  }, 12000);
+}
+
 function mapCompletionKind(monaco: Monaco, kind?: string): number {
   const K = monaco.languages.CompletionItemKind;
   switch (kind) {
@@ -298,6 +490,7 @@ function mapCompletionKind(monaco: Monaco, kind?: string): number {
 export function useMonacoLsp(
   monacoRef: React.MutableRefObject<Monaco | null>,
   qfs: QFsHandle,
+  editorRef?: React.MutableRefObject<any>,
 ) {
   const disposablesRef = useRef<IDisposable[]>([]);
   const configuredRef = useRef(false);
@@ -319,7 +512,16 @@ export function useMonacoLsp(
     // Register AI completion provider for TypeScript
     const aiDisposable = registerAICompletionProvider(monaco, qfs);
     disposablesRef.current.push(aiDisposable);
-  }, [qfs]);
+
+    // Register AI code action provider (lightbulb menu)
+    const codeActionDisposable = registerAICodeActionProvider(monaco);
+    disposablesRef.current.push(codeActionDisposable);
+
+    // Register AI commands (refactor, explain, docstring)
+    const editorGetter = () => editorRef?.current;
+    const cmdDisposables = registerAICommands(monaco, editorGetter);
+    disposablesRef.current.push(...cmdDisposables);
+  }, [qfs, editorRef]);
 
   // Sync Q-FS files into Monaco models whenever tree changes
   useEffect(() => {

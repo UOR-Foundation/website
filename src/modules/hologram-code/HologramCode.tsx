@@ -1147,7 +1147,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   }, [qfs, activeFilePath]);
 
   // ── LSP: Monaco TypeScript worker + AI completions ─────────────────────
-  useMonacoLsp(monacoInstanceRef, qfs);
+  useMonacoLsp(monacoInstanceRef, qfs, editorRef);
 
   const activeFile = useMemo(
     () => openFiles.find(f => f.path === activeFilePath) ?? null,
