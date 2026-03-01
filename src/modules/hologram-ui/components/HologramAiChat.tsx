@@ -1110,7 +1110,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </div>
           ))}
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {messages.filter((m) => m.role !== "system").map((msg, idx, arr) => {
               // Find the preceding user message for context
               const allNonSystem = arr;
@@ -1694,43 +1694,39 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.5s_ease-out_both]`}>
-      <div className="flex gap-2.5 max-w-[92%] relative">
+      <div className="flex gap-2 max-w-[92%] relative">
         {/* Reading progress — subtle left-edge line for long assistant messages */}
         {showProgress && (
           <div
-            className="absolute left-0 top-0 w-[2px] rounded-full transition-opacity duration-500"
+            className="absolute left-0 top-0 w-[1.5px] rounded-full transition-opacity duration-500"
             style={{
               height: `${progress * 100}%`,
               background: `linear-gradient(180deg, ${P.goldLight}, ${P.goldMuted})`,
-              opacity: progress > 0 && progress < 1 ? 0.6 : 0,
+              opacity: progress > 0 && progress < 1 ? 0.4 : 0,
               marginLeft: "-6px",
             }}
           />
         )}
 
-        {/* Avatar for assistant */}
+        {/* Avatar for assistant — minimal dot instead of icon */}
         {!isUser && (
           <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-            style={{ background: P.goldBg }}
-          >
-            <Sparkles className="w-3 h-3" style={{ color: P.goldLight }} />
-          </div>
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-2.5"
+            style={{ background: "hsla(38, 50%, 55%, 0.5)" }}
+          />
         )}
 
         <div className="min-w-0" ref={bubbleRef}>
           <div
-            className="px-4 py-3 rounded-2xl"
+            className={isUser ? "px-3.5 py-2.5 rounded-2xl" : ""}
             style={
               isUser
                  ? {
-                    background: "hsla(38, 30%, 25%, 0.4)",
-                    border: "1px solid hsla(38, 35%, 30%, 0.2)",
+                    background: "hsla(38, 20%, 22%, 0.25)",
+                    border: "1px solid hsla(38, 25%, 30%, 0.12)",
                     borderBottomRightRadius: "6px",
                   }
-                : {
-                    background: "transparent",
-                  }
+                : {}
             }
           >
             {isUser ? (
@@ -1742,7 +1738,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                   </div>
                 )}
                 <p
-                  className="text-base leading-[1.75] whitespace-pre-wrap"
+                  className="text-[14px] leading-[1.7] whitespace-pre-wrap"
                   style={{ color: P.text, fontFamily: P.font }}
                 >
                   {content}
@@ -1760,14 +1756,14 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
               </div>
             ) : (
               <div
-                className={`text-base leading-[1.9] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
+                className={`text-[14px] leading-[1.85] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
                 style={{
-                  color: "hsl(30, 14%, 76%)",
+                  color: "hsl(30, 12%, 72%)",
                   fontFamily: P.font,
                   textRendering: "optimizeLegibility",
-                  letterSpacing: "0.005em",
-                  ['--tw-prose-headings' as string]: "hsl(38, 35%, 72%)",
-                  ['--tw-prose-bold' as string]: P.text,
+                  letterSpacing: "0.01em",
+                  ['--tw-prose-headings' as string]: "hsl(38, 30%, 70%)",
+                  ['--tw-prose-bold' as string]: "hsl(38, 20%, 82%)",
                   ['--tw-prose-code' as string]: P.goldLight,
                   ['--tw-prose-links' as string]: P.goldLight,
                   ['--tw-prose-bullets' as string]: P.goldMuted,
