@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
 import { supabase } from "@/integrations/supabase/client";
-import ProModeMixer from "./ProModeMixer";
+import ProModeDeck from "./ProModeDeck";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import {
   getDefaultValues,
@@ -884,34 +884,16 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       </div>
       </div>{/* end conversation column */}
 
-        {/* ── Pro Mode panel — slides in from right ─────────────── */}
-        <AnimatePresence>
-          {proMode && (
-            <motion.div
-              initial={{ width: 0, opacity: 0, x: 20, filter: "blur(10px)" }}
-              animate={{ width: 420, opacity: 1, x: 0, filter: "blur(0px)" }}
-              exit={{ width: 0, opacity: 0, x: 20, filter: "blur(10px)" }}
-              transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-              className="relative flex-shrink-0 overflow-hidden shadow-2xl z-10"
-              style={{
-                borderLeft: "1px solid hsla(38, 20%, 35%, 0.15)",
-                background: "hsla(25, 8%, 8%, 0.95)",
-                backdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-transparent via-orange-500/20 to-transparent opacity-50" />
-              <div className="w-[420px] h-full relative">
-                <ProModeMixer
-                  coherenceH={coherence.h ?? 0.5}
-                  values={dimensionValues}
-                  onChange={handleDimensionChange}
-                  activePresetId={activePresetId}
-                  onSelectPreset={handleSelectPreset}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ── Pro Mode — fullscreen DJ deck overlay ─────────────── */}
+        <ProModeDeck
+          open={proMode}
+          onClose={() => setProMode(false)}
+          coherenceH={coherence.h ?? 0.5}
+          values={dimensionValues}
+          onChange={handleDimensionChange}
+          activePresetId={activePresetId}
+          onSelectPreset={handleSelectPreset}
+        />
 
       </div>{/* end flex row */}
 
