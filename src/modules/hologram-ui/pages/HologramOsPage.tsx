@@ -34,6 +34,7 @@ import CodeProjectionShell from "@/modules/hologram-ui/components/CodeProjection
 import PackageManagerProjection from "@/modules/hologram-ui/components/PackageManagerProjection";
 import VaultProjection from "@/modules/hologram-ui/components/vault/VaultProjection";
 import AppsProjection from "@/modules/hologram-ui/components/AppsProjection";
+import MySpaceProjection from "@/modules/hologram-ui/components/MySpaceProjection";
 import MobileOsShell from "@/modules/hologram-ui/components/MobileOsShell";
 import DesktopOsSidebar from "@/modules/hologram-ui/components/DesktopOsSidebar";
 import ShortcutCheatSheet from "@/modules/hologram-ui/components/ShortcutCheatSheet";
@@ -360,6 +361,7 @@ export default function HologramOsPage() {
             onOpenPackages={() => k.openPanel("packages")}
             onOpenVault={() => k.openPanel("vault")}
             onOpenApps={() => k.openPanel("apps")}
+            onOpenMySpace={() => k.openPanel("myspace")}
             onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
             onReplayGuide={() => setShortcutsOpen(true)}
             onHoverPanel={handleHoverPanel}
@@ -491,6 +493,7 @@ export default function HologramOsPage() {
       <PackageManagerProjection open={activePanel === "packages"} preload={preloadedPanels.has("packages")} onClose={() => k.closePanel()} />
       <VaultProjection open={activePanel === "vault"} preload={preloadedPanels.has("vault")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} />
       <AppsProjection open={activePanel === "apps"} preload={preloadedPanels.has("apps")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} onNavigate={(r) => { k.closePanel(); navigate(r); }} />
+      <MySpaceProjection open={activePanel === "myspace"} preload={preloadedPanels.has("myspace")} onClose={() => k.closePanel()} />
       <SnapGuideOverlay />
       
       <KernelDevTools />

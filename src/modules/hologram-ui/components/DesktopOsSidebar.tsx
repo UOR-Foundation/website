@@ -176,7 +176,7 @@ interface NavItem { label: string; icon: React.ElementType; path?: string; panel
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",     icon: Home,       path: "/hologram-console" },
-  { label: "My Space", icon: User,       path: "/your-space" },
+  { label: "My Space", icon: User,       panel: "myspace" },
   { label: "Apps",     icon: LayoutGrid, panel: "apps" },
 ];
 
@@ -198,6 +198,7 @@ interface DesktopOsSidebarProps {
   onOpenPackages?: () => void;
   onOpenVault?: () => void;
   onOpenApps?: () => void;
+  onOpenMySpace?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   onHoverPanel?: (panel: string) => void;
@@ -219,6 +220,7 @@ export default function DesktopOsSidebar({
   onOpenPackages,
   onOpenVault,
   onOpenApps,
+  onOpenMySpace,
   onGoHome,
   onReplayGuide,
   onHoverPanel,
@@ -384,6 +386,8 @@ export default function DesktopOsSidebar({
                 onClick={() => collapseAndDo(() => {
                   if (item.panel === "apps" && onOpenApps) {
                     onOpenApps();
+                  } else if (item.panel === "myspace" && onOpenMySpace) {
+                    onOpenMySpace();
                   } else if (item.label === "Home" && onGoHome) {
                     onGoHome();
                   } else if (item.label === "My Space") {
