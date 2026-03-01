@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import KnowledgeGraphInput from "./KnowledgeGraphInput";
 import KnowledgeGraphExplorer from "./KnowledgeGraphExplorer";
 import ResonanceTimeline from "./ResonanceTimeline";
+import DimensionSparklines from "./DimensionSparklines";
 
 interface ResonancePanelProps {
   open: boolean;
@@ -254,6 +255,12 @@ export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
                 history={profile.history || []}
                 currentScore={diag.resonanceScore}
                 convergenceRate={diag.convergenceRate}
+              />
+
+              {/* Dimension-level sparklines */}
+              <DimensionSparklines
+                history={profile.history || []}
+                currentProfile={profile}
               />
 
               {/* Knowledge Graph Explorer */}
