@@ -984,10 +984,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
       <div
         className="relative h-full w-full flex"
         style={{
-          opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: isResizing ? "none" : "opacity 180ms ease",
-          contain: "layout style",
+          contain: "layout style paint",
         }}
       >
         {/* ── Resize handle — left edge drag strip ─────────────────── */}

@@ -444,28 +444,45 @@ export default function HologramOsPage() {
           })}
         </div>
 
-        {/* ══ Lumen AI Chat — inline, pushes content ═══════════════ */}
+        {/* ══ Lumen AI Chat — GPU-accelerated slide, always mounted ═══ */}
         <div
-          className="shrink-0 h-full overflow-hidden"
+          className="shrink-0 h-full"
           style={{
-            width: chatOpen ? (lumenPanel.width ? `${lumenPanel.width}px` : "340px") : "0px",
+            width: chatOpen || lumenPanel.isResizing
+              ? (lumenPanel.width ? `${lumenPanel.width}px` : "340px")
+              : "0px",
+            overflow: "visible",
             transition: lumenPanel.isResizing
               ? "none"
-              : "width 220ms cubic-bezier(0.22, 1, 0.36, 1)",
+              : "width 180ms cubic-bezier(0.22, 1, 0.36, 1)",
             willChange: "width",
           }}
         >
-          <HologramAiChat
-            open={chatOpen}
-            onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
-            onPhaseChange={triadicActivity.setActivePhase}
-            creatorStage={triadicActivity.creatorStage}
-            replayGuideKey={0}
-            initialPrompt={chatPrompt}
-            panelWidth={lumenPanel.width}
-            resizeHandleProps={lumenPanel.resizeHandleProps}
-            isResizing={lumenPanel.isResizing}
-          />
+          <div
+            className="h-full overflow-hidden"
+            style={{
+              width: lumenPanel.width ? `${lumenPanel.width}px` : "340px",
+              transform: chatOpen ? "translateX(0)" : "translateX(100%)",
+              opacity: chatOpen ? 1 : 0,
+              transition: lumenPanel.isResizing
+                ? "none"
+                : "transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 120ms ease",
+              willChange: "transform, opacity",
+              contain: "layout style paint",
+            }}
+          >
+            <HologramAiChat
+              open={chatOpen}
+              onClose={() => { k.setChatOpen(false); setChatPrompt(""); }}
+              onPhaseChange={triadicActivity.setActivePhase}
+              creatorStage={triadicActivity.creatorStage}
+              replayGuideKey={0}
+              initialPrompt={chatPrompt}
+              panelWidth={lumenPanel.width}
+              resizeHandleProps={lumenPanel.resizeHandleProps}
+              isResizing={lumenPanel.isResizing}
+            />
+          </div>
         </div>
       </div>
 
