@@ -128,6 +128,7 @@ const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraph
 const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
+const ConvergencePage = lazy(() => import("@/modules/hologram-ui/pages/ConvergencePage"));
 const MetaObserverPage = lazy(() => import("@/modules/observable/pages/MetaObserverPage"));
 const MultiScalePage = lazy(() => import("@/modules/observable/pages/MultiScalePage"));
 const StreamProjectionPage = lazy(() => import("@/modules/observable/pages/StreamProjectionPage"));
@@ -286,6 +287,7 @@ const App = () => {
             <Route path="/hologram-os" element={<HologramOsPage />} />
             <Route path="/hologram" element={<HologramConsolePage />} />
             <Route path="/code-kg" element={<CodeKgPage />} />
+            <Route path="/convergence" element={<ConvergencePage />} />
             <Route path="/meta-observer" element={<MetaObserverPage />} />
             <Route path="/multi-scale" element={<MultiScalePage />} />
             <Route path="/stream-projection" element={<StreamProjectionPage />} />
