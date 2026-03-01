@@ -2567,47 +2567,47 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
           borderBottom: `1px solid ${t.borderCell}`,
           background: t.bgToolbar,
         }}>
-          <button onClick={saveNotebook} className="p-1.5 rounded" title="Save (Ctrl+S)" style={{ color: t.textMuted }}>
+          <button onClick={saveNotebook} className="p-1.5 rounded transition-colors hover:scale-105" title="Save (Ctrl+S)" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Save size={16} />
           </button>
 
           <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
 
-          <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded" title="Insert cell below (B)" style={{ color: t.textMuted }}>
+          <button onClick={() => addCell(activeCell, "code")} className="p-1.5 rounded transition-colors hover:scale-105" title="Insert cell below (B)" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Plus size={16} />
           </button>
 
-          <button onClick={cutCellAction} className="p-1.5 rounded" title="Cut cell (X)" style={{ color: t.textMuted }}>
+          <button onClick={cutCellAction} className="p-1.5 rounded transition-colors hover:scale-105" title="Cut cell (X)" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Scissors size={16} />
           </button>
-          <button onClick={copyCellAction} className="p-1.5 rounded" title="Copy cell (C)" style={{ color: t.textMuted }}>
+          <button onClick={copyCellAction} className="p-1.5 rounded transition-colors hover:scale-105" title="Copy cell (C)" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Copy size={16} />
           </button>
-          <button onClick={pasteCellAction} className="p-1.5 rounded" title="Paste cell (V)" style={{ color: t.textMuted, opacity: clipboard ? 1 : 0.4 }}>
+          <button onClick={pasteCellAction} className="p-1.5 rounded transition-colors hover:scale-105" title="Paste cell (V)" style={{ color: t.textMuted, opacity: clipboard ? 1 : 0.4 }} onMouseEnter={e => { if (clipboard) e.currentTarget.style.background = t.bgHoverStrong; }} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <ClipboardPaste size={16} />
           </button>
 
           <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
 
-          <button onClick={() => activeCell && moveCell(activeCell, -1)} className="p-1.5 rounded" title="Move cell up" style={{ color: t.textMuted }}>
+          <button onClick={() => activeCell && moveCell(activeCell, -1)} className="p-1.5 rounded transition-colors hover:scale-105" title="Move cell up" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <ArrowUp size={16} />
           </button>
-          <button onClick={() => activeCell && moveCell(activeCell, 1)} className="p-1.5 rounded" title="Move cell down" style={{ color: t.textMuted }}>
+          <button onClick={() => activeCell && moveCell(activeCell, 1)} className="p-1.5 rounded transition-colors hover:scale-105" title="Move cell down" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <ArrowDown size={16} />
           </button>
 
           <div className="w-px h-5 mx-1" style={{ background: t.borderStrong }} />
 
-          <button onClick={() => activeCell && runCell(activeCell)} className="p-1.5 rounded" title="Run cell (Shift+Enter)" style={{ color: t.textMuted }}>
+          <button onClick={() => activeCell && runCell(activeCell)} className="p-1.5 rounded transition-colors hover:scale-105" title="Run cell (Shift+Enter)" style={{ color: t.green }} onMouseEnter={e => (e.currentTarget.style.background = t.greenBg)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Play size={16} />
           </button>
-          <button onClick={() => setKernelBusy(false)} className="p-1.5 rounded" title="Interrupt kernel" style={{ color: t.textMuted, opacity: kernelBusy ? 1 : 0.4 }}>
+          <button onClick={() => setKernelBusy(false)} className="p-1.5 rounded transition-colors" title="Interrupt kernel" style={{ color: t.textMuted, opacity: kernelBusy ? 1 : 0.4 }}>
             <Square size={14} />
           </button>
-          <button onClick={() => restartKernel(false)} className="p-1.5 rounded" title="Restart kernel" style={{ color: t.textMuted }}>
+          <button onClick={() => restartKernel(false)} className="p-1.5 rounded transition-colors hover:scale-105" title="Restart kernel" style={{ color: t.textMuted }} onMouseEnter={e => (e.currentTarget.style.background = t.bgHoverStrong)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <RotateCcw size={16} />
           </button>
-          <button onClick={runAllCells} className="p-1.5 rounded" title="Restart & Run All" style={{ color: t.textMuted }}>
+          <button onClick={runAllCells} className="p-1.5 rounded transition-colors hover:scale-105" title="Restart & Run All" style={{ color: t.gold }} onMouseEnter={e => (e.currentTarget.style.background = t.goldBg)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <FastForward size={16} />
           </button>
 
