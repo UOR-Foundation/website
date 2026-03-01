@@ -205,12 +205,22 @@ function evalMathExpr(expr: string): number {
 
 // ── Kernel State ────────────────────────────────────────────────────────────
 
+export interface UserFunction {
+  name: string;
+  params: string[];
+  defaults: Record<string, unknown>;
+  body: string[];
+}
+
 export interface KernelState {
   circuit: SimulatorState | null;
   variables: Record<string, unknown>;
+  functions: Record<string, UserFunction>;
   executionCounter: number;
   lastCounts: Record<string, number> | null;
   noiseModel: NoiseModel;
+  /** stdout buffer for capturing output inside functions */
+  _stdout: string[];
 }
 
 export function createKernel(): KernelState {
@@ -218,25 +228,148 @@ export function createKernel(): KernelState {
     circuit: null,
     variables: {
       // Pre-loaded standard library references
-      math: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, tan: Math.tan, ceil: Math.ceil, floor: Math.floor, abs: Math.abs },
-      np: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, array: (...args: unknown[]) => args, zeros: (n: number) => new Array(n).fill(0), ones: (n: number) => new Array(n).fill(1), linspace: (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => a + (b - a) * i / (n - 1)), arange: (a: number, b: number, s = 1) => { const r: number[] = []; for (let i = a; i < b; i += s) r.push(i); return r; }, random: { rand: () => Math.random(), randint: (a: number, b: number) => Math.floor(Math.random() * (b - a)) + a, seed: () => {} }, mean: (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length, dot: (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * (b[i] || 0), 0), reshape: (arr: unknown[]) => arr },
-      pd: { DataFrame: (data: Record<string, unknown[]>) => ({ data, head: () => data, describe: () => "DataFrame summary", shape: [Object.values(data)[0]?.length ?? 0, Object.keys(data).length], columns: Object.keys(data), toString: () => { const cols = Object.keys(data); const rows = (Object.values(data)[0] as unknown[])?.length ?? 0; let t = cols.join("\t") + "\n"; for (let i = 0; i < Math.min(rows, 10); i++) { t += cols.map(c => String((data[c] as unknown[])[i])).join("\t") + "\n"; } return t; } }) },
+      math: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, tan: Math.tan, ceil: Math.ceil, floor: Math.floor, abs: Math.abs, pow: Math.pow, exp: Math.exp, log2: Math.log2, log10: Math.log10, factorial: (n: number) => { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }, gcd: (a: number, b: number) => { while (b) { [a, b] = [b, a % b]; } return Math.abs(a); } },
+      np: { pi: Math.PI, e: Math.E, sqrt: Math.sqrt, log: Math.log, sin: Math.sin, cos: Math.cos, exp: Math.exp, abs: Math.abs, array: (...args: unknown[]) => Array.isArray(args[0]) ? args[0] : args, zeros: (n: number) => new Array(n).fill(0), ones: (n: number) => new Array(n).fill(1), full: (n: number, v: unknown) => new Array(n).fill(v), linspace: (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => a + (b - a) * i / (n - 1)), arange: (a: number, b?: number, s = 1) => { if (b === undefined) { b = a; a = 0; } const r: number[] = []; for (let i = a; i < b; i += s) r.push(i); return r; }, random: { rand: () => Math.random(), randn: () => { const u = 1 - Math.random(), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }, randint: (a: number, b: number, size?: number) => { if (size) return Array.from({ length: size }, () => Math.floor(Math.random() * (b - a)) + a); return Math.floor(Math.random() * (b - a)) + a; }, choice: (arr: unknown[]) => arr[Math.floor(Math.random() * arr.length)], seed: () => {}, shuffle: (arr: unknown[]) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; } }, mean: (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length, std: (arr: number[]) => { const m = arr.reduce((s, v) => s + v, 0) / arr.length; return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length); }, sum: (arr: number[]) => arr.reduce((s, v) => s + v, 0), max: (arr: number[]) => Math.max(...arr), min: (arr: number[]) => Math.min(...arr), argmax: (arr: number[]) => arr.indexOf(Math.max(...arr)), argmin: (arr: number[]) => arr.indexOf(Math.min(...arr)), dot: (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * (b[i] || 0), 0), reshape: (arr: unknown[]) => arr, concatenate: (arrs: unknown[][]) => arrs.flat(), unique: (arr: unknown[]) => [...new Set(arr)], where: (cond: boolean[], a: unknown[], b: unknown[]) => cond.map((c, i) => c ? a[i] : b[i]), clip: (arr: number[], lo: number, hi: number) => arr.map(v => Math.max(lo, Math.min(hi, v))) },
+      pd: { DataFrame: (data: Record<string, unknown[]>) => ({ _isPandasDf: true, data, head: (n = 5) => { const cols = Object.keys(data); const rows = Math.min(n, (Object.values(data)[0] as unknown[])?.length ?? 0); const result: Record<string, unknown[]> = {}; for (const c of cols) result[c] = (data[c] as unknown[]).slice(0, rows); return { _isPandasDf: true, data: result, shape: [rows, cols.length], columns: cols, toString: () => formatDataFrame(result) }; }, describe: () => { const cols = Object.keys(data); const stats: Record<string, unknown> = {}; for (const c of cols) { const vals = (data[c] as unknown[]).filter(v => typeof v === "number") as number[]; if (vals.length) { stats[c] = { count: vals.length, mean: (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2), min: Math.min(...vals).toFixed(2), max: Math.max(...vals).toFixed(2) }; } } return stats; }, shape: [Object.values(data)[0]?.length ?? 0, Object.keys(data).length], columns: Object.keys(data), values: Object.keys(data).length > 0 ? Array.from({ length: (Object.values(data)[0] as unknown[])?.length ?? 0 }, (_, i) => Object.values(data).map(col => (col as unknown[])[i])) : [], dtypes: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof (v as unknown[])[0]])), toString: () => formatDataFrame(data) }) },
       True: true,
       False: false,
       None: null,
+      // Built-in functions available as variables
+      __builtins__: true,
     },
+    functions: {},
     executionCounter: 0,
     lastCounts: null,
     noiseModel: noNoise(),
+    _stdout: [],
   };
+}
+
+function formatDataFrame(data: Record<string, unknown[]>): string {
+  const cols = Object.keys(data);
+  const rows = (Object.values(data)[0] as unknown[])?.length ?? 0;
+  let t = "   " + cols.join("\t") + "\n";
+  for (let i = 0; i < Math.min(rows, 10); i++) {
+    t += i + "  " + cols.map(c => String((data[c] as unknown[])[i])).join("\t") + "\n";
+  }
+  if (rows > 10) t += `\n[${rows} rows × ${cols.length} columns]`;
+  return t;
 }
 
 // ── Cell Executor ───────────────────────────────────────────────────────────
 
 // ── General Python Expression Evaluator ─────────────────────────────────────
 
-function evalPythonExpr(expr: string, variables: Record<string, unknown>): unknown {
+function evalPythonExpr(expr: string, variables: Record<string, unknown>, functions?: Record<string, UserFunction>): unknown {
   let cleaned = expr.trim();
+
+  // Dict literal: {'key': val, ...}
+  if (cleaned.startsWith("{") && cleaned.endsWith("}") && cleaned.includes(":")) {
+    try {
+      const inner = cleaned.slice(1, -1);
+      const entries: [string, unknown][] = [];
+      // Simple key-value parse
+      const pairs = splitTopLevel(inner, ",");
+      for (const pair of pairs) {
+        const colonIdx = pair.indexOf(":");
+        if (colonIdx === -1) continue;
+        const key = evalPythonExpr(pair.slice(0, colonIdx).trim(), variables, functions);
+        const val = evalPythonExpr(pair.slice(colonIdx + 1).trim(), variables, functions);
+        entries.push([String(key), val]);
+      }
+      return Object.fromEntries(entries);
+    } catch { /* fall through */ }
+  }
+
+  // Tuple literal: (a, b, c)
+  if (cleaned.startsWith("(") && cleaned.endsWith(")") && cleaned.includes(",")) {
+    const inner = cleaned.slice(1, -1);
+    const parts = splitTopLevel(inner, ",");
+    if (parts.length > 1) {
+      return parts.map(p => evalPythonExpr(p.trim(), variables, functions));
+    }
+  }
+
+  // Method chains: obj.method(args) or obj.prop
+  const methodMatch = cleaned.match(/^(.+)\.(upper|lower|strip|lstrip|rstrip|split|join|replace|startswith|endswith|find|count|title|capitalize|center|ljust|rjust|zfill|format|encode|isdigit|isalpha|isalnum|isupper|islower|append|pop|extend|insert|remove|reverse|sort|copy|clear|index|keys|values|items|get|update|setdefault|has_key)\(([^)]*)\)$/);
+  if (methodMatch) {
+    const obj = evalPythonExpr(methodMatch[1], variables, functions);
+    const method = methodMatch[2];
+    const argStr = methodMatch[3];
+    const args = argStr ? splitTopLevel(argStr, ",").map(a => evalPythonExpr(a.trim(), variables, functions)) : [];
+    return callMethod(obj, method, args);
+  }
+
+  // Property access: obj.prop (without parens)
+  const propMatch = cleaned.match(/^(\w+)\.(keys|values|items|shape|columns|dtypes|T)$/);
+  if (propMatch) {
+    const obj = variables[propMatch[1]];
+    if (obj && typeof obj === "object") {
+      const prop = propMatch[2];
+      if (prop === "keys" && !Array.isArray(obj)) return Object.keys(obj as object);
+      if (prop === "values" && !Array.isArray(obj)) return Object.values(obj as object);
+      if (prop === "items" && !Array.isArray(obj)) return Object.entries(obj as object);
+      return (obj as Record<string, unknown>)[prop];
+    }
+  }
+
+  // Function calls for user-defined functions
+  const fnCallMatch = cleaned.match(/^(\w+)\(([^)]*)\)$/);
+  if (fnCallMatch && functions && functions[fnCallMatch[1]]) {
+    const fn = functions[fnCallMatch[1]];
+    const callArgs = fnCallMatch[2] ? splitTopLevel(fnCallMatch[2], ",").map(a => evalPythonExpr(a.trim(), variables, functions)) : [];
+    return callUserFunction(fn, callArgs, variables, functions);
+  }
+
+  // Built-in function calls
+  if (fnCallMatch) {
+    const fname = fnCallMatch[1];
+    const callArgs = fnCallMatch[2] ? splitTopLevel(fnCallMatch[2], ",").map(a => evalPythonExpr(a.trim(), variables, functions)) : [];
+    const builtin = callBuiltin(fname, callArgs, variables);
+    if (builtin !== undefined) return builtin;
+  }
+
+  // Subscript: obj[key]
+  const subscriptMatch = cleaned.match(/^(.+)\[(.+)\]$/);
+  if (subscriptMatch) {
+    const obj = evalPythonExpr(subscriptMatch[1], variables, functions);
+    const keyExpr = subscriptMatch[2];
+    // Slice: a:b or a:b:c
+    if (keyExpr.includes(":")) {
+      const parts = keyExpr.split(":").map(p => p.trim() ? evalPythonExpr(p.trim(), variables, functions) as number : undefined);
+      if (Array.isArray(obj)) {
+        const start = parts[0] ?? 0;
+        const end = parts[1] ?? obj.length;
+        const step = parts[2] ?? 1;
+        if (step === 1) return obj.slice(start, end);
+        const result: unknown[] = [];
+        for (let i = start; i < end; i += step) result.push(obj[i]);
+        return result;
+      }
+      if (typeof obj === "string") return obj.slice(parts[0] ?? 0, parts[1] ?? obj.length);
+    }
+    const key = evalPythonExpr(keyExpr, variables, functions);
+    if (Array.isArray(obj) && typeof key === "number") {
+      return key < 0 ? obj[obj.length + key] : obj[key];
+    }
+    if (typeof obj === "string" && typeof key === "number") {
+      return key < 0 ? obj[obj.length + key] : obj[key];
+    }
+    if (obj && typeof obj === "object") {
+      return (obj as Record<string, unknown>)[String(key)];
+    }
+  }
+
+  // Ternary: expr if cond else expr
+  const ternaryMatch = cleaned.match(/^(.+)\s+if\s+(.+)\s+else\s+(.+)$/);
+  if (ternaryMatch) {
+    const cond = evalPythonExpr(ternaryMatch[2], variables, functions);
+    return cond
+      ? evalPythonExpr(ternaryMatch[1], variables, functions)
+      : evalPythonExpr(ternaryMatch[3], variables, functions);
+  }
+
+  // Standard transpilation
   cleaned = cleaned
     .replace(/\bTrue\b/g, "true")
     .replace(/\bFalse\b/g, "false")
@@ -246,46 +379,286 @@ function evalPythonExpr(expr: string, variables: Record<string, unknown>): unkno
     .replace(/\bor\b/g, "||")
     .replace(/\blen\(([^)]+)\)/g, "($1).length")
     .replace(/\babs\(([^)]+)\)/g, "Math.abs($1)")
-    .replace(/\bround\(([^)]+)\)/g, "Math.round($1)")
-    .replace(/\bint\(([^)]+)\)/g, "Math.floor($1)")
+    .replace(/\bround\(([^,)]+)(?:,\s*(\d+))?\)/g, (_, val, digits) =>
+      digits ? `(Math.round(${val} * Math.pow(10, ${digits})) / Math.pow(10, ${digits}))` : `Math.round(${val})`)
+    .replace(/\bint\(([^)]+)\)/g, "(typeof($1)==='string'?parseInt($1):Math.floor($1))")
     .replace(/\bfloat\(([^)]+)\)/g, "Number($1)")
     .replace(/\bstr\(([^)]+)\)/g, "String($1)")
+    .replace(/\bbool\(([^)]+)\)/g, "Boolean($1)")
     .replace(/\bsum\(([^)]+)\)/g, "($1).reduce((a,b)=>a+b,0)")
-    .replace(/\bmin\(([^)]+)\)/g, "Math.min(...$1)")
-    .replace(/\bmax\(([^)]+)\)/g, "Math.max(...$1)")
-    .replace(/\bsorted\(([^)]+)\)/g, "[...$1].sort((a,b)=>a-b)")
+    .replace(/\bmin\(([^)]+)\)/g, "(Array.isArray($1)?Math.min(...$1):Math.min($1))")
+    .replace(/\bmax\(([^)]+)\)/g, "(Array.isArray($1)?Math.max(...$1):Math.max($1))")
+    .replace(/\bsorted\(([^,)]+)(?:,\s*reverse\s*=\s*True)?\)/g, (_, arr, rev) =>
+      rev ? `[...$1].sort((a,b)=>b-a)` : `[...$1].sort((a,b)=>a-b)`)
+    .replace(/\breversed\(([^)]+)\)/g, "[...$1].reverse()")
     .replace(/\blist\(range\(([^)]+)\)\)/g, "Array.from({length:$1},(_,i)=>i)")
+    .replace(/\brange\(([^,)]+),\s*([^,)]+)(?:,\s*([^)]+))?\)/g, (_, a, b, step) =>
+      step ? `Array.from({length:Math.ceil((${b}-${a})/${step})},(_,i)=>${a}+i*${step})`
+        : `Array.from({length:${b}-${a}},(_,i)=>${a}+i)`)
     .replace(/\brange\(([^)]+)\)/g, "Array.from({length:$1},(_,i)=>i)")
+    .replace(/\benumerate\(([^)]+)\)/g, "($1).map((v,i)=>[i,v])")
+    .replace(/\bzip\(([^,]+),\s*([^)]+)\)/g, "($1).map((v,i)=>[v,($2)[i]])")
+    .replace(/\bmap\(([^,]+),\s*([^)]+)\)/g, "($2).map($1)")
+    .replace(/\bfilter\(([^,]+),\s*([^)]+)\)/g, "($2).filter($1)")
+    .replace(/\bany\(([^)]+)\)/g, "($1).some(Boolean)")
+    .replace(/\ball\(([^)]+)\)/g, "($1).every(Boolean)")
+    .replace(/\bset\(([^)]*)\)/g, (_, arg) => arg ? `[...new Set(${arg})]` : "[]")
+    .replace(/\btuple\(([^)]*)\)/g, (_, arg) => arg ? `[...${arg}]` : "[]")
+    .replace(/\bdict\(([^)]*)\)/g, (_, arg) => arg ? `Object.fromEntries(${arg})` : "{}")
+    .replace(/\btype\(([^)]+)\)/g, (_, v) => `(typeof(${v})==='number'?"<class 'int'>":typeof(${v})==='string'?"<class 'str'>":Array.isArray(${v})?"<class 'list'>":"<class '"+typeof(${v})+"'>")`)
+    .replace(/\bisinstance\(([^,]+),\s*(\w+)\)/g, (_, v, t) => {
+      const typeMap: Record<string, string> = { int: "number", float: "number", str: "string", bool: "boolean", list: "object" };
+      return typeMap[t] ? `typeof(${v})==='${typeMap[t]}'` : `typeof(${v})==='${t}'`;
+    })
     .replace(/\bmath\.pi\b/g, String(Math.PI))
     .replace(/\bmath\.e\b/g, String(Math.E))
     .replace(/\bmath\.sqrt\(([^)]+)\)/g, "Math.sqrt($1)")
     .replace(/\bmath\.log\(([^)]+)\)/g, "Math.log($1)")
+    .replace(/\bmath\.log2\(([^)]+)\)/g, "Math.log2($1)")
+    .replace(/\bmath\.log10\(([^)]+)\)/g, "Math.log10($1)")
     .replace(/\bmath\.sin\(([^)]+)\)/g, "Math.sin($1)")
     .replace(/\bmath\.cos\(([^)]+)\)/g, "Math.cos($1)")
+    .replace(/\bmath\.tan\(([^)]+)\)/g, "Math.tan($1)")
+    .replace(/\bmath\.exp\(([^)]+)\)/g, "Math.exp($1)")
+    .replace(/\bmath\.pow\(([^,]+),\s*([^)]+)\)/g, "Math.pow($1,$2)")
+    .replace(/\bmath\.factorial\(([^)]+)\)/g, "((n)=>{let r=1;for(let i=2;i<=n;i++)r*=i;return r})($1)")
+    .replace(/\bmath\.gcd\(([^,]+),\s*([^)]+)\)/g, "((a,b)=>{while(b){[a,b]=[b,a%b]}return Math.abs(a)})($1,$2)")
+    .replace(/\bmath\.ceil\(([^)]+)\)/g, "Math.ceil($1)")
+    .replace(/\bmath\.floor\(([^)]+)\)/g, "Math.floor($1)")
     .replace(/\bnp\.pi\b/g, String(Math.PI))
     .replace(/\bnp\.sqrt\(([^)]+)\)/g, "Math.sqrt($1)")
     .replace(/\bnp\.log\(([^)]+)\)/g, "Math.log($1)")
+    .replace(/\bnp\.exp\(([^)]+)\)/g, "Math.exp($1)")
+    .replace(/\bnp\.abs\(([^)]+)\)/g, "Math.abs($1)")
+    .replace(/\bnp\.sum\(([^)]+)\)/g, "($1).reduce((a,b)=>a+b,0)")
+    .replace(/\bnp\.mean\(([^)]+)\)/g, "(($1).reduce((a,b)=>a+b,0)/($1).length)")
     .replace(/\bpi\b/g, String(Math.PI));
   // Floor division
   cleaned = cleaned.replace(/(\w+)\s*\/\/\s*(\w+)/g, "Math.floor($1/$2)");
-  // Power operator
-  cleaned = cleaned.replace(/(\w+)\s*\*\*\s*(\w+)/g, "Math.pow($1,$2)");
+  // Power operator — handle complex expressions too
+  cleaned = cleaned.replace(/(\w+|\))\s*\*\*\s*(\w+|\()/g, "Math.pow($1,$2)");
+  // In operator: x in arr
+  cleaned = cleaned.replace(/(\S+)\s+in\s+(\S+)/g, "(($2).includes($1))");
+  // Not in: x not in arr
+  cleaned = cleaned.replace(/(\S+)\s+not\s+in\s+(\S+)/g, "(!($2).includes($1))");
   // f-strings
   cleaned = cleaned.replace(/f["']([^"']*?)["']/g, (_, inner) => {
     const replaced = inner.replace(/\{([^}]+)\}/g, "${$1}");
     return "`" + replaced + "`";
   });
-  // List comprehensions: [expr for x in iterable]
-  const listCompMatch = cleaned.match(/^\[(.+)\s+for\s+(\w+)\s+in\s+(.+)\]$/);
-  if (listCompMatch) {
-    cleaned = `(${listCompMatch[3]}).map(${listCompMatch[2]}=>${listCompMatch[1]})`;
+  // List comprehensions: [expr for x in iterable] or [expr for x in iterable if cond]
+  const listCompIfMatch = cleaned.match(/^\[(.+)\s+for\s+(\w+)\s+in\s+(.+)\s+if\s+(.+)\]$/);
+  if (listCompIfMatch) {
+    cleaned = `(${listCompIfMatch[3]}).filter(${listCompIfMatch[2]}=>${listCompIfMatch[4]}).map(${listCompIfMatch[2]}=>${listCompIfMatch[1]})`;
+  } else {
+    const listCompMatch = cleaned.match(/^\[(.+)\s+for\s+(\w+)\s+in\s+(.+)\]$/);
+    if (listCompMatch) {
+      cleaned = `(${listCompMatch[3]}).map(${listCompMatch[2]}=>${listCompMatch[1]})`;
+    }
   }
+  // Dict comprehension: {k: v for k, v in iterable}
+  const dictCompMatch = cleaned.match(/^\{(.+):\s*(.+)\s+for\s+(\w+)\s+in\s+(.+)\}$/);
+  if (dictCompMatch) {
+    cleaned = `Object.fromEntries((${dictCompMatch[4]}).map(${dictCompMatch[3]}=>[${dictCompMatch[1]},${dictCompMatch[2]}]))`;
+  }
+
+  // String multiplication: "x" * n
+  cleaned = cleaned.replace(/"([^"]+)"\s*\*\s*(\w+)/g, '"$1".repeat($2)');
+  cleaned = cleaned.replace(/'([^']+)'\s*\*\s*(\w+)/g, "'$1'.repeat($2)");
+
   const varNames = Object.keys(variables);
   const varValues = Object.values(variables);
   try {
     const fn = new Function(...varNames, `"use strict"; return (${cleaned})`);
     return fn(...varValues);
   } catch { return undefined; }
+}
+
+// ── Method call dispatcher ─────────────────────────────────────────────────
+
+function callMethod(obj: unknown, method: string, args: unknown[]): unknown {
+  // String methods
+  if (typeof obj === "string") {
+    switch (method) {
+      case "upper": return obj.toUpperCase();
+      case "lower": return obj.toLowerCase();
+      case "strip": return obj.trim();
+      case "lstrip": return obj.trimStart();
+      case "rstrip": return obj.trimEnd();
+      case "split": return args[0] ? obj.split(String(args[0])) : obj.split(/\s+/).filter(Boolean);
+      case "join": return Array.isArray(args[0]) ? (args[0] as unknown[]).join(obj) : obj;
+      case "replace": return obj.replace(new RegExp(String(args[0]).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), String(args[1] ?? ""));
+      case "startswith": return obj.startsWith(String(args[0]));
+      case "endswith": return obj.endsWith(String(args[0]));
+      case "find": return obj.indexOf(String(args[0]));
+      case "count": return (obj.match(new RegExp(String(args[0]).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length;
+      case "title": return obj.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase());
+      case "capitalize": return obj.charAt(0).toUpperCase() + obj.slice(1).toLowerCase();
+      case "center": return obj.padStart(Math.floor(((args[0] as number) + obj.length) / 2), String(args[1] ?? " ")).padEnd(args[0] as number, String(args[1] ?? " "));
+      case "zfill": return obj.padStart(args[0] as number, "0");
+      case "isdigit": return /^\d+$/.test(obj);
+      case "isalpha": return /^[a-zA-Z]+$/.test(obj);
+      case "isalnum": return /^[a-zA-Z0-9]+$/.test(obj);
+      case "isupper": return obj === obj.toUpperCase();
+      case "islower": return obj === obj.toLowerCase();
+      case "format": { let r = obj; (args as unknown[]).forEach((a, i) => { r = r.replace(`{${i}}`, String(a)).replace("{}", String(a)); }); return r; }
+      case "encode": return obj; // no-op in JS
+      default: return undefined;
+    }
+  }
+  // List methods
+  if (Array.isArray(obj)) {
+    switch (method) {
+      case "append": obj.push(args[0]); return undefined;
+      case "pop": return args.length ? obj.splice(args[0] as number, 1)[0] : obj.pop();
+      case "extend": if (Array.isArray(args[0])) obj.push(...args[0]); return undefined;
+      case "insert": obj.splice(args[0] as number, 0, args[1]); return undefined;
+      case "remove": { const idx = obj.indexOf(args[0]); if (idx !== -1) obj.splice(idx, 1); return undefined; }
+      case "reverse": obj.reverse(); return undefined;
+      case "sort": obj.sort((a: unknown, b: unknown) => (a as number) - (b as number)); return undefined;
+      case "copy": return [...obj];
+      case "clear": obj.length = 0; return undefined;
+      case "index": return obj.indexOf(args[0]);
+      case "count": return obj.filter(v => v === args[0]).length;
+      default: return undefined;
+    }
+  }
+  // Dict methods
+  if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+    const dict = obj as Record<string, unknown>;
+    switch (method) {
+      case "keys": return Object.keys(dict);
+      case "values": return Object.values(dict);
+      case "items": return Object.entries(dict);
+      case "get": return dict[String(args[0])] ?? (args[1] ?? null);
+      case "update": if (args[0] && typeof args[0] === "object") Object.assign(dict, args[0]); return undefined;
+      case "pop": { const k = String(args[0]); const v = dict[k] ?? args[1]; delete dict[k]; return v; }
+      case "setdefault": { const k = String(args[0]); if (!(k in dict)) dict[k] = args[1] ?? null; return dict[k]; }
+      case "copy": return { ...dict };
+      case "clear": { for (const k of Object.keys(dict)) delete dict[k]; return undefined; }
+      default: return undefined;
+    }
+  }
+  return undefined;
+}
+
+// ── Built-in function dispatcher ──────────────────────────────────────────
+
+function callBuiltin(name: string, args: unknown[], variables: Record<string, unknown>): unknown {
+  switch (name) {
+    case "len": return Array.isArray(args[0]) ? args[0].length : typeof args[0] === "string" ? args[0].length : typeof args[0] === "object" && args[0] ? Object.keys(args[0]).length : 0;
+    case "type": { const v = args[0]; if (typeof v === "number") return Number.isInteger(v) ? "<class 'int'>" : "<class 'float'>"; if (typeof v === "string") return "<class 'str'>"; if (typeof v === "boolean") return "<class 'bool'>"; if (Array.isArray(v)) return "<class 'list'>"; if (v === null) return "<class 'NoneType'>"; if (typeof v === "object") return "<class 'dict'>"; return `<class '${typeof v}'>`; }
+    case "isinstance": return typeof args[0] === (args[1] === "int" || args[1] === "float" ? "number" : args[1] === "str" ? "string" : args[1] === "bool" ? "boolean" : "object");
+    case "print": return args.map(a => formatPythonValue(a)).join(" ");
+    case "input": return args[0] ? String(args[0]) : "";
+    case "abs": return Math.abs(args[0] as number);
+    case "round": return typeof args[1] === "number" ? Math.round((args[0] as number) * 10 ** args[1]) / 10 ** args[1] : Math.round(args[0] as number);
+    case "int": return typeof args[0] === "string" ? parseInt(args[0]) : Math.floor(args[0] as number);
+    case "float": return Number(args[0]);
+    case "str": return String(args[0]);
+    case "bool": return Boolean(args[0]);
+    case "list": return Array.isArray(args[0]) ? [...args[0]] : typeof args[0] === "string" ? args[0].split("") : [];
+    case "dict": return typeof args[0] === "object" ? { ...(args[0] as object) } : {};
+    case "set": return Array.isArray(args[0]) ? [...new Set(args[0])] : [];
+    case "tuple": return Array.isArray(args[0]) ? [...args[0]] : [];
+    case "sum": return (args[0] as number[]).reduce((a, b) => a + b, (args[1] as number) ?? 0);
+    case "min": return Array.isArray(args[0]) ? Math.min(...args[0] as number[]) : Math.min(...args as number[]);
+    case "max": return Array.isArray(args[0]) ? Math.max(...args[0] as number[]) : Math.max(...args as number[]);
+    case "sorted": { const arr = [...args[0] as unknown[]]; arr.sort((a, b) => (a as number) - (b as number)); return arr; }
+    case "reversed": return [...args[0] as unknown[]].reverse();
+    case "enumerate": return (args[0] as unknown[]).map((v, i) => [i + ((args[1] as number) ?? 0), v]);
+    case "zip": return (args[0] as unknown[]).map((v, i) => args.map(a => (a as unknown[])[i]));
+    case "map": return (args[1] as unknown[]).map(v => (args[0] as (v: unknown) => unknown)(v));
+    case "filter": return (args[1] as unknown[]).filter(v => (args[0] as (v: unknown) => boolean)(v));
+    case "any": return (args[0] as unknown[]).some(Boolean);
+    case "all": return (args[0] as unknown[]).every(Boolean);
+    case "range": {
+      if (args.length === 1) return Array.from({ length: args[0] as number }, (_, i) => i);
+      if (args.length === 2) return Array.from({ length: (args[1] as number) - (args[0] as number) }, (_, i) => (args[0] as number) + i);
+      const [start, stop, step] = args as number[];
+      const r: number[] = [];
+      for (let i = start; step > 0 ? i < stop : i > stop; i += step) r.push(i);
+      return r;
+    }
+    case "chr": return String.fromCharCode(args[0] as number);
+    case "ord": return (args[0] as string).charCodeAt(0);
+    case "hex": return "0x" + (args[0] as number).toString(16);
+    case "bin": return "0b" + (args[0] as number).toString(2);
+    case "oct": return "0o" + (args[0] as number).toString(8);
+    case "pow": return Math.pow(args[0] as number, args[1] as number);
+    case "divmod": return [Math.floor((args[0] as number) / (args[1] as number)), (args[0] as number) % (args[1] as number)];
+    case "hash": return typeof args[0] === "string" ? args[0].split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0) : 0;
+    case "id": return Math.floor(Math.random() * 1e15);
+    case "format": return String(args[0]);
+    default: return undefined;
+  }
+}
+
+// ── User function executor ───────────────────────────────────────────────
+
+function callUserFunction(fn: UserFunction, args: unknown[], parentVars: Record<string, unknown>, functions: Record<string, UserFunction>): unknown {
+  // Build local scope
+  const localVars = { ...parentVars };
+  fn.params.forEach((p, i) => {
+    localVars[p] = args[i] ?? fn.defaults[p] ?? null;
+  });
+
+  // Execute body lines
+  for (const line of fn.body) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("return ")) {
+      return evalPythonExpr(trimmed.slice(7), localVars, functions);
+    }
+    if (trimmed.startsWith("return")) {
+      return null;
+    }
+    // Simple assignment
+    const assignMatch = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
+    if (assignMatch) {
+      const val = evalPythonExpr(assignMatch[2], localVars, functions);
+      if (val !== undefined) localVars[assignMatch[1]] = val;
+      continue;
+    }
+    // Print
+    if (trimmed.startsWith("print(")) {
+      // Capture but don't output (side effect inside function)
+      continue;
+    }
+  }
+  return null;
+}
+
+// ── Split at top-level delimiter ──────────────────────────────────────────
+
+function splitTopLevel(expr: string, delim: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let inStr: string | null = null;
+  let current = "";
+  for (let i = 0; i < expr.length; i++) {
+    const ch = expr[i];
+    if (inStr) {
+      current += ch;
+      if (ch === inStr && expr[i - 1] !== "\\") inStr = null;
+    } else if (ch === "'" || ch === '"') {
+      current += ch;
+      inStr = ch;
+    } else if ("([{".includes(ch)) {
+      depth++;
+      current += ch;
+    } else if (")]}".includes(ch)) {
+      depth--;
+      current += ch;
+    } else if (ch === delim && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) parts.push(current);
+  return parts;
 }
 
 function formatPythonValue(val: unknown): string {
@@ -299,51 +672,21 @@ function formatPythonValue(val: unknown): string {
   if (typeof val === "string") return `'${val}'`;
   if (Array.isArray(val)) return `[${val.map(formatPythonValue).join(", ")}]`;
   if (typeof val === "object") {
-    if ((val as any)?.data && (val as any)?.shape) {
-      const data = (val as any).data as Record<string, unknown[]>;
-      const cols = Object.keys(data);
-      const rows = (Object.values(data)[0] as unknown[])?.length ?? 0;
-      let table = "   " + cols.join("\t") + "\n";
-      for (let i = 0; i < Math.min(rows, 10); i++) {
-        table += i + "  " + cols.map(c => String((data[c] as unknown[])[i])).join("\t") + "\n";
-      }
-      if (rows > 10) table += `\n[${rows} rows × ${cols.length} columns]`;
-      return table;
+    if ((val as Record<string, unknown>)?._isPandasDf) {
+      return formatDataFrame((val as Record<string, unknown>).data as Record<string, unknown[]>);
+    }
+    if ((val as Record<string, unknown>)?.data && (val as Record<string, unknown>)?.shape) {
+      const data = (val as Record<string, unknown>).data as Record<string, unknown[]>;
+      return formatDataFrame(data);
     }
     const entries = Object.entries(val as Record<string, unknown>);
     return `{${entries.slice(0, 20).map(([k, v]) => `'${k}': ${formatPythonValue(v)}`).join(", ")}}`;
   }
   return String(val);
 }
-
+// splitPrintArgs delegates to splitTopLevel
 function splitPrintArgs(expr: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let inStr: string | null = null;
-  let current = "";
-  for (let i = 0; i < expr.length; i++) {
-    const ch = expr[i];
-    if (inStr) {
-      current += ch;
-      if (ch === inStr && expr[i - 1] !== "\\") inStr = null;
-    } else if (ch === "'" || ch === '"') {
-      current += ch;
-      inStr = ch;
-    } else if (ch === "(" || ch === "[" || ch === "{") {
-      depth++;
-      current += ch;
-    } else if (ch === ")" || ch === "]" || ch === "}") {
-      depth--;
-      current += ch;
-    } else if (ch === "," && depth === 0) {
-      parts.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  if (current.trim()) parts.push(current);
-  return parts;
+  return splitTopLevel(expr, ",");
 }
 
 export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput[] {
@@ -493,11 +836,11 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
               return trimmed.slice(1, -1);
             if (trimmed.startsWith("f'") || trimmed.startsWith('f"')) {
               const inner = trimmed.slice(2, -1);
-              return inner.replace(/\{([^}]+)\}/g, (_, e) => formatPythonValue(evalPythonExpr(e, kernel.variables)));
+              return inner.replace(/\{([^}]+)\}/g, (_, e) => formatPythonValue(evalPythonExpr(e, kernel.variables, kernel.functions)));
             }
             if (trimmed in kernel.variables) return formatPythonValue(kernel.variables[trimmed]);
             if (trimmed === "counts" && kernel.lastCounts) return JSON.stringify(kernel.lastCounts);
-            const val = evalPythonExpr(trimmed, kernel.variables);
+            const val = evalPythonExpr(trimmed, kernel.variables, kernel.functions);
             if (val !== undefined) return formatPythonValue(val);
             return trimmed;
           });
@@ -511,16 +854,19 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
       case "assign": {
         const trimmed = line.trim();
         // Augmented assignments
-        const augMatch = trimmed.match(/^(\w+)\s*(\+=|-=|\*=|\/=)\s*(.+)$/);
+        const augMatch = trimmed.match(/^(\w+)\s*(\+=|-=|\*=|\/=|%=|\*\*=|\/\/=)\s*(.+)$/);
         if (augMatch) {
           const [, vn, op, rhs] = augMatch;
-          const rv = evalPythonExpr(rhs, kernel.variables);
+          const rv = evalPythonExpr(rhs, kernel.variables, kernel.functions);
           const cv = kernel.variables[vn];
           if (typeof cv === "number" && typeof rv === "number") {
             if (op === "+=") kernel.variables[vn] = cv + rv;
             else if (op === "-=") kernel.variables[vn] = cv - rv;
             else if (op === "*=") kernel.variables[vn] = cv * rv;
             else if (op === "/=") kernel.variables[vn] = cv / rv;
+            else if (op === "%=") kernel.variables[vn] = cv % rv;
+            else if (op === "**=") kernel.variables[vn] = cv ** rv;
+            else if (op === "//=") kernel.variables[vn] = Math.floor(cv / rv);
           } else if (typeof cv === "string" && typeof rv === "string" && op === "+=") {
             kernel.variables[vn] = cv + rv;
           } else if (Array.isArray(cv) && Array.isArray(rv) && op === "+=") {
@@ -528,12 +874,32 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
           }
           break;
         }
+        // Method calls on variables (e.g., results.append(x))
+        const methodCallMatch = trimmed.match(/^(\w+)\.(append|pop|extend|insert|remove|reverse|sort|clear|update)\(([^)]*)\)$/);
+        if (methodCallMatch) {
+          const obj = kernel.variables[methodCallMatch[1]];
+          const args = methodCallMatch[3] ? splitTopLevel(methodCallMatch[3], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+          callMethod(obj, methodCallMatch[2], args);
+          break;
+        }
         const assignMatch = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
         if (assignMatch) {
           const [, vn, rhs] = assignMatch;
           if (vn === "qc" || vn === "sim" || vn === "result") break;
-          const val = evalPythonExpr(rhs, kernel.variables);
+          const val = evalPythonExpr(rhs, kernel.variables, kernel.functions);
           if (val !== undefined) kernel.variables[vn] = val;
+        }
+        // Dict/list subscript assignment: obj[key] = val
+        const subscriptAssign = trimmed.match(/^(\w+)\[(.+)\]\s*=\s*(.+)$/);
+        if (subscriptAssign) {
+          const obj = kernel.variables[subscriptAssign[1]];
+          const key = evalPythonExpr(subscriptAssign[2], kernel.variables, kernel.functions);
+          const val = evalPythonExpr(subscriptAssign[3], kernel.variables, kernel.functions);
+          if (Array.isArray(obj) && typeof key === "number") {
+            obj[key] = val;
+          } else if (obj && typeof obj === "object") {
+            (obj as Record<string, unknown>)[String(key)] = val;
+          }
         }
         break;
       }
@@ -545,8 +911,95 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
       case "unknown": {
         const trimmed = line.trim();
         if (!trimmed) break;
-        // For loops
-        const forMatch = trimmed.match(/^for\s+(\w+)\s+in\s+(.+):\s*$/);
+
+        // Function definition
+        const defMatch = trimmed.match(/^def\s+(\w+)\(([^)]*)\)\s*(?:->.*)?:\s*$/);
+        if (defMatch) {
+          const fnName = defMatch[1];
+          const paramStr = defMatch[2];
+          const params: string[] = [];
+          const defaults: Record<string, unknown> = {};
+          if (paramStr.trim()) {
+            for (const p of paramStr.split(",")) {
+              const pt = p.trim();
+              if (pt.includes("=")) {
+                const [pn, pv] = pt.split("=").map(s => s.trim());
+                params.push(pn);
+                defaults[pn] = evalPythonExpr(pv, kernel.variables, kernel.functions);
+              } else {
+                params.push(pt);
+              }
+            }
+          }
+          const bodyLines: string[] = [];
+          let j = lineIdx + 1;
+          while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t") || lines[j].trim() === "")) {
+            if (lines[j].trim()) bodyLines.push(lines[j].trim());
+            j++;
+          }
+          lineIdx = j - 1;
+          kernel.functions[fnName] = { name: fnName, params, defaults, body: bodyLines };
+          // Also make callable from evalPythonExpr
+          kernel.variables[fnName] = (...args: unknown[]) => callUserFunction(kernel.functions[fnName], args, kernel.variables, kernel.functions);
+          break;
+        }
+
+        // While loop
+        const whileMatch = trimmed.match(/^while\s+(.+):\s*$/);
+        if (whileMatch) {
+          const bodyLines: string[] = [];
+          let j = lineIdx + 1;
+          while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t") || lines[j].trim() === "")) {
+            if (lines[j].trim()) bodyLines.push(lines[j].trim());
+            j++;
+          }
+          lineIdx = j - 1;
+          let iterations = 0;
+          const MAX_ITER = 10000;
+          while (evalPythonExpr(whileMatch[1], kernel.variables, kernel.functions) && iterations++ < MAX_ITER) {
+            let shouldBreak = false;
+            for (const bodyLine of bodyLines) {
+              if (bodyLine === "break") { shouldBreak = true; break; }
+              if (bodyLine === "continue") break;
+              executeBodyLine(bodyLine, kernel, cell, outputs);
+            }
+            if (shouldBreak) break;
+          }
+          break;
+        }
+
+        // Try/except
+        const tryMatch = trimmed.match(/^try:\s*$/);
+        if (tryMatch) {
+          const tryBody: string[] = [];
+          let j = lineIdx + 1;
+          while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t")) && !lines[j].trim().startsWith("except")) {
+            if (lines[j].trim()) tryBody.push(lines[j].trim());
+            j++;
+          }
+          const exceptBody: string[] = [];
+          if (j < lines.length && lines[j].trim().startsWith("except")) {
+            j++; // skip except line
+            while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t"))) {
+              if (lines[j].trim()) exceptBody.push(lines[j].trim());
+              j++;
+            }
+          }
+          lineIdx = j - 1;
+          try {
+            for (const bodyLine of tryBody) {
+              executeBodyLine(bodyLine, kernel, cell, outputs);
+            }
+          } catch {
+            for (const bodyLine of exceptBody) {
+              executeBodyLine(bodyLine, kernel, cell, outputs);
+            }
+          }
+          break;
+        }
+
+        // For loops (with tuple unpacking)
+        const forMatch = trimmed.match(/^for\s+(\w+(?:\s*,\s*\w+)*)\s+in\s+(.+):\s*$/);
         if (forMatch) {
           const bodyLines: string[] = [];
           let j = lineIdx + 1;
@@ -555,55 +1008,114 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
             j++;
           }
           lineIdx = j - 1;
-          const iterable = evalPythonExpr(forMatch[2], kernel.variables);
+          const varNames = forMatch[1].split(",").map(s => s.trim());
+          const iterable = evalPythonExpr(forMatch[2], kernel.variables, kernel.functions);
           if (Array.isArray(iterable)) {
             for (const item of iterable) {
-              kernel.variables[forMatch[1]] = item;
-              for (const bodyLine of bodyLines) {
-                const bp = parsePythonLine(bodyLine);
-                if (bp.type === "print") {
-                  const bo = executeCell(kernel, { ...cell, source: bodyLine, type: "code" });
-                  outputs.push(...bo);
-                  kernel.executionCounter--; // Don't double-count
-                } else if (bp.type === "assign") {
-                  const bm = bodyLine.trim().match(/^(\w+)\s*=\s*(.+)$/);
-                  if (bm) { const v = evalPythonExpr(bm[2], kernel.variables); if (v !== undefined) kernel.variables[bm[1]] = v; }
-                }
+              if (varNames.length > 1 && Array.isArray(item)) {
+                varNames.forEach((vn, i) => { kernel.variables[vn] = item[i]; });
+              } else {
+                kernel.variables[varNames[0]] = item;
               }
+              let shouldBreak = false;
+              for (const bodyLine of bodyLines) {
+                if (bodyLine === "break") { shouldBreak = true; break; }
+                if (bodyLine === "continue") break;
+                executeBodyLine(bodyLine, kernel, cell, outputs);
+              }
+              if (shouldBreak) break;
             }
           }
           break;
         }
-        // If-else (basic)
+
+        // If / elif / else
         const ifMatch = trimmed.match(/^if\s+(.+):\s*$/);
         if (ifMatch) {
-          const cond = evalPythonExpr(ifMatch[1], kernel.variables);
-          const bodyLines: string[] = [];
+          const cond = evalPythonExpr(ifMatch[1], kernel.variables, kernel.functions);
+          const ifBody: string[] = [];
           let j = lineIdx + 1;
           while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t"))) {
-            if (lines[j].trim()) bodyLines.push(lines[j].trim());
+            if (lines[j].trim()) ifBody.push(lines[j].trim());
             j++;
           }
-          lineIdx = j - 1;
-          if (cond) {
-            for (const bodyLine of bodyLines) {
-              const bp = parsePythonLine(bodyLine);
-              if (bp.type === "print") {
-                const bo = executeCell(kernel, { ...cell, source: bodyLine, type: "code" });
-                outputs.push(...bo);
-                kernel.executionCounter--;
+          // Collect elif / else
+          const branches: { cond: unknown; body: string[] }[] = [{ cond, body: ifBody }];
+          while (j < lines.length) {
+            const elifMatch = lines[j].trim().match(/^elif\s+(.+):\s*$/);
+            const elseMatch = lines[j].trim().match(/^else:\s*$/);
+            if (elifMatch) {
+              const elifBody: string[] = [];
+              j++;
+              while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t"))) {
+                if (lines[j].trim()) elifBody.push(lines[j].trim());
+                j++;
               }
+              branches.push({ cond: evalPythonExpr(elifMatch[1], kernel.variables, kernel.functions), body: elifBody });
+            } else if (elseMatch) {
+              const elseBody: string[] = [];
+              j++;
+              while (j < lines.length && (lines[j].startsWith("    ") || lines[j].startsWith("\t"))) {
+                if (lines[j].trim()) elseBody.push(lines[j].trim());
+                j++;
+              }
+              branches.push({ cond: true, body: elseBody });
+            } else {
+              break;
+            }
+          }
+          lineIdx = j - 1;
+          for (const branch of branches) {
+            if (branch.cond) {
+              for (const bodyLine of branch.body) {
+                executeBodyLine(bodyLine, kernel, cell, outputs);
+              }
+              break;
             }
           }
           break;
         }
+
+        // Method call as standalone statement
+        const standaloneMethodMatch = trimmed.match(/^(\w+)\.(append|pop|extend|insert|remove|reverse|sort|clear|update|add)\(([^)]*)\)$/);
+        if (standaloneMethodMatch) {
+          const obj = kernel.variables[standaloneMethodMatch[1]];
+          const args = standaloneMethodMatch[3] ? splitTopLevel(standaloneMethodMatch[3], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+          callMethod(obj, standaloneMethodMatch[2], args);
+          break;
+        }
+
+        // User function call as statement
+        const fnCallStmt = trimmed.match(/^(\w+)\(([^)]*)\)$/);
+        if (fnCallStmt && kernel.functions[fnCallStmt[1]]) {
+          const fn = kernel.functions[fnCallStmt[1]];
+          const callArgs = fnCallStmt[2] ? splitTopLevel(fnCallStmt[2], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+          const result = callUserFunction(fn, callArgs, kernel.variables, kernel.functions);
+          // If function returns printable output, show it
+          if (result !== null && result !== undefined) {
+            outputs.push({ type: "text", content: formatPythonValue(result) });
+          }
+          break;
+        }
+
+        // Dict/list subscript assignment: obj[key] = val
+        const subscriptAssign2 = trimmed.match(/^(\w+)\[(.+)\]\s*=\s*(.+)$/);
+        if (subscriptAssign2) {
+          const obj = kernel.variables[subscriptAssign2[1]];
+          const key = evalPythonExpr(subscriptAssign2[2], kernel.variables, kernel.functions);
+          const val = evalPythonExpr(subscriptAssign2[3], kernel.variables, kernel.functions);
+          if (Array.isArray(obj) && typeof key === "number") obj[key] = val;
+          else if (obj && typeof obj === "object") (obj as Record<string, unknown>)[String(key)] = val;
+          break;
+        }
+
         // Last-line expression display (like Jupyter's auto-display)
         const isLast = lineIdx === lines.length - 1 || lines.slice(lineIdx + 1).every(l => !l.trim() || l.trim().startsWith("#"));
         if (isLast && trimmed && !trimmed.includes("=")) {
           if (trimmed in kernel.variables) {
             outputs.push({ type: "text", content: formatPythonValue(kernel.variables[trimmed]) });
           } else {
-            const val = evalPythonExpr(trimmed, kernel.variables);
+            const val = evalPythonExpr(trimmed, kernel.variables, kernel.functions);
             if (val !== undefined) outputs.push({ type: "text", content: formatPythonValue(val) });
           }
         }
@@ -614,6 +1126,58 @@ export function executeCell(kernel: KernelState, cell: NotebookCell): CellOutput
 
   kernel.executionCounter++;
   return outputs;
+}
+
+/** Execute a single body line within a control flow block (for/while/if/try) */
+function executeBodyLine(bodyLine: string, kernel: KernelState, cell: NotebookCell, outputs: CellOutput[]): void {
+  const bp = parsePythonLine(bodyLine);
+  if (bp.type === "print") {
+    const bo = executeCell(kernel, { ...cell, source: bodyLine, type: "code" });
+    outputs.push(...bo);
+    kernel.executionCounter--;
+  } else if (bp.type === "assign") {
+    const trimmed = bodyLine.trim();
+    // Method calls
+    const methodMatch = trimmed.match(/^(\w+)\.(append|pop|extend|insert|remove|reverse|sort|clear|update)\(([^)]*)\)$/);
+    if (methodMatch) {
+      const obj = kernel.variables[methodMatch[1]];
+      const args = methodMatch[3] ? splitTopLevel(methodMatch[3], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+      callMethod(obj, methodMatch[2], args);
+      return;
+    }
+    // Augmented
+    const augMatch = trimmed.match(/^(\w+)\s*(\+=|-=|\*=|\/=)\s*(.+)$/);
+    if (augMatch) {
+      const rv = evalPythonExpr(augMatch[3], kernel.variables, kernel.functions);
+      const cv = kernel.variables[augMatch[1]];
+      if (typeof cv === "number" && typeof rv === "number") {
+        if (augMatch[2] === "+=") kernel.variables[augMatch[1]] = cv + rv;
+        else if (augMatch[2] === "-=") kernel.variables[augMatch[1]] = cv - rv;
+        else if (augMatch[2] === "*=") kernel.variables[augMatch[1]] = cv * rv;
+        else if (augMatch[2] === "/=") kernel.variables[augMatch[1]] = cv / rv;
+      }
+      return;
+    }
+    // Standard assignment
+    const bm = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
+    if (bm) { const v = evalPythonExpr(bm[2], kernel.variables, kernel.functions); if (v !== undefined) kernel.variables[bm[1]] = v; }
+  } else if (bp.type === "unknown" || bp.type === "comparison") {
+    const trimmed = bodyLine.trim();
+    // Standalone method call
+    const methodMatch = trimmed.match(/^(\w+)\.(append|pop|extend|insert|remove|reverse|sort|clear|update|add)\(([^)]*)\)$/);
+    if (methodMatch) {
+      const obj = kernel.variables[methodMatch[1]];
+      const args = methodMatch[3] ? splitTopLevel(methodMatch[3], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+      callMethod(obj, methodMatch[2], args);
+    }
+    // User function call
+    const fnCallMatch = trimmed.match(/^(\w+)\(([^)]*)\)$/);
+    if (fnCallMatch && kernel.functions[fnCallMatch[1]]) {
+      const fn = kernel.functions[fnCallMatch[1]];
+      const callArgs = fnCallMatch[2] ? splitTopLevel(fnCallMatch[2], ",").map(a => evalPythonExpr(a.trim(), kernel.variables, kernel.functions)) : [];
+      callUserFunction(fn, callArgs, kernel.variables, kernel.functions);
+    }
+  }
 }
 
 // ── Notebook Factory ────────────────────────────────────────────────────────
