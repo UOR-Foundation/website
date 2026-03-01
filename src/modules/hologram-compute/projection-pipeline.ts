@@ -34,6 +34,13 @@ import {
   type InferenceResult,
 } from "./coherence-inference";
 
+import {
+  holographicEncode,
+  generateHolographicReport,
+  type HolographicEncoding,
+  type HolographicCodecConfig,
+} from "./holographic-codec";
+
 // ═══════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════
@@ -50,14 +57,17 @@ export interface ProjectionPipelineConfig {
   useCompression: boolean;
   /** Maximum layers to process (for quick testing) */
   maxLayers?: number;
+  /** Holographic codec config overrides */
+  codecConfig?: Partial<HolographicCodecConfig>;
 }
 
 /** Pipeline status */
 export interface PipelineStatus {
-  stage: "idle" | "projecting" | "caching" | "ready" | "inferring" | "error";
+  stage: "idle" | "projecting" | "compressing" | "caching" | "ready" | "inferring" | "error";
   progress: number; // [0, 1]
   message: string;
   decomposition: AtlasModelDecomposition | null;
+  holographicEncoding: HolographicEncoding | null;
   engramEntries: number;
   error?: string;
 }
@@ -66,8 +76,12 @@ export interface PipelineStatus {
 export interface PipelineReport {
   /** Model projection report */
   projectionReport: string;
+  /** Holographic compression report */
+  holographicReport: string;
   /** Decomposition stats */
   decomposition: AtlasModelDecomposition;
+  /** Holographic encoding */
+  holographicEncoding: HolographicEncoding;
   /** Engram cache stats */
   engramStats: ReturnType<EngramCache["stats"]>;
   /** Benchmark inference result */
@@ -105,8 +119,9 @@ export class AtlasProjectionPipeline {
   private engine: CoherenceInferenceEngine | null = null;
   private _status: PipelineStatus = {
     stage: "idle", progress: 0, message: "Not initialized",
-    decomposition: null, engramEntries: 0,
+    decomposition: null, holographicEncoding: null, engramEntries: 0,
   };
+  private holographicEncoding: HolographicEncoding | null = null;
 
   /** Status change listeners */
   private listeners = new Set<(status: PipelineStatus) => void>();
@@ -157,16 +172,32 @@ export class AtlasProjectionPipeline {
         decomposition: this.decomposition,
       });
 
-      // ── Stage 2: Engram Cache Population ──────────────────
-      this.updateStatus({ stage: "caching", progress: 0.5, message: "Populating Engram conditional memory cache..." });
+      // ── Stage 2: Holographic Compression ──────────────────
+      this.updateStatus({ stage: "compressing", progress: 0.45, message: "Applying holographic compression (Bekenstein-Hawking)..." });
+      await yieldThread();
+
+      this.holographicEncoding = holographicEncode(this.decomposition, this.config.codecConfig);
+
+      this.updateStatus({
+        progress: 0.55,
+        message: `Compressed ${this.holographicEncoding.compressionRatio.toFixed(1)}× via holographic codec (${this.holographicEncoding.blocks.length} blocks)`,
+        holographicEncoding: this.holographicEncoding,
+      });
+
+      // ── Stage 3: Engram Cache Population ──────────────────
+      this.updateStatus({ stage: "caching", progress: 0.6, message: "Populating Engram conditional memory cache..." });
       await yieldThread();
 
       this.engram = new EngramCache(this.config.engramConfig);
 
-      // Select blocks for caching
-      const blocks = this.config.useCompression
-        ? this.decomposition.blocks.filter(b => b.isCanonical)
-        : this.decomposition.blocks;
+      // Use holographically compressed blocks for the cache
+      const blocks = this.holographicEncoding.blocks.map(hb => ({
+        vertex: hb.vertex,
+        fiber: hb.fiber,
+        r8Block: hb.canonical,
+        layerIndex: 0,
+        blockIndex: hb.scramblingIndex,
+      }));
 
       const stored = this.engram.populateFromBlocks(blocks);
 
@@ -230,7 +261,9 @@ export class AtlasProjectionPipeline {
 
     return {
       projectionReport: this.decomposition ? generateProjectionReport(this.decomposition) : "",
+      holographicReport: this.holographicEncoding ? generateHolographicReport(this.holographicEncoding) : "",
       decomposition: this.decomposition!,
+      holographicEncoding: this.holographicEncoding!,
       engramStats: this.engram!.stats(),
       benchmarkResult,
       totalTimeMs: performance.now() - t0,

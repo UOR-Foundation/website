@@ -121,3 +121,26 @@ export type {
   PipelineStatus,
   PipelineReport,
 } from "./projection-pipeline";
+
+// Holographic Codec — scale-invariant compression via holographic principle
+export {
+  holographicEncode,
+  holographicDecode,
+  generateHolographicReport,
+  reconstructMirror,
+  ATLAS_HORIZON_AREA,
+  ATLAS_PLANCK_AREA,
+  BEKENSTEIN_BOUND_BITS,
+  BEKENSTEIN_BOUND_BYTES,
+  RT_SURFACE_COUNT,
+  MSS_GRADIENT_BOUND,
+  SCRAMBLING_HOPS,
+  SCRAMBLING_TIME,
+  DEFAULT_CODEC_CONFIG,
+} from "./holographic-codec";
+export type {
+  HolographicBlock,
+  HolographicEncoding,
+  HolographicCodecConfig,
+  PhaseStats,
+} from "./holographic-codec";
