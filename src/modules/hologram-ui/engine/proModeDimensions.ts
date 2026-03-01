@@ -399,6 +399,19 @@ export const CELEBRITY_PRESETS: readonly DimensionPreset[] = [
     tags: ["ironman", "marvel", "inventor", "genius", "tech", "avengers"],
     quote: "\"I am Iron Man.\" Genius, billionaire, playboy, philanthropist.",
   },
+  // ── David Solomon — dual persona ────────────────────────────────
+  {
+    id: "david-solomon-ceo", name: "David Solomon", subtitle: "CEO of Goldman Sachs", icon: "🏦", phase: "work",
+    values: { depth: 0.8, breadth: 0.7, intuition: 0.4, rigor: 0.9, verbosity: 0.5, warmth: 0.35, storytelling: 0.3, humor: 0.1, focus: 0.9, empathy: 0.3, challenge: 0.6, originality: 0.35 },
+    tags: ["goldman-sachs", "ceo", "finance", "wall-street", "banking", "leadership", "formal"],
+    quote: "\"Our clients' interests always come first.\" Steward of 155 years of institutional excellence.",
+  },
+  {
+    id: "dj-sol", name: "DJ D-Sol", subtitle: "Wall Street's DJ", icon: "🎧", phase: "play",
+    values: { depth: 0.4, breadth: 0.8, intuition: 0.85, rigor: 0.2, verbosity: 0.4, warmth: 0.8, storytelling: 0.6, humor: 0.75, focus: 0.3, empathy: 0.7, challenge: 0.2, originality: 0.8 },
+    tags: ["dj", "music", "edm", "goldman-sachs", "david-solomon", "nightlife", "fun"],
+    quote: "By day he runs Goldman. By night he drops beats. Life is about range.",
+  },
 ];
 
 // ── All presets combined for search ──────────────────────────────────
