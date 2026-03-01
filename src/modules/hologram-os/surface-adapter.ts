@@ -37,6 +37,10 @@ interface InterpolatableState {
   readonly typographyBasePx: number;
   readonly typographyScale: number;
   readonly breathPeriodMs: number;
+  readonly coherenceDh: number;
+  readonly coherenceAmplitude: number;
+  readonly coherencePhase: number;
+  readonly hScore: number;
 }
 
 function extractInterpolatable(frame: ProjectionFrame): InterpolatableState {
@@ -46,6 +50,10 @@ function extractInterpolatable(frame: ProjectionFrame): InterpolatableState {
     typographyBasePx: frame.typography.basePx,
     typographyScale: frame.typography.scale,
     breathPeriodMs: frame.breathPeriodMs,
+    coherenceDh: frame.coherenceGradient.dh,
+    coherenceAmplitude: frame.coherenceGradient.amplitude,
+    coherencePhase: frame.coherenceGradient.phase,
+    hScore: frame.systemCoherence.meanH,
   };
 }
 
@@ -60,6 +68,10 @@ function lerpState(from: InterpolatableState, to: InterpolatableState, t: number
     typographyBasePx: lerp(from.typographyBasePx, to.typographyBasePx, t),
     typographyScale: lerp(from.typographyScale, to.typographyScale, t),
     breathPeriodMs: lerp(from.breathPeriodMs, to.breathPeriodMs, t),
+    coherenceDh: lerp(from.coherenceDh, to.coherenceDh, t),
+    coherenceAmplitude: lerp(from.coherenceAmplitude, to.coherenceAmplitude, t),
+    coherencePhase: lerp(from.coherencePhase, to.coherencePhase, t),
+    hScore: lerp(from.hScore, to.hScore, t),
   };
 }
 
@@ -165,19 +177,29 @@ export class BrowserSurfaceAdapter {
     const basePx = `${state.typographyBasePx.toFixed(1)}px`;
     const breathMs = `${state.breathPeriodMs.toFixed(0)}ms`;
     const breathSec = (state.breathPeriodMs / 1000).toFixed(2);
+    const dh = state.coherenceDh.toFixed(3);
+    const amplitude = state.coherenceAmplitude.toFixed(3);
+    const phase = state.coherencePhase.toFixed(3);
+    const hScore = state.hScore.toFixed(3);
 
     // Fast hash — skip DOM write if nothing changed
-    const hash = `${coherence}|${processCount}|${basePx}|${breathMs}`;
+    const hash = `${coherence}|${processCount}|${basePx}|${breathMs}|${dh}|${phase}`;
     if (hash === this.lastCssHash) return;
     this.lastCssHash = hash;
 
-    // Single batched DOM write via cssText on a dedicated style element
+    // Batched DOM write — coherence wave variables for CSS consumption
     const root = document.documentElement;
     root.style.setProperty("--kernel-coherence", coherence);
     root.style.setProperty("--kernel-process-count", processCount);
     root.style.setProperty("--kernel-base-px", basePx);
     root.style.setProperty("--kernel-breath-period", breathMs);
     root.style.setProperty("--kernel-breath-seconds", breathSec);
+    // QSP Phase 1: Coherence gradient CSS variables
+    root.style.setProperty("--coherence-dh", dh);
+    root.style.setProperty("--h-score", hScore);
+    root.style.setProperty("--h-gradient", dh);
+    root.style.setProperty("--h-phase", phase);
+    root.style.setProperty("--h-amplitude", amplitude);
   }
 
   /** Get interpolation diagnostics for DevTools */

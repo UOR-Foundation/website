@@ -34,6 +34,7 @@ export {
 
 // React Hooks
 export { useKernel, type UseKernelResult } from "./hooks/useKernel";
+export { useCoherence, type CoherenceState } from "./hooks/useCoherence";
 
 // Runtime (legacy v2 bridge)
 export {

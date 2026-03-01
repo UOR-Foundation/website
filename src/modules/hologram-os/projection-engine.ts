@@ -99,6 +99,46 @@ export interface AttentionProjection {
   readonly aiResponseStyle: "concise" | "exploratory";
 }
 
+/**
+ * Aperture Wave — continuous wave function replacing discrete aperture.
+ * Backward compatible: aperture = wave.center for existing consumers.
+ */
+export interface ApertureWave {
+  readonly center: number;
+  readonly width: number;
+  readonly phase: number;
+}
+
+/**
+ * Coherence Gradient — continuous ∂H/∂t signal.
+ * Foundation for wave-coherence UI and future quantum-AI attention.
+ */
+export interface CoherenceGradient {
+  /** Smoothed ∂H/∂t: positive = rising, negative = decaying */
+  readonly dh: number;
+  /** Magnitude of change (always positive) */
+  readonly amplitude: number;
+  /** Normalized phase in breathing cycle (0–1) */
+  readonly phase: number;
+  /** Per-field coherence contributions (sum ≈ meanH) */
+  readonly contributions: {
+    readonly panels: number;
+    readonly processes: number;
+    readonly attention: number;
+  };
+}
+
+/**
+ * Agent frame source — when a child kernel contributes to the composite frame.
+ */
+export interface AgentFrameSource {
+  readonly agentId: string;
+  readonly kernelRole: string;
+  readonly hScore: number;
+  readonly frameCount: number;
+  readonly idle: boolean;
+}
+
 /** A single projection frame — one tick's worth of visual state */
 export interface ProjectionFrame {
   readonly tick: number;
@@ -110,16 +150,16 @@ export interface ProjectionFrame {
   readonly observables: readonly ObservableProjection[];
   readonly typography: TypographyProjection;
   readonly palette: PaletteProjection;
-  /** Attention/focus state — derived from kernel aperture register */
   readonly attention: AttentionProjection;
-  /** System-wide coherence: are we serving the human well? */
+  readonly apertureWave: ApertureWave;
   readonly systemCoherence: {
     readonly meanH: number;
     readonly zone: CoherenceZone;
     readonly processCount: number;
   };
-  /** Breathing rhythm — derived breath period in ms for ambient animations */
+  readonly coherenceGradient: CoherenceGradient;
   readonly breathPeriodMs: number;
+  readonly agentSources: readonly AgentFrameSource[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -312,7 +352,6 @@ export class KernelProjector {
   private displayGpuTier: "low" | "mid" | "high" = "mid";
 
   // ── Structural Sharing Cache ──────────────────────────────────────────
-  // Cached sub-frame arrays — reused when unchanged to prevent React re-renders
   private cachedPanels: readonly PanelProjection[] = [];
   private cachedProcesses: readonly ProcessProjection[] = [];
   private cachedObservables: readonly ObservableProjection[] = [];
@@ -320,6 +359,18 @@ export class KernelProjector {
   private cachedPalette: PaletteProjection | null = null;
   private cachedAttention: AttentionProjection | null = null;
   private cachedCoherence: ProjectionFrame["systemCoherence"] | null = null;
+  private cachedApertureWave: ApertureWave | null = null;
+  private cachedGradient: CoherenceGradient | null = null;
+
+  // ── Coherence Gradient State (∂H/∂t) ─────────────────────────────────
+  // EMA of H-score deltas — zero-allocation hot path
+  private prevMeanH = 0.5;
+  private gradientEma = 0;
+  private static readonly GRADIENT_ALPHA = 0.15; // EMA smoothing factor
+  private apertureWavePhase = 0;
+
+  // ── Agent Projection Sources ──────────────────────────────────────────
+  private agentSources: AgentFrameSource[] = [];
 
   // Frame-diff fingerprint — skip emission when frame is identical
   private lastFrameFingerprint = "";
@@ -362,7 +413,7 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}`;
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}`;
   }
 
   /**
@@ -1050,19 +1101,18 @@ export class KernelProjector {
     const br = this.config.breathingRhythm;
     const dt = br.lastEventAt > 0 ? now - br.lastEventAt : 0;
 
-    // Update intervals window (only track meaningful gaps, 50ms–10s)
-    let intervals = [...br.intervals];
+    // Ring buffer: overwrite oldest entry instead of slice (zero GC)
+    let intervals = br.intervals;
     if (dt > 50 && dt < 10000) {
-      intervals.push(dt);
-      if (intervals.length > KernelProjector.BREATH_WINDOW) {
-        intervals = intervals.slice(-KernelProjector.BREATH_WINDOW);
+      if (intervals.length >= KernelProjector.BREATH_WINDOW) {
+        // Ring buffer overwrite — shift is O(n) but window is only 20
+        intervals = [...intervals.slice(1), dt];
+      } else {
+        intervals = [...intervals, dt];
       }
     }
 
-    // Compute breath period: median of intervals, clamped
     const breathPeriodMs = this.computeBreathPeriod(intervals);
-
-    // Dwell = time since last burst (gap > threshold = new breath cycle)
     const dwellMs = dt > KernelProjector.DWELL_THRESHOLD_MS ? dt : br.dwellMs;
 
     this.config.breathingRhythm = {
@@ -1240,6 +1290,43 @@ export class KernelProjector {
       };
     }
 
+    // ── Coherence Gradient (∂H/∂t) — zero-allocation EMA ─────────────
+    const delta = meanH - this.prevMeanH;
+    this.gradientEma = this.gradientEma * (1 - KernelProjector.GRADIENT_ALPHA) + delta * KernelProjector.GRADIENT_ALPHA;
+    this.prevMeanH = meanH;
+
+    // Compute breathing phase from kernel tick
+    const breathMs = this.config.breathingRhythm.breathPeriodMs;
+    const breathPhase = breathMs > 0 ? ((this.tickCount * (this.activeTickMs || 16)) % breathMs) / breathMs : 0;
+
+    // Coherence contributions (conservation: sum ≈ meanH)
+    const panelH = this.cachedPanels.length > 0
+      ? this.cachedPanels.reduce((s, p) => s + p.hScore, 0) / this.cachedPanels.length
+      : 0;
+    const processH = meanH;
+    const attentionH = aperture * 0.3;
+    const totalContrib = panelH + processH + attentionH || 1;
+
+    this.cachedGradient = {
+      dh: Math.max(-1, Math.min(1, this.gradientEma * 10)), // scale to [-1,1]
+      amplitude: Math.abs(this.gradientEma * 10),
+      phase: breathPhase,
+      contributions: {
+        panels: (panelH / totalContrib) * meanH,
+        processes: (processH / totalContrib) * meanH,
+        attention: (attentionH / totalContrib) * meanH,
+      },
+    };
+
+    // ── Aperture Wave — continuous wave function ────────────────────────
+    this.apertureWavePhase = (this.apertureWavePhase + 0.02 * (1 + Math.abs(this.gradientEma * 5))) % (2 * Math.PI);
+    const waveWidth = 0.3 + 0.2 * Math.sin(this.apertureWavePhase);
+    this.cachedApertureWave = {
+      center: aperture,
+      width: Math.max(0.1, Math.min(0.9, waveWidth)),
+      phase: this.apertureWavePhase,
+    };
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1251,8 +1338,11 @@ export class KernelProjector {
       typography: this.cachedTypography,
       palette: this.cachedPalette,
       attention: this.cachedAttention,
+      apertureWave: this.cachedApertureWave,
       systemCoherence: this.cachedCoherence,
+      coherenceGradient: this.cachedGradient,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
+      agentSources: this.agentSources,
     };
   }
 

@@ -154,6 +154,21 @@ export type {
 } from "./q-secure-mesh";
 
 // Q-Simulator: Full statevector quantum simulator
+// Q-CoherenceHead: Quantum-AI readiness interface
+export { HammingCoherenceHead, MultiHeadCoherence } from "./q-coherence-head";
+export type {
+  CoherenceVector,
+  CoherenceHead,
+  CoherenceContext,
+} from "./q-coherence-head";
+
+// Q-Agent-Projection: Agent ↔ Frame bridge
+export { AgentProjector, ProjectionCompositor } from "./q-agent-projection";
+export type {
+  AgentProjectionFrame,
+} from "./q-agent-projection";
+
+// Q-Simulator: Full statevector quantum simulator
 export {
   createState,
   applyOp,
