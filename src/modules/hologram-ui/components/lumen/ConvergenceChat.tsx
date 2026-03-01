@@ -24,8 +24,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { Send, ArrowUp } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2 } from "lucide-react";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
+import { useConvergenceVoice, type VoicePhase } from "@/modules/hologram-ui/hooks/useConvergenceVoice";
 import {
   buildScaffold,
   processResponse,
@@ -82,6 +83,34 @@ export default function ConvergenceChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const coherence = useCoherence();
+  const [voiceMode, setVoiceMode] = useState(false);
+
+  // ── Voice integration ────────────────────────────────────────────
+  const voice = useConvergenceVoice({
+    onTranscript: (text) => {
+      setInput(text);
+      // Auto-converge after voice input
+      setTimeout(() => converge(text), 300);
+    },
+    onSpeakingStart: () => {},
+    onSpeakingEnd: () => {},
+  });
+
+  // Auto-speak responses when in voice mode
+  const lastExchangeRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!voiceMode || voice.phase === "speaking") return;
+    const lastEx = exchanges[exchanges.length - 1];
+    if (
+      lastEx &&
+      lastEx.understanding &&
+      lastEx.pipeline.stage === "converged" &&
+      lastEx.id !== lastExchangeRef.current
+    ) {
+      lastExchangeRef.current = lastEx.id;
+      voice.speak(lastEx.understanding);
+    }
+  }, [exchanges, voiceMode, voice.phase]);
 
   // ── Time-aware greeting ──────────────────────────────────────────
   useEffect(() => {
@@ -457,7 +486,7 @@ export default function ConvergenceChat() {
                 style={{ color: "hsla(30, 10%, 55%, 0.5)" }}
               >
                 This is not a prompt. It's a thought. Express it naturally —
-                the reasoning will converge around it.
+                type or {voice.isSttAvailable ? "speak" : "write"}, and the reasoning will converge around it.
               </p>
             </motion.div>
           )}
@@ -722,22 +751,114 @@ export default function ConvergenceChat() {
                 </span>
               </div>
 
-              <button
-                onClick={() => converge(input)}
-                disabled={!input.trim() || isConverging}
-                className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 disabled:opacity-10"
-                style={{
-                  background: input.trim()
-                    ? "hsla(38, 40%, 50%, 0.15)"
-                    : "transparent",
-                  color: input.trim()
-                    ? "hsl(38, 50%, 65%)"
-                    : "hsla(30, 10%, 40%, 0.3)",
-                }}
-              >
-                <ArrowUp className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Voice orb / mic button */}
+                {voice.isSttAvailable && (
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      if (!voiceMode) {
+                        setVoiceMode(true);
+                        voice.startListening();
+                      } else {
+                        voice.toggle();
+                      }
+                    }}
+                    disabled={isConverging && voice.phase !== "speaking"}
+                    className="relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 group"
+                    style={{
+                      background: voice.phase === "listening"
+                        ? "hsla(38, 50%, 50%, 0.2)"
+                        : voice.phase === "speaking"
+                          ? "hsla(200, 40%, 50%, 0.15)"
+                          : voiceMode
+                            ? "hsla(38, 30%, 40%, 0.1)"
+                            : "transparent",
+                      color: voice.phase === "listening"
+                        ? "hsl(38, 55%, 65%)"
+                        : voice.phase === "speaking"
+                          ? "hsl(200, 45%, 65%)"
+                          : voiceMode
+                            ? "hsl(38, 35%, 60%)"
+                            : "hsla(30, 10%, 45%, 0.4)",
+                    }}
+                    title={voice.phase === "listening" ? "Stop listening" : "Voice input"}
+                  >
+                    {/* Breathing ring when listening */}
+                    {voice.phase === "listening" && (
+                      <motion.div
+                        className="absolute inset-0 rounded-xl"
+                        animate={{
+                          scale: [1, 1.3 + voice.level * 0.5, 1],
+                          opacity: [0.4, 0.1, 0.4],
+                        }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                        style={{
+                          border: "1px solid hsla(38, 50%, 55%, 0.3)",
+                        }}
+                      />
+                    )}
+                    {/* Speaking wave */}
+                    {voice.phase === "speaking" && (
+                      <motion.div
+                        className="absolute inset-0 rounded-xl"
+                        animate={{
+                          scale: [1, 1.15, 1],
+                          opacity: [0.3, 0.15, 0.3],
+                        }}
+                        transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                        style={{
+                          border: "1px solid hsla(200, 45%, 55%, 0.25)",
+                        }}
+                      />
+                    )}
+                    {voice.phase === "speaking" ? (
+                      <Volume2 className="w-4 h-4" />
+                    ) : voice.phase === "listening" ? (
+                      <Mic className="w-4 h-4" />
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                  </button>
+                )}
+
+                {/* Send button */}
+                <button
+                  onClick={() => converge(input)}
+                  disabled={!input.trim() || isConverging}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 disabled:opacity-10"
+                  style={{
+                    background: input.trim()
+                      ? "hsla(38, 40%, 50%, 0.15)"
+                      : "transparent",
+                    color: input.trim()
+                      ? "hsl(38, 50%, 65%)"
+                      : "hsla(30, 10%, 40%, 0.3)",
+                  }}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+
+            {/* Voice transcript overlay */}
+            <AnimatePresence>
+              {voice.phase === "listening" && voice.transcript && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="px-4 pb-2"
+                >
+                  <p
+                    className="text-[13px] italic"
+                    style={{ color: "hsla(38, 30%, 65%, 0.6)" }}
+                  >
+                    {voice.transcript}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Subtle attribution */}
