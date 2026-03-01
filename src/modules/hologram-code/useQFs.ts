@@ -8,7 +8,7 @@
  * **Persistence**: The Merkle DAG is serialized to localStorage
  * after every mutation (debounced 500ms), so the workspace
  * survives page reloads. Authenticated users also get cloud
- * sync via the Data Bank.
+ * sync via the Data Bank (AES-256-GCM encrypted).
  *
  * Every file operation flows through Q-FS:
  *   open file  → qfs.readFile(path)  → Uint8Array → string
@@ -25,12 +25,18 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { QFs, type InodeType } from "@/hologram/kernel/q-fs";
 import { QMmu } from "@/hologram/kernel/q-mmu";
 import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
+import { supabase } from "@/integrations/supabase/client";
+import { writeSlot, readSlot } from "@/modules/data-bank/lib/sync";
 
 // ── Persistence constants ───────────────────────────────────────────────────
 const QFS_STORAGE_KEY = "uor:qfs:workspace";
 const QFS_VERSION_KEY = "uor:qfs:version";
+const QFS_CLOUD_SLOT = "qfs-workspace";
 const PERSIST_DEBOUNCE_MS = 500;
+const CLOUD_SYNC_DEBOUNCE_MS = 3000;
 const QFS_SCHEMA_VERSION = 1;
+
+export type CloudSyncState = "idle" | "syncing" | "synced" | "error" | "offline";
 
 interface PersistedWorkspace {
   version: number;
@@ -116,6 +122,14 @@ export interface QFsHandle {
   ready: boolean;
   /** Clear persisted data and re-seed default workspace files */
   resetWorkspace: () => void;
+  /** Cloud sync state for authenticated users */
+  cloudSync: CloudSyncState;
+  /** Push workspace to cloud (Data Bank) */
+  syncToCloud: () => Promise<void>;
+  /** Pull workspace from cloud (Data Bank) */
+  syncFromCloud: () => Promise<boolean>;
+  /** Last cloud sync timestamp */
+  lastCloudSync: string | null;
 }
 
 // ── Workspace seed files ────────────────────────────────────────────────────
@@ -593,26 +607,19 @@ export function useQFs(): QFsHandle {
   const [version, setVersion] = useState(0);
   const [ready, setReady] = useState(false);
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cloudSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cloudSync, setCloudSync] = useState<CloudSyncState>("offline");
+  const [lastCloudSync, setLastCloudSync] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
 
-  // Initialize Q-FS once — restore from persistence or seed defaults
-  useEffect(() => {
-    if (fsRef.current) return;
-
+  // ── Helper: rebuild Q-FS from a file list ─────────────────────────────────
+  const rebuildFs = useCallback((files: { path: string; content: string }[]) => {
     const mmu = new QMmu();
     const fs = new QFs(mmu);
     fs.mkfs(0);
 
-    // Try to restore from persisted workspace first
-    const persisted = loadFromLocal();
-    const filesToLoad = persisted ? persisted.files : SEED_FILES.map(s => ({ path: s.path, content: s.content }));
-
-    if (persisted) {
-      console.log(`⬡ Q-FS: Restoring ${persisted.files.length} files from persistent storage (saved ${persisted.savedAt})`);
-    }
-
-    for (const seed of filesToLoad) {
+    for (const seed of files) {
       const { dirs, file } = parsePath(seed.path);
-
       let currentPath = "/";
       for (const dir of dirs) {
         const existing = fs.ls(currentPath);
@@ -621,38 +628,170 @@ export function useQFs(): QFsHandle {
         }
         currentPath = currentPath === "/" ? `/${dir}` : `${currentPath}/${dir}`;
       }
-
       if (file) {
-        const content = encodeUtf8(seed.content);
-        fs.createFile(currentPath, file, content, 0);
+        fs.createFile(currentPath, file, encodeUtf8(seed.content), 0);
       }
     }
 
     fsRef.current = fs;
     mmuRef.current = mmu;
+    return fs;
+  }, []);
+
+  // ── Initialize Q-FS once — restore from persistence or seed defaults ──────
+  useEffect(() => {
+    if (fsRef.current) return;
+
+    const persisted = loadFromLocal();
+    const filesToLoad = persisted ? persisted.files : SEED_FILES.map(s => ({ path: s.path, content: s.content }));
+
+    if (persisted) {
+      console.log(`⬡ Q-FS: Restoring ${persisted.files.length} files from persistent storage (saved ${persisted.savedAt})`);
+    }
+
+    rebuildFs(filesToLoad);
     setReady(true);
     setVersion(1);
 
-    // If this was a fresh seed (no persistence), persist immediately
     if (!persisted) {
-      persistToLocal(fs);
+      persistToLocal(fsRef.current!);
+    }
+  }, [rebuildFs]);
+
+  // ── Track auth state for cloud sync ───────────────────────────────────────
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        userIdRef.current = session.user.id;
+        setCloudSync("idle");
+      } else {
+        userIdRef.current = null;
+        setCloudSync("offline");
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) {
+        userIdRef.current = session.user.id;
+        setCloudSync("idle");
+      } else {
+        userIdRef.current = null;
+        setCloudSync("offline");
+      }
+    });
+
+    return () => { subscription.unsubscribe(); };
+  }, []);
+
+  // ── On first ready + authenticated: try cloud restore ─────────────────────
+  useEffect(() => {
+    if (!ready || !userIdRef.current) return;
+
+    const userId = userIdRef.current;
+    (async () => {
+      try {
+        const slot = await readSlot(userId, QFS_CLOUD_SLOT);
+        if (!slot) {
+          // No cloud workspace — push current local state
+          console.log("⬡ Q-FS Cloud: No cloud workspace found, will push local on next save");
+          return;
+        }
+
+        const cloudWs: PersistedWorkspace = JSON.parse(slot.value);
+        const local = loadFromLocal();
+
+        // Cloud is newer → restore from cloud
+        if (!local || new Date(cloudWs.savedAt) > new Date(local.savedAt)) {
+          console.log(`⬡ Q-FS Cloud: Restoring ${cloudWs.files.length} files from Data Bank`);
+          rebuildFs(cloudWs.files);
+          persistToLocal(fsRef.current!);
+          setVersion(v => v + 1);
+          setLastCloudSync(cloudWs.savedAt);
+          setCloudSync("synced");
+        } else {
+          setCloudSync("idle");
+        }
+      } catch (e) {
+        console.warn("⬡ Q-FS Cloud: Failed to check cloud workspace:", e);
+        setCloudSync("error");
+      }
+    })();
+  }, [ready, cloudSync === "idle" ? "check" : "skip", rebuildFs]);
+
+  // ── Cloud sync: push to Data Bank ─────────────────────────────────────────
+  const syncToCloud = useCallback(async () => {
+    const userId = userIdRef.current;
+    if (!userId || !fsRef.current) return;
+
+    setCloudSync("syncing");
+    try {
+      const snapshot = serializeFs(fsRef.current);
+      await writeSlot(userId, QFS_CLOUD_SLOT, JSON.stringify(snapshot));
+      setLastCloudSync(snapshot.savedAt);
+      setCloudSync("synced");
+      console.log(`⬡ Q-FS Cloud: Pushed ${snapshot.files.length} files to Data Bank`);
+    } catch (e) {
+      console.warn("⬡ Q-FS Cloud: Push failed:", e);
+      setCloudSync("error");
     }
   }, []);
 
-  // Debounced persistence after every mutation
+  // ── Cloud sync: pull from Data Bank ───────────────────────────────────────
+  const syncFromCloud = useCallback(async (): Promise<boolean> => {
+    const userId = userIdRef.current;
+    if (!userId) return false;
+
+    setCloudSync("syncing");
+    try {
+      const slot = await readSlot(userId, QFS_CLOUD_SLOT);
+      if (!slot) {
+        setCloudSync("idle");
+        return false;
+      }
+
+      const cloudWs: PersistedWorkspace = JSON.parse(slot.value);
+      rebuildFs(cloudWs.files);
+      persistToLocal(fsRef.current!);
+      setVersion(v => v + 1);
+      setLastCloudSync(cloudWs.savedAt);
+      setCloudSync("synced");
+      console.log(`⬡ Q-FS Cloud: Pulled ${cloudWs.files.length} files from Data Bank`);
+      return true;
+    } catch (e) {
+      console.warn("⬡ Q-FS Cloud: Pull failed:", e);
+      setCloudSync("error");
+      return false;
+    }
+  }, [rebuildFs]);
+
+  // ── Debounced cloud push after local persist ──────────────────────────────
+  const scheduleCloudSync = useCallback(() => {
+    if (!userIdRef.current) return;
+    if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current);
+    cloudSyncTimerRef.current = setTimeout(() => {
+      syncToCloud();
+    }, CLOUD_SYNC_DEBOUNCE_MS);
+  }, [syncToCloud]);
+
+  // ── Debounced persistence after every mutation ────────────────────────────
   const schedulePersist = useCallback(() => {
     if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
     persistTimerRef.current = setTimeout(() => {
       if (fsRef.current) {
         persistToLocal(fsRef.current);
+        scheduleCloudSync();
       }
     }, PERSIST_DEBOUNCE_MS);
-  }, []);
+  }, [scheduleCloudSync]);
 
-  // Cleanup timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current);
       // Final flush on unmount
       if (fsRef.current) persistToLocal(fsRef.current);
     };
@@ -724,36 +863,23 @@ export function useQFs(): QFsHandle {
   const rootCid = fsRef.current?.getRootCid() ?? null;
 
   const resetWorkspace = useCallback(() => {
-    // Clear persisted data
     localStorage.removeItem(QFS_STORAGE_KEY);
     localStorage.removeItem(QFS_VERSION_KEY);
 
-    // Re-initialize Q-FS with seed files
-    const mmu = new QMmu();
-    const fs = new QFs(mmu);
-    fs.mkfs(0);
-
-    for (const seed of SEED_FILES) {
-      const { dirs, file } = parsePath(seed.path);
-      let currentPath = "/";
-      for (const dir of dirs) {
-        const existing = fs.ls(currentPath);
-        if (!existing.some(e => e.name === dir && e.type === "directory")) {
-          fs.mkdir(currentPath, dir, 0);
-        }
-        currentPath = currentPath === "/" ? `/${dir}` : `${currentPath}/${dir}`;
-      }
-      if (file) {
-        fs.createFile(currentPath, file, encodeUtf8(seed.content), 0);
-      }
-    }
-
-    fsRef.current = fs;
-    mmuRef.current = mmu;
-    persistToLocal(fs);
+    rebuildFs(SEED_FILES.map(s => ({ path: s.path, content: s.content })));
+    persistToLocal(fsRef.current!);
     setVersion(v => v + 1);
     console.log("⬡ Q-FS: Workspace reset to defaults");
-  }, []);
 
-  return { tree, readFile, writeFile, createFile, mkdir, rm, stats, rootCid, ready, resetWorkspace };
+    // Also push reset state to cloud
+    if (userIdRef.current) {
+      scheduleCloudSync();
+    }
+  }, [rebuildFs, scheduleCloudSync]);
+
+  return {
+    tree, readFile, writeFile, createFile, mkdir, rm,
+    stats, rootCid, ready, resetWorkspace,
+    cloudSync, syncToCloud, syncFromCloud, lastCloudSync,
+  };
 }

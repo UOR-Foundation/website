@@ -31,8 +31,9 @@ import {
   FileText, FileCode, FileJson, FileType, Image as ImageIcon,
   Folder, FolderOpen, SplitSquareVertical, Play, RotateCcw,
   Command, HardDrive, FilePlus, FolderPlus, Trash2,
+  Cloud, CloudOff, CloudUpload, CloudDownload, Loader2, Check, AlertTriangle,
 } from "lucide-react";
-import { useQFs, type FSNode } from "./useQFs";
+import { useQFs, type FSNode, type CloudSyncState } from "./useQFs";
 import { useMonacoLsp } from "./useMonacoLsp";
 import { resolveLanguage, getRegistrySummary } from "./language-projections";
 
@@ -472,6 +473,10 @@ const StatusBar = memo(function StatusBar({
   errorCount = 0,
   warningCount = 0,
   onProblemsClick,
+  cloudSync,
+  lastCloudSync,
+  onSyncToCloud,
+  onSyncFromCloud,
 }: {
   line: number;
   col: number;
@@ -481,7 +486,35 @@ const StatusBar = memo(function StatusBar({
   errorCount?: number;
   warningCount?: number;
   onProblemsClick?: () => void;
+  cloudSync: CloudSyncState;
+  lastCloudSync: string | null;
+  onSyncToCloud: () => void;
+  onSyncFromCloud: () => void;
 }) {
+  const syncIcon = {
+    idle: <Cloud size={11} />,
+    syncing: <Loader2 size={11} className="animate-spin" />,
+    synced: <Check size={11} />,
+    error: <AlertTriangle size={11} />,
+    offline: <CloudOff size={11} />,
+  }[cloudSync];
+
+  const syncLabel = {
+    idle: "Cloud: Ready",
+    syncing: "Syncing…",
+    synced: lastCloudSync ? `Synced ${new Date(lastCloudSync).toLocaleTimeString()}` : "Synced",
+    error: "Sync Error",
+    offline: "Local Only",
+  }[cloudSync];
+
+  const syncColor = {
+    idle: C.statusText,
+    syncing: "#3794ff",
+    synced: "#89d185",
+    error: "#f14c4c",
+    offline: C.statusText,
+  }[cloudSync];
+
   return (
     <div
       className="flex items-center justify-between shrink-0 select-none"
@@ -522,6 +555,29 @@ const StatusBar = memo(function StatusBar({
             <span>{fsStats.totalFiles} files · {(fsStats.totalBytes / 1024).toFixed(1)}KB · {fsStats.journalLength} ops</span>
           </span>
         )}
+        {/* Cloud Sync Indicator */}
+        <span className="flex items-center gap-1" style={{ color: syncColor }} title={syncLabel}>
+          {syncIcon}
+          <span>{syncLabel}</span>
+          {cloudSync !== "offline" && cloudSync !== "syncing" && (
+            <>
+              <button
+                className="hover:bg-white/10 rounded p-0.5 ml-0.5"
+                onClick={onSyncToCloud}
+                title="Push to Cloud"
+              >
+                <CloudUpload size={11} />
+              </button>
+              <button
+                className="hover:bg-white/10 rounded p-0.5"
+                onClick={onSyncFromCloud}
+                title="Pull from Cloud"
+              >
+                <CloudDownload size={11} />
+              </button>
+            </>
+          )}
+        </span>
       </div>
       <div className="flex items-center gap-4">
         <span>Ln {line}, Col {col}</span>
@@ -1653,6 +1709,10 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         errorCount={(() => { let c = 0; diagnostics.forEach(d => { c += d.filter(e => e.severity === "error").length; }); return c; })()}
         warningCount={(() => { let c = 0; diagnostics.forEach(d => { c += d.filter(e => e.severity === "warning").length; }); return c; })()}
         onProblemsClick={() => { setTerminalVisible(true); setBottomTab("problems"); }}
+        cloudSync={qfs.cloudSync}
+        lastCloudSync={qfs.lastCloudSync}
+        onSyncToCloud={() => qfs.syncToCloud()}
+        onSyncFromCloud={() => qfs.syncFromCloud()}
       />
 
       {/* ── Command Palette Overlay ───────────────────────────────── */}
