@@ -32,11 +32,13 @@ import {
 } from "@/modules/ring-core/reward-circuit";
 import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
 import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/stabilizer-engine";
+import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/circuit-compiler";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
 export type { RewardProjection, RewardSignal, EpistemicGrade, CoherenceSnapshot as RewardCoherenceSnapshot };
 export type { StabilizerProjection };
+export type { CircuitProjection };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -171,6 +173,7 @@ export interface ProjectionFrame {
   readonly coherenceGradient: CoherenceGradient;
   readonly rewardProjection: RewardProjection;
   readonly stabilizerProjection: StabilizerProjection;
+  readonly circuitProjection: CircuitProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -344,9 +347,11 @@ export class KernelProjector {
   private prescience = getPrescienceEngine();
   private surface: HolographicSurface = getHolographicSurface();
   private stabilizer: StabilizerEngine = getStabilizerEngine();
+  private circuitEngine: CircuitEngine = getCircuitEngine();
   private rewardAccumulator = new RewardAccumulator();
   private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
   private cachedStabilizerProjection: StabilizerProjection = { syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0, totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0 };
+  private cachedCircuitProjection: CircuitProjection = { active: false, gateCount: 0, gatesCompleted: 0, gatesRunning: 0, meanH: 0, converged: false, currentGate: "", progress: 0, gateCounts: {} as CircuitProjection["gateCounts"], totalExecutions: 0, latencyEma: 0 };
   private lastCoherenceSnapshot: CoherenceSnapshot = { h: 0.5, dh: 0, phi: 0.5, zone: "STABLE", epistemicGrade: "D" };
   private widgetRegistry = new Map<WidgetType, number>(); // widget → PID
   private bootEvents: BootEvent[] = [];
@@ -1383,6 +1388,9 @@ export class KernelProjector {
       this.surface.absorbHumanSignal(corrMag, `stabilizer:${stabResult.correction.label}`);
     }
 
+    // ── Circuit Engine — the neuro-symbolic compiler ────────────────────
+    this.cachedCircuitProjection = this.circuitEngine.project();
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1399,6 +1407,7 @@ export class KernelProjector {
       coherenceGradient: this.cachedGradient,
       rewardProjection: this.cachedRewardProjection,
       stabilizerProjection: this.cachedStabilizerProjection,
+      circuitProjection: this.cachedCircuitProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
@@ -1507,6 +1516,42 @@ export class KernelProjector {
   /** Get the reward accumulator stats (for dev tools). */
   getRewardStats() {
     return this.rewardAccumulator.stats();
+  }
+
+  // ── Circuit Compiler — Neuro-Symbolic Pipeline Syscalls ──────────────
+
+  /**
+   * Compile a query into a circuit graph and execute its symbolic gates.
+   * This is the primary entry point for reasoning through the circuit compiler.
+   */
+  compileAndExecute(query: string, quantum: number = 0): CircuitProjection {
+    this.circuitEngine.load(query, quantum);
+    const result = this.circuitEngine.execute();
+
+    if (result) {
+      // Feed circuit coherence into reward circuit
+      this.recordReward("circuit", result.overallGrade, `circuit:${result.circuitId}`);
+
+      kernelLog("syscall", "circuit-compiler", `compiled ${result.gateResults.length} gates, grade=${result.overallGrade}, latency=${result.totalLatencyMs.toFixed(1)}ms`, {
+        circuitId: result.circuitId,
+        gates: result.gateResults.length,
+        meanH: result.meanH,
+        converged: result.converged,
+      });
+    }
+
+    this.markDirty();
+    return this.circuitEngine.project();
+  }
+
+  /** Get the current circuit projection */
+  getCircuitProjection(): CircuitProjection {
+    return this.cachedCircuitProjection;
+  }
+
+  /** Get the circuit engine for advanced control */
+  getCircuitEngine(): CircuitEngine {
+    return this.circuitEngine;
   }
 
   // ── Persistence ──────────────────────────────────────────────────────
