@@ -12,11 +12,11 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 import { getBrowserAdapter } from "@/modules/hologram-os/surface-adapter";
 import { KP } from "@/modules/hologram-os/kernel-palette";
-import { IconX, IconCpu, IconActivity, IconSettings, IconList } from "@tabler/icons-react";
+import { IconX, IconCpu, IconActivity, IconSettings, IconList, IconDeviceDesktop } from "@tabler/icons-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
-type Tab = "processes" | "performance" | "system" | "details";
+type Tab = "processes" | "performance" | "system" | "details" | "hardware";
 
 interface Stats {
   tickCount: number;
@@ -344,12 +344,324 @@ function DetailsTab({ stats }: { stats: Stats }) {
   );
 }
 
+// ─── Hardware Tab ───────────────────────────────────────────────────────
+
+interface HardwareInfo {
+  // Platform
+  platform: string;
+  userAgent: string;
+  language: string;
+  cookiesEnabled: boolean;
+  onLine: boolean;
+  // CPU
+  logicalCores: number;
+  // Memory
+  deviceMemoryGb: number | null;
+  jsHeapUsedMb: number | null;
+  jsHeapTotalMb: number | null;
+  jsHeapLimitMb: number | null;
+  // Display
+  screenWidth: number;
+  screenHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  dpr: number;
+  colorDepth: number;
+  colorGamut: string;
+  hdr: boolean;
+  refreshHz: number;
+  orientation: string;
+  touchPoints: number;
+  // GPU
+  gpuRenderer: string;
+  gpuVendor: string;
+  gpuTier: string;
+  // Storage
+  storageEstimate: { usage: number; quota: number } | null;
+  // Network
+  connectionType: string | null;
+  downlinkMbps: number | null;
+  rtt: number | null;
+  saveData: boolean;
+  // Battery
+  batteryLevel: number | null;
+  batteryCharging: boolean | null;
+  // Media
+  audioOutputs: number;
+  videoInputs: number;
+}
+
+function useHardwareInfo(visible: boolean): HardwareInfo | null {
+  const [info, setInfo] = useState<HardwareInfo | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const detect = async () => {
+      const nav = navigator as any;
+
+      // GPU detection via WebGL
+      let gpuRenderer = "Unknown";
+      let gpuVendor = "Unknown";
+      try {
+        const canvas = document.createElement("canvas");
+        const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+        if (gl) {
+          const ext = (gl as WebGLRenderingContext).getExtension("WEBGL_debug_renderer_info");
+          if (ext) {
+            gpuRenderer = (gl as WebGLRenderingContext).getParameter(ext.UNMASKED_RENDERER_WEBGL) || "Unknown";
+            gpuVendor = (gl as WebGLRenderingContext).getParameter(ext.UNMASKED_VENDOR_WEBGL) || "Unknown";
+          }
+        }
+      } catch {}
+
+      // Color gamut
+      let colorGamut = "sRGB";
+      if (window.matchMedia("(color-gamut: p3)").matches) colorGamut = "Display P3";
+      else if (window.matchMedia("(color-gamut: rec2020)").matches) colorGamut = "Rec. 2020";
+      const hdr = window.matchMedia("(dynamic-range: high)").matches;
+
+      // Storage
+      let storageEstimate: { usage: number; quota: number } | null = null;
+      try {
+        if (nav.storage?.estimate) {
+          const est = await nav.storage.estimate();
+          storageEstimate = { usage: est.usage || 0, quota: est.quota || 0 };
+        }
+      } catch {}
+
+      // Network
+      const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+
+      // Battery
+      let batteryLevel: number | null = null;
+      let batteryCharging: boolean | null = null;
+      try {
+        if (nav.getBattery) {
+          const batt = await nav.getBattery();
+          batteryLevel = batt.level;
+          batteryCharging = batt.charging;
+        }
+      } catch {}
+
+      // Media devices count
+      let audioOutputs = 0;
+      let videoInputs = 0;
+      try {
+        if (nav.mediaDevices?.enumerateDevices) {
+          const devices = await nav.mediaDevices.enumerateDevices();
+          audioOutputs = devices.filter((d: any) => d.kind === "audiooutput").length;
+          videoInputs = devices.filter((d: any) => d.kind === "videoinput").length;
+        }
+      } catch {}
+
+      // JS heap
+      const perfMem = (performance as any).memory;
+
+      // Orientation
+      const orientation = screen.orientation?.type?.replace("-primary", "").replace("-secondary", " (flipped)") || "unknown";
+
+      // Refresh Hz from projector
+      const dc = getKernelProjector().getDisplayCapabilities() || { refreshHz: 60, dpr: window.devicePixelRatio, gpuTier: "unknown" };
+
+      // Platform string
+      let platform = nav.userAgentData?.platform || nav.platform || "Unknown";
+      if (nav.userAgentData?.brands) {
+        const brand = nav.userAgentData.brands.find((b: any) => !b.brand.includes("Not"));
+        if (brand) platform += ` · ${brand.brand} ${brand.version}`;
+      }
+
+      setInfo({
+        platform,
+        userAgent: nav.userAgent || "",
+        language: nav.language || "en",
+        cookiesEnabled: nav.cookieEnabled ?? true,
+        onLine: nav.onLine ?? true,
+        logicalCores: nav.hardwareConcurrency || 1,
+        deviceMemoryGb: nav.deviceMemory ?? null,
+        jsHeapUsedMb: perfMem ? perfMem.usedJSHeapSize / (1024 * 1024) : null,
+        jsHeapTotalMb: perfMem ? perfMem.totalJSHeapSize / (1024 * 1024) : null,
+        jsHeapLimitMb: perfMem ? perfMem.jsHeapSizeLimit / (1024 * 1024) : null,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        dpr: dc.dpr,
+        colorDepth: screen.colorDepth,
+        colorGamut,
+        hdr,
+        refreshHz: dc.refreshHz,
+        orientation,
+        touchPoints: nav.maxTouchPoints || 0,
+        gpuRenderer,
+        gpuVendor,
+        gpuTier: dc.gpuTier,
+        storageEstimate,
+        connectionType: conn?.effectiveType ?? null,
+        downlinkMbps: conn?.downlink ?? null,
+        rtt: conn?.rtt ?? null,
+        saveData: conn?.saveData ?? false,
+        batteryLevel,
+        batteryCharging,
+        audioOutputs,
+        videoInputs,
+      });
+    };
+
+    detect();
+    // Poll live metrics (heap, battery, network) every 2s
+    intervalRef.current = setInterval(detect, 2000);
+    return () => clearInterval(intervalRef.current);
+  }, [visible]);
+
+  return info;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function HardwareTab({ stats }: { stats: Stats }) {
+  const hw = useHardwareInfo(true);
+  if (!hw) return <div className="text-center py-8 text-sm" style={{ color: KP.dim }}>Detecting hardware…</div>;
+
+  const gpuTierLabel = hw.gpuTier === "high" ? "High" : hw.gpuTier === "mid" ? "Medium" : "Basic";
+  const gpuTierColor = hw.gpuTier === "high" ? KP.green : hw.gpuTier === "mid" ? KP.gold : KP.dim;
+
+  return (
+    <div className="space-y-4">
+      {/* Device overview cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Cores</div>
+          <div className="text-lg font-semibold tabular-nums" style={{ color: KP.text }}>{hw.logicalCores}</div>
+          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>logical threads</div>
+        </div>
+        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Memory</div>
+          <div className="text-lg font-semibold tabular-nums" style={{ color: hw.deviceMemoryGb ? KP.text : KP.dim }}>
+            {hw.deviceMemoryGb ? `${hw.deviceMemoryGb} GB` : "—"}
+          </div>
+          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>device RAM</div>
+        </div>
+        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Display</div>
+          <div className="text-lg font-semibold tabular-nums" style={{ color: KP.purple }}>
+            {hw.refreshHz} Hz
+          </div>
+          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>{hw.dpr.toFixed(1)}x · {hw.screenWidth}×{hw.screenHeight}</div>
+        </div>
+      </div>
+
+      {/* GPU */}
+      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+        <SectionLabel>Graphics Processing Unit</SectionLabel>
+        <div className="rounded-lg p-3 space-y-2" style={{ background: "hsla(30, 8%, 14%, 0.4)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-xs break-all leading-relaxed" style={{ color: KP.text }}>{hw.gpuRenderer}</div>
+          <div className="text-[11px]" style={{ color: KP.muted }}>{hw.gpuVendor}</div>
+          <div className="flex gap-4 text-[11px] pt-1" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
+            <span style={{ color: KP.dim }}>Quality tier: <span style={{ color: gpuTierColor }}>{gpuTierLabel}</span></span>
+            <span style={{ color: KP.dim }}>Color: <span style={{ color: KP.muted }}>{hw.colorGamut}</span></span>
+            {hw.hdr && <span style={{ color: KP.purple }}>HDR ✓</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Live Memory */}
+      {hw.jsHeapUsedMb !== null && (
+        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+          <SectionLabel>JavaScript Memory (Live)</SectionLabel>
+          <UsageBar
+            value={hw.jsHeapUsedMb}
+            max={hw.jsHeapLimitMb || 4096}
+            color="hsl(38, 60%, 55%)"
+            label={`Heap: ${hw.jsHeapUsedMb.toFixed(0)} MB / ${hw.jsHeapLimitMb?.toFixed(0)} MB limit`}
+          />
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-2">
+            <MetricRow label="Used" value={`${hw.jsHeapUsedMb.toFixed(1)} MB`} accent={KP.gold} />
+            <MetricRow label="Allocated" value={`${hw.jsHeapTotalMb?.toFixed(1)} MB`} />
+          </div>
+        </div>
+      )}
+
+      {/* Storage */}
+      {hw.storageEstimate && (
+        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+          <SectionLabel>Local Storage</SectionLabel>
+          <UsageBar
+            value={hw.storageEstimate.usage}
+            max={hw.storageEstimate.quota}
+            color="hsl(200, 50%, 55%)"
+            label={`${formatBytes(hw.storageEstimate.usage)} / ${formatBytes(hw.storageEstimate.quota)}`}
+          />
+        </div>
+      )}
+
+      {/* Display details */}
+      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+        <SectionLabel>Display &amp; Input</SectionLabel>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+          <MetricRow label="Screen resolution" value={`${hw.screenWidth} × ${hw.screenHeight}`} />
+          <MetricRow label="Viewport" value={`${hw.viewportWidth} × ${hw.viewportHeight}`} />
+          <MetricRow label="Color depth" value={`${hw.colorDepth}-bit`} />
+          <MetricRow label="Orientation" value={hw.orientation} />
+          <MetricRow label="Touch support" value={hw.touchPoints > 0 ? `${hw.touchPoints} points` : "None"} accent={hw.touchPoints > 0 ? KP.green : KP.dim} />
+          <MetricRow label="Cameras" value={hw.videoInputs > 0 ? `${hw.videoInputs}` : "None"} />
+          <MetricRow label="Audio outputs" value={`${hw.audioOutputs}`} />
+        </div>
+      </div>
+
+      {/* Network */}
+      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+        <SectionLabel>Network</SectionLabel>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+          <MetricRow label="Status" value={hw.onLine ? "Online" : "Offline"} accent={hw.onLine ? KP.green : KP.red} />
+          {hw.connectionType && <MetricRow label="Connection" value={hw.connectionType.toUpperCase()} accent={hw.connectionType === "4g" ? KP.green : KP.gold} />}
+          {hw.downlinkMbps !== null && <MetricRow label="Downlink" value={`${hw.downlinkMbps} Mbps`} accent={hw.downlinkMbps >= 10 ? KP.green : KP.gold} />}
+          {hw.rtt !== null && <MetricRow label="Latency (RTT)" value={`${hw.rtt} ms`} accent={hw.rtt <= 50 ? KP.green : hw.rtt <= 150 ? KP.gold : KP.red} />}
+          {hw.saveData && <MetricRow label="Data saver" value="Enabled" accent={KP.gold} />}
+        </div>
+      </div>
+
+      {/* Battery */}
+      {hw.batteryLevel !== null && (
+        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+          <SectionLabel>Battery</SectionLabel>
+          <UsageBar
+            value={hw.batteryLevel * 100}
+            max={100}
+            color={hw.batteryLevel > 0.2 ? "hsl(152, 44%, 50%)" : "hsl(0, 65%, 55%)"}
+            label={`${(hw.batteryLevel * 100).toFixed(0)}%${hw.batteryCharging ? " · Charging" : ""}`}
+          />
+        </div>
+      )}
+
+      {/* Platform */}
+      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
+        <SectionLabel>Platform</SectionLabel>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+          <MetricRow label="Platform" value={hw.platform} />
+          <MetricRow label="Language" value={hw.language} />
+        </div>
+        <div className="mt-2 text-[10px] break-all leading-relaxed rounded p-2" style={{ color: KP.dim, background: "hsla(30, 8%, 14%, 0.4)" }}>
+          {hw.userAgent}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ─────────────────────────────────────────────────────
 
 const TAB_META: { id: Tab; label: string; icon: typeof IconCpu }[] = [
   { id: "processes", label: "Processes", icon: IconList },
   { id: "performance", label: "Performance", icon: IconActivity },
   { id: "system", label: "System", icon: IconCpu },
+  { id: "hardware", label: "Hardware", icon: IconDeviceDesktop },
   { id: "details", label: "Details", icon: IconSettings },
 ];
 
@@ -482,6 +794,7 @@ export default function KernelDevTools() {
           {tab === "processes" && <ProcessesTab stats={stats} />}
           {tab === "performance" && <PerformanceTab stats={stats} />}
           {tab === "system" && <SystemTab stats={stats} />}
+          {tab === "hardware" && <HardwareTab stats={stats} />}
           {tab === "details" && <DetailsTab stats={stats} />}
         </div>
 
