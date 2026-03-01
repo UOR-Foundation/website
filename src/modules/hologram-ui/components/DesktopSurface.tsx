@@ -304,8 +304,17 @@ export default function DesktopSurface({
         </div>
       )}
 
-      {/* ── Chrome: Focus Toggle — ALWAYS visible, never removable ── */}
-      <div className="absolute right-20 top-1/2 -translate-y-1/2 z-[400]">
+      {/* ── Chrome: Focus Toggle — fades in focus mode, reveals on hover ── */}
+      <div
+        className="absolute right-20 top-1/2 -translate-y-1/2 z-[400] group/focus-toggle"
+        style={{
+          opacity: isFocus ? 0.08 : 1,
+          pointerEvents: "auto",
+          transition: "opacity 600ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+        onMouseEnter={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+        onMouseLeave={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.08"; }}
+      >
         <AttentionToggle bgMode={mode} />
       </div>
 
