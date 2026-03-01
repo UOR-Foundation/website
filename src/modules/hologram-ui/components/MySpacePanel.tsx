@@ -207,15 +207,18 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   // ── Auth Handlers ──
 
   const handleGoogleSignIn = useCallback(async () => {
+    // Store return path before OAuth redirect (non-iframe flow navigates away)
+    sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/hologram-os",
+      redirect_uri: window.location.origin,
     });
     if (error) toast.error("Could not sign in with Google");
   }, []);
 
   const handleAppleSignIn = useCallback(async () => {
+    sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error } = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin + "/hologram-os",
+      redirect_uri: window.location.origin,
     });
     if (error) toast.error("Could not sign in with Apple");
   }, []);
