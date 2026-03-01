@@ -1,20 +1,2 @@
-/**
- * MessengerProjection — Keep-alive messenger panel with hover preloading
- */
-
-import ProjectionShell from "./ProjectionShell";
-import HologramMessenger from "./HologramMessenger";
-
-interface MessengerProjectionProps {
-  open: boolean;
-  preload?: boolean;
-  onClose: () => void;
-}
-
-export default function MessengerProjection({ open, preload, onClose }: MessengerProjectionProps) {
-  return (
-    <ProjectionShell open={open} preload={preload} onClose={onClose} id="messenger">
-      <HologramMessenger onClose={onClose} />
-    </ProjectionShell>
-  );
-}
+// Re-export from projections/ for backward compatibility
+export { default } from "./projections/MessengerProjection";
