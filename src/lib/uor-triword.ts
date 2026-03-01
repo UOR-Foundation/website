@@ -69,7 +69,7 @@
  * ✓ URDNA2015 — genesis object canonicalized via standard pipeline
  *
  * @module uor-triword
- * @version 1.0.0
+ * @version 2.0.0
  * @see UOR Triality — Observer / Observable / Context
  * @see UOR Content Registry — self-certification
  */
@@ -86,27 +86,49 @@
 export const TRIWORD_GENESIS = {
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
   "@type": "uor:TriwordGenesis",
-  "uor:version": "1.0.0",
+  "uor:version": "2.0.0",
   "uor:description":
     "Triword encoding maps UOR canonical IDs to human-readable " +
     "three-word labels aligned with the framework's triality principle. " +
     "Each word corresponds to one of three fundamental dimensions: " +
-    "Observer (entity), Observable (property), Context (frame).",
+    "Observer (entity), Observable (quality), Context (realm). " +
+    "The vocabulary is curated to evoke a sense of wholeness and " +
+    "connectedness across all ecosystems — earth, sea, forest, sky, " +
+    "space, and humanity — embedding the feeling of unity with self, " +
+    "planet, nature, and cosmos. Words are simple, memorable, and " +
+    "phonetically distinct for use as shareable addresses.",
+  "uor:genesis": {
+    "uor:description":
+      "The coordinate origin [0,0,0] resolves to Theos · Logos · Sophia — " +
+      "the philosophical seed from which all addresses radiate outward.",
+    "uor:observer_0": "theos",
+    "uor:observable_0": "logos",
+    "uor:context_0": "sophia",
+  },
   "uor:triality": {
     "uor:observer": {
-      "uor:description": "Nouns representing entities, subjects, and agents",
+      "uor:description":
+        "Beings and forces across all ecosystems — creatures of land, sea, " +
+        "and sky; plants, minerals, and cosmic entities; human archetypes " +
+        "and natural forces. The living, breathing 'who' of every object.",
       "uor:cardinality": 256,
       "uor:bitWidth": 8,
       "uor:hashByteIndex": 0,
     },
     "uor:observable": {
-      "uor:description": "Adjectives representing properties, qualities, and states",
+      "uor:description":
+        "Qualities of connection — how things feel, move, and relate. " +
+        "Textures, temperatures, light states, and elemental properties " +
+        "that evoke harmony, equilibrium, and the sensory experience of nature.",
       "uor:cardinality": 256,
       "uor:bitWidth": 8,
       "uor:hashByteIndex": 1,
     },
     "uor:context": {
-      "uor:description": "Nouns representing frames, settings, and environments",
+      "uor:description":
+        "Realms and habitats spanning every ecosystem — terrestrial " +
+        "landscapes, ocean depths, forest canopies, atmospheric heights, " +
+        "and cosmic expanses. The grounded, spatial 'where' of every observation.",
       "uor:cardinality": 256,
       "uor:bitWidth": 8,
       "uor:hashByteIndex": 2,
@@ -120,135 +142,142 @@ export const TRIWORD_GENESIS = {
     "uor:hashSource": "first 3 bytes of SHA-256 from canonical ID",
   },
   "uor:selectionCriteria": [
-    "Common, unambiguous English words",
+    "Common, unambiguous English words known to a 10-year-old",
     "No homophones (to/too/two excluded)",
-    "No offensive or culturally sensitive terms",
+    "No offensive, religious, or culturally sensitive terms",
     "Phonetically distinct to avoid confusion",
     "Minimum 3 characters, maximum 8 characters",
-    "Sorted alphabetically for deterministic indexing",
+    "Easy to spell, pronounce, and remember",
+    "Index 0 reserved for genesis kernel (Theos / Logos / Sophia)",
+    "Remaining 255 entries sorted alphabetically",
     "Each word unique within its dimension",
+    "Words evoke connectedness across earth, sea, forest, sky, space, and humanity",
+    "Neutral tone invoking unity, equilibrium, harmony, and peace",
   ],
 } as const;
 
 // ── Wordlists — Triality-Aligned Dimensions ─────────────────────────────────
 //
 // OBSERVER (Dimension 1) — 256 nouns
-// Natural entities: creatures, plants, minerals, celestial bodies, elements.
-// The living, breathing "who" of every object in the universe.
+// Beings and forces across all ecosystems: creatures of land, sea, and sky;
+// plants and minerals; cosmic entities; human archetypes and natural forces.
+// Index 0 = "theos" (genesis kernel). Remaining 255 sorted alphabetically.
 //
 const OBSERVERS: readonly string[] = [
-  "acorn","adder","agate","alder","aloe","amber","ant","ape",
-  "ash","aspen","aster","aura","badger","bark","basalt","bat",
-  "bear","bee","berry","birch","bison","bloom","boa","bone",
-  "bough","bramble","brier","bronze","brook","bull","bunting","burr",
-  "canary","carp","cedar","chalk","cicada","clam","clay","clover",
-  "cloud","coal","cobra","cobalt","cod","colt","comet","condor",
-  "copper","coral","crane","crest","crow","crystal","cub","cypress",
-  "daisy","dawn","deer","dew","doe","dove","drake","dune",
-  "dust","eagle","eel","elder","elk","elm","ember","ewe",
-  "falcon","fawn","feather","fern","fig","finch","flame","flint",
-  "flora","fog","fossil","fox","frog","frost","gale","garnet",
-  "gem","ginger","glacier","gold","goose","granite","grove","grouse",
-  "gull","hart","hawk","hazel","heath","hedge","hen","heron",
-  "hind","holly","hornet","hound","ice","iris","iron","ivy",
-  "jade","jasper","jay","juniper","kelp","kite","lake","larch",
-  "lark","laurel","lava","leaf","lichen","light","lily","linden",
-  "lion","lotus","lynx","maple","marble","mare","marsh","marten",
-  "meadow","merlin","mica","mink","mint","mist","mole","moon",
-  "moose","moss","moth","myrtle","nebula","nest","nettle","newt",
-  "nova","oak","oat","onyx","opal","orchid","osprey","otter",
-  "owl","oyster","palm","pearl","pebble","peony","perch","petal",
-  "pewter","pine","plover","plume","pollen","pond","poplar","poppy",
-  "puma","quail","quartz","rain","ram","raven","ray","reed",
-  "reef","river","robin","rock","roe","root","rose","rowan",
-  "ruby","rush","rye","sage","salmon","salt","sand","sapphire",
-  "seal","seed","shadow","shell","silk","silver","slate","snail",
-  "snow","sorrel","spark","sparrow","spider","spore","spring","spruce",
-  "stag","star","stone","stork","storm","stream","sumac","sun",
-  "swan","swift","tern","thorn","thrush","thyme","tide","toad",
-  "topaz","trout","tulip","turtle","vapor","vine","violet","viper",
-  "vole","wave","weasel","web","whale","whin","willow","wind",
-  "wolf","worm","wren","yarrow","yew","zenith","zephyr","zinnia",
+  "theos","acorn","alder","alpaca","amber","ant","ape","ash",
+  "aspen","aster","aurora","badger","bass","bat","bear","beaver",
+  "bee","berry","birch","bird","bison","bloom","boa","bobcat",
+  "bone","bough","brook","bud","bull","bunting","calf","camel",
+  "canary","caribou","carp","cat","cedar","cheetah","chick","child",
+  "cicada","clam","cloud","clover","cobra","cod","colt","comet",
+  "condor","copper","coral","cougar","cow","coyote","crab","crane",
+  "cricket","crow","crystal","cub","cuckoo","cypress","dahlia","daisy",
+  "dawn","deer","dew","doe","dolphin","dove","drake","dune",
+  "dusk","dust","eagle","eel","egret","elder","elk","elm",
+  "ember","ewe","falcon","fawn","feather","fern","ferret","fig",
+  "finch","firefly","flint","flora","flower","foal","fog","fox",
+  "frog","frost","gale","gazelle","gem","ginger","glow","goat",
+  "goose","grove","gull","hare","hart","hawk","hazel","heart",
+  "hedge","hen","heron","hive","holly","horse","hound","human",
+  "ibis","iris","ivy","jay","juniper","kelp","kite","koala",
+  "lamb","larch","lark","leaf","lemur","lichen","light","lily",
+  "linden","lion","llama","lotus","lynx","magpie","mantis","maple",
+  "mare","marten","meadow","minnow","mist","mole","moon","moose",
+  "moss","moth","mouse","mule","myrtle","nest","nettle","newt",
+  "oak","oat","olive","orca","orchid","oriole","osprey","otter",
+  "owl","ox","oyster","palm","panda","panther","parrot","pearl",
+  "pelican","penguin","petal","pine","plover","plume","pollen","pony",
+  "poppy","puma","pup","quail","rabbit","rain","ram","raven",
+  "ray","reed","robin","root","rose","rowan","rush","rye",
+  "sage","salmon","sand","seal","seed","shadow","sheep","shell",
+  "silk","snail","snake","snow","soul","sparrow","spider","spore",
+  "sprout","stag","star","stork","stream","sun","swan","swift",
+  "tern","thistle","thorn","thrush","tide","tiger","toad","tree",
+  "trout","tulip","turtle","vapor","vine","violet","viper","vole",
+  "walrus","wasp","wave","weasel","web","whale","whelk","willow",
+  "wind","wolf","worm","wren","yak","yarrow","yew","zebra",
 ] as const;
 
 //
 // OBSERVABLE (Dimension 2) — 256 adjectives
-// Natural qualities: textures, temperatures, light states, elemental properties.
-// The sensory, felt "how" of every observation.
+// Qualities of connection: textures, temperatures, light states, movements,
+// and elemental properties that evoke harmony, equilibrium, and the sensory
+// experience of nature. Index 0 = "logos" (genesis kernel).
 //
 const OBSERVABLES: readonly string[] = [
-  "aglow","alive","alpine","amber","ancient","aqua","arctic","ardent",
-  "arid","ashen","astral","auburn","autumn","azure","bare","basalt",
-  "bitter","blazing","bleak","bold","boreal","bound","brazen","bright",
-  "brisk","broad","broken","bronze","calm","carved","chaste","chill",
+  "logos","aglow","alive","alpine","amber","ancient","aqua","arctic",
+  "ardent","arid","ashen","astral","auburn","autumn","azure","bare",
+  "basalt","bitter","blazing","bleak","bold","boreal","bound","brazen",
+  "bright","brisk","broad","bronze","calm","carved","chaste","chill",
   "clear","close","clouded","coarse","cobalt","cold","cool","copper",
-  "coral","cosmic","crisp","crude","dappled","dark","dawning","deep",
-  "dense","dewy","dim","distant","divine","dormant","dry","dusky",
-  "earthen","eastern","edged","elder","emerald","empty","endless","eroded",
-  "eternal","fading","faint","fallen","far","feral","ferric","fertile",
-  "fierce","fiery","fine","firm","first","fleet","floral","flowing",
-  "fluid","foggy","forged","fossil","fragile","free","fresh","frigid",
-  "frozen","full","fused","gentle","gilded","glacial","gleaming","golden",
-  "gnarled","granite","grave","great","green","grey","growing","hale",
-  "hardy","hazy","heavy","hewn","hidden","high","hoary","hollow",
-  "honest","hushed","icy","idle","immense","inborn","inland","inner",
-  "iron","ivory","jade","keen","kind","known","laced","large",
-  "last","late","lean","leafy","level","light","limber","liquid",
-  "living","lone","long","lost","lucid","lunar","lush","major",
-  "marine","matte","meek","mellow","mere","mild","mineral","minor",
-  "misty","molten","moonlit","moral","mossy","muted","narrow","native",
-  "near","neat","new","nimble","noble","north","noted","novel",
-  "numb","ochre","old","olive","only","opal","open","outer",
-  "oval","own","pale","past","peak","pearly","plain","pliant",
-  "polar","primal","prime","prior","proud","pure","quaint","quick",
-  "quiet","radiant","rapid","rare","raw","ready","real","rich",
-  "rigid","risen","robust","rooted","rough","round","royal","rugged",
-  "rural","russet","rustic","sacred","safe","scarce","second","serene",
-  "shaded","sharp","sheer","short","silent","silken","silver","simple",
-  "sleek","slim","slow","small","smooth","snowy","solar","solid",
-  "south","spare","sparse","stable","stark","steep","still","sunlit",
-  "supple","swift","tawny","tender","thick","thin","tidal","twilit",
-  "vast","verdant","vernal","violet","vital","vivid","warm","waning",
+  "coral","cosmic","crisp","dappled","dark","dawning","deep","dense",
+  "dewy","dim","distant","dormant","dry","dusky","earthen","eastern",
+  "edged","elder","emerald","empty","endless","eroded","eternal","even",
+  "fading","faint","fallen","far","feral","ferric","fertile","fierce",
+  "fiery","fine","firm","first","fleet","floral","flowing","fluid",
+  "foggy","forged","fossil","fragile","free","fresh","frigid","frozen",
+  "full","fused","gentle","gilded","glacial","gleaming","golden","gnarled",
+  "granite","great","green","grey","growing","hale","hardy","hazy",
+  "heavy","hewn","hidden","high","hollow","honest","humble","hushed",
+  "icy","immense","inborn","inland","inner","iron","ivory","jade",
+  "keen","kind","known","laced","large","last","late","lean",
+  "leafy","level","light","limber","liquid","living","lone","long",
+  "lost","lucid","lunar","lush","major","marine","matte","meek",
+  "mellow","mere","mild","mineral","minor","misty","molten","moonlit",
+  "mossy","muted","narrow","native","near","neat","new","nimble",
+  "noble","north","noted","novel","ochre","old","olive","only",
+  "opal","open","outer","oval","own","pale","past","peak",
+  "pearly","plain","pliant","polar","primal","prime","prior","proud",
+  "pure","quaint","quick","quiet","radiant","rapid","rare","raw",
+  "ready","real","rich","rigid","risen","robust","rooted","rough",
+  "round","royal","rugged","rural","russet","rustic","safe","scarce",
+  "serene","shaded","shared","sharp","sheer","short","silent","silken",
+  "silver","simple","sleek","slim","slow","small","smooth","snowy",
+  "solar","solid","south","spare","sparse","stable","stark","steady",
+  "steep","still","strong","sunlit","supple","swift","tawny","tender",
+  "thick","thin","tidal","twilit","vast","verdant","vernal","violet",
+  "vital","vivid","warm","whole","wide","wild","woven","young",
 ] as const;
 
 //
 // CONTEXT (Dimension 3) — 256 nouns
-// Natural landscapes: terrains, habitats, waters, geological formations.
-// The grounded, spatial "where" of every observation.
+// Realms and habitats spanning every ecosystem: terrestrial landscapes,
+// ocean depths, forest canopies, atmospheric heights, and cosmic expanses.
+// Index 0 = "sophia" (genesis kernel).
 //
 const CONTEXTS: readonly string[] = [
-  "abbey","abyss","acre","alcove","alley","alpine","arbor","arcade",
+  "sophia","abyss","acre","alcove","alley","alpine","arbor","arcade",
   "arch","atoll","attic","bank","bar","barn","basin","bay",
   "bayou","beach","bench","bend","bluff","bog","border","bower",
-  "brae","bridge","brink","burrow","butte","cabin","cairn","camp",
-  "canal","canyon","cape","castle","cavern","cave","cellar","channel",
-  "chapel","chase","chasm","circle","cirque","city","cliff","close",
-  "coast","col","colony","common","copse","corner","corral","court",
-  "cove","cradle","crag","creek","crest","croft","cross","crypt",
-  "dale","deck","dell","delta","den","depot","desert","ditch",
-  "dock","domain","downs","draw","drift","drive","east","edge",
-  "estuary","expanse","eyrie","falls","farm","fen","fence","ferry",
-  "field","fjord","flat","flats","fold","ford","forest","forge",
-  "forum","fringe","garden","gap","garret","gate","glade","glen",
-  "gorge","grange","gravel","green","grotto","grove","gulch","gully",
-  "hamlet","harbor","haven","hearth","heath","height","helm","hill",
-  "hold","hollow","holt","house","hub","inlet","island","isle",
-  "jetty","keep","knob","knoll","lagoon","lake","landing","lane",
-  "lawn","lea","ledge","level","loch","lodge","loft","lowland",
-  "manor","margin","market","marsh","meadow","mere","mesa","mill",
-  "moor","mount","narrows","niche","nook","north","notch","oasis",
-  "outcrop","outlet","palace","parish","park","parlor","pass","patch",
-  "patio","peak","perch","pier","pitch","plain","plinth","plaza",
-  "point","pool","porch","portal","port","post","prairie","priory",
-  "quarry","quay","ranch","range","ravine","reach","reef","ridge",
-  "ring","rise","river","road","rock","room","route","row",
-  "ruins","run","saddle","school","shelf","shore","shrine","sierra",
-  "slope","sound","south","span","spring","spur","square","stand",
-  "station","strait","strand","summit","swamp","terrace","thicket","throne",
-  "tier","tower","trail","trench","tundra","tunnel","vale","valley",
-  "vault","verge","villa","village","vista","walk","ward","wash",
-  "watch","water","well","west","wharf","wild","wing","wood",
-  "works","yard","clearing","zone","dune","rapids","steppe","highland",
+  "bridge","brink","burrow","butte","cabin","cairn","camp","canal",
+  "canopy","canyon","cape","castle","cavern","cave","cellar","channel",
+  "chase","chasm","circle","cirque","city","clearing","cliff","close",
+  "coast","colony","common","copse","corner","corral","cosmos","court",
+  "cove","cradle","crag","creek","crest","croft","cross","current",
+  "dale","deck","dell","delta","den","depths","depot","desert",
+  "ditch","dock","domain","downs","draw","drift","drive","dune",
+  "earth","east","edge","estuary","expanse","falls","farm","fen",
+  "fence","ferry","field","fjord","flat","flats","fold","ford",
+  "forest","forge","forum","fringe","garden","gap","gate","glade",
+  "glen","gorge","grange","gravel","green","grotto","grove","gulch",
+  "gully","hamlet","harbor","haven","hearth","heath","height","helm",
+  "highland","hill","hold","hollow","holt","horizon","house","hub",
+  "inlet","island","isle","jetty","keep","knob","knoll","lagoon",
+  "lake","landing","lane","lawn","lea","ledge","level","loch",
+  "lodge","loft","lowland","manor","margin","market","marsh","meadow",
+  "mere","mesa","mill","moor","mount","narrows","niche","nook",
+  "north","notch","oasis","orbit","outcrop","outlet","palace","parish",
+  "park","pass","patch","patio","peak","perch","pier","pitch",
+  "plain","plinth","plaza","point","pool","porch","portal","port",
+  "post","prairie","quarry","quay","ranch","range","rapids","ravine",
+  "reach","reef","ridge","ring","rise","river","road","rock",
+  "room","route","row","ruins","run","saddle","savanna","school",
+  "shelf","shelter","shore","sierra","sky","slope","sound","south",
+  "span","spring","spur","square","stand","station","steppe","strait",
+  "strand","summit","swamp","terrace","thicket","tier","tower","trail",
+  "trench","tundra","tunnel","vale","valley","vault","verge","villa",
+  "village","vista","walk","ward","wash","watch","water","well",
+  "west","wharf","wild","wing","wood","works","yard","zone",
 ] as const;
 
 // ── Self-Verification ───────────────────────────────────────────────────────
