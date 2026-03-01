@@ -21,7 +21,7 @@ import { useDraggablePosition } from "../hooks/useDraggablePosition";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "./widgets/WeatherWidget";
 import ProductivityTimerWidget from "./widgets/ProductivityTimerWidget";
-import AmbientMoodWidget from "./widgets/AmbientMoodWidget";
+import BreathingWidget from "./widgets/BreathingWidget";
 
 import { SNAP_ANCHOR_EVENT } from "../hooks/useDraggablePosition";
 // VoiceOrb lifted to page level for single-instance efficiency
@@ -330,7 +330,7 @@ export default function DesktopSurface({
         onDoubleClick={handleDoubleClick("frame-widget", frameWidgetDrag)}
         {...frameWidgetDrag.handlers}
       >
-        {mode === "image" && <AmbientMoodWidget />}
+        {mode === "image" && <BreathingWidget />}
         {mode === "white" && <ProductivityTimerWidget />}
         {mode === "dark" && <WeatherWidget />}
       </div>
