@@ -7,11 +7,11 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { boot } from "@/modules/qkernel/q-boot";
-import { QSched } from "@/modules/qkernel/q-sched";
-import { QIpc } from "@/modules/qkernel/q-ipc";
-import { QNet } from "@/modules/qkernel/q-net";
-import { QAgent, QAgentMesh, type ResourceEnvelope } from "@/modules/qkernel/q-agent";
+import { boot } from "@/hologram/kernel/q-boot";
+import { QSched } from "@/hologram/kernel/q-sched";
+import { QIpc } from "@/hologram/kernel/q-ipc";
+import { QNet } from "@/hologram/kernel/q-net";
+import { QAgent, QAgentMesh, type ResourceEnvelope } from "@/hologram/kernel/q-agent";
 
 // ── Helper: set up shared infrastructure ─────────────────────────
 async function createMesh() {

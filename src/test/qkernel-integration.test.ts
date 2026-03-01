@@ -7,15 +7,15 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { boot } from "@/modules/qkernel/q-boot";
-import { QMmu } from "@/modules/qkernel/q-mmu";
-import { QSched } from "@/modules/qkernel/q-sched";
-import { QSyscall } from "@/modules/qkernel/q-syscall";
-import { QFs } from "@/modules/qkernel/q-fs";
-import { QEcc, CODE_K } from "@/modules/qkernel/q-ecc";
-import { QIsa } from "@/modules/qkernel/q-isa";
-import { QNet } from "@/modules/qkernel/q-net";
-import { QIpc } from "@/modules/qkernel/q-ipc";
+import { boot } from "@/hologram/kernel/q-boot";
+import { QMmu } from "@/hologram/kernel/q-mmu";
+import { QSched } from "@/hologram/kernel/q-sched";
+import { QSyscall } from "@/hologram/kernel/q-syscall";
+import { QFs } from "@/hologram/kernel/q-fs";
+import { QEcc, CODE_K } from "@/hologram/kernel/q-ecc";
+import { QIsa } from "@/hologram/kernel/q-isa";
+import { QNet } from "@/hologram/kernel/q-net";
+import { QIpc } from "@/hologram/kernel/q-ipc";
 
 describe("Q-Kernel: Full System Boot & Integration", () => {
   it("boots and exercises all 8 subsystems end-to-end", async () => {

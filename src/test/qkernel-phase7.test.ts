@@ -6,14 +6,14 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QEcc } from "@/modules/qkernel/q-ecc";
+import { QEcc } from "@/hologram/kernel/q-ecc";
 import {
   QSecurity,
   RING_NAMES,
   type IsolationRing,
   type CapabilityToken,
   type SecurityOp,
-} from "@/modules/qkernel/q-security";
+} from "@/hologram/kernel/q-security";
 
 describe("Q-Security — Phase 7: Capability-Based Access Control", () => {
   let ecc: QEcc;

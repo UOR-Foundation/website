@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootEvent } from "../projection-engine";
-import type { BootStage } from "@/modules/qkernel/q-boot";
+import type { BootStage } from "@/hologram/kernel/q-boot";
 
 interface KernelBootProps {
   events: BootEvent[];
