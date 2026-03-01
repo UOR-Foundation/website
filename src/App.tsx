@@ -92,7 +92,7 @@ const AppConsoleDetail = lazy(() => import("@/modules/console/pages/AppConsoleDe
 const AppConsoleDiscovery = lazy(() => import("@/modules/console/pages/AppConsoleDiscovery"));
 const ConsoleYourSpace = lazy(() => import("@/modules/console/pages/ConsoleYourSpace"));
 const AppConsoleRunner = lazy(() => import("@/modules/console/pages/AppConsoleRunner"));
-const PrimeHubPage = lazy(() => import("@/modules/hologram-prime/pages/PrimeHubPage"));
+const PrimeHubPage = lazy(() => import("@/modules/hologram-ui/pages/PrimeHubPage"));
 const DevelopersPage = lazy(() => import("@/modules/developers/pages/DevelopersPage"));
 const DnsDocPage = lazy(() => import("@/modules/developers/pages/DnsDocPage"));
 const ComputeDocPage = lazy(() => import("@/modules/developers/pages/ComputeDocPage"));
