@@ -22,6 +22,7 @@ import {
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import KnowledgeGraphInput from "./KnowledgeGraphInput";
+import KnowledgeGraphExplorer from "./KnowledgeGraphExplorer";
 
 interface ResonancePanelProps {
   open: boolean;
@@ -246,6 +247,9 @@ export default function ResonancePanel({ open, onClose }: ResonancePanelProps) {
                   ))}
                 </div>
               </section>
+
+              {/* Knowledge Graph Explorer */}
+              {userId && <KnowledgeGraphExplorer userId={userId} />}
 
               {/* Knowledge Graph Input */}
               {userId && <KnowledgeGraphInput userId={userId} />}
