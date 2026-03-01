@@ -1691,7 +1691,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
   const showProgress = !isUser && content.length > 400;
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.5s_ease-out_both]`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-[message-fade-in_0.6s_cubic-bezier(0.22,1,0.36,1)_both]`}>
       <div className="flex gap-2 max-w-[92%] relative">
         {/* Reading progress — subtle left-edge line for long assistant messages */}
         {showProgress && (
