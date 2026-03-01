@@ -309,7 +309,7 @@ export default function BreathingWidget() {
           }}
         />
 
-        {/* Center orb + countdown */}
+        {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ textRendering: "geometricPrecision" }}>
           {running ? (
             <div
@@ -337,31 +337,35 @@ export default function BreathingWidget() {
               </span>
             </div>
           ) : (
-            <svg width="10" height="12" viewBox="0 0 10 12" fill="none" style={{ opacity: 0.5 }}>
-              <path d="M1 1L9 6L1 11V1Z" fill="hsla(38, 15%, 85%, 0.8)" />
-            </svg>
+            <span
+              className="tracking-[0.2em] uppercase leading-none"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: "8px",
+                fontWeight: 500,
+                color: "hsla(38, 15%, 85%, 0.65)",
+              }}
+            >
+              Breathe
+            </span>
           )}
         </div>
       </div>
 
-      {/* Label — matches DayProgressRing exactly: tracking, size, weight, font */}
-      <span
-        className="tracking-[0.35em] uppercase text-center transition-all duration-300 cursor-pointer"
-        onClick={(e) => { e.stopPropagation(); if (!running) cycleNext(); }}
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "10px",
-          color: running
-            ? phase.color.replace("0.85)", "0.9)")
-            : "hsla(38, 15%, 85%, 0.75)",
-          fontWeight: 500,
-        }}
-      >
-        {running ? phase.label : "Breathe"}
-      </span>
-
-      {/* Mode switcher — always visible below label when not running */}
-      {!running && (
+      {/* Label area — mode switcher when idle, phase label when running */}
+      {running ? (
+        <span
+          className="tracking-[0.35em] uppercase text-center transition-all duration-300"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "10px",
+            color: phase.color.replace("0.85)", "0.9)"),
+            fontWeight: 500,
+          }}
+        >
+          {phase.label}
+        </span>
+      ) : (
         <div className="flex items-center gap-3">
           {PROTOCOLS.map((p, i) => {
             const active = i === selectedIdx;
