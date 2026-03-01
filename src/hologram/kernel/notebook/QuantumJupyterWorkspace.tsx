@@ -433,6 +433,138 @@ function CellOutputView({ output }: { output: CellOutput }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Precision Input Projection — per-line virtualized editor
+   ═══════════════════════════════════════════════════════════════════════════
+   Renders each line as its own <input>, giving pixel-perfect cursor alignment,
+   crisp row targeting, and smooth performance even for 1000+ line cells.
+   Only the visible viewport window is rendered (virtualized).
+*/
+
+const PIP_LINE_H = 23;
+const PIP_OVERSCAN = 8;
+
+function PrecisionInputEditor({
+  source, onChange, cellId, onRun, onEdit, showLineNumbers, t,
+}: {
+  source: string;
+  onChange: (s: string) => void;
+  cellId: string;
+  onRun: () => void;
+  onEdit: () => void;
+  showLineNumbers: boolean;
+  t: NbColors;
+}) {
+  const lines = useMemo(() => source.split("\n"), [source]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewH, setViewH] = useState(400);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => { for (const e of entries) setViewH(e.contentRect.height); });
+    ro.observe(el);
+    setViewH(el.clientHeight);
+    return () => ro.disconnect();
+  }, []);
+
+  const totalH = lines.length * PIP_LINE_H;
+  const startIdx = Math.max(0, Math.floor(scrollTop / PIP_LINE_H) - PIP_OVERSCAN);
+  const endIdx = Math.min(lines.length, Math.ceil((scrollTop + viewH) / PIP_LINE_H) + PIP_OVERSCAN);
+
+  const handleLineChange = useCallback((idx: number, value: string) => {
+    const next = [...lines];
+    next[idx] = value;
+    onChange(next.join("\n"));
+  }, [lines, onChange]);
+
+  const focusLine = useCallback((idx: number, pos?: number) => {
+    requestAnimationFrame(() => {
+      const input = scrollRef.current?.querySelector(`[data-pip-line="${idx}"]`) as HTMLInputElement | null;
+      if (input) { input.focus(); if (pos != null) input.selectionStart = input.selectionEnd = pos; }
+    });
+  }, []);
+
+  const handleLineKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    if (e.key === "Enter" && (e.shiftKey || e.ctrlKey)) { e.preventDefault(); onRun(); return; }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const pos = input.selectionStart ?? input.value.length;
+      const next = [...lines]; next[idx] = input.value.slice(0, pos); next.splice(idx + 1, 0, input.value.slice(pos));
+      onChange(next.join("\n"));
+      focusLine(idx + 1, 0);
+      return;
+    }
+    if (e.key === "Backspace" && input.selectionStart === 0 && input.selectionEnd === 0 && idx > 0) {
+      e.preventDefault();
+      const prevLen = lines[idx - 1].length;
+      const next = [...lines]; next[idx - 1] += next[idx]; next.splice(idx, 1);
+      onChange(next.join("\n"));
+      focusLine(idx - 1, prevLen);
+      return;
+    }
+    if (e.key === "Delete" && input.selectionStart === input.value.length && idx < lines.length - 1) {
+      e.preventDefault();
+      const next = [...lines]; next[idx] += next[idx + 1]; next.splice(idx + 1, 1);
+      onChange(next.join("\n"));
+      return;
+    }
+    if (e.key === "ArrowUp" && idx > 0) { e.preventDefault(); focusLine(idx - 1, Math.min(input.selectionStart ?? 0, lines[idx - 1].length)); return; }
+    if (e.key === "ArrowDown" && idx < lines.length - 1) { e.preventDefault(); focusLine(idx + 1, Math.min(input.selectionStart ?? 0, lines[idx + 1].length)); return; }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const pos = input.selectionStart ?? 0;
+      if (e.shiftKey) {
+        const sp = input.value.match(/^ {1,4}/)?.[0].length ?? 0;
+        if (sp > 0) { handleLineChange(idx, input.value.slice(sp)); requestAnimationFrame(() => { input.selectionStart = input.selectionEnd = Math.max(0, pos - sp); }); }
+      } else {
+        handleLineChange(idx, input.value.slice(0, pos) + "    " + input.value.slice(pos));
+        requestAnimationFrame(() => { input.selectionStart = input.selectionEnd = pos + 4; });
+      }
+    }
+    if (e.key === "Escape") { e.preventDefault(); input.blur(); }
+  }, [lines, onChange, onRun, handleLineChange, focusLine]);
+
+  return (
+    <div className="relative flex rounded overflow-hidden" style={{ border: `1px solid ${t.bgCellCodeBorderActive}` }}>
+      {showLineNumbers && (
+        <div className="select-none pr-1 text-right border-r shrink-0" style={{ minWidth: 40, background: t.bgHover, borderColor: t.border }}>
+          <div style={{ height: Math.min(totalH, 600), overflow: "hidden", position: "relative" }}>
+            {Array.from({ length: endIdx - startIdx }, (_, i) => {
+              const li = startIdx + i;
+              return <div key={li} className="text-[12px] font-mono px-1 flex items-center justify-end"
+                style={{ position: "absolute", top: li * PIP_LINE_H - scrollTop, height: PIP_LINE_H, color: t.textDim }}>{li + 1}</div>;
+            })}
+          </div>
+        </div>
+      )}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden"
+        onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+        style={{ maxHeight: Math.min(totalH + 4, 600), background: t.bgCellCode }}>
+        <div style={{ height: totalH, position: "relative" }}>
+          {Array.from({ length: endIdx - startIdx }, (_, i) => {
+            const li = startIdx + i;
+            return (
+              <input key={li} data-pip-line={li} data-cell-id={cellId}
+                value={lines[li] ?? ""} onChange={e => handleLineChange(li, e.target.value)}
+                onKeyDown={e => handleLineKeyDown(li, e)} onFocus={onEdit} spellCheck={false}
+                className="absolute left-0 right-0 px-4 font-mono text-[13px] bg-transparent focus:outline-none"
+                style={{
+                  top: li * PIP_LINE_H, height: PIP_LINE_H, lineHeight: `${PIP_LINE_H}px`,
+                  color: t.textCode, caretColor: t.caret, border: "none",
+                  background: "transparent",
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Notebook Cell (Jupyter-authentic) ────────────────────────────────────── */
 
 interface CellViewProps {
@@ -441,6 +573,7 @@ interface CellViewProps {
   isSelected: boolean;
   editMode: boolean;
   showLineNumbers: boolean;
+  precisionMode: boolean;
   onFocus: () => void;
   onEdit: () => void;
   onChange: (source: string) => void;
@@ -453,7 +586,7 @@ interface CellViewProps {
 }
 
 const CellView = React.memo(function CellView({
-  cell, isActive, isSelected, editMode, showLineNumbers,
+  cell, isActive, isSelected, editMode, showLineNumbers, precisionMode,
   onFocus, onEdit, onChange, onRun, onDelete, onMoveUp, onMoveDown, onToggleType, onToggleCollapse,
 }: CellViewProps) {
   const t = useNbTheme();
@@ -606,7 +739,7 @@ const CellView = React.memo(function CellView({
           <>
             <div className="relative rounded overflow-hidden" style={{
               background: isMarkdown ? "transparent" : t.bgCellCode,
-              border: isMarkdown ? "none" : `1px solid ${isActive ? t.bgCellCodeBorderActive : t.bgCellCodeBorder}`,
+              border: isMarkdown ? "none" : (precisionMode && !isMarkdown ? "none" : `1px solid ${isActive ? t.bgCellCodeBorderActive : t.bgCellCodeBorder}`),
             }}>
               {isMarkdown && !(isActive && editMode) && localSource ? (
                 <div className="px-4 py-3" style={{ color: t.text }}>
@@ -621,6 +754,17 @@ const CellView = React.memo(function CellView({
                     return line ? <p key={i} className="text-sm my-1 leading-relaxed" style={{ color: t.text }}>{line}</p> : <br key={i} />;
                   })}
                 </div>
+              ) : precisionMode && !isMarkdown ? (
+                /* ── Precision Input Projection mode ── */
+                <PrecisionInputEditor
+                  source={localSource}
+                  onChange={(val) => { setLocalSource(val); flushToParent(val); }}
+                  cellId={cell.id}
+                  onRun={onRun}
+                  onEdit={onEdit}
+                  showLineNumbers={showLineNumbers}
+                  t={t}
+                />
               ) : (
                 <div className="relative flex">
                   {showLineNumbers && !isMarkdown && (
@@ -1762,6 +1906,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   // ── Jupyter-specific state ──
   const [editMode, setEditMode] = useState(false);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
+  const [precisionMode, setPrecisionMode] = useState(false);
   const [clipboard, setClipboard] = useState<NotebookCell | null>(null);
   const [undoStack, setUndoStack] = useState<NotebookCell[]>([]);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -2652,6 +2797,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                     isSelected={activeCell === cell.id}
                     editMode={editMode && activeCell === cell.id}
                     showLineNumbers={showLineNumbers}
+                    precisionMode={precisionMode}
                     onFocus={() => { setActiveCell(cell.id); setEditMode(false); }}
                     onEdit={() => setEditMode(true)}
                     onChange={source => updateCell(cell.id, source)}
@@ -2709,6 +2855,21 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
           <span style={{ color: editMode ? t.editModeText : t.commandModeText, fontWeight: 600 }}>
             {editMode ? "EDIT" : "CMD"}
           </span>
+          <div className="w-px h-3.5" style={{ background: t.border }} />
+          {/* Precision Input Projection toggle */}
+          <button
+            onClick={() => setPrecisionMode(!precisionMode)}
+            className="flex items-center gap-1.5 text-xs px-1.5 py-0.5 rounded"
+            style={{
+              color: precisionMode ? t.gold : t.textDim,
+              background: precisionMode ? `${t.gold}18` : "transparent",
+              border: precisionMode ? `1px solid ${t.gold}33` : "1px solid transparent",
+            }}
+            title="Precision Input Projection — per-line editing for large cells"
+          >
+            <Hash size={10} />
+            PIP
+          </button>
           <div className="w-px h-3.5" style={{ background: t.border }} />
           <span className="text-xs" style={{ color: t.textDim }}>
             Qiskit · Cirq · PennyLane
