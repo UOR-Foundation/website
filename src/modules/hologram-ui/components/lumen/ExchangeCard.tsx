@@ -14,7 +14,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint } from "lucide-react";
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
 const C = {
@@ -52,6 +52,36 @@ interface ExchangeCardProps {
   exchange: ExchangeData;
   isActive: boolean;
   pipelineSlot?: React.ReactNode;
+}
+
+// ── The Eight Guarantees ─────────────────────────────────────────────
+const GUARANTEES = [
+  { id: "G1", label: "Data Sovereignty", short: "Your data stays with you", icon: "🔒" },
+  { id: "G2", label: "No Fabrication", short: "Every claim is grounded", icon: "◇" },
+  { id: "G3", label: "Full Transparency", short: "Every step is inspectable", icon: "◈" },
+  { id: "G4", label: "Honesty Over Comfort", short: "Truth before smoothness", icon: "△" },
+  { id: "G5", label: "User Control", short: "Nothing without your consent", icon: "⊙" },
+  { id: "G6", label: "Proportional Response", short: "Evidence matches assertion", icon: "≡" },
+  { id: "G7", label: "Trust Is Earned", short: "Built through reliability", icon: "⟡" },
+  { id: "G8", label: "User Success", short: "Exists only to serve you", icon: "✦" },
+] as const;
+
+/** Detect which guarantees are most visibly active for a given response */
+function activeGuarantees(meta?: ExchangeMeta, understanding?: string): string[] {
+  const active: string[] = [];
+  // G2 — No Fabrication: always active; highlight if grade is high
+  if (meta?.grade === "A" || meta?.grade === "B") active.push("G2");
+  // G3 — Transparency: always active when trace data exists
+  if (meta?.claims && meta.claims.length > 0) active.push("G3");
+  // G4 — Honesty: highlight when confidence is explicitly low or uncertainty expressed
+  if (meta?.grade === "C" || meta?.grade === "D") active.push("G4");
+  if (understanding?.includes("not confident") || understanding?.includes("don't know") || understanding?.includes("uncertain")) active.push("G4");
+  // G6 — Proportional: active when converged (evidence matched)
+  if (meta?.converged) active.push("G6");
+  // G7 — Trust earned: always active
+  active.push("G7");
+  // G1, G5, G8 are structural (always enforced)
+  return [...new Set(active)];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -163,8 +193,10 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: ExchangeCardProps) {
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
+  const [showGuarantees, setShowGuarantees] = useState(false);
   const isConverged = ex.pipeline.stage === "converged";
   const score = trustScore(ex.meta);
+  const active = activeGuarantees(ex.meta, ex.understanding);
   const followUps = ex.meta?.claims
     ? generateFollowUps(ex.meta.claims, ex.thought)
     : generateFollowUps([], ex.thought);
@@ -366,6 +398,17 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                       <Shield className="w-3 h-3" />
                       <span className="text-[9px] tracking-[0.12em] uppercase">Verify</span>
                     </button>
+
+                    {/* Guarantees toggle */}
+                    <button
+                      onClick={() => setShowGuarantees(v => !v)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)]"
+                      style={{ color: showGuarantees ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
+                      title="Constitutional guarantees"
+                    >
+                      <Fingerprint className="w-3 h-3" />
+                      <span className="text-[9px] tracking-[0.12em] uppercase">{active.length}</span>
+                    </button>
                   </div>
                 </div>
 
@@ -479,6 +522,69 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                             </button>
                           ))}
                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ── Expandable: Constitutional Guarantees ── */}
+                <AnimatePresence>
+                  {showGuarantees && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 p-3 rounded-xl" style={{ background: "hsla(38, 8%, 7%, 0.4)", border: "1px solid hsla(38, 20%, 25%, 0.06)" }}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Fingerprint className="w-3 h-3" style={{ color: "hsla(38, 40%, 58%, 0.4)" }} />
+                          <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(38, 20%, 55%, 0.4)" }}>
+                            Constitutional guarantees
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {GUARANTEES.map((g) => {
+                            const isActive = active.includes(g.id);
+                            return (
+                              <motion.div
+                                key={g.id}
+                                initial={false}
+                                animate={{ opacity: isActive ? 1 : 0.35 }}
+                                className="flex items-start gap-2 px-2 py-1.5 rounded-lg"
+                                style={{
+                                  background: isActive ? "hsla(38, 15%, 18%, 0.15)" : "transparent",
+                                }}
+                              >
+                                <span className="text-[11px] flex-shrink-0 mt-px" style={{ opacity: isActive ? 0.8 : 0.3 }}>
+                                  {g.icon}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="text-[9px] tracking-[0.08em] uppercase" style={{
+                                    color: isActive ? "hsla(38, 30%, 65%, 0.7)" : "hsla(38, 15%, 50%, 0.3)",
+                                    fontWeight: 500,
+                                  }}>
+                                    {g.label}
+                                  </p>
+                                  <p className="text-[10px] leading-snug mt-0.5" style={{
+                                    color: isActive ? "hsla(30, 12%, 62%, 0.5)" : "hsla(30, 10%, 50%, 0.2)",
+                                  }}>
+                                    {g.short}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        <p className="text-[9px] mt-3 pt-2 leading-relaxed" style={{
+                          color: "hsla(30, 12%, 55%, 0.25)",
+                          borderTop: "1px solid hsla(38, 15%, 22%, 0.05)",
+                        }}>
+                          These constraints are structural. They cannot be turned off, overridden, or bypassed.
+                        </p>
                       </div>
                     </motion.div>
                   )}
