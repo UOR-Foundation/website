@@ -469,7 +469,7 @@ export default function DesktopSurface({
             <button
               className="relative flex items-center justify-center cursor-pointer group"
               style={{ width: 48, height: 48, background: "none", border: "none", padding: 0 }}
-              onClick={onOpenChat}
+              onClick={onOpenConvergence}
               aria-label="Open Lumen AI"
             >
               {/* Ripple rings */}
@@ -532,60 +532,7 @@ export default function DesktopSurface({
             </p>
           </div>
 
-          {/* ── Queue pill — coherence reasoning entry point ── */}
-          <div
-            className="flex justify-center"
-            style={{
-              marginTop: "clamp(12px, 1.5vh, 24px)",
-              animation: "stagger-fade-in 1.6s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both",
-            }}
-          >
-            <button
-              onPointerDown={() => onOpenConvergence()}
-              className="group/conv relative px-5 py-2 rounded-full transition-all duration-500 hover:scale-[1.03] active:scale-[0.97]"
-              style={{
-                background: mode === "white"
-                  ? "hsla(32, 20%, 92%, 0.5)"
-                  : mode === "dark"
-                    ? "hsla(38, 15%, 15%, 0.35)"
-                    : "hsla(25, 10%, 12%, 0.35)",
-                border: `1px solid ${
-                  mode === "white"
-                    ? "hsla(32, 25%, 75%, 0.3)"
-                    : "hsla(38, 25%, 40%, 0.15)"
-                }`,
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-              }}
-              aria-label="Open Lumen reasoning interface"
-            >
-              <span
-                className="flex items-center gap-2 tracking-[0.18em] uppercase transition-all duration-300 group-hover/conv:tracking-[0.22em]"
-                style={{
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  fontWeight: 400,
-                  fontSize: "calc(10px * var(--holo-user-scale))",
-                  color: mode === "white"
-                    ? "hsla(32, 30%, 35%, 0.8)"
-                    : "hsla(38, 30%, 70%, 0.7)",
-                }}
-              >
-                <span
-                  className="inline-block w-1 h-1 rounded-full"
-                  style={{
-                    background: mode === "white"
-                      ? "hsla(32, 40%, 50%, 0.6)"
-                      : "hsla(38, 50%, 55%, 0.5)",
-                    boxShadow: mode === "white"
-                      ? "0 0 4px hsla(32, 40%, 50%, 0.3)"
-                      : "0 0 6px hsla(38, 50%, 55%, 0.3)",
-                    animation: "heartbeat-love 2.4s ease-in-out infinite",
-                  }}
-                />
-                Lumen
-              </span>
-            </button>
-          </div>
+          {/* Queue pill removed — Genesis dot now opens Lumen directly */}
         </div>
       </div>
 
