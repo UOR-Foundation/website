@@ -47,6 +47,7 @@ import {
   getProceduralMemory,
   getMirrorProtocol,
 } from "@/modules/hologram-ui/engine/reasoning";
+import { observeExchange, compileResonanceDirective, loadResonanceProfile } from "@/modules/hologram-ui/engine/resonanceObserver";
 import ConvergencePipeline, { type PipelineState, type PipelineStage } from "./ConvergencePipeline";
 import ShowcasePipeline, { isComplexQuestion } from "./ShowcasePipeline";
 import { Sparkles as MagicIcon } from "lucide-react"; // Import magic icon
@@ -293,6 +294,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           personaId: "hologram",
           skillId: "reason",
           triadicMode: triadicMode !== "balanced" ? triadicMode : undefined,
+          resonanceContext: compileResonanceDirective(loadResonanceProfile()),
         }),
       });
 
@@ -429,6 +431,10 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       if (nsResult) {
         saveReasoningProof(nsResult).catch(() => {});
       }
+
+      // ── Cybernetic feedback: observe this exchange ───────────
+      const prevUserMsg = exchanges.length > 0 ? exchanges[exchanges.length - 1].thought : undefined;
+      observeExchange(thought, streamedText, prevUserMsg);
 
     } catch (e) {
       updateExchange({
