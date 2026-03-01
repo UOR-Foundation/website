@@ -2,15 +2,25 @@
  * ProModeDeck — Pioneer-Style DJ Controller for Lumen
  * ════════════════════════════════════════════════════
  *
- * 12 experiential dimensions across 3 categories.
- * Searchable persona library on each deck + cloud-synced presets.
+ * Redesigned to "unfold" around the input text box.
+ * The input stays anchored; the deck blooms outward with
+ * staggered spring animations for a magical experience.
+ *
+ * Layout (center-outward bloom):
+ *   ┌─────────────────────────────────────┐
+ *   │  [Deck A]   Screen Display  [Deck B]│ ← rises up
+ *   │             ─────────────           │
+ *   │     Fader Groups (3 categories)     │ ← scales in
+ *   │         ═══ Crossfader ═══          │ ← fades in
+ *   │       ╔═══ Input Box ═══╗           │ ← stays in place
+ *   └─────────────────────────────────────┘
  *
  * @module hologram-ui/components/lumen/ProModeDeck
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Search, Upload, X, Save, Heart } from "lucide-react";
+import { ChevronDown, Search, Upload, X, Save } from "lucide-react";
 import {
   DIMENSIONS,
   PRESETS,
@@ -83,50 +93,7 @@ function LED({ on, color = HW.gold, size = 5 }: { on: boolean; color?: string; s
   );
 }
 
-// ── Rotary Knob ─────────────────────────────────────────────────────
-
-function RotaryKnob({ label, value, onChange, hue, size = 34 }: {
-  label: string; value: number; onChange: (v: number) => void; hue: number; size?: number;
-}) {
-  const accent = `hsl(${hue}, 45%, 55%)`;
-  const angle = -135 + value * 270;
-
-  const handleDrag = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    const startY = e.clientY; const startVal = value;
-    const onMove = (ev: PointerEvent) => { onChange(Math.max(0, Math.min(1, startVal + (startY - ev.clientY) / 120))); };
-    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-    window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
-  }, [value, onChange]);
-
-  return (
-    <div className="flex flex-col items-center gap-0.5" style={{ width: size + 14 }}>
-      <div className="relative rounded-full cursor-pointer"
-        style={{
-          width: size, height: size,
-          background: `radial-gradient(circle at 38% 32%, hsl(0, 0%, 22%), hsl(0, 0%, 10%))`,
-          border: `1.5px solid hsla(0, 0%, 28%, 0.4)`,
-          boxShadow: `0 2px 6px hsla(0,0%,0%,0.5), inset 0 1px 2px hsla(0,0%,100%,0.04)`,
-        }} onPointerDown={handleDrag}>
-        <svg className="absolute inset-0" viewBox="0 0 40 40" style={{ width: size, height: size }}>
-          <circle cx="20" cy="20" r="16" fill="none" stroke="hsla(0,0%,20%,0.3)" strokeWidth="2"
-            strokeDasharray="75.4" strokeDashoffset="18.85" transform="rotate(135 20 20)" />
-          <circle cx="20" cy="20" r="16" fill="none" stroke={accent} strokeWidth="2"
-            strokeDasharray="75.4" strokeDashoffset={75.4 - value * 56.55} transform="rotate(135 20 20)"
-            style={{ filter: `drop-shadow(0 0 3px ${accent})`, transition: "stroke-dashoffset 0.08s" }} />
-        </svg>
-        <div className="absolute" style={{
-          top: "50%", left: "50%", width: 2, height: size / 2 - 6, background: accent, borderRadius: 1,
-          transformOrigin: "bottom center", transform: `translate(-50%, -100%) rotate(${angle}deg)`,
-          transition: "transform 0.08s", boxShadow: `0 0 4px ${accent}`,
-        }} />
-      </div>
-      <span className="text-[9px] font-semibold tracking-wide text-center leading-tight" style={{ color: accent }}>{label}</span>
-    </div>
-  );
-}
-
-// ── Channel Fader ───────────────────────────────────────────────────
+// ── Channel Fader (redesigned — taller, cleaner) ────────────────────
 
 function ChannelFader({ label, value, onChange, hue, lowLabel, highLabel }: {
   label: string; value: number; onChange: (v: number) => void; hue: number; lowLabel: string; highLabel: string;
@@ -134,33 +101,36 @@ function ChannelFader({ label, value, onChange, hue, lowLabel, highLabel }: {
   const pct = Math.round(value * 100);
   const accent = `hsl(${hue}, 45%, 55%)`;
   return (
-    <div className="flex flex-col items-center" style={{ width: 40 }}>
-      <span className="text-[7px] font-medium mb-0.5 tracking-wider" style={{ color: `hsla(${hue}, 25%, 50%, 0.4)` }}>{highLabel}</span>
+    <div className="flex flex-col items-center" style={{ width: 44 }}>
+      <span className="text-[7px] font-medium mb-1 tracking-wider opacity-40" style={{ color: accent }}>{highLabel}</span>
       <div className="relative rounded-md flex items-center justify-center"
-        style={{ width: 18, height: 60, background: HW.groove, border: `1px solid ${HW.border}`, boxShadow: "inset 0 1px 4px hsla(0,0%,0%,0.4)" }}>
-        <div className="absolute" style={{ width: 2, top: 5, bottom: 5, left: "50%", transform: "translateX(-50%)", background: "hsla(0,0%,16%,0.5)", borderRadius: 1 }} />
+        style={{ width: 20, height: 80, background: HW.groove, border: `1px solid ${HW.border}`, boxShadow: "inset 0 1px 4px hsla(0,0%,0%,0.4)" }}>
+        {/* Track line */}
+        <div className="absolute" style={{ width: 2, top: 6, bottom: 6, left: "50%", transform: "translateX(-50%)", background: "hsla(0,0%,16%,0.5)", borderRadius: 1 }} />
+        {/* Fill */}
         <div className="absolute transition-all duration-75" style={{
-          width: 2, bottom: 5, left: "50%", transform: "translateX(-50%)", borderRadius: 1,
-          height: `${pct * 0.7}%`, maxHeight: "calc(100% - 10px)",
+          width: 2, bottom: 6, left: "50%", transform: "translateX(-50%)", borderRadius: 1,
+          height: `${pct * 0.72}%`, maxHeight: "calc(100% - 12px)",
           background: `linear-gradient(to top, ${accent}, hsla(${hue}, 35%, 35%, 0.2))`,
         }} />
+        {/* Thumb */}
         <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none transition-all duration-75" style={{
-          bottom: `calc(5px + ${pct}% * 0.45)`, width: 14, height: 7, borderRadius: 2,
-          background: `linear-gradient(180deg, hsl(0, 0%, 30%), hsl(0, 0%, 16%))`,
+          bottom: `calc(6px + ${pct}% * 0.52)`, width: 16, height: 8, borderRadius: 2,
+          background: `linear-gradient(180deg, hsl(0, 0%, 32%), hsl(0, 0%, 16%))`,
           border: `1px solid hsla(${hue}, 25%, 40%, 0.25)`,
-          boxShadow: `0 0 4px hsla(${hue}, 50%, 50%, 0.15), 0 1px 2px hsla(0,0%,0%,0.5)`,
+          boxShadow: `0 0 5px hsla(${hue}, 50%, 50%, 0.15), 0 1px 2px hsla(0,0%,0%,0.5)`,
         }} />
         <input type="range" min={0} max={100} value={pct} onChange={(e) => onChange(Number(e.target.value) / 100)}
           className="absolute inset-0 opacity-0 cursor-pointer z-10"
           style={{ width: "100%", height: "100%", writingMode: "vertical-lr", direction: "rtl", margin: 0, WebkitAppearance: "slider-vertical" as never }} />
       </div>
-      <span className="text-[7px] font-medium mt-0.5 tracking-wider" style={{ color: `hsla(${hue}, 25%, 50%, 0.4)` }}>{lowLabel}</span>
+      <span className="text-[7px] font-medium mt-1 tracking-wider opacity-40" style={{ color: accent }}>{lowLabel}</span>
       <span className="text-[10px] font-bold mt-0.5" style={{ color: accent }}>{label}</span>
     </div>
   );
 }
 
-// ── Persona Card with hover quote ────────────────────────────────────
+// ── Persona Card ────────────────────────────────────────────────────
 
 function PersonaCard({ preset: p, active, hue: pH, accentColor, onSelect }: {
   preset: DimensionPreset; active: boolean; hue: number; accentColor: string;
@@ -174,19 +144,19 @@ function PersonaCard({ preset: p, active, hue: pH, accentColor, onSelect }: {
         onPointerDown={() => onSelect(p)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-100 text-left active:scale-[0.98]"
+        className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all duration-100 text-left active:scale-[0.98]"
         style={{
           background: active ? `hsla(${pH}, 22%, 16%, 0.7)` : hovered ? `hsla(${pH}, 15%, 13%, 0.4)` : "transparent",
           border: active ? `1px solid hsla(${pH}, 40%, 45%, 0.3)` : "1px solid transparent",
         }}
       >
-        <span className="text-[16px] flex-shrink-0" style={{
+        <span className="text-[18px] flex-shrink-0" style={{
           filter: active ? `drop-shadow(0 0 4px hsla(${pH}, 50%, 50%, 0.3))` : "none",
         }}>{p.icon}</span>
         <div className="flex-1 min-w-0">
           <span className="text-[12px] font-semibold block truncate"
             style={{ color: active ? HW.text : HW.textSub }}>{p.name}</span>
-          <span className="text-[9px] block truncate"
+          <span className="text-[10px] block truncate"
             style={{ color: active ? HW.textSub : HW.textDim }}>{p.subtitle}</span>
         </div>
         {active && <LED on size={4} color={accentColor} />}
@@ -201,32 +171,19 @@ function PersonaCard({ preset: p, active, hue: pH, accentColor, onSelect }: {
             exit={{ opacity: 0, y: 2, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
             className="absolute left-1/2 -translate-x-1/2 z-50 pointer-events-none"
-            style={{
-              bottom: "calc(100% + 6px)",
-              width: "max(180px, 100%)",
-              maxWidth: "220px",
-            }}
+            style={{ bottom: "calc(100% + 6px)", width: "max(180px, 100%)", maxWidth: "220px" }}
           >
-            <div
-              className="rounded-lg px-3 py-2.5 shadow-lg"
+            <div className="rounded-lg px-3 py-2.5 shadow-lg"
               style={{
                 background: `linear-gradient(135deg, hsla(${pH}, 18%, 12%, 0.95), hsla(${pH}, 12%, 8%, 0.95))`,
                 border: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
                 backdropFilter: "blur(12px)",
-              }}
-            >
-              <p className="text-[10px] leading-relaxed italic"
-                style={{ color: `hsla(${pH}, 20%, 78%, 0.9)`, fontFamily: HW.fontDisplay }}>
+              }}>
+              <p className="text-[10px] leading-relaxed italic" style={{ color: `hsla(${pH}, 20%, 78%, 0.9)`, fontFamily: HW.fontDisplay }}>
                 {p.quote}
               </p>
-              {/* Tiny arrow */}
               <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 rotate-45"
-                style={{
-                  background: `hsla(${pH}, 12%, 8%, 0.95)`,
-                  borderRight: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
-                  borderBottom: `1px solid hsla(${pH}, 30%, 35%, 0.3)`,
-                }}
-              />
+                style={{ background: `hsla(${pH}, 12%, 8%, 0.95)`, borderRight: `1px solid hsla(${pH}, 30%, 35%, 0.3)`, borderBottom: `1px solid hsla(${pH}, 30%, 35%, 0.3)` }} />
             </div>
           </motion.div>
         )}
@@ -256,18 +213,14 @@ function DeckSearchPanel({ side, accentColor, onSelect, selectedId, cloudPresets
         saveCustomPreset(preset);
         onSavePreset(preset);
         onSelect(preset);
-      } catch (err) {
-        console.error("Failed to import persona:", err);
-      }
+      } catch (err) { console.error("Failed to import persona:", err); }
     };
     reader.readAsText(file);
     e.target.value = "";
   }, [onSelect, onSavePreset]);
 
   const grouped = useMemo(() => {
-    const groups: Record<string, DimensionPreset[]> = {
-      "Archetypes": [], "Personalities": [], "Saved": [],
-    };
+    const groups: Record<string, DimensionPreset[]> = { "Archetypes": [], "Personalities": [], "Saved": [] };
     for (const p of results) {
       if (p.imported || cloudPresets.some(cp => cp.id === p.id)) groups["Saved"].push(p);
       else if (CELEBRITY_PRESETS.some((c) => c.id === p.id)) groups["Personalities"].push(p);
@@ -278,28 +231,25 @@ function DeckSearchPanel({ side, accentColor, onSelect, selectedId, cloudPresets
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-2 py-1.5" style={{ borderBottom: `1px solid ${HW.border}` }}>
+      <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: `1px solid ${HW.border}` }}>
         <LED on size={6} color={accentColor} />
-        <span className="text-[12px] tracking-[0.2em] uppercase font-bold" style={{ color: accentColor }}>Deck {side}</span>
+        <span className="text-[11px] tracking-[0.2em] uppercase font-bold" style={{ color: accentColor }}>Deck {side}</span>
       </div>
 
-      <div className="px-2 py-1.5" style={{ borderBottom: `1px solid ${HW.border}` }}>
-        <div className="flex items-center gap-1.5 rounded-md px-2 py-1" style={{
-          background: HW.groove, border: `1px solid ${HW.border}`,
-        }}>
+      <div className="px-3 py-2" style={{ borderBottom: `1px solid ${HW.border}` }}>
+        <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: HW.groove, border: `1px solid ${HW.border}` }}>
           <Search size={12} style={{ color: HW.textDim, flexShrink: 0 }} />
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder="Search personas…"
             className="flex-1 bg-transparent border-none outline-none text-[12px] font-medium"
-            style={{ color: HW.text, fontFamily: HW.font, caretColor: accentColor }}
-          />
+            style={{ color: HW.text, fontFamily: HW.font, caretColor: accentColor }} />
           {query && (
             <button onPointerDown={() => setQuery("")} className="opacity-50 hover:opacity-100">
               <X size={10} style={{ color: HW.textSub }} />
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1 mt-1">
+        <div className="flex items-center gap-1 mt-1.5">
           <button onPointerDown={() => fileInputRef.current?.click()}
             className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wider uppercase transition-all hover:opacity-100 opacity-60"
             style={{ color: accentColor, background: `${accentColor}12`, border: `1px solid ${accentColor}20` }}>
@@ -310,23 +260,17 @@ function DeckSearchPanel({ side, accentColor, onSelect, selectedId, cloudPresets
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-1.5 py-1" style={{ scrollbarWidth: "none" }}>
+      <div className="flex-1 overflow-y-auto px-2 py-1.5" style={{ scrollbarWidth: "none" }}>
         {Object.entries(grouped).map(([group, presets]) => {
           if (presets.length === 0) return null;
           return (
-            <div key={group} className="mb-2">
+            <div key={group} className="mb-2.5">
               <span className="text-[9px] tracking-[0.15em] uppercase block mb-1 px-1 font-bold"
-                style={{ color: `${accentColor}60` }}>
-                {group}
-              </span>
+                style={{ color: `${accentColor}60` }}>{group}</span>
               <div className="space-y-0.5">
-                {presets.map((p) => {
-                  const active = selectedId === p.id;
-                  const pH = presetHue(p);
-                  return (
-                    <PersonaCard key={p.id} preset={p} active={active} hue={pH} accentColor={accentColor} onSelect={onSelect} />
-                  );
-                })}
+                {presets.map((p) => (
+                  <PersonaCard key={p.id} preset={p} active={selectedId === p.id} hue={presetHue(p)} accentColor={accentColor} onSelect={onSelect} />
+                ))}
               </div>
             </div>
           );
@@ -356,41 +300,41 @@ function ScreenSpectrum({ values, coherenceH }: { values: DimensionValues; coher
       if (!running) return;
       const w = canvas.width, h = canvas.height; ctx.clearRect(0, 0, w, h);
       const dims = DIMENSIONS;
-      const barW = Math.floor((w - 40) / dims.length);
+      const barW = Math.floor((w - 60) / dims.length);
       const startX = Math.floor((w - barW * dims.length) / 2);
       const t = Date.now() * 0.001;
       dims.forEach((dim, i) => {
         const val = values[dim.id] ?? dim.defaultValue;
-        const barH = val * (h - 28);
+        const barH = val * (h - 32);
         const x = startX + i * barW;
         const shimmer = Math.sin(t * 2.5 + i * 0.6) * 0.05 + 1;
         const finalH = barH * shimmer;
         const meta = CATEGORY_META[dim.category];
         const alpha = 0.5 + val * 0.5;
-        ctx.shadowBlur = 10; ctx.shadowColor = `hsla(${meta.hue}, 55%, 55%, ${alpha * 0.2})`;
-        const gradient = ctx.createLinearGradient(x, h - 8, x, h - 8 - finalH);
+        ctx.shadowBlur = 12; ctx.shadowColor = `hsla(${meta.hue}, 55%, 55%, ${alpha * 0.25})`;
+        const gradient = ctx.createLinearGradient(x, h - 10, x, h - 10 - finalH);
         gradient.addColorStop(0, `hsla(${meta.hue}, 35%, 28%, ${alpha * 0.4})`);
         gradient.addColorStop(0.4, `hsla(${meta.hue}, 50%, 50%, ${alpha * 0.7})`);
         gradient.addColorStop(1, `hsla(${meta.hue}, 60%, 65%, ${alpha})`);
         ctx.fillStyle = gradient;
-        const bx = x + 2, bw = barW - 4, by = h - 8 - finalH, r = Math.min(bw / 2, 3);
-        ctx.beginPath(); ctx.moveTo(bx, h - 8); ctx.lineTo(bx, by + r);
+        const bx = x + 3, bw = barW - 6, by = h - 10 - finalH, r = Math.min(bw / 2, 4);
+        ctx.beginPath(); ctx.moveTo(bx, h - 10); ctx.lineTo(bx, by + r);
         ctx.quadraticCurveTo(bx, by, bx + r, by); ctx.lineTo(bx + bw - r, by);
-        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r); ctx.lineTo(bx + bw, h - 8); ctx.closePath(); ctx.fill();
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + r); ctx.lineTo(bx + bw, h - 10); ctx.closePath(); ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.fillStyle = `hsla(${meta.hue}, 65%, 72%, ${alpha})`; ctx.fillRect(bx, by, bw, 1.5);
-        ctx.fillStyle = `hsla(${meta.hue}, 25%, 55%, 0.55)`; ctx.font = "bold 9px 'DM Sans', sans-serif";
-        ctx.textAlign = "center"; ctx.fillText(dim.label.slice(0, 6), x + barW / 2, h);
+        ctx.fillStyle = `hsla(${meta.hue}, 65%, 72%, ${alpha})`; ctx.fillRect(bx, by, bw, 2);
+        ctx.fillStyle = `hsla(${meta.hue}, 25%, 55%, 0.6)`; ctx.font = "bold 10px 'DM Sans', sans-serif";
+        ctx.textAlign = "center"; ctx.fillText(dim.label.slice(0, 7), x + barW / 2, h - 1);
       });
-      const lineY = h - 8 - coherenceH * (h - 28);
-      ctx.beginPath(); ctx.strokeStyle = "hsla(38, 50%, 55%, 0.18)"; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
-      ctx.moveTo(14, lineY); ctx.lineTo(w - 14, lineY); ctx.stroke(); ctx.setLineDash([]);
+      const lineY = h - 10 - coherenceH * (h - 32);
+      ctx.beginPath(); ctx.strokeStyle = "hsla(38, 50%, 55%, 0.2)"; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+      ctx.moveTo(16, lineY); ctx.lineTo(w - 16, lineY); ctx.stroke(); ctx.setLineDash([]);
       frameRef.current = requestAnimationFrame(render);
     };
     render();
     return () => { running = false; cancelAnimationFrame(frameRef.current); };
   }, [values, coherenceH]);
-  return <canvas ref={canvasRef} width={600} height={80} className="w-full" style={{ height: 80 }} />;
+  return <canvas ref={canvasRef} width={700} height={110} className="w-full" style={{ height: 110 }} />;
 }
 
 function ScreenCoherence({ values, coherenceH, deckA, deckB, mix }: {
@@ -412,44 +356,49 @@ function ScreenCoherence({ values, coherenceH, deckA, deckB, mix }: {
   }, [values]);
 
   return (
-    <div className="flex items-center justify-between px-4 py-2" style={{ height: 80 }}>
-      <div className="flex flex-col gap-1" style={{ width: 110 }}>
-        <div className="flex items-center gap-2">
-          <LED on={!!deckA} color={HW.deckA} />
-          <span className="text-[11px] font-semibold truncate" style={{ color: deckA ? HW.deckA : HW.textDim }}>
+    <div className="flex items-center justify-between px-6 py-3" style={{ height: 110 }}>
+      {/* Deck info */}
+      <div className="flex flex-col gap-1.5" style={{ width: 140 }}>
+        <div className="flex items-center gap-2.5">
+          <LED on={!!deckA} color={HW.deckA} size={6} />
+          <span className="text-[12px] font-semibold truncate" style={{ color: deckA ? HW.deckA : HW.textDim }}>
             {deckA ? deckA.name : "Deck A"}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <LED on={!!deckB} color={HW.deckB} />
-          <span className="text-[11px] font-semibold truncate" style={{ color: deckB ? HW.deckB : HW.textDim }}>
+        <div className="flex items-center gap-2.5">
+          <LED on={!!deckB} color={HW.deckB} size={6} />
+          <span className="text-[12px] font-semibold truncate" style={{ color: deckB ? HW.deckB : HW.textDim }}>
             {deckB ? deckB.name : "Deck B"}
           </span>
         </div>
-        <span className="text-[10px] font-mono" style={{ color: HW.textDim }}>
+        <span className="text-[11px] font-mono mt-1" style={{ color: HW.textDim }}>
           Mix {Math.round((1 - mix) * 100)}/{Math.round(mix * 100)}
         </span>
       </div>
-      <motion.div className="relative flex items-center justify-center" style={{ width: 50, height: 50 }}>
+
+      {/* Coherence orb */}
+      <motion.div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
         <motion.div className="absolute inset-0 rounded-full"
           animate={{ scale: [1, 1.1, 1], opacity: [0.12, 0.25, 0.12] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           style={{ border: `1.5px solid hsla(${hue}, 45%, 55%, 0.3)` }} />
-        <div className="w-9 h-9 rounded-full flex items-center justify-center"
+        <div className="w-12 h-12 rounded-full flex items-center justify-center"
           style={{ background: `radial-gradient(circle at 40% 35%, hsla(${hue}, 50%, 45%, 0.2), hsla(${hue}, 30%, 18%, 0.08))`, border: `1px solid hsla(${hue}, 40%, 50%, 0.2)` }}>
-          <span className="font-mono text-[16px] font-bold" style={{ color: `hsl(${hue}, 55%, 68%)` }}>{pct}</span>
+          <span className="font-mono text-[18px] font-bold" style={{ color: `hsl(${hue}, 55%, 68%)` }}>{pct}</span>
         </div>
       </motion.div>
-      <div className="flex flex-col gap-1" style={{ width: 120 }}>
+
+      {/* Category meters */}
+      <div className="flex flex-col gap-2" style={{ width: 160 }}>
         {(["reasoning", "expression", "awareness"] as const).map((cat) => {
           const meta = CATEGORY_META[cat]; const avg = catAvg[cat];
           return (
             <div key={cat}>
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[9px] tracking-wide uppercase font-semibold" style={{ color: `hsla(${meta.hue}, 35%, 58%, 0.55)` }}>{meta.label}</span>
-                <span className="text-[10px] font-mono font-semibold" style={{ color: `hsl(${meta.hue}, 40%, 58%)` }}>{avg}</span>
+                <span className="text-[9px] tracking-wide uppercase font-semibold" style={{ color: `hsla(${meta.hue}, 35%, 58%, 0.6)` }}>{meta.label}</span>
+                <span className="text-[11px] font-mono font-semibold" style={{ color: `hsl(${meta.hue}, 40%, 58%)` }}>{avg}</span>
               </div>
-              <div className="h-[3px] rounded-full overflow-hidden" style={{ background: `hsla(${meta.hue}, 10%, 12%, 0.5)` }}>
+              <div className="h-[4px] rounded-full overflow-hidden" style={{ background: `hsla(${meta.hue}, 10%, 12%, 0.5)` }}>
                 <div className="h-full rounded-full transition-all duration-300" style={{
                   width: `${avg}%`, background: `linear-gradient(90deg, hsla(${meta.hue}, 40%, 38%, 0.5), hsl(${meta.hue}, 50%, 55%))`,
                 }} />
@@ -464,21 +413,21 @@ function ScreenCoherence({ values, coherenceH, deckA, deckB, mix }: {
 
 function ScreenRadar({ values }: { values: DimensionValues }) {
   const dims = DIMENSIONS;
-  const cx = 150, cy = 42, maxR = 34;
+  const cx = 175, cy = 55, maxR = 46;
   const angleStep = (Math.PI * 2) / dims.length;
   const points = dims.map((dim, i) => {
     const val = values[dim.id] ?? dim.defaultValue;
     const angle = -Math.PI / 2 + i * angleStep;
     return {
       x: cx + Math.cos(angle) * maxR * val, y: cy + Math.sin(angle) * maxR * val,
-      lx: cx + Math.cos(angle) * (maxR + 12), ly: cy + Math.sin(angle) * (maxR + 12),
-      label: dim.label.slice(0, 4), hue: dim.hue, val,
+      lx: cx + Math.cos(angle) * (maxR + 14), ly: cy + Math.sin(angle) * (maxR + 14),
+      label: dim.label.slice(0, 5), hue: dim.hue, val,
     };
   });
   const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
   return (
-    <div className="flex items-center justify-center" style={{ height: 80 }}>
-      <svg width={300} height={84} viewBox="0 0 300 84" className="w-full" style={{ maxWidth: 400 }}>
+    <div className="flex items-center justify-center" style={{ height: 110 }}>
+      <svg width={350} height={110} viewBox="0 0 350 110" className="w-full" style={{ maxWidth: 450 }}>
         {[0.25, 0.5, 0.75, 1].map((r) => (
           <polygon key={r} points={dims.map((_, i) => { const a = -Math.PI / 2 + i * angleStep; return `${cx + Math.cos(a) * maxR * r},${cy + Math.sin(a) * maxR * r}`; }).join(" ")}
             fill="none" stroke="hsla(38, 10%, 25%, 0.12)" strokeWidth={0.5} />
@@ -487,8 +436,8 @@ function ScreenRadar({ values }: { values: DimensionValues }) {
           style={{ filter: "drop-shadow(0 0 4px hsla(38, 50%, 55%, 0.1))" }} />
         {points.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r={2.5} fill={`hsl(${p.hue}, 50%, 60%)`} opacity={0.8} />
-            <text x={p.lx} y={p.ly + 3} textAnchor="middle" fill={`hsla(${p.hue}, 30%, 58%, 0.5)`} fontSize="7" fontFamily="'DM Sans', sans-serif">{p.label}</text>
+            <circle cx={p.x} cy={p.y} r={3} fill={`hsl(${p.hue}, 50%, 60%)`} opacity={0.8} />
+            <text x={p.lx} y={p.ly + 3} textAnchor="middle" fill={`hsla(${p.hue}, 30%, 58%, 0.55)`} fontSize="8" fontFamily="'DM Sans', sans-serif">{p.label}</text>
           </g>
         ))}
       </svg>
@@ -501,25 +450,30 @@ function ScreenRadar({ values }: { values: DimensionValues }) {
 function Crossfader({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const pct = Math.round(value * 100);
   return (
-    <div className="px-4 py-1">
-      <div className="flex items-center justify-between mb-0.5">
+    <div className="px-5 py-2">
+      <div className="flex items-center justify-between mb-1">
         <span className="text-[10px] font-bold" style={{ color: HW.deckA }}>A</span>
-        <span className="text-[8px] tracking-[0.2em] uppercase font-semibold" style={{ color: HW.textDim }}>Crossfader</span>
+        <span className="text-[9px] tracking-[0.2em] uppercase font-semibold" style={{ color: HW.textDim }}>Crossfader</span>
         <span className="text-[10px] font-bold" style={{ color: HW.deckB }}>B</span>
       </div>
-      <div className="relative h-6 flex items-center">
+      <div className="relative h-7 flex items-center">
         <div className="absolute inset-x-0 h-[3px] rounded-full" style={{ background: `linear-gradient(90deg, ${HW.deckAGlow}, hsla(0,0%,10%,0.4), ${HW.deckBGlow})` }} />
         <div className="absolute pointer-events-none transition-all duration-75" style={{
-          left: `calc(${pct}% - 14px)`, width: 28, height: 12, borderRadius: 3,
+          left: `calc(${pct}% - 16px)`, width: 32, height: 14, borderRadius: 4,
           background: `linear-gradient(180deg, hsl(0,0%,30%), hsl(0,0%,14%))`,
           border: "1px solid hsla(38, 20%, 35%, 0.25)",
           boxShadow: "0 0 8px hsla(38, 50%, 45%, 0.08), 0 2px 4px hsla(0,0%,0%,0.5)",
           top: "50%", transform: "translateY(-50%)",
         }}>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: 10, height: 1, background: "hsla(38, 30%, 50%, 0.35)", borderRadius: 1 }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: 12, height: 1, background: "hsla(38, 30%, 50%, 0.35)", borderRadius: 1 }} />
         </div>
         <input type="range" min={0} max={100} value={pct} onChange={(e) => onChange(Number(e.target.value) / 100)}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" style={{ margin: 0 }} />
+      </div>
+      <div className="flex justify-center mt-1">
+        <span className="text-[9px] font-mono" style={{ color: HW.textDim }}>
+          {pct === 0 ? "Pure A" : pct === 100 ? "Pure B" : pct === 50 ? "50 / 50" : `${100 - pct} / ${pct}`}
+        </span>
       </div>
     </div>
   );
@@ -547,16 +501,50 @@ function SaveMixButton({ values, onSave }: { values: DimensionValues; onSave: (n
         placeholder="Mix name…" autoFocus
         className="px-2 py-0.5 rounded text-[10px] bg-transparent border outline-none w-24"
         style={{ color: HW.text, borderColor: HW.gold + "40", fontFamily: HW.font, caretColor: HW.gold }}
-        onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) { onSave(name.trim()); setShowInput(false); setName(""); } }}
-      />
+        onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) { onSave(name.trim()); setShowInput(false); setName(""); } }} />
       <button onPointerDown={() => { if (name.trim()) { onSave(name.trim()); setShowInput(false); setName(""); } }}
-        className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-        style={{ color: HW.gold, background: HW.goldGlow }}>✓</button>
+        className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ color: HW.gold, background: HW.goldGlow }}>✓</button>
       <button onPointerDown={() => { setShowInput(false); setName(""); }}
         className="text-[9px] px-1 py-0.5 rounded" style={{ color: HW.textDim }}>✕</button>
     </div>
   );
 }
+
+// ── Stagger Variants ────────────────────────────────────────────────
+
+const bloomContainer = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.06, delayChildren: 0.04 },
+  },
+  exit: {
+    transition: { staggerChildren: 0.03, staggerDirection: -1 },
+  },
+};
+
+const bloomScreen = {
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 28, stiffness: 300 } },
+  exit: { opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.15 } },
+};
+
+const bloomFaders = {
+  hidden: { opacity: 0, y: 16, scale: 0.94 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 26, stiffness: 280 } },
+  exit: { opacity: 0, y: 8, scale: 0.97, transition: { duration: 0.12 } },
+};
+
+const bloomCrossfader = {
+  hidden: { opacity: 0, scaleX: 0.7 },
+  visible: { opacity: 1, scaleX: 1, transition: { type: "spring" as const, damping: 24, stiffness: 260 } },
+  exit: { opacity: 0, scaleX: 0.8, transition: { duration: 0.1 } },
+};
+
+const bloomSide = {
+  hidden: (side: "left" | "right") => ({ opacity: 0, x: side === "left" ? -40 : 40 }),
+  visible: { opacity: 1, x: 0, transition: { type: "spring" as const, damping: 28, stiffness: 260, delay: 0.12 } },
+  exit: (side: "left" | "right") => ({ opacity: 0, x: side === "left" ? -20 : 20, transition: { duration: 0.12 } }),
+};
 
 // ── Main Deck Component ─────────────────────────────────────────────
 
@@ -629,36 +617,37 @@ export default memo(function ProModeDeck({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ y: "100%", opacity: 0.6 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "100%", opacity: 0 }}
-          transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.7 }}
-          className="flex flex-col relative"
-          style={{ fontFamily: HW.font, maxHeight: "46vh", minHeight: 280 }}
+          className="flex-shrink-0 relative"
+          style={{ fontFamily: HW.font }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
         >
-          {/* Gold accent line */}
+          {/* Gold accent line at top */}
           <div className="absolute -top-[1px] left-0 right-0 h-[2px] z-10"
-            style={{ background: `linear-gradient(90deg, transparent 5%, ${HW.gold}30 20%, ${HW.gold}50 50%, ${HW.gold}30 80%, transparent 95%)` }} />
+            style={{ background: `linear-gradient(90deg, transparent 5%, ${HW.gold}25 20%, ${HW.gold}40 50%, ${HW.gold}25 80%, transparent 95%)` }} />
 
-          <div className="h-full" style={{
+          {/* Main body */}
+          <div style={{
             background: `linear-gradient(180deg, ${HW.bodyLight} 0%, ${HW.body} 100%)`,
             borderTop: `1px solid hsla(0,0%,18%,0.3)`,
-            boxShadow: "0 -8px 40px hsla(0,0%,0%,0.6), 0 -2px 0 hsla(38, 20%, 25%, 0.06)",
+            boxShadow: "0 -8px 40px hsla(0,0%,0%,0.5)",
           }}>
-            {/* Top bar */}
-            <div className="flex items-center justify-between px-4 py-1 cursor-pointer" onPointerDown={onClose}
+            {/* Top bar — clickable to collapse */}
+            <div className="flex items-center justify-between px-5 py-2 cursor-pointer select-none" onPointerDown={onClose}
               style={{ borderBottom: `1px solid ${HW.border}` }}>
               <div className="flex items-center gap-3">
                 <LED on size={6} color={HW.gold} />
                 <span className="text-[10px] tracking-[0.25em] uppercase font-semibold" style={{ color: HW.textDim }}>Pro Mode</span>
-                <span className="text-[13px] font-light" style={{ fontFamily: HW.fontDisplay, color: HW.text }}>Lumen Experience Deck</span>
+                <span className="text-[14px] font-light" style={{ fontFamily: HW.fontDisplay, color: HW.text }}>Lumen Experience Deck</span>
               </div>
               <div className="flex items-center gap-2">
                 {isAuthenticated && <SaveMixButton values={values} onSave={handleSaveMix} />}
                 {manualOverride && (
                   <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold" style={{ background: HW.goldGlow, color: HW.gold, border: `1px solid ${HW.gold}25` }}>Custom</span>
                 )}
-                <button onPointerDown={handleReset}
+                <button onPointerDown={(e) => { e.stopPropagation(); handleReset(); }}
                   className="text-[9px] tracking-wider uppercase font-semibold px-2 py-0.5 rounded transition-all hover:opacity-100 opacity-60"
                   style={{ color: HW.textDim, background: `hsla(0,0%,14%,0.6)`, border: `1px solid ${HW.border}` }}>
                   Reset
@@ -667,33 +656,46 @@ export default memo(function ProModeDeck({
               </div>
             </div>
 
-            {/* Three-column layout */}
-            <div className="flex min-h-0" style={{ height: "calc(46vh - 42px)", maxHeight: 360 }}>
-
-              {/* LEFT DECK */}
-              <div className="flex-shrink-0 overflow-hidden flex flex-col"
-                style={{ width: 190, borderRight: `1px solid ${HW.border}` }}>
+            {/* Three-column layout with staggered bloom */}
+            <motion.div
+              className="flex"
+              style={{ height: "clamp(320px, 44vh, 420px)" }}
+              variants={bloomContainer}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {/* LEFT DECK — slides in from left */}
+              <motion.div
+                className="flex-shrink-0 overflow-hidden flex flex-col"
+                style={{ width: 200, borderRight: `1px solid ${HW.border}` }}
+                custom="left"
+                variants={bloomSide}
+              >
                 <DeckSearchPanel side="A" accentColor={HW.deckA}
                   onSelect={(p) => { setDeckAPreset(p); setManualOverride(false); }}
                   selectedId={deckAPreset?.id ?? null}
                   cloudPresets={cloudPresets}
                   onSavePreset={savePreset} />
-              </div>
+              </motion.div>
 
-              {/* CENTER MIXER */}
+              {/* CENTER — screen + faders + crossfader + input */}
               <div className="flex-1 flex flex-col min-w-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
 
-                {/* Screen */}
-                <div className="flex-shrink-0 mx-2 mt-1.5 rounded-lg overflow-hidden"
+                {/* Screen — blooms first */}
+                <motion.div variants={bloomScreen}
+                  className="flex-shrink-0 mx-4 mt-3 rounded-xl overflow-hidden"
                   style={{
-                    background: HW.screen, border: `1px solid ${HW.screenBorder}`,
-                    boxShadow: "inset 0 2px 8px hsla(0,0%,0%,0.6), 0 2px 12px hsla(0,0%,0%,0.3)",
+                    background: HW.screen,
+                    border: `1px solid ${HW.screenBorder}`,
+                    boxShadow: "inset 0 2px 8px hsla(0,0%,0%,0.6), 0 2px 16px hsla(0,0%,0%,0.3)",
                   }}>
-                  <div className="flex items-center justify-between px-3 py-0.5" style={{ borderBottom: "1px solid hsla(220,8%,14%,0.5)" }}>
-                    <div className="flex gap-0.5">
+                  {/* Screen tab bar */}
+                  <div className="flex items-center justify-between px-4 py-1.5" style={{ borderBottom: "1px solid hsla(220,8%,14%,0.5)" }}>
+                    <div className="flex gap-1">
                       {(["spectrum", "coherence", "radar"] as const).map((m) => (
                         <button key={m} onPointerDown={() => setScreenMode(m)}
-                          className="px-2 py-0.5 rounded text-[9px] tracking-wider uppercase font-semibold transition-all"
+                          className="px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase font-semibold transition-all"
                           style={{
                             color: screenMode === m ? HW.goldBright : HW.textDim,
                             background: screenMode === m ? HW.goldGlow : "transparent",
@@ -702,11 +704,11 @@ export default memo(function ProModeDeck({
                         </button>
                       ))}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <LED on={coherenceH > 0.7} color={HW.green} size={4} />
-                      <LED on={coherenceH > 0.4 && coherenceH <= 0.7} color={HW.gold} size={4} />
-                      <LED on={coherenceH <= 0.4} color={HW.red} size={4} />
-                      <span className="text-[9px] font-mono font-semibold ml-1" style={{ color: HW.textSub }}>H:{Math.round(coherenceH * 100)}</span>
+                    <div className="flex items-center gap-2">
+                      <LED on={coherenceH > 0.7} color={HW.green} size={5} />
+                      <LED on={coherenceH > 0.4 && coherenceH <= 0.7} color={HW.gold} size={5} />
+                      <LED on={coherenceH <= 0.4} color={HW.red} size={5} />
+                      <span className="text-[10px] font-mono font-semibold ml-1" style={{ color: HW.textSub }}>H:{Math.round(coherenceH * 100)}</span>
                     </div>
                   </div>
                   <AnimatePresence mode="wait">
@@ -716,23 +718,21 @@ export default memo(function ProModeDeck({
                       {screenMode === "radar" && <ScreenRadar values={values} />}
                     </motion.div>
                   </AnimatePresence>
-                </div>
+                </motion.div>
 
-                {/* Input slot */}
-                {inputSlot && <div className="flex-shrink-0 mx-2 mt-1">{inputSlot}</div>}
-
-                {/* Faders — 3 category groups */}
-                <div className="flex-shrink-0 flex items-start justify-center gap-1.5 mx-2 mt-1">
+                {/* Faders — bloom second */}
+                <motion.div variants={bloomFaders}
+                  className="flex-shrink-0 flex items-start justify-center gap-3 mx-4 mt-3">
                   {categories.map((cat) => {
                     const meta = CATEGORY_META[cat];
                     const dims = groupedDimensions[cat];
                     return (
-                      <div key={cat} className="flex-shrink-0 rounded-lg px-1 py-1" style={{ background: HW.surface, border: `1px solid ${HW.border}` }}>
-                        <div className="flex items-center gap-1 mb-0.5 px-0.5 justify-center">
-                          <LED on size={3} color={`hsl(${meta.hue}, 50%, 55%)`} />
-                          <span className="text-[8px] tracking-[0.15em] uppercase font-semibold" style={{ color: `hsla(${meta.hue}, 35%, 58%, 0.5)` }}>{meta.label}</span>
+                      <div key={cat} className="flex-shrink-0 rounded-xl px-3 py-2" style={{ background: HW.surface, border: `1px solid ${HW.border}` }}>
+                        <div className="flex items-center gap-1.5 mb-1.5 justify-center">
+                          <LED on size={4} color={`hsl(${meta.hue}, 50%, 55%)`} />
+                          <span className="text-[9px] tracking-[0.15em] uppercase font-bold" style={{ color: `hsla(${meta.hue}, 35%, 58%, 0.6)` }}>{meta.label}</span>
                         </div>
-                        <div className="flex justify-center gap-0">
+                        <div className="flex justify-center gap-0.5">
                           {dims.map((dim) => (
                             <ChannelFader key={dim.id} label={dim.label}
                               value={values[dim.id] ?? dim.defaultValue}
@@ -743,25 +743,40 @@ export default memo(function ProModeDeck({
                       </div>
                     );
                   })}
-                </div>
+                </motion.div>
 
-                {/* Crossfader */}
-                <div className="flex-shrink-0 mx-2 mt-1 mb-1 rounded-lg" style={{ background: HW.surface, border: `1px solid ${HW.border}` }}>
+                {/* Crossfader — bloom third */}
+                <motion.div variants={bloomCrossfader}
+                  className="flex-shrink-0 mx-4 mt-2 rounded-xl" style={{ background: HW.surface, border: `1px solid ${HW.border}` }}>
                   <Crossfader value={crossfader} onChange={(v) => { setCrossfader(v); setManualOverride(false); }} />
-                </div>
+                </motion.div>
+
+                {/* Input slot — always visible, anchored */}
+                {inputSlot && (
+                  <motion.div
+                    className="flex-shrink-0 mx-4 mt-2 mb-3"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    {inputSlot}
+                  </motion.div>
+                )}
               </div>
 
-              {/* RIGHT DECK */}
-              <div className="flex-shrink-0 overflow-hidden flex flex-col"
-                style={{ width: 190, borderLeft: `1px solid ${HW.border}` }}>
+              {/* RIGHT DECK — slides in from right */}
+              <motion.div
+                className="flex-shrink-0 overflow-hidden flex flex-col"
+                style={{ width: 200, borderLeft: `1px solid ${HW.border}` }}
+                custom="right"
+                variants={bloomSide}
+              >
                 <DeckSearchPanel side="B" accentColor={HW.deckB}
                   onSelect={(p) => { setDeckBPreset(p); setManualOverride(false); }}
                   selectedId={deckBPreset?.id ?? null}
                   cloudPresets={cloudPresets}
                   onSavePreset={savePreset} />
-              </div>
-
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </motion.div>
       )}
