@@ -49,6 +49,8 @@ import {
 } from "@/modules/hologram-ui/engine/reasoning";
 import ConvergencePipeline, { type PipelineState, type PipelineStage } from "./ConvergencePipeline";
 import ShowcasePipeline, { isComplexQuestion } from "./ShowcasePipeline";
+import { Sparkles as MagicIcon } from "lucide-react"; // Import magic icon
+
 // ── Palette — almost invisible, warm, human ──────────────────────────
 const C = {
   bg: "hsl(25, 8%, 6%)",
@@ -512,25 +514,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             </button>
           )}
 
-          {/* Pro Mode toggle */}
-          <button
-            onPointerDown={() => setProMode(!proMode)}
-            className="h-7 px-2.5 rounded-lg flex items-center gap-1.5 transition-all duration-220"
-            style={{
-              background: proMode
-                ? "hsla(38, 40%, 45%, 0.15)"
-                : "hsla(38, 15%, 30%, 0.06)",
-              border: `1px solid ${proMode ? "hsla(38, 35%, 45%, 0.2)" : "hsla(38, 15%, 25%, 0.08)"}`,
-              color: proMode
-                ? "hsl(38, 50%, 65%)"
-                : "hsla(38, 15%, 55%, 0.35)",
-            }}
-          >
-            <SlidersHorizontal className="w-3 h-3" strokeWidth={1.5} />
-            <span className="text-[10px] tracking-[0.08em] font-medium">
-              Pro
-            </span>
-          </button>
+          {/* Pro Mode toggle (Moved to input area) */}
         </div>
       </div>
 
@@ -550,49 +534,45 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           {/* Welcome — when empty */}
           {!hasExchanges && !isConverging && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-              className="flex flex-col items-center justify-center text-center"
-              style={{
-                /* Golden ratio: content sits at ~38.2% from top (1 - 1/φ) */
-                minHeight: "61.8vh",
-                paddingTop: "6.18vh",
-              }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+              className="flex flex-col items-center justify-center text-center h-full min-h-[50vh]"
             >
-              {/* Breathing glyph — scales with viewport */}
+              {/* Breathing glyph — balanced */}
               <motion.div
-                animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="mb-[3.2vh]"
+                animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="mb-8"
               >
-                <span
-                  className="text-[clamp(24px,3.6vh,42px)]"
-                  style={{ color: "hsla(38, 40%, 60%, 0.3)" }}
-                >
-                  ✦
-                </span>
+                <Sparkles
+                  size={32}
+                  strokeWidth={1}
+                  style={{ color: "hsla(38, 30%, 60%, 0.4)" }}
+                />
               </motion.div>
 
               <h2
-                className="font-light leading-tight mb-3"
+                className="font-light leading-tight mb-4"
                 style={{
                   fontFamily: C.fontDisplay,
-                  color: "hsla(38, 20%, 80%, 0.85)",
-                  letterSpacing: "-0.01em",
-                  fontSize: "clamp(24px, 3.8vh, 44px)",
+                  color: "hsla(38, 20%, 85%, 0.9)",
+                  letterSpacing: "-0.015em",
+                  fontSize: "clamp(28px, 4.5vh, 48px)",
                 }}
               >
                 {greeting}
               </h2>
               <p
-                className="max-w-md leading-relaxed"
+                className="max-w-lg leading-relaxed px-4"
                 style={{
-                  color: "hsla(30, 10%, 55%, 0.5)",
-                  fontSize: "clamp(13px, 1.6vh, 17px)",
+                  color: "hsla(30, 8%, 55%, 0.6)",
+                  fontSize: "clamp(14px, 1.8vh, 18px)",
+                  fontFamily: C.font,
+                  letterSpacing: "0.01em",
                 }}
               >
-                This is not a prompt. It's a thought. Express it naturally,
+                This is not a prompt. It's a thought. Express it naturally,<br className="hidden sm:block" />
                 and the understanding will find its shape.
               </p>
             </motion.div>
@@ -685,6 +665,36 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
             {/* Bottom bar */}
             <div className="flex items-center justify-end px-3 pb-2.5">
               <div className="flex items-center gap-2">
+                {/* Pro Mode magical toggle */}
+                <button
+                  onPointerDown={() => setProMode(!proMode)}
+                  className="relative group flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all duration-300"
+                  style={{
+                    color: proMode ? C.gold : "hsla(38, 15%, 50%, 0.4)",
+                    background: proMode ? "hsla(38, 30%, 25%, 0.15)" : "transparent",
+                  }}
+                  title="Enter Pro Mode"
+                >
+                  <MagicIcon 
+                    size={14} 
+                    className={`transition-transform duration-500 ${proMode ? "rotate-180" : "group-hover:rotate-12"}`}
+                  />
+                  <span 
+                    className={`text-[10px] tracking-widest uppercase font-medium transition-all duration-300 ${proMode ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0 overflow-hidden"}`}
+                  >
+                    Pro
+                  </span>
+                  
+                  {/* Subtle glow hint */}
+                  {!proMode && (
+                    <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{ boxShadow: "0 0 12px hsla(38, 40%, 60%, 0.1)" }}
+                    />
+                  )}
+                </button>
+
+                <div className="w-[1px] h-4 mx-1" style={{ background: "hsla(38, 10%, 30%, 0.15)" }} />
+
                 {/* Voice orb / mic button */}
                 {voice.isSttAvailable && (
                   <button
@@ -811,16 +821,19 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         <AnimatePresence>
           {proMode && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 420, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-shrink-0 overflow-hidden"
+              initial={{ width: 0, opacity: 0, x: 20, filter: "blur(10px)" }}
+              animate={{ width: 420, opacity: 1, x: 0, filter: "blur(0px)" }}
+              exit={{ width: 0, opacity: 0, x: 20, filter: "blur(10px)" }}
+              transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
+              className="relative flex-shrink-0 overflow-hidden shadow-2xl z-10"
               style={{
-                borderLeft: "1px solid hsla(38, 15%, 25%, 0.1)",
+                borderLeft: "1px solid hsla(38, 20%, 35%, 0.15)",
+                background: "hsla(25, 8%, 8%, 0.95)",
+                backdropFilter: "blur(20px)",
               }}
             >
-              <div className="w-[420px] h-full">
+              <div className="absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-transparent via-orange-500/20 to-transparent opacity-50" />
+              <div className="w-[420px] h-full relative">
                 <ProModeMixer
                   coherenceH={coherence.h ?? 0.5}
                   values={dimensionValues}
