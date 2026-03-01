@@ -465,7 +465,7 @@ export default function HologramOsPage() {
             width: chatOpen || lumenPanel.isResizing
               ? (lumenPanel.width ? `${lumenPanel.width}px` : "340px")
               : "0px",
-            overflow: "visible",
+            overflow: "hidden",
             transition: lumenPanel.isResizing
               ? "none"
               : "width 180ms cubic-bezier(0.22, 1, 0.36, 1)",
