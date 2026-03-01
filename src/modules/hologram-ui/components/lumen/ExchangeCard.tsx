@@ -15,7 +15,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal } from "lucide-react";
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
 const C = {
@@ -316,6 +316,10 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: reflectPrompt }));
   }, [ex.thought, ex.understanding]);
 
+  const handleRemix = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("lumen:remix", { detail: ex.thought }));
+  }, [ex.thought]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -527,6 +531,17 @@ export default function ExchangeCard({ exchange: ex, isActive, pipelineSlot }: E
                     >
                       <Fingerprint className="w-3 h-3" />
                       <span className="text-[9px] tracking-[0.12em] uppercase">{active.length}</span>
+                    </button>
+
+                    {/* Remix with current mix */}
+                    <button
+                      onClick={handleRemix}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(200,20%,25%,0.12)]"
+                      style={{ color: "hsla(200, 45%, 60%, 0.5)" }}
+                      title="Regenerate with current fader mix"
+                    >
+                      <SlidersHorizontal className="w-3 h-3" />
+                      <span className="text-[9px] tracking-[0.12em] uppercase">Remix</span>
                     </button>
                   </div>
                 </div>

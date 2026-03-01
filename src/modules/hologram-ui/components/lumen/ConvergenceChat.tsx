@@ -504,6 +504,18 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
     return () => window.removeEventListener("lumen:follow-up", handler);
   }, [isConverging, converge]);
 
+  // ── Remix listener — re-run same query with current fader mix ───
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const thought = (e as CustomEvent).detail as string;
+      if (thought && !isConverging) {
+        converge(thought);
+      }
+    };
+    window.addEventListener("lumen:remix", handler);
+    return () => window.removeEventListener("lumen:remix", handler);
+  }, [isConverging, converge]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
