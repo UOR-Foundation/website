@@ -16,6 +16,7 @@ import { sha256, sha256hex } from "./axiom-hash";
 import { createCid, verifyCid, cidToIri, type Cid } from "./axiom-cid";
 import { canonicalEncode, canonicalStringify } from "./axiom-codec";
 import { verifyTauInvolution, verifyMirrorCoherence, MIRROR_PAIRS, FANO_LINES } from "./axiom-mirror";
+import { verifyConstitution, getConstitutionCid, EIGHT_LAWS } from "./axiom-constitution";
 
 // ── POST Check Results ────────────────────────────────────
 
@@ -134,6 +135,19 @@ function checkFanoIntegrity(): PostCheck {
   };
 }
 
+/** POST 8: Constitutional integrity — the Eight Laws are intact and immutable */
+function checkConstitutionalIntegrity(): PostCheck {
+  const passed = verifyConstitution();
+  const cid = getConstitutionCid();
+  return {
+    name: "constitutional-integrity",
+    passed,
+    detail: passed
+      ? `Eight Laws verified. Constitution CID: ${cid.string.slice(0, 20)}…`
+      : "FATAL: Constitutional integrity compromised. The Eight Laws have been tampered with.",
+  };
+}
+
 // ── POST Sequence ─────────────────────────────────────────
 
 /**
@@ -156,6 +170,7 @@ export function post(): PostResult {
     checkTauInvolution(),      // 5. Mirrors reflect properly
     checkMirrorCoherence(),    // 6. Error correction is sound
     checkFanoIntegrity(),      // 7. Routing topology is intact
+    checkConstitutionalIntegrity(), // 8. The Eight Laws are immutable
   ];
 
   const passed = checks.every((c) => c.passed);

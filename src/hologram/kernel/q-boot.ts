@@ -27,6 +27,7 @@ import {
 import { sha256 } from "@/hologram/genesis/axiom-hash";
 import { createCid } from "@/hologram/genesis/axiom-cid";
 import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
+import { getConstitutionCid, getConstitutionalAttestation } from "@/hologram/genesis/axiom-constitution";
 import {
   verifyTauInvolution, verifyMirrorCoherence,
   MIRROR_PAIRS, MIRROR_COUNT, ATLAS_VERTICES,
@@ -98,6 +99,7 @@ export interface QKernelBoot {
   readonly genesis: GenesisProcess;
   readonly bootTimeMs: number;
   readonly kernelCid: string;
+  readonly constitutionCid: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -202,7 +204,7 @@ export function boot(): QKernelBoot {
       hardware: { vertexCount: 0, edgeCount: 0, fanoPoints: 0, fanoLines: 0, mirrorPairs: 0, signClasses: 0, verified: false },
       firmware: { levels: 0, algebras: [], properties: [], triangleIdentitiesHold: false, roundTripLossless: false },
       genesis: { pid: 0, name: "init", sessionCid: "", hScore: 0, zone: "convergent", createdAt: "", parentPid: null, state: "running" },
-      bootTimeMs: performance.now() - t0, kernelCid: "",
+      bootTimeMs: performance.now() - t0, kernelCid: "", constitutionCid: "",
     };
   }
 
@@ -210,11 +212,14 @@ export function boot(): QKernelBoot {
   const firmware = hydrateFirmware();
   const genesis = createGenesisProcess();
 
+  const constitutionCid = getConstitutionCid().string;
+
   const kernelState = canonicalEncode({
     post: postResult.allPassed,
     hw: { v: hardware.vertexCount, e: hardware.edgeCount, f: hardware.fanoLines, m: hardware.mirrorPairs },
     fw: { levels: firmware.levels, tri: firmware.triangleIdentitiesHold, rt: firmware.roundTripLossless },
     genesis: genesis.sessionCid,
+    constitution: constitutionCid,
   });
   const kernelHash = sha256(kernelState);
   const kernelCid = createCid(kernelHash).string;
@@ -222,6 +227,6 @@ export function boot(): QKernelBoot {
   return {
     stage: "running", post: postResult,
     hardware, firmware, genesis,
-    bootTimeMs: performance.now() - t0, kernelCid,
+    bootTimeMs: performance.now() - t0, kernelCid, constitutionCid,
   };
 }
