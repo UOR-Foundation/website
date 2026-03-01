@@ -8,7 +8,7 @@
  * selectively via zero-knowledge proofs.
  */
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   Shield, Fingerprint, Lock, LogOut, Copy, Check,
   Camera, ChevronRight, Settings, Plus, Users,
@@ -35,6 +35,40 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
   const [trustOpen, setTrustOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // ── Realtime pending trust request count ────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    // Initial fetch
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("trust_connections")
+        .select("id", { count: "exact", head: true })
+        .eq("responder_id", user.id)
+        .eq("status", "pending");
+      setPendingCount(count ?? 0);
+    };
+    fetchCount();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel("trust-requests-badge")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "trust_connections",
+          filter: `responder_id=eq.${user.id}`,
+        },
+        () => { fetchCount(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const handleSaveProfile = useCallback(async () => {
     if (!user) return;
@@ -377,11 +411,19 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
         </button>
         <button
           onClick={() => setTrustOpen(true)}
-          className="flex items-center gap-2 mt-2 cursor-pointer group"
+          className="flex items-center gap-2 mt-2 cursor-pointer group relative"
           style={{ color: KP.gold, background: "none", border: "none" }}
         >
           <Users className="w-3.5 h-3.5" />
           <span className="text-sm font-medium group-hover:opacity-80 transition-opacity">Trust network</span>
+          {pendingCount > 0 && (
+            <span
+              className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold animate-pulse"
+              style={{ background: KP.gold, color: KP.bg }}
+            >
+              {pendingCount}
+            </span>
+          )}
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
