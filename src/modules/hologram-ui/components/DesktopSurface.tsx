@@ -432,7 +432,7 @@ export default function DesktopSurface({
           <div className="flex justify-center">
             <div
               style={{
-                height: "clamp(40px, 6vh, 110px)",
+                height: "clamp(56px, 8vh, 130px)",
                 width: 0,
                 borderLeft: `1px solid ${
                   mode === "white"
@@ -447,35 +447,12 @@ export default function DesktopSurface({
             />
           </div>
 
-          {/* Lumen ambient marker — subtle, non-interactive */}
-          <div
-            className="flex flex-col items-center"
-            style={{ animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both" }}
-          >
-            <p
-              className="tracking-[0.08em] transition-all duration-500"
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 300,
-                fontStyle: "italic",
-                fontSize: "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
-                color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
-                maxWidth: "30ch",
-                lineHeight: 1.6,
-                textAlign: "center",
-                animation: "stagger-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
-              }}
-            >
-              <TypewriterText text={getLumenSubtitle()} />
-            </p>
-          </div>
-
-          {/* ── Genesis-synced circle + dot — emanating from center ── */}
+          {/* ── Genesis-synced circle + dot — directly below line ── */}
           <div
             className="flex flex-col items-center"
             style={{
-              marginTop: "clamp(12px, 2vh, 28px)",
-              animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both",
+              marginTop: "clamp(6px, 1vh, 14px)",
+              animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
             }}
           >
             <button
@@ -484,7 +461,7 @@ export default function DesktopSurface({
               onClick={onOpenChat}
               aria-label="Open Lumen AI"
             >
-              {/* Ripple rings — emanate outward and fade to nothing */}
+              {/* Ripple rings */}
               {[0, 0.8, 1.6].map((delay, i) => (
                 <div
                   key={i}
@@ -501,7 +478,7 @@ export default function DesktopSurface({
                   }}
                 />
               ))}
-              {/* Core dot — click target for Lumen AI */}
+              {/* Core dot */}
               <div
                 className="rounded-full transition-transform duration-200 group-hover:scale-[1.6]"
                 style={{
@@ -517,6 +494,31 @@ export default function DesktopSurface({
                 }}
               />
             </button>
+          </div>
+
+          {/* Subtitle text — below the circle */}
+          <div
+            className="flex flex-col items-center"
+            style={{
+              marginTop: "clamp(2px, 0.5vh, 8px)",
+              animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
+            }}
+          >
+            <p
+              className="tracking-[0.08em] transition-all duration-500"
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 300,
+                fontStyle: "italic",
+                fontSize: "calc(clamp(14px, 1vw, 18px) * var(--holo-user-scale))",
+                color: mode === "white" ? "hsla(0, 0%, 20%, 0.8)" : "hsla(38, 12%, 85%, 0.6)",
+                maxWidth: "30ch",
+                lineHeight: 1.6,
+                textAlign: "center",
+              }}
+            >
+              <TypewriterText text={getLumenSubtitle()} />
+            </p>
           </div>
         </div>
       </div>
