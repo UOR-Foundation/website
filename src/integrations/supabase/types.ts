@@ -1163,6 +1163,48 @@ export type Database = {
           },
         ]
       }
+      trust_connections: {
+        Row: {
+          ceremony_cid: string | null
+          created_at: string
+          id: string
+          message: string | null
+          requester_attestation: string | null
+          requester_id: string
+          responder_attestation: string | null
+          responder_id: string
+          status: string
+          trust_level: number
+          updated_at: string
+        }
+        Insert: {
+          ceremony_cid?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_attestation?: string | null
+          requester_id: string
+          responder_attestation?: string | null
+          responder_id: string
+          status?: string
+          trust_level?: number
+          updated_at?: string
+        }
+        Update: {
+          ceremony_cid?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_attestation?: string | null
+          requester_id?: string
+          responder_attestation?: string | null
+          responder_id?: string
+          status?: string
+          trust_level?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       uor_bindings: {
         Row: {
           address: string
@@ -1848,6 +1890,16 @@ export type Database = {
         }[]
       }
       record_invite_click: { Args: { click_code: string }; Returns: undefined }
+      search_profiles_by_handle: {
+        Args: { search_handle: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          uor_glyph: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
