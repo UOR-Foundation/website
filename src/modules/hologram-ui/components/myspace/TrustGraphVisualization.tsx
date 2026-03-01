@@ -7,13 +7,14 @@
  * The current user is the central node.
  */
 
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import {
   forceSimulation,
   forceLink,
   forceManyBody,
   forceCenter,
   forceCollide,
+  type Simulation,
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
@@ -52,9 +53,13 @@ export default function TrustGraphVisualization({
   userGlyph,
 }: TrustGraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const simRef = useRef<Simulation<GraphNode, GraphLink> | null>(null);
+  const nodesRef = useRef<GraphNode[]>([]);
+  const linksRef = useRef<GraphLink[]>([]);
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [links, setLinks] = useState<GraphLink[]>([]);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [draggedNode, setDraggedNode] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 350 });
 
   // Measure container
@@ -97,6 +102,7 @@ export default function TrustGraphVisualization({
     }));
 
     const allNodes = [centerNode, ...peerNodes];
+    nodesRef.current = allNodes;
 
     const sim = forceSimulation<GraphNode>(allNodes)
       .force(
@@ -109,18 +115,57 @@ export default function TrustGraphVisualization({
       .force("center", forceCenter(dimensions.width / 2, dimensions.height / 2))
       .force("collide", forceCollide(32));
 
+    linksRef.current = graphLinks;
+    simRef.current = sim;
+
     sim.on("tick", () => {
       setNodes([...allNodes]);
       setLinks([...graphLinks]);
     });
 
-    // Run simulation quickly
     sim.alpha(1).restart();
 
     return () => {
       sim.stop();
+      simRef.current = null;
     };
   }, [connections, userName, userGlyph, dimensions]);
+
+  const onNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    e.stopPropagation();
+    const node = nodesRef.current.find((n) => n.id === nodeId);
+    if (!node || !simRef.current) return;
+    setDraggedNode(nodeId);
+    node.fx = node.x;
+    node.fy = node.y;
+    simRef.current.alphaTarget(0.3).restart();
+    (e.target as SVGElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const onNodePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!draggedNode || !svgRef.current) return;
+    const svg = svgRef.current;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+    const node = nodesRef.current.find((n) => n.id === draggedNode);
+    if (node) {
+      node.fx = svgP.x;
+      node.fy = svgP.y;
+    }
+  }, [draggedNode]);
+
+  const onNodePointerUp = useCallback(() => {
+    if (!draggedNode) return;
+    const node = nodesRef.current.find((n) => n.id === draggedNode);
+    if (node) {
+      node.fx = null;
+      node.fy = null;
+    }
+    setDraggedNode(null);
+    simRef.current?.alphaTarget(0);
+  }, [draggedNode]);
 
   if (connections.length === 0) {
     return (
@@ -149,6 +194,8 @@ export default function TrustGraphVisualization({
         height={dimensions.height}
         className="w-full"
         style={{ minHeight: 280 }}
+        onPointerMove={onNodePointerMove}
+        onPointerUp={onNodePointerUp}
       >
         {/* Edges */}
         {links.map((link, i) => {
@@ -212,10 +259,11 @@ export default function TrustGraphVisualization({
           return (
             <g
               key={node.id}
-              onMouseEnter={() => setHoveredNode(node.id)}
-              onMouseLeave={() => setHoveredNode(null)}
+              onMouseEnter={() => !draggedNode && setHoveredNode(node.id)}
+              onMouseLeave={() => !draggedNode && setHoveredNode(null)}
+              onPointerDown={(e) => onNodePointerDown(e, node.id)}
               style={{
-                cursor: "pointer",
+                cursor: draggedNode === node.id ? "grabbing" : "grab",
                 transition: "opacity 0.3s ease",
                 opacity: isFaded ? 0.25 : 1,
               }}
