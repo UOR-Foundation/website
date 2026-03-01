@@ -365,10 +365,10 @@ export default function VoiceOrb({
             )}
             {hasObserver && voice.isActive && (
               <div className="flex items-center gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid hsla(38, 20%, 30%, 0.1)" }}>
-                <div className="rounded-full" style={{
+              <div className="rounded-full" style={{
                   width: "4px", height: "4px",
                   background: "hsla(150, 40%, 55%, 0.6)",
-                  animation: "heartbeat-love 3s ease-in-out infinite",
+                  animation: "heartbeat-love calc(2s + 1.5s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
                 }} />
                 <span style={{
                   fontFamily: "'DM Sans', sans-serif",
@@ -484,7 +484,7 @@ export default function VoiceOrb({
             style={{
               transform: "scale(2.4)",
               background: `radial-gradient(circle, hsla(150, 35%, 50%, ${voice.isActive ? 0.06 : 0.03}) 0%, transparent 70%)`,
-              animation: "ring-breathe 5s ease-in-out infinite",
+              animation: `ring-breathe calc(3s + 3s * (1 - var(--h-score, 0.5))) ease-in-out infinite`,
               transition: "background 1s ease",
             }}
           />
@@ -496,7 +496,9 @@ export default function VoiceOrb({
           style={{
             transform: `scale(${voice.isListening ? 1.5 + metrics.intensity * 0.5 : 1.8})`,
             background: `radial-gradient(circle, ${coherenceGlow} 0%, transparent 70%)`,
-            animation: voice.isActive && !voice.isListening ? "ring-breathe 3s ease-in-out infinite" : undefined,
+            animation: voice.isActive && !voice.isListening
+              ? `ring-breathe calc(2s + 1.5s * (1 - var(--h-score, 0.5))) ease-in-out infinite`
+              : undefined,
             transition: "transform 0.15s ease-out, background 0.3s ease",
           }}
         />
@@ -525,11 +527,11 @@ export default function VoiceOrb({
                 ? `0 0 ${12 + metrics.intensity * 20}px ${coherenceGlow}, inset 0 0 ${6 + metrics.intensity * 8}px ${coherenceGlow}`
                 : voice.isActive
                   ? `0 0 24px ${STATE_COLORS[voice.state].glow}, inset 0 0 10px ${STATE_COLORS[voice.state].glow}`
-                  : alwaysListening && voice.isIdle
-                    ? "0 0 12px hsla(185, 30%, 50%, 0.08)"
-                    : hovered
-                      ? "0 0 12px hsla(38, 30%, 50%, 0.08)"
-                      : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
+                    : alwaysListening && voice.isIdle
+                      ? `0 0 calc(8px + 8px * var(--h-score, 0.5)) hsla(185, 30%, 50%, calc(0.04 + 0.08 * var(--h-score, 0.5)))`
+                      : hovered
+                        ? `0 0 calc(8px + 8px * var(--h-score, 0.5)) hsla(38, 30%, 50%, calc(0.04 + 0.08 * var(--h-score, 0.5)))`
+                        : "0 2px 8px hsla(0, 0%, 0%, 0.2)",
             transition: "background 0.3s ease, border-color 0.15s ease, box-shadow 0.15s ease",
           }}
         >
