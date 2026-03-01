@@ -330,9 +330,9 @@ export default function DesktopSurface({
         onDoubleClick={handleDoubleClick("frame-widget", frameWidgetDrag)}
         {...frameWidgetDrag.handlers}
       >
-        {mode === "image" && <WeatherWidget />}
+        {mode === "image" && <AmbientMoodWidget />}
         {mode === "white" && <ProductivityTimerWidget />}
-        {mode === "dark" && <AmbientMoodWidget />}
+        {mode === "dark" && <WeatherWidget />}
       </div>
 
       {/* ── Content: Logo ────────────────────────── */}
