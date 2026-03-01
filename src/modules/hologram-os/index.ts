@@ -30,6 +30,8 @@ export {
   type RewardCoherenceSnapshot,
   type StabilizerProjection,
   type CircuitProjection,
+  type CompositorProjection,
+  type SupervisorProjection,
 } from "./projection-engine";
 
 // Surface Adapter — kernel frames → browser DOM

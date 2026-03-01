@@ -33,12 +33,15 @@ import {
 import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
 import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/stabilizer-engine";
 import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/circuit-compiler";
+import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/projection-compositor";
+import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/kernel-supervisor";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
 export type { RewardProjection, RewardSignal, EpistemicGrade, CoherenceSnapshot as RewardCoherenceSnapshot };
 export type { StabilizerProjection };
 export type { CircuitProjection };
+export type { CompositorProjection, SupervisorProjection };
 
 // ═══════════════════════════════════════════════════════════════════════
 // Projection Frame Types — Pure data descriptions of what to render
@@ -174,6 +177,7 @@ export interface ProjectionFrame {
   readonly rewardProjection: RewardProjection;
   readonly stabilizerProjection: StabilizerProjection;
   readonly circuitProjection: CircuitProjection;
+  readonly compositorProjection: CompositorProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
 }
@@ -348,6 +352,8 @@ export class KernelProjector {
   private surface: HolographicSurface = getHolographicSurface();
   private stabilizer: StabilizerEngine = getStabilizerEngine();
   private circuitEngine: CircuitEngine = getCircuitEngine();
+  private compositor: ProjectionCompositor = getProjectionCompositor();
+  private supervisor: KernelSupervisor = getKernelSupervisor();
   private rewardAccumulator = new RewardAccumulator();
   private cachedRewardProjection: RewardProjection = { ema: 0, cumulative: 0, count: 0, trend: "stable", lastReward: 0, temperature: 1.0 };
   private cachedStabilizerProjection: StabilizerProjection = { syndromeWeight: 0, health: 1, correctionApplied: false, totalCorrections: 0, totalExtractions: 0, fanoViolations: 0, zone: "convergent", errorRate: 0 };
@@ -437,7 +443,7 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}`;
+    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}|${frame.compositorProjection.kernelCount}`;
   }
 
   /**
@@ -1391,6 +1397,9 @@ export class KernelProjector {
     // ── Circuit Engine — the neuro-symbolic compiler ────────────────────
     this.cachedCircuitProjection = this.circuitEngine.project();
 
+    // ── Compositor — multi-kernel frame merger ────────────────────────
+    const compositorProjection = this.compositor.project();
+
     return {
       tick: this.tickCount,
       timestamp: Date.now(),
@@ -1408,6 +1417,7 @@ export class KernelProjector {
       rewardProjection: this.cachedRewardProjection,
       stabilizerProjection: this.cachedStabilizerProjection,
       circuitProjection: this.cachedCircuitProjection,
+      compositorProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
     };
@@ -1552,6 +1562,21 @@ export class KernelProjector {
   /** Get the circuit engine for advanced control */
   getCircuitEngine(): CircuitEngine {
     return this.circuitEngine;
+  }
+
+  /** Get the compositor projection */
+  getCompositorProjection(): CompositorProjection {
+    return this.compositor.project();
+  }
+
+  /** Get the kernel supervisor for spawning child kernels */
+  getKernelSupervisor(): KernelSupervisor {
+    return this.supervisor;
+  }
+
+  /** Get the projection compositor for multi-kernel frame merging */
+  getProjectionCompositor(): ProjectionCompositor {
+    return this.compositor;
   }
 
   // ── Persistence ──────────────────────────────────────────────────────
