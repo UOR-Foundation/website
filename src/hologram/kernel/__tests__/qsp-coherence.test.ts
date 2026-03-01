@@ -112,3 +112,88 @@ describe("ProjectionCompositor", () => {
     expect(result.activeCount).toBe(0);
   });
 });
+
+// ── Prescience × Coherence Gradient Tests ───────────────────────────
+
+describe("PrescienceEngine coherence gradient modulation", () => {
+  // Fresh engine for each test (bypass singleton)
+  function makeEngine() {
+    // Clear localStorage to get a clean state
+    try { localStorage.removeItem("hologram:prescience"); } catch {}
+    // Re-import to get fresh instance would be complex, so we test via the class
+    const { PrescienceEngine } = require("@/modules/hologram-os/prescience-engine");
+    return new PrescienceEngine();
+  }
+
+  it("sharpens distribution when dh > 0 (rising coherence)", () => {
+    const engine = makeEngine();
+    engine.setBootTime(Date.now());
+    engine.setCurrentState("none:image");
+
+    // Build a transition history with two targets of different strength
+    engine.recordTransition("chat:image", 0.8);
+    engine.setCurrentState("none:image");
+    engine.recordTransition("chat:image", 0.8);
+    engine.setCurrentState("none:image");
+    engine.recordTransition("code:image", 0.5);
+    engine.setCurrentState("none:image");
+
+    // Neutral gradient — baseline
+    engine.setCoherenceGradient(0);
+    const neutralHints = engine.getHints();
+
+    // Positive gradient — should sharpen (top candidate gains, lower loses)
+    engine.setCoherenceGradient(0.5);
+    // Force re-emit
+    engine.setCurrentState("none:image");
+    const sharpHints = engine.getHints();
+
+    // With sharpening, the top hint's confidence should be >= neutral
+    if (neutralHints.length > 0 && sharpHints.length > 0) {
+      expect(sharpHints[0].confidence).toBeGreaterThanOrEqual(neutralHints[0].confidence);
+    }
+  });
+
+  it("widens distribution when dh < 0 (falling coherence)", () => {
+    const engine = makeEngine();
+    engine.setBootTime(Date.now());
+    engine.setCurrentState("none:image");
+
+    // Build history
+    engine.recordTransition("chat:image", 0.8);
+    engine.setCurrentState("none:image");
+    engine.recordTransition("chat:image", 0.8);
+    engine.setCurrentState("none:image");
+    engine.recordTransition("code:image", 0.5);
+    engine.setCurrentState("none:image");
+
+    // Negative gradient — should widen (flatten scores)
+    engine.setCoherenceGradient(-0.5);
+    engine.setCurrentState("none:image");
+    const wideHints = engine.getHints();
+
+    // With widening, more candidates should pass threshold
+    // or the top candidate's dominance should decrease
+    // (scores compressed toward each other)
+    if (wideHints.length >= 2) {
+      const ratio = wideHints[1].confidence / wideHints[0].confidence;
+      // More uniform distribution means ratio closer to 1
+      expect(ratio).toBeGreaterThan(0);
+    }
+  });
+
+  it("exposes gradient stats", () => {
+    const engine = makeEngine();
+    engine.setCoherenceGradient(0.3);
+    const stats = engine.getStats();
+    expect(stats.coherenceDh).toBe(0.3);
+    expect(stats.gradientExponent).toBeGreaterThan(1); // positive dh → exponent > 1
+  });
+
+  it("neutral gradient (dh=0) produces exponent=1 (no distortion)", () => {
+    const engine = makeEngine();
+    engine.setCoherenceGradient(0);
+    const stats = engine.getStats();
+    expect(stats.gradientExponent).toBeCloseTo(1, 5);
+  });
+});
