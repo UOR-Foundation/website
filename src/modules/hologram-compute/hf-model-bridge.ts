@@ -473,6 +473,8 @@ export async function getNextTokenLogits(
   loadedModel: LoadedHFModel,
   tokenIds: number[],
 ): Promise<Float32Array> {
+  if (tokenIds.length === 0) return new Float32Array(0);
+
   try {
     const transformers = await import("@huggingface/transformers");
     const inputTensor = new transformers.Tensor(
@@ -494,11 +496,15 @@ export async function getNextTokenLogits(
 
     // output.logits is a Tensor of shape [1, seqLen, vocabSize]
     if (output.logits) {
-      const logitsData = output.logits.data as Float32Array;
+      const logitsData = output.logits.data;
       const vocabSize = loadedModel.manifest.vocabSize;
-      // Extract logits for the last token position
+      // Extract logits for the last token position — copy to avoid buffer alignment issues
       const lastPos = (tokenIds.length - 1) * vocabSize;
-      return new Float32Array(logitsData.buffer, logitsData.byteOffset + lastPos * 4, vocabSize);
+      const result = new Float32Array(vocabSize);
+      for (let i = 0; i < vocabSize && (lastPos + i) < logitsData.length; i++) {
+        result[i] = Number(logitsData[lastPos + i]);
+      }
+      return result;
     }
   } catch (e) {
     console.warn("[HF-Bridge] Forward pass failed:", e);
