@@ -580,6 +580,23 @@ export default function DesktopSurface({
         }}
       >
         <button
+          onClick={() => onOpenLegal("principles")}
+          className="transition-opacity duration-500 hover:opacity-90"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: "calc(10px * var(--holo-user-scale))",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: mode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(38, 30%, 75%, 0.75)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Our Principles
+        </button>
+        <span style={{ width: "2px", height: "2px", borderRadius: "50%", background: P.legalDot }} />
+        <button
           onClick={() => onOpenLegal("privacy")}
           className="transition-opacity duration-500 hover:opacity-70"
           style={{
@@ -611,23 +628,6 @@ export default function DesktopSurface({
           }}
         >
           Terms of Use
-        </button>
-        <span style={{ width: "2px", height: "2px", borderRadius: "50%", background: P.legalDot }} />
-        <button
-          onClick={() => onOpenLegal("principles")}
-          className="transition-opacity duration-500 hover:opacity-90"
-          style={{
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontSize: "calc(10px * var(--holo-user-scale))",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            color: mode === "white" ? "hsla(0, 0%, 10%, 0.85)" : "hsla(38, 30%, 75%, 0.75)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Our Principles
         </button>
       </div>
     </div>
