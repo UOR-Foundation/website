@@ -15,7 +15,19 @@ import { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark, Sparkles } from "lucide-react";
+
+// ── Bloom Toggle (persisted, default ON) ─────────────────────────────
+const BLOOM_KEY = "lumen:bloom-enabled";
+function getBloomDefault(): boolean {
+  try {
+    const v = localStorage.getItem(BLOOM_KEY);
+    return v === null ? true : v === "true";
+  } catch { return true; }
+}
+function setBloomPersist(v: boolean) {
+  try { localStorage.setItem(BLOOM_KEY, String(v)); } catch {}
+}
 
 // ── Palette (mirrors ConvergenceChat) ────────────────────────────────
 const C = {
@@ -417,6 +429,7 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 
 // ── Main Component ───────────────────────────────────────────────────
 function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix }: ExchangeCardProps) {
+  const [bloomEnabled, setBloomEnabled] = useState(getBloomDefault);
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
@@ -528,6 +541,7 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
               thought={ex.thought}
               understanding={ex.understanding}
               onFollowUp={handleFollowUp}
+              enabled={bloomEnabled}
             >
               <div
                 className="text-[15px] leading-[2] prose prose-invert max-w-none"
@@ -778,6 +792,21 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                         </span>
                       </button>
                     )}
+
+                    {/* Bloom toggle */}
+                    <button
+                      onClick={() => {
+                        const next = !bloomEnabled;
+                        setBloomEnabled(next);
+                        setBloomPersist(next);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,20%,25%,0.08)]"
+                      style={{ color: bloomEnabled ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.2)" }}
+                      title={bloomEnabled ? "Disable keyword exploration" : "Enable keyword exploration"}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span className="text-[9px] tracking-[0.12em] uppercase">Bloom</span>
+                    </button>
                   </div>
                 </div>
 
