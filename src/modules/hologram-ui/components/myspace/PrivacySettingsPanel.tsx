@@ -9,6 +9,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Shield, Lock, Eye, EyeOff, Fingerprint,
   Globe, Hash, User, Mail, FileText, Image, AtSign,
@@ -223,69 +224,82 @@ export default function PrivacySettingsPanel({ onBack }: PrivacySettingsPanelPro
             </span>
           </button>
 
-          {diffOpen && (
-            <div
-              className="mt-2 rounded-xl overflow-hidden"
-              style={{ border: `1px solid ${KP.cardBorder}`, background: KP.card }}
-            >
-              {/* Column headers */}
-              <div
-                className="grid grid-cols-[1fr_80px_24px_80px] items-center px-4 py-2.5"
-                style={{ borderBottom: `1px solid ${KP.border}` }}
+          <AnimatePresence initial={false}>
+            {diffOpen && (
+              <motion.div
+                key="diff-content"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                className="overflow-hidden"
               >
-                <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: KP.dim }}>Category</span>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>Before</span>
-                <span />
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>After</span>
-              </div>
-
-              {changedCategories.map((cat, i) => {
-                const Icon = cat.icon;
-                const wasBefore = !!({ ...DEFAULT_RULES, ...savedRules })[cat.key];
-                const isNow = !!rules[cat.key];
-                return (
+                <div
+                  className="mt-2 rounded-xl overflow-hidden"
+                  style={{ border: `1px solid ${KP.cardBorder}`, background: KP.card }}
+                >
+                  {/* Column headers */}
                   <div
-                    key={cat.key}
                     className="grid grid-cols-[1fr_80px_24px_80px] items-center px-4 py-2.5"
-                    style={{
-                      borderBottom: i < changedCategories.length - 1 ? `1px solid ${KP.border}` : undefined,
-                    }}
+                    style={{ borderBottom: `1px solid ${KP.border}` }}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: KP.gold }} />
-                      <span className="text-xs font-medium truncate" style={{ color: KP.text }}>{cat.label}</span>
-                    </div>
-                    <div className="flex justify-center">
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                        style={{
-                          background: wasBefore ? `${KP.gold}15` : "hsl(25 8% 15%)",
-                          color: wasBefore ? KP.gold : KP.dim,
-                        }}
-                      >
-                        {wasBefore ? "Visible" : "Private"}
-                      </span>
-                    </div>
-                    <div className="flex justify-center">
-                      <span className="text-xs" style={{ color: KP.dim }}>→</span>
-                    </div>
-                    <div className="flex justify-center">
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                        style={{
-                          background: isNow ? `${KP.gold}20` : "hsl(0 50% 15%)",
-                          color: isNow ? KP.gold : "hsl(0 70% 65%)",
-                          border: `1px solid ${isNow ? `${KP.gold}30` : "hsl(0 50% 25%)"}`,
-                        }}
-                      >
-                        {isNow ? "Visible" : "Private"}
-                      </span>
-                    </div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: KP.dim }}>Category</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>Before</span>
+                    <span />
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>After</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
+
+                  {changedCategories.map((cat, i) => {
+                    const Icon = cat.icon;
+                    const wasBefore = !!({ ...DEFAULT_RULES, ...savedRules })[cat.key];
+                    const isNow = !!rules[cat.key];
+                    return (
+                      <motion.div
+                        key={cat.key}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04, duration: 0.2 }}
+                        className="grid grid-cols-[1fr_80px_24px_80px] items-center px-4 py-2.5"
+                        style={{
+                          borderBottom: i < changedCategories.length - 1 ? `1px solid ${KP.border}` : undefined,
+                        }}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: KP.gold }} />
+                          <span className="text-xs font-medium truncate" style={{ color: KP.text }}>{cat.label}</span>
+                        </div>
+                        <div className="flex justify-center">
+                          <span
+                            className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                            style={{
+                              background: wasBefore ? "hsla(152, 40%, 50%, 0.15)" : "hsla(0, 40%, 50%, 0.15)",
+                              color: wasBefore ? "hsl(152, 40%, 55%)" : "hsl(0, 40%, 60%)",
+                            }}
+                          >
+                            {wasBefore ? "Visible" : "Private"}
+                          </span>
+                        </div>
+                        <div className="flex justify-center">
+                          <span style={{ color: KP.dim, fontSize: "12px" }}>→</span>
+                        </div>
+                        <div className="flex justify-center">
+                          <span
+                            className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                            style={{
+                              background: isNow ? "hsla(152, 40%, 50%, 0.15)" : "hsla(0, 40%, 50%, 0.15)",
+                              color: isNow ? "hsl(152, 40%, 55%)" : "hsl(0, 40%, 60%)",
+                            }}
+                          >
+                            {isNow ? "Visible" : "Private"}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
