@@ -123,6 +123,9 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const [resonancePanelOpen, setResonancePanelOpen] = useState(false);
   const [graphContext, setGraphContext] = useState<GraphContext | null>(null);
   const lastExchangeTimestampRef = useRef<number>(0);
+  const resonanceProfile = loadResonanceProfile();
+  const rScore = resonanceProfile.resonanceScore;
+  const rConfidence = Math.min(1, resonanceProfile.observationCount / 20);
 
   // Load graph context on mount (enrichment from knowledge graph)
   useEffect(() => {
@@ -503,18 +506,28 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
 
   return (
     <div
-      className={embedded ? "flex flex-col w-full h-full" : "fixed inset-0 flex flex-col"}
+      className={embedded ? "flex flex-col w-full h-full relative" : "fixed inset-0 flex flex-col relative"}
       style={{ background: C.bg, fontFamily: C.font }}
     >
+      {/* Ambient resonance glow — subtle edge gradient that warms as resonance improves */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          opacity: 0.08 + rScore * 0.12 * rConfidence,
+          background: `radial-gradient(ellipse at 50% 0%, hsla(${38 + rScore * 30}, ${40 + rScore * 20}%, 55%, ${0.15 * rConfidence}) 0%, transparent 60%),
+                       radial-gradient(ellipse at 50% 100%, hsla(${38 + rScore * 30}, ${40 + rScore * 20}%, 45%, ${0.08 * rConfidence}) 0%, transparent 50%)`,
+          transition: "opacity 8s ease, background 8s ease",
+        }}
+      />
       {/* ── Top bar — almost invisible ─────────────────────── */}
       <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: `hsla(${38 + (coherence.h ?? 0.5) * 160}, 50%, 60%, 0.7)`,
-              boxShadow: `0 0 calc(6px + 6px * ${coherence.h ?? 0.5}) hsla(38, 50%, 55%, ${0.15 + (coherence.h ?? 0.5) * 0.3})`,
-              animation: `heartbeat-love calc(1.8s + 1.2s * (1 - ${coherence.h ?? 0.5})) ease-in-out infinite`,
+              background: `hsla(${38 + (coherence.h ?? 0.5) * 100 + rScore * 60}, ${45 + rScore * 15}%, 60%, ${0.5 + rScore * 0.3})`,
+              boxShadow: `0 0 calc(6px + 8px * ${rScore}) hsla(${38 + rScore * 30}, 50%, 55%, ${0.15 + rScore * 0.25})`,
+              animation: `heartbeat-love calc(${2.4 - rScore * 0.8}s) ease-in-out infinite`,
             }}
           />
           <span
@@ -535,15 +548,22 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
               {exchanges.length} exchange{exchanges.length !== 1 ? "s" : ""}
             </span>
           )}
-          {/* Resonance Profile button */}
+          {/* Resonance Profile button — glows with resonance state */}
           <button
             onClick={() => setResonancePanelOpen(true)}
-            className="w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+            className="w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-700 hover:scale-110 active:scale-95"
             style={{
-              color: "hsla(38, 15%, 60%, 0.4)",
-              background: "hsla(38, 15%, 30%, 0.08)",
+              color: rConfidence > 0.3
+                ? `hsla(${38 + rScore * 30}, ${40 + rScore * 25}%, ${55 + rScore * 10}%, ${0.4 + rScore * 0.4})`
+                : "hsla(38, 15%, 60%, 0.4)",
+              background: rConfidence > 0.3
+                ? `hsla(${38 + rScore * 30}, ${40 + rScore * 20}%, 50%, ${0.06 + rScore * 0.1})`
+                : "hsla(38, 15%, 30%, 0.08)",
+              boxShadow: rScore > 0.5 && rConfidence > 0.3
+                ? `0 0 ${6 + rScore * 8}px hsla(${38 + rScore * 30}, 50%, 55%, ${rScore * 0.15})`
+                : "none",
             }}
-            title="View resonance profile"
+            title={`Resonance: ${Math.round(rScore * 100)}%`}
           >
             <Brain className="w-3 h-3" strokeWidth={1.5} />
           </button>
