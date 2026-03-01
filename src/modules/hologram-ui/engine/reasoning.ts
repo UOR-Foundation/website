@@ -94,3 +94,14 @@ export {
   type ProceduralProjection,
   type HabitRingEntry,
 } from "@/hologram/kernel/procedural-memory";
+
+// ── Mirror Coherence Protocol ─────────────────────────────────────
+export {
+  getMirrorProtocol,
+  MirrorProtocolEngine,
+  type MirrorBond,
+  type MirrorObservation,
+  type SharedHabit,
+  type MirrorProjection,
+  type MirrorBondEntry,
+} from "@/hologram/kernel/mirror-protocol";

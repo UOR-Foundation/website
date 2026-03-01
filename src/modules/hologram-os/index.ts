@@ -33,6 +33,7 @@ export {
   type CompositorProjection,
   type SupervisorProjection,
   type ProceduralProjection,
+  type MirrorProjection,
 } from "./projection-engine";
 
 // Surface Adapter — kernel frames → browser DOM
