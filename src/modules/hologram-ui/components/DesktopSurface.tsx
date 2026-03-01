@@ -477,35 +477,24 @@ export default function DesktopSurface({
               animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both",
             }}
           >
-            <div className="relative flex items-center justify-center" style={{ width: 48, height: 48 }}>
-              {/* Outer emanating ring — breathes in sync with Genesis */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  width: 48,
-                  height: 48,
-                  border: `1px solid ${
-                    mode === "white"
-                      ? "hsla(32, 35%, 45%, 0.2)"
-                      : "hsla(38, 40%, 55%, 0.15)"
-                  }`,
-                  animation: "genesis-ring-emanate 2.4s ease-in-out infinite",
-                }}
-              />
-              {/* Second emanating ring — offset phase */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  width: 32,
-                  height: 32,
-                  border: `1px solid ${
-                    mode === "white"
-                      ? "hsla(32, 35%, 45%, 0.12)"
-                      : "hsla(38, 40%, 55%, 0.08)"
-                  }`,
-                  animation: "genesis-ring-emanate 2.4s ease-in-out 0.3s infinite",
-                }}
-              />
+            <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
+              {/* Ripple rings — emanate outward and fade to nothing */}
+              {[0, 0.8, 1.6].map((delay, i) => (
+                <div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    border: `1px solid ${
+                      mode === "white"
+                        ? "hsla(32, 35%, 45%, 0.25)"
+                        : "hsla(38, 40%, 55%, 0.2)"
+                    }`,
+                    animation: `genesis-ripple 2.4s ease-out ${delay}s infinite`,
+                  }}
+                />
+              ))}
               {/* Core dot — identical to sidebar Genesis dot */}
               <div
                 className="rounded-full"
