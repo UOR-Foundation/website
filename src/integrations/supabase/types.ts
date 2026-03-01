@@ -54,10 +54,12 @@ export type Database = {
         Row: {
           access_count: number
           agent_id: string
+          arousal: number
           compressed: boolean
           compression_witness_cid: string | null
           content: Json
           created_at: string
+          dominance: number
           epistemic_grade: string
           id: string
           importance: number
@@ -67,14 +69,17 @@ export type Database = {
           session_cid: string | null
           storage_tier: string
           summary: string | null
+          valence: number
         }
         Insert: {
           access_count?: number
           agent_id: string
+          arousal?: number
           compressed?: boolean
           compression_witness_cid?: string | null
           content?: Json
           created_at?: string
+          dominance?: number
           epistemic_grade?: string
           id?: string
           importance?: number
@@ -84,14 +89,17 @@ export type Database = {
           session_cid?: string | null
           storage_tier?: string
           summary?: string | null
+          valence?: number
         }
         Update: {
           access_count?: number
           agent_id?: string
+          arousal?: number
           compressed?: boolean
           compression_witness_cid?: string | null
           content?: Json
           created_at?: string
+          dominance?: number
           epistemic_grade?: string
           id?: string
           importance?: number
@@ -101,6 +109,7 @@ export type Database = {
           session_cid?: string | null
           storage_tier?: string
           summary?: string | null
+          valence?: number
         }
         Relationships: []
       }

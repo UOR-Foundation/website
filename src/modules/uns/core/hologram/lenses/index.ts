@@ -22,3 +22,20 @@ export {
   SECURE_MEMORY_BLUEPRINT,
   createSecureMemoryBlueprint,
 } from "./secure-memory";
+
+export {
+  LIMBIC_LENS_BLUEPRINT,
+  createLimbicBlueprint,
+  deriveVAD,
+  classifyEmotion,
+  emotionalIntensity,
+  vadSimilarity,
+  affectiveLinkScore,
+  emotionAdjustedImportance,
+} from "./limbic";
+
+export type {
+  VADVector,
+  EmotionalMemory,
+  AffectiveLinkScore,
+} from "./limbic";
