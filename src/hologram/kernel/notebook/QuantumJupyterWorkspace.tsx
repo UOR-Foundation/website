@@ -14,7 +14,7 @@
  *   - Light/dark theme follows the Hologram desktop frame
  */
 
-import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import {
   X, Play, Plus, FileText, Terminal,
   Folder, FolderOpen, Code, Sparkles,
@@ -480,7 +480,7 @@ const CellView = React.memo(function CellView({
     }
   }, []);
 
-  useEffect(() => { autoResize(); }, [localSource, autoResize]);
+  useLayoutEffect(() => { autoResize(); }, [localSource, autoResize]);
 
   useEffect(() => {
     if (isActive && editMode && textareaRef.current) {
@@ -505,7 +505,7 @@ const CellView = React.memo(function CellView({
     const val = e.target.value;
     setLocalSource(val);
     flushToParent(val);
-    setTimeout(autoResize, 0);
+    requestAnimationFrame(autoResize);
   }, [flushToParent, autoResize]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -549,15 +549,17 @@ const CellView = React.memo(function CellView({
 
   const handlePaste = useCallback(() => {
     onEdit();
-    setTimeout(autoResize, 0);
+    requestAnimationFrame(autoResize);
   }, [onEdit, autoResize]);
 
   const isMarkdown = cell.type === "markdown";
   const isCollapsed = cell.metadata?.collapsed;
-  // Always compute highlights from localSource so overlay stays in sync
+  const showSyntaxOverlay = !isMarkdown && !editMode;
+
+  // Compute highlights only when overlay is visible (command mode) for max typing performance
   const highlighted = useMemo(
-    () => !isMarkdown ? highlightPython(localSource, t) : [],
-    [isMarkdown, localSource, t]
+    () => showSyntaxOverlay && localSource ? highlightPython(localSource, t) : [],
+    [showSyntaxOverlay, localSource, t]
   );
 
   const borderColor = isActive
@@ -636,8 +638,8 @@ const CellView = React.memo(function CellView({
                   )}
 
                   <div className="flex-1 relative">
-                    {/* Syntax highlight overlay — ALWAYS visible for code cells */}
-                    {!isMarkdown && localSource && (
+                    {/* Syntax highlight overlay — shown only in command mode for precise editing */}
+                    {showSyntaxOverlay && localSource && (
                       <pre
                         className="absolute inset-0 px-4 py-[5px] text-[13px] font-mono leading-[1.8] pointer-events-none overflow-hidden"
                         aria-hidden="true"
@@ -646,13 +648,15 @@ const CellView = React.memo(function CellView({
                           whiteSpace: "pre-wrap",
                           wordBreak: "break-word",
                           overflowWrap: "break-word",
+                          tabSize: 4,
+                          fontVariantLigatures: "none",
                           margin: 0,
                           border: "none",
                           background: "transparent",
                         }}
                       >
                         {highlighted.map((h, i) => (
-                          <div key={i}>{h.tokens}</div>
+                          <div key={i}>{h.tokens.length > 0 ? h.tokens : "\u00A0"}</div>
                         ))}
                       </pre>
                     )}
@@ -667,13 +671,15 @@ const CellView = React.memo(function CellView({
                       onFocus={onEdit}
                       className="w-full px-4 py-[5px] text-[13px] font-mono resize-none focus:outline-none bg-transparent relative z-10"
                       style={{
-                        color: isMarkdown ? t.text : "transparent",
+                        color: isMarkdown ? t.text : showSyntaxOverlay ? "transparent" : t.textCode,
                         caretColor: t.caret,
                         lineHeight: "1.8",
                         minHeight: "28px",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                         overflowWrap: "break-word",
+                        tabSize: 4,
+                        fontVariantLigatures: "none",
                       }}
                       spellCheck={false}
                       placeholder={isMarkdown ? "Write Markdown here…" : "# Write Python code here…"}
