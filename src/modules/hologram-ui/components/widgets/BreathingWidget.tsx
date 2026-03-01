@@ -340,28 +340,20 @@ export default function BreathingWidget() {
         </div>
       </div>
 
-      {/* Label row — fixed height so layout never jumps */}
-      <span
-        className="tracking-[0.35em] uppercase text-center transition-all duration-300"
-        style={{
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: "10px",
-          fontWeight: 500,
-          color: running
-            ? phase.color.replace("0.85)", "0.9)")
-            : "hsla(38, 15%, 85%, 0.75)",
-          height: 14,
-          lineHeight: "14px",
-        }}
-      >
-        {running ? phase.label : ""}
-      </span>
-
-      {/* Second row — mode switcher (idle) or cycle counter (running), fixed height */}
-      <div
-        style={{ height: 14, display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
-        {running ? (
+      {/* Label area — single row, matches DayProgressRing "Your day" spacing */}
+      {running ? (
+        <div className="flex flex-col items-center gap-1">
+          <span
+            className="tracking-[0.35em] uppercase text-center transition-all duration-300"
+            style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: "10px",
+              fontWeight: 500,
+              color: phase.color.replace("0.85)", "0.9)"),
+            }}
+          >
+            {phase.label}
+          </span>
           <span
             className="tracking-[0.15em] text-center"
             style={{
@@ -372,35 +364,35 @@ export default function BreathingWidget() {
           >
             {cycle + 1} of {protocol.cycles}
           </span>
-        ) : (
-          <div className="flex items-center gap-3">
-            {PROTOCOLS.map((p, i) => {
-              const active = i === selectedIdx;
-              return (
-                <button
-                  key={p.intent}
-                  onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
-                  className="transition-all duration-300"
-                  style={{
-                    fontSize: "10px",
-                    fontFamily: "'DM Sans', system-ui, sans-serif",
-                    fontWeight: 500,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase" as const,
-                    color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.35)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                >
-                  {p.intent}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          {PROTOCOLS.map((p, i) => {
+            const active = i === selectedIdx;
+            return (
+              <button
+                key={p.intent}
+                onClick={(e) => { e.stopPropagation(); setSelectedIdx(i); }}
+                className="transition-all duration-300"
+                style={{
+                  fontSize: "10px",
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontWeight: 500,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase" as const,
+                  color: active ? "hsla(38, 30%, 85%, 0.9)" : "hsla(38, 15%, 75%, 0.35)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                {p.intent}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
