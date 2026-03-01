@@ -69,15 +69,15 @@ export default function LumenFloatingPill() {
           transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
-        {/* Breathing dot */}
+        {/* Breathing dot — coherence-driven */}
         <div
           className="rounded-full"
           style={{
             width: "7px",
             height: "7px",
             background: "hsla(38, 50%, 60%, 0.8)",
-            boxShadow: "0 0 12px hsla(38, 50%, 55%, 0.4)",
-            animation: "heartbeat-love 2.4s ease-in-out infinite",
+            boxShadow: `0 0 calc(8px + 8px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.2 + 0.4 * var(--h-score, 0.5)))`,
+            animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
           }}
         />
 
