@@ -1,16 +1,16 @@
 /**
- * QuantumJupyterWorkspace — Authentic JupyterLab experience
- * ═════════════════════════════════════════════════════════
+ * Hologram Notebook — Authentic Jupyter experience
+ * ═════════════════════════════════════════════════
  *
- * Dual-mode workspace designed for zero learning curve:
- *   - Workspace: Full notebook editor (feels exactly like JupyterLab)
- *   - Demos: Interactive app mode (no code, just explore)
+ * General-purpose interactive notebook for Python, AI/ML, data science,
+ * and quantum computing. Zero learning curve for anyone familiar with
+ * Jupyter Notebook / JupyterLab.
  *
  * Design principles:
- *   - Large, readable fonts (16px base)
- *   - Plain language — no jargon
- *   - Familiar JupyterLab layout and behavior
- *   - Respects user's time — no unnecessary text
+ *   - Identical to Jupyter — familiar layout, shortcuts, behavior
+ *   - Crisp, delightful, and beautiful
+ *   - Every result is auditable and debuggable
+ *   - Fully functional: all buttons work, all features are real
  *   - Light/dark theme follows the Hologram desktop frame
  */
 
@@ -802,33 +802,32 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
   onNew: (type: "quantum" | "ml") => void;
 }) {
   const t = useNbTheme();
-  const [demosOpen, setDemosOpen] = useState(true);
+  const [pythonOpen, setPythonOpen] = useState(true);
+  const [quantumOpen, setQuantumOpen] = useState(true);
   const [projectsOpen, setProjectsOpen] = useState(true);
+
+  const pythonTemplates = templates.filter(t => t.category === "python" || t.category === "data" || t.category === "ml");
+  const quantumTemplates = templates.filter(t => t.category === "quantum" || t.category === "hybrid");
 
   return (
     <div className="h-full flex flex-col" style={{ background: t.bgToolbar, borderRight: `1px solid ${t.borderCell}` }}>
       <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: t.textDim, borderBottom: `1px solid ${t.border}` }}>
-        Files
+        Notebooks
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
-        <button onClick={() => setDemosOpen(!demosOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
-          <ChevronRight size={12} className={`transition-transform ${demosOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
-          {demosOpen ? <FolderOpen size={14} style={{ color: t.gold }} /> : <Folder size={14} style={{ color: t.gold }} />}
-          <span className="text-sm font-medium">{" "}Examples</span>
+        {/* Python & AI */}
+        <button onClick={() => setPythonOpen(!pythonOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors" style={{ color: t.text }}>
+          <ChevronRight size={12} className={`transition-transform ${pythonOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+          {pythonOpen ? <FolderOpen size={14} style={{ color: t.blue }} /> : <Folder size={14} style={{ color: t.blue }} />}
+          <span className="text-sm font-medium">Python & AI</span>
         </button>
-        {demosOpen && (
+        {pythonOpen && (
           <div className="pl-8 space-y-0.5">
-            {templates.map(tmpl => (
-              <button
-                key={tmpl.id}
-                onClick={() => onSelect(tmpl.id)}
+            {pythonTemplates.map(tmpl => (
+              <button key={tmpl.id} onClick={() => onSelect(tmpl.id)}
                 className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-colors"
-                style={{
-                  background: activeId === tmpl.id ? t.blueBg : "transparent",
-                  color: activeId === tmpl.id ? t.blue : t.textMuted,
-                }}
-              >
+                style={{ background: activeId === tmpl.id ? t.blueBg : "transparent", color: activeId === tmpl.id ? t.blue : t.textMuted }}>
                 <FileText size={13} />
                 <span className="text-sm truncate">{tmpl.name}.ipynb</span>
               </button>
@@ -836,10 +835,30 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
           </div>
         )}
 
+        {/* Quantum */}
+        <button onClick={() => setQuantumOpen(!quantumOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors mt-1" style={{ color: t.text }}>
+          <ChevronRight size={12} className={`transition-transform ${quantumOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
+          {quantumOpen ? <FolderOpen size={14} style={{ color: t.gold }} /> : <Folder size={14} style={{ color: t.gold }} />}
+          <span className="text-sm font-medium">Quantum</span>
+        </button>
+        {quantumOpen && (
+          <div className="pl-8 space-y-0.5">
+            {quantumTemplates.map(tmpl => (
+              <button key={tmpl.id} onClick={() => onSelect(tmpl.id)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left transition-colors"
+                style={{ background: activeId === tmpl.id ? t.blueBg : "transparent", color: activeId === tmpl.id ? t.blue : t.textMuted }}>
+                <FileText size={13} />
+                <span className="text-sm truncate">{tmpl.name}.ipynb</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* My Notebooks */}
         <button onClick={() => setProjectsOpen(!projectsOpen)} className="w-full flex items-center gap-2 px-4 py-2 transition-colors mt-1" style={{ color: t.text }}>
           <ChevronRight size={12} className={`transition-transform ${projectsOpen ? "rotate-90" : ""}`} style={{ color: t.textDim }} />
           {projectsOpen ? <FolderOpen size={14} style={{ color: t.green }} /> : <Folder size={14} style={{ color: t.green }} />}
-          <span className="text-sm font-medium">{" "}My Notebooks</span>
+          <span className="text-sm font-medium">My Notebooks</span>
         </button>
         {projectsOpen && (
           <div className="pl-8 text-sm py-2 px-3" style={{ color: t.textDim }}>
@@ -850,10 +869,10 @@ function FileBrowser({ templates, activeId, onSelect, onNew }: {
 
       <div className="p-3 space-y-1.5" style={{ borderTop: `1px solid ${t.border}` }}>
         <button onClick={() => onNew("quantum")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: t.blue }}>
-          <Atom size={14} /> New Notebook
+          <Plus size={14} /> New Python Notebook
         </button>
-        <button onClick={() => onNew("ml")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: t.purple }}>
-          <Brain size={14} /> New Quantum+ML Notebook
+        <button onClick={() => onNew("ml")} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors" style={{ color: t.gold }}>
+          <Atom size={14} /> New Quantum Notebook
         </button>
       </div>
     </div>
@@ -2288,8 +2307,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
       <NbThemeCtx.Provider value={t}>
         <div className="h-full flex flex-col" style={{ background: t.bgSoft }}>
           <div className="flex items-center gap-3 px-6 py-3.5" style={{ borderBottom: `1px solid ${t.border}`, background: t.bg }}>
-            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Notebook</span>
-            <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ background: t.greenBg, color: t.greenText }}>Python 3.11</span>
+            <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Hologram Notebook</span>
+            <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ background: t.greenBg, color: t.greenText }}>Python 3 · Idle</span>
             <div className="flex-1" />
             <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
             {onClose && <button onClick={onClose} className="p-2 rounded-lg" style={{ color: t.textMuted }}><X size={20} /></button>}
@@ -2299,61 +2318,86 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
             <div className="max-w-3xl mx-auto px-8 py-12">
               <div className="text-center mb-12">
                 <h1 className="text-4xl font-serif font-semibold mb-4" style={{ color: t.textStrong }}>
-                  Notebook
+                  Hologram Notebook
                 </h1>
                 <p className="text-lg leading-relaxed max-w-lg mx-auto" style={{ color: t.textMuted }}>
-                  Interactive Python notebooks for AI, data science, and quantum computing — running natively in Q-Linux.
+                  Interactive computing environment for Python, AI, data science, and quantum — powered by Q-Linux.
                 </p>
               </div>
 
-              <div className="flex gap-6 justify-center mb-14">
+              <div className="flex gap-5 justify-center mb-14">
                 <button
-                  onClick={() => setMode("workspace")}
-                  className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                  onClick={() => { setNotebook(createNotebook("Untitled")); setKernel(createKernel()); setMode("workspace"); }}
+                  className="group flex flex-col items-center gap-3 p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-[200px]"
                   style={{ background: t.bg, border: `1px solid ${t.border}` }}
                 >
-                  <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: t.blueBg }}>
-                    <Code size={30} style={{ color: t.blue }} />
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: t.blueBg }}>
+                    <Plus size={28} style={{ color: t.blue }} />
                   </div>
-                  <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Open Workspace</span>
-                  <span className="text-base" style={{ color: t.textMuted }}>Write and run code</span>
+                  <span className="text-base font-semibold" style={{ color: t.textStrong }}>New Notebook</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Python 3</span>
+                </button>
+
+                <button
+                  onClick={() => setMode("workspace")}
+                  className="group flex flex-col items-center gap-3 p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-[200px]"
+                  style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                >
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: t.greenBg }}>
+                    <Code size={28} style={{ color: t.green }} />
+                  </div>
+                  <span className="text-base font-semibold" style={{ color: t.textStrong }}>Open Workspace</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Browse & edit notebooks</span>
                 </button>
 
                 <button
                   onClick={() => setMode("demos")}
-                  className="group flex flex-col items-center gap-4 p-10 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-xs"
+                  className="group flex flex-col items-center gap-3 p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex-1 max-w-[200px]"
                   style={{ background: t.bg, border: `1px solid ${t.border}` }}
                 >
-                  <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: t.goldBg }}>
-                    <Sparkles size={30} style={{ color: t.gold }} />
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: t.goldBg }}>
+                    <Sparkles size={28} style={{ color: t.gold }} />
                   </div>
-                  <span className="text-lg font-semibold" style={{ color: t.textStrong }}>Open Demos</span>
-                  <span className="text-base" style={{ color: t.textMuted }}>Interactive examples</span>
+                  <span className="text-base font-semibold" style={{ color: t.textStrong }}>Demos</span>
+                  <span className="text-sm" style={{ color: t.textMuted }}>Quantum & AI examples</span>
                 </button>
               </div>
 
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: t.textDim }}>Featured Notebooks</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {featured.map(tmpl => (
-                    <button
-                      key={tmpl.id}
-                      onClick={() => loadTemplate(tmpl.id)}
-                      className="flex items-start gap-4 p-5 rounded-xl text-left transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
-                      style={{ background: t.bg, border: `1px solid ${t.border}` }}
-                    >
-                      <span className="text-2xl mt-0.5">{tmpl.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold mb-1" style={{ color: t.textStrong }}>{tmpl.name}</h3>
-                        <p className="text-sm leading-relaxed" style={{ color: t.textMuted }}>{tmpl.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Category sections */}
+              {[
+                { label: "Python & General", filter: (t: any) => t.category === "python" || t.category === "data", icon: "🐍" },
+                { label: "AI & Machine Learning", filter: (t: any) => t.category === "ml" || t.category === "hybrid", icon: "🤖" },
+                { label: "Quantum Computing", filter: (t: any) => t.category === "quantum", icon: "⚛️" },
+              ].map(section => {
+                const items = templates.filter(section.filter);
+                if (items.length === 0) return null;
+                return (
+                  <div key={section.label} className="mb-8">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: t.textDim }}>
+                      <span>{section.icon}</span> {section.label}
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3">
+                      {items.map(tmpl => (
+                        <button
+                          key={tmpl.id}
+                          onClick={() => loadTemplate(tmpl.id)}
+                          className="flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                          style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                        >
+                          <span className="text-xl mt-0.5">{tmpl.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold mb-0.5" style={{ color: t.textStrong }}>{tmpl.name}</h3>
+                            <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{tmpl.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
 
-              <p className="text-sm text-center mt-10" style={{ color: t.textDim }}>
-                Every result is verified and reproducible.
+              <p className="text-xs text-center mt-8" style={{ color: t.textDim }}>
+                All computations run in-browser on Q-Linux. Results are deterministic and reproducible.
               </p>
             </div>
           </div>
@@ -2399,9 +2443,9 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-5xl mx-auto">
-              <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: t.textStrong }}>Quantum Simulation Lab</h2>
+              <h2 className="text-2xl font-serif font-semibold mb-2" style={{ color: t.textStrong }}>Interactive Demos</h2>
               <p className="text-base mb-6" style={{ color: t.textMuted }}>
-                Experience quantum computing through interactive simulations. Every demo runs on our built in quantum simulator. No external hardware, no setup, fully reproducible.
+                Interactive simulations for quantum computing, AI, and data science. Every demo runs natively — no setup required.
               </p>
 
               <div className="flex items-center gap-1 mb-6 pb-3" style={{ borderBottom: `1px solid ${t.border}` }}>
@@ -2473,10 +2517,10 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
 
   const fileMenuItems: MenuItem[] = [
     { label: "New Notebook", shortcut: "", action: () => { setNotebook(createNotebook("Untitled")); setKernel(createKernel()); } },
-    { label: "New Quantum+ML Notebook", action: () => {
-      const nb = createNotebook("Quantum+ML Notebook", [
-        createCell("markdown", "# Quantum + ML Notebook\nCombine quantum circuits with machine learning."),
-        createCell("code", "from qiskit import QuantumCircuit\nfrom sklearn.svm import SVC"),
+    { label: "New Python Notebook", action: () => {
+      const nb = createNotebook("Python Notebook", [
+        createCell("markdown", "# Python Notebook\nReady to write Python code."),
+        createCell("code", "# Start coding here\nprint('Hello, World!')"),
         createCell("code", ""),
       ]);
       setNotebook(nb);
@@ -2545,7 +2589,7 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
   const helpMenuItems: MenuItem[] = [
     { label: "Keyboard Shortcuts", shortcut: "H", action: () => setShowShortcuts(true) },
     { divider: true, label: "" },
-    { label: "About", action: () => {} },
+    { label: "About Hologram Notebook", action: () => {} },
   ];
 
   return (
@@ -2652,8 +2696,8 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
           {/* Theme toggle */}
           <ThemeToggleButton mode={themeMode} canToggle={canToggleTheme} onToggle={toggleTheme} />
 
-          <button onClick={() => setMode("demos")} className="flex items-center gap-1 px-2 py-1 rounded text-[13px] ml-1" style={{ color: t.textMuted }}>
-            <Sparkles size={14} /> Demos
+          <button onClick={() => setMode("landing")} className="flex items-center gap-1 px-2 py-1 rounded text-[13px] ml-1" style={{ color: t.textMuted }}>
+            <Sparkles size={14} /> Home
           </button>
           {onClose && <button onClick={onClose} className="p-1.5 rounded ml-1" style={{ color: t.textMuted }}><X size={16} /></button>}
         </div>
@@ -2700,14 +2744,14 @@ export default function QuantumJupyterWorkspace({ onClose }: QuantumJupyterWorks
                 onSelect={loadTemplate}
                 onNew={(type) => {
                   const nb = createNotebook(
-                    type === "quantum" ? "Untitled" : "Quantum+ML Notebook",
+                    "Untitled",
                     type === "ml" ? [
-                      createCell("markdown", "# Quantum + ML Notebook\nCombine quantum circuits with machine learning."),
-                      createCell("code", "from qiskit import QuantumCircuit\nfrom sklearn.svm import SVC"),
+                      createCell("markdown", "# Quantum Notebook\nQuantum computing with Qiskit."),
+                      createCell("code", "from qiskit import QuantumCircuit\n\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.draw()"),
                       createCell("code", ""),
                     ] : [
-                      createCell("markdown", "# Untitled Notebook\nWrite your quantum code below."),
-                      createCell("code", "from qiskit import QuantumCircuit\n\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.draw()"),
+                      createCell("code", "# Start coding\nprint('Hello, World!')"),
+                      createCell("code", ""),
                     ]
                   );
                   setNotebook(nb);

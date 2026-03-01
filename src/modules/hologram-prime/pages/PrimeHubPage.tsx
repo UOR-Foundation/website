@@ -17,7 +17,7 @@ import { P } from "@/modules/hologram-ui/theme/prime-palette";
 import { usePrimeTheme } from "../hooks/usePrimeTheme";
 import { useIsMobile } from "@/hooks/use-mobile";
 import QRShareCard from "../components/QRShareCard";
-import hologramIcon from "@/assets/hologram-icon.png";
+import hologramIcon from "@/assets/hologram-logo.png";
 
 // Placeholder for now
 const HologramPrimePage = () => <div className="text-white p-10 text-center">Audio Player Loading...</div>;
