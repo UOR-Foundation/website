@@ -167,6 +167,11 @@ export default function PrivacySettingsPanel({ onBack }: PrivacySettingsPanelPro
 
   const visibleCount = CATEGORIES.filter(c => rules[c.key]).length;
   const privateCount = CATEGORIES.length - visibleCount;
+  const [diffOpen, setDiffOpen] = useState(false);
+
+  const changedCategories = CATEGORIES.filter(
+    c => !!rules[c.key] !== !!({ ...DEFAULT_RULES, ...savedRules })[c.key]
+  );
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: `${KP.dim} transparent` }}>
@@ -197,6 +202,92 @@ export default function PrivacySettingsPanel({ onBack }: PrivacySettingsPanelPro
           )}
         </div>
       </div>
+
+      {/* ── Diff view (when changes exist) ── */}
+      {hasChanges && changedCategories.length > 0 && (
+        <div className="px-5 pt-4">
+          <button
+            onClick={() => setDiffOpen(p => !p)}
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-colors"
+            style={{
+              background: `${KP.gold}0a`,
+              border: `1px solid ${KP.gold}20`,
+            }}
+          >
+            <Shield className="w-4 h-4 shrink-0" style={{ color: KP.gold }} />
+            <span className="flex-1 text-left text-xs font-medium" style={{ color: KP.text }}>
+              {changedCategories.length} unsaved change{changedCategories.length > 1 ? "s" : ""}
+            </span>
+            <span className="text-[10px]" style={{ color: KP.dim }}>
+              {diffOpen ? "Hide diff" : "Show diff"}
+            </span>
+          </button>
+
+          {diffOpen && (
+            <div
+              className="mt-2 rounded-xl overflow-hidden"
+              style={{ border: `1px solid ${KP.cardBorder}`, background: KP.card }}
+            >
+              {/* Column headers */}
+              <div
+                className="grid grid-cols-[1fr_80px_24px_80px] items-center px-4 py-2.5"
+                style={{ borderBottom: `1px solid ${KP.border}` }}
+              >
+                <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: KP.dim }}>Category</span>
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>Before</span>
+                <span />
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-center" style={{ color: KP.dim }}>After</span>
+              </div>
+
+              {changedCategories.map((cat, i) => {
+                const Icon = cat.icon;
+                const wasBefore = !!({ ...DEFAULT_RULES, ...savedRules })[cat.key];
+                const isNow = !!rules[cat.key];
+                return (
+                  <div
+                    key={cat.key}
+                    className="grid grid-cols-[1fr_80px_24px_80px] items-center px-4 py-2.5"
+                    style={{
+                      borderBottom: i < changedCategories.length - 1 ? `1px solid ${KP.border}` : undefined,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: KP.gold }} />
+                      <span className="text-xs font-medium truncate" style={{ color: KP.text }}>{cat.label}</span>
+                    </div>
+                    <div className="flex justify-center">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                          background: wasBefore ? `${KP.gold}15` : "hsl(25 8% 15%)",
+                          color: wasBefore ? KP.gold : KP.dim,
+                        }}
+                      >
+                        {wasBefore ? "Visible" : "Private"}
+                      </span>
+                    </div>
+                    <div className="flex justify-center">
+                      <span className="text-xs" style={{ color: KP.dim }}>→</span>
+                    </div>
+                    <div className="flex justify-center">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                        style={{
+                          background: isNow ? `${KP.gold}20` : "hsl(0 50% 15%)",
+                          color: isNow ? KP.gold : "hsl(0 70% 65%)",
+                          border: `1px solid ${isNow ? `${KP.gold}30` : "hsl(0 50% 25%)"}`,
+                        }}
+                      >
+                        {isNow ? "Visible" : "Private"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Summary bar ── */}
       <div className="px-5 py-4">
