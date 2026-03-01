@@ -30,7 +30,7 @@ import {
   Terminal as TerminalIcon, PanelBottom, Bell,
   FileText, FileCode, FileJson, FileType, Image as ImageIcon,
   Folder, FolderOpen, SplitSquareVertical, Play, RotateCcw,
-  Command, HardDrive, FilePlus, FolderPlus, Trash2,
+  Command, HardDrive, FilePlus, FolderPlus, Trash2, Pencil,
   Cloud, CloudOff, CloudUpload, CloudDownload, Loader2, Check, AlertTriangle,
 } from "lucide-react";
 import { useQFs, type FSNode, type CloudSyncState } from "./useQFs";
@@ -177,12 +177,14 @@ const ExplorerContextMenu = memo(function ExplorerContextMenu({
   onNewFile,
   onNewFolder,
   onDelete,
+  onRename,
   onClose,
 }: {
   menu: ContextMenuState;
   onNewFile: (parentPath: string) => void;
   onNewFolder: (parentPath: string) => void;
   onDelete: (path: string) => void;
+  onRename: (path: string) => void;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -196,12 +198,16 @@ const ExplorerContextMenu = memo(function ExplorerContextMenu({
   }, [onClose]);
 
   const parentPath = menu.targetIsFolder ? menu.targetPath : menu.targetPath.replace(/\/[^/]+$/, "") || "/";
+  const isRoot = menu.targetPath === "/";
 
   const items = [
     { label: "New File…", icon: FilePlus, action: () => { onNewFile(parentPath); onClose(); } },
     { label: "New Folder…", icon: FolderPlus, action: () => { onNewFolder(parentPath); onClose(); } },
     null, // separator
-    { label: "Delete", icon: Trash2, action: () => { onDelete(menu.targetPath); onClose(); }, danger: true },
+    ...(!isRoot ? [
+      { label: "Rename…", icon: Pencil, action: () => { onRename(menu.targetPath); onClose(); } },
+      { label: "Delete", icon: Trash2, action: () => { onDelete(menu.targetPath); onClose(); }, danger: true },
+    ] : []),
   ];
 
   return (
@@ -307,6 +313,9 @@ const FileTreeNode = memo(function FileTreeNode({
   inlineCreate,
   onInlineSubmit,
   onInlineCancel,
+  renamingPath,
+  onRenameSubmit,
+  onRenameCancel,
 }: {
   node: FSNode;
   depth: number;
@@ -316,10 +325,16 @@ const FileTreeNode = memo(function FileTreeNode({
   inlineCreate: { parentPath: string; type: "file" | "folder" } | null;
   onInlineSubmit: (name: string) => void;
   onInlineCancel: () => void;
+  renamingPath: string | null;
+  onRenameSubmit: (oldPath: string, newName: string) => void;
+  onRenameCancel: () => void;
 }) {
   const [expanded, setExpanded] = useState(depth === 0);
   const isFolder = node.type === "folder";
   const isActive = activeFile === node.path;
+  const isRenaming = renamingPath === node.path;
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  const [renameValue, setRenameValue] = useState(node.name);
 
   // Auto-expand folder when creating inside it
   useEffect(() => {
@@ -328,43 +343,104 @@ const FileTreeNode = memo(function FileTreeNode({
     }
   }, [inlineCreate, isFolder, node.path]);
 
+  // Focus rename input
+  useEffect(() => {
+    if (isRenaming) {
+      setRenameValue(node.name);
+      setTimeout(() => {
+        const input = renameInputRef.current;
+        if (input) {
+          input.focus();
+          // Select name without extension for files
+          const dotIdx = node.name.lastIndexOf(".");
+          input.setSelectionRange(0, dotIdx > 0 && !isFolder ? dotIdx : node.name.length);
+        }
+      }, 0);
+    }
+  }, [isRenaming, node.name, isFolder]);
+
+  const commitRename = () => {
+    const newName = renameValue.trim();
+    if (newName && newName !== node.name) {
+      onRenameSubmit(node.path, newName);
+    } else {
+      onRenameCancel();
+    }
+  };
+
   return (
     <div>
-      <button
-        className="w-full flex items-center gap-1 text-left text-[13px] leading-[22px] select-none"
-        style={{
-          paddingLeft: depth * 12 + 8,
-          paddingRight: 8,
-          color: isActive ? C.text : C.textMuted,
-          background: isActive ? C.listActive : "transparent",
-        }}
-        onClick={() => {
-          if (isFolder) setExpanded(!expanded);
-          else onSelect(node);
-        }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          onContextMenu(e, node);
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) e.currentTarget.style.background = C.listHover;
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) e.currentTarget.style.background = isActive ? C.listActive : "transparent";
-        }}
-      >
-        {isFolder ? (
-          expanded ? <ChevronDown size={14} style={{ color: C.textDim }} /> : <ChevronRight size={14} style={{ color: C.textDim }} />
-        ) : (
-          <span style={{ width: 14 }} />
-        )}
-        {isFolder ? (
-          expanded ? <FolderOpen size={14} style={{ color: "#dcb67a" }} /> : <Folder size={14} style={{ color: "#dcb67a" }} />
-        ) : (
-          getFileIcon(node.name)
-        )}
-        <span className="ml-1 truncate">{node.name}</span>
-      </button>
+      {isRenaming ? (
+        <div
+          className="flex items-center gap-1 text-[13px] leading-[22px]"
+          style={{ paddingLeft: depth * 12 + 8, paddingRight: 8 }}
+        >
+          {isFolder ? (
+            <ChevronRight size={14} style={{ color: C.textDim }} />
+          ) : (
+            <span style={{ width: 14 }} />
+          )}
+          {isFolder ? (
+            <Folder size={14} style={{ color: "#dcb67a" }} />
+          ) : (
+            getFileIcon(node.name)
+          )}
+          <input
+            ref={renameInputRef}
+            className="flex-1 ml-1 bg-transparent outline-none text-[13px]"
+            style={{
+              color: C.text,
+              border: `1px solid ${C.accent}`,
+              borderRadius: 2,
+              padding: "0 4px",
+              lineHeight: "20px",
+            }}
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitRename();
+              if (e.key === "Escape") onRenameCancel();
+            }}
+            onBlur={commitRename}
+          />
+        </div>
+      ) : (
+        <button
+          className="w-full flex items-center gap-1 text-left text-[13px] leading-[22px] select-none"
+          style={{
+            paddingLeft: depth * 12 + 8,
+            paddingRight: 8,
+            color: isActive ? C.text : C.textMuted,
+            background: isActive ? C.listActive : "transparent",
+          }}
+          onClick={() => {
+            if (isFolder) setExpanded(!expanded);
+            else onSelect(node);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onContextMenu(e, node);
+          }}
+          onMouseEnter={(e) => {
+            if (!isActive) e.currentTarget.style.background = C.listHover;
+          }}
+          onMouseLeave={(e) => {
+            if (!isActive) e.currentTarget.style.background = isActive ? C.listActive : "transparent";
+          }}
+        >
+          {isFolder ? (
+            expanded ? <ChevronDown size={14} style={{ color: C.textDim }} /> : <ChevronRight size={14} style={{ color: C.textDim }} />
+          ) : (
+            <span style={{ width: 14 }} />
+          )}
+          {isFolder ? (
+            expanded ? <FolderOpen size={14} style={{ color: "#dcb67a" }} /> : <Folder size={14} style={{ color: "#dcb67a" }} />
+          ) : (
+            getFileIcon(node.name)
+          )}
+          <span className="ml-1 truncate">{node.name}</span>
+        </button>
+      )}
       {isFolder && expanded && (
         <>
           {inlineCreate && inlineCreate.parentPath === node.path && (
@@ -386,6 +462,9 @@ const FileTreeNode = memo(function FileTreeNode({
               inlineCreate={inlineCreate}
               onInlineSubmit={onInlineSubmit}
               onInlineCancel={onInlineCancel}
+              renamingPath={renamingPath}
+              onRenameSubmit={onRenameSubmit}
+              onRenameCancel={onRenameCancel}
             />
           ))}
         </>
@@ -1166,9 +1245,10 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   const editorRef = useRef<MonacoEditor>(null);
   const monacoInstanceRef = useRef<any>(null);
 
-  // ── Explorer context menu + inline creation state ───────────────────────
+  // ── Explorer context menu + inline creation + rename state ────────────────
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [inlineCreate, setInlineCreate] = useState<{ parentPath: string; type: "file" | "folder" } | null>(null);
+  const [renamingPath, setRenamingPath] = useState<string | null>(null);
 
   const handleExplorerContextMenu = useCallback((e: React.MouseEvent, node: FSNode) => {
     setContextMenu({ x: e.clientX, y: e.clientY, targetPath: node.path, targetIsFolder: node.type === "folder" });
@@ -1193,6 +1273,113 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
   }, [inlineCreate, qfs]);
 
   const handleInlineCancel = useCallback(() => setInlineCreate(null), []);
+
+  const handleRenameStart = useCallback((path: string) => {
+    setRenamingPath(path);
+  }, []);
+
+  const handleRenameSubmit = useCallback((oldPath: string, newName: string) => {
+    // Derive parent path and old name
+    const parentPath = oldPath.replace(/\/[^/]+$/, "") || "/";
+    const isFolder = qfs.tree.some(function find(n: FSNode): boolean {
+      if (n.path === oldPath) return n.type === "folder";
+      return n.children?.some(find) ?? false;
+    });
+
+    if (isFolder) {
+      // For folders: create new folder, recursively copy children, delete old
+      // Simplified: Q-FS doesn't have native rename, so we create new + copy files + delete old
+      const collectAll = (basePath: string): { path: string; content: string }[] => {
+        const results: { path: string; content: string }[] = [];
+        const stack = [basePath];
+        while (stack.length) {
+          const dir = stack.pop()!;
+          const content = qfs.readFile(dir);
+          if (content !== null) {
+            results.push({ path: dir, content });
+          }
+          // Check children via tree traversal
+          const findNode = (nodes: FSNode[], target: string): FSNode | null => {
+            for (const n of nodes) {
+              if (n.path === target) return n;
+              if (n.children) {
+                const found = findNode(n.children, target);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          const dirNode = findNode(qfs.tree, dir);
+          if (dirNode?.children) {
+            for (const child of dirNode.children) {
+              if (child.type === "folder") stack.push(child.path);
+              else results.push({ path: child.path, content: qfs.readFile(child.path) ?? "" });
+            }
+          }
+        }
+        return results;
+      };
+
+      const files = collectAll(oldPath);
+      const newFolderPath = parentPath === "/" ? `/${newName}` : `${parentPath}/${newName}`;
+
+      // Create new folder
+      qfs.mkdir(parentPath, newName);
+
+      // Recreate all files under new path
+      for (const f of files) {
+        const relativePath = f.path.slice(oldPath.length);
+        const newPath = newFolderPath + relativePath;
+        const newParent = newPath.replace(/\/[^/]+$/, "") || "/";
+        const fileName = newPath.split("/").pop()!;
+
+        // Ensure parent dirs exist
+        const parts = newParent.split("/").filter(Boolean);
+        let cur = "/";
+        for (const part of parts) {
+          const next = cur === "/" ? `/${part}` : `${cur}/${part}`;
+          if (next !== newFolderPath) {
+            // might need to create intermediate dirs
+            try { qfs.mkdir(cur, part); } catch { /* already exists */ }
+          }
+          cur = next;
+        }
+
+        qfs.createFile(newParent, fileName, f.content);
+      }
+
+      // Delete old folder (files first, then folder)
+      for (const f of files.reverse()) qfs.rm(f.path);
+      qfs.rm(oldPath);
+
+      // Update open files
+      setOpenFiles(prev => prev.map(f => {
+        if (f.path.startsWith(oldPath)) {
+          const newP = newFolderPath + f.path.slice(oldPath.length);
+          return { ...f, path: newP, name: newP.split("/").pop()! };
+        }
+        return f;
+      }));
+      if (activeFilePath?.startsWith(oldPath)) {
+        setActiveFilePath(newFolderPath + activeFilePath.slice(oldPath.length));
+      }
+    } else {
+      // For files: read content, create new, delete old
+      const content = qfs.readFile(oldPath) ?? "";
+      qfs.createFile(parentPath, newName, content);
+      qfs.rm(oldPath);
+
+      const newPath = parentPath === "/" ? `/${newName}` : `${parentPath}/${newName}`;
+      setOpenFiles(prev => prev.map(f =>
+        f.path === oldPath ? { ...f, path: newPath, name: newName } : f
+      ));
+      if (activeFilePath === oldPath) setActiveFilePath(newPath);
+    }
+
+    setRenamingPath(null);
+  }, [qfs, activeFilePath]);
+
+  const handleRenameCancel = useCallback(() => setRenamingPath(null), []);
 
   const handleDeleteNode = useCallback((path: string) => {
     qfs.rm(path);
@@ -1499,6 +1686,9 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
                 inlineCreate={inlineCreate}
                 onInlineSubmit={handleInlineSubmit}
                 onInlineCancel={handleInlineCancel}
+                renamingPath={renamingPath}
+                onRenameSubmit={handleRenameSubmit}
+                onRenameCancel={handleRenameCancel}
               />
             ))}
           </div>
@@ -1729,6 +1919,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
           onNewFile={handleNewFile}
           onNewFolder={handleNewFolder}
           onDelete={handleDeleteNode}
+          onRename={handleRenameStart}
           onClose={() => setContextMenu(null)}
         />
       )}
