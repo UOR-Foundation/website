@@ -1267,8 +1267,83 @@ function GateContextToolbar({ gate, t, onEdit, onInfo, onCut, onCopy, onDelete }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Param Editor Dialog
+   Gate Info Dialog
    ═══════════════════════════════════════════════════════════════════════════ */
+
+function GateInfoDialog({ gate, t, onClose }: {
+  gate: PlacedGate; t: Theme; onClose: () => void;
+}) {
+  const def = findGateDef(gate.gateId);
+  const matrixMap: Record<string, string[][]> = {
+    h: [["1/√2", "1/√2"], ["1/√2", "−1/√2"]],
+    x: [["0", "1"], ["1", "0"]],
+    y: [["0", "−i"], ["i", "0"]],
+    z: [["1", "0"], ["0", "−1"]],
+    s: [["1", "0"], ["0", "i"]],
+    t: [["1", "0"], ["0", "e^(iπ/4)"]],
+    sdg: [["1", "0"], ["0", "−i"]],
+    tdg: [["1", "0"], ["0", "e^(−iπ/4)"]],
+    id: [["1", "0"], ["0", "1"]],
+    sx: [["(1+i)/2", "(1−i)/2"], ["(1−i)/2", "(1+i)/2"]],
+  };
+  const matrix = matrixMap[gate.gateId];
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: "hsla(0,0%,0%,0.5)" }} />
+      <div className="relative rounded-xl p-5 space-y-3 min-w-[320px] max-w-[400px]"
+        style={{ background: t.surface, border: `1px solid ${t.borderStrong}`, boxShadow: t.shadow }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[15px] font-bold"
+            style={{ background: t.accent, color: "white" }}>
+            {def?.label || gate.gateId}
+          </div>
+          <div>
+            <h3 className="text-[15px] font-semibold" style={{ color: t.text }}>{def?.label || gate.gateId} Gate</h3>
+            <p className="text-[12px]" style={{ color: t.textMuted }}>{def?.description}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-[13px]" style={{ color: t.textSecondary }}>
+          <div className="flex justify-between"><span>Gate ID</span><span className="font-mono" style={{ color: t.text }}>{gate.gateId.toUpperCase()}</span></div>
+          <div className="flex justify-between"><span>Qubit count</span><span className="font-mono" style={{ color: t.text }}>{def?.qubits || gate.qubits.length}</span></div>
+          <div className="flex justify-between"><span>Target qubits</span><span className="font-mono" style={{ color: t.text }}>{gate.qubits.map(q => `q[${q}]`).join(", ")}</span></div>
+          <div className="flex justify-between"><span>Column</span><span className="font-mono" style={{ color: t.text }}>{gate.col}</span></div>
+          <div className="flex justify-between"><span>Parameterized</span><span className="font-mono" style={{ color: t.text }}>{def?.parameterized ? "Yes" : "No"}</span></div>
+          {gate.params && gate.params.length > 0 && (
+            <div className="flex justify-between"><span>Parameters</span><span className="font-mono" style={{ color: t.accent }}>{gate.params.map(formatAngle).join(", ")}</span></div>
+          )}
+          {def?.isaOpcode && (
+            <div className="flex justify-between"><span>ISA Opcode</span><span className="font-mono" style={{ color: t.accent }}>{def.isaOpcode}</span></div>
+          )}
+        </div>
+
+        {matrix && (
+          <div className="space-y-1.5">
+            <p className="text-[12px] font-medium" style={{ color: t.textMuted }}>Unitary Matrix</p>
+            <div className="font-mono text-[12px] rounded-lg p-3 space-y-1" style={{ background: t.surfaceAlt, border: `1px solid ${t.border}` }}>
+              {matrix.map((row, i) => (
+                <div key={i} className="flex gap-4">
+                  {row.map((cell, j) => (
+                    <span key={j} className="min-w-[80px]" style={{ color: t.accent }}>{cell}</span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-1">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-semibold" style={{ background: t.accent, color: "white" }}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function ParamDialog({ gate, t, onSave, onClose }: {
   gate: PlacedGate; t: Theme; onSave: (params: number[]) => void; onClose: () => void;
@@ -1329,6 +1404,8 @@ export default function QuantumWorkspace({ onClose }: Props) {
   const [gates, setGates] = useState<PlacedGate[]>([]);
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
   const [editingGate, setEditingGate] = useState<string | null>(null);
+  const [infoGate, setInfoGate] = useState<string | null>(null);
+  const [clipboardGate, setClipboardGate] = useState<PlacedGate | null>(null);
   const [circuitName, setCircuitName] = useState("Untitled circuit");
   const [placingGate, setPlacingGate] = useState<GateDef | null>(null);
   const [probs, setProbs] = useState<{ state: string; probability: number; amplitude: Complex }[]>([]);
@@ -1499,11 +1576,25 @@ export default function QuantumWorkspace({ onClose }: Props) {
     if (!selectedGate) return;
     const g = gates.find(x => x.id === selectedGate);
     if (!g) return;
+    setClipboardGate({ ...g });
+  }, [selectedGate, gates]);
+
+  const cutGate = useCallback(() => {
+    if (!selectedGate) return;
+    const g = gates.find(x => x.id === selectedGate);
+    if (!g) return;
+    setClipboardGate({ ...g });
     pushUndo();
-    setGates(prev => [...prev, { ...g, id: gid(), col: g.col + 1 }]);
+    setGates(prev => prev.filter(x => x.id !== selectedGate));
+    setSelectedGate(null);
   }, [selectedGate, gates, pushUndo]);
 
-  const cutGate = useCallback(() => { copyGate(); deleteSelected(); }, [copyGate, deleteSelected]);
+  const pasteGate = useCallback(() => {
+    if (!clipboardGate) return;
+    pushUndo();
+    const maxCol = gates.length > 0 ? Math.max(...gates.map(g => g.col)) + 1 : 0;
+    setGates(prev => [...prev, { ...clipboardGate, id: gid(), col: maxCol }]);
+  }, [clipboardGate, gates, pushUndo]);
 
   const clearCircuit = useCallback(() => {
     pushUndo();
@@ -1684,10 +1775,12 @@ export default function QuantumWorkspace({ onClose }: Props) {
       if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "z"))) { e.preventDefault(); redo(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "c") { e.preventDefault(); copyGate(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "x") { e.preventDefault(); cutGate(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") { e.preventDefault(); pasteGate(); }
+      if (e.key === "i" && !e.ctrlKey && !e.metaKey && selectedGate) { e.preventDefault(); setInfoGate(selectedGate); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedGate, deleteSelected, undo, redo, copyGate, cutGate]);
+  }, [selectedGate, deleteSelected, undo, redo, copyGate, cutGate, pasteGate]);
 
   const saveGateParams = useCallback((gateId: string, params: number[]) => {
     pushUndo();
@@ -1696,6 +1789,7 @@ export default function QuantumWorkspace({ onClose }: Props) {
   }, [pushUndo]);
 
   const editingGateObj = editingGate ? gates.find(g => g.id === editingGate) : null;
+  const infoGateObj = infoGate ? gates.find(g => g.id === infoGate) : null;
   const selectedGateObj = selectedGate ? gates.find(g => g.id === selectedGate) : null;
 
   const filteredGates = useMemo(() => {
@@ -1946,9 +2040,14 @@ export default function QuantumWorkspace({ onClose }: Props) {
                       gate={selectedGateObj} t={t}
                       onEdit={() => {
                         const def = findGateDef(selectedGateObj.gateId);
-                        if (def?.parameterized) setEditingGate(selectedGateObj.id);
+                        if (def?.parameterized) {
+                          setEditingGate(selectedGateObj.id);
+                        } else {
+                          // Non-parameterized gates: show info instead
+                          setInfoGate(selectedGateObj.id);
+                        }
                       }}
-                      onInfo={() => {}}
+                      onInfo={() => setInfoGate(selectedGateObj.id)}
                       onCut={cutGate}
                       onCopy={copyGate}
                       onDelete={deleteSelected}
@@ -2073,6 +2172,14 @@ export default function QuantumWorkspace({ onClose }: Props) {
           gate={editingGateObj} t={t}
           onSave={params => saveGateParams(editingGateObj.id, params)}
           onClose={() => setEditingGate(null)}
+        />
+      )}
+
+      {/* Info dialog */}
+      {infoGateObj && (
+        <GateInfoDialog
+          gate={infoGateObj} t={t}
+          onClose={() => setInfoGate(null)}
         />
       )}
     </div>
