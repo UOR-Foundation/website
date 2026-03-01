@@ -144,7 +144,7 @@ export interface BootEvent {
  * "none" = desktop home. All others = a full-screen projection overlay.
  * Chat is independent (can coexist with any panel or desktop).
  */
-export type PanelId = "none" | "chat" | "browser" | "compute" | "memory" | "messenger" | "terminal" | "jupyter" | "quantum-workspace" | "code";
+export type PanelId = "none" | "chat" | "browser" | "compute" | "memory" | "messenger" | "terminal" | "jupyter" | "quantum-workspace" | "code" | "packages";
 
 /** Desktop frame IDs — the kernel's view of the active visual environment */
 export type DesktopMode = "image" | "white" | "dark";

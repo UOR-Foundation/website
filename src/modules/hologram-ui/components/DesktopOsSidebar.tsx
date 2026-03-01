@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, User, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal, Beaker, Atom, Code2, ChevronDown, Server,
+  Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "./DataBankIndicator";
@@ -113,6 +113,7 @@ interface DesktopOsSidebarProps {
   onOpenJupyter?: () => void;
   onOpenQuantumWorkspace?: () => void;
   onOpenCode?: () => void;
+  onOpenPackages?: () => void;
   onGoHome?: () => void;
   onReplayGuide?: () => void;
   onHoverPanel?: (panel: string) => void;
@@ -131,6 +132,7 @@ export default function DesktopOsSidebar({
   onOpenJupyter,
   onOpenQuantumWorkspace,
   onOpenCode,
+  onOpenPackages,
   onGoHome,
   onReplayGuide,
   onHoverPanel,
@@ -389,6 +391,22 @@ export default function DesktopOsSidebar({
             >
               <Code2 className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(210, 80%, 60%)" }} />
               {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Code</span>}
+            </button>
+          </IconTooltip>
+        )}
+        {/* Packages */}
+        {onOpenPackages && (
+          <IconTooltip label="Packages" show={!expanded}>
+            <button
+              onClick={() => collapseAndDo(onOpenPackages)}
+              onMouseEnter={() => onHoverPanel?.("packages")}
+              className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
+                !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
+              }`}
+              style={{ color: "var(--sb-text)" }}
+            >
+              <Package className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(38, 50%, 55%)" }} />
+              {expanded && <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Packages</span>}
             </button>
           </IconTooltip>
         )}
