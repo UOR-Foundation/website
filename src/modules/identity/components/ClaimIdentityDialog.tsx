@@ -298,8 +298,9 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
   const handleGoogleSignIn = async () => {
     setStep("signing-in");
     setError(null);
+    sessionStorage.setItem("auth_return_to", "/claim-identity");
     const { error: authError } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/claim-identity",
+      redirect_uri: window.location.origin,
     });
     if (authError) {
       setError(authError.message || "Sign-in failed. Please try again.");

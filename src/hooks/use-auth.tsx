@@ -69,11 +69,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession);
         if (newSession?.user) {
           // Use setTimeout to avoid Supabase deadlock
           setTimeout(() => fetchProfile(newSession.user.id), 0);
+          // Handle post-OAuth redirect: if we stored a return path, navigate there
+          if (event === "SIGNED_IN") {
+            const returnTo = sessionStorage.getItem("auth_return_to");
+            if (returnTo) {
+              sessionStorage.removeItem("auth_return_to");
+              // Only redirect if we're on root (came back from OAuth redirect)
+              if (window.location.pathname === "/") {
+                window.location.href = returnTo;
+              }
+            }
+          }
         } else {
           setProfile(null);
         }

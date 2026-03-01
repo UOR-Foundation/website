@@ -293,8 +293,9 @@ export default function HologramClaimOverlay({ open, onClose }: HologramClaimOve
   const handleGoogleSignIn = async () => {
     setStep("signing-in");
     setError(null);
+    sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error: authError } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/hologram-os",
+      redirect_uri: window.location.origin,
     });
     if (authError) {
       setError(authError.message || "Sign-in failed.");
