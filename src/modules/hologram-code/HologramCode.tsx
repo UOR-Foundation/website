@@ -30,8 +30,9 @@ import {
   Terminal as TerminalIcon, PanelBottom, Bell,
   FileText, FileCode, FileJson, FileType, Image as ImageIcon,
   Folder, FolderOpen, SplitSquareVertical, Play, RotateCcw,
-  Command,
+  Command, HardDrive,
 } from "lucide-react";
+import { useQFs, type FSNode } from "./useQFs";
 
 // ── VS Code Dark+ Color Tokens ──────────────────────────────────────────────
 const C = {
@@ -95,229 +96,7 @@ function getLanguage(name: string): string {
   return "plaintext";
 }
 
-// ── Demo file system ────────────────────────────────────────────────────────
-interface FSNode {
-  name: string;
-  type: "file" | "folder";
-  children?: FSNode[];
-  content?: string;
-  path: string;
-}
-
-const DEMO_FS: FSNode[] = [
-  {
-    name: "src", type: "folder", path: "src", children: [
-      {
-        name: "main.ts", type: "file", path: "src/main.ts",
-        content: `/**
- * Hologram Code — Main Entry Point
- * ═════════════════════════════════
- *
- * Welcome to Hologram Code, the native code editor
- * running on Q-Linux inside the Hologram OS.
- *
- * This is Monaco Editor — the same engine that powers
- * Visual Studio Code. Every keystroke, every shortcut,
- * every feature you know works exactly the same here.
- *
- * Try:
- *   Ctrl+Shift+P  → Command Palette
- *   Ctrl+P        → Quick Open
- *   Ctrl+D        → Select next occurrence
- *   Ctrl+/        → Toggle comment
- *   Ctrl+Backtick → Toggle terminal
- */
-
-import { boot } from "./kernel";
-import { createProjection } from "./projection";
-import type { HologramConfig } from "./types";
-
-const config: HologramConfig = {
-  name: "hologram-code",
-  version: "1.0.0",
-  kernel: "q-linux",
-  projection: "monaco",
-};
-
-async function main(): Promise<void> {
-  console.log("⬡ Booting Hologram Code...");
-  
-  const kernel = await boot(config);
-  const surface = createProjection(kernel);
-  
-  surface.mount(document.getElementById("root")!);
-  
-  console.log("✓ Hologram Code is live.");
-}
-
-main().catch(console.error);
-`,
-      },
-      {
-        name: "kernel.ts", type: "file", path: "src/kernel.ts",
-        content: `/**
- * Q-Linux Kernel Interface
- * ════════════════════════
- *
- * Provides the bridge between the editor and the
- * Q-Linux kernel running in the Hologram OS.
- */
-
-export interface KernelInstance {
-  readonly pid: number;
-  readonly cid: string;
-  readonly hScore: number;
-  exec(command: string): Promise<string>;
-  read(path: string): Promise<Uint8Array>;
-  write(path: string, data: Uint8Array): Promise<void>;
-}
-
-export async function boot(config: Record<string, unknown>): Promise<KernelInstance> {
-  // POST — verify ring integrity
-  const ring = verifyRing();
-  
-  // Hydrate topology
-  const topology = await hydrateTopology(ring);
-  
-  // Spawn editor process
-  return {
-    pid: 1,
-    cid: "baguqeera...",
-    hScore: 1.0,
-    exec: async (cmd) => "$ " + cmd + "\\n(executed)",
-    read: async () => new Uint8Array(),
-    write: async () => {},
-  };
-}
-
-function verifyRing(): boolean {
-  // Z/256Z ring coherence check
-  for (let x = 0; x < 256; x++) {
-    const neg = (256 - x) & 0xff;
-    const bnot = x ^ 0xff;
-    if (neg !== ((bnot + 1) & 0xff)) return false;
-  }
-  return true;
-}
-
-async function hydrateTopology(ring: boolean): Promise<void> {
-  if (!ring) throw new Error("Ring coherence failed");
-}
-`,
-      },
-      {
-        name: "types.ts", type: "file", path: "src/types.ts",
-        content: `/**
- * Core Type Definitions
- */
-
-export interface HologramConfig {
-  name: string;
-  version: string;
-  kernel: string;
-  projection: string;
-  features?: string[];
-}
-
-export interface ProjectionSurface {
-  mount(root: HTMLElement): void;
-  unmount(): void;
-  resize(width: number, height: number): void;
-}
-
-export type CoherenceZone = "convergent" | "exploring" | "divergent";
-
-export interface ProcessState {
-  pid: number;
-  name: string;
-  zone: CoherenceZone;
-  hScore: number;
-  memoryUsage: number;
-}
-`,
-      },
-      {
-        name: "projection.ts", type: "file", path: "src/projection.ts",
-        content: `/**
- * Projection Surface
- * ══════════════════
- *
- * Creates the rendering surface for the editor.
- */
-
-import type { ProjectionSurface } from "./types";
-
-export function createProjection(kernel: unknown): ProjectionSurface {
-  return {
-    mount(root: HTMLElement) {
-      root.innerHTML = "";
-      console.log("Projection surface mounted");
-    },
-    unmount() {
-      console.log("Projection surface unmounted");
-    },
-    resize(w: number, h: number) {
-      console.log("Resized to " + w + "x" + h);
-    },
-  };
-}
-`,
-      },
-    ],
-  },
-  {
-    name: "package.json", type: "file", path: "package.json",
-    content: `{
-  "name": "hologram-workspace",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "test": "vitest"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  }
-}
-`,
-  },
-  {
-    name: "README.md", type: "file", path: "README.md",
-    content: `# Hologram Workspace
-
-Welcome to your Hologram Code workspace.
-
-This editor runs natively on **Q-Linux** inside the Hologram OS.
-It uses the **Monaco Editor** engine — the same core that powers
-Visual Studio Code.
-
-## Features
-
-- Full syntax highlighting for 50+ languages
-- IntelliSense & autocomplete
-- Multi-cursor editing
-- Find & replace with regex
-- Code folding & bracket matching
-- Minimap navigation
-- Command Palette (Ctrl+Shift+P)
-- Integrated terminal
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+S | Save |
-| Ctrl+P | Quick Open |
-| Ctrl+Shift+P | Command Palette |
-| Ctrl+/ | Toggle Comment |
-| Ctrl+D | Select Next Occurrence |
-| Alt+↑/↓ | Move Line Up/Down |
-| Ctrl+Shift+K | Delete Line |
-`,
-  },
-];
+// FSNode type is now imported from useQFs
 
 // ── Activity Bar ────────────────────────────────────────────────────────────
 
@@ -529,11 +308,13 @@ const StatusBar = memo(function StatusBar({
   col,
   language,
   encoding,
+  fsStats,
 }: {
   line: number;
   col: number;
   language: string;
   encoding: string;
+  fsStats?: { totalFiles: number; totalBytes: number; journalLength: number };
 }) {
   return (
     <div
@@ -559,6 +340,12 @@ const StatusBar = memo(function StatusBar({
           <span>⚠</span>
           <span>0</span>
         </span>
+        {fsStats && (
+          <span className="flex items-center gap-1 opacity-80" title="Q-FS Merkle DAG">
+            <HardDrive size={11} />
+            <span>{fsStats.totalFiles} files · {(fsStats.totalBytes / 1024).toFixed(1)}KB · {fsStats.journalLength} ops</span>
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <span>Ln {line}, Col {col}</span>
@@ -920,6 +707,9 @@ interface HologramCodeProps {
 }
 
 export default function HologramCode({ onClose }: HologramCodeProps) {
+  // ── Q-FS — Merkle DAG filesystem (single source of truth) ───────────────
+  const qfs = useQFs();
+
   // ── State ───────────────────────────────────────────────────────────────
   const [activityItem, setActivityItem] = useState<ActivityItem | null>("explorer");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -948,19 +738,33 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
 
   // ── File operations ─────────────────────────────────────────────────────
   const openFile = useCallback((node: FSNode) => {
-    if (node.type !== "file" || !node.content) return;
+    if (node.type !== "file") return;
+    // Read content from Q-FS (Merkle DAG)
+    const content = qfs.readFile(node.path) ?? node.content ?? "";
     const exists = openFiles.find(f => f.path === node.path);
     if (!exists) {
       setOpenFiles(prev => [...prev, {
         path: node.path,
         name: node.name,
-        content: node.content!,
+        content,
         language: getLanguage(node.name),
         modified: false,
       }]);
     }
     setActiveFilePath(node.path);
-  }, [openFiles]);
+  }, [openFiles, qfs]);
+
+  // ── Save file to Q-FS (Ctrl+S) ─────────────────────────────────────────
+  const saveFile = useCallback((path: string) => {
+    const file = openFiles.find(f => f.path === path);
+    if (!file || !file.modified) return;
+    const success = qfs.writeFile(path, file.content);
+    if (success) {
+      setOpenFiles(prev =>
+        prev.map(f => f.path === path ? { ...f, modified: false } : f)
+      );
+    }
+  }, [openFiles, qfs]);
 
   const closeFile = useCallback((path: string) => {
     setOpenFiles(prev => {
@@ -1056,11 +860,19 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         if (activeFilePath) closeFile(activeFilePath);
         return;
       }
+
+      // Save file to Q-FS
+      if (mod && e.key === "s") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeFilePath) saveFile(activeFilePath);
+        return;
+      }
     };
 
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [activeFilePath, closeFile]);
+  }, [activeFilePath, closeFile, saveFile]);
 
   // ── Command palette actions ─────────────────────────────────────────────
   const handleCommand = useCallback((action: string) => {
@@ -1106,7 +918,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
               <ChevronDown size={12} />
               <span>hologram-workspace</span>
             </div>
-            {DEMO_FS.map((node) => (
+            {qfs.tree.map((node) => (
               <FileTreeNode
                 key={node.path}
                 node={node}
@@ -1291,6 +1103,7 @@ export default function HologramCode({ onClose }: HologramCodeProps) {
         col={cursorCol}
         language={activeFile?.language ?? "Plain Text"}
         encoding="UTF-8"
+        fsStats={qfs.stats}
       />
 
       {/* ── Command Palette Overlay ───────────────────────────────── */}
