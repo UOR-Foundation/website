@@ -5,11 +5,12 @@
  * Opens Lumen AI as a slide-out panel on any non-home page,
  * keeping the underlying page visible and interactive.
  * Keep-alive: mounts on first open, then stays mounted for instant re-open.
+ * Uses ConvergenceChat for visual continuity with the fullscreen Lumen.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import HologramAiChat from "@/modules/hologram-ui/components/HologramAiChat";
+import ConvergenceChat from "@/modules/hologram-ui/components/lumen/ConvergenceChat";
 
 /** Show on /hologram console only — /hologram-os has its own chat overlay */
 const ALLOWED_ROUTES = ["/hologram"];
@@ -50,16 +51,17 @@ export default function GlobalLumenOverlay() {
           position: "fixed",
           inset: 0,
           zIndex: 9500,
-          background: "hsla(0, 0%, 0%, 0.15)",
-          backdropFilter: "blur(2px)",
-          WebkitBackdropFilter: "blur(2px)",
+          background: "hsla(0, 0%, 0%, 0.12)",
+          backdropFilter: "blur(1px)",
+          WebkitBackdropFilter: "blur(1px)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "opacity 0.28s ease",
+          transition: "opacity 160ms ease",
+          willChange: open ? "opacity" : "auto",
         }}
       />
 
-      {/* Chat panel — slides in from right */}
+      {/* Chat panel — slides in from right, GPU-promoted */}
       <div
         style={{
           position: "fixed",
@@ -69,21 +71,20 @@ export default function GlobalLumenOverlay() {
           width: `${PANEL_WIDTH}px`,
           maxWidth: "90vw",
           zIndex: 9600,
-          borderLeft: "1px solid hsla(38, 15%, 30%, 0.2)",
-          boxShadow: "-8px 0 40px hsla(0, 0%, 0%, 0.3)",
+          borderLeft: "1px solid hsla(38, 15%, 30%, 0.12)",
+          boxShadow: open ? "-4px 0 30px hsla(0, 0%, 0%, 0.2)" : "none",
           overflow: "hidden",
-          transform: open ? "translateX(0)" : `translateX(100%)`,
+          transform: open ? "translate3d(0, 0, 0)" : "translate3d(100%, 0, 0)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease",
-          willChange: "transform",
+          transition: open
+            ? "transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease"
+            : "transform 160ms cubic-bezier(0.4, 0, 0.2, 1), opacity 100ms ease",
+          willChange: open ? "transform, opacity" : "auto",
+          contain: "layout style paint",
         }}
       >
-        <HologramAiChat
-          open={open}
-          onClose={handleClose}
-          panelWidth={PANEL_WIDTH}
-        />
+        <ConvergenceChat embedded onClose={handleClose} />
       </div>
     </>
   );

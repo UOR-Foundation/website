@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2 } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
 import { useConvergenceVoice, type VoicePhase } from "@/modules/hologram-ui/hooks/useConvergenceVoice";
@@ -88,9 +88,11 @@ interface ConvergenceChatProps {
   embedded?: boolean;
   /** Close callback for embedded mode */
   onClose?: () => void;
+  /** Expand to fullscreen callback — shows expand icon when provided */
+  onExpand?: () => void;
 }
 
-export default function ConvergenceChat({ embedded = false, onClose }: ConvergenceChatProps = {}) {
+export default function ConvergenceChat({ embedded = false, onClose, onExpand }: ConvergenceChatProps = {}) {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [input, setInput] = useState("");
   const [isConverging, setIsConverging] = useState(false);
@@ -460,7 +462,7 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
           </span>
         </div>
 
-        {/* Coherence readout */}
+        {/* Right controls */}
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono" style={{ color: "hsla(38, 15%, 55%, 0.25)" }}>
             H {(coherence.h ?? 0.5).toFixed(3)}
@@ -469,6 +471,19 @@ export default function ConvergenceChat({ embedded = false, onClose }: Convergen
             <span className="text-[10px] font-mono" style={{ color: "hsla(38, 15%, 55%, 0.2)" }}>
               {exchanges.length} exchange{exchanges.length !== 1 ? "s" : ""}
             </span>
+          )}
+          {onExpand && (
+            <button
+              onClick={onExpand}
+              className="w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+              style={{
+                color: "hsla(38, 15%, 60%, 0.4)",
+                background: "hsla(38, 15%, 30%, 0.08)",
+              }}
+              title="Expand to full screen"
+            >
+              <Maximize2 className="w-3 h-3" strokeWidth={1.5} />
+            </button>
           )}
         </div>
       </div>
