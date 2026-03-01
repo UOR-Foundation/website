@@ -144,3 +144,17 @@ export type {
   HolographicCodecConfig,
   PhaseStats,
 } from "./holographic-codec";
+
+// HuggingFace Model Bridge — real model loading for Atlas projection
+export {
+  loadHFModel,
+  tokenize,
+  detokenize,
+  baselineInference,
+  BROWSER_MODELS,
+} from "./hf-model-bridge";
+export type {
+  ModelLoadStatus,
+  LoadedHFModel,
+  BrowserModelProfile,
+} from "./hf-model-bridge";

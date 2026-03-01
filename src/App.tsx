@@ -150,6 +150,7 @@ const GenesisBootPage = lazy(() => import("@/pages/GenesisBootPage"));
 const ArtifactInspectorPage = lazy(() => import("@/pages/ArtifactInspectorPage"));
 const KernelGraphPage = lazy(() => import("@/pages/KernelGraphPage"));
 const TriwordLookupPage = lazy(() => import("@/pages/TriwordLookupPage"));
+const AtlasProjectionLab = lazy(() => import("@/pages/AtlasProjectionLab"));
 
 const queryClient = new QueryClient();
 
@@ -305,6 +306,7 @@ const App = () => {
             <Route path="/atlas" element={<AtlasVisualizationPage />} />
             <Route path="/quantum" element={<QuantumDashboardPage />} />
             <Route path="/q-shell" element={<QShellPage />} />
+            <Route path="/projection-lab" element={<AtlasProjectionLab />} />
             {/* Debug routes removed — private */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
