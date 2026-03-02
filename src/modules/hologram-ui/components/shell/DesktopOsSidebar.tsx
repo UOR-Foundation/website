@@ -16,8 +16,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, Fingerprint, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
-  Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package, FolderOpen,
-  Wrench, Sparkles,
+  Terminal, Beaker, Atom, Code2, ChevronDown, Package,
+  Sparkles,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import GenesisPopover from "../GenesisPopover";
@@ -486,42 +486,39 @@ export default memo(function DesktopOsSidebar({
           )}
         </div>
 
-        {/* ── Main Nav ───────────────────────────────────────── */}
-        <div className="flex-1 px-2 space-y-0 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
-          {/* Home */}
+        {/* ── Main Nav — Sanctuary → Explore → Create ────────── */}
+        <div className="flex-1 px-2 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
+          {/* ── Anchor ── */}
           <NavButton icon={Home} label="Home" expanded={expanded}
             active={isActive("/hologram-os")}
             onAction={() => act(onGoHome || (() => navigate("/hologram-os")))} />
 
-          {/* My Space */}
+          {/* ── Sanctuary — your sovereign base ── */}
           <NavButton icon={Fingerprint} label="My Space" expanded={expanded}
             onAction={() => act(onOpenMySpace)}
             onHover={() => onHoverPanel?.("myspace")} />
 
-          {/* Apps */}
+          {/* subtle zone separator */}
+          <div style={{ height: expanded ? "12px" : "8px" }} />
+
+          {/* ── Explore — discover the world ── */}
           <NavButton icon={LayoutGrid} label="Apps" expanded={expanded}
             onAction={() => act(onOpenApps)}
             onHover={() => onHoverPanel?.("apps")} />
 
-          {/* Web */}
           {onOpenBrowser && (
             <NavButton icon={Globe} label="Web" expanded={expanded}
               onAction={() => act(onOpenBrowser)}
               onHover={() => onHoverPanel?.("browser")} />
           )}
 
-          {/* Vault */}
-          {onOpenVault && (
-            <NavButton icon={FolderOpen} label="Vault" expanded={expanded}
-              iconColor="var(--sb-gold)"
-              onAction={() => act(onOpenVault)}
-              onHover={() => onHoverPanel?.("vault")} />
-          )}
+          {/* subtle zone separator */}
+          <div style={{ height: expanded ? "12px" : "8px" }} />
 
-          {/* ── Tools section ───────────────────────────────── */}
+          {/* ── Create — active engagement ── */}
           {expanded ? (
             <>
-              <SectionToggle icon={Wrench} label="Tools" open={toolsOpen} expanded={expanded}
+              <SectionToggle icon={Sparkles} label="Studio" open={toolsOpen} expanded={expanded}
                 onToggle={() => toggleSection("tools-open", setToolsOpen)} />
               {toolsOpen && toolItems.map(item => (
                 <NavButton key={item.panel} icon={item.icon} label={item.label} expanded indent
@@ -531,7 +528,6 @@ export default memo(function DesktopOsSidebar({
               ))}
             </>
           ) : (
-            /* Collapsed: flyout */
             <div className="relative group/tip">
               <button
                 ref={toolsAnchor}
@@ -539,16 +535,16 @@ export default memo(function DesktopOsSidebar({
                 className="sb-btn w-full flex items-center justify-center rounded-xl"
                 style={{ color: "var(--sb-text)", background: toolsFlyout ? "var(--sb-active)" : "transparent" }}
               >
-                <Wrench className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: toolsFlyout ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+                <Sparkles className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: toolsFlyout ? "var(--sb-gold)" : "var(--sb-muted)" }} />
               </button>
               {!toolsFlyout && (
                 <div className="sb-tip pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 z-50">
-                  Tools
+                  Studio
                 </div>
               )}
             </div>
           )}
-          <Flyout open={toolsFlyout} onClose={() => setToolsFlyout(false)} anchorRef={toolsAnchor} label="Tools">
+          <Flyout open={toolsFlyout} onClose={() => setToolsFlyout(false)} anchorRef={toolsAnchor} label="Studio">
             {toolItems.map(item => (
               <FlyoutItem key={item.panel} icon={item.icon} label={item.label} iconColor={item.iconColor}
                 onAction={() => act(toolActionMap[item.panel])} />
@@ -556,8 +552,12 @@ export default memo(function DesktopOsSidebar({
           </Flyout>
         </div>
 
-        {/* ── Share the Love ─────────────────────────────────── */}
-        <div className="px-2 pt-1 pb-0 shrink-0">
+        {/* ── Connect — bridge between self and others ──────── */}
+        <div className="px-2 pb-1 shrink-0">
+          <NavButton icon={Inbox} label="Messages" expanded={expanded}
+            onAction={() => act(onOpenMessenger)}
+            onHover={() => onHoverPanel?.("messenger")} />
+
           <div className={!expanded ? "relative group/tip" : undefined}>
             <button
               onPointerDown={(e) => { e.preventDefault(); act(() => setShareOpen(true)); }}
@@ -577,53 +577,50 @@ export default memo(function DesktopOsSidebar({
           </div>
         </div>
 
-        {/* ── Bottom: Help, Inbox, System ─────────────────────── */}
-        <div className="px-2 py-3 space-y-0 shrink-0" style={{ borderTop: "1px solid var(--sb-border)" }}>
-          {expanded && <TextSizeControl textSize={textSize} setTextSize={setTextSize} bgMode={bgMode} />}
-
+        {/* ── Utility — quiet system controls ─────────────────── */}
+        <div className="px-2 py-2 shrink-0 flex items-center gap-1" style={{ borderTop: "1px solid var(--sb-border)" }}>
+          {/* Help */}
           {onReplayGuide && (
-            <NavButton icon={HelpCircle} label={`Help (${MOD_KEY} /)`} expanded={expanded}
-              onAction={() => act(onReplayGuide)} />
-          )}
-
-          <NavButton icon={Inbox} label={`Messages (${MOD_KEY} M)`} expanded={expanded}
-            onAction={() => act(onOpenMessenger)}
-            onHover={() => onHoverPanel?.("messenger")} />
-
-          {/* System section */}
-          {expanded ? (
-            <>
-              <SectionToggle icon={Server} label="System" open={systemOpen} expanded={expanded}
-                onToggle={() => toggleSection("system-open", setSystemOpen)} />
-              {systemOpen && systemItems.map(item => (
-                <NavButton key={item.label} icon={item.icon} label={item.label} expanded indent
-                  onAction={() => act(item.action)}
-                  onHover={item.panel ? () => onHoverPanel?.(item.panel) : undefined} />
-              ))}
-            </>
-          ) : (
             <div className="relative group/tip">
               <button
-                ref={systemAnchor}
-                onPointerDown={(e) => { e.preventDefault(); setSystemFlyout(p => !p); setToolsFlyout(false); }}
-                className="sb-btn w-full flex items-center justify-center rounded-xl"
-                style={{ color: "var(--sb-text)", background: systemFlyout ? "var(--sb-active)" : "transparent" }}
+                onPointerDown={(e) => { e.preventDefault(); act(onReplayGuide); }}
+                className="sb-btn flex items-center justify-center rounded-xl"
+                style={{ color: "var(--sb-muted)", width: "36px", height: "36px" }}
               >
-                <Server className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: systemFlyout ? "var(--sb-gold)" : "var(--sb-muted)" }} />
+                <HelpCircle className="w-4 h-4" strokeWidth={1.3} />
               </button>
-              {!systemFlyout && (
-                <div className="sb-tip pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 z-50">
-                  System
-                </div>
-              )}
+              <div className="sb-tip pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 z-50">
+                Help ({MOD_KEY} /)
+              </div>
             </div>
           )}
+
+          {/* Settings gear — flyout with Storage, Compute, Settings */}
+          <div className="relative group/tip">
+            <button
+              ref={systemAnchor}
+              onPointerDown={(e) => { e.preventDefault(); setSystemFlyout(p => !p); setToolsFlyout(false); }}
+              className="sb-btn flex items-center justify-center rounded-xl"
+              style={{ color: systemFlyout ? "var(--sb-gold)" : "var(--sb-muted)", width: "36px", height: "36px", background: systemFlyout ? "var(--sb-active)" : "transparent" }}
+            >
+              <Settings className="w-4 h-4" strokeWidth={1.3} />
+            </button>
+            {!systemFlyout && (
+              <div className="sb-tip pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 rounded-lg text-[13px] font-light whitespace-nowrap opacity-0 scale-95 group-hover/tip:opacity-100 group-hover/tip:scale-100 z-50">
+                System
+              </div>
+            )}
+          </div>
+
           <Flyout open={systemFlyout} onClose={() => setSystemFlyout(false)} anchorRef={systemAnchor} label="System">
             {systemItems.map(item => (
               <FlyoutItem key={item.label} icon={item.icon} label={item.label}
                 onAction={() => act(item.action)} />
             ))}
           </Flyout>
+
+          {expanded && <div className="flex-1" />}
+          {expanded && <TextSizeControl textSize={textSize} setTextSize={setTextSize} bgMode={bgMode} />}
         </div>
 
         {/* ── Genesis Dot ────────────────────────────────────── */}
