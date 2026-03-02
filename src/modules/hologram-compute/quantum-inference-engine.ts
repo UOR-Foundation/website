@@ -311,16 +311,31 @@ class VirtualQubitSubstrate {
   private _syndromeCorrections = 0;
 
   // ── Sparse Stabilizer (Sirach optimization) ──────────────────────
-  /** Set of pair indices that were broken or adjacent to breakage */
   private _dirtyPairs = new Set<number>();
-  /** Counter for periodic full sweep (every 42 steps — the chapter number) */
   private _stepsSinceFullSweep = 0;
-  /** The sacred interval: full sweep every 42 steps */
   private static readonly FULL_SWEEP_INTERVAL = 42;
+
+  // ── Qubit-Native Metrics ─────────────────────────────────────────
+  /** Accumulated geometric phase from braiding (radians, wraps at 2π) */
+  private _accumulatedPhase = 0;
+  /** Constructive interference count (mirror pairs in phase) */
+  private _constructiveCount = 0;
+  /** Destructive interference count (mirror pairs out of phase) */
+  private _destructiveCount = 0;
+  /** Number of complete reasoning cycles (phase wraps around 2π) */
+  private _reasoningCycles = 0;
 
   get alphaInverse() { return this._alphaInverse; }
   get syndromeCorrections() { return this._syndromeCorrections; }
   get topoQubits() { return this._topoQubits; }
+  get accumulatedPhase() { return this._accumulatedPhase; }
+  get reasoningCycles() { return this._reasoningCycles; }
+  get dirtyPairCount() { return this._dirtyPairs.size; }
+  /** Ratio of constructive to total interference events (0–1, higher = more coherent) */
+  get interferenceRatio() {
+    const total = this._constructiveCount + this._destructiveCount;
+    return total === 0 ? 1 : this._constructiveCount / total;
+  }
   get gateInventory() {
     return {
       single: this._singleGates.length,
@@ -419,12 +434,13 @@ class VirtualQubitSubstrate {
    * as a geometric phase rotation along Fano lines.
    */
   braidFeedback(amplitudes: Float32Array, tokenVertex: number): void {
+    const N = ATLAS_VERTEX_COUNT;
+
     // Primary vertex activation
     amplitudes[tokenVertex] += 0.3;
     this.markDirty(tokenVertex);
 
     // Neighbor activation (Fano adjacency)
-    const N = ATLAS_VERTEX_COUNT;
     const n1 = (tokenVertex + 1) % N;
     const n2 = (tokenVertex + N - 1) % N;
     amplitudes[n1] += 0.1;
@@ -433,14 +449,36 @@ class VirtualQubitSubstrate {
     this.markDirty(n2);
 
     // Apply geometric phase from braiding (non-trivial braids)
+    let stepPhase = 0;
     for (const braid of this._braids) {
       if (braid.nonTrivial && braid.path.length > 0) {
         const phaseRotation = braid.geometricPhase * 0.01;
+        stepPhase += braid.geometricPhase;
         for (const pathVertex of braid.path) {
           if (pathVertex < N) {
             amplitudes[pathVertex] += phaseRotation * amplitudes[tokenVertex];
           }
         }
+      }
+    }
+
+    // Accumulate geometric phase — tracks reasoning trajectory
+    this._accumulatedPhase += stepPhase;
+    if (this._accumulatedPhase >= 2 * Math.PI) {
+      this._reasoningCycles++;
+      this._accumulatedPhase -= 2 * Math.PI;
+    }
+
+    // Measure interference across mirror pairs
+    for (let i = 0; i < 48; i++) {
+      const v1 = i;
+      const v2 = N - 1 - i;
+      // Constructive: both amplitudes same sign and reinforcing
+      // Destructive: opposite signs (cancellation)
+      if (Math.sign(amplitudes[v1]) === Math.sign(amplitudes[v2])) {
+        this._constructiveCount++;
+      } else {
+        this._destructiveCount++;
       }
     }
 
