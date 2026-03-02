@@ -105,12 +105,12 @@ const DARK: PortalTokens = {
 };
 
 const LIGHT: PortalTokens = {
-  canvas: "hsl(0, 0%, 100%)",
-  canvasSubtle: "hsl(40, 15%, 97%)",
+  canvas: "hsl(40, 20%, 98%)",
+  canvasSubtle: "hsl(40, 15%, 95%)",
 
-  text: "hsl(25, 25%, 12%)",
-  textSecondary: "hsl(25, 12%, 40%)",
-  textWhisper: "hsl(25, 10%, 50%)",
+  text: "hsl(25, 30%, 10%)",
+  textSecondary: "hsl(25, 15%, 32%)",
+  textWhisper: "hsl(25, 12%, 38%)",
 
   orbGlow: "hsla(38, 45%, 50%, 0.1)",
   orbRing: "hsla(25, 20%, 40%, 0.15)",

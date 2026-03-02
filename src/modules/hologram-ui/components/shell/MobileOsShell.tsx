@@ -54,7 +54,7 @@ import { getPrimeTheme, setPrimeTheme } from "@/modules/hologram-ui/theme/prime-
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Golden Ratio Helpers ──────────────────────────────────────────────
-const ORB_SIZE = 68;
+const ORB_SIZE = 80;
 const ORB_BREATH_SIZE = ORB_SIZE + GR.lg; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // ── Haptic feedback — warm, responsive ─────────────────────────────────
@@ -86,10 +86,11 @@ const NAV_ITEMS: NavItem[] = [
 
 // ── New User Narrative ─────────────────────────────────────────────────
 const NARRATIVE_LINES = [
-  "This is your space.",
-  "Nothing here belongs to anyone but you.",
-  "An intelligence that serves you. Never the other way around.",
-  "Let's begin.",
+  "Welcome.",
+  "This is your space — yours alone.",
+  "An intelligence that serves you.",
+  "Never the other way around.",
+  "Tap the light below to begin.",
 ];
 
 function useNarrative(isNewUser: boolean) {
@@ -306,13 +307,13 @@ export default function MobileOsShell() {
           style={{ paddingTop: "calc(env(safe-area-inset-top, 16px) + 12px)" }}
         >
           <p
-            className="tracking-[0.5em] uppercase"
+            className="tracking-[0.35em] uppercase"
             style={{
-              fontFamily: PP.font,
-              fontSize: "10px",
-              color: PP.textWhisper,
-              opacity: 0.5,
-              letterSpacing: "0.5em",
+              fontFamily: PP.fontDisplay,
+              fontSize: "14px",
+              fontWeight: 500,
+              color: PP.textSecondary,
+              letterSpacing: "0.35em",
             }}
           >
             Hologram
@@ -323,9 +324,9 @@ export default function MobileOsShell() {
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDark ? (
-              <Sun className="w-4 h-4" strokeWidth={1.2} style={{ color: PP.textWhisper, opacity: 0.5 }} />
+              <Sun className="w-5 h-5" strokeWidth={1.4} style={{ color: PP.textSecondary }} />
             ) : (
-              <Moon className="w-4 h-4" strokeWidth={1.2} style={{ color: PP.textWhisper, opacity: 0.5 }} />
+              <Moon className="w-5 h-5" strokeWidth={1.4} style={{ color: PP.textSecondary }} />
             )}
           </button>
         </div>
@@ -337,7 +338,7 @@ export default function MobileOsShell() {
         >
           {/* ── New User Narrative (typographic journey) ────────── */}
           {narrative.isActive && (
-            <div className="flex flex-col items-center gap-6 max-w-[280px]">
+            <div className="flex flex-col items-center gap-8 max-w-[320px]">
               {/* Previous lines — fading */}
               {narrative.previousLines.map((line, i) => (
                 <p
@@ -345,10 +346,10 @@ export default function MobileOsShell() {
                   className="text-center leading-relaxed"
                   style={{
                     fontFamily: PP.fontDisplay,
-                    fontSize: "22px",
+                    fontSize: "28px",
                     fontWeight: 300,
                     color: PP.narrativeFade,
-                    transition: "color 0.8s ease",
+                    transition: "color 1s ease",
                   }}
                 >
                   {line}
@@ -359,10 +360,10 @@ export default function MobileOsShell() {
                 className="text-center leading-relaxed"
                 style={{
                   fontFamily: PP.fontDisplay,
-                  fontSize: "22px",
+                  fontSize: "28px",
                   fontWeight: 300,
                   color: PP.narrativeText,
-                  minHeight: "34px",
+                  minHeight: "40px",
                 }}
               >
                 {narrative.currentLine}
@@ -385,16 +386,17 @@ export default function MobileOsShell() {
             <>
                {/* Identity mark — your personal anchor */}
                {userGlyph && (
-                <div
-                  className="flex items-center justify-center mb-8"
+               <div
+                  className="flex items-center justify-center mb-6"
                   style={{
                     width: GR.xxxl,
                     height: GR.xxxl,
-                    fontSize: "42px",
-                    color: PP.glyphColor,
-                    textShadow: `0 0 40px ${PP.glyphGlow}`,
+                    fontSize: "48px",
+                    color: PP.accent,
+                    textShadow: `0 0 30px ${PP.glyphGlow}`,
                     animation: "portal-glyph-breathe 6s ease-in-out infinite",
                     userSelect: "none",
+                    opacity: 0.6,
                   }}
                 >
                   {userGlyph}
@@ -403,17 +405,17 @@ export default function MobileOsShell() {
 
               {/* Greeting — personalized, warm */}
               {name && (
-                <h1
-                  className="text-center mb-3"
+              <h1
+                  className="text-center mb-4"
                   style={{
                     fontFamily: PP.fontDisplay,
-                    fontSize: "32px",
+                    fontSize: "38px",
                     fontWeight: 300,
                     color: PP.text,
-                    letterSpacing: "0.01em",
-                    lineHeight: 1.3,
-                    animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
-                    animationDelay: "0.2s",
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1.2,
+                    animation: "portal-fade-up 1s cubic-bezier(0.23, 1, 0.32, 1) both",
+                    animationDelay: "0.3s",
                   }}
                 >
                   {name}
@@ -425,14 +427,14 @@ export default function MobileOsShell() {
                 className="text-center"
                 style={{
                   fontFamily: PP.font,
-                  fontSize: "16px",
+                  fontSize: "17px",
                   fontWeight: 400,
-                  color: PP.textWhisper,
-                  letterSpacing: "0.02em",
-                  lineHeight: 1.6,
-                  animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
-                  animationDelay: "0.5s",
-                  maxWidth: "260px",
+                  color: PP.textSecondary,
+                  letterSpacing: "0.01em",
+                  lineHeight: 1.7,
+                  animation: "portal-fade-up 1s cubic-bezier(0.23, 1, 0.32, 1) both",
+                  animationDelay: "0.6s",
+                  maxWidth: "280px",
                 }}
               >
                 {whisper.text}
@@ -529,11 +531,10 @@ export default function MobileOsShell() {
             <div
               className="rounded-full"
               style={{
-                width: 10,
-                height: 10,
+                width: 14,
+                height: 14,
                 background: PP.orbCenter,
-                opacity: 0.8,
-                boxShadow: `0 0 ${8 + coherence.hScore * 12}px ${PP.orbGlow}`,
+                boxShadow: `0 0 ${12 + coherence.hScore * 16}px ${PP.orbGlow}`,
                 transition: "box-shadow 1.5s ease",
               }}
             />
@@ -553,14 +554,14 @@ export default function MobileOsShell() {
               />
             )}
             <p
-              className="tracking-[0.4em] uppercase text-center"
+              className="tracking-[0.35em] uppercase text-center"
               style={{
                 fontFamily: PP.font,
-                fontSize: "11px",
-                color: PP.textWhisper,
-                opacity: 0.6,
-                animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
-                animationDelay: "0.9s",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: PP.textSecondary,
+                animation: "portal-fade-up 1s cubic-bezier(0.23, 1, 0.32, 1) both",
+                animationDelay: "1s",
               }}
             >
               {alwaysListening ? "Listening" : "Lumen"}
