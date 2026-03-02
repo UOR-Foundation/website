@@ -738,9 +738,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <div className="flex-1 min-w-0">
           <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
             {isCpu ? (
-              <>Can a CPU match GPU speed? <strong style={{ color: P.gold }}>Hologram vGPU</strong> delivers <strong style={{ color: P.gold }}>GPU-class throughput on a single CPU thread</strong> by eliminating all O(N³) computation. Up to <strong style={{ color: P.text }}>N={sizes[sizes.length - 1]}</strong> — outputs verified <strong style={{ color: P.text }}>byte-identical</strong> via SHA-256.</>
+              <><strong style={{ color: P.gold }}>CPU only, no GPU.</strong> Single thread vs pre-computed retrieval. Same inputs, same outputs (SHA-256 verified). Up to N={sizes[sizes.length - 1]}.</>
             ) : (
-              <>Even <strong style={{ color: P.blue }}>real GPU hardware</strong> with thousands of parallel cores can't outrun <strong style={{ color: P.gold }}>pre-computed retrieval</strong>. The vGPU is faster, uses less energy, and produces <strong style={{ color: P.text }}>byte-identical</strong> results at every dimension up to <strong style={{ color: P.text }}>N={sizes[sizes.length - 1]}</strong>.</>
+              <><strong style={{ color: P.blue }}>Real GPU</strong> vs <strong style={{ color: P.gold }}>pre-computed retrieval</strong>. Both produce byte-identical results (SHA-256 verified). Up to N={sizes[sizes.length - 1]}.</>
             )}
           </p>
         </div>
@@ -769,23 +769,23 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               <h3 className="text-sm font-medium" style={{ color: P.text }}>{baseLabel} Baseline</h3>
             </div>
             <p className="text-2xl font-light font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
-            <p className="text-[11px]" style={{ color: P.muted }}>
-              {isCpu
-                ? `Single ${hw.jsEngine} thread. ${hw.cpuCores}-core ${hw.cpuArch}. Up to N=${sizes[sizes.length - 1]}.`
-                : `Real WebGPU compute shader. Thousands of parallel cores. Up to N=${sizes[sizes.length - 1]}.`
-              }
-            </p>
-          </div>
-          <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
-              <h3 className="text-sm font-medium" style={{ color: P.text }}>Hologram vGPU</h3>
-            </div>
-            <p className="text-2xl font-light font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
-            <p className="text-[11px]" style={{ color: P.muted }}>
-              Pre-computes via {hw.webgpuAvailable ? "GPU" : "CPU + 64KB LUT"}. Retrieves answers instantly — zero computation.
-            </p>
-          </div>
+             <p className="text-[11px]" style={{ color: P.muted }}>
+               {isCpu
+                 ? `Single ${hw.jsEngine} thread. ${hw.cpuCores} cores, ${hw.cpuArch}.`
+                 : `WebGPU compute shader. Thousands of parallel cores.`
+               }
+             </p>
+           </div>
+           <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+             <div className="flex items-center gap-2">
+               <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
+               <h3 className="text-sm font-medium" style={{ color: P.text }}>Hologram vGPU</h3>
+             </div>
+             <p className="text-2xl font-light font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
+             <p className="text-[11px]" style={{ color: P.muted }}>
+               {isCpu ? "Pre-computes via CPU LUT." : "Pre-computes via GPU."} Retrieves instantly.
+             </p>
+           </div>
         </div>
       )}
 
@@ -793,9 +793,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {state === "precomputing" && (
         <div className="p-5 text-center space-y-2 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-          <p className="text-sm font-medium" style={{ color: P.gold }}>Pre-computing all results…</p>
+          <p className="text-sm font-medium" style={{ color: P.gold }}>Crystallizing answers…</p>
           <p className="text-[12px]" style={{ color: P.muted }}>
-            {ALL_SIZES.length} sizes up to {ALL_SIZES[ALL_SIZES.length - 1]}². Using {hw.webgpuAvailable ? "GPU via WebGPU" : "CPU with 64KB lookup table"}.
+            {ALL_SIZES.length} sizes, up to {ALL_SIZES[ALL_SIZES.length - 1]}×{ALL_SIZES[ALL_SIZES.length - 1]}.
           </p>
         </div>
       )}
@@ -822,12 +822,12 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             {/* Key message */}
             <div className="text-center space-y-1 max-w-[220px]">
               <p className="text-sm font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "GPU-class speed, no GPU needed" : "Speeds up any existing GPU"}
+                {isCpu ? "No GPU required" : "Faster than your GPU"}
               </p>
               <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
                 {isCpu
-                  ? "Delivers GPU-equivalent throughput on a single CPU thread."
-                  : "Works on top of your existing hardware — instant results via pre-computed retrieval."}
+                  ? "Same results, single CPU thread."
+                  : "Pre-computed retrieval beats live computation."}
               </p>
             </div>
 
@@ -882,8 +882,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               </button>
             </div>
             <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
-              <strong style={{ color: P.text }}>LINPACK / HPL</strong> — FLOP/s via <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>2N³ / time</code>.
-              Median of {sampleCount(16)}–{sampleCount(1024)} samples, adaptive warmup ({warmupCount(16)}–{warmupCount(1024)} iters), work-amplified timing (≥{MIN_MEASUREMENT_TIME_MS}ms), ~{TIMER_RESOLUTION_US}µs timer. Zero simulation — all values measured.
+              <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>2N³ / time</code> · Median of {sampleCount(16)}–{sampleCount(1024)} samples · Adaptive warmup · Work-amplified timing · All values measured live.
             </p>
           </div>
 
@@ -1185,9 +1184,8 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           <div className="space-y-1.5">
             <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>What We Measure</h4>
             <p className="text-[13px] leading-relaxed">
-              We multiply two grids of numbers (matrices) of increasing size and time how long each method takes.
-              This is the <strong style={{ color: P.text }}>core math behind all AI models</strong> — the same operation that powers
-              ChatGPT, image generators, and voice assistants. Larger grids = harder problem.
+              Matrix multiplication at increasing sizes. This is the <strong style={{ color: P.text }}>core math behind all AI models</strong>.
+              Larger matrices = harder problem.
             </p>
           </div>
 
@@ -1199,11 +1197,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                 <h4 className="text-[13px] font-bold" style={{ color: P.red }}>Standard CPU</h4>
               </div>
               <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>How it works:</strong> Calculates every single multiplication one by one.
-                As the grid doubles in size, the work <strong style={{ color: P.text }}>increases 8×</strong>.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Speed:</strong> Gets dramatically slower with larger inputs.
+                Computes every multiplication one by one. Double the size, <strong style={{ color: P.text }}>8× the work</strong>.
               </p>
             </div>
 
@@ -1213,12 +1207,10 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                 <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>Real GPU</h4>
               </div>
               <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>How it works:</strong> Splits the work across thousands of tiny processors
-                that run in parallel. Much faster, but <strong style={{ color: P.text }}>still slows down</strong> with bigger grids.
+                Thousands of parallel cores. Much faster, but <strong style={{ color: P.text }}>still slows down</strong> with size.
               </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Status:</strong>{" "}
-                <span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available on this device" : "Not available on this device"}</span>
+              <p className="text-[13px]" style={{ color: P.muted }}>
+                <span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available on this device" : "Not available"}</span>
               </p>
             </div>
 
@@ -1228,11 +1220,10 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                 <h4 className="text-[13px] font-bold" style={{ color: P.gold }}>Hologram vGPU</h4>
               </div>
               <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>How it works:</strong> Pre-computes every possible answer <em>once</em>,
-                then looks up the result instantly — like checking an answer key instead of solving the problem.
+                Computes every answer once, then retrieves instantly. Like an answer key instead of re-solving.
               </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Speed:</strong> <strong style={{ color: P.gold }}>Always the same</strong>, no matter how large the input.
+              <p className="text-[13px]" style={{ color: P.muted }}>
+                <strong style={{ color: P.gold }}>Same speed at every size.</strong>
               </p>
             </div>
           </div>
@@ -1243,15 +1234,15 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
             <ul className="space-y-1.5 text-[13px] leading-relaxed" style={{ color: P.muted }}>
               <li className="flex items-start gap-2">
                 <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical inputs:</strong> All three methods receive the exact same data, generated from a fixed recipe so anyone can reproduce this test.</span>
+                <span><strong style={{ color: P.text }}>Same inputs.</strong> All methods receive identical data from a deterministic seed. Fully reproducible.</span>
               </li>
               <li className="flex items-start gap-2">
                 <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical outputs:</strong> Every result is verified byte-for-byte — all three methods produce the same answer, confirmed by a cryptographic fingerprint (SHA-256).</span>
+                <span><strong style={{ color: P.text }}>Same outputs.</strong> Every result verified byte for byte via SHA-256 cryptographic fingerprint.</span>
               </li>
               <li className="flex items-start gap-2">
                 <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Runs in your browser:</strong> Nothing is faked or simulated. This benchmark runs live on your device right now.</span>
+                <span><strong style={{ color: P.text }}>Live on your device.</strong> Nothing simulated. This runs in your browser right now.</span>
               </li>
             </ul>
           </div>
