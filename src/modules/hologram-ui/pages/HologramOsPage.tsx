@@ -30,6 +30,7 @@ import MessengerProjection from "@/modules/hologram-ui/components/MessengerProje
 import TerminalProjection from "@/modules/hologram-ui/components/TerminalProjection";
 import JupyterProjection from "@/modules/hologram-ui/components/JupyterProjection";
 import QuantumWorkspaceProjection from "@/modules/hologram-ui/components/QuantumWorkspaceProjection";
+import AILabProjection from "@/modules/hologram-ui/components/AILabProjection";
 import CodeProjectionShell from "@/modules/hologram-ui/components/CodeProjectionShell";
 import PackageManagerProjection from "@/modules/hologram-ui/components/PackageManagerProjection";
 import VaultProjection from "@/modules/hologram-ui/components/vault/VaultProjection";
@@ -368,6 +369,7 @@ export default function HologramOsPage() {
             onOpenMessenger={() => k.openPanel("messenger")}
             onOpenJupyter={() => k.openPanel("jupyter")}
             onOpenQuantumWorkspace={() => k.openPanel("quantum-workspace")}
+            onOpenAILab={() => k.openPanel("ai-lab")}
             onOpenCode={() => k.openPanel("code")}
             onOpenPackages={() => k.openPanel("packages")}
             onOpenVault={() => k.openPanel("vault")}
@@ -521,6 +523,7 @@ export default function HologramOsPage() {
       <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
       <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
       <QuantumWorkspaceProjection open={activePanel === "quantum-workspace"} preload={preloadedPanels.has("quantum-workspace")} onClose={() => k.closePanel()} />
+      <AILabProjection open={activePanel === "ai-lab"} preload={preloadedPanels.has("ai-lab")} onClose={() => k.closePanel()} />
       <CodeProjectionShell open={activePanel === "code"} preload={preloadedPanels.has("code")} onClose={() => k.closePanel()} />
       <PackageManagerProjection open={activePanel === "packages"} preload={preloadedPanels.has("packages")} onClose={() => k.closePanel()} />
       <VaultProjection open={activePanel === "vault"} preload={preloadedPanels.has("vault")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} />

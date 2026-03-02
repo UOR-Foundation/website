@@ -14,7 +14,7 @@ import {
   Home, LayoutGrid, Fingerprint, Globe, Cpu, Database,
   Settings, HelpCircle, Inbox, PanelLeftOpen, PanelLeftClose,
   Terminal, Beaker, Atom, Code2, ChevronDown, Server, Package, FolderOpen,
-  Wrench,
+  Wrench, Sparkles,
 } from "lucide-react";
 import HologramLogo from "./HologramLogo";
 import DataBankIndicator from "../DataBankIndicator";
@@ -200,6 +200,7 @@ interface DesktopOsSidebarProps {
   onOpenMessenger?: () => void;
   onOpenJupyter?: () => void;
   onOpenQuantumWorkspace?: () => void;
+  onOpenAILab?: () => void;
   onOpenCode?: () => void;
   onOpenPackages?: () => void;
   onOpenVault?: () => void;
@@ -223,6 +224,7 @@ export default function DesktopOsSidebar({
   onOpenMessenger,
   onOpenJupyter,
   onOpenQuantumWorkspace,
+  onOpenAILab,
   onOpenCode,
   onOpenPackages,
   onOpenVault,
@@ -565,6 +567,17 @@ export default function DesktopOsSidebar({
                     <span className="text-[13px] font-light whitespace-nowrap tracking-wide">Quantum Lab</span>
                   </button>
                 )}
+                {onOpenAILab && (
+                  <button
+                    onPointerDown={pointerDown(onOpenAILab)}
+                    onMouseEnter={() => onHoverPanel?.("ai-lab")}
+                    className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
+                    style={{ color: "var(--sb-text)" }}
+                  >
+                    <Sparkles className="w-4 h-4 shrink-0" strokeWidth={1.3} style={{ color: "hsl(260, 60%, 65%)" }} />
+                    <span className="text-[13px] font-light whitespace-nowrap tracking-wide">AI Lab</span>
+                  </button>
+                )}
                 {onOpenCode && (
                   <button
                     onPointerDown={pointerDown(onOpenCode)}
@@ -618,6 +631,9 @@ export default function DesktopOsSidebar({
               )}
               {onOpenQuantumWorkspace && (
                 <FlyoutItem icon={Atom} label="Quantum Lab" iconColor="hsl(200, 60%, 60%)" onClick={() => collapseAndDo(onOpenQuantumWorkspace)} />
+              )}
+              {onOpenAILab && (
+                <FlyoutItem icon={Sparkles} label="AI Lab" iconColor="hsl(260, 60%, 65%)" onClick={() => collapseAndDo(onOpenAILab)} />
               )}
               {onOpenCode && (
                 <FlyoutItem icon={Code2} label="Code" iconColor="hsl(210, 80%, 60%)" onClick={() => collapseAndDo(onOpenCode)} />

@@ -307,6 +307,7 @@ const App = () => {
             <Route path="/quantum" element={<QuantumDashboardPage />} />
             <Route path="/q-shell" element={<QShellPage />} />
             <Route path="/projection-lab" element={<AtlasProjectionLab />} />
+            <Route path="/ai-lab" element={<AtlasProjectionLab />} />
             {/* Debug routes removed — private */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
