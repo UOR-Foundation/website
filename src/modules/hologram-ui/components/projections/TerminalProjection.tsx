@@ -2,8 +2,10 @@
  * TerminalProjection — Keep-alive terminal panel with hover preloading
  */
 
+import { lazy, Suspense } from "react";
 import ProjectionShell from "../shell/ProjectionShell";
-import QShellEmbed from "@/hologram/kernel/pages/QShellEmbed";
+
+const QShellEmbed = lazy(() => import("@/hologram/kernel/pages/QShellEmbed"));
 
 interface TerminalProjectionProps {
   open: boolean;
@@ -22,7 +24,13 @@ export default function TerminalProjection({ open, preload, onClose, onOpenJupyt
       backdropColor="hsla(0, 0%, 0%, 0.4)"
       beamGradient="linear-gradient(to bottom, hsla(120, 40%, 55%, 0.0), hsla(120, 40%, 55%, 0.2), hsla(120, 40%, 55%, 0.0))"
     >
-      <QShellEmbed onClose={onClose} onOpenJupyter={onOpenJupyter} />
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-full" style={{ background: "hsl(0, 0%, 8%)", color: "hsl(120, 40%, 55%)" }}>
+          <span className="text-sm font-mono">Loading Terminal…</span>
+        </div>
+      }>
+        <QShellEmbed onClose={onClose} onOpenJupyter={onOpenJupyter} />
+      </Suspense>
     </ProjectionShell>
   );
 }
