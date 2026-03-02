@@ -262,14 +262,17 @@ export default memo(function DesktopSurface({
             <img
               src={heroLandscape}
               alt="Serene landscape"
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover image-retina ${isActive ? "will-change-active" : "will-change-idle"}`}
               loading="eager"
               decoding="async"
+              // §8 Resolution-native: srcSet delivers DPR-matched images
+              // (same src for now — ready for 2x/3x variants when generated)
+              srcSet={`${heroLandscape} 1x, ${heroLandscape} 2x`}
+              sizes="100vw"
               style={{
                 animation: `ken-burns-breathe ${kenBurnsDuration} cubic-bezier(0.25, 0.1, 0.25, 1) forwards`,
                 animationPlayState: isActive ? "running" : "paused",
                 imageRendering: "auto" as const,
-                willChange: isActive ? "transform" : "auto",
                 // High-DPR: ensure sub-pixel rendering for maximum sharpness
                 backfaceVisibility: "hidden",
                 transform: "translateZ(0)",
