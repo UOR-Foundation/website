@@ -15,6 +15,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootEvent } from "../projection-engine";
 import type { BootStage } from "@/hologram/kernel/q-boot";
+import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/tee-bridge";
 
 interface KernelBootProps {
   events: BootEvent[];
@@ -37,11 +38,19 @@ export default function KernelBoot({
 }: KernelBootProps) {
   const [visible, setVisible] = useState(true);
   const [phase, setPhase] = useState<Phase>("dark");
+  const [teeCaps, setTeeCaps] = useState<TEECapabilities | null>(null);
   const bootedRef = useRef(false);
   const phaseRef = useRef<Phase>("dark");
 
   // Keep ref in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  // Detect TEE during boot
+  useEffect(() => {
+    if (skipAnimation) return;
+    const bridge = new TEEBridge();
+    bridge.detect().then(caps => setTeeCaps(caps)).catch(() => {});
+  }, [skipAnimation]);
 
   // Sequenced phase timeline — independent of boot speed
   useEffect(() => {
@@ -249,8 +258,101 @@ export default function KernelBoot({
               transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             />
           )}
+
+          {/* ── TEE Status Indicator — appears during ring/project phases ── */}
+          {teeCaps && (phase === "ring" || phase === "project") && (
+            <TEEStatusIndicator caps={teeCaps} phase={phase} isPanic={isPanic} />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TEE Status Indicator — hardware security level badge during boot
+// ═══════════════════════════════════════════════════════════════════════
+
+function getTeeLabel(caps: TEECapabilities): { icon: string; label: string; level: string } {
+  const name = caps.providerName.toLowerCase();
+  if (name.includes("secure enclave") || name.includes("apple")) {
+    return { icon: "🔐", label: "Secure Enclave", level: "Hardware" };
+  }
+  if (name.includes("trustzone") || name.includes("arm")) {
+    return { icon: "🛡️", label: "TrustZone", level: "Hardware" };
+  }
+  if (name.includes("tpm") || name.includes("platform")) {
+    return { icon: "🔒", label: "Platform TPM", level: "Hardware" };
+  }
+  if (name.includes("security key") || name.includes("roaming")) {
+    return { icon: "🗝️", label: "Security Key", level: "External" };
+  }
+  return { icon: "∿", label: "Software ZK", level: "Software" };
+}
+
+function TEEStatusIndicator({
+  caps,
+  phase,
+  isPanic,
+}: {
+  caps: TEECapabilities;
+  phase: Phase;
+  isPanic: boolean;
+}) {
+  const { icon, label, level } = getTeeLabel(caps);
+  const isHardware = caps.hardwareAttestation;
+  const dotColor = isPanic
+    ? "hsla(0, 40%, 55%, 0.9)"
+    : isHardware
+      ? "hsla(152, 50%, 55%, 0.9)"
+      : "hsla(38, 50%, 65%, 0.7)";
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none flex flex-col items-center gap-1"
+      style={{ bottom: "18%", left: "50%", transform: "translateX(-50%)" }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: phase === "project" ? 0 : 0.85, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+    >
+      {/* Security dot */}
+      <div className="flex items-center gap-1.5">
+        <motion.div
+          className="rounded-full"
+          style={{
+            width: 5,
+            height: 5,
+            background: dotColor,
+            boxShadow: `0 0 8px ${dotColor}`,
+          }}
+          animate={{ scale: [1, 1.3, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <span
+          style={{
+            fontSize: "10px",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "hsla(30, 12%, 75%, 0.7)",
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+          }}
+        >
+          {icon} {label}
+        </span>
+      </div>
+      {/* Level badge */}
+      <span
+        style={{
+          fontSize: "8px",
+          letterSpacing: "0.25em",
+          textTransform: "uppercase",
+          color: isHardware ? "hsla(152, 40%, 55%, 0.5)" : "hsla(38, 30%, 55%, 0.4)",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {level} isolation · TEE verified
+      </span>
+    </motion.div>
   );
 }
