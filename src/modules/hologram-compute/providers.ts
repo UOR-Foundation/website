@@ -25,6 +25,8 @@
 
 import { getHologramGpu, type GpuDeviceInfo, type GpuBenchmarkResult } from "@/modules/uns/core/hologram/gpu";
 import { getLutEngine, type LutApplyResult, type CriticalIdentityProof, type LutEngineInfo, type LutName } from "@/modules/uns/core/hologram/gpu";
+import { getDispatcher, type DispatcherSnapshot } from "./compute-dispatcher";
+import { getClock, type ClockSnapshot } from "./adaptive-clock";
 
 // ── Provider Types ──────────────────────────────────────────────────────────
 
@@ -322,7 +324,6 @@ export class ComputeOrchestrator {
   private snapshots = new Map<string, ProviderSnapshot>();
 
   constructor() {
-    // Register all provider types
     this.providers = [
       new LocalGpuProvider(),
       new CloudProvider(),
@@ -330,7 +331,11 @@ export class ComputeOrchestrator {
     ];
   }
 
-  /** Initialize all providers and collect snapshots. */
+  /**
+   * Initialize all providers, the ComputeDispatcher, and the AdaptiveClockBooster.
+   * The dispatcher probes hardware and selects the optimal tier.
+   * The clock starts with idle-gated boosting wired to the dispatcher.
+   */
   async init(): Promise<ProviderSnapshot[]> {
     const results = await Promise.all(
       this.providers.map(async (p) => {
@@ -339,6 +344,22 @@ export class ComputeOrchestrator {
         return snap;
       }),
     );
+
+    // Boot the tiered compute dispatcher
+    const dispatcher = getDispatcher();
+    await dispatcher.init();
+
+    // Wire the adaptive clock to the dispatcher's idle gating
+    const clock = getClock();
+    clock.onTick((_tick, _dt, boosting) => {
+      if (boosting) {
+        dispatcher.enterIdle();
+      } else {
+        dispatcher.exitIdle();
+      }
+    });
+    clock.start();
+
     return results;
   }
 
@@ -348,9 +369,18 @@ export class ComputeOrchestrator {
     return [...this.snapshots.values()];
   }
 
+  /** Get the ComputeDispatcher snapshot (tiered cascade status). */
+  get dispatcherSnapshot(): DispatcherSnapshot {
+    return getDispatcher().snapshot();
+  }
+
+  /** Get the AdaptiveClockBooster snapshot. */
+  get clockSnapshot(): ClockSnapshot {
+    return getClock().snapshot();
+  }
+
   /** Get best available provider for a job type. */
   bestProvider(jobType: ComputeJob["type"]): ComputeProvider | null {
-    // Priority: local (free) → cloud → peer
     for (const p of this.providers) {
       const snap = this.snapshots.get(p.id);
       if (!snap || snap.status === "offline" || snap.status === "error") continue;
@@ -382,6 +412,8 @@ export class ComputeOrchestrator {
   destroy(): void {
     this.providers.forEach(p => p.destroy());
     this.snapshots.clear();
+    getDispatcher().destroy();
+    getClock().destroy();
   }
 }
 
