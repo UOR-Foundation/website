@@ -2,17 +2,17 @@
  * System Monitor — Warm, readable system diagnostics
  * ═══════════════════════════════════════════════════
  *
- * Toggle with Ctrl+Shift+D. Designed to feel native to the
- * Hologram OS warm palette with clear, human-readable labels.
- *
- * Features a side-by-side Hardware ↔ Hologram comparison
- * so users can see how physical resources map to virtual ones.
+ * Toggle with Ctrl+Shift+D. Optimized for 60fps even while
+ * polling at animation-frame cadence. All sub-components are
+ * memoized; tabs lazy-render only when active; hardware detection
+ * splits static (GPU, browser) from dynamic (heap, battery) to
+ * avoid redundant async work.
  */
 
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 import { getBrowserAdapter } from "@/modules/hologram-os/surface-adapter";
-import { IconX, IconCpu, IconActivity, IconSettings, IconList, IconDeviceDesktop, IconBolt, IconCube, IconColumns } from "@tabler/icons-react";
+import { IconX, IconCpu, IconActivity, IconSettings, IconList, IconColumns } from "@tabler/icons-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -78,37 +78,37 @@ function useHistory(value: number, maxLen = 60) {
   return ref.current;
 }
 
-// ─── Shared Sub-components ──────────────────────────────────────────────
+// ─── Shared Sub-components (all memoized) ───────────────────────────────
 
-function SegmentedBar({ value, max, segments = 20, color, label, unit, showValue = true }: {
+const SegmentedBar = memo(function SegmentedBar({ value, max, segments = 20, color, label, unit, showValue = true }: {
   value: number; max: number; segments?: number; color: string; label: string; unit: string; showValue?: boolean;
 }) {
   const filled = Math.round((value / Math.max(max, 1)) * segments);
+  const displayVal = typeof value === "number" ? (value >= 1000 ? Math.round(value).toLocaleString() : value.toFixed(value < 10 ? 1 : 0)) : value;
   return (
     <div className="flex items-center gap-3 py-2">
       <span className="text-[12px] uppercase tracking-[0.1em] w-16 shrink-0 text-right font-medium" style={{ color: DT.textLabel, fontFamily: DT.mono }}>{label}</span>
       <div className="flex gap-[2px] flex-1">
         {Array.from({ length: segments }).map((_, i) => (
-          <div key={i} className="h-3.5 flex-1 rounded-[2px] transition-all duration-150" style={{
+          <div key={i} className="h-3.5 flex-1 rounded-[2px]" style={{
             background: i < filled ? color : "hsla(30, 6%, 18%, 0.5)",
             boxShadow: i < filled ? `0 0 4px ${color}40` : "none",
             opacity: i < filled ? (0.5 + (i / segments) * 0.5) : 0.3,
+            transition: "background 120ms, opacity 120ms",
           }} />
         ))}
       </div>
       {showValue && (
         <div className="flex items-baseline gap-1 min-w-[80px] justify-end">
-          <span className="text-xl font-bold tabular-nums" style={{ color: DT.textBright, fontFamily: DT.mono }}>
-            {typeof value === "number" ? (value >= 1000 ? Math.round(value).toLocaleString() : value.toFixed(value < 10 ? 1 : 0)) : value}
-          </span>
+          <span className="text-xl font-bold tabular-nums" style={{ color: DT.textBright, fontFamily: DT.mono }}>{displayVal}</span>
           <span className="text-[11px] uppercase font-medium" style={{ color: DT.textDim }}>{unit}</span>
         </div>
       )}
     </div>
   );
-}
+});
 
-function Readout({ label, value, unit, color = DT.textBright, size = "lg", sub }: {
+const Readout = memo(function Readout({ label, value, unit, color = DT.textBright, size = "lg", sub }: {
   label: string; value: string | number; unit: string; color?: string; size?: "sm" | "lg"; sub?: string;
 }) {
   return (
@@ -121,18 +121,19 @@ function Readout({ label, value, unit, color = DT.textBright, size = "lg", sub }
       {sub && <div className="text-[11px] mt-1" style={{ color: DT.textDim }}>{sub}</div>}
     </div>
   );
-}
+});
 
-function InsetPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+const InsetPanel = memo(function InsetPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-xl p-4 ${className}`} style={{
       background: DT.insetBg, border: `1px solid ${DT.insetBorder}`,
       boxShadow: `inset 0 1px 3px hsla(28, 15%, 0%, 0.3), 0 1px 0 hsla(30, 10%, 30%, 0.05)`,
+      contain: "layout style",
     }}>{children}</div>
   );
-}
+});
 
-function Section({ title, children, color, description }: { title: string; children: React.ReactNode; color?: string; description?: string }) {
+const Section = memo(function Section({ title, children, color, description }: { title: string; children: React.ReactNode; color?: string; description?: string }) {
   const c = color || DT.gold;
   return (
     <div>
@@ -140,33 +141,31 @@ function Section({ title, children, color, description }: { title: string; child
         <span className="text-[12px] uppercase tracking-[0.15em] font-semibold" style={{ color: c, fontFamily: DT.mono }}>{title}</span>
         <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${c}40, transparent)` }} />
       </div>
-      {description && (
-        <p className="text-[12px] leading-relaxed mb-3" style={{ color: DT.textLabel }}>{description}</p>
-      )}
+      {description && <p className="text-[12px] leading-relaxed mb-3" style={{ color: DT.textLabel }}>{description}</p>}
       {children}
     </div>
   );
-}
+});
 
-function MetricRow({ label, value, accent, hint }: { label: string; value: string | number; accent?: string; hint?: string }) {
+const MetricRow = memo(function MetricRow({ label, value, accent, hint }: { label: string; value: string | number; accent?: string; hint?: string }) {
   return (
     <div className="flex justify-between items-center py-[5px]">
       <span className="text-[13px]" style={{ color: DT.textLabel, fontFamily: DT.font }} title={hint}>{label}</span>
       <span className="text-[13px] font-medium tabular-nums" style={{ color: accent ?? DT.textBright, fontFamily: DT.mono }}>{value}</span>
     </div>
   );
-}
+});
 
-function StatusDot({ active }: { active: boolean }) {
+const StatusDot = memo(function StatusDot({ active }: { active: boolean }) {
   return (
     <span className="inline-block w-2 h-2 rounded-full mr-2" style={{
       background: active ? DT.green : DT.textDim,
       boxShadow: active ? `0 0 6px ${DT.green}60` : "none",
     }} />
   );
-}
+});
 
-function Sparkline({ data, color, height = 52, label }: { data: number[]; color: string; height?: number; label?: string }) {
+const Sparkline = memo(function Sparkline({ data, color, height = 52, label }: { data: number[]; color: string; height?: number; label?: string }) {
   const max = Math.max(...data, 1);
   const w = 320;
   const points = data.map((v, i) => {
@@ -199,9 +198,9 @@ function Sparkline({ data, color, height = 52, label }: { data: number[]; color:
       )}
     </div>
   );
-}
+});
 
-function SliderGauge({ value, max, color, label, displayValue }: { value: number; max: number; color: string; label: string; displayValue: string }) {
+const SliderGauge = memo(function SliderGauge({ value, max, color, label, displayValue }: { value: number; max: number; color: string; label: string; displayValue: string }) {
   const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
   return (
     <div className="space-y-1.5">
@@ -210,44 +209,55 @@ function SliderGauge({ value, max, color, label, displayValue }: { value: number
         <span className="tabular-nums font-medium" style={{ color: DT.textBright }}>{displayValue}</span>
       </div>
       <div className="h-[7px] rounded-full overflow-hidden relative" style={{ background: "hsla(30, 6%, 15%, 0.8)", boxShadow: "inset 0 1px 2px hsla(0,0%,0%,0.3)" }}>
-        <div className="h-full rounded-full transition-all duration-300" style={{
+        <div className="h-full rounded-full" style={{
           width: `${pct}%`, background: `linear-gradient(90deg, ${color}90, ${color})`, boxShadow: `0 0 8px ${color}40`,
+          transition: "width 200ms ease-out",
         }} />
-        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 transition-all duration-300" style={{
+        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2" style={{
           left: `calc(${pct}% - 6px)`, background: DT.panelBg, borderColor: color, boxShadow: `0 0 6px ${color}60`,
+          transition: "left 200ms ease-out",
         }} />
       </div>
     </div>
   );
-}
+});
 
-// ─── Hardware Detection ─────────────────────────────────────────────────
+// ─── Hardware Detection (split static/dynamic) ─────────────────────────
 
-interface HardwareInfo {
-  platform: string;
-  userAgent: string;
-  language: string;
-  cookiesEnabled: boolean;
-  onLine: boolean;
+interface StaticHwInfo {
   logicalCores: number;
   deviceMemoryGb: number | null;
-  jsHeapUsedMb: number | null;
-  jsHeapTotalMb: number | null;
-  jsHeapLimitMb: number | null;
   screenWidth: number;
   screenHeight: number;
-  viewportWidth: number;
-  viewportHeight: number;
   dpr: number;
   colorDepth: number;
   colorGamut: string;
   hdr: boolean;
-  refreshHz: number;
-  orientation: string;
   touchPoints: number;
   gpuRenderer: string;
   gpuVendor: string;
   gpuTier: string;
+  webglVersion: string;
+  maxViewportDims: string;
+  maxTextureSize: number | null;
+  maxRenderbufferSize: number | null;
+  browserName: string;
+  browserVersion: string;
+  osName: string;
+  prefersReducedMotion: boolean;
+  prefersColorScheme: string;
+  mediaCapabilities: string;
+}
+
+interface DynamicHwInfo {
+  onLine: boolean;
+  jsHeapUsedMb: number | null;
+  jsHeapTotalMb: number | null;
+  jsHeapLimitMb: number | null;
+  viewportWidth: number;
+  viewportHeight: number;
+  refreshHz: number;
+  orientation: string;
   storageEstimate: { usage: number; quota: number } | null;
   connectionType: string | null;
   downlinkMbps: number | null;
@@ -257,17 +267,9 @@ interface HardwareInfo {
   batteryCharging: boolean | null;
   audioOutputs: number;
   videoInputs: number;
-  browserName: string;
-  browserVersion: string;
-  osName: string;
-  maxTextureSize: number | null;
-  maxRenderbufferSize: number | null;
-  webglVersion: string;
-  maxViewportDims: string;
-  prefersReducedMotion: boolean;
-  prefersColorScheme: string;
-  mediaCapabilities: string;
 }
+
+type HardwareInfo = StaticHwInfo & DynamicHwInfo;
 
 function parseBrowserInfo(ua: string): { browser: string; version: string; os: string } {
   let browser = "Unknown", version = "", os = "Unknown";
@@ -284,19 +286,22 @@ function parseBrowserInfo(ua: string): { browser: string; version: string; os: s
   return { browser, version, os };
 }
 
+/** Detect GPU/browser/screen once; refresh heap/battery/network on interval */
 function useHardwareInfo(visible: boolean): HardwareInfo | null {
   const [info, setInfo] = useState<HardwareInfo | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const staticRef = useRef<StaticHwInfo | null>(null);
 
   useEffect(() => {
     if (!visible) return;
-    const detect = async () => {
+    let cancelled = false;
+
+    // Static detection — runs once
+    const detectStatic = async (): Promise<StaticHwInfo> => {
+      if (staticRef.current) return staticRef.current;
       const nav = navigator as any;
       let gpuRenderer = "Unknown", gpuVendor = "Unknown";
-      let maxTextureSize: number | null = null;
-      let maxRenderbufferSize: number | null = null;
-      let webglVersion = "None";
-      let maxViewportDims = "N/A";
+      let maxTextureSize: number | null = null, maxRenderbufferSize: number | null = null;
+      let webglVersion = "None", maxViewportDims = "N/A";
       try {
         const canvas = document.createElement("canvas");
         const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
@@ -323,25 +328,40 @@ function useHardwareInfo(visible: boolean): HardwareInfo | null {
 
       const colorGamut = window.matchMedia?.("(color-gamut: rec2020)")?.matches ? "Rec. 2020"
         : window.matchMedia?.("(color-gamut: p3)")?.matches ? "Display P3" : "sRGB";
-      const hdr = window.matchMedia?.("(dynamic-range: high)")?.matches || false;
-      const orientation = screen?.orientation?.type?.includes("landscape") ? "Landscape" : "Portrait";
+      const { browser: browserName, version: browserVersion, os: osName } = parseBrowserInfo(navigator.userAgent);
+
+      const result: StaticHwInfo = {
+        logicalCores: nav.hardwareConcurrency || 1,
+        deviceMemoryGb: nav.deviceMemory || null,
+        screenWidth: screen.width * (window.devicePixelRatio || 1),
+        screenHeight: screen.height * (window.devicePixelRatio || 1),
+        dpr: window.devicePixelRatio || 1,
+        colorDepth: screen.colorDepth || 24,
+        colorGamut,
+        hdr: window.matchMedia?.("(dynamic-range: high)")?.matches || false,
+        touchPoints: nav.maxTouchPoints || 0,
+        gpuRenderer, gpuVendor, gpuTier, webglVersion, maxViewportDims,
+        maxTextureSize, maxRenderbufferSize,
+        browserName, browserVersion, osName,
+        prefersReducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false,
+        prefersColorScheme: window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light",
+        mediaCapabilities: "MediaRecorder" in window ? "Full" : "Partial",
+      };
+      staticRef.current = result;
+      return result;
+    };
+
+    // Dynamic detection — runs on interval
+    const detectDynamic = async (): Promise<DynamicHwInfo> => {
+      const nav = navigator as any;
+      const perf = performance as any;
+      const memory = perf.memory;
 
       let storageEstimate: { usage: number; quota: number } | null = null;
-      try {
-        if (nav.storage?.estimate) {
-          const est = await nav.storage.estimate();
-          storageEstimate = { usage: est.usage || 0, quota: est.quota || 0 };
-        }
-      } catch {}
+      try { if (nav.storage?.estimate) { const est = await nav.storage.estimate(); storageEstimate = { usage: est.usage || 0, quota: est.quota || 0 }; } } catch {}
 
       let batteryLevel: number | null = null, batteryCharging: boolean | null = null;
-      try {
-        if (nav.getBattery) {
-          const bat = await nav.getBattery();
-          batteryLevel = bat.level;
-          batteryCharging = bat.charging;
-        }
-      } catch {}
+      try { if (nav.getBattery) { const bat = await nav.getBattery(); batteryLevel = bat.level; batteryCharging = bat.charging; } } catch {}
 
       let audioOutputs = 0, videoInputs = 0;
       try {
@@ -352,34 +372,14 @@ function useHardwareInfo(visible: boolean): HardwareInfo | null {
         }
       } catch {}
 
-      const perf = performance as any;
-      const memory = perf.memory;
-
-      const { browser: browserName, version: browserVersion, os: osName } = parseBrowserInfo(navigator.userAgent);
-      const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
-      const prefersColorScheme = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
-
-      setInfo({
-        platform: nav.platform || "Unknown",
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        cookiesEnabled: navigator.cookieEnabled,
+      return {
         onLine: navigator.onLine,
-        logicalCores: nav.hardwareConcurrency || 1,
-        deviceMemoryGb: nav.deviceMemory || null,
         jsHeapUsedMb: memory ? Math.round(memory.usedJSHeapSize / 1048576 * 10) / 10 : null,
         jsHeapTotalMb: memory ? Math.round(memory.totalJSHeapSize / 1048576 * 10) / 10 : null,
         jsHeapLimitMb: memory ? Math.round(memory.jsHeapSizeLimit / 1048576 * 10) / 10 : null,
-        screenWidth: screen.width * (window.devicePixelRatio || 1),
-        screenHeight: screen.height * (window.devicePixelRatio || 1),
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        dpr: window.devicePixelRatio || 1,
-        colorDepth: screen.colorDepth || 24,
-        colorGamut, hdr, orientation,
+        viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
         refreshHz: (window as any).__hologramRefreshHz || 60,
-        touchPoints: nav.maxTouchPoints || 0,
-        gpuRenderer, gpuVendor, gpuTier,
+        orientation: screen?.orientation?.type?.includes("landscape") ? "Landscape" : "Portrait",
         storageEstimate,
         connectionType: nav.connection?.effectiveType || null,
         downlinkMbps: nav.connection?.downlink || null,
@@ -387,15 +387,18 @@ function useHardwareInfo(visible: boolean): HardwareInfo | null {
         saveData: nav.connection?.saveData || false,
         batteryLevel, batteryCharging,
         audioOutputs, videoInputs,
-        browserName, browserVersion, osName,
-        maxTextureSize, maxRenderbufferSize, webglVersion, maxViewportDims,
-        prefersReducedMotion, prefersColorScheme,
-        mediaCapabilities: "MediaRecorder" in window ? "Full" : "Partial",
-      });
+      };
     };
-    detect();
-    intervalRef.current = setInterval(detect, 2000);
-    return () => clearInterval(intervalRef.current);
+
+    const refresh = async () => {
+      if (cancelled) return;
+      const [s, d] = await Promise.all([detectStatic(), detectDynamic()]);
+      if (!cancelled) setInfo({ ...s, ...d });
+    };
+
+    refresh();
+    const id = setInterval(refresh, 3000); // dynamic refresh at 3s (was 2s)
+    return () => { cancelled = true; clearInterval(id); };
   }, [visible]);
 
   return info;
@@ -405,37 +408,47 @@ function useClockBenchmark(visible: boolean) {
   const [result, setResult] = useState<{
     mopsPerSec: number; estimatedMhz: number; benchmarkMs: number; sampleCount: number; jitterUs: number;
   } | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const samplesRef = useRef<number[]>([]);
 
   useEffect(() => {
     if (!visible) return;
+    let cancelled = false;
+
     const benchmark = () => {
-      const ITERATIONS = 2_000_000;
-      const t0 = performance.now();
-      let acc = 0;
-      for (let i = 0; i < ITERATIONS; i++) acc += Math.sin(i * 0.001) * Math.cos(i * 0.002);
-      const elapsed = performance.now() - t0;
-      if (acc === Infinity) console.log(acc);
-      const mops = (ITERATIONS / elapsed) * 1000 / 1_000_000;
-      samplesRef.current.push(mops);
-      if (samplesRef.current.length > 20) samplesRef.current.shift();
-      const avgMops = samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
-      const estimatedHz = (ITERATIONS * 5 / 4) / (elapsed / 1000);
-      const deltas = [];
-      for (let i = 1; i < samplesRef.current.length; i++) deltas.push(Math.abs(samplesRef.current[i] - samplesRef.current[i - 1]));
-      const jitterMops = deltas.length > 0 ? deltas.reduce((a, b) => a + b, 0) / deltas.length : 0;
-      setResult({
-        mopsPerSec: avgMops,
-        estimatedMhz: Math.round(estimatedHz / 1_000_000),
-        benchmarkMs: elapsed,
-        sampleCount: samplesRef.current.length,
-        jitterUs: Math.round(jitterMops * 1000),
-      });
+      if (cancelled) return;
+      // Use requestIdleCallback to avoid blocking UI
+      const run = () => {
+        const ITERATIONS = 1_500_000; // reduced from 2M for less jank
+        const t0 = performance.now();
+        let acc = 0;
+        for (let i = 0; i < ITERATIONS; i++) acc += Math.sin(i * 0.001) * Math.cos(i * 0.002);
+        const elapsed = performance.now() - t0;
+        if (acc === Infinity) console.log(acc);
+        const mops = (ITERATIONS / elapsed) * 1000 / 1_000_000;
+        samplesRef.current.push(mops);
+        if (samplesRef.current.length > 20) samplesRef.current.shift();
+        const avgMops = samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
+        const estimatedHz = (ITERATIONS * 5 / 4) / (elapsed / 1000);
+        const deltas: number[] = [];
+        for (let i = 1; i < samplesRef.current.length; i++) deltas.push(Math.abs(samplesRef.current[i] - samplesRef.current[i - 1]));
+        const jitterMops = deltas.length > 0 ? deltas.reduce((a, b) => a + b, 0) / deltas.length : 0;
+        if (!cancelled) {
+          setResult({
+            mopsPerSec: avgMops, estimatedMhz: Math.round(estimatedHz / 1_000_000),
+            benchmarkMs: elapsed, sampleCount: samplesRef.current.length, jitterUs: Math.round(jitterMops * 1000),
+          });
+        }
+      };
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(run, { timeout: 5000 });
+      } else {
+        setTimeout(run, 100);
+      }
     };
+
     benchmark();
-    intervalRef.current = setInterval(benchmark, 3000);
-    return () => clearInterval(intervalRef.current);
+    const id = setInterval(benchmark, 4000); // reduced frequency
+    return () => { cancelled = true; clearInterval(id); };
   }, [visible]);
 
   return result;
@@ -450,7 +463,7 @@ function formatBytes(bytes: number): string {
 
 // ─── Tab Panels ─────────────────────────────────────────────────────────
 
-function ProcessesTab({ stats }: { stats: Stats }) {
+const ProcessesTab = memo(function ProcessesTab({ stats }: { stats: Stats }) {
   const projector = getKernelProjector();
   const frame = projector.projectFrame();
   const processes = frame.processes;
@@ -468,10 +481,8 @@ function ProcessesTab({ stats }: { stats: Stats }) {
       {processes.map((p) => {
         const zoneColor = p.zone === "convergent" ? DT.green : p.zone === "exploring" ? DT.gold : DT.red;
         return (
-          <div key={p.pid} className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 items-center text-[13px] py-1.5 rounded-lg px-2 transition-colors"
-            style={{ fontFamily: DT.font }}
-            onMouseEnter={e => (e.currentTarget.style.background = "hsla(30, 8%, 15%, 0.3)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+          <div key={p.pid} className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 items-center text-[13px] py-1.5 rounded-lg px-2 hover:bg-[hsla(30,8%,15%,0.3)]"
+            style={{ fontFamily: DT.font, transition: "background 100ms" }}>
             <span className="flex items-center gap-2" style={{ color: DT.textBright }}>
               <StatusDot active={p.state === "running"} /><span className="truncate">{p.name}</span>
               <span className="text-[10px]" style={{ color: DT.textDim }}>#{p.pid}</span>
@@ -495,9 +506,9 @@ function ProcessesTab({ stats }: { stats: Stats }) {
       </InsetPanel>
     </div>
   );
-}
+});
 
-function PerformanceTab({ stats }: { stats: Stats }) {
+const PerformanceTab = memo(function PerformanceTab({ stats }: { stats: Stats }) {
   const fpsHistory = useHistory(stats.measuredFps);
   const tickRateHistory = useHistory(stats.kernelTickRateHz);
   const fpsHealth = stats.measuredFps >= stats.displayRefreshHz * 0.9 ? "excellent"
@@ -543,9 +554,9 @@ function PerformanceTab({ stats }: { stats: Stats }) {
       </InsetPanel>
     </div>
   );
-}
+});
 
-function SystemTab({ stats }: { stats: Stats }) {
+const SystemTab = memo(function SystemTab({ stats }: { stats: Stats }) {
   const projector = getKernelProjector();
   const frame = projector.projectFrame();
 
@@ -587,9 +598,9 @@ function SystemTab({ stats }: { stats: Stats }) {
       </InsetPanel>
     </div>
   );
-}
+});
 
-function DetailsTab({ stats }: { stats: Stats }) {
+const DetailsTab = memo(function DetailsTab({ stats }: { stats: Stats }) {
   return (
     <div className="space-y-4">
       <p className="text-[13px] leading-relaxed" style={{ color: DT.textLabel }}>
@@ -627,15 +638,37 @@ function DetailsTab({ stats }: { stats: Stats }) {
       </InsetPanel>
     </div>
   );
-}
+});
 
 // ─── Side-by-Side Compare Tab ───────────────────────────────────────────
-// The heart of the Task Manager: see how your physical hardware maps
-// to the holographic virtual machine, side by side.
 
 const FRACTAL_DIM = 1.9206;
 
-function CompareTab({ stats }: { stats: Stats }) {
+const CompareSection = memo(function CompareSection({ title, rows, color, description }: {
+  title: string; rows: [string, string, string][]; color?: string; description?: string;
+}) {
+  return (
+    <InsetPanel>
+      <Section title={title} color={color} description={description}>
+        <div className="grid grid-cols-[minmax(100px,1.2fr)_1fr_1fr] gap-3 pb-2 mb-1" style={{ borderBottom: `1px solid ${DT.sectionBorder}` }}>
+          <span />
+          <span className="text-[11px] uppercase tracking-[0.1em] font-medium text-right" style={{ color: DT.goldDim, fontFamily: DT.mono }}>Your Hardware</span>
+          <span className="text-[11px] uppercase tracking-[0.1em] font-medium text-right" style={{ color: DT.purple, fontFamily: DT.mono }}>Hologram</span>
+        </div>
+        {rows.map(([label, hwVal, holoVal], i) => (
+          <div key={i} className="grid grid-cols-[minmax(100px,1.2fr)_1fr_1fr] gap-3 py-[5px] items-center"
+            style={{ borderBottom: i < rows.length - 1 ? `1px solid hsla(30, 6%, 20%, 0.15)` : "none" }}>
+            <span className="text-[13px]" style={{ color: DT.textLabel }}>{label}</span>
+            <span className="text-[13px] font-medium tabular-nums text-right" style={{ color: DT.textBright, fontFamily: DT.mono }}>{hwVal}</span>
+            <span className="text-[13px] font-medium tabular-nums text-right" style={{ color: DT.textValue, fontFamily: DT.mono }}>{holoVal}</span>
+          </div>
+        ))}
+      </Section>
+    </InsetPanel>
+  );
+});
+
+const CompareTab = memo(function CompareTab({ stats }: { stats: Stats }) {
   const hw = useHardwareInfo(true);
   const bench = useClockBenchmark(true);
   const projector = getKernelProjector();
@@ -646,22 +679,21 @@ function CompareTab({ stats }: { stats: Stats }) {
   const vgpuMhz = Math.round((stats.kernelTickRateHz * FRACTAL_DIM * stats.kernelTickRateHz) / 1000);
   const processCount = frame.processes.length;
 
-  /* Each row: [label, hardware value, hologram value] */
-  type CompareRow = [string, string, string, string?]; // [label, hw, holo, hint?]
+  type R = [string, string, string];
 
-  const processorRows: CompareRow[] = [
+  const processorRows: R[] = [
     ["Processor cores", `${hw.logicalCores} threads`, `${processCount || 1} virtual tasks`],
     ["Clock speed", bench ? `${bench.estimatedMhz.toLocaleString()} MHz` : "Measuring…", `${vgpuMhz} vMHz`],
     ["Throughput", bench ? `${bench.mopsPerSec.toFixed(1)} MOPS` : "…", `${stats.kernelTickRateHz} ticks/s`],
   ];
 
-  const memoryRows: CompareRow[] = [
+  const memoryRows: R[] = [
     ["Memory", hw.deviceMemoryGb ? `${hw.deviceMemoryGb} GB RAM` : "N/A", `${stats.tickCount.toLocaleString()} frames buffered`],
     ["Heap usage", hw.jsHeapUsedMb ? `${hw.jsHeapUsedMb.toFixed(1)} MB` : "N/A", `${stats.renderCount}/s draws`],
     ["Storage", hw.storageEstimate ? formatBytes(hw.storageEstimate.usage) : "N/A", `${stats.listenerCount} active listeners`],
   ];
 
-  const displayRows: CompareRow[] = [
+  const displayRows: R[] = [
     ["Refresh rate", `${hw.refreshHz} Hz native`, `${stats.kernelTickRateHz} Hz engine`],
     ["Resolution", `${hw.screenWidth}×${hw.screenHeight}`, `${stats.measuredFps.toFixed(0)} FPS output`],
     ["Pixel density", `${hw.dpr}x DPR`, `${hw.dpr}x (matched)`],
@@ -669,47 +701,24 @@ function CompareTab({ stats }: { stats: Stats }) {
     ["HDR", hw.hdr ? "Supported" : "No", hw.hdr ? "Active" : "N/A"],
   ];
 
-  const graphicsRows: CompareRow[] = [
+  const graphicsRows: R[] = [
     ["GPU", hw.gpuRenderer.length > 40 ? hw.gpuRenderer.slice(0, 37) + "…" : hw.gpuRenderer, `Hologram Surface`],
     ["Quality tier", hw.gpuTier === "high" ? "High" : hw.gpuTier === "mid" ? "Medium" : "Basic", stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"],
     ["Rendering API", hw.webglVersion, "Holographic Projection"],
   ];
 
-  const networkRows: CompareRow[] = [
+  const networkRows: R[] = [
     ["Status", hw.onLine ? "Online" : "Offline", stats.isActive ? "Active" : "Idle"],
     ["Connection", hw.connectionType?.toUpperCase() || "Unknown", stats.interpSleeping ? "Sleeping" : "Streaming"],
     ["Speed", hw.downlinkMbps !== null ? `${hw.downlinkMbps} Mbps` : "N/A", `${stats.kernelTickRateHz} ops/s`],
     ["Latency", hw.rtt !== null ? `${hw.rtt}ms` : "N/A", `${stats.lastFrameAge.toFixed(0)}ms frame age`],
   ];
 
-  const healthRows: CompareRow[] = [
+  const healthRows: R[] = [
     ["Battery", hw.batteryLevel !== null ? `${(hw.batteryLevel * 100).toFixed(0)}%${hw.batteryCharging ? " charging" : ""}` : "N/A", `${(frame.systemCoherence.meanH * 100).toFixed(0)}% system health`],
     ["Motion preference", hw.prefersReducedMotion ? "Reduced" : "Normal", stats.interpSleeping ? "Eco mode" : "Full motion"],
     ["Platform", `${hw.osName} · ${hw.browserName}`, `Hologram OS · Engine v1.0`],
   ];
-
-  function CompareSection({ title, rows, color, description }: { title: string; rows: CompareRow[]; color?: string; description?: string }) {
-    return (
-      <InsetPanel>
-        <Section title={title} color={color} description={description}>
-          {/* Column headers */}
-          <div className="grid grid-cols-[minmax(100px,1.2fr)_1fr_1fr] gap-3 pb-2 mb-1" style={{ borderBottom: `1px solid ${DT.sectionBorder}` }}>
-            <span className="text-[11px] uppercase tracking-[0.1em] font-medium" style={{ color: DT.textDim }} />
-            <span className="text-[11px] uppercase tracking-[0.1em] font-medium text-right" style={{ color: DT.goldDim }}>Your Hardware</span>
-            <span className="text-[11px] uppercase tracking-[0.1em] font-medium text-right" style={{ color: DT.purple }}>Hologram</span>
-          </div>
-          {rows.map(([label, hwVal, holoVal], i) => (
-            <div key={i} className="grid grid-cols-[minmax(100px,1.2fr)_1fr_1fr] gap-3 py-[5px] items-center"
-              style={{ borderBottom: i < rows.length - 1 ? `1px solid hsla(30, 6%, 20%, 0.15)` : "none" }}>
-              <span className="text-[13px]" style={{ color: DT.textLabel }}>{label}</span>
-              <span className="text-[13px] font-medium tabular-nums text-right" style={{ color: DT.textBright, fontFamily: DT.mono }}>{hwVal}</span>
-              <span className="text-[13px] font-medium tabular-nums text-right" style={{ color: DT.textValue, fontFamily: DT.mono }}>{holoVal}</span>
-            </div>
-          ))}
-        </Section>
-      </InsetPanel>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -730,7 +739,7 @@ function CompareTab({ stats }: { stats: Stats }) {
         description="Battery level versus system coherence. Both measure how much capacity you have left." />
     </div>
   );
-}
+});
 
 // ─── Main Component ─────────────────────────────────────────────────────
 
@@ -742,7 +751,7 @@ const TAB_META: { id: Tab; label: string; icon: typeof IconCpu }[] = [
   { id: "details", label: "Details", icon: IconSettings },
 ];
 
-export default function KernelDevTools() {
+export default memo(function KernelDevTools() {
   const [visible, setVisible] = useState(false);
   const [tab, setTab] = useState<Tab>("compare");
   const [stats, setStats] = useState<Stats | null>(null);
@@ -753,6 +762,7 @@ export default function KernelDevTools() {
   const lastTickCountRef = useRef(0);
   const frameDropRef = useRef(0);
 
+  // Keyboard toggle — stable callback
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === "D") { e.preventDefault(); setVisible((v) => !v); }
@@ -761,14 +771,22 @@ export default function KernelDevTools() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // Stats polling — uses rAF-aligned interval for smoother updates
   useEffect(() => {
     if (!visible) return;
     const projector = getKernelProjector();
     const adapter = getBrowserAdapter();
     const unsub = projector.onFrame(() => { renderCountRef.current++; });
 
-    const poll = () => {
-      const now = performance.now();
+    let rafId: number;
+    let lastPoll = 0;
+    const POLL_INTERVAL = 66; // ~15Hz polling (was 50ms/20Hz) — sufficient for human reading
+
+    const poll = (now: number) => {
+      rafId = requestAnimationFrame(poll);
+      if (now - lastPoll < POLL_INTERVAL) return;
+      lastPoll = now;
+
       const ps = projector.getStreamStats();
       const is = adapter.getInterpStats();
       const dt = now - lastTickRef.current;
@@ -797,21 +815,25 @@ export default function KernelDevTools() {
         renderCount: rendersPerSec, kernelTickRateHz, frameDrops: frameDropRef.current,
       });
     };
-    const id = setInterval(poll, 50);
-    poll();
-    return () => { unsub(); clearInterval(id); };
+
+    rafId = requestAnimationFrame(poll);
+    return () => { unsub(); cancelAnimationFrame(rafId); };
   }, [visible]);
+
+  const handleClose = useCallback(() => setVisible(false), []);
+  const handleTabChange = useCallback((id: Tab) => setTab(id), []);
 
   if (!visible || !stats) return null;
 
   return (
     <div className="fixed inset-0 z-[9998] flex items-center justify-center"
-      style={{ background: "hsla(28, 12%, 3%, 0.8)", backdropFilter: "blur(16px)" }}>
+      style={{ background: "hsla(28, 12%, 3%, 0.8)", backdropFilter: "blur(16px)", contain: "strict" }}>
       <div className="w-full max-w-[780px] rounded-2xl overflow-hidden select-none" style={{
         background: DT.panelBg,
         border: `1px solid ${DT.panelBorder}`,
         boxShadow: `0 0 60px hsla(30, 30%, 15%, 0.12), 0 25px 50px -12px hsla(0, 0%, 0%, 0.5), inset 0 1px 0 hsla(30, 15%, 40%, 0.06)`,
         fontFamily: DT.font, maxHeight: "88vh",
+        contain: "layout style paint",
       }}>
         {/* Title bar */}
         <div className="flex items-center justify-between px-5 py-3.5" style={{
@@ -824,10 +846,8 @@ export default function KernelDevTools() {
             </div>
             <span className="text-[15px] font-semibold tracking-wide" style={{ color: DT.textBright, fontFamily: DT.font }}>System Monitor</span>
           </div>
-          <button onClick={() => setVisible(false)} className="p-2 rounded-lg transition-colors" title="Close (Ctrl+Shift+D)"
-            style={{ color: DT.textDim }}
-            onMouseEnter={e => { e.currentTarget.style.background = "hsla(0, 50%, 40%, 0.15)"; e.currentTarget.style.color = DT.red; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = DT.textDim; }}>
+          <button onClick={handleClose} className="p-2 rounded-lg transition-colors hover:bg-[hsla(0,50%,40%,0.15)]" title="Close (Ctrl+Shift+D)"
+            style={{ color: DT.textDim }}>
             <IconX size={16} />
           </button>
         </div>
@@ -839,13 +859,14 @@ export default function KernelDevTools() {
             const isCompare = id === "compare";
             const activeColor = isCompare ? DT.purple : DT.gold;
             return (
-              <button key={id} onClick={() => setTab(id)}
-                className="flex items-center gap-2 px-3.5 py-3 text-[12px] uppercase tracking-[0.08em] rounded-t-lg transition-all relative"
+              <button key={id} onClick={() => handleTabChange(id)}
+                className="flex items-center gap-2 px-3.5 py-3 text-[12px] uppercase tracking-[0.08em] rounded-t-lg relative"
                 style={{
                   color: active ? activeColor : DT.textDim,
                   background: active ? DT.sectionBg : "transparent",
                   fontFamily: DT.font, fontWeight: active ? 600 : 400,
                   borderBottom: active ? `2px solid ${activeColor}` : "2px solid transparent",
+                  transition: "color 100ms, background 100ms",
                 }}>
                 <Icon size={14} /><span className="hidden sm:inline">{label}</span>
               </button>
@@ -853,8 +874,8 @@ export default function KernelDevTools() {
           })}
         </div>
 
-        {/* Tab content */}
-        <div className="p-5 overflow-y-auto" style={{ maxHeight: "calc(88vh - 110px)", scrollbarWidth: "thin" }}>
+        {/* Tab content — only active tab renders */}
+        <div className="p-5 overflow-y-auto" style={{ maxHeight: "calc(88vh - 110px)", scrollbarWidth: "thin", contain: "layout style" }}>
           {tab === "processes" && <ProcessesTab stats={stats} />}
           {tab === "performance" && <PerformanceTab stats={stats} />}
           {tab === "system" && <SystemTab stats={stats} />}
@@ -876,4 +897,4 @@ export default function KernelDevTools() {
       </div>
     </div>
   );
-}
+});
