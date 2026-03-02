@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconBolt, IconBrain, IconCpu, IconPlayerPlay, IconPlayerStop,
   IconSparkles, IconX, IconAtom, IconCircuitDiode,
-  IconChevronDown, IconFlame, IconDatabase, IconShield,
+  IconChevronDown, IconFlame, IconDatabase, IconShield, IconExternalLink,
 } from "@tabler/icons-react";
 import { usePageTheme, type PagePalette } from "@/modules/hologram-ui/hooks/usePageTheme";
 import { AtlasProjectionPipeline, MODEL_MANIFESTS } from "@/modules/hologram-compute";
@@ -40,13 +40,15 @@ interface ModelProfile {
   kvTraditional: string;
   manifest: keyof typeof MODEL_MANIFESTS;
   tagline: string;
+  hfUrl: string;
+  arch: { layers: number; hiddenDim: number; heads: number; headDim: number; vocab: string; ctx: string };
 }
 
 const MODELS: ModelProfile[] = [
-  { id: "smollm", name: "SmolLM2", params: "1.7B", fullParams: "1,700,000,000", atlasSize: "~45MB", kvTraditional: "~800MB", manifest: "smollm2-1.7b", tagline: "Small but mighty" },
-  { id: "mistral", name: "Mistral", params: "7B", fullParams: "7,000,000,000", atlasSize: "~180MB", kvTraditional: "~2GB", manifest: "mistral-7b", tagline: "Efficient powerhouse" },
-  { id: "llama8b", name: "Llama 3.1", params: "8B", fullParams: "8,000,000,000", atlasSize: "~200MB", kvTraditional: "~4GB", manifest: "llama-3.1-8b", tagline: "Meta's flagship" },
-  { id: "llama70b", name: "Llama 3", params: "70B", fullParams: "70,554,383,360", atlasSize: "~380MB", kvTraditional: "~40GB", manifest: "llama-3-70b", tagline: "Meta's flagship · 70B parameters on 96 qubits" },
+  { id: "smollm", name: "SmolLM2", params: "1.7B", fullParams: "1,700,000,000", atlasSize: "~45MB", kvTraditional: "~800MB", manifest: "smollm2-1.7b", tagline: "Small but mighty", hfUrl: "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B", arch: { layers: 24, hiddenDim: 2048, heads: 32, headDim: 64, vocab: "49,152", ctx: "8K" } },
+  { id: "mistral", name: "Mistral", params: "7B", fullParams: "7,000,000,000", atlasSize: "~180MB", kvTraditional: "~2GB", manifest: "mistral-7b", tagline: "Efficient powerhouse", hfUrl: "https://huggingface.co/mistralai/Mistral-7B-v0.1", arch: { layers: 32, hiddenDim: 4096, heads: 32, headDim: 128, vocab: "32,000", ctx: "32K" } },
+  { id: "llama8b", name: "Llama 3.1", params: "8B", fullParams: "8,000,000,000", atlasSize: "~200MB", kvTraditional: "~4GB", manifest: "llama-3.1-8b", tagline: "Meta's flagship", hfUrl: "https://huggingface.co/meta-llama/Meta-Llama-3.1-8B", arch: { layers: 32, hiddenDim: 4096, heads: 32, headDim: 128, vocab: "128,256", ctx: "128K" } },
+  { id: "llama70b", name: "Llama 3", params: "70B", fullParams: "70,554,383,360", atlasSize: "~380MB", kvTraditional: "~40GB", manifest: "llama-3-70b", tagline: "Meta's flagship · 70B parameters on 96 qubits", hfUrl: "https://huggingface.co/meta-llama/Meta-Llama-3-70B", arch: { layers: 80, hiddenDim: 8192, heads: 64, headDim: 128, vocab: "128,256", ctx: "8K" } },
 ];
 
 const DEMO_PROMPTS = [
@@ -88,6 +90,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
   const [initPhase, setInitPhase] = useState<"idle" | "l1" | "l2" | "l3" | "projecting">("idle");
   const [initMessage, setInitMessage] = useState("");
   const [showModelPicker, setShowModelPicker] = useState(false);
+  const [showModelTooltip, setShowModelTooltip] = useState(false);
   const [gpuAvailable, setGpuAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -366,8 +369,11 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
 
         {/* Model + Prompt */}
         <div style={{ display: "flex", gap: "8px", marginTop: "16px", position: "relative" }}>
-          <div style={{ position: "relative" }}>
-            <button onClick={() => !isStreaming && setShowModelPicker(p => !p)} disabled={isStreaming}
+          <div style={{ position: "relative" }}
+            onMouseEnter={() => !showModelPicker && !isStreaming && setShowModelTooltip(true)}
+            onMouseLeave={() => setShowModelTooltip(false)}
+          >
+            <button onClick={() => { setShowModelTooltip(false); !isStreaming && setShowModelPicker(p => !p); }} disabled={isStreaming}
               style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 13px", borderRadius: "10px", background: P.cardBg, border: `1px solid ${P.cardBorder}`, cursor: isStreaming ? "default" : "pointer", color: P.text, fontSize: "13px", fontWeight: 600, minWidth: "170px", justifyContent: "space-between", opacity: isStreaming ? 0.6 : 1 }}>
               <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                 <IconBrain size={14} style={{ color: P.accent }} />
@@ -376,6 +382,40 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               </span>
               <IconChevronDown size={12} style={{ color: P.textDim }} />
             </button>
+
+            {/* Architecture tooltip */}
+            <AnimatePresence>
+              {showModelTooltip && !showModelPicker && (
+                <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.12 }}
+                  style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, width: "280px", zIndex: 60, background: P.cardBg, border: `1px solid ${P.cardBorder}`, borderRadius: "12px", padding: "14px 16px", boxShadow: "0 16px 48px hsla(0,0%,0%,0.5)", pointerEvents: "auto" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: P.text, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <IconBrain size={13} style={{ color: P.accent }} /> {selectedModel.name} {selectedModel.params}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px", fontSize: "11px" }}>
+                    {[
+                      ["Layers", String(selectedModel.arch.layers)],
+                      ["Hidden dim", selectedModel.arch.hiddenDim.toLocaleString()],
+                      ["Attn heads", String(selectedModel.arch.heads)],
+                      ["Head dim", String(selectedModel.arch.headDim)],
+                      ["Vocab size", selectedModel.arch.vocab],
+                      ["Context", selectedModel.arch.ctx],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                        <span style={{ color: P.textDim }}>{k}</span>
+                        <span style={{ color: P.text, fontWeight: 600, fontFamily: "monospace", fontSize: "10px" }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a href={selectedModel.hfUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "10px", fontSize: "10px", fontWeight: 600, color: P.accent, textDecoration: "none", letterSpacing: "0.03em" }}
+                    onClick={e => e.stopPropagation()}>
+                    <IconExternalLink size={11} /> View on HuggingFace ↗
+                  </a>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Model picker dropdown */}
             <AnimatePresence>
               {showModelPicker && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}
