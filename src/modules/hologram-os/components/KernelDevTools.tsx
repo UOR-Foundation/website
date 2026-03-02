@@ -823,6 +823,19 @@ export default memo(function KernelDevTools() {
   const handleClose = useCallback(() => setVisible(false), []);
   const handleTabChange = useCallback((id: Tab) => setTab(id), []);
 
+  // Arrow-key tab navigation
+  const handleTabKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    setTab(prev => {
+      const idx = TAB_META.findIndex(t => t.id === prev);
+      const next = e.key === "ArrowRight"
+        ? (idx + 1) % TAB_META.length
+        : (idx - 1 + TAB_META.length) % TAB_META.length;
+      return TAB_META[next].id;
+    });
+  }, []);
+
   if (!visible || !stats) return null;
 
   return (
@@ -853,13 +866,14 @@ export default memo(function KernelDevTools() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex px-2 pt-1 gap-0.5" style={{ background: "hsla(28, 8%, 8%, 0.8)", borderBottom: `1px solid ${DT.sectionBorder}` }}>
+        <div role="tablist" className="flex px-2 pt-1 gap-0.5" style={{ background: "hsla(28, 8%, 8%, 0.8)", borderBottom: `1px solid ${DT.sectionBorder}` }} onKeyDown={handleTabKeyDown}>
           {TAB_META.map(({ id, label, icon: Icon }) => {
             const active = tab === id;
             const isCompare = id === "compare";
             const activeColor = isCompare ? DT.purple : DT.gold;
             return (
-              <button key={id} onClick={() => handleTabChange(id)}
+              <button key={id} role="tab" aria-selected={active} tabIndex={active ? 0 : -1}
+                onClick={() => handleTabChange(id)}
                 className="flex items-center gap-2 px-3.5 py-3 text-[12px] uppercase tracking-[0.08em] rounded-t-lg relative"
                 style={{
                   color: active ? activeColor : DT.textDim,
