@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import ProjectionErrorBoundary from "@/modules/hologram-ui/components/ProjectionErrorBoundary";
 
 import { useNavigate } from "react-router-dom";
 import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
@@ -394,6 +395,11 @@ export default function HologramOsPage() {
   const openMySpaceCb = useCallback(() => kOpenPanel("myspace"), [kOpenPanel]);
   const goHomeCb = useCallback(() => { kSetChatOpen(false); kClosePanel(); }, [kSetChatOpen, kClosePanel]);
   const replayGuideCb = useCallback(() => setShortcutsOpen(true), []);
+  // Stable close callback — shared across all projections to avoid inline arrows
+  const closePanelCb = useCallback(() => kClosePanel(), [kClosePanel]);
+  const openJupyterFromTerminal = useCallback(() => kOpenPanel("jupyter"), [kOpenPanel]);
+  const openPanelFromChild = useCallback((p: string) => kOpenPanel(p as any), [kOpenPanel]);
+  const navigateFromChild = useCallback((r: string) => { kClosePanel(); navigate(r); }, [kClosePanel, navigate]);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
@@ -583,29 +589,55 @@ export default function HologramOsPage() {
       <ShortcutCheatSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <LegalPanel open={legalOpen} initialTab={legalTab} onClose={() => setLegalOpen(false)} bgMode={activeDesktop === "white" ? "white" : "dark"} />
       <ModularSnapGrid visible={lumenPanel.isResizing} />
-      <BrowserProjection
-        open={activePanel === "browser"}
-        preload={preloadedPanels.has("browser")}
-        onClose={() => k.closePanel()}
-        onSendToLumen={({ title, url, markdown }) => {
-          const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
-          setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
-          k.closePanel();
-          k.setChatOpen(true);
-        }}
-      />
-      <ComputeProjection open={activePanel === "compute"} preload={preloadedPanels.has("compute")} onClose={() => k.closePanel()} />
-      <MemoryProjection open={activePanel === "memory"} preload={preloadedPanels.has("memory")} onClose={() => k.closePanel()} />
-      <MessengerProjection open={activePanel === "messenger"} preload={preloadedPanels.has("messenger")} onClose={() => k.closePanel()} />
-      <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={() => k.closePanel()} onOpenJupyter={() => k.openPanel("jupyter")} />
-      <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={() => k.closePanel()} />
-      <QuantumWorkspaceProjection open={activePanel === "quantum-workspace"} preload={preloadedPanels.has("quantum-workspace")} onClose={() => k.closePanel()} />
-      <AILabProjection open={activePanel === "ai-lab"} preload={preloadedPanels.has("ai-lab")} onClose={() => k.closePanel()} />
-      <CodeProjectionShell open={activePanel === "code"} preload={preloadedPanels.has("code")} onClose={() => k.closePanel()} />
-      <PackageManagerProjection open={activePanel === "packages"} preload={preloadedPanels.has("packages")} onClose={() => k.closePanel()} />
-      <VaultProjection open={activePanel === "vault"} preload={preloadedPanels.has("vault")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} />
-      <AppsProjection open={activePanel === "apps"} preload={preloadedPanels.has("apps")} onClose={() => k.closePanel()} onOpenPanel={(p) => k.openPanel(p as any)} onNavigate={(r) => { k.closePanel(); navigate(r); }} />
-      <MySpaceProjection open={activePanel === "myspace"} preload={preloadedPanels.has("myspace")} onClose={() => k.closePanel()} />
+      <ProjectionErrorBoundary id="browser" onClose={closePanelCb}>
+        <BrowserProjection
+          open={activePanel === "browser"}
+          preload={preloadedPanels.has("browser")}
+          onClose={closePanelCb}
+          onSendToLumen={({ title, url, markdown }) => {
+            const truncated = markdown.length > 4000 ? markdown.slice(0, 4000) + "\n\n…[truncated]" : markdown;
+            setChatPrompt(`I'm reading "${title}" (${url}). Here's the page content:\n\n${truncated}\n\nPlease summarize the key points and insights from this page.`);
+            k.closePanel();
+            k.setChatOpen(true);
+          }}
+        />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="compute" onClose={closePanelCb}>
+        <ComputeProjection open={activePanel === "compute"} preload={preloadedPanels.has("compute")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="memory" onClose={closePanelCb}>
+        <MemoryProjection open={activePanel === "memory"} preload={preloadedPanels.has("memory")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="messenger" onClose={closePanelCb}>
+        <MessengerProjection open={activePanel === "messenger"} preload={preloadedPanels.has("messenger")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="terminal" onClose={closePanelCb}>
+        <TerminalProjection open={activePanel === "terminal"} preload={preloadedPanels.has("terminal")} onClose={closePanelCb} onOpenJupyter={openJupyterFromTerminal} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="jupyter" onClose={closePanelCb}>
+        <JupyterProjection open={activePanel === "jupyter"} preload={preloadedPanels.has("jupyter")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="quantum" onClose={closePanelCb}>
+        <QuantumWorkspaceProjection open={activePanel === "quantum-workspace"} preload={preloadedPanels.has("quantum-workspace")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="ai-lab" onClose={closePanelCb}>
+        <AILabProjection open={activePanel === "ai-lab"} preload={preloadedPanels.has("ai-lab")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="code" onClose={closePanelCb}>
+        <CodeProjectionShell open={activePanel === "code"} preload={preloadedPanels.has("code")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="packages" onClose={closePanelCb}>
+        <PackageManagerProjection open={activePanel === "packages"} preload={preloadedPanels.has("packages")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="vault" onClose={closePanelCb}>
+        <VaultProjection open={activePanel === "vault"} preload={preloadedPanels.has("vault")} onClose={closePanelCb} onOpenPanel={openPanelFromChild} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="apps" onClose={closePanelCb}>
+        <AppsProjection open={activePanel === "apps"} preload={preloadedPanels.has("apps")} onClose={closePanelCb} onOpenPanel={openPanelFromChild} onNavigate={navigateFromChild} />
+      </ProjectionErrorBoundary>
+      <ProjectionErrorBoundary id="myspace" onClose={closePanelCb}>
+        <MySpaceProjection open={activePanel === "myspace"} preload={preloadedPanels.has("myspace")} onClose={closePanelCb} />
+      </ProjectionErrorBoundary>
       {/* ConvergenceProjection removed — now rendered inline as LumenFullscreen within the content area */}
       <SnapGuideOverlay />
       
