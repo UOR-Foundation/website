@@ -13,7 +13,7 @@
  * @module hologram-ui/hooks/useAttentionMode
  */
 
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { getKernelProjector, type AttentionProjection } from "@/modules/hologram-os/projection-engine";
 
 export type AttentionPreset = "focus" | "diffuse";
@@ -44,12 +44,23 @@ interface AttentionContextValue extends AttentionState {
 export function useAttentionMode(): AttentionContextValue {
   const projector = getKernelProjector();
 
-  // Subscribe to kernel frames to get attention updates
+  // Subscribe to kernel frames to get attention updates — only re-render when values change
   const [attention, setAttention] = useState<AttentionProjection>(() => projector.getAttention());
+  const lastRef = useRef(attention);
 
   useEffect(() => {
     const unsub = projector.onFrame((frame) => {
-      setAttention(frame.attention);
+      const next = frame.attention;
+      const prev = lastRef.current;
+      // Shallow equality on key scalars — skip re-render if unchanged
+      if (
+        prev.aperture === next.aperture &&
+        prev.preset === next.preset &&
+        prev.distractionGate === next.distractionGate &&
+        prev.snr === next.snr
+      ) return;
+      lastRef.current = next;
+      setAttention(next);
     });
     return unsub;
   }, [projector]);

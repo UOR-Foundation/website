@@ -37,15 +37,12 @@ export function useScreenTheme({ screenId, fallback = "dark" }: UseScreenThemeOp
     return "image";
   });
 
-  // Subscribe to kernel frames for desktop mode changes
+  // Subscribe to kernel frames for desktop mode changes — guarded to avoid redundant re-renders
   useEffect(() => {
     const unsub = projector.onFrame((frame) => {
       const mode = frame.palette.mode;
-      if (mode === "white" || mode === "dark") {
-        setPortalMode(mode);
-      } else {
-        setPortalMode("image");
-      }
+      const next = (mode === "white" || mode === "dark") ? mode : "image";
+      setPortalMode(prev => prev === next ? prev : next);
     });
     return unsub;
   }, [projector]);

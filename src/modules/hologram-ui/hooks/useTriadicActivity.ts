@@ -20,11 +20,22 @@ export function useTriadicActivity() {
   const projector = getKernelProjector();
   const [state, setState] = useState(() => projector.getTriadicActivity());
   const activePhaseRef = useRef<TriadicPhase | null>(null);
+  const lastStateRef = useRef(state);
 
-  // Subscribe to kernel frames for state updates
+  // Subscribe to kernel frames — only update state when triadic data actually changes
   useEffect(() => {
     const unsub = projector.onFrame(() => {
-      setState(projector.getTriadicActivity());
+      const next = projector.getTriadicActivity();
+      const prev = lastStateRef.current;
+      // Shallow equality check — avoid re-render if nothing changed
+      if (
+        prev.learn === next.learn &&
+        prev.work === next.work &&
+        prev.play === next.play &&
+        prev.date === next.date
+      ) return;
+      lastStateRef.current = next;
+      setState(next);
     });
     return unsub;
   }, [projector]);
@@ -54,8 +65,8 @@ export function useTriadicActivity() {
     activePhaseRef.current = phase;
   }, []);
 
-  /** Normalized balance suitable for DayProgressRing */
-  const balance: TriadicBalance | null = (() => {
+  /** Normalized balance suitable for DayProgressRing — memoized to prevent child re-renders */
+  const balance: TriadicBalance | null = useMemo(() => {
     const total = state.learn + state.work + state.play;
     if (total < 30) return null;
     return {
@@ -63,7 +74,7 @@ export function useTriadicActivity() {
       work: state.work / total,
       play: state.play / total,
     };
-  })();
+  }, [state.learn, state.work, state.play]);
 
   const creatorStage: CreatorStage = useMemo(() => {
     const history = projector.getTriadicHistory();
