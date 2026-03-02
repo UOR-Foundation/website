@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain } from "lucide-react";
+import { Send, ArrowUp, Mic, MicOff, Volume2, BookOpen, Briefcase, Sparkles, Maximize2, SlidersHorizontal, Brain, Shield, ShieldCheck } from "lucide-react";
 import ExchangeCard from "./ExchangeCard";
 import SavedRemixesPanel from "./SavedRemixesPanel";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +58,8 @@ import {
   verifyProofOfThought,
   type ProofOfThoughtReceipt,
 } from "@/modules/hologram-ui/engine/reasoning";
+import { getConfidentialPipeline, type ConfidentialInferenceResult } from "@/hologram/kernel/tee-inference";
+import { getTEEBridge } from "@/hologram/kernel/tee-bridge";
 import { observeExchange, compileResonanceDirective, loadResonanceProfile, loadProfileFromCloud } from "@/modules/hologram-ui/engine/resonanceObserver";
 import { loadGraphContext, type GraphContext } from "@/modules/hologram-ui/engine/contextGraphBridge";
 import ResonancePanel from "./ResonancePanel";
@@ -159,6 +161,30 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const rConfidence = Math.min(1, resonanceProfile.observationCount / 20);
   /** Pending remix metadata to attach to the next converge call */
   const pendingRemixRef = useRef<{ original: string; originalMix: string } | null>(null);
+  /** Confidential inference mode — encrypts prompts inside TEE */
+  const [confidentialMode, setConfidentialMode] = useState(false);
+  const [confidentialReady, setConfidentialReady] = useState(false);
+  const [lastConfidentialReceipt, setLastConfidentialReceipt] = useState<ConfidentialInferenceResult["receipt"] | null>(null);
+
+  // Initialize confidential pipeline when toggled on
+  useEffect(() => {
+    if (!confidentialMode) { setConfidentialReady(false); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const pipeline = getConfidentialPipeline();
+        const session = await supabase.auth.getSession();
+        const userId = session.data.session?.user?.id || "anonymous";
+        const userName = session.data.session?.user?.email || "User";
+        await pipeline.initialize(userId, userName);
+        if (!cancelled) setConfidentialReady(true);
+      } catch (e) {
+        console.warn("[ConvergenceChat] TEE init failed:", e);
+        if (!cancelled) { setConfidentialMode(false); setConfidentialReady(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [confidentialMode]);
 
   // Load graph context on mount (enrichment from knowledge graph)
   useEffect(() => {
@@ -375,6 +401,28 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         deckPersonaContext = parts.join("\n");
       }
 
+      let streamedText = "";
+
+      // ── Confidential TEE Path: encrypt → infer → decrypt ────
+      if (confidentialMode && confidentialReady) {
+        const confPipeline = getConfidentialPipeline();
+        const confMessages = allMessages.map(m => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        }));
+        const confResult = await confPipeline.infer(confMessages, {
+          model: "google/gemini-3-flash-preview",
+          personaId: "hologram",
+          skillId: "reason",
+        });
+        streamedText = confResult.content;
+        setLastConfidentialReceipt(confResult.receipt);
+        updateExchange({
+          understanding: streamedText,
+          pipeline: { stage: "converged" },
+        });
+      } else {
+      // ── Standard streaming path ──────────────────────────────
       const resp = await fetch(STREAM_URL, {
         method: "POST",
         headers: {
@@ -403,7 +451,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
-      let streamedText = "";
+      streamedText = "";
       let done = false;
       let pendingStreamText = "";
       let scheduledFrame: number | null = null;
@@ -444,6 +492,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
         cancelAnimationFrame(scheduledFrame);
       }
       updateExchange({ understanding: streamedText });
+      } // end else (standard streaming path)
 
       // ── Stage 5: Evaluate (reward circuit) ───────────────────
       setPipeline({ stage: "rewarding" });
@@ -1046,6 +1095,32 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {/* Confidential TEE toggle */}
+                <button
+                  onPointerDown={() => setConfidentialMode(!confidentialMode)}
+                  className="relative group flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all duration-300"
+                  style={{
+                    color: confidentialMode
+                      ? (confidentialReady ? "hsl(160, 60%, 55%)" : "hsl(38, 50%, 55%)")
+                      : "hsla(38, 15%, 50%, 0.4)",
+                    background: confidentialMode ? "hsla(160, 30%, 20%, 0.15)" : "transparent",
+                  }}
+                  title={confidentialMode
+                    ? (confidentialReady ? "Confidential mode active — prompts encrypted in TEE" : "Initializing TEE...")
+                    : "Enable confidential mode (encrypt prompts in hardware TEE)"}
+                >
+                  {confidentialMode ? (
+                    <ShieldCheck size={14} className={`transition-transform duration-500 ${confidentialReady ? "" : "animate-pulse"}`} />
+                  ) : (
+                    <Shield size={14} className="transition-transform duration-300 group-hover:scale-110" />
+                  )}
+                  <span
+                    className={`text-[10px] tracking-widest uppercase font-medium transition-all duration-300 ${confidentialMode ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0 overflow-hidden"}`}
+                  >
+                    {confidentialReady ? "TEE" : "Init…"}
+                  </span>
+                </button>
+
                 {/* Pro Mode magical toggle */}
                 <button
                   onPointerDown={() => setProMode(!proMode)}

@@ -163,6 +163,17 @@ export type {
   SecureMeshStats,
 } from "./q-secure-mesh";
 
+// TEE Confidential Inference Pipeline
+export { ConfidentialInferencePipeline, getConfidentialPipeline, resetConfidentialPipeline } from "./tee-inference";
+export type {
+  ConfidentialMessage,
+  ConfidentialInferenceConfig,
+  ConfidentialInferenceResult,
+  ConfidentialReceipt,
+  TEEInferenceStatus,
+  ConfidentialPipelineStats,
+} from "./tee-inference";
+
 // Q-Simulator: Full statevector quantum simulator
 // Q-CoherenceHead: Quantum-AI readiness interface
 export { HammingCoherenceHead, MultiHeadCoherence } from "./q-coherence-head";
