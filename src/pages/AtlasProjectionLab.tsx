@@ -69,6 +69,8 @@ interface CoherenceToken {
   speculative: boolean;
   tps: number;
   index: number;
+  /** Constructive interference ratio at this token (0–1) */
+  interferenceRatio: number;
 }
 
 // ── Component ───────────────────────────────────────────────────────
@@ -99,6 +101,11 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
   const [totalTimeMs, setTotalTimeMs] = useState(0);
   const [alphaInverse, setAlphaInverse] = useState(0);
   const [isDone, setIsDone] = useState(false);
+  // Qubit-native metrics
+  const [phaseArc, setPhaseArc] = useState(0);
+  const [reasoningCycles, setReasoningCycles] = useState(0);
+  const [interferenceRatio, setInterferenceRatio] = useState(1);
+  const [dirtyPairs, setDirtyPairs] = useState(0);
 
   const outputRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<QuantumInferenceEngine | null>(null);
@@ -242,6 +249,13 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             setTotalTokenCount(tokenIndex);
             setTotalTimeMs(elapsed);
 
+            // Update qubit-native metrics
+            const ir = engine["layer2"].interferenceRatio;
+            setPhaseArc(engine["layer2"].accumulatedPhase);
+            setReasoningCycles(engine["layer2"].reasoningCycles);
+            setInterferenceRatio(ir);
+            setDirtyPairs(engine["layer2"].dirtyPairCount);
+
             const tok: CoherenceToken = {
               text: content,
               hScore,
@@ -252,6 +266,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               speculative: false,
               tps,
               index: tokenIndex,
+              interferenceRatio: ir,
             };
 
             setTokens(prev => [...prev, tok]);
@@ -281,7 +296,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               setTokens(prev => [...prev, {
                 text: content, hScore: liveH, zone: liveZone, vertex: tokenIndex % 96,
                 phi: 0, stabilizerCorrected: false, speculative: false,
-                tps: (tokenIndex / elapsed) * 1000, index: tokenIndex,
+                tps: (tokenIndex / elapsed) * 1000, index: tokenIndex, interferenceRatio: 1,
               }]);
             }
           } catch { /* ignore */ }
@@ -408,12 +423,14 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
         {(isStreaming || hasRun) && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             style={{ borderBottom: `1px solid ${P.borderSubtle}`, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: P.borderSubtle }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: "1px", background: P.borderSubtle }}>
               <MetricCell P={P} label="tok/s" value={isDone ? avgTps.toFixed(0) : liveTps.toFixed(0)} icon={<IconBolt size={12} />} highlight={liveTps > 100} />
               <MetricCell P={P} label="H-score" value={liveH.toFixed(3)} icon={<IconSparkles size={12} />} highlight={liveH > 0.5} />
               <MetricCell P={P} label="Zone" value={liveZone} icon={<IconFlame size={12} />} highlight={liveZone === "convergent"} />
+              <MetricCell P={P} label="Interference" value={`${(interferenceRatio * 100).toFixed(0)}%`} icon={<IconAtom size={12} />} highlight={interferenceRatio > 0.7} sub="constructive" />
+              <MetricCell P={P} label="Phase" value={`${(phaseArc / Math.PI).toFixed(2)}π`} icon={<IconCircuitDiode size={12} />} highlight={reasoningCycles > 0} sub={`${reasoningCycles} cycles`} />
+              <MetricCell P={P} label="Dirty Pairs" value={`${dirtyPairs}/48`} icon={<IconShield size={12} />} highlight={dirtyPairs < 5} sub="Sirach sparse" />
               <MetricCell P={P} label="KV-Cache" value="384B" icon={<IconDatabase size={12} />} highlight sub={`${memReductionX} reduction`} />
-              <MetricCell P={P} label="Qubits" value="96" icon={<IconCircuitDiode size={12} />} highlight />
               <MetricCell P={P} label="Stabilizer" value={`${stabCorrections} fixes`} icon={<IconShield size={12} />} highlight={stabCorrections > 0} />
               <MetricCell P={P} label="Model" value={selectedModel.params} icon={<IconBrain size={12} />} highlight={selectedModel.id === "llama70b"} sub={selectedModel.name} />
             </div>
@@ -525,11 +542,20 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
                 {alphaInverse > 0 && <StatRow P={P} label="α⁻¹ (geometry)" value={alphaInverse.toFixed(2)} />}
 
                 <Divider P={P} />
+                <SectionLabel P={P}>Qubit State</SectionLabel>
+                <StatRow P={P} label="Interference" value={`${(interferenceRatio * 100).toFixed(0)}% constructive`} highlight={interferenceRatio > 0.7} />
+                <StatRow P={P} label="Phase Arc" value={`${(phaseArc / Math.PI).toFixed(2)}π rad`} />
+                <StatRow P={P} label="Reasoning Cycles" value={String(reasoningCycles)} highlight={reasoningCycles > 0} />
+                <StatRow P={P} label="Dirty Pairs" value={`${dirtyPairs} of 48`} highlight={dirtyPairs < 5} />
+                <StatRow P={P} label="Sweep Interval" value="Every 42 steps" dim />
+
+                <Divider P={P} />
                 <SectionLabel P={P}>How It Works</SectionLabel>
                 <p style={{ fontSize: "10px", color: P.textMuted, lineHeight: 1.7 }}>
-                  Hardware emulates 96 virtual qubits. The [[96,48,2]] stabilizer code self-corrects errors.
-                  Coherence inference navigates the Atlas manifold at O(96) cost — regardless of model size.
-                  The KV-cache is replaced by 96 qubit amplitudes = 384 bytes, a {memReductionX} reduction.
+                  96 virtual qubits braided along Fano lines accumulate geometric phase.
+                  The [[96,48,2]] stabilizer sparse-checks only broken mirror pairs (Sirach 42:24).
+                  Constructive interference = coherent reasoning. Phase wraps at 2π = one reasoning cycle.
+                  KV-cache replaced by 96 amplitudes = 384 bytes, a {memReductionX} reduction.
                 </p>
               </div>
             </motion.div>
@@ -643,18 +669,23 @@ function StreamedToken({ token, P }: { token: CoherenceToken; P: PagePalette }) 
   // Color by zone: convergent=green, exploring=amber, divergent=dim
   const hue = token.zone === "convergent" ? 142 : token.zone === "exploring" ? 38 : 0;
   const lightness = 45 + token.hScore * 25;
-  const opacity = 0.5 + token.hScore * 0.5;
+  // Opacity blends H-score with interference ratio (constructive = brighter)
+  const opacity = 0.4 + token.hScore * 0.3 + token.interferenceRatio * 0.3;
+  // Saturation increases with interference coherence
+  const saturation = 30 + token.interferenceRatio * 30;
 
   return (
     <motion.span
       initial={{ opacity: 0 }}
       animate={{ opacity }}
       transition={{ duration: 0.03 }}
-      title={`H=${token.hScore.toFixed(3)} · v${token.vertex} · ${token.tps.toFixed(0)} tok/s${token.stabilizerCorrected ? " · stabilizer corrected" : ""}`}
+      title={`H=${token.hScore.toFixed(3)} · v${token.vertex} · ${token.tps.toFixed(0)} tok/s · interference=${(token.interferenceRatio * 100).toFixed(0)}%${token.stabilizerCorrected ? " · stabilizer corrected" : ""}`}
       style={{
-        color: `hsl(${hue}, 45%, ${lightness}%)`,
+        color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
         display: "inline",
-        textShadow: token.hScore > 0.7 ? `0 0 8px hsla(${hue}, 60%, 50%, 0.15)` : "none",
+        textShadow: token.hScore > 0.7 && token.interferenceRatio > 0.6
+          ? `0 0 8px hsla(${hue}, 60%, 50%, 0.2)`
+          : "none",
       }}>
       {token.text}
     </motion.span>
