@@ -13,23 +13,23 @@
  *   4. Layered timing — faster enter, slightly faster exit
  */
 
-/** Primary interaction curve — quick snap with organic ease-out */
-export const EASE_PROJECT = "cubic-bezier(0.22, 1, 0.36, 1)";
+/** Primary interaction curve — organic ease-out with gentle deceleration */
+export const EASE_PROJECT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
-/** Exit curve — slightly faster, clean departure */
-export const EASE_DISMISS = "cubic-bezier(0.16, 0.6, 0.4, 1)";
+/** Exit curve — balanced departure, not abrupt */
+export const EASE_DISMISS = "cubic-bezier(0.2, 0.8, 0.4, 1)";
 
 /** Micro interaction curve — for hovers, toggles, small state changes */
 export const EASE_MICRO = "cubic-bezier(0.25, 0.1, 0.25, 1)";
 
-/** Panel projection (sidebar panels, chat) — primary interaction */
-export const DURATION_PROJECT_MS = 220;
+/** Panel projection (sidebar panels, chat) — harmonious, balanced slide */
+export const DURATION_PROJECT_MS = 340;
 
 /** Overlay reveal (legal panel, modals) — slightly longer for presence */
-export const DURATION_OVERLAY_MS = 280;
+export const DURATION_OVERLAY_MS = 400;
 
 /** Backdrop fade — faster than content to feel responsive */
-export const DURATION_BACKDROP_MS = 180;
+export const DURATION_BACKDROP_MS = 260;
 
 /** Desktop frame switch — elegant peel */
 export const DURATION_FRAME_MS = 1000;
