@@ -93,6 +93,8 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
   const [showModelTooltip, setShowModelTooltip] = useState(false);
   const [gpuAvailable, setGpuAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [liveMode, setLiveMode] = useState(true);
+  const [liveStatus, setLiveStatus] = useState<"idle" | "waiting" | "firing">("idle");
 
   // Live metrics
   const [liveTps, setLiveTps] = useState(0);
@@ -113,6 +115,8 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
   const outputRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<QuantumInferenceEngine | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPromptRef = useRef(prompt);
 
   useEffect(() => {
     (async () => {
@@ -121,6 +125,37 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
       catch { setGpuAvailable(false); }
     })();
   }, []);
+
+  // Auto-fire counter for live mode
+  const [autoFire, setAutoFire] = useState(0);
+
+  // ── Live Mode: auto-infer after typing pause ──
+  const cancelCurrentStream = useCallback(() => {
+    abortRef.current?.abort();
+    engineRef.current?.destroy();
+    engineRef.current = null;
+    setIsStreaming(false);
+    setIsInitializing(false);
+  }, []);
+
+  const handlePromptChange = useCallback((val: string) => {
+    setPrompt(val);
+    if (!liveMode) return;
+
+    // Cancel running stream when user resumes typing
+    if (isStreaming || isInitializing) cancelCurrentStream();
+
+    // Clear previous debounce
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (val.trim().length < 3) { setLiveStatus("idle"); return; }
+
+    setLiveStatus("waiting");
+    debounceRef.current = setTimeout(() => {
+      setLiveStatus("firing");
+      setAutoFire(prev => prev + 1);
+    }, 800);
+  }, [liveMode, isStreaming, isInitializing, cancelCurrentStream]);
 
   const startInference = useCallback(async () => {
     const ac = new AbortController();
@@ -321,13 +356,23 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
     } finally {
       setIsStreaming(false);
       setIsInitializing(false);
+      setLiveStatus("idle");
     }
   }, [selectedModel, prompt]);
+
+  // Auto-fire effect for live mode
+  useEffect(() => {
+    if (autoFire > 0 && !isStreaming && !isInitializing && prompt.trim().length >= 3) {
+      startInference();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFire]);
 
   const stopInference = useCallback(() => {
     abortRef.current?.abort();
     engineRef.current?.destroy();
     engineRef.current = null;
+    setLiveStatus("idle");
   }, []);
 
   const hasRun = tokens.length > 0 || isDone;
@@ -435,18 +480,33 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             </AnimatePresence>
           </div>
 
-          <input type="text" value={prompt} onChange={e => setPrompt(e.target.value)}
-            placeholder="Ask anything — inference runs at qubit speed..."
-            disabled={isStreaming}
-            onKeyDown={e => e.key === "Enter" && !isStreaming && startInference()}
-            style={{ flex: 1, padding: "9px 14px", borderRadius: "10px", fontSize: "13px", background: P.inputBg, border: `1px solid ${P.inputBorder}`, color: P.text, outline: "none", opacity: isStreaming ? 0.6 : 1 }} />
+          <div style={{ flex: 1, position: "relative" }}>
+            <input type="text" value={prompt} onChange={e => handlePromptChange(e.target.value)}
+              placeholder={liveMode ? "Start typing — inference fires automatically…" : "Ask anything — inference runs at qubit speed..."}
+              disabled={isStreaming && !liveMode}
+              onKeyDown={e => e.key === "Enter" && !isStreaming && startInference()}
+              style={{ width: "100%", padding: "9px 14px", borderRadius: "10px", fontSize: "13px", background: P.inputBg, border: `1px solid ${liveMode && liveStatus === "waiting" ? P.accent + "50" : P.inputBorder}`, color: P.text, outline: "none", transition: "border-color 0.2s" }} />
+            {liveMode && liveStatus === "waiting" && (
+              <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "4px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: P.accent, animation: "pulse 1s ease-in-out infinite" }} />
+                <span style={{ fontSize: "9px", color: P.accent, fontWeight: 600, letterSpacing: "0.05em" }}>LISTENING</span>
+              </div>
+            )}
+          </div>
+
+          {/* Live mode toggle */}
+          <button onClick={() => setLiveMode(m => !m)}
+            title={liveMode ? "Live mode: ON — auto-infers as you type" : "Live mode: OFF — manual run only"}
+            style={{ width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", background: liveMode ? `${P.accent}18` : P.cardBg, border: `1px solid ${liveMode ? P.accent + "40" : P.cardBorder}`, cursor: "pointer", color: liveMode ? P.accent : P.textDim, transition: "all 0.2s", flexShrink: 0 }}>
+            <IconBolt size={15} />
+          </button>
 
           {isStreaming ? (
-            <button onClick={stopInference} style={{ padding: "9px 18px", borderRadius: "10px", background: `${P.red}20`, color: P.red, border: `1px solid ${P.red}30`, fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+            <button onClick={stopInference} style={{ padding: "9px 18px", borderRadius: "10px", background: `${P.red}20`, color: P.red, border: `1px solid ${P.red}30`, fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
               <IconPlayerStop size={14} /> Stop
             </button>
           ) : (
-            <button onClick={startInference} style={{ padding: "9px 22px", borderRadius: "10px", background: P.btnPrimary, color: P.btnPrimaryText, border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", boxShadow: P.btnPrimaryShadow }}>
+            <button onClick={startInference} style={{ padding: "9px 22px", borderRadius: "10px", background: P.btnPrimary, color: P.btnPrimaryText, border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", boxShadow: P.btnPrimaryShadow, flexShrink: 0 }}>
               <IconPlayerPlay size={14} /> Run
             </button>
           )}
@@ -455,7 +515,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
         {/* Quick prompts */}
         <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
           {DEMO_PROMPTS.map((p, i) => (
-            <button key={i} onClick={() => !isStreaming && setPrompt(p)} disabled={isStreaming}
+            <button key={i} onClick={() => !isStreaming && handlePromptChange(p)} disabled={isStreaming}
               style={{ fontSize: "10px", color: prompt === p ? P.accent : P.textDim, background: prompt === p ? `${P.accent}10` : P.cardBgSubtle, padding: "3px 9px", borderRadius: "5px", border: prompt === p ? `1px solid ${P.accent}25` : `1px solid ${P.borderSubtle}`, cursor: isStreaming ? "default" : "pointer" }}>
               {p}
             </button>
