@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import HologramAiChat from "./HologramAiChat";
 import VoiceOrb from "./VoiceOrb";
 import TrustStatusBar from "./TrustStatusBar";
+import SessionVerifyAnimation from "./SessionVerifyAnimation";
 import BloomProjectionTabs, { type BloomProjection } from "./BloomProjectionTabs";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 
@@ -54,17 +55,20 @@ function ProjectionSpinner() {
 export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBloomProps) {
   const [mounted, setMounted] = useState(false);
   const [activeProjection, setActiveProjection] = useState<BloomProjection>("conversation");
+  const [verifyComplete, setVerifyComplete] = useState(false);
   const swipeStartY = useRef<number | null>(null);
 
   useEffect(() => {
     if (open && !mounted) setMounted(true);
   }, [open, mounted]);
 
-  // Reset to conversation when closing
+  // Reset state when closing
   useEffect(() => {
     if (!open) {
-      // Small delay so exit animation plays with current content
-      const t = setTimeout(() => setActiveProjection("conversation"), BLOOM_DURATION * 1000);
+      const t = setTimeout(() => {
+        setActiveProjection("conversation");
+        setVerifyComplete(false);
+      }, BLOOM_DURATION * 1000);
       return () => clearTimeout(t);
     }
   }, [open]);
@@ -133,6 +137,14 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
             </div>
             <TrustStatusBar />
           </div>
+
+          {/* Session chain verification animation */}
+          {!verifyComplete && (
+            <SessionVerifyAnimation
+              play={open}
+              onComplete={() => setVerifyComplete(true)}
+            />
+          )}
 
           {/* Projection tabs */}
           <div className="py-2">
