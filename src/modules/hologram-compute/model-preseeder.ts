@@ -14,9 +14,10 @@ const PRESEED_PREFIX = "hologram:model-preseeded:";
 
 /** Models to pre-seed, ordered smallest → largest for fastest first-run UX */
 const PRESEED_MODELS: { key: string; hfId: string; label: string; dtype?: Record<string, string> }[] = [
-  { key: "smollm2-135m", hfId: "HuggingFaceTB/SmolLM2-135M-Instruct", label: "SmolLM2 135M" },
-  { key: "gpt2",         hfId: "Xenova/gpt2",                          label: "GPT-2 124M", dtype: { model: "fp32" } },
-  { key: "phi-1.5",      hfId: "Xenova/phi-1_5",                       label: "Phi-1.5 1.3B", dtype: { model: "q4" } },
+  { key: "smollm2-135m",  hfId: "HuggingFaceTB/SmolLM2-135M-Instruct",      label: "SmolLM2 135M" },
+  { key: "gpt2",          hfId: "Xenova/gpt2",                               label: "GPT-2 124M",      dtype: { model: "fp32" } },
+  { key: "phi-1.5",       hfId: "Xenova/phi-1_5",                            label: "Phi-1.5 1.3B",    dtype: { model: "q4" } },
+  { key: "llama-3.2-1b",  hfId: "onnx-community/Llama-3.2-1B-Instruct",     label: "Llama 3.2 1B",    dtype: { model: "q4" } },
 ];
 
 /**
