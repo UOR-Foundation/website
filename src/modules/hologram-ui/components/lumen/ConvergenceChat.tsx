@@ -51,6 +51,11 @@ import {
   getCircuitEngine,
   getProceduralMemory,
   getMirrorProtocol,
+  createAccumulator,
+  recordIteration,
+  sealReceiptSync,
+  verifyProofOfThought,
+  type ProofOfThoughtReceipt,
 } from "@/modules/hologram-ui/engine/reasoning";
 import { observeExchange, compileResonanceDirective, loadResonanceProfile, loadProfileFromCloud } from "@/modules/hologram-ui/engine/resonanceObserver";
 import { loadGraphContext, type GraphContext } from "@/modules/hologram-ui/engine/contextGraphBridge";
@@ -444,11 +449,17 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
 
       // Process neuro-symbolic result
       let nsResult: NeuroSymbolicResult | null = null;
+      let proofReceipt: ProofOfThoughtReceipt | null = null;
       if (scaffold && streamedText.length > 20) {
         let iteration = 0;
         let currentResponse = streamedText;
+        let proofAcc = createAccumulator();
         while (iteration < DEFAULT_CONFIG.maxIterations) {
-          const { result } = processResponse(scaffold, currentResponse, iteration);
+          const { report, result } = processResponse(scaffold, currentResponse, iteration);
+          // Record geometric data into proof accumulator (content-blind)
+          const gradeDist = { A: 0, B: 0, C: 0, D: 0 };
+          for (const c of report.annotations) gradeDist[c.grade]++;
+          proofAcc = recordIteration(proofAcc, report.overallCurvature, gradeDist, coherence.h ?? 0.85, report.converged, currentResponse.length);
           if (result) { nsResult = result; break; }
           iteration++;
         }
@@ -456,6 +467,8 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           const { result } = processResponse(scaffold, currentResponse, iteration);
           nsResult = result;
         }
+        // Seal the Proof-of-Thought receipt (ZK, content-blind)
+        proofReceipt = sealReceiptSync(proofAcc, coherence.h ?? 0.85, 0.7);
       }
 
       // Compute reward
@@ -527,6 +540,21 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
           reward: rewardSignal?.reward,
           inferenceMs: elapsed,
           claims: nsResult?.claims,
+          ...(proofReceipt && {
+            proofOfThought: {
+              cid: proofReceipt.cid,
+              spectralGrade: proofReceipt.spectralGrade,
+              driftDelta0: proofReceipt.driftDelta0,
+              triadicPhase: proofReceipt.triadicPhase,
+              fidelity: proofReceipt.fidelity,
+              eigenvaluesLocked: proofReceipt.eigenvaluesLocked,
+              converged: proofReceipt.converged,
+              compressionRatio: proofReceipt.compressionRatio,
+              zk: proofReceipt.zk,
+              freeParameters: proofReceipt.freeParameters,
+              verified: verifyProofOfThought(proofReceipt).verified,
+            },
+          }),
         },
       });
 

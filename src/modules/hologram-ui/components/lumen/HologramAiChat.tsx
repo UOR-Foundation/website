@@ -54,6 +54,11 @@ import {
   getAccelerator,
   streamOptimized,
   StreamingCurvatureMonitor,
+  createAccumulator,
+  recordIteration,
+  sealReceiptSync,
+  verifyProofOfThought,
+  type ProofOfThoughtReceipt,
 } from "@/modules/hologram-ui/engine/reasoning";
 import AnnotatedResponse from "@/components/reasoning/EpistemicBadge";
 import { getFusionContextBlock } from "@/modules/data-bank/lib/fusion-graph";
@@ -835,11 +840,17 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
 
       // ABDUCTIVE: Measure curvature & annotate (if reasoning mode)
       let nsResult: NeuroSymbolicResult | null = null;
+      let proofReceipt: ProofOfThoughtReceipt | null = null;
       if (scaffold && streamedText.length > 20) {
         let iteration = 0;
         let currentResponse = streamedText;
+        let proofAcc = createAccumulator();
         while (iteration < DEFAULT_CONFIG.maxIterations) {
           const { report, refinementPrompt, result } = processResponse(scaffold, currentResponse, iteration);
+          // Record geometric data into proof accumulator (content-blind)
+          const gradeDist = { A: 0, B: 0, C: 0, D: 0 };
+          for (const c of report.annotations) gradeDist[c.grade]++;
+          proofAcc = recordIteration(proofAcc, report.overallCurvature, gradeDist, 0.85, report.converged, currentResponse.length);
           if (result) { nsResult = result; break; }
           if (refinementPrompt) {
             // Re-prompt LLM with constraint violations — DON'T reset streamedText
@@ -863,6 +874,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           const { result } = processResponse(scaffold, currentResponse, iteration);
           nsResult = result;
         }
+        // Seal the Proof-of-Thought receipt (ZK, content-blind)
+        proofReceipt = sealReceiptSync(proofAcc, 0.85, 0.7);
       }
 
       const elapsed = Math.round(performance.now() - start);
@@ -884,6 +897,21 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             converged: nsResult.converged,
             curvature: nsResult.finalCurvature,
             proofId: pgiResult ? pgiResult.proof.proofId : nsResult.proof.proofId,
+          },
+        }),
+        ...(proofReceipt && {
+          proofOfThought: {
+            cid: proofReceipt.cid,
+            spectralGrade: proofReceipt.spectralGrade,
+            driftDelta0: proofReceipt.driftDelta0,
+            triadicPhase: proofReceipt.triadicPhase,
+            fidelity: proofReceipt.fidelity,
+            eigenvaluesLocked: proofReceipt.eigenvaluesLocked,
+            converged: proofReceipt.converged,
+            compressionRatio: proofReceipt.compressionRatio,
+            zk: proofReceipt.zk,
+            freeParameters: proofReceipt.freeParameters,
+            verified: verifyProofOfThought(proofReceipt).verified,
           },
         }),
       };
