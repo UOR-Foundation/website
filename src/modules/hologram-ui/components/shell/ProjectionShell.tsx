@@ -26,7 +26,7 @@ import {
 const SIDEBAR_WIDTH = 56;
 
 /** Slightly longer duration for the holographic reveal for elegance */
-const REVEAL_MS = Math.round(DURATION_PROJECT_MS * 1.1); // ~374ms
+const REVEAL_MS = Math.round(DURATION_PROJECT_MS * 1.05); // ~504ms
 
 interface ProjectionShellProps {
   /** Panel is visible and interactive */
@@ -128,10 +128,10 @@ export default memo(function ProjectionShell({
           left: SIDEBAR_WIDTH,
           right: 0,
           // Holographic reveal: clip-path sweeps from left edge to full width
-          clipPath: open ? "inset(0 0 0 0)" : "inset(0 100% 0 0)",
+          clipPath: open ? "inset(0 0 0 0)" : "inset(0 0 0 100%)",
           transition: open
             ? `clip-path ${REVEAL_MS}ms ${EASE_PROJECT}`
-            : `clip-path ${REVEAL_MS}ms ${EASE_DISMISS}`,
+            : `clip-path ${Math.round(REVEAL_MS * 0.85)}ms ${EASE_DISMISS}`,
           pointerEvents: open ? "auto" : "none",
           // Isolation
           contain: "layout style",
@@ -144,11 +144,11 @@ export default memo(function ProjectionShell({
         <div
           className="absolute inset-0"
           style={{
-            transform: open ? "translate3d(0, 0, 0)" : "translate3d(-24px, 0, 0)",
-            opacity: open ? 1 : 0.7,
+            transform: open ? "translate3d(0, 0, 0)" : "translate3d(40px, 0, 0)",
+            opacity: open ? 1 : 0,
             transition: open
               ? `transform ${REVEAL_MS}ms ${EASE_PROJECT}, opacity ${Math.round(REVEAL_MS * 0.5)}ms ${EASE_PROJECT}`
-              : `transform ${Math.round(REVEAL_MS * 0.8)}ms ${EASE_DISMISS}, opacity ${Math.round(REVEAL_MS * 0.3)}ms ease-out`,
+              : `transform ${Math.round(REVEAL_MS * 0.7)}ms ${EASE_DISMISS}, opacity ${Math.round(REVEAL_MS * 0.4)}ms ease-out`,
             // Skip rendering when closed — critical for performance
             contentVisibility: open ? "visible" : "hidden",
             containIntrinsicSize: "auto 100vh",

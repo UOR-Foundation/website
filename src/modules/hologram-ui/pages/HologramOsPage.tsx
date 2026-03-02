@@ -565,7 +565,7 @@ export default function HologramOsPage() {
             overflow: "hidden",
             transition: lumenPanel.isResizing
               ? "none"
-              : "width 180ms cubic-bezier(0.22, 1, 0.36, 1)",
+              : "width 320ms cubic-bezier(0.16, 1, 0.3, 1)",
             willChange: "width",
           }}
         >
@@ -578,8 +578,8 @@ export default function HologramOsPage() {
               transition: lumenPanel.isResizing
                 ? "none"
                 : chatOpen
-                  ? "transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease"
-                  : "transform 140ms cubic-bezier(0.4, 0, 0.2, 1), opacity 100ms ease",
+                  ? "transform 360ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease"
+                  : "transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease",
               willChange: chatOpen || chatPrewarmed ? "transform, opacity" : "auto",
               contain: "layout style paint",
             }}
