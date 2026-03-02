@@ -113,61 +113,83 @@ const CONSOLE_ZONES: ConsoleZone[] = [
 
 // ── New User Narrative ─────────────────────────────────────────────────
 const NARRATIVE_LINES = [
-  "Welcome.",
+  "Hello.",
+  "You found something real.",
   "This is your space — yours alone.",
-  "An intelligence that serves you.",
-  "Never the other way around.",
-  "Tap the light below to begin.",
+  "An intelligence that learns with you.",
+  "That remembers for you.",
+  "That never works against you.",
+  "Welcome to Hologram.",
 ];
+
+// Typing speed varies per line for natural cadence
+const TYPING_SPEEDS = [70, 50, 45, 45, 50, 45, 40];
+// Pause after each line (ms) — longer for emotional weight
+const LINE_PAUSES = [2000, 1400, 1600, 1200, 1200, 1800, 3000];
 
 function useNarrative(isNewUser: boolean) {
   const [lineIndex, setLineIndex] = useState(-1);
   const [charIndex, setCharIndex] = useState(0);
   const [complete, setComplete] = useState(!isNewUser);
   const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<"dormant" | "breathing" | "typing" | "settling" | "done">("dormant");
 
   useEffect(() => {
-    if (!isNewUser || complete) return;
+    if (!isNewUser || complete) { setPhase("done"); return; }
 
-    // Initial pause before narrative begins
-    const startDelay = setTimeout(() => {
+    // Phase 1: Canvas breathes (1.5s)
+    const breathTimer = setTimeout(() => setPhase("breathing"), 400);
+    // Phase 2: Begin typing (after breathing)
+    const typeTimer = setTimeout(() => {
+      setPhase("typing");
       setStarted(true);
       setLineIndex(0);
       setCharIndex(0);
-    }, 1200);
+    }, 2200);
 
-    return () => clearTimeout(startDelay);
+    return () => { clearTimeout(breathTimer); clearTimeout(typeTimer); };
   }, [isNewUser, complete]);
 
   useEffect(() => {
     if (!started || lineIndex < 0 || lineIndex >= NARRATIVE_LINES.length) return;
 
     const line = NARRATIVE_LINES[lineIndex];
+    const speed = TYPING_SPEEDS[lineIndex] ?? 50;
+
     if (charIndex < line.length) {
-      const timer = setTimeout(() => setCharIndex(c => c + 1), 55);
+      const timer = setTimeout(() => setCharIndex(c => c + 1), speed);
       return () => clearTimeout(timer);
     }
 
     // Line complete — pause, then advance
+    const pause = LINE_PAUSES[lineIndex] ?? 1400;
     if (lineIndex < NARRATIVE_LINES.length - 1) {
-      const pause = setTimeout(() => {
+      const advanceTimer = setTimeout(() => {
         setLineIndex(l => l + 1);
         setCharIndex(0);
-      }, 1600); // φ-inspired pause
-      return () => clearTimeout(pause);
+      }, pause);
+      return () => clearTimeout(advanceTimer);
     }
 
-    // All lines done
-    const finishPause = setTimeout(() => setComplete(true), 2400);
+    // All lines done — settle, then transition
+    const finishPause = setTimeout(() => {
+      setPhase("settling");
+      setTimeout(() => {
+        setComplete(true);
+        setPhase("done");
+      }, 1200);
+    }, pause);
     return () => clearTimeout(finishPause);
   }, [started, lineIndex, charIndex]);
 
   return {
+    phase,
     isActive: started && !complete,
     complete,
     currentLine: lineIndex >= 0 ? NARRATIVE_LINES[lineIndex]?.slice(0, charIndex) ?? "" : "",
     previousLines: lineIndex > 0 ? NARRATIVE_LINES.slice(0, lineIndex) : [],
     lineIndex,
+    totalLines: NARRATIVE_LINES.length,
     typing: lineIndex >= 0 && lineIndex < NARRATIVE_LINES.length && charIndex < (NARRATIVE_LINES[lineIndex]?.length ?? 0),
   };
 }
@@ -324,6 +346,7 @@ export default function MobileOsShell() {
         touchAction: "pan-x",
         overscrollBehavior: "none",
         transition: "background 0.6s ease",
+        animation: narrative.phase === "breathing" ? "portal-canvas-breathe 2s cubic-bezier(0.23, 1, 0.32, 1) both" : undefined,
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -334,10 +357,15 @@ export default function MobileOsShell() {
 
       <div className="relative z-10 flex flex-col h-full">
 
-        {/* ── Top bar: theme toggle (minimal) ─────────────────────── */}
+        {/* ── Top bar: theme toggle (minimal) — fades in after narrative ── */}
         <div
           className="flex items-center justify-between px-6"
-          style={{ paddingTop: "calc(env(safe-area-inset-top, 16px) + 12px)" }}
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 16px) + 12px)",
+            opacity: narrative.phase === "dormant" || narrative.phase === "breathing" ? 0 : 1,
+            transform: narrative.phase === "dormant" || narrative.phase === "breathing" ? "translateY(-8px)" : "translateY(0)",
+            transition: "opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1), transform 1.2s cubic-bezier(0.23, 1, 0.32, 1)",
+          }}
         >
           <p
             className="tracking-[0.35em] uppercase"
@@ -369,54 +397,86 @@ export default function MobileOsShell() {
           className="flex-1 flex flex-col items-center justify-center px-8"
           style={{ paddingBottom: `${GR.xxxl}px` }}
         >
-          {/* ── New User Narrative (typographic journey) ────────── */}
+          {/* ── New User Narrative (cinematic journey) ────────── */}
           {narrative.isActive && (
-            <div className="flex flex-col items-center gap-8 max-w-[320px]">
-              {/* Previous lines — fading */}
-              {narrative.previousLines.map((line, i) => (
-                <p
-                  key={i}
-                  className="text-center leading-relaxed"
-                  style={{
-                    fontFamily: PP.fontDisplay,
-                    fontSize: "28px",
-                    fontWeight: 300,
-                    color: PP.narrativeFade,
-                    transition: "color 1s ease",
-                  }}
-                >
-                  {line}
-                </p>
-              ))}
-              {/* Current line — typing */}
+            <div
+              className="flex flex-col items-center justify-center"
+              style={{
+                maxWidth: "300px",
+                minHeight: "120px",
+              }}
+            >
+              {/* Show only current line — clean, focused */}
               <p
+                key={narrative.lineIndex}
                 className="text-center leading-relaxed"
                 style={{
                   fontFamily: PP.fontDisplay,
-                  fontSize: "28px",
+                  fontSize: narrative.lineIndex === 0 ? "36px" : narrative.lineIndex === NARRATIVE_LINES.length - 1 ? "32px" : "26px",
                   fontWeight: 300,
                   color: PP.narrativeText,
-                  minHeight: "40px",
+                  letterSpacing: narrative.lineIndex === 0 ? "-0.01em" : "0.01em",
+                  lineHeight: 1.4,
+                  animation: "portal-narrative-line 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
                 }}
               >
                 {narrative.currentLine}
                 {narrative.typing && (
                   <span
                     style={{
-                      opacity: 0.4,
-                      animation: "portal-blink-caret 0.8s step-end infinite",
+                      opacity: 0.3,
+                      animation: "portal-blink-caret 1s step-end infinite",
                     }}
                   >
                     ▎
                   </span>
                 )}
               </p>
+
+              {/* Progress — subtle dots showing journey position */}
+              <div
+                className="flex items-center gap-2 mt-8"
+                style={{ animation: "portal-fade-up 1s cubic-bezier(0.23, 1, 0.32, 1) 1.5s both" }}
+              >
+                {NARRATIVE_LINES.map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full transition-all duration-700"
+                    style={{
+                      width: i === narrative.lineIndex ? "16px" : "4px",
+                      height: "4px",
+                      background: i <= narrative.lineIndex ? PP.accent : PP.orbBreathRing,
+                      opacity: i <= narrative.lineIndex ? 0.6 : 0.2,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Settling state — graceful crossfade ──────────────── */}
+          {narrative.phase === "settling" && (
+            <div
+              className="flex flex-col items-center"
+              style={{
+                animation: "portal-settle-glow 1.2s cubic-bezier(0.23, 1, 0.32, 1) both",
+              }}
+            >
+              <div
+                className="rounded-full"
+                style={{
+                  width: "3px",
+                  height: "3px",
+                  background: PP.accent,
+                  boxShadow: `0 0 40px 20px ${PP.orbGlow}`,
+                }}
+              />
             </div>
           )}
 
           {/* ── Resting State (post-narrative or returning user) ──── */}
-          {(narrative.complete || !isNewUser) && (
-            <>
+          {(narrative.complete || !isNewUser) && narrative.phase === "done" && (
+            <div style={{ animation: isNewUser ? "portal-rest-emerge 1.5s cubic-bezier(0.23, 1, 0.32, 1) both" : undefined }}>
                {/* Identity mark — your personal anchor */}
                {userGlyph && (
                <div
@@ -472,7 +532,7 @@ export default function MobileOsShell() {
               >
                 {whisper.text}
               </p>
-            </>
+            </div>
           )}
         </div>
 
@@ -851,6 +911,24 @@ export default function MobileOsShell() {
         @keyframes portal-wake-sentinel {
           0%, 100% { transform: scale(1); opacity: 0.6; }
           50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes portal-canvas-breathe {
+          0% { opacity: 0; }
+          50% { opacity: 0.6; }
+          100% { opacity: 1; }
+        }
+        @keyframes portal-narrative-line {
+          0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes portal-settle-glow {
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(3); }
+          100% { opacity: 0; transform: scale(6); }
+        }
+        @keyframes portal-rest-emerge {
+          0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>
