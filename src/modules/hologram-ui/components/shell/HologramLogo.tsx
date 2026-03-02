@@ -1,61 +1,41 @@
 /**
- * HologramLogo — Hexagonal Dot-Grid Mark
- * ════════════════════════════════════════
+ * HologramLogo — Hexagonal Dot-Grid Mark with 3D Holographic Shimmer
+ * ═══════════════════════════════════════════════════════════════════
  *
- * High-fidelity recreation of the reference logo: a hexagonal shape
- * composed of circles in 4 size tiers. Seven vertical "cascade columns"
- * create a wave-like rhythm where dots grow from tiny (top) to large
- * (center-bottom), producing a dynamic, dimensional feel.
- *
- * Grid: hex-packed (offset rows), 11 rows, max 8 columns at widest.
- * Sizes: 0 = tiny (1.4r), 1 = small (2.4r), 2 = medium (3.4r), 3 = large (4.6r)
+ * High-fidelity hexagonal shape composed of circles in 4 size tiers.
+ * Large dots feature a layered holographic glow: inner radial gradient,
+ * outer halo, and a sweeping shimmer highlight that rotates across
+ * the grid in a continuous wave.
  */
 
 interface HologramLogoProps {
   size?: number;
   color?: string;
   className?: string;
-  /** Enable subtle pulse animation on large dots */
+  /** Enable holographic shimmer + glow on dots */
   animate?: boolean;
 }
 
-// Dot definition: [column-offset, size-tier]
-// Column offsets are in half-unit steps for hex packing
 type Dot = [number, 0 | 1 | 2 | 3];
 
-// Mapped from reference image — 11 rows, hex-packed
-// The 7 vertical "stripes" cascade from small→large top→bottom
 const GRID: { dots: Dot[] }[] = [
-  // Row 0 (top) — 4 dots, all tiny
   { dots: [[-1.5, 0], [-0.5, 0], [0.5, 0], [1.5, 0]] },
-  // Row 1 — 5 dots, offset; center-right starts growing
   { dots: [[-2, 0], [-1, 0], [0, 0], [1, 1], [2, 0]] },
-  // Row 2 — 6 dots; cascade columns 3,5 emerge
   { dots: [[-2.5, 0], [-1.5, 0], [-0.5, 1], [0.5, 2], [1.5, 1], [2.5, 0]] },
-  // Row 3 — 7 dots; columns grow further
   { dots: [[-3, 0], [-2, 0], [-1, 1], [0, 2], [1, 3], [2, 2], [3, 0]] },
-  // Row 4 — 7 dots; large dots in center-right
   { dots: [[-3, 0], [-2, 1], [-1, 2], [0, 3], [1, 3], [2, 3], [3, 1]] },
-  // Row 5 — 8 dots (widest); peak size across middle
   { dots: [[-3.5, 0], [-2.5, 2], [-1.5, 3], [-0.5, 3], [0.5, 3], [1.5, 3], [2.5, 3], [3.5, 0]] },
-  // Row 6 — 7 dots; still large in center
   { dots: [[-3, 0], [-2, 2], [-1, 3], [0, 3], [1, 3], [2, 2], [3, 0]] },
-  // Row 7 — 7 dots; cascade descending
   { dots: [[-3, 0], [-2, 2], [-1, 2], [0, 3], [1, 2], [2, 1], [3, 0]] },
-  // Row 8 — 6 dots; winding down
   { dots: [[-2.5, 0], [-1.5, 1], [-0.5, 2], [0.5, 2], [1.5, 1], [2.5, 0]] },
-  // Row 9 — 5 dots; small
   { dots: [[-2, 0], [-1, 1], [0, 1], [1, 1], [2, 0]] },
-  // Row 10 (bottom) — 4 dots; tiny
   { dots: [[-1.5, 0], [-0.5, 0], [0.5, 0], [1.5, 0]] },
 ];
 
-// φ-proportioned radii: each tier ≈ φ^0.5 × previous
 const RADII = [1.3, 2.2, 3.3, 4.5] as const;
 const OPACITIES = [0.3, 0.5, 0.75, 1.0] as const;
-
 const COL_SPACING = 10;
-const ROW_HEIGHT = COL_SPACING * 0.866; // hex packing: √3/2
+const ROW_HEIGHT = COL_SPACING * 0.866;
 
 export default function HologramLogo({
   size = 32,
@@ -77,33 +57,126 @@ export default function HologramLogo({
       className={className}
       aria-label="Hologram logo"
     >
+      <defs>
+        {/* Radial glow for large dots (tier 2+) */}
+        <radialGradient id="holo-glow-3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(45, 80%, 70%)" stopOpacity="1" />
+          <stop offset="50%" stopColor="hsl(38, 60%, 55%)" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="hsl(30, 50%, 40%)" stopOpacity="0.3" />
+        </radialGradient>
+        <radialGradient id="holo-glow-2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="hsl(42, 70%, 65%)" stopOpacity="0.9" />
+          <stop offset="60%" stopColor="hsl(36, 55%, 50%)" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="hsl(30, 45%, 38%)" stopOpacity="0.2" />
+        </radialGradient>
+
+        {/* Outer halo blur for depth */}
+        <filter id="holo-halo" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+
+        {/* Shimmer sweep — a bright highlight that rotates */}
+        {animate && (
+          <linearGradient id="holo-shimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(50, 100%, 90%)" stopOpacity="0">
+              <animate attributeName="stopOpacity" values="0;0;0.6;0;0" dur="3.6s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="40%" stopColor="hsl(48, 90%, 85%)" stopOpacity="0">
+              <animate attributeName="stopOpacity" values="0;0.4;0.8;0.4;0" dur="3.6s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="60%" stopColor="hsl(45, 80%, 80%)" stopOpacity="0">
+              <animate attributeName="stopOpacity" values="0;0.4;0.8;0.4;0" dur="3.6s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="100%" stopColor="hsl(40, 100%, 90%)" stopOpacity="0">
+              <animate attributeName="stopOpacity" values="0;0;0.6;0;0" dur="3.6s" repeatCount="indefinite" />
+            </stop>
+            {/* Sweep the gradient angle */}
+            <animateTransform
+              attributeName="gradientTransform"
+              type="rotate"
+              from="0 0.5 0.5"
+              to="360 0.5 0.5"
+              dur="4.8s"
+              repeatCount="indefinite"
+            />
+          </linearGradient>
+        )}
+      </defs>
+
       {animate && (
         <style>{`
-          @keyframes holo-dot-pulse {
+          @keyframes holo-breathe {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.72; }
+          }
+          @keyframes holo-halo-pulse {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.6; }
           }
         `}</style>
       )}
+
       {GRID.map((row, ri) =>
-        row.dots.map(([col, sz], di) => (
-          <circle
-            key={`${ri}-${di}`}
-            cx={col * COL_SPACING}
-            cy={ri * ROW_HEIGHT}
-            r={RADII[sz]}
-            fill={color}
-            opacity={OPACITIES[sz]}
-            style={
-              animate && sz >= 2
-                ? {
-                    animation: `holo-dot-pulse ${2.4 + ri * 0.18}s ease-in-out infinite`,
-                    animationDelay: `${di * 0.12}s`,
-                  }
-                : undefined
-            }
-          />
-        ))
+        row.dots.map(([col, sz], di) => {
+          const cx = col * COL_SPACING;
+          const cy = ri * ROW_HEIGHT;
+          const r = RADII[sz];
+          const isLarge = sz >= 2;
+          const isMassive = sz === 3;
+          const delay = (ri * 0.1 + di * 0.08) % 3.6;
+
+          return (
+            <g key={`${ri}-${di}`}>
+              {/* Outer halo glow — only for tier 2+ dots */}
+              {animate && isLarge && (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r * 2.2}
+                  fill={isMassive ? "hsl(45, 70%, 55%)" : "hsl(38, 55%, 48%)"}
+                  opacity={0.12}
+                  style={{
+                    animation: `holo-halo-pulse ${3.2 + ri * 0.15}s ease-in-out infinite`,
+                    animationDelay: `${delay}s`,
+                  }}
+                />
+              )}
+
+              {/* Base dot with gradient fill for large, flat fill for small */}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={isLarge ? `url(#holo-glow-${sz})` : color}
+                opacity={isLarge ? 1 : OPACITIES[sz]}
+                filter={animate && isMassive ? "url(#holo-halo)" : undefined}
+                style={
+                  animate && isLarge
+                    ? {
+                        animation: `holo-breathe ${2.4 + ri * 0.18}s ease-in-out infinite`,
+                        animationDelay: `${delay}s`,
+                      }
+                    : undefined
+                }
+              />
+
+              {/* Shimmer overlay — additive highlight sweep on large dots */}
+              {animate && isLarge && (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r * 0.85}
+                  fill="url(#holo-shimmer)"
+                  style={{
+                    mixBlendMode: "screen",
+                    animationDelay: `${delay}s`,
+                  }}
+                />
+              )}
+            </g>
+          );
+        })
       )}
     </svg>
   );
