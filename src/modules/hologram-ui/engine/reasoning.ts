@@ -122,3 +122,34 @@ export {
   type SpectralTest,
   type QSVGAtlasBridgeReport,
 } from "@/modules/qsvg";
+
+// ── QSVG Geometric Tick ───────────────────────────────────────────────
+export {
+  // Geometric Units
+  GEOMETRIC_TICK_QUANTUM,
+  PROJECTION_FIDELITY,
+  NOISE_FLOOR,
+  GEOMETRIC_CATASTROPHE,
+  hScoreToDefects,
+  defectsToHScore,
+  classifyGeometricZone,
+  triadicPhase,
+  getGeometricManifest,
+  type GeometricZone,
+  type GeometricManifest,
+  // Coherence Bridge
+  measureGeometricState,
+  measureGeometricDrift,
+  computeRefocusTarget,
+  verifyGeometricClosure,
+  createGeometricReceipt,
+  type GeometricMeasurement,
+  type GeometricReceipt,
+  // Spectral Feedback
+  spectralHealth,
+  spectralCorrection,
+  spectralClosure,
+  runSpectralFeedbackCycle,
+  type SpectralHealth,
+  type SpectralFeedbackCycle,
+} from "@/modules/qsvg";

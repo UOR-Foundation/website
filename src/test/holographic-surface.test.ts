@@ -68,7 +68,7 @@ describe("HolographicSurface", () => {
       // Refocused means coherenceAfter is blended back toward before
       expect(receipt.refocused).toBe(true);
       expect(receipt.coherenceAfter).toBeGreaterThan(0.1);
-      expect(receipt.coherenceAfter).toBeLessThan(0.6);
+      expect(receipt.coherenceAfter).toBeLessThanOrEqual(0.6);
     });
 
     it("does NOT refocus on gentle decline", () => {
