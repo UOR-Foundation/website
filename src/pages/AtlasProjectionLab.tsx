@@ -1,15 +1,22 @@
 /**
- * Atlas Projection Lab — Interactive Model Projection Dashboard
- * ══════════════════════════════════════════════════════════════
+ * Atlas Projection Lab — AI Lab
+ * ══════════════════════════════
  *
- * End-to-end testing page for the Atlas model projection pipeline.
- * Load real models, project through Atlas, run coherence inference,
- * and compare with baseline transformer inference.
+ * End-to-end model projection dashboard styled with the Hologram
+ * Kernel Palette for visual harmony with the rest of the OS.
+ *
+ * WHY:  Understand how AI models think — make their reasoning visible.
+ * HOW:  Project open-source LLMs onto a geometric manifold for coherence-guided inference.
+ * WHAT: Load models, benchmark, generate, and compare side-by-side.
  */
 
 import { useState, useCallback, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IconBrain, IconAtom, IconChartBar, IconPlayerPlay, IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu } from "@tabler/icons-react";
+import {
+  IconBrain, IconAtom, IconChartBar, IconPlayerPlay,
+  IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu,
+} from "@tabler/icons-react";
+import { KP } from "@/modules/hologram-os/kernel-palette";
 
 const MultiModelBenchmark = lazy(() => import("./MultiModelBenchmark"));
 const HuggingFaceModelBrowser = lazy(() => import("./HuggingFaceModelBrowser"));
@@ -32,23 +39,52 @@ import {
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
 
-// ═══════════════════════════════════════════════════════════════
-// Component
-// ═══════════════════════════════════════════════════════════════
+// ── Shared styles ────────────────────────────────────────────
+const card = {
+  background: KP.card,
+  border: `1px solid ${KP.border}`,
+  borderRadius: "16px",
+  padding: "20px",
+};
+const sectionTitle: React.CSSProperties = {
+  fontSize: "10px",
+  fontWeight: 600,
+  letterSpacing: "0.15em",
+  textTransform: "uppercase" as const,
+  color: KP.dim,
+};
+const inputStyle: React.CSSProperties = {
+  background: "transparent",
+  border: `1px solid ${KP.border}`,
+  borderRadius: "12px",
+  padding: "10px 14px",
+  color: KP.text,
+  fontSize: "13px",
+  outline: "none",
+  width: "100%",
+};
+const btnPrimary: React.CSSProperties = {
+  background: KP.gold,
+  color: KP.bg,
+  borderRadius: "12px",
+  padding: "10px 20px",
+  fontSize: "13px",
+  fontWeight: 600,
+  cursor: "pointer",
+  border: "none",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+};
 
 export default function AtlasProjectionLab() {
-  // Model selection
   const [selectedModel, setSelectedModel] = useState<string>("smollm2-135m");
   const [useRealModel, setUseRealModel] = useState(false);
-
-  // Loading state
   const [loadStatus, setLoadStatus] = useState<ModelLoadStatus>({ stage: "idle", progress: 0, message: "" });
   const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus>({
     stage: "idle", progress: 0, message: "Not initialized",
     decomposition: null, holographicEncoding: null, engramEntries: 0,
   });
-
-  // Results
   const [report, setReport] = useState<PipelineReport | null>(null);
   const [inferenceResult, setInferenceResult] = useState<InferenceResult | null>(null);
   const [baselineResult, setBaselineResult] = useState<{ text: string; timeMs: number; tokensPerSecond: number; tokenIds: number[] } | null>(null);
@@ -63,12 +99,11 @@ export default function AtlasProjectionLab() {
     atlas: { index: number; nll: number; tokenStr: string }[];
     baseline: { index: number; nll: number; tokenStr: string }[];
   }>({ atlas: [], baseline: [] });
-
-  // Refs
   const loadedModelRef = useRef<LoadedHFModel | null>(null);
   const pipelineRef = useRef<AtlasProjectionPipeline | null>(null);
   const logRef = useRef<string[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
 
   const addLog = useCallback((msg: string) => {
     logRef.current = [...logRef.current, `[${new Date().toLocaleTimeString()}] ${msg}`];
@@ -79,39 +114,32 @@ export default function AtlasProjectionLab() {
   const handleInitialize = useCallback(async () => {
     try {
       addLog("Starting Atlas Projection Pipeline...");
-
-      // Determine manifest
       let manifest = MODEL_MANIFESTS[selectedModel] || MODEL_MANIFESTS["smollm2-1.7b"];
       let weightLoader: ((layer: number, matrix: any) => Float32Array | null) | undefined;
 
       if (useRealModel) {
         addLog(`Loading real model from HuggingFace: ${BROWSER_MODELS[selectedModel]?.name ?? selectedModel}`);
-
         const loaded = await loadHFModel(selectedModel, (status) => {
           setLoadStatus(status);
           if (status.message) addLog(status.message);
         });
-
         loadedModelRef.current = loaded;
         manifest = loaded.manifest;
         weightLoader = loaded.weightLoader;
         addLog(`Model loaded: ${loaded.weights.size} weight tensors extracted`);
       } else {
         addLog(`Using synthetic weights for ${manifest?.name ?? selectedModel}`);
-        // Use existing manifests — pick the profile's manifest if available
         const profile = BROWSER_MODELS[selectedModel];
         if (profile) manifest = profile.manifest;
       }
 
-      // Create and initialize the Atlas pipeline
       const pipeline = new AtlasProjectionPipeline({
         manifest,
-        maxLayers: Math.min(manifest.layerCount, 8), // Cap for browser perf
+        maxLayers: Math.min(manifest.layerCount, 8),
         useCompression: true,
         weightLoader,
       });
 
-      // Subscribe to status updates
       pipeline.onStatusChange((status) => {
         setPipelineStatus(status);
         if (status.message) addLog(status.message);
@@ -119,12 +147,8 @@ export default function AtlasProjectionLab() {
 
       pipelineRef.current = pipeline;
 
-      // Wire real lm_head weights into the coherence engine
       if (loadedModelRef.current) {
         const loadedModel = loadedModelRef.current;
-
-        // 1. Direct lm_head projection — extract the real lm_head.weight tensor
-        //    and project it into Atlas space for native O(96) vocabulary lookup
         const lmHeadWeights = loadedModel.weights.get("lm_head");
         if (lmHeadWeights) {
           const vocabSize = loadedModel.manifest.vocabSize;
@@ -134,27 +158,20 @@ export default function AtlasProjectionLab() {
         } else {
           addLog("⚠ lm_head weights not found, using fallback projection");
         }
-
-        // 2. Also wire the full forward pass callback as secondary path
-        //    (used when lm_head projection alone isn't sufficient)
         const { getNextTokenLogits } = await import("@/modules/hologram-compute/hf-model-bridge");
         pipeline.setLogitsCallback(async (context: number[]) => {
           return getNextTokenLogits(loadedModel, context.slice(-32));
         });
-        addLog("✓ Real model forward-pass callback wired as secondary path");
+        addLog("✓ Real model forward-pass callback wired");
       }
 
-      // Run the full benchmark
       addLog("Running full pipeline benchmark...");
       const benchmarkReport = await pipeline.benchmark([1, 2, 3, 4, 5], 16);
       setReport(benchmarkReport);
-
       addLog(`✓ Pipeline ready! ${benchmarkReport.decomposition.totalBlocks} blocks projected`);
       addLog(`  Compression: ${benchmarkReport.holographicEncoding.compressionRatio.toFixed(1)}×`);
       addLog(`  Bekenstein efficiency: ${(benchmarkReport.holographicEncoding.bekensteinEfficiency * 100).toFixed(1)}%`);
       addLog(`  Benchmark: ${benchmarkReport.benchmarkResult.tokensPerSecond.toFixed(0)} tok/s`);
-      addLog(`  Total time: ${benchmarkReport.totalTimeMs.toFixed(0)}ms`);
-
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       addLog(`✗ Error: ${msg}`);
@@ -168,19 +185,16 @@ export default function AtlasProjectionLab() {
       addLog("Pipeline not ready. Initialize first.");
       return;
     }
-
     addLog(`Generating from prompt: "${prompt}"`);
     setPerplexityStats({ atlas: null, baseline: null });
     setPerTokenNLL({ atlas: [], baseline: [] });
 
-    // Tokenize
     let tokenIds: number[];
     if (loadedModelRef.current) {
       tokenIds = tokenize(loadedModelRef.current, prompt);
       addLog(`Tokenized: ${tokenIds.length} tokens`);
     } else {
-      // Simple hash-based tokenization for synthetic mode
-      tokenIds = prompt.split(/\s+/).map((w, i) => {
+      tokenIds = prompt.split(/\s+/).map((w) => {
         let h = 0;
         for (let j = 0; j < w.length; j++) h = (h * 31 + w.charCodeAt(j)) & 0xFFFF;
         return h % 50000;
@@ -191,7 +205,6 @@ export default function AtlasProjectionLab() {
     const result = await pipeline.infer(tokenIds, 32);
     setInferenceResult(result);
 
-    // Detokenize
     if (loadedModelRef.current) {
       const text = detokenize(loadedModelRef.current, result.tokenIds);
       setGeneratedText(text);
@@ -200,27 +213,19 @@ export default function AtlasProjectionLab() {
       setGeneratedText(`[Token IDs: ${result.tokenIds.slice(0, 8).join(", ")}...]`);
       addLog(`Generated ${result.tokenIds.length} tokens`);
     }
+    addLog(`  H-score: ${result.meanHScore.toFixed(4)}, Speed: ${result.tokensPerSecond.toFixed(0)} tok/s`);
 
-    addLog(`  H-score: ${result.meanHScore.toFixed(4)}`);
-    addLog(`  Speed: ${result.tokensPerSecond.toFixed(0)} tok/s`);
-    addLog(`  Time: ${result.totalTimeMs.toFixed(1)}ms`);
-
-    // Auto-run baseline comparison if real model loaded
     if (loadedModelRef.current) {
       setIsRunningBaseline(true);
-      addLog("Running standard transformer baseline for comparison...");
+      addLog("Running standard transformer baseline...");
       try {
         const baseline = await baselineInference(loadedModelRef.current, prompt, 32);
         setBaselineResult(baseline);
-        addLog(`  Baseline: "${baseline.text.slice(0, 80)}..."`);
-        addLog(`  Baseline: ${baseline.tokensPerSecond.toFixed(0)} tok/s (${baseline.timeMs.toFixed(0)}ms)`);
-        const speedup = (baseline.timeMs > 0 && result.totalTimeMs > 0) 
-          ? (baseline.timeMs / result.totalTimeMs).toFixed(1) 
-          : "N/A";
-        addLog(`  ⚡ Coherence speedup: ${speedup}× over standard attention`);
+        addLog(`  Baseline: ${baseline.tokensPerSecond.toFixed(0)} tok/s`);
+        const speedup = (baseline.timeMs > 0 && result.totalTimeMs > 0) ? (baseline.timeMs / result.totalTimeMs).toFixed(1) : "N/A";
+        addLog(`  ⚡ Coherence speedup: ${speedup}×`);
 
-        // Compute perplexity for both outputs
-        addLog("📊 Computing perplexity (evaluating output quality)...");
+        addLog("📊 Computing perplexity...");
         const atlasFullSeq = [...tokenIds, ...result.tokenIds];
         const [atlasPpl, baselinePpl, atlasPerToken, baselinePerToken] = await Promise.all([
           computePerplexity(loadedModelRef.current!, atlasFullSeq),
@@ -228,22 +233,12 @@ export default function AtlasProjectionLab() {
           computePerTokenNLL(loadedModelRef.current!, atlasFullSeq),
           computePerTokenNLL(loadedModelRef.current!, baseline.tokenIds),
         ]);
-
         setPerplexityStats({
           atlas: { perplexity: atlasPpl.perplexity, avgNLL: atlasPpl.avgNLL },
           baseline: { perplexity: baselinePpl.perplexity, avgNLL: baselinePpl.avgNLL },
         });
         setPerTokenNLL({ atlas: atlasPerToken, baseline: baselinePerToken });
-
-        addLog(`  📊 Atlas PPL: ${atlasPpl.perplexity.toFixed(1)} (NLL: ${atlasPpl.avgNLL.toFixed(3)}, ${atlasPpl.tokenCount} tokens)`);
-        addLog(`  📊 Baseline PPL: ${baselinePpl.perplexity.toFixed(1)} (NLL: ${baselinePpl.avgNLL.toFixed(3)}, ${baselinePpl.tokenCount} tokens)`);
-
-        const pplRatio = atlasPpl.perplexity / Math.max(baselinePpl.perplexity, 0.01);
-        if (pplRatio < 1.5) {
-          addLog(`  ✓ Atlas quality within ${((pplRatio - 1) * 100).toFixed(0)}% of transformer baseline`);
-        } else {
-          addLog(`  ⚠ Atlas perplexity ${pplRatio.toFixed(1)}× higher than baseline`);
-        }
+        addLog(`  📊 Atlas PPL: ${atlasPpl.perplexity.toFixed(1)}, Baseline PPL: ${baselinePpl.perplexity.toFixed(1)}`);
       } catch (e) {
         addLog(`  Baseline comparison skipped: ${e instanceof Error ? e.message : String(e)}`);
       } finally {
@@ -252,210 +247,245 @@ export default function AtlasProjectionLab() {
     }
   }, [prompt, pipelineStatus.stage, addLog]);
 
-  // ── Render ─────────────────────────────────────────────────
-  const stageIcon = (stage: string) => {
-    if (stage === "ready") return <IconCheck className="w-4 h-4 text-emerald-400" />;
-    if (stage === "error") return <IconAlertTriangle className="w-4 h-4 text-red-400" />;
-    if (stage === "idle") return <IconAtom className="w-4 h-4 text-muted-foreground" />;
-    return <IconLoader2 className="w-4 h-4 text-amber-400 animate-spin" />;
-  };
+  const stageColor = pipelineStatus.stage === "ready" ? KP.green : pipelineStatus.stage === "error" ? KP.red : KP.gold;
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <IconBrain className="w-8 h-8 text-primary" />
+    <div style={{ minHeight: "100vh", background: KP.bg, color: KP.text, fontFamily: KP.font, padding: "32px 24px" }}>
+      <div style={{ maxWidth: "960px", margin: "0 auto" }}>
+        {/* ── Header ── */}
+        <div style={{ marginBottom: "40px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "12px" }}>
+            <div
+              style={{
+                width: "48px", height: "48px", borderRadius: "14px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: `linear-gradient(145deg, ${KP.gold}22, ${KP.purple}15)`,
+                border: `1px solid ${KP.gold}25`,
+              }}
+            >
+              <IconBrain size={24} style={{ color: KP.gold }} />
+            </div>
+            <div>
+              <h1
+                style={{
+                  fontSize: "26px", fontWeight: 600, fontFamily: KP.serif,
+                  color: KP.text, margin: 0, lineHeight: 1.2,
+                }}
+              >
+                AI Lab
+              </h1>
+              <p style={{ fontSize: "13px", color: KP.muted, margin: "4px 0 0" }}>
+                See how models think. Project, benchmark, generate.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">AI Lab</h1>
-            <p className="text-sm text-muted-foreground">
-              Project open-source LLMs onto the Atlas manifold — coherence-guided inference
-            </p>
+
+          {/* Why · How · What */}
+          <div
+            style={{
+              ...card,
+              padding: "16px 20px",
+              background: `linear-gradient(135deg, ${KP.gold}08, ${KP.purple}06)`,
+              borderColor: `${KP.gold}15`,
+            }}
+          >
+            <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+              {[
+                { label: "Why", text: "Make AI reasoning visible and auditable" },
+                { label: "How", text: "Project model weights onto a geometric manifold" },
+                { label: "What", text: "Load real models, run inference, compare quality" },
+              ].map((item) => (
+                <div key={item.label} style={{ flex: "1 1 200px" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: KP.gold }}>
+                    {item.label}
+                  </span>
+                  <p style={{ fontSize: "12px", color: KP.muted, margin: "4px 0 0", lineHeight: 1.5 }}>
+                    {item.text}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* HuggingFace Model Browser */}
-        <Suspense fallback={<div className="text-muted-foreground text-sm font-mono p-4">Loading model browser…</div>}>
+        {/* ── Model Browser ── */}
+        <Suspense fallback={<LoadingPlaceholder text="Loading model browser…" />}>
           <HuggingFaceModelBrowser />
         </Suspense>
 
-        {/* Multi-Model Benchmark */}
-        <Suspense fallback={<div className="text-muted-foreground text-sm font-mono p-4">Loading multi-model benchmark…</div>}>
+        <div style={{ height: "16px" }} />
+
+        {/* ── Multi-Model Benchmark ── */}
+        <Suspense fallback={<LoadingPlaceholder text="Loading benchmark…" />}>
           <MultiModelBenchmark />
         </Suspense>
 
-        {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div style={{ height: "24px" }} />
+
+        {/* ── Controls ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           {/* Model Selection */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Model Selection</h2>
+          <div style={card}>
+            <p style={sectionTitle}>Model</p>
+            <div style={{ marginTop: "12px" }}>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                style={{
+                  ...inputStyle,
+                  cursor: "pointer",
+                  appearance: "none" as const,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 12px center",
+                  paddingRight: "36px",
+                }}
+              >
+                <optgroup label="Browser-Viable (Real Weights)">
+                  {Object.entries(BROWSER_MODELS).map(([id, profile]) => (
+                    <option key={id} value={id}>{profile.name} ({profile.downloadSizeMB}MB)</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Synthetic Projection">
+                  {Object.entries(MODEL_MANIFESTS).map(([id, m]) => (
+                    <option key={id} value={id}>{m.name} ({(m.parameterCount / 1e9).toFixed(1)}B)</option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
 
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full p-2 rounded-lg bg-background border border-border text-foreground text-sm"
-            >
-              <optgroup label="Browser-Viable (Real Weights)">
-                {Object.entries(BROWSER_MODELS).map(([id, profile]) => (
-                  <option key={id} value={id}>
-                    {profile.name} ({profile.downloadSizeMB}MB)
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Synthetic Projection (Manifest Only)">
-                {Object.entries(MODEL_MANIFESTS).map(([id, m]) => (
-                  <option key={id} value={id}>
-                    {m.name} ({(m.parameterCount / 1e9).toFixed(1)}B params)
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", cursor: "pointer", fontSize: "12px", color: KP.muted }}>
               <input
                 type="checkbox"
                 checked={useRealModel}
                 onChange={(e) => setUseRealModel(e.target.checked)}
-                className="rounded accent-primary"
+                style={{ accentColor: KP.gold }}
               />
-              <span className="text-muted-foreground">
-                Load real weights from HuggingFace
-                {useRealModel && <span className="text-amber-400 ml-1">(downloads model)</span>}
-              </span>
+              Load real weights from HuggingFace
+              {useRealModel && <span style={{ color: KP.gold, marginLeft: "4px" }}>(downloads model)</span>}
             </label>
 
             <button
               onClick={handleInitialize}
               disabled={pipelineStatus.stage !== "idle" && pipelineStatus.stage !== "ready" && pipelineStatus.stage !== "error"}
-              className="w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                ...btnPrimary,
+                width: "100%",
+                justifyContent: "center",
+                marginTop: "16px",
+                opacity: (pipelineStatus.stage !== "idle" && pipelineStatus.stage !== "ready" && pipelineStatus.stage !== "error") ? 0.5 : 1,
+              }}
             >
-              <IconRocket className="w-4 h-4" />
+              <IconRocket size={16} />
               Initialize Pipeline
             </button>
           </div>
 
-          {/* Status Panel */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pipeline Status</h2>
+          {/* Status */}
+          <div style={card}>
+            <p style={sectionTitle}>Status</p>
 
-            {/* Model Load Status */}
             {useRealModel && loadStatus.stage !== "idle" && (
-              <div className="flex items-center gap-2 text-sm">
-                {stageIcon(loadStatus.stage)}
-                <span className="text-muted-foreground">{loadStatus.message}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", fontSize: "12px", color: KP.muted }}>
+                <StageIcon stage={loadStatus.stage} />
+                <span>{loadStatus.message}</span>
               </div>
             )}
 
-            {/* Pipeline Status */}
-            <div className="flex items-center gap-2 text-sm">
-              {stageIcon(pipelineStatus.stage)}
-              <span className="text-muted-foreground">{pipelineStatus.message}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", fontSize: "12px", color: KP.muted }}>
+              <StageIcon stage={pipelineStatus.stage} />
+              <span>{pipelineStatus.message}</span>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+            {/* Progress bar */}
+            <div style={{ width: "100%", height: "6px", borderRadius: "3px", background: `${KP.border}`, marginTop: "12px", overflow: "hidden" }}>
               <motion.div
-                className="h-full bg-primary rounded-full"
-                animate={{ width: `${(pipelineStatus.progress * 100)}%` }}
+                style={{ height: "100%", borderRadius: "3px", background: stageColor }}
+                animate={{ width: `${pipelineStatus.progress * 100}%` }}
                 transition={{ duration: 0.3 }}
               />
             </div>
 
-            {/* Key Metrics */}
+            {/* Metrics */}
             {report && (
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <MetricCard
-                  label="Compression"
-                  value={`${report.holographicEncoding.compressionRatio.toFixed(1)}×`}
-                />
-                <MetricCard
-                  label="Bekenstein"
-                  value={`${(report.holographicEncoding.bekensteinEfficiency * 100).toFixed(0)}%`}
-                />
-                <MetricCard
-                  label="Tok/s"
-                  value={`${report.benchmarkResult.tokensPerSecond.toFixed(0)}`}
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "16px" }}>
+                <Metric label="Compression" value={`${report.holographicEncoding.compressionRatio.toFixed(1)}×`} />
+                <Metric label="Bekenstein" value={`${(report.holographicEncoding.bekensteinEfficiency * 100).toFixed(0)}%`} />
+                <Metric label="Tok/s" value={`${report.benchmarkResult.tokensPerSecond.toFixed(0)}`} />
               </div>
             )}
           </div>
         </div>
 
-        {/* Inference */}
+        {/* ── Inference ── */}
         <AnimatePresence>
           {pipelineStatus.stage === "ready" && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-border bg-card p-4 space-y-3"
+              style={{ ...card, marginTop: "16px" }}
             >
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                <IconCpu className="w-4 h-4" />
-                Coherence Inference
-              </h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <IconCpu size={16} style={{ color: KP.gold }} />
+                <span style={sectionTitle}>Coherence Inference</span>
+              </div>
 
-              <div className="flex gap-2">
+              <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="text"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Enter prompt..."
-                  className="flex-1 p-2 rounded-lg bg-background border border-border text-foreground text-sm"
+                  placeholder="Enter a prompt…"
                   onKeyDown={(e) => e.key === "Enter" && handleInfer()}
+                  style={{ ...inputStyle, flex: 1 }}
                 />
-                <button
-                  onClick={handleInfer}
-                  className="py-2 px-4 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 flex items-center gap-2"
-                >
-                  <IconPlayerPlay className="w-4 h-4" />
+                <button onClick={handleInfer} style={btnPrimary}>
+                  <IconPlayerPlay size={14} />
                   Generate
                 </button>
               </div>
 
-              {/* Output */}
               {generatedText && (
-                <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-sm font-mono text-foreground whitespace-pre-wrap">{generatedText}</p>
+                <div
+                  style={{
+                    marginTop: "16px", padding: "14px 16px", borderRadius: "12px",
+                    background: `${KP.surface}`, border: `1px solid ${KP.border}`,
+                    fontSize: "13px", fontFamily: "monospace", color: KP.text,
+                    whiteSpace: "pre-wrap", lineHeight: 1.6,
+                  }}
+                >
+                  {generatedText}
                 </div>
               )}
 
-              {/* Inference Metrics */}
               {inferenceResult && (
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  <MetricCard label="Tokens" value={`${inferenceResult.tokenIds.length}`} />
-                  <MetricCard label="H-score" value={inferenceResult.meanHScore.toFixed(3)} />
-                  <MetricCard label="Tok/s" value={`${inferenceResult.tokensPerSecond.toFixed(0)}`} />
-                  <MetricCard label="Time" value={`${inferenceResult.totalTimeMs.toFixed(0)}ms`} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginTop: "16px" }}>
+                  <Metric label="Tokens" value={`${inferenceResult.tokenIds.length}`} />
+                  <Metric label="H-score" value={inferenceResult.meanHScore.toFixed(3)} />
+                  <Metric label="Tok/s" value={`${inferenceResult.tokensPerSecond.toFixed(0)}`} />
+                  <Metric label="Time" value={`${inferenceResult.totalTimeMs.toFixed(0)}ms`} />
                 </div>
               )}
 
               {/* Coherence Journey */}
               {inferenceResult && inferenceResult.steps.length > 0 && (
-                <div className="space-y-1">
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase">Coherence Journey</h3>
-                  <div className="flex items-end gap-[2px] h-16">
+                <div style={{ marginTop: "16px" }}>
+                  <p style={{ ...sectionTitle, marginBottom: "8px" }}>Coherence Journey</p>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: "48px" }}>
                     {inferenceResult.steps.map((step, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-t-sm"
                         style={{
+                          flex: 1,
+                          borderRadius: "2px 2px 0 0",
                           height: `${step.state.hScore * 100}%`,
-                          backgroundColor: `hsl(var(${step.state.zone === "convergent"
-                            ? "--primary"
-                            : step.state.zone === "exploring"
-                              ? "--accent"
-                              : "--destructive"}))`,
-                          opacity: 0.7 + step.state.hScore * 0.3,
+                          background: step.state.zone === "convergent" ? KP.green
+                            : step.state.zone === "exploring" ? KP.gold : KP.red,
+                          opacity: 0.5 + step.state.hScore * 0.5,
                         }}
                         title={`Step ${i}: H=${step.state.hScore.toFixed(3)} (${step.state.zone})`}
                       />
                     ))}
-                  </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Step 0</span>
-                    <span>Step {inferenceResult.steps.length - 1}</span>
                   </div>
                 </div>
               )}
@@ -463,31 +493,37 @@ export default function AtlasProjectionLab() {
           )}
         </AnimatePresence>
 
-        {/* Baseline Comparison */}
+        {/* ── Comparison ── */}
         {baselineResult && inferenceResult && (
-          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <IconChartBar className="w-4 h-4" />
-              Coherence vs Standard Transformer
-            </h2>
+          <div style={{ ...card, marginTop: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <IconChartBar size={16} style={{ color: KP.gold }} />
+              <span style={sectionTitle}>Atlas vs Standard Transformer</span>
+            </div>
 
-            {/* Perplexity Summary Bar */}
+            {/* Perplexity */}
             {perplexityStats.atlas && perplexityStats.baseline && (
-              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase">Perplexity Comparison</span>
-                  <span className="text-xs text-muted-foreground">(lower = more coherent)</span>
+              <div
+                style={{
+                  padding: "16px", borderRadius: "12px", marginBottom: "16px",
+                  background: `linear-gradient(135deg, ${KP.gold}06, ${KP.purple}04)`,
+                  border: `1px solid ${KP.border}`,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <span style={{ ...sectionTitle }}>Perplexity</span>
+                  <span style={{ fontSize: "10px", color: KP.dim }}>lower = more coherent</span>
                 </div>
-                <div className="grid grid-cols-4 gap-3 text-center">
-                  <MetricCard
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                  <Metric
                     label="Atlas PPL"
                     value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)}
                   />
-                  <MetricCard
+                  <Metric
                     label="Baseline PPL"
                     value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)}
                   />
-                  <MetricCard
+                  <Metric
                     label="Quality Ratio"
                     value={
                       perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
@@ -503,100 +539,106 @@ export default function AtlasProjectionLab() {
                     }
                   />
                 </div>
-                {/* Visual perplexity bar comparison */}
+
+                {/* Visual bars */}
                 {perplexityStats.atlas.perplexity !== Infinity && perplexityStats.baseline.perplexity !== Infinity && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground w-16">Atlas</span>
-                      <div className="flex-1 h-3 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{
-                            width: `${Math.min(100, (perplexityStats.baseline.perplexity / Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono text-foreground w-12 text-right">{perplexityStats.atlas.perplexity.toFixed(1)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground w-16">Baseline</span>
-                      <div className="flex-1 h-3 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-accent transition-all"
-                          style={{
-                            width: `${Math.min(100, (perplexityStats.atlas.perplexity / Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono text-foreground w-12 text-right">{perplexityStats.baseline.perplexity.toFixed(1)}</span>
-                    </div>
+                  <div style={{ marginTop: "12px" }}>
+                    <PerplexityBar
+                      label="Atlas"
+                      value={perplexityStats.atlas.perplexity}
+                      maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)}
+                      color={KP.gold}
+                    />
+                    <PerplexityBar
+                      label="Baseline"
+                      value={perplexityStats.baseline.perplexity}
+                      maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)}
+                      color={KP.purple}
+                    />
                   </div>
                 )}
               </div>
             )}
 
-            {/* Per-Token NLL Line Chart */}
+            {/* Per-Token NLL */}
             {perTokenNLL.atlas.length > 0 && perTokenNLL.baseline.length > 0 && (
               <NLLChart atlas={perTokenNLL.atlas} baseline={perTokenNLL.baseline} />
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg border border-border p-3 space-y-2">
-                <h3 className="text-xs font-semibold text-primary">Atlas Coherence (O(96))</h3>
-                <div className="text-sm font-mono text-foreground">{generatedText}</div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <MetricCard label="Tok/s" value={`${inferenceResult.tokensPerSecond.toFixed(0)}`} />
-                  <MetricCard label="Time" value={`${inferenceResult.totalTimeMs.toFixed(0)}ms`} />
-                  <MetricCard label="H-score" value={inferenceResult.meanHScore.toFixed(3)} />
-                </div>
-                {perplexityStats.atlas && (
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <MetricCard label="Perplexity" value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)} />
-                    <MetricCard label="Avg NLL" value={perplexityStats.atlas.avgNLL === Infinity ? "∞" : perplexityStats.atlas.avgNLL.toFixed(3)} />
-                  </div>
-                )}
-              </div>
-              <div className="rounded-lg border border-border p-3 space-y-2">
-                <h3 className="text-xs font-semibold text-muted-foreground">Standard Attention (O(N²))</h3>
-                <div className="text-sm font-mono text-foreground">{baselineResult.text.slice(0, 200)}</div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <MetricCard label="Tok/s" value={`${baselineResult.tokensPerSecond.toFixed(0)}`} />
-                  <MetricCard label="Time" value={`${baselineResult.timeMs.toFixed(0)}ms`} />
-                  <MetricCard label="Speedup" value={`${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×`} />
-                </div>
-                {perplexityStats.baseline && (
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <MetricCard label="Perplexity" value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)} />
-                    <MetricCard label="Avg NLL" value={perplexityStats.baseline.avgNLL === Infinity ? "∞" : perplexityStats.baseline.avgNLL.toFixed(3)} />
-                  </div>
-                )}
-              </div>
+            {/* Side-by-side */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "16px" }}>
+              <ComparisonPanel
+                title="Atlas Coherence (O(96))"
+                titleColor={KP.gold}
+                text={generatedText}
+                metrics={[
+                  { label: "Tok/s", value: `${inferenceResult.tokensPerSecond.toFixed(0)}` },
+                  { label: "Time", value: `${inferenceResult.totalTimeMs.toFixed(0)}ms` },
+                  { label: "H-score", value: inferenceResult.meanHScore.toFixed(3) },
+                ]}
+                ppl={perplexityStats.atlas}
+              />
+              <ComparisonPanel
+                title="Standard Attention (O(N²))"
+                titleColor={KP.muted}
+                text={baselineResult.text.slice(0, 200)}
+                metrics={[
+                  { label: "Tok/s", value: `${baselineResult.tokensPerSecond.toFixed(0)}` },
+                  { label: "Time", value: `${baselineResult.timeMs.toFixed(0)}ms` },
+                  { label: "Speedup", value: `${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×` },
+                ]}
+                ppl={perplexityStats.baseline}
+              />
             </div>
           </div>
         )}
 
-        {/* Reports */}
+        {/* ── Reports ── */}
         {report && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReportPanel title="Atlas Projection" icon={<IconAtom className="w-4 h-4" />} content={report.projectionReport} />
-            <ReportPanel title="Holographic Codec" icon={<IconChartBar className="w-4 h-4" />} content={report.holographicReport} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
+            <ReportPanel title="Atlas Projection" icon={<IconAtom size={14} style={{ color: KP.gold }} />} content={report.projectionReport} />
+            <ReportPanel title="Holographic Codec" icon={<IconChartBar size={14} style={{ color: KP.gold }} />} content={report.holographicReport} />
           </div>
         )}
 
-        {/* Live Log */}
-        <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pipeline Log</h2>
-          <div className="h-48 overflow-y-auto font-mono text-xs text-muted-foreground space-y-0.5 bg-muted/30 rounded-lg p-2">
-            {logs.length === 0 ? (
-              <p className="opacity-50">Waiting for pipeline initialization...</p>
-            ) : (
-              logs.map((log, i) => (
-                <div key={i} className={log.includes("✓") ? "text-emerald-400" : log.includes("✗") ? "text-red-400" : ""}>
-                  {log}
-                </div>
-              ))
-            )}
-          </div>
+        {/* ── Log (collapsible) ── */}
+        <div style={{ ...card, marginTop: "16px" }}>
+          <button
+            onClick={() => setShowLogs((p) => !p)}
+            style={{
+              ...sectionTitle,
+              background: "none", border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", gap: "6px", padding: 0,
+            }}
+          >
+            Pipeline Log
+            <span style={{ fontSize: "10px", color: KP.dim, fontWeight: 400 }}>
+              {showLogs ? "▲ hide" : `▼ ${logs.length} entries`}
+            </span>
+          </button>
+
+          {showLogs && (
+            <div
+              style={{
+                marginTop: "12px", maxHeight: "180px", overflowY: "auto",
+                fontFamily: "monospace", fontSize: "11px", color: KP.dim,
+                padding: "12px", borderRadius: "10px",
+                background: `${KP.surface}`,
+                border: `1px solid ${KP.border}`,
+                lineHeight: 1.6,
+              }}
+            >
+              {logs.length === 0 ? (
+                <span style={{ opacity: 0.5 }}>Waiting for initialization…</span>
+              ) : (
+                logs.map((log, i) => (
+                  <div key={i} style={{ color: log.includes("✓") ? KP.green : log.includes("✗") ? KP.red : KP.dim }}>
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -604,28 +646,128 @@ export default function AtlasProjectionLab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Sub-components
+// Sub-components — all using KP palette
 // ═══════════════════════════════════════════════════════════════
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function LoadingPlaceholder({ text }: { text: string }) {
   return (
-    <div className="p-2 rounded-lg bg-muted/50">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-bold text-foreground">{value}</div>
+    <div style={{ padding: "24px", textAlign: "center", fontSize: "12px", color: KP.dim }}>
+      {text}
+    </div>
+  );
+}
+
+function StageIcon({ stage }: { stage: string }) {
+  if (stage === "ready") return <IconCheck size={14} style={{ color: KP.green }} />;
+  if (stage === "error") return <IconAlertTriangle size={14} style={{ color: KP.red }} />;
+  if (stage === "idle") return <IconAtom size={14} style={{ color: KP.dim }} />;
+  return <IconLoader2 size={14} style={{ color: KP.gold }} className="animate-spin" />;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: "10px", borderRadius: "10px", textAlign: "center",
+        background: KP.card, border: `1px solid ${KP.border}`,
+      }}
+    >
+      <div style={{ fontSize: "10px", color: KP.dim, marginBottom: "2px" }}>{label}</div>
+      <div style={{ fontSize: "16px", fontWeight: 700, color: KP.text, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+    </div>
+  );
+}
+
+function PerplexityBar({ label, value, maxVal, color }: { label: string; value: number; maxVal: number; color: string }) {
+  const pct = Math.min(100, (value / maxVal) * 100);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+      <span style={{ fontSize: "10px", color: KP.dim, width: "56px" }}>{label}</span>
+      <div style={{ flex: 1, height: "8px", borderRadius: "4px", background: `${KP.border}`, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: "4px", background: color, transition: "width 0.5s" }} />
+      </div>
+      <span style={{ fontSize: "10px", fontFamily: "monospace", color: KP.text, width: "48px", textAlign: "right" }}>{value.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function ComparisonPanel({ title, titleColor, text, metrics, ppl }: {
+  title: string; titleColor: string; text: string;
+  metrics: { label: string; value: string }[];
+  ppl: { perplexity: number; avgNLL: number } | null;
+}) {
+  return (
+    <div style={{ padding: "16px", borderRadius: "12px", background: KP.card, border: `1px solid ${KP.border}` }}>
+      <p style={{ fontSize: "11px", fontWeight: 600, color: titleColor, marginBottom: "10px" }}>{title}</p>
+      <div style={{ fontSize: "12px", fontFamily: "monospace", color: KP.text, lineHeight: 1.5, marginBottom: "12px" }}>{text}</div>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${metrics.length}, 1fr)`, gap: "6px" }}>
+        {metrics.map((m) => <Metric key={m.label} label={m.label} value={m.value} />)}
+      </div>
+      {ppl && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginTop: "6px" }}>
+          <Metric label="Perplexity" value={ppl.perplexity === Infinity ? "∞" : ppl.perplexity.toFixed(1)} />
+          <Metric label="Avg NLL" value={ppl.avgNLL === Infinity ? "∞" : ppl.avgNLL.toFixed(3)} />
+        </div>
+      )}
     </div>
   );
 }
 
 function ReportPanel({ title, icon, content }: { title: string; icon: React.ReactNode; content: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+    <div style={card}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
         {icon}
-        {title}
-      </h2>
-      <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded-lg p-3 overflow-auto max-h-64">
+        <span style={sectionTitle}>{title}</span>
+      </div>
+      <pre
+        style={{
+          fontSize: "11px", fontFamily: "monospace", color: KP.dim,
+          whiteSpace: "pre-wrap", padding: "12px", borderRadius: "10px",
+          background: KP.surface, border: `1px solid ${KP.border}`,
+          maxHeight: "240px", overflow: "auto", lineHeight: 1.5, margin: 0,
+        }}
+      >
         {content}
       </pre>
+    </div>
+  );
+}
+
+function QualityGradeBadge({ ratio }: { ratio: number }) {
+  let grade: string, color: string, bg: string;
+
+  if (!isFinite(ratio)) {
+    grade = "—"; color = KP.dim; bg = `${KP.dim}15`;
+  } else if (ratio <= 1.0) {
+    grade = "A"; color = KP.green; bg = `${KP.green}18`;
+  } else if (ratio <= 1.25) {
+    grade = "B"; color = "hsl(200, 50%, 55%)"; bg = "hsla(200, 50%, 55%, 0.12)";
+  } else if (ratio <= 2.0) {
+    grade = "C"; color = KP.gold; bg = `${KP.gold}15`;
+  } else {
+    grade = "D"; color = KP.red; bg = `${KP.red}15`;
+  }
+
+  return (
+    <div
+      style={{
+        padding: "10px", borderRadius: "10px", textAlign: "center",
+        background: KP.card, border: `1px solid ${KP.border}`,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <div style={{ fontSize: "10px", color: KP.dim, marginBottom: "4px" }}>Grade</div>
+      <div
+        style={{
+          width: "32px", height: "32px", borderRadius: "8px",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "16px", fontWeight: 900, color, background: bg,
+          border: `1px solid ${color}30`,
+        }}
+      >
+        {grade}
+      </div>
     </div>
   );
 }
@@ -639,8 +781,7 @@ function NLLChart({
   atlas: { index: number; nll: number; tokenStr: string }[];
   baseline: { index: number; nll: number; tokenStr: string }[];
 }) {
-  const W = 700;
-  const H = 200;
+  const W = 700, H = 200;
   const PAD = { top: 20, right: 20, bottom: 40, left: 50 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
@@ -657,10 +798,6 @@ function NLLChart({
   const buildPath = (data: { nll: number }[]) =>
     data.map((d, i) => `${i === 0 ? "M" : "L"}${toX(i, data.length).toFixed(1)},${toY(d.nll).toFixed(1)}`).join(" ");
 
-  const atlasPath = buildPath(atlas);
-  const baselinePath = buildPath(baseline);
-
-  // Y-axis ticks
   const yTicks = 5;
   const yLabels = Array.from({ length: yTicks }, (_, i) => {
     const val = minNLL + (nllRange * i) / (yTicks - 1);
@@ -668,101 +805,46 @@ function NLLChart({
   });
 
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase">Per-Token NLL Over Sequence</span>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-primary rounded-full" />
-            <span className="text-[10px] text-muted-foreground">Atlas</span>
+    <div style={{ padding: "16px", borderRadius: "12px", background: KP.card, border: `1px solid ${KP.border}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <span style={sectionTitle}>Per-Token NLL</span>
+        <div style={{ display: "flex", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <div style={{ width: "12px", height: "2px", borderRadius: "1px", background: KP.gold }} />
+            <span style={{ fontSize: "10px", color: KP.dim }}>Atlas</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-accent rounded-full" />
-            <span className="text-[10px] text-muted-foreground">Baseline</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <div style={{ width: "12px", height: "2px", borderRadius: "1px", background: KP.purple }} />
+            <span style={{ fontSize: "10px", color: KP.dim }}>Baseline</span>
           </div>
         </div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: 220 }}>
-        {/* Grid lines */}
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", maxHeight: 220 }}>
         {yLabels.map((t, i) => (
           <g key={i}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={t.y} y2={t.y} className="stroke-border" strokeWidth={0.5} strokeDasharray="4 2" />
-            <text x={PAD.left - 6} y={t.y + 3} textAnchor="end" className="fill-muted-foreground" fontSize={9}>{t.val.toFixed(1)}</text>
+            <line x1={PAD.left} x2={W - PAD.right} y1={t.y} y2={t.y} stroke={KP.border.replace("hsla", "hsla")} strokeWidth={0.5} strokeDasharray="4 2" />
+            <text x={PAD.left - 6} y={t.y + 3} textAnchor="end" fill={KP.dim} fontSize={9}>{t.val.toFixed(1)}</text>
           </g>
         ))}
-
-        {/* Axis labels */}
-        <text x={PAD.left + chartW / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>Token Position</text>
-        <text x={12} y={PAD.top + chartH / 2} textAnchor="middle" className="fill-muted-foreground" fontSize={10} transform={`rotate(-90, 12, ${PAD.top + chartH / 2})`}>NLL</text>
-
-        {/* X-axis ticks */}
+        <text x={PAD.left + chartW / 2} y={H - 4} textAnchor="middle" fill={KP.dim} fontSize={10}>Token Position</text>
+        <text x={12} y={PAD.top + chartH / 2} textAnchor="middle" fill={KP.dim} fontSize={10} transform={`rotate(-90, 12, ${PAD.top + chartH / 2})`}>NLL</text>
         {Array.from({ length: Math.min(maxLen, 8) }, (_, i) => {
           const idx = Math.round((i / Math.max(7, 1)) * (maxLen - 1));
-          return (
-            <text key={i} x={toX(idx, maxLen)} y={H - PAD.bottom + 16} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
-              {idx}
-            </text>
-          );
+          return <text key={i} x={toX(idx, maxLen)} y={H - PAD.bottom + 16} textAnchor="middle" fill={KP.dim} fontSize={9}>{idx}</text>;
         })}
-
-        {/* Baseline line */}
-        <path d={baselinePath} fill="none" className="stroke-accent" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
-
-        {/* Atlas line */}
-        <path d={atlasPath} fill="none" className="stroke-primary" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-
-        {/* Hover dots — atlas */}
+        <path d={buildPath(baseline)} fill="none" stroke={KP.purple} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
+        <path d={buildPath(atlas)} fill="none" stroke={KP.gold} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         {atlas.map((d, i) => (
-          <circle key={`a${i}`} cx={toX(i, atlas.length)} cy={toY(d.nll)} r={2.5} className="fill-primary" opacity={0.6}>
+          <circle key={`a${i}`} cx={toX(i, atlas.length)} cy={toY(d.nll)} r={2.5} fill={KP.gold} opacity={0.6}>
             <title>{`Atlas #${d.index}: NLL=${d.nll.toFixed(3)} "${d.tokenStr}"`}</title>
           </circle>
         ))}
-
-        {/* Hover dots — baseline */}
         {baseline.map((d, i) => (
-          <circle key={`b${i}`} cx={toX(i, baseline.length)} cy={toY(d.nll)} r={2} className="fill-accent" opacity={0.5}>
+          <circle key={`b${i}`} cx={toX(i, baseline.length)} cy={toY(d.nll)} r={2} fill={KP.purple} opacity={0.5}>
             <title>{`Baseline #${d.index}: NLL=${d.nll.toFixed(3)} "${d.tokenStr}"`}</title>
           </circle>
         ))}
       </svg>
-    </div>
-  );
-}
-
-function QualityGradeBadge({ ratio }: { ratio: number }) {
-  let grade: string;
-  let color: string;
-  let label: string;
-
-  if (!isFinite(ratio)) {
-    grade = "—";
-    color = "bg-muted text-muted-foreground";
-    label = "No data";
-  } else if (ratio <= 1.0) {
-    grade = "A";
-    color = "bg-emerald-500/15 text-emerald-500 border-emerald-500/30";
-    label = "Superior";
-  } else if (ratio <= 1.25) {
-    grade = "B";
-    color = "bg-sky-500/15 text-sky-500 border-sky-500/30";
-    label = "Near-parity";
-  } else if (ratio <= 2.0) {
-    grade = "C";
-    color = "bg-amber-500/15 text-amber-500 border-amber-500/30";
-    label = "Acceptable";
-  } else {
-    grade = "D";
-    color = "bg-red-500/15 text-red-500 border-red-500/30";
-    label = "Degraded";
-  }
-
-  return (
-    <div className="p-2 rounded-lg bg-muted/50 flex flex-col items-center justify-center">
-      <div className="text-xs text-muted-foreground">Grade</div>
-      <div className={`mt-1 w-9 h-9 rounded-lg border flex items-center justify-center text-lg font-black ${color}`}>
-        {grade}
-      </div>
-      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
     </div>
   );
 }
