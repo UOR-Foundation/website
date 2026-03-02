@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ProModeDeck from "./ProModeDeck";
 import { useSavedRemixes } from "../../hooks/useSavedRemixes";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
+import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
 import {
   getDefaultValues,
   buildDimensionPrompt,
@@ -139,6 +140,8 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const coherence = useCoherence();
+  // Attention aperture from kernel — drives UI compression
+  const { aperture } = useAttentionMode();
   const [voiceMode, setVoiceMode] = useState(false);
   const [triadicMode, setTriadicMode] = useState<TriadicMode>("balanced");
   const [proMode, setProMode] = useState(false);
@@ -883,6 +886,7 @@ export default function ConvergenceChat({ embedded = false, onClose, onExpand }:
                 exchange={ex}
                 isActive={idx === exchanges.length - 1 && isConverging}
                 bloomEnabled={bloomEnabled}
+                aperture={aperture}
                 isRemixSaved={isRemixSaved(ex.id)}
                 onToggleSaveRemix={(exchange) => {
                   if (isRemixSaved(exchange.id)) {

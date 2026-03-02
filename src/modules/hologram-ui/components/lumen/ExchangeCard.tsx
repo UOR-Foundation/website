@@ -11,11 +11,18 @@
  * is always visible as a subtle arc; details unfold on interaction.
  */
 
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark, Sparkles, Lock } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark, Sparkles, Lock, Focus } from "lucide-react";
+import {
+  computeCompression,
+  compressProofSummary,
+  compressTrace,
+  shouldShowElement,
+  type CompressionSchedule,
+} from "@/modules/hologram-ui/engine/attention-compression";
 
 // ── Bloom Toggle (persisted, default ON) ─────────────────────────────
 const BLOOM_KEY = "lumen:bloom-enabled";
@@ -92,6 +99,8 @@ interface ExchangeCardProps {
   onToggleSaveRemix?: (exchange: ExchangeData) => void;
   /** Global bloom toggle from parent */
   bloomEnabled?: boolean;
+  /** Attention aperture (0–1) from kernel projection. Controls detail compression. */
+  aperture?: number;
 }
 
 // ── The Eight Guarantees ─────────────────────────────────────────────
@@ -644,7 +653,10 @@ function TrustArc({ score, grade }: { score: number; grade?: string }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────
-function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix, bloomEnabled = true }: ExchangeCardProps) {
+function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onToggleSaveRemix, bloomEnabled = true, aperture = 0.5 }: ExchangeCardProps) {
+  // Compute attention-driven compression schedule
+  const compression = useMemo(() => computeCompression(aperture), [aperture]);
+
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
@@ -654,9 +666,29 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
   const active = activeGuarantees(ex.meta, ex.understanding);
   const followUps = generateFollowUps(ex.meta?.claims ?? [], ex.thought, ex.understanding);
   const traceNarrative = buildTraceNarrative(ex);
+  // Compress trace based on attention
+  const compressedTrace = useMemo(
+    () => compressTrace(traceNarrative, compression.traceDetail, ex.meta),
+    [traceNarrative, compression.traceDetail, ex.meta],
+  );
   const sources = extractSources(ex.understanding, ex.meta?.claims ?? []);
   const [traceCopied, setTraceCopied] = useState(false);
   const proof = ex.meta?.proofOfThought;
+  // Compressed proof summary for minimal mode
+  const proofSummary = useMemo(
+    () => proof ? compressProofSummary(proof) : null,
+    [proof],
+  );
+
+  // Auto-collapse expanded sections when attention focuses
+  useEffect(() => {
+    if (compression.autoCollapse) {
+      setShowTrace(false);
+      setShowVerify(false);
+      setShowGuarantees(false);
+      setShowProof(false);
+    }
+  }, [compression.autoCollapse]);
 
   const handleFollowUp = useCallback((question: string) => {
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: question }));
@@ -733,7 +765,7 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
             {isConverged && ex.meta && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: compression.trustArcScale }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <TrustArc score={score} grade={ex.meta.grade} />
@@ -761,11 +793,12 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
               enabled={bloomEnabled}
             >
               <div
-                className="text-[15px] leading-[2] prose prose-invert max-w-none"
+                className="text-[15px] leading-[2] prose prose-invert max-w-none transition-opacity duration-500"
                 style={{
                   color: "hsl(30, 12%, 74%)",
                   fontFamily: C.font,
                   letterSpacing: "0.012em",
+                  opacity: compression.responseEmphasis,
                   ['--tw-prose-headings' as string]: "hsl(38, 25%, 75%)",
                   ['--tw-prose-bold' as string]: "hsl(38, 18%, 82%)",
                   ['--tw-prose-code' as string]: "hsl(38, 50%, 62%)",
@@ -948,8 +981,40 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       </span>
                     )}
                   </div>
-                  {/* Proof Badge — always visible */}
-                  {proof && <ProofBadge proof={proof} />}
+                  {/* Proof Badge — adapts to compression level */}
+                  {proof && compression.proofDetail < 0.3 && proofSummary ? (
+                    <motion.div
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+                      style={{
+                        background: `hsla(220, 12%, 15%, 0.06)`,
+                        border: `1px solid hsla(220, 15%, 25%, 0.08)`,
+                      }}
+                      title={proofSummary.summary}
+                    >
+                      <span className="text-[7px]" style={{ color: "hsla(38, 40%, 55%, 0.5)" }}>{proofSummary.indicator}</span>
+                      <span className="text-[7px] font-mono tracking-wider" style={{ color: "hsla(220, 20%, 60%, 0.45)" }}>
+                        {proof.spectralGrade} · {proof.triadicPhase}
+                      </span>
+                    </motion.div>
+                  ) : proof ? (
+                    <ProofBadge proof={proof} />
+                  ) : null}
+
+                  {/* Compression indicator */}
+                  {compression.label !== "balanced" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 0.35, scale: 1 }}
+                      className="flex items-center gap-0.5 px-1 py-0.5 rounded-md"
+                      style={{ border: "1px solid hsla(200, 20%, 30%, 0.06)" }}
+                      title={`Attention: ${compression.label} (aperture ${(compression.aperture * 100).toFixed(0)}%)`}
+                    >
+                      <Focus className="w-2 h-2" style={{ color: "hsla(200, 30%, 55%, 0.4)" }} />
+                      <span className="text-[6px] font-mono uppercase tracking-widest" style={{ color: "hsla(200, 25%, 55%, 0.3)" }}>
+                        {compression.label}
+                      </span>
+                    </motion.div>
+                  )}
 
                   {/* Interactive toggles */}
                   <div className="flex items-center gap-1 flex-wrap">
@@ -964,27 +1029,31 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       <span className="text-[9px] tracking-[0.12em] uppercase">Trace</span>
                     </button>
 
-                    {/* Verify toggle */}
-                    <button
-                      onClick={() => setShowVerify(v => !v)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)]"
-                      style={{ color: showVerify ? "hsla(152, 45%, 55%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
-                      title="Verify and deepen"
-                    >
-                      <Shield className="w-3 h-3" />
-                      <span className="text-[9px] tracking-[0.12em] uppercase">Verify</span>
-                    </button>
+                    {/* Verify toggle — hidden when compressed */}
+                    {shouldShowElement("medium", compression) && (
+                      <button
+                        onClick={() => setShowVerify(v => !v)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)]"
+                        style={{ color: showVerify ? "hsla(152, 45%, 55%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
+                        title="Verify and deepen"
+                      >
+                        <Shield className="w-3 h-3" />
+                        <span className="text-[9px] tracking-[0.12em] uppercase">Verify</span>
+                      </button>
+                    )}
 
-                    {/* Guarantees toggle */}
-                    <button
-                      onClick={() => setShowGuarantees(v => !v)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)]"
-                      style={{ color: showGuarantees ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
-                      title="Constitutional guarantees"
-                    >
-                      <Fingerprint className="w-3 h-3" />
-                      <span className="text-[9px] tracking-[0.12em] uppercase">{active.length}</span>
-                    </button>
+                    {/* Guarantees toggle — hidden when compressed */}
+                    {shouldShowElement("low", compression) && (
+                      <button
+                        onClick={() => setShowGuarantees(v => !v)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(38,15%,25%,0.08)]"
+                        style={{ color: showGuarantees ? "hsla(38, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
+                        title="Constitutional guarantees"
+                      >
+                        <Fingerprint className="w-3 h-3" />
+                        <span className="text-[9px] tracking-[0.12em] uppercase">{active.length}</span>
+                      </button>
+                    )}
 
                     {/* Proof-of-Thought toggle */}
                     {proof && (
@@ -1071,22 +1140,30 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                           </div>
                         </div>
 
-                        {/* Human-readable narrative trace */}
+                        {/* Human-readable narrative trace — attention-compressed */}
                         <div className="space-y-2.5">
-                          {traceNarrative.map((step, i) => {
+                          {compressedTrace.map((step, i) => {
                             const isSubStep = step.startsWith("   ");
+                            const isEllipsis = step.startsWith("…");
                             return (
                               <div key={i} className="flex items-start gap-2.5" style={{ paddingLeft: isSubStep ? 16 : 0 }}>
-                                {!isSubStep && (
+                                {!isSubStep && !isEllipsis && (
                                   <div className="w-1 h-1 rounded-full mt-[7px] flex-shrink-0" style={{ background: "hsla(38, 35%, 55%, 0.25)" }} />
                                 )}
                                 {isSubStep && (
                                   <div className="w-[3px] h-[3px] rounded-sm mt-[6px] flex-shrink-0" style={{ background: gradeColor(ex.meta?.grade), opacity: 0.5 }} />
                                 )}
+                                {isEllipsis && (
+                                  <div className="w-1 h-1 rounded-full mt-[7px] flex-shrink-0" style={{ background: "hsla(200, 25%, 50%, 0.2)" }} />
+                                )}
                                 <p className="text-[12px] leading-[1.7]" style={{
-                                  color: isSubStep ? "hsla(30, 12%, 65%, 0.55)" : "hsla(30, 12%, 70%, 0.7)",
+                                  color: isEllipsis ? "hsla(200, 20%, 55%, 0.35)"
+                                    : isSubStep ? "hsla(30, 12%, 65%, 0.55)"
+                                    : "hsla(30, 12%, 70%, 0.7)",
                                   fontFamily: C.font,
                                   fontWeight: isSubStep ? 350 : 400,
+                                  fontStyle: isEllipsis ? "italic" : "normal",
+                                  fontSize: `${12 * compression.metaTypographyScale}px`,
                                 }}>
                                   {step.trim()}
                                 </p>
@@ -1301,5 +1378,6 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
 export default memo(ExchangeCard, (prev, next) => (
   prev.exchange === next.exchange &&
   prev.isActive === next.isActive &&
-  prev.pipelineSlot === next.pipelineSlot
+  prev.pipelineSlot === next.pipelineSlot &&
+  prev.aperture === next.aperture
 ));
