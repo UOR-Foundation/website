@@ -76,8 +76,8 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",       icon: Home,     action: "/hologram-console" },
-  { label: "Explore",    icon: Compass,  action: "/console/apps" },
+  { label: "Home",       icon: Home,     action: "/hologram-os" },
+  { label: "Explore",    icon: Compass,  action: "/hologram-os?open=explore" },
   { label: "Your Space", icon: User,     action: "/your-space" },
   { label: "Community",  icon: Globe,    action: "/research" },
   { label: "My Space",   icon: Shield,   action: "__myspace" },

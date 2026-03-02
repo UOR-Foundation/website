@@ -490,8 +490,8 @@ export default memo(function DesktopOsSidebar({
         <div className="flex-1 px-2 space-y-0 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
           {/* Home */}
           <NavButton icon={Home} label="Home" expanded={expanded}
-            active={isActive("/hologram-console")}
-            onAction={() => act(onGoHome || (() => navigate("/hologram-console")))} />
+            active={isActive("/hologram-os")}
+            onAction={() => act(onGoHome || (() => navigate("/hologram-os")))} />
 
           {/* My Space */}
           <NavButton icon={Fingerprint} label="My Space" expanded={expanded}
