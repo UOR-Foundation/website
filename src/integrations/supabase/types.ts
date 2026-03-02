@@ -1034,6 +1034,78 @@ export type Database = {
         }
         Relationships: []
       }
+      proof_of_thought: {
+        Row: {
+          cid: string
+          compression_ratio: number
+          conversation_id: string | null
+          created_at: string
+          drift_delta0: number
+          eigenvalues_locked: number
+          fidelity: number
+          free_parameters: number
+          id: string
+          message_id: string | null
+          receipt: Json
+          spectral_grade: string
+          triadic_phase: number
+          user_id: string
+          verified_at: string | null
+          zk_mode: boolean
+        }
+        Insert: {
+          cid: string
+          compression_ratio?: number
+          conversation_id?: string | null
+          created_at?: string
+          drift_delta0?: number
+          eigenvalues_locked?: number
+          fidelity?: number
+          free_parameters?: number
+          id?: string
+          message_id?: string | null
+          receipt?: Json
+          spectral_grade?: string
+          triadic_phase?: number
+          user_id: string
+          verified_at?: string | null
+          zk_mode?: boolean
+        }
+        Update: {
+          cid?: string
+          compression_ratio?: number
+          conversation_id?: string | null
+          created_at?: string
+          drift_delta0?: number
+          eigenvalues_locked?: number
+          fidelity?: number
+          free_parameters?: number
+          id?: string
+          message_id?: string | null
+          receipt?: Json
+          spectral_grade?: string
+          triadic_phase?: number
+          user_id?: string
+          verified_at?: string | null
+          zk_mode?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_of_thought_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_of_thought_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "ai_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reasoning_proofs: {
         Row: {
           certificate: Json | null

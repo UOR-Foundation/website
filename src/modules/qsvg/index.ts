@@ -107,3 +107,19 @@ export {
   type SpectralClosure,
   type SpectralFeedbackCycle,
 } from "./spectral-feedback";
+
+// ── Proof-of-Thought ─────────────────────────────────────────────────────────
+export {
+  createAccumulator,
+  recordIteration,
+  sealReceipt,
+  sealReceiptSync,
+  verifyProofOfThought,
+  receiptToUORCoordinate,
+  summarizeReceipt,
+  type ProofAccumulator,
+  type ProofOfThoughtReceipt,
+  type ProofSnapshot,
+  type ProofVerification,
+  type ProofCheck,
+} from "./proof-of-thought";
