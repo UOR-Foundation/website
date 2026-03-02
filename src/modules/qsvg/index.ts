@@ -9,7 +9,10 @@
  *   1. Foundational constants (δ₀, D, α, M*)
  *   2. Formal correspondences between QSVG and Atlas
  *   3. Spectral verification (CronNet-Holo operator ↔ Riemann ζ)
- *   4. Integration with the coherence/reasoning pipeline
+ *   4. Geometric units (all thresholds derived from δ₀)
+ *   5. Coherence bridge (δ₀-gated kernel coherence)
+ *   6. Spectral feedback (critical-line self-healing)
+ *   7. Integration with the coherence/reasoning pipeline
  *
  * Author: Luis Morató de Dalmases (QSVG theory)
  * Integration: Atlas / UOR Framework
@@ -56,3 +59,51 @@ export {
   spectralGrade,
   type SpectralTest,
 } from "./spectral-verification";
+
+// ── Geometric Units ──────────────────────────────────────────────────────────
+export {
+  GEOMETRIC_TICK_QUANTUM,
+  STRUCTURE_COUNT,
+  EVOLUTION_COUNT,
+  COMPLETION_NUMBER,
+  PHI,
+  GEOMETRIC_CATASTROPHE,
+  PROJECTION_FIDELITY,
+  NOISE_FLOOR,
+  HOPF_ANGLE_DEG,
+  HOPF_ANGLE_RAD,
+  ZONE_THRESHOLDS,
+  hScoreToDefects,
+  defectsToHScore,
+  spectralCoupling,
+  classifyGeometricZone,
+  triadicPhase,
+  getGeometricManifest,
+  type GeometricZone,
+  type GeometricManifest,
+} from "./geometric-units";
+
+// ── Coherence Bridge ─────────────────────────────────────────────────────────
+export {
+  measureGeometricState,
+  measureGeometricDrift,
+  computeRefocusTarget,
+  verifyGeometricClosure,
+  createGeometricReceipt,
+  type GeometricMeasurement,
+  type RefocusTarget,
+  type GeometricClosure,
+  type GeometricReceipt,
+} from "./coherence-bridge";
+
+// ── Spectral Feedback ────────────────────────────────────────────────────────
+export {
+  spectralHealth,
+  spectralCorrection,
+  spectralClosure,
+  runSpectralFeedbackCycle,
+  type SpectralHealth,
+  type SpectralCorrection,
+  type SpectralClosure,
+  type SpectralFeedbackCycle,
+} from "./spectral-feedback";
