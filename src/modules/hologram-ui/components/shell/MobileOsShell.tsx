@@ -39,8 +39,9 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home, Compass, User, Globe, Shield, Settings,
-  Sparkles, X, Download, ChevronUp, Sun, Moon,
+  Sparkles, X, Download, ChevronUp, Sun, Moon, Ear, EarOff,
 } from "lucide-react";
+import { useWakeWord } from "@/modules/hologram-ui/hooks/useWakeWord";
 import MySpacePanel from "../MySpacePanel";
 import MobileLumenBloom from "../lumen/MobileLumenBloom";
 import PwaInstallBanner from "../PwaInstallBanner";
@@ -153,13 +154,32 @@ export default function MobileOsShell() {
   const [userGlyph, setUserGlyph] = useState<string | null>(null);
   const [themeKey, setThemeKey] = useState(getPrimeTheme());
   const [orbY, setOrbY] = useState<number | undefined>(undefined);
+  const [alwaysListening, setAlwaysListening] = useState(false);
   const orbRef = useRef<HTMLButtonElement>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressRef = useRef(false);
 
   const { name } = useGreeting();
   const whisper = useAmbientWhisper();
   const pwa = usePwaInstall();
   const narrative = useNarrative(isNewUser);
   const coherence = usePortalCoherence();
+
+  // ── Wake Word: "Hi Lumen" ──────────────────────────────────────────
+  const handleWake = useCallback(() => {
+    if (orbRef.current) {
+      const rect = orbRef.current.getBoundingClientRect();
+      setOrbY(rect.top + rect.height / 2);
+    }
+    heartbeatHaptic();
+    setChatOpen(true);
+  }, []);
+
+  const wakeWord = useWakeWord({
+    onWake: handleWake,
+    wakePhrase: "hi lumen",
+    enabled: alwaysListening && !chatOpen,
+  });
 
   // Check if user is new (no glyph yet)
   useEffect(() => {
@@ -209,7 +229,30 @@ export default function MobileOsShell() {
   }, []);
 
   // ── Orb tap — instant Lumen activation ─────────────────────────────
+  const handleOrbPointerDown = useCallback(() => {
+    didLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      didLongPressRef.current = true;
+      setAlwaysListening(prev => {
+        const next = !prev;
+        if (navigator.vibrate) navigator.vibrate(next ? [30, 60, 30] : 15);
+        return next;
+      });
+    }, 600);
+  }, []);
+
+  const handleOrbPointerUp = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
   const handleLumenTap = useCallback(() => {
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return;
+    }
     // Capture orb position for bloom origin
     if (orbRef.current) {
       const rect = orbRef.current.getBoundingClientRect();
@@ -429,14 +472,30 @@ export default function MobileOsShell() {
           <button
             ref={orbRef}
             onClick={handleLumenTap}
+            onPointerDown={handleOrbPointerDown}
+            onPointerUp={handleOrbPointerUp}
+            onPointerLeave={handleOrbPointerUp}
             className="relative flex items-center justify-center active:scale-95 transition-transform duration-300"
             style={{
               width: ORB_SIZE,
               height: ORB_SIZE,
+              touchAction: "none",
               animation: "portal-orb-emanate 0.9s cubic-bezier(0.23, 1, 0.32, 1) 0.6s both",
             }}
-            aria-label="Open Lumen"
+            aria-label={alwaysListening ? "Listening for 'Hi Lumen' — tap to open" : "Open Lumen"}
           >
+            {/* Wake word sentinel ring — visible when always-listening */}
+            {alwaysListening && (
+              <div
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  inset: -(GR.xl),
+                  border: `1.5px solid hsla(185, 40%, 55%, ${wakeWord.isDetecting ? 0.35 : 0.12})`,
+                  animation: "portal-wake-sentinel 4s ease-in-out infinite",
+                  transition: "border-color 0.5s ease",
+                }}
+              />
+            )}
             {/* Outer breathing ring — synced to coherence */}
             <div
               className="absolute rounded-full pointer-events-none"
@@ -480,20 +539,33 @@ export default function MobileOsShell() {
             />
           </button>
 
-          {/* Orb label */}
-          <p
-            className="mt-3 tracking-[0.4em] uppercase text-center"
-            style={{
-              fontFamily: PP.font,
-              fontSize: "11px",
-              color: PP.textWhisper,
-              opacity: 0.6,
-              animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
-              animationDelay: "0.9s",
-            }}
-          >
-            Lumen
-          </p>
+          {/* Orb label + listening indicator */}
+          <div className="mt-3 flex items-center gap-2 justify-center">
+            {alwaysListening && (
+              <Ear
+                className="w-3 h-3"
+                strokeWidth={1.5}
+                style={{
+                  color: wakeWord.isDetecting ? "hsla(185, 50%, 60%, 0.8)" : PP.textWhisper,
+                  opacity: wakeWord.isDetecting ? 1 : 0.5,
+                  transition: "all 0.3s ease",
+                }}
+              />
+            )}
+            <p
+              className="tracking-[0.4em] uppercase text-center"
+              style={{
+                fontFamily: PP.font,
+                fontSize: "11px",
+                color: PP.textWhisper,
+                opacity: 0.6,
+                animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
+                animationDelay: "0.9s",
+              }}
+            >
+              {alwaysListening ? "Listening" : "Lumen"}
+            </p>
+          </div>
 
           {/* Drawer handle */}
           <button
@@ -670,6 +742,10 @@ export default function MobileOsShell() {
         @keyframes portal-blink-caret {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
+        }
+        @keyframes portal-wake-sentinel {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(1.08); opacity: 1; }
         }
       `}</style>
     </div>

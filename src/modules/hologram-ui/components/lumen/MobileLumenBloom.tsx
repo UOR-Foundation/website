@@ -4,8 +4,9 @@
  *
  * When the user taps the orb, Lumen expands from the orb's position
  * using center-outward radial expansion with organic flow easing.
- * This creates the feeling that Lumen *lives* inside the orb and
- * the screen becomes a conversation surface.
+ *
+ * Includes an embedded VoiceOrb at the bottom for seamless
+ * voice ↔ text interaction within the conversation surface.
  *
  * Dismissal: swipe down from top, tap close, or say "done".
  *
@@ -15,6 +16,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import HologramAiChat from "./HologramAiChat";
+import VoiceOrb from "./VoiceOrb";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 
 interface MobileLumenBloomProps {
@@ -26,21 +28,24 @@ interface MobileLumenBloomProps {
 
 /** Organic Flow easing — the signature Lumen reveal curve */
 const ORGANIC_EASE = [0.23, 1, 0.32, 1] as const;
-const BLOOM_DURATION = 0.7; // seconds — φ-inspired timing
+const BLOOM_DURATION = 0.7;
 
 export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBloomProps) {
   const [mounted, setMounted] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const swipeStartY = useRef<number | null>(null);
 
-  // Keep-alive: mount on first open, stay mounted for instant re-open
   useEffect(() => {
     if (open && !mounted) setMounted(true);
   }, [open, mounted]);
 
-  // Swipe-down to dismiss
+  // Reset voice mode when closing
+  useEffect(() => {
+    if (!open) setVoiceMode(false);
+  }, [open]);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const el = e.currentTarget;
-    // Only capture swipe-down if scrolled to top
     if (el.scrollTop <= 5) {
       swipeStartY.current = e.touches[0].clientY;
     }
@@ -53,9 +58,13 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
     if (dy > 80) onClose();
   }, [onClose]);
 
+  const handleVoiceExchange = useCallback((userText: string, assistantText: string) => {
+    // Voice exchanges are logged by the VoiceOrb internally
+    console.log("[LumenBloom] Voice exchange completed");
+  }, []);
+
   if (!mounted) return null;
 
-  // Origin point for bloom — default to bottom-center (orb position)
   const originY = orbY ?? (typeof window !== "undefined" ? window.innerHeight * 0.82 : 700);
 
   return (
@@ -86,7 +95,7 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Swipe-down indicator — visible when scrolled to top */}
+          {/* Swipe-down indicator */}
           <div
             className="flex justify-center pt-2 pb-0"
             style={{ paddingTop: `calc(env(safe-area-inset-top, 8px) + 4px)` }}
@@ -97,11 +106,26 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
             />
           </div>
 
-          {/* Lumen Chat — full height */}
+          {/* Lumen Chat — main area */}
           <div className="flex-1 overflow-hidden">
             <HologramAiChat
               open={open}
               onClose={onClose}
+            />
+          </div>
+
+          {/* Voice Orb — embedded at bottom of bloom */}
+          <div
+            className="flex justify-center"
+            style={{
+              paddingBottom: `calc(env(safe-area-inset-bottom, 12px) + ${GR.md}px)`,
+              paddingTop: `${GR.sm}px`,
+              background: `linear-gradient(to top, ${PP.canvas}, transparent)`,
+            }}
+          >
+            <VoiceOrb
+              personaId="hologram"
+              onExchange={handleVoiceExchange}
             />
           </div>
         </motion.div>
