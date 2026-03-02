@@ -197,3 +197,18 @@ export type {
   HoloMemConfig,
   HoloMemStats,
 } from "./holomem";
+
+// SharedRingBuffer — Zero-copy cross-thread tensor transfer
+export {
+  SharedRingBuffer,
+} from "./shared-ring-buffer";
+
+// Projection Worker — Off-main-thread Belt-Fiber decomposition
+export {
+  ProjectionWorkerPool,
+  getProjectionPool,
+} from "./projection-worker";
+export type {
+  ProjectionResult,
+  ProjectionProgress,
+} from "./projection-worker";
