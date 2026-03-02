@@ -254,17 +254,21 @@ export default memo(function DesktopOsSidebar({
   const isFocused = aperture >= 0.5;
 
   // Focus-responsive palette overrides — when focused, the sidebar becomes
-  // more ethereal: lower opacity borders, compressed contrast, lighter weight
+  // more ethereal: softer borders, compressed contrast, lighter weight
+  // but icons maintain sufficient contrast for usability
   const focusOverrides = useMemo((): Record<string, string> => {
     if (!isFocused) return {};
     const t = Math.min(1, (aperture - 0.3) / 0.7); // 0→1 over the focus range
     return {
-      "--sb-border": `hsla(38, 10%, 50%, ${(0.06 + (1 - t) * 0.09).toFixed(3)})`,
+      "--sb-border": `hsla(38, 10%, 50%, ${(0.04 + (1 - t) * 0.06).toFixed(3)})`,
       "--sb-hover": `hsla(30, 12%, 95%, ${(0.03 + (1 - t) * 0.05).toFixed(3)})`,
-      "--sb-shadow": `2px 0 ${8 + (1 - t) * 8}px -4px hsla(25, 10%, 0%, ${(0.08 + (1 - t) * 0.22).toFixed(2)})`,
-      "--sb-highlight": `inset -1px 0 0 hsla(38, 20%, 70%, ${(0.02 + (1 - t) * 0.04).toFixed(3)})`,
+      "--sb-shadow": `2px 0 ${4 + (1 - t) * 4}px -4px hsla(25, 10%, 0%, ${(0.05 + (1 - t) * 0.15).toFixed(2)})`,
+      "--sb-highlight": `inset -1px 0 0 hsla(38, 20%, 70%, ${(0.01 + (1 - t) * 0.03).toFixed(3)})`,
+      // Keep icon/text contrast strong enough to remain usable
+      "--sb-muted": bgMode === "white" ? "hsl(25, 8%, 40%)" : "hsl(30, 6%, 60%)",
+      "--sb-text": bgMode === "white" ? "hsl(25, 8%, 25%)" : "hsl(30, 8%, 82%)",
     };
-  }, [isFocused, aperture]);
+  }, [isFocused, aperture, bgMode]);
 
   // Flyout state for collapsed mode
   const [toolsFlyoutOpen, setToolsFlyoutOpen] = useState(false);
@@ -349,8 +353,8 @@ export default memo(function DesktopOsSidebar({
         transition: "width 200ms cubic-bezier(0.25, 0.1, 0.25, 1), background 600ms ease, border-color 600ms ease, color 600ms ease, box-shadow 600ms ease, opacity 600ms ease",
         fontFamily: "'DM Sans', system-ui, sans-serif",
         contain: "layout style",
-        // Focus: subtle opacity reduction and thinned-out feeling
-        opacity: isFocused ? 0.88 : 1,
+        // Focus: subtle opacity reduction — still clearly visible for navigation
+        opacity: isFocused ? 0.75 : 1,
       } as React.CSSProperties}
     >
       {/* ── Top: Logo / toggle ─────────────────────────────────── */}
