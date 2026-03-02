@@ -23,6 +23,7 @@ import { ShareTheLoveModal } from "../ShareTheLoveModal";
 import TextSizeControl from "../TextSizeControl";
 import { useTextSize, type TextSize } from "@/modules/hologram-ui/hooks/useTextSize";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
+import { TEEBridge } from "@/hologram/kernel/tee-bridge";
 
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
@@ -251,6 +252,17 @@ export default memo(function DesktopOsSidebar({
   const { textSize, setTextSize } = useTextSize();
   const { aperture } = useAttentionMode();
   const isFocused = aperture >= 0.5;
+
+  // TEE trust status for Genesis dot
+  const [isTrusted, setIsTrusted] = useState(false);
+  useEffect(() => {
+    const bridge = new TEEBridge();
+    bridge.detect().then(caps => {
+      if (caps.hardwareAttestation && bridge.hasCredential) {
+        setIsTrusted(true);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Focus-responsive palette overrides — when focused, the sidebar becomes
   // more ethereal: softer borders, compressed contrast, lighter weight
@@ -809,7 +821,7 @@ export default memo(function DesktopOsSidebar({
 
       {/* ── Genesis Dot — kernel heartbeat summary ────────── */}
       <div className="flex justify-center pb-3 pt-1 shrink-0">
-        <IconTooltip label="Genesis" show={!expanded}>
+        <IconTooltip label={isTrusted ? "Connected · Trusted" : "Genesis"} show={!expanded}>
           <button
             onClick={() => collapseAndDo(() => setGenesisOpen(true))}
             className="group relative flex items-center justify-center transition-all duration-300"
@@ -828,18 +840,22 @@ export default memo(function DesktopOsSidebar({
               style={{
                 width: "8px",
                 height: "8px",
-                background: "hsla(38, 50%, 60%, 0.85)",
-                boxShadow: `0 0 calc(8px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.2 + 0.4 * var(--h-score, 0.5))), 0 0 calc(3px + 6px * var(--h-score, 0.5)) hsla(38, 50%, 55%, 0.3)`,
-                animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
+                background: isTrusted ? "hsla(142, 55%, 50%, 0.9)" : "hsla(38, 50%, 60%, 0.85)",
+                boxShadow: isTrusted
+                  ? `0 0 10px hsla(142, 55%, 50%, 0.5), 0 0 4px hsla(142, 55%, 50%, 0.3)`
+                  : `0 0 calc(8px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.2 + 0.4 * var(--h-score, 0.5))), 0 0 calc(3px + 6px * var(--h-score, 0.5)) hsla(38, 50%, 55%, 0.3)`,
+                animation: isTrusted
+                  ? "none"
+                  : "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
                 flexShrink: 0,
               }}
             />
             {expanded && (
               <span
                 className="text-[13px] font-light tracking-wide ml-3 whitespace-nowrap"
-                style={{ color: "var(--sb-gold)" }}
+                style={{ color: isTrusted ? "hsl(142, 40%, 60%)" : "var(--sb-gold)" }}
               >
-                Genesis
+                {isTrusted ? "Connected" : "Genesis"}
               </span>
             )}
           </button>
