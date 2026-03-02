@@ -1,11 +1,13 @@
 /**
- * Kernel Task Manager — System monitor overlay inspired by Windows Task Manager.
- * ═══════════════════════════════════════════════════════════════════════════════
+ * Kernel Task Manager — Afterburner-inspired system monitor
+ * ═══════════════════════════════════════════════════════════
  *
- * Toggle with Ctrl+Shift+D. Centered modal with tabs:
- *   Processes · Performance · System · Details
+ * Toggle with Ctrl+Shift+D. Futuristic hardware monitoring aesthetic
+ * inspired by MSI Afterburner — segmented bars, large readouts,
+ * beveled panels — adapted to the Hologram OS warm palette.
  *
- * All labels are jargon-free. Designed for maximum familiarity.
+ * Designed to be instantly intuitive for anyone who has ever used
+ * a system monitor on any platform.
  */
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -46,6 +48,35 @@ interface Stats {
   frameDrops: number;
 }
 
+// ─── Design Tokens ──────────────────────────────────────────────────────
+
+const DT = {
+  // Afterburner-inspired palette layered onto Hologram warmth
+  panelBg: "hsla(220, 12%, 7%, 0.97)",
+  panelBorder: "hsla(200, 15%, 25%, 0.35)",
+  sectionBg: "hsla(210, 10%, 10%, 0.7)",
+  sectionBorder: "hsla(200, 12%, 30%, 0.2)",
+  insetBg: "hsla(210, 12%, 6%, 0.8)",
+  insetBorder: "hsla(200, 10%, 22%, 0.25)",
+  // Accents
+  cyan: "hsl(185, 70%, 50%)",
+  cyanDim: "hsl(185, 40%, 30%)",
+  cyanGlow: "hsla(185, 70%, 50%, 0.15)",
+  gold: "hsl(38, 60%, 55%)",
+  goldDim: "hsl(38, 30%, 35%)",
+  green: "hsl(152, 55%, 50%)",
+  red: "hsl(0, 60%, 55%)",
+  purple: "hsl(270, 50%, 60%)",
+  // Text
+  textBright: "hsl(200, 15%, 90%)",
+  textLabel: "hsl(200, 8%, 55%)",
+  textDim: "hsl(210, 6%, 35%)",
+  textValue: "hsl(185, 60%, 75%)",
+  // Font
+  mono: "'DM Sans', 'SF Mono', 'Consolas', monospace",
+  font: "'DM Sans', system-ui, sans-serif",
+} as const;
+
 // ─── Sparkline History ──────────────────────────────────────────────────
 
 function useHistory(value: number, maxLen = 60) {
@@ -55,55 +86,131 @@ function useHistory(value: number, maxLen = 60) {
   return ref.current;
 }
 
-// ─── Shared Sub-components ──────────────────────────────────────────────
+// ─── Shared Sub-components — Afterburner Style ──────────────────────────
 
-function Sparkline({ data, color, height = 48, label }: { data: number[]; color: string; height?: number; label?: string }) {
-  const max = Math.max(...data, 1);
-  const w = 280;
-  const points = data.map((v, i) => {
-    const x = (i / Math.max(data.length - 1, 1)) * w;
-    const y = height - (v / max) * (height - 4);
-    return `${x},${y}`;
-  }).join(" ");
-
-  const fillPoints = `0,${height} ${points} ${w},${height}`;
-
+/** Segmented bar graph like MSI Afterburner's frequency/temp bars */
+function SegmentedBar({
+  value,
+  max,
+  segments = 20,
+  color,
+  label,
+  unit,
+  showValue = true,
+}: {
+  value: number;
+  max: number;
+  segments?: number;
+  color: string;
+  label: string;
+  unit: string;
+  showValue?: boolean;
+}) {
+  const filled = Math.round((value / Math.max(max, 1)) * segments);
   return (
-    <div className="relative" style={{ width: w, height }}>
-      <svg width={w} height={height} className="overflow-visible">
-        <defs>
-          <linearGradient id={`sg-${color.replace(/[^a-z0-9]/gi, "")}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
-        <polygon points={fillPoints} fill={`url(#sg-${color.replace(/[^a-z0-9]/gi, "")})`} />
-        <polyline points={points} fill="none" stroke={color} strokeWidth={1.5} />
-      </svg>
-      {label && (
-        <span className="absolute top-0 right-0 text-[9px] opacity-60" style={{ color: KP.muted, fontFamily: KP.font }}>
-          {label}
-        </span>
+    <div className="flex items-center gap-3 py-1.5">
+      <span className="text-[10px] uppercase tracking-[0.15em] w-14 shrink-0 text-right" style={{ color: DT.textLabel, fontFamily: DT.mono }}>
+        {label}
+      </span>
+      <div className="flex gap-[2px] flex-1">
+        {Array.from({ length: segments }).map((_, i) => (
+          <div
+            key={i}
+            className="h-3 flex-1 rounded-[1px] transition-all duration-150"
+            style={{
+              background: i < filled ? color : "hsla(210, 8%, 18%, 0.5)",
+              boxShadow: i < filled ? `0 0 4px ${color}40` : "none",
+              opacity: i < filled ? (0.5 + (i / segments) * 0.5) : 0.3,
+            }}
+          />
+        ))}
+      </div>
+      {showValue && (
+        <div className="flex items-baseline gap-1 min-w-[72px] justify-end">
+          <span className="text-lg font-bold tabular-nums" style={{ color: DT.textBright, fontFamily: DT.mono }}>
+            {typeof value === "number" ? (value >= 1000 ? Math.round(value).toLocaleString() : value.toFixed(value < 10 ? 1 : 0)) : value}
+          </span>
+          <span className="text-[9px] uppercase" style={{ color: DT.textDim }}>{unit}</span>
+        </div>
       )}
+    </div>
+  );
+}
+
+/** Large readout with label — like MSI's primary readings */
+function Readout({
+  label,
+  value,
+  unit,
+  color = DT.textBright,
+  size = "lg",
+  sub,
+}: {
+  label: string;
+  value: string | number;
+  unit: string;
+  color?: string;
+  size?: "sm" | "lg";
+  sub?: string;
+}) {
+  return (
+    <div className="text-center">
+      <div className="text-[9px] uppercase tracking-[0.2em] mb-1" style={{ color: DT.textDim, fontFamily: DT.mono }}>
+        {label}
+      </div>
+      <div className="flex items-baseline justify-center gap-1">
+        <span
+          className={`font-bold tabular-nums ${size === "lg" ? "text-2xl" : "text-lg"}`}
+          style={{ color, fontFamily: DT.mono }}
+        >
+          {value}
+        </span>
+        <span className="text-[10px] uppercase" style={{ color: DT.textDim }}>{unit}</span>
+      </div>
+      {sub && <div className="text-[9px] mt-0.5" style={{ color: DT.textDim }}>{sub}</div>}
+    </div>
+  );
+}
+
+/** Inset panel with beveled look */
+function InsetPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`rounded-lg p-3 ${className}`}
+      style={{
+        background: DT.insetBg,
+        border: `1px solid ${DT.insetBorder}`,
+        boxShadow: `inset 0 1px 3px hsla(210, 15%, 0%, 0.4), 0 1px 0 hsla(200, 10%, 30%, 0.06)`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Section with header — like Afterburner's VOLTAGE / CLOCK / FAN tabs */
+function Section({ icon, title, children }: { icon?: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2.5">
+        {icon && <span style={{ color: DT.cyan }}>{icon}</span>}
+        <span className="text-[10px] uppercase tracking-[0.2em] font-semibold" style={{ color: DT.cyan, fontFamily: DT.mono }}>
+          {title}
+        </span>
+        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${DT.cyanDim}, transparent)` }} />
+      </div>
+      {children}
     </div>
   );
 }
 
 function MetricRow({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
   return (
-    <div className="flex justify-between items-center py-0.5">
-      <span className="text-xs" style={{ color: KP.muted }}>{label}</span>
-      <span className="text-xs font-medium tabular-nums" style={{ color: accent ?? KP.text }}>
+    <div className="flex justify-between items-center py-[3px]">
+      <span className="text-[11px]" style={{ color: DT.textLabel, fontFamily: DT.mono }}>{label}</span>
+      <span className="text-[11px] font-medium tabular-nums" style={{ color: accent ?? DT.textBright, fontFamily: DT.mono }}>
         {value}
       </span>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <div className="text-[10px] uppercase tracking-widest mb-1.5 mt-3 first:mt-0" style={{ color: KP.dim }}>
-      {children}
     </div>
   );
 }
@@ -112,23 +219,81 @@ function StatusDot({ active }: { active: boolean }) {
   return (
     <span
       className="inline-block w-1.5 h-1.5 rounded-full mr-1.5"
-      style={{ background: active ? KP.green : KP.dim }}
+      style={{
+        background: active ? DT.green : DT.textDim,
+        boxShadow: active ? `0 0 6px ${DT.green}60` : "none",
+      }}
     />
   );
 }
 
-function UsageBar({ value, max = 100, color, label }: { value: number; max?: number; color: string; label: string }) {
-  const pct = Math.min(100, (value / max) * 100);
+/** Sparkline with gradient fill */
+function Sparkline({ data, color, height = 48, label }: { data: number[]; color: string; height?: number; label?: string }) {
+  const max = Math.max(...data, 1);
+  const w = 320;
+  const points = data.map((v, i) => {
+    const x = (i / Math.max(data.length - 1, 1)) * w;
+    const y = height - (v / max) * (height - 4);
+    return `${x},${y}`;
+  }).join(" ");
+
+  const fillPoints = `0,${height} ${points} ${w},${height}`;
+  const gradId = `sg-${color.replace(/[^a-z0-9]/gi, "")}`;
+
+  return (
+    <div className="relative" style={{ width: "100%", height }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" className="overflow-visible">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <polygon points={fillPoints} fill={`url(#${gradId})`} />
+        <polyline points={points} fill="none" stroke={color} strokeWidth={1.5} />
+        {/* Latest value dot */}
+        {data.length > 0 && (() => {
+          const lastX = w;
+          const lastY = height - (data[data.length - 1] / max) * (height - 4);
+          return <circle cx={lastX} cy={lastY} r={2.5} fill={color} style={{ filter: `drop-shadow(0 0 3px ${color})` }} />;
+        })()}
+      </svg>
+      {label && (
+        <span className="absolute top-0 right-1 text-[8px] tracking-wider uppercase" style={{ color: DT.textDim, fontFamily: DT.mono }}>
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Horizontal slider-style gauge */
+function SliderGauge({ value, max, color, label, displayValue }: { value: number; max: number; color: string; label: string; displayValue: string }) {
+  const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-[11px]">
-        <span style={{ color: KP.muted }}>{label}</span>
-        <span className="tabular-nums" style={{ color }}>{pct.toFixed(0)}%</span>
+      <div className="flex justify-between text-[10px]" style={{ fontFamily: DT.mono }}>
+        <span style={{ color: DT.textLabel }}>{label}</span>
+        <span className="tabular-nums" style={{ color: DT.textBright }}>{displayValue}</span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "hsla(30, 8%, 20%, 0.6)" }}>
+      <div className="h-[6px] rounded-full overflow-hidden relative" style={{ background: "hsla(210, 8%, 15%, 0.8)", boxShadow: "inset 0 1px 2px hsla(0,0%,0%,0.4)" }}>
         <div
-          className="h-full rounded-full transition-all duration-200"
-          style={{ width: `${pct}%`, background: color }}
+          className="h-full rounded-full transition-all duration-300"
+          style={{
+            width: `${pct}%`,
+            background: `linear-gradient(90deg, ${color}90, ${color})`,
+            boxShadow: `0 0 8px ${color}40`,
+          }}
+        />
+        {/* Thumb dot */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 transition-all duration-300"
+          style={{
+            left: `calc(${pct}% - 5px)`,
+            background: DT.panelBg,
+            borderColor: color,
+            boxShadow: `0 0 6px ${color}60`,
+          }}
         />
       </div>
     </div>
@@ -145,38 +310,43 @@ function ProcessesTab({ stats }: { stats: Stats }) {
   return (
     <div className="space-y-3">
       {/* Header row */}
-      <div className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 text-[10px] uppercase tracking-wider pb-1"
-        style={{ color: KP.dim, borderBottom: `1px solid ${KP.cardBorder}` }}>
-        <span>Name</span>
+      <div
+        className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 text-[9px] uppercase tracking-[0.15em] pb-2"
+        style={{ color: DT.textDim, borderBottom: `1px solid ${DT.sectionBorder}`, fontFamily: DT.mono }}
+      >
+        <span>Process</span>
         <span className="text-right">Status</span>
-        <span className="text-right">Score</span>
+        <span className="text-right">H-Score</span>
         <span className="text-right">CPU</span>
-        <span className="text-right">Children</span>
+        <span className="text-right">Sub</span>
       </div>
 
       {/* Process rows */}
       {processes.map((p) => {
-        const zoneColor = p.zone === "convergent" ? KP.green : p.zone === "exploring" ? KP.gold : KP.red;
+        const zoneColor = p.zone === "convergent" ? DT.green : p.zone === "exploring" ? DT.gold : DT.red;
         return (
           <div
             key={p.pid}
-            className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 items-center text-xs py-0.5 rounded px-1 hover:bg-white/[0.02] transition-colors"
+            className="grid grid-cols-[1fr_70px_60px_60px_60px] gap-2 items-center text-[11px] py-1 rounded px-2 transition-colors"
+            style={{ fontFamily: DT.mono }}
+            onMouseEnter={e => (e.currentTarget.style.background = "hsla(185, 10%, 15%, 0.3)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
-            <span className="flex items-center gap-1.5" style={{ color: KP.text }}>
+            <span className="flex items-center gap-1.5" style={{ color: DT.textBright }}>
               <StatusDot active={p.state === "running"} />
               <span className="truncate">{p.name}</span>
-              <span className="text-[9px] opacity-40">#{p.pid}</span>
+              <span className="text-[8px]" style={{ color: DT.textDim }}>#{p.pid}</span>
             </span>
-            <span className="text-right capitalize text-[11px]" style={{ color: zoneColor }}>
+            <span className="text-right capitalize" style={{ color: zoneColor }}>
               {p.zone === "convergent" ? "Stable" : p.zone === "exploring" ? "Active" : "Unstable"}
             </span>
-            <span className="text-right tabular-nums" style={{ color: KP.muted }}>
+            <span className="text-right tabular-nums" style={{ color: DT.textLabel }}>
               {(p.hScore * 100).toFixed(0)}%
             </span>
-            <span className="text-right tabular-nums" style={{ color: KP.muted }}>
+            <span className="text-right tabular-nums" style={{ color: DT.textLabel }}>
               {p.cpuMs.toFixed(0)}ms
             </span>
-            <span className="text-right tabular-nums" style={{ color: KP.muted }}>
+            <span className="text-right tabular-nums" style={{ color: DT.textLabel }}>
               {p.childCount}
             </span>
           </div>
@@ -184,15 +354,17 @@ function ProcessesTab({ stats }: { stats: Stats }) {
       })}
 
       {processes.length === 0 && (
-        <div className="text-center py-8 text-sm" style={{ color: KP.dim }}>No active processes</div>
+        <div className="text-center py-8 text-sm" style={{ color: DT.textDim }}>No active processes</div>
       )}
 
       {/* Summary bar */}
-      <div className="flex gap-4 pt-2 text-[11px]" style={{ borderTop: `1px solid ${KP.cardBorder}`, color: KP.muted }}>
-        <span>Processes: <strong style={{ color: KP.text }}>{processes.length}</strong></span>
-        <span>Listeners: <strong style={{ color: KP.text }}>{stats.listenerCount}</strong></span>
-        <span>Frame rate: <strong style={{ color: KP.text }}>{stats.tickRateHz} Hz</strong></span>
-      </div>
+      <InsetPanel>
+        <div className="flex gap-6 text-[10px]" style={{ color: DT.textLabel, fontFamily: DT.mono }}>
+          <span>Processes: <strong style={{ color: DT.cyan }}>{processes.length}</strong></span>
+          <span>Listeners: <strong style={{ color: DT.cyan }}>{stats.listenerCount}</strong></span>
+          <span>Frame rate: <strong style={{ color: DT.cyan }}>{stats.tickRateHz} Hz</strong></span>
+        </div>
+      </InsetPanel>
     </div>
   );
 }
@@ -201,133 +373,64 @@ function PerformanceTab({ stats }: { stats: Stats }) {
   const fpsHistory = useHistory(stats.measuredFps);
   const tickRateHistory = useHistory(stats.kernelTickRateHz);
   const renderHistory = useHistory(stats.renderCount);
-  const frameDropHistory = useHistory(stats.frameDrops);
 
-  // Health assessment
   const fpsHealth = stats.measuredFps >= stats.displayRefreshHz * 0.9 ? "excellent"
     : stats.measuredFps >= 30 ? "good"
     : stats.measuredFps >= 15 ? "degraded" : "poor";
-  const fpsColor = fpsHealth === "excellent" ? KP.green : fpsHealth === "good" ? KP.gold : KP.red;
+  const fpsColor = fpsHealth === "excellent" ? DT.green : fpsHealth === "good" ? DT.gold : DT.red;
 
   return (
     <div className="space-y-4">
-      {/* ── Live Gauges Row ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-3">
-        {/* FPS Gauge */}
-        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>FPS</div>
-          <div className="text-2xl font-bold tabular-nums" style={{ color: fpsColor }}>
-            {stats.measuredFps.toFixed(0)}
-          </div>
-          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
-            {fpsHealth === "excellent" ? "✓ Smooth" : fpsHealth === "good" ? "~ Acceptable" : "⚠ Dropping"}
-          </div>
-        </div>
+      {/* ── Top readout bar — like Afterburner's GPU/MEM/VOLT/TEMP ─── */}
+      <InsetPanel>
+        <SegmentedBar value={stats.measuredFps} max={stats.displayRefreshHz} segments={24} color={fpsColor} label="FPS" unit="fps" />
+        <SegmentedBar value={stats.kernelTickRateHz} max={stats.displayRefreshHz} segments={24} color={DT.purple} label="TICK" unit="Hz" />
+        <SegmentedBar value={stats.renderCount} max={200} segments={24} color={DT.gold} label="RNDR" unit="/s" />
+        <SegmentedBar value={stats.frameDrops} max={10} segments={24} color={stats.frameDrops > 0 ? DT.red : DT.green} label="DROP" unit="frames" />
+      </InsetPanel>
 
-        {/* Kernel Tick Rate */}
-        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Tick Rate</div>
-          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.isActive ? KP.purple : KP.dim }}>
-            {stats.kernelTickRateHz}
+      {/* ── Live sparklines ──────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        <InsetPanel>
+          <div className="flex justify-between items-baseline mb-2">
+            <span className="text-[9px] uppercase tracking-[0.15em]" style={{ color: DT.textDim, fontFamily: DT.mono }}>Frame Rate</span>
+            <span className="text-sm tabular-nums font-bold" style={{ color: fpsColor, fontFamily: DT.mono }}>
+              {stats.measuredFps.toFixed(0)}
+            </span>
           </div>
-          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
-            Hz · {stats.isActive ? "Active" : "Idle"}
+          <Sparkline data={fpsHistory} color={fpsColor} height={40} />
+        </InsetPanel>
+        <InsetPanel>
+          <div className="flex justify-between items-baseline mb-2">
+            <span className="text-[9px] uppercase tracking-[0.15em]" style={{ color: DT.textDim, fontFamily: DT.mono }}>Kernel Tick</span>
+            <span className="text-sm tabular-nums font-bold" style={{ color: DT.purple, fontFamily: DT.mono }}>
+              {stats.kernelTickRateHz}Hz
+            </span>
           </div>
-        </div>
-
-        {/* Re-render Count */}
-        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Renders</div>
-          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.renderCount > 120 ? KP.gold : KP.green }}>
-            {stats.renderCount > 999 ? `${(stats.renderCount / 1000).toFixed(1)}k` : stats.renderCount}
-          </div>
-          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
-            per second
-          </div>
-        </div>
-
-        {/* Frame Drops */}
-        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Drops</div>
-          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.frameDrops > 0 ? KP.red : KP.green }}>
-            {stats.frameDrops}
-          </div>
-          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
-            {stats.frameDrops === 0 ? "✓ None" : "frames missed"}
-          </div>
-        </div>
+          <Sparkline data={tickRateHistory} color={DT.purple} height={40} />
+        </InsetPanel>
       </div>
 
-      {/* ── FPS Sparkline ────────────────────────────────────────────── */}
-      <div>
-        <div className="flex justify-between items-baseline mb-2">
-          <span className="text-sm font-medium" style={{ color: KP.text }}>Frame Rate Over Time</span>
-          <span className="text-lg tabular-nums font-semibold" style={{ color: fpsColor }}>
-            {stats.measuredFps.toFixed(1)} <span className="text-xs font-normal" style={{ color: KP.muted }}>fps</span>
-          </span>
-        </div>
-        <Sparkline data={fpsHistory} color="hsl(152, 44%, 50%)" label="60 samples" />
-        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
-          How many frames your display paints per second. Should match your display's {stats.displayRefreshHz}Hz refresh rate.
-          Dips indicate the system is doing heavy work or re-rendering too many components.
-        </div>
-      </div>
+      {/* ── Gauges row ───────────────────────────────────────────── */}
+      <InsetPanel>
+        <Section title="System Gauges">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <SliderGauge value={stats.measuredFps} max={stats.displayRefreshHz} color={fpsColor} label="FPS Load" displayValue={`${((stats.measuredFps / stats.displayRefreshHz) * 100).toFixed(0)}%`} />
+            <SliderGauge value={stats.interpPhase * 100} max={100} color={DT.cyan} label="Interp Phase" displayValue={`${(stats.interpPhase * 100).toFixed(0)}%`} />
+            <SliderGauge value={stats.renderCount} max={200} color={DT.gold} label="Render Load" displayValue={`${stats.renderCount}/s`} />
+            <SliderGauge value={stats.lastFrameAge} max={100} color={stats.lastFrameAge > 50 ? DT.gold : DT.green} label="Frame Age" displayValue={`${stats.lastFrameAge.toFixed(0)}ms`} />
+          </div>
+        </Section>
+      </InsetPanel>
 
-      {/* ── Kernel Tick Sparkline ─────────────────────────────────────── */}
-      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <div className="flex justify-between items-baseline mb-2">
-          <span className="text-sm font-medium" style={{ color: KP.text }}>Kernel Tick Rate</span>
-          <span className="text-base tabular-nums font-semibold" style={{ color: KP.purple }}>
-            {stats.kernelTickRateHz} <span className="text-xs font-normal" style={{ color: KP.muted }}>Hz</span>
-          </span>
-        </div>
-        <Sparkline data={tickRateHistory} color="hsl(280, 45%, 60%)" height={32} label="ticks/sec" />
-        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
-          How often the kernel recomputes the projection frame. Runs at {stats.displayRefreshHz}Hz when active (responding to your input),
-          drops to 10Hz when idle to save energy. The system automatically scales between these rates.
-        </div>
-      </div>
-
-      {/* ── Re-render Sparkline ──────────────────────────────────────── */}
-      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <div className="flex justify-between items-baseline mb-2">
-          <span className="text-sm font-medium" style={{ color: KP.text }}>React Renders</span>
-          <span className="text-base tabular-nums font-semibold" style={{ color: stats.renderCount > 120 ? KP.gold : KP.green }}>
-            {stats.renderCount} <span className="text-xs font-normal" style={{ color: KP.muted }}>/sec</span>
-          </span>
-        </div>
-        <Sparkline data={renderHistory} color="hsl(38, 60%, 55%)" height={32} label="renders/sec" />
-        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
-          How many React component re-renders occur per second. Low numbers mean the system is efficiently
-          skipping unnecessary updates. High numbers (&gt;120) may indicate components reacting to every kernel tick.
-        </div>
-      </div>
-
-      {/* ── Detailed Metrics Grid ────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1 pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <MetricRow label="Display refresh" value={`${stats.displayRefreshHz} Hz`} />
+      {/* ── Detail grid ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1 px-1">
+        <MetricRow label="Display refresh" value={`${stats.displayRefreshHz} Hz`} accent={DT.cyan} />
         <MetricRow label="Pixel density" value={`${stats.displayDpr.toFixed(1)}x`} />
-        <MetricRow label="Quality tier" value={stats.displayQuality === "ultra" ? "Ultra" : stats.displayQuality === "standard" ? "Standard" : "Basic"} accent={stats.displayQuality === "ultra" ? KP.green : stats.displayQuality === "standard" ? KP.gold : KP.dim} />
-        <MetricRow label="GPU tier" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} accent={stats.displayGpuTier === "high" ? KP.green : stats.displayGpuTier === "mid" ? KP.gold : KP.dim} />
-        <MetricRow label="Frame age" value={`${stats.lastFrameAge.toFixed(0)} ms`} accent={stats.lastFrameAge > 150 ? KP.gold : KP.muted} />
-        <MetricRow label="Smoothing" value={stats.interpSleeping ? "Sleeping (idle)" : stats.interpHasPrev ? "Blending" : "Instant"} accent={stats.interpSleeping ? KP.dim : KP.green} />
-      </div>
-
-      {/* ── Health Summary ────────────────────────────────────────────── */}
-      <div className="rounded-lg p-3" style={{ background: fpsHealth === "excellent" ? "hsla(152, 30%, 15%, 0.4)" : fpsHealth === "good" ? "hsla(38, 30%, 15%, 0.4)" : "hsla(0, 30%, 15%, 0.4)", border: `1px solid ${KP.cardBorder}` }}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold" style={{ color: fpsColor }}>
-            {fpsHealth === "excellent" ? "✓ Excellent Performance" : fpsHealth === "good" ? "~ Good Performance" : fpsHealth === "degraded" ? "⚠ Degraded Performance" : "✗ Poor Performance"}
-          </span>
-        </div>
-        <div className="text-[10px] leading-relaxed" style={{ color: KP.muted }}>
-          {fpsHealth === "excellent"
-            ? `Your system is running at peak efficiency. FPS matches your ${stats.displayRefreshHz}Hz display. Kernel tick rate adapts automatically, and React renders are minimal.`
-            : fpsHealth === "good"
-            ? `Performance is acceptable but not at native refresh rate. The kernel is compensating with frame interpolation to maintain smooth visuals.`
-            : `Frame rate is below optimal. The kernel has reduced tick rate to conserve resources. Consider closing unused panels or reducing animation complexity.`
-          }
-        </div>
+        <MetricRow label="Quality tier" value={stats.displayQuality === "ultra" ? "Ultra" : stats.displayQuality === "standard" ? "Standard" : "Basic"} accent={stats.displayQuality === "ultra" ? DT.green : DT.gold} />
+        <MetricRow label="GPU tier" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} accent={stats.displayGpuTier === "high" ? DT.green : DT.gold} />
+        <MetricRow label="Smoothing" value={stats.interpSleeping ? "Sleeping" : stats.interpHasPrev ? "Blending" : "Instant"} accent={stats.interpSleeping ? DT.textDim : DT.green} />
+        <MetricRow label="Frame drops" value={stats.frameDrops} accent={stats.frameDrops === 0 ? DT.green : DT.red} />
       </div>
     </div>
   );
@@ -339,110 +442,95 @@ function SystemTab({ stats }: { stats: Stats }) {
 
   return (
     <div className="space-y-4">
-      {/* System Overview */}
+      {/* Top readout cards */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Engine</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: stats.isActive ? KP.green : KP.muted }}>
-            {stats.isActive ? "Active" : "Idle"}
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>
-            {stats.tickCount.toLocaleString()} frames rendered
-          </div>
-        </div>
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Coherence</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: frame.systemCoherence.zone === "convergent" ? KP.green : KP.gold }}>
-            {(frame.systemCoherence.meanH * 100).toFixed(0)}%
-          </div>
-          <div className="text-[10px] mt-1 capitalize" style={{ color: KP.dim }}>
-            {frame.systemCoherence.zone === "convergent" ? "Stable" : frame.systemCoherence.zone === "exploring" ? "Adapting" : "Unstable"}
-          </div>
-        </div>
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Focus</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: KP.purple }}>
-            {(frame.attention.aperture * 100).toFixed(0)}%
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>
-            {frame.attention.preset === "focus" ? "Deep focus" : "Relaxed"}
-          </div>
-        </div>
+        <InsetPanel className="text-center">
+          <Readout label="Engine" value={stats.isActive ? "ON" : "IDLE"} unit="" color={stats.isActive ? DT.green : DT.textDim} size="sm" sub={`${stats.tickCount.toLocaleString()} frames`} />
+        </InsetPanel>
+        <InsetPanel className="text-center">
+          <Readout label="Coherence" value={`${(frame.systemCoherence.meanH * 100).toFixed(0)}`} unit="%" color={frame.systemCoherence.zone === "convergent" ? DT.green : DT.gold} size="sm" sub={frame.systemCoherence.zone === "convergent" ? "Stable" : "Adapting"} />
+        </InsetPanel>
+        <InsetPanel className="text-center">
+          <Readout label="Focus" value={`${(frame.attention.aperture * 100).toFixed(0)}`} unit="%" color={DT.purple} size="sm" sub={frame.attention.preset === "focus" ? "Deep focus" : "Relaxed"} />
+        </InsetPanel>
       </div>
 
-      {/* Breathing & Rhythm */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Your Rhythm</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Breathing pace" value={`${(stats.breathPeriodMs / 1000).toFixed(1)}s per cycle`} accent={KP.purple} />
-          <MetricRow label="Interactions" value={stats.breathEventCount.toLocaleString()} />
-          <MetricRow label="Rhythm samples" value={`${stats.breathIntervalCount} of 20`} />
-          {stats.breathDwellMs > 0 && (
-            <MetricRow label="Time since last action" value={`${(stats.breathDwellMs / 1000).toFixed(1)}s`} accent={stats.breathDwellMs > 5000 ? KP.gold : KP.muted} />
-          )}
-        </div>
-      </div>
+      {/* Rhythm */}
+      <InsetPanel>
+        <Section title="Your Rhythm">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="Breathing pace" value={`${(stats.breathPeriodMs / 1000).toFixed(1)}s`} accent={DT.purple} />
+            <MetricRow label="Interactions" value={stats.breathEventCount.toLocaleString()} />
+            <MetricRow label="Rhythm samples" value={`${stats.breathIntervalCount} / 20`} />
+            {stats.breathDwellMs > 0 && (
+              <MetricRow label="Idle time" value={`${(stats.breathDwellMs / 1000).toFixed(1)}s`} accent={stats.breathDwellMs > 5000 ? DT.gold : DT.textLabel} />
+            )}
+          </div>
+        </Section>
+      </InsetPanel>
 
-      {/* Typography & Display */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Display</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Refresh rate" value={`${stats.displayRefreshHz} Hz`} />
-          <MetricRow label="Pixel density" value={`${stats.displayDpr.toFixed(1)}x`} />
-          <MetricRow label="Graphics quality" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} />
-          <MetricRow label="Text scale" value={`${(frame.typography.userScale * 100).toFixed(0)}%`} />
-        </div>
-      </div>
+      {/* Display */}
+      <InsetPanel>
+        <Section title="Display">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="Refresh rate" value={`${stats.displayRefreshHz} Hz`} accent={DT.cyan} />
+            <MetricRow label="Pixel density" value={`${stats.displayDpr.toFixed(1)}x`} />
+            <MetricRow label="Graphics quality" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} />
+            <MetricRow label="Text scale" value={`${(frame.typography.userScale * 100).toFixed(0)}%`} />
+          </div>
+        </Section>
+      </InsetPanel>
     </div>
   );
 }
 
 function DetailsTab({ stats }: { stats: Stats }) {
   return (
-    <div className="space-y-3">
-      <SectionLabel>Rendering Engine</SectionLabel>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-        <MetricRow label="Engine status" value={stats.streamRunning ? "Running" : "Stopped"} accent={stats.streamRunning ? KP.green : KP.red} />
-        <MetricRow label="Tick rate" value={`${stats.tickRateHz} Hz`} />
-        <MetricRow label="Total frames" value={stats.tickCount.toLocaleString()} />
-        <MetricRow label="Pending changes" value={stats.dirty ? "Yes" : "None"} accent={stats.dirty ? KP.gold : KP.muted} />
-        <MetricRow label="Active listeners" value={stats.listenerCount} />
-        {stats.isActive && (
-          <MetricRow label="Active duration" value={`${(stats.activeUntil / 1000).toFixed(1)}s`} accent={KP.green} />
-        )}
-      </div>
+    <div className="space-y-4">
+      <InsetPanel>
+        <Section title="Rendering Engine">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="Engine" value={stats.streamRunning ? "Running" : "Stopped"} accent={stats.streamRunning ? DT.green : DT.red} />
+            <MetricRow label="Tick rate" value={`${stats.tickRateHz} Hz`} accent={DT.cyan} />
+            <MetricRow label="Total frames" value={stats.tickCount.toLocaleString()} />
+            <MetricRow label="Pending" value={stats.dirty ? "Yes" : "None"} accent={stats.dirty ? DT.gold : DT.textLabel} />
+            <MetricRow label="Listeners" value={stats.listenerCount} />
+            {stats.isActive && <MetricRow label="Active for" value={`${(stats.activeUntil / 1000).toFixed(1)}s`} accent={DT.green} />}
+          </div>
+        </Section>
+      </InsetPanel>
 
-      <SectionLabel>Smoothing Pipeline</SectionLabel>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-        <MetricRow label="Smoothing engine" value={stats.interpSleeping ? "Sleeping" : stats.interpRunning ? "Running" : "Off"} accent={stats.interpSleeping ? KP.gold : stats.interpRunning ? KP.green : KP.dim} />
-        <MetricRow label="Update interval" value={`${stats.interpTickMs.toFixed(0)} ms`} />
-        <MetricRow label="Progress" value={`${(stats.interpPhase * 100).toFixed(0)}%`} />
-        <MetricRow label="Transition style" value={stats.interpHasPrev ? "Smooth blend" : "Instant snap"} accent={stats.interpHasPrev ? KP.green : KP.gold} />
-      </div>
+      <InsetPanel>
+        <Section title="Smoothing Pipeline">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="State" value={stats.interpSleeping ? "Sleeping" : stats.interpRunning ? "Running" : "Off"} accent={stats.interpSleeping ? DT.gold : stats.interpRunning ? DT.green : DT.textDim} />
+            <MetricRow label="Interval" value={`${stats.interpTickMs.toFixed(0)} ms`} />
+            <MetricRow label="Progress" value={`${(stats.interpPhase * 100).toFixed(0)}%`} />
+            <MetricRow label="Mode" value={stats.interpHasPrev ? "Blend" : "Snap"} accent={stats.interpHasPrev ? DT.green : DT.gold} />
+          </div>
+        </Section>
+      </InsetPanel>
 
-      <SectionLabel>Measured Performance</SectionLabel>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-        <MetricRow label="Actual frame rate" value={`${stats.measuredFps.toFixed(1)} fps`} accent={stats.measuredFps > 15 ? KP.green : KP.gold} />
-        <MetricRow label="Last frame age" value={`${stats.lastFrameAge.toFixed(0)} ms`} accent={stats.lastFrameAge > 150 ? KP.gold : KP.muted} />
-      </div>
+      <InsetPanel>
+        <Section title="Measured Performance">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="FPS" value={`${stats.measuredFps.toFixed(1)}`} accent={stats.measuredFps > 15 ? DT.green : DT.gold} />
+            <MetricRow label="Frame age" value={`${stats.lastFrameAge.toFixed(0)} ms`} accent={stats.lastFrameAge > 150 ? DT.gold : DT.textLabel} />
+          </div>
+        </Section>
+      </InsetPanel>
     </div>
   );
 }
 
 // ─── Processor Comparison Tab ───────────────────────────────────────────
 
-/**
- * Geometric time constants derived from {3,3,5} Coxeter group.
- * δ₀ = 6.8° angular defect → the smallest resolvable tick quantum.
- * Triadic rhythm: Structure(3) × Evolution(6) × Completion(9).
- */
 const DELTA_0_DEG = 6.8;
 const DELTA_0_RAD = DELTA_0_DEG * (Math.PI / 180);
-const GEOMETRIC_TICK_PERIOD_MS = DELTA_0_RAD * 1000; // ~118.68ms per geometric tick
+const GEOMETRIC_TICK_PERIOD_MS = DELTA_0_RAD * 1000;
 const FRACTAL_DIM = 1.9206;
 const CRONNET_SCALE_EV = 1.22e-3;
 
-/** Measure per-core throughput via single-threaded benchmark */
 function useClockBenchmark(visible: boolean) {
   const [result, setResult] = useState<{
     mopsPerSec: number;
@@ -456,9 +544,7 @@ function useClockBenchmark(visible: boolean) {
 
   useEffect(() => {
     if (!visible) return;
-
     const benchmark = () => {
-      // Run a tight arithmetic loop to measure per-core throughput
       const ITERATIONS = 2_000_000;
       const t0 = performance.now();
       let acc = 0;
@@ -466,29 +552,21 @@ function useClockBenchmark(visible: boolean) {
         acc += Math.sin(i * 0.001) * Math.cos(i * 0.002);
       }
       const elapsed = performance.now() - t0;
-      // Prevent dead code elimination
       if (acc === Infinity) console.log(acc);
-
       const mops = (ITERATIONS / elapsed) * 1000 / 1_000_000;
       samplesRef.current.push(mops);
       if (samplesRef.current.length > 20) samplesRef.current.shift();
-
-      // Average for stability
       const avgMops = samplesRef.current.reduce((a, b) => a + b, 0) / samplesRef.current.length;
-      // Estimate MHz — each iteration is ~5 FP ops (sin+cos+mul+add+assign), modern CPUs do ~4 ops/cycle
       const estimatedCyclesPerOp = 4;
       const totalOps = ITERATIONS * 5;
       const cyclesUsed = totalOps / estimatedCyclesPerOp;
       const estimatedHz = cyclesUsed / (elapsed / 1000);
       const estimatedMhz = estimatedHz / 1_000_000;
-
-      // Measure timing jitter
       const deltas = [];
       for (let i = 1; i < samplesRef.current.length; i++) {
         deltas.push(Math.abs(samplesRef.current[i] - samplesRef.current[i - 1]));
       }
       const jitterMops = deltas.length > 0 ? deltas.reduce((a, b) => a + b, 0) / deltas.length : 0;
-
       setResult({
         mopsPerSec: avgMops,
         estimatedMhz: Math.round(estimatedMhz),
@@ -497,27 +575,24 @@ function useClockBenchmark(visible: boolean) {
         jitterUs: Math.round(jitterMops * 1000),
       });
     };
-
     benchmark();
-    intervalRef.current = setInterval(benchmark, 3000); // Re-measure every 3s
+    intervalRef.current = setInterval(benchmark, 3000);
     return () => clearInterval(intervalRef.current);
   }, [visible]);
 
   return result;
 }
 
-/** Geometric time from the δ₀ angular defect */
 function useGeometricTime() {
   const [time, setTime] = useState({
     geometricTick: 0,
-    geometricPhase: 0, // 0-1 within current triadic cycle
-    triadicCycle: 0,   // which cycle (Structure/Evolution/Completion)
+    geometricPhase: 0,
+    triadicCycle: 0,
     triadicLabel: "Structure",
     precisionNs: 0,
     systemTimeMs: 0,
     driftUs: 0,
   });
-
   const bootTimeRef = useRef(performance.now());
   const lastMeasureRef = useRef(performance.now());
 
@@ -525,87 +600,32 @@ function useGeometricTime() {
     const update = () => {
       const now = performance.now();
       const elapsed = now - bootTimeRef.current;
-
-      // Geometric ticks since boot
       const geometricTick = Math.floor(elapsed / GEOMETRIC_TICK_PERIOD_MS);
       const phaseWithin = (elapsed % GEOMETRIC_TICK_PERIOD_MS) / GEOMETRIC_TICK_PERIOD_MS;
-
-      // Triadic cycle: every 3 geometric ticks is one triadic cycle
       const triadicIndex = geometricTick % 3;
       const triadicLabels = ["Structure", "Evolution", "Completion"] as const;
       const triadicCycle = Math.floor(geometricTick / 3);
-
-      // Precision: performance.now() gives ~5μs, geometric time gives δ₀-quantum resolution
       const dtMs = now - lastMeasureRef.current;
       lastMeasureRef.current = now;
-      // Drift = deviation of measured interval from expected geometric period
       const expectedTicks = dtMs / GEOMETRIC_TICK_PERIOD_MS;
       const actualTicks = Math.round(expectedTicks);
       const driftUs = Math.abs((dtMs - actualTicks * GEOMETRIC_TICK_PERIOD_MS)) * 1000;
-
       setTime({
         geometricTick,
         geometricPhase: phaseWithin,
         triadicCycle,
         triadicLabel: triadicLabels[triadicIndex],
-        precisionNs: Math.round(GEOMETRIC_TICK_PERIOD_MS * 1_000_000), // ns per geometric tick
+        precisionNs: Math.round(GEOMETRIC_TICK_PERIOD_MS * 1_000_000),
         systemTimeMs: now,
         driftUs: Math.round(driftUs),
       });
     };
-
     const id = setInterval(update, 50);
     update();
     return () => clearInterval(id);
   }, []);
 
   return time;
-}
-
-/** Side-by-side comparison card */
-function ComparisonRow({
-  label,
-  hardwareValue,
-  hardwareUnit,
-  hologramValue,
-  hologramUnit,
-  hologramAccent,
-  description,
-}: {
-  label: string;
-  hardwareValue: string;
-  hardwareUnit: string;
-  hologramValue: string;
-  hologramUnit: string;
-  hologramAccent?: string;
-  description?: string;
-}) {
-  return (
-    <div className="py-2" style={{ borderBottom: `1px solid hsla(30, 8%, 20%, 0.3)` }}>
-      <div className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: KP.dim }}>{label}</div>
-      <div className="grid grid-cols-2 gap-4">
-        {/* Hardware side */}
-        <div className="rounded-lg px-3 py-2" style={{ background: "hsla(200, 8%, 14%, 0.5)", border: `1px solid hsla(200, 10%, 25%, 0.3)` }}>
-          <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: "hsl(200, 30%, 55%)" }}>Hardware</div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-base font-semibold tabular-nums" style={{ color: "hsl(200, 30%, 75%)" }}>{hardwareValue}</span>
-            <span className="text-[10px]" style={{ color: KP.dim }}>{hardwareUnit}</span>
-          </div>
-        </div>
-        {/* Hologram side */}
-        <div className="rounded-lg px-3 py-2" style={{ background: "hsla(38, 12%, 14%, 0.5)", border: `1px solid hsla(38, 15%, 30%, 0.3)` }}>
-          <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: KP.gold }}>Hologram vGPU</div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-base font-semibold tabular-nums" style={{ color: hologramAccent ?? KP.gold }}>{hologramValue}</span>
-            <span className="text-[10px]" style={{ color: KP.dim }}>{hologramUnit}</span>
-          </div>
-        </div>
-      </div>
-      {description && (
-        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>{description}</div>
-      )}
-    </div>
-  );
 }
 
 function ProcessorTab({ stats }: { stats: Stats }) {
@@ -615,156 +635,116 @@ function ProcessorTab({ stats }: { stats: Stats }) {
   const projector = getKernelProjector();
   const dc = projector.getDisplayCapabilities();
 
-  // Hologram vGPU "clock speed" derived from kernel tick rate and coherence
-  const vgpuClockMhz = stats.kernelTickRateHz > 0
-    ? Math.round(stats.kernelTickRateHz * stats.tickCount * 0.001) // implied cycles
-    : 0;
-  const vgpuOpsPerTick = Math.round(stats.kernelTickRateHz * FRACTAL_DIM); // effective ops via fractal compression
+  const vgpuOpsPerTick = Math.round(stats.kernelTickRateHz * FRACTAL_DIM);
   const vgpuEffectiveMhz = Math.round(vgpuOpsPerTick * stats.kernelTickRateHz / 1000);
-
-  // Geometric time precision comparison
-  const systemPrecisionUs = 5; // performance.now() typical precision
-  const geometricPrecisionUs = Math.round(GEOMETRIC_TICK_PERIOD_MS * 1000); // δ₀ quantum in μs
+  const systemPrecisionUs = 5;
+  const geometricPrecisionUs = Math.round(GEOMETRIC_TICK_PERIOD_MS * 1000);
 
   const mopsHistory = useHistory(bench?.mopsPerSec ?? 0);
   const vgpuHistory = useHistory(vgpuEffectiveMhz);
 
   if (!bench || !hw) {
-    return <div className="text-center py-8 text-sm" style={{ color: KP.dim }}>Calibrating processor…</div>;
+    return <div className="text-center py-8 text-sm" style={{ color: DT.textDim, fontFamily: DT.mono }}>Calibrating processor…</div>;
   }
 
   return (
-    <div className="space-y-1">
-      {/* Section Header */}
-      <div className="flex items-center gap-2 pb-2" style={{ borderBottom: `1px solid ${KP.cardBorder}` }}>
-        <IconBolt size={14} style={{ color: KP.gold }} />
-        <span className="text-sm font-medium" style={{ color: KP.text }}>Hardware vs Hologram Processor Comparison</span>
-      </div>
-      <div className="text-[10px] leading-relaxed pb-2" style={{ color: KP.dim }}>
-        Side-by-side comparison of your physical device's processing capabilities versus
-        the Hologram virtual GPU pipeline. Hologram achieves higher effective throughput through
-        geometric compression (D={FRACTAL_DIM}) and coherence-driven scheduling.
-      </div>
+    <div className="space-y-4">
+      {/* ── Top readout bar — Afterburner-style ──────────────────── */}
+      <InsetPanel>
+        <SegmentedBar value={bench.estimatedMhz} max={5000} segments={28} color="hsl(200, 50%, 60%)" label="CPU" unit="MHz" />
+        <SegmentedBar value={vgpuEffectiveMhz} max={5000} segments={28} color={DT.cyan} label="vGPU" unit="MHz" />
+        <SegmentedBar value={bench.mopsPerSec} max={100} segments={28} color={DT.gold} label="MOPS" unit="M/s" />
+        <SegmentedBar value={geoTime.driftUs} max={2000} segments={28} color={geoTime.driftUs < 500 ? DT.green : DT.gold} label="DRIFT" unit="μs" />
+      </InsetPanel>
 
-      {/* ── Clock Speed Comparison ──────────────────────────────────── */}
-      <ComparisonRow
-        label="Clock Speed (Estimated)"
-        hardwareValue={bench.estimatedMhz.toLocaleString()}
-        hardwareUnit="MHz"
-        hologramValue={vgpuEffectiveMhz.toLocaleString()}
-        hologramUnit="MHz eff."
-        hologramAccent={vgpuEffectiveMhz > bench.estimatedMhz ? KP.green : KP.gold}
-        description={`Hardware: measured via ${bench.sampleCount} single-thread FP benchmark samples. Hologram: derived from kernel tick rate (${stats.kernelTickRateHz}Hz) × fractal dimension (${FRACTAL_DIM}) compression.`}
-      />
+      {/* ── Side-by-side comparison ──────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Hardware side */}
+        <InsetPanel>
+          <div className="text-[9px] uppercase tracking-[0.2em] text-center mb-3" style={{ color: "hsl(200, 40%, 55%)", fontFamily: DT.mono }}>
+            ⬡ Hardware
+          </div>
+          <div className="space-y-3">
+            <Readout label="Clock Speed" value={bench.estimatedMhz.toLocaleString()} unit="MHz" color="hsl(200, 50%, 75%)" />
+            <Readout label="Throughput" value={bench.mopsPerSec.toFixed(1)} unit="MOPS" color="hsl(200, 40%, 65%)" size="sm" />
+            <Readout label="Time Precision" value={systemPrecisionUs.toString()} unit="μs" color="hsl(200, 30%, 60%)" size="sm" />
+          </div>
+          <div className="mt-3">
+            <Sparkline data={mopsHistory} color="hsl(200, 50%, 60%)" height={32} label="MOPS" />
+          </div>
+        </InsetPanel>
 
-      {/* ── Throughput Comparison ───────────────────────────────────── */}
-      <ComparisonRow
-        label="Throughput (MOPS)"
-        hardwareValue={bench.mopsPerSec.toFixed(1)}
-        hardwareUnit="MOPS"
-        hologramValue={(stats.kernelTickRateHz * FRACTAL_DIM).toFixed(1)}
-        hologramUnit="MOPS eff."
-        description="Million operations per second. Hardware: raw single-thread arithmetic. Hologram: effective throughput including coherence-indexed O(1) frame projection."
-      />
-
-      {/* ── Sparklines ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 pt-2">
-        <div>
-          <div className="text-[10px] mb-1" style={{ color: "hsl(200, 30%, 55%)" }}>Hardware MOPS</div>
-          <Sparkline data={mopsHistory} color="hsl(200, 40%, 60%)" height={36} label="MOPS" />
-        </div>
-        <div>
-          <div className="text-[10px] mb-1" style={{ color: KP.gold }}>Hologram vGPU MHz</div>
-          <Sparkline data={vgpuHistory} color="hsl(38, 60%, 55%)" height={36} label="MHz eff." />
-        </div>
+        {/* Hologram side */}
+        <InsetPanel>
+          <div className="text-[9px] uppercase tracking-[0.2em] text-center mb-3" style={{ color: DT.cyan, fontFamily: DT.mono }}>
+            ◈ Hologram vGPU
+          </div>
+          <div className="space-y-3">
+            <Readout label="Effective Clock" value={vgpuEffectiveMhz.toLocaleString()} unit="MHz" color={DT.cyan} />
+            <Readout label="Throughput" value={(stats.kernelTickRateHz * FRACTAL_DIM).toFixed(1)} unit="MOPS" color={DT.gold} size="sm" />
+            <Readout label="δ₀ Quantum" value={geometricPrecisionUs.toString()} unit="μs" color={DT.purple} size="sm" />
+          </div>
+          <div className="mt-3">
+            <Sparkline data={vgpuHistory} color={DT.cyan} height={32} label="MHz" />
+          </div>
+        </InsetPanel>
       </div>
 
-      {/* ── Time Precision Comparison ──────────────────────────────── */}
-      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <SectionLabel>Time Measurement Precision</SectionLabel>
-        <div className="text-[10px] mb-3 leading-relaxed" style={{ color: KP.dim }}>
-          Hardware uses <code className="px-1 rounded" style={{ background: "hsla(200, 10%, 20%, 0.6)" }}>performance.now()</code> (~5μs resolution).
-          Hologram uses geometric time derived from the δ₀ = {DELTA_0_DEG}° angular defect of the
-          {"{3,3,5}"} Coxeter group — a mathematically exact quantum that doesn't drift with system load.
-        </div>
-
-        <ComparisonRow
-          label="Time Quantum (Smallest Tick)"
-          hardwareValue={systemPrecisionUs.toFixed(0)}
-          hardwareUnit="μs"
-          hologramValue={geometricPrecisionUs.toFixed(0)}
-          hologramUnit="μs (δ₀)"
-          hologramAccent={KP.purple}
-          description={`Geometric tick period: δ₀ = ${DELTA_0_DEG}° → ${GEOMETRIC_TICK_PERIOD_MS.toFixed(2)}ms. Each tick is one quantum of angular resolution in the 96-vertex manifold.`}
-        />
-
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          <div className="rounded-lg p-2.5 text-center" style={{ background: "hsla(280, 12%, 14%, 0.5)", border: `1px solid hsla(280, 15%, 30%, 0.3)` }}>
-            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Geometric Tick</div>
-            <div className="text-lg font-bold tabular-nums" style={{ color: KP.purple }}>
-              {geoTime.geometricTick.toLocaleString()}
+      {/* ── Geometric Time Section ───────────────────────────────── */}
+      <InsetPanel>
+        <Section title="Geometric Time">
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: DT.textDim, fontFamily: DT.mono }}>Tick</div>
+              <div className="text-lg font-bold tabular-nums" style={{ color: DT.purple, fontFamily: DT.mono }}>
+                {geoTime.geometricTick.toLocaleString()}
+              </div>
             </div>
-            <div className="text-[9px] mt-0.5" style={{ color: KP.dim }}>since boot</div>
-          </div>
-          <div className="rounded-lg p-2.5 text-center" style={{ background: "hsla(280, 12%, 14%, 0.5)", border: `1px solid hsla(280, 15%, 30%, 0.3)` }}>
-            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Triadic Phase</div>
-            <div className="text-sm font-semibold" style={{ color: geoTime.triadicLabel === "Structure" ? "hsl(200, 50%, 65%)" : geoTime.triadicLabel === "Evolution" ? KP.gold : KP.green }}>
-              {geoTime.triadicLabel}
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: DT.textDim, fontFamily: DT.mono }}>Phase</div>
+              <div className="text-sm font-semibold" style={{
+                color: geoTime.triadicLabel === "Structure" ? "hsl(200, 50%, 65%)" : geoTime.triadicLabel === "Evolution" ? DT.gold : DT.green,
+                fontFamily: DT.mono,
+              }}>
+                {geoTime.triadicLabel}
+              </div>
+              <div className="text-[8px] mt-0.5" style={{ color: DT.textDim }}>Cycle #{geoTime.triadicCycle}</div>
             </div>
-            <div className="text-[9px] mt-0.5" style={{ color: KP.dim }}>cycle #{geoTime.triadicCycle}</div>
-          </div>
-          <div className="rounded-lg p-2.5 text-center" style={{ background: "hsla(280, 12%, 14%, 0.5)", border: `1px solid hsla(280, 15%, 30%, 0.3)` }}>
-            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Drift</div>
-            <div className="text-lg font-bold tabular-nums" style={{ color: geoTime.driftUs < 500 ? KP.green : KP.gold }}>
-              {geoTime.driftUs < 1000 ? `${geoTime.driftUs}` : `${(geoTime.driftUs / 1000).toFixed(1)}k`}
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: DT.textDim, fontFamily: DT.mono }}>Drift</div>
+              <div className="text-lg font-bold tabular-nums" style={{ color: geoTime.driftUs < 500 ? DT.green : DT.gold, fontFamily: DT.mono }}>
+                {geoTime.driftUs}
+              </div>
+              <div className="text-[8px] mt-0.5" style={{ color: DT.textDim }}>μs</div>
             </div>
-            <div className="text-[9px] mt-0.5" style={{ color: KP.dim }}>μs from ideal</div>
           </div>
-        </div>
 
-        {/* Phase progress bar */}
-        <div className="mt-3">
-          <div className="flex justify-between text-[10px] mb-1">
-            <span style={{ color: KP.dim }}>Geometric phase within tick</span>
-            <span className="tabular-nums" style={{ color: KP.purple }}>{(geoTime.geometricPhase * 100).toFixed(1)}%</span>
+          {/* Phase progress */}
+          <SliderGauge
+            value={geoTime.geometricPhase * 100}
+            max={100}
+            color={DT.purple}
+            label="Phase within tick"
+            displayValue={`${(geoTime.geometricPhase * 100).toFixed(1)}%`}
+          />
+        </Section>
+      </InsetPanel>
+
+      {/* ── Detail grid ──────────────────────────────────────────── */}
+      <InsetPanel>
+        <Section title="Processor Details">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+            <MetricRow label="Logical cores" value={hw.logicalCores} accent={DT.cyan} />
+            <MetricRow label="Kernel tick rate" value={`${stats.kernelTickRateHz} Hz`} accent={DT.purple} />
+            <MetricRow label="Hardware GPU" value={hw.gpuRenderer.split("/").pop()?.trim() || hw.gpuRenderer} />
+            <MetricRow label="vGPU tier" value={dc.gpuTier === "high" ? "High" : dc.gpuTier === "mid" ? "Medium" : "Basic"} accent={dc.gpuTier === "high" ? DT.green : DT.gold} />
+            <MetricRow label="Benchmark jitter" value={`±${bench.jitterUs} MOPS`} accent={bench.jitterUs < 50 ? DT.green : DT.gold} />
+            <MetricRow label="Fractal dim (D)" value={FRACTAL_DIM.toFixed(4)} accent={DT.purple} />
+            <MetricRow label="δ₀ angular defect" value={`${DELTA_0_DEG}°`} accent={DT.purple} />
+            <MetricRow label="Tick quantum" value={`${GEOMETRIC_TICK_PERIOD_MS.toFixed(2)} ms`} accent={DT.purple} />
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "hsla(280, 8%, 20%, 0.5)" }}>
-            <div className="h-full rounded-full" style={{
-              width: `${geoTime.geometricPhase * 100}%`,
-              background: "linear-gradient(90deg, hsl(280, 45%, 55%), hsl(38, 60%, 55%))",
-              transition: "width 50ms linear",
-            }} />
-          </div>
-        </div>
-      </div>
-
-      {/* ── CPU / GPU Detail Grid ─────────────────────────────────── */}
-      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <SectionLabel>Processor Details</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Logical cores" value={hw.logicalCores} />
-          <MetricRow label="Kernel tick rate" value={`${stats.kernelTickRateHz} Hz`} accent={KP.purple} />
-          <MetricRow label="Hardware GPU" value={hw.gpuRenderer.split("/").pop()?.trim() || hw.gpuRenderer} />
-          <MetricRow label="Hologram vGPU tier" value={dc.gpuTier === "high" ? "High" : dc.gpuTier === "mid" ? "Medium" : "Basic"} accent={dc.gpuTier === "high" ? KP.green : dc.gpuTier === "mid" ? KP.gold : KP.dim} />
-          <MetricRow label="Benchmark jitter" value={`±${bench.jitterUs} MOPS`} accent={bench.jitterUs < 50 ? KP.green : KP.gold} />
-          <MetricRow label="Frame drops" value={stats.frameDrops} accent={stats.frameDrops === 0 ? KP.green : KP.red} />
-          <MetricRow label="Display refresh" value={`${dc.refreshHz} Hz`} />
-          <MetricRow label="Pixel density" value={`${dc.dpr.toFixed(1)}x DPR`} />
-        </div>
-      </div>
-
-      {/* ── Constants Reference ────────────────────────────────────── */}
-      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-        <SectionLabel>Geometric Constants</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Angular defect (δ₀)" value={`${DELTA_0_DEG}°`} accent={KP.purple} />
-          <MetricRow label="δ₀ in radians" value={DELTA_0_RAD.toFixed(6)} accent={KP.purple} />
-          <MetricRow label="Fractal dimension (D)" value={FRACTAL_DIM.toFixed(4)} accent={KP.purple} />
-          <MetricRow label="CronNet scale (M*)" value={`${CRONNET_SCALE_EV} eV`} accent={KP.purple} />
-          <MetricRow label="Tick quantum" value={`${GEOMETRIC_TICK_PERIOD_MS.toFixed(2)} ms`} accent={KP.purple} />
-          <MetricRow label="Coxeter group" value="{3,3,5}" accent={KP.purple} />
-        </div>
-      </div>
+        </Section>
+      </InsetPanel>
     </div>
   );
 }
@@ -772,20 +752,16 @@ function ProcessorTab({ stats }: { stats: Stats }) {
 // ─── Hardware Tab ───────────────────────────────────────────────────────
 
 interface HardwareInfo {
-  // Platform
   platform: string;
   userAgent: string;
   language: string;
   cookiesEnabled: boolean;
   onLine: boolean;
-  // CPU
   logicalCores: number;
-  // Memory
   deviceMemoryGb: number | null;
   jsHeapUsedMb: number | null;
   jsHeapTotalMb: number | null;
   jsHeapLimitMb: number | null;
-  // Display
   screenWidth: number;
   screenHeight: number;
   viewportWidth: number;
@@ -797,21 +773,16 @@ interface HardwareInfo {
   refreshHz: number;
   orientation: string;
   touchPoints: number;
-  // GPU
   gpuRenderer: string;
   gpuVendor: string;
   gpuTier: string;
-  // Storage
   storageEstimate: { usage: number; quota: number } | null;
-  // Network
   connectionType: string | null;
   downlinkMbps: number | null;
   rtt: number | null;
   saveData: boolean;
-  // Battery
   batteryLevel: number | null;
   batteryCharging: boolean | null;
-  // Media
   audioOutputs: number;
   videoInputs: number;
 }
@@ -822,11 +793,8 @@ function useHardwareInfo(visible: boolean): HardwareInfo | null {
 
   useEffect(() => {
     if (!visible) return;
-
     const detect = async () => {
       const nav = navigator as any;
-
-      // GPU detection via WebGL
       let gpuRenderer = "Unknown";
       let gpuVendor = "Unknown";
       try {
@@ -840,102 +808,47 @@ function useHardwareInfo(visible: boolean): HardwareInfo | null {
           }
         }
       } catch {}
-
-      // Color gamut
       let colorGamut = "sRGB";
       if (window.matchMedia("(color-gamut: p3)").matches) colorGamut = "Display P3";
       else if (window.matchMedia("(color-gamut: rec2020)").matches) colorGamut = "Rec. 2020";
       const hdr = window.matchMedia("(dynamic-range: high)").matches;
-
-      // Storage
       let storageEstimate: { usage: number; quota: number } | null = null;
-      try {
-        if (nav.storage?.estimate) {
-          const est = await nav.storage.estimate();
-          storageEstimate = { usage: est.usage || 0, quota: est.quota || 0 };
-        }
-      } catch {}
-
-      // Network
+      try { if (nav.storage?.estimate) { const est = await nav.storage.estimate(); storageEstimate = { usage: est.usage || 0, quota: est.quota || 0 }; } } catch {}
       const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
-
-      // Battery
       let batteryLevel: number | null = null;
       let batteryCharging: boolean | null = null;
-      try {
-        if (nav.getBattery) {
-          const batt = await nav.getBattery();
-          batteryLevel = batt.level;
-          batteryCharging = batt.charging;
-        }
-      } catch {}
-
-      // Media devices count
+      try { if (nav.getBattery) { const batt = await nav.getBattery(); batteryLevel = batt.level; batteryCharging = batt.charging; } } catch {}
       let audioOutputs = 0;
       let videoInputs = 0;
-      try {
-        if (nav.mediaDevices?.enumerateDevices) {
-          const devices = await nav.mediaDevices.enumerateDevices();
-          audioOutputs = devices.filter((d: any) => d.kind === "audiooutput").length;
-          videoInputs = devices.filter((d: any) => d.kind === "videoinput").length;
-        }
-      } catch {}
-
-      // JS heap
+      try { if (nav.mediaDevices?.enumerateDevices) { const devices = await nav.mediaDevices.enumerateDevices(); audioOutputs = devices.filter((d: any) => d.kind === "audiooutput").length; videoInputs = devices.filter((d: any) => d.kind === "videoinput").length; } } catch {}
       const perfMem = (performance as any).memory;
-
-      // Orientation
       const orientation = screen.orientation?.type?.replace("-primary", "").replace("-secondary", " (flipped)") || "unknown";
-
-      // Refresh Hz from projector
       const dc = getKernelProjector().getDisplayCapabilities() || { refreshHz: 60, dpr: window.devicePixelRatio, gpuTier: "unknown" };
-
-      // Platform string
       let platform = nav.userAgentData?.platform || nav.platform || "Unknown";
-      if (nav.userAgentData?.brands) {
-        const brand = nav.userAgentData.brands.find((b: any) => !b.brand.includes("Not"));
-        if (brand) platform += ` · ${brand.brand} ${brand.version}`;
-      }
-
+      if (nav.userAgentData?.brands) { const brand = nav.userAgentData.brands.find((b: any) => !b.brand.includes("Not")); if (brand) platform += ` · ${brand.brand} ${brand.version}`; }
       setInfo({
-        platform,
-        userAgent: nav.userAgent || "",
-        language: nav.language || "en",
-        cookiesEnabled: nav.cookieEnabled ?? true,
-        onLine: nav.onLine ?? true,
+        platform, userAgent: nav.userAgent || "", language: nav.language || "en",
+        cookiesEnabled: nav.cookieEnabled ?? true, onLine: nav.onLine ?? true,
         logicalCores: nav.hardwareConcurrency || 1,
         deviceMemoryGb: nav.deviceMemory ?? null,
         jsHeapUsedMb: perfMem ? perfMem.usedJSHeapSize / (1024 * 1024) : null,
         jsHeapTotalMb: perfMem ? perfMem.totalJSHeapSize / (1024 * 1024) : null,
         jsHeapLimitMb: perfMem ? perfMem.jsHeapSizeLimit / (1024 * 1024) : null,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        dpr: dc.dpr,
-        colorDepth: screen.colorDepth,
-        colorGamut,
-        hdr,
-        refreshHz: dc.refreshHz,
-        orientation,
+        screenWidth: screen.width, screenHeight: screen.height,
+        viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
+        dpr: dc.dpr, colorDepth: screen.colorDepth, colorGamut, hdr,
+        refreshHz: dc.refreshHz, orientation,
         touchPoints: nav.maxTouchPoints || 0,
-        gpuRenderer,
-        gpuVendor,
-        gpuTier: dc.gpuTier,
+        gpuRenderer, gpuVendor, gpuTier: dc.gpuTier,
         storageEstimate,
         connectionType: conn?.effectiveType ?? null,
         downlinkMbps: conn?.downlink ?? null,
         rtt: conn?.rtt ?? null,
         saveData: conn?.saveData ?? false,
-        batteryLevel,
-        batteryCharging,
-        audioOutputs,
-        videoInputs,
+        batteryLevel, batteryCharging, audioOutputs, videoInputs,
       });
     };
-
     detect();
-    // Poll live metrics (heap, battery, network) every 2s
     intervalRef.current = setInterval(detect, 2000);
     return () => clearInterval(intervalRef.current);
   }, [visible]);
@@ -952,130 +865,89 @@ function formatBytes(bytes: number): string {
 
 function HardwareTab({ stats }: { stats: Stats }) {
   const hw = useHardwareInfo(true);
-  if (!hw) return <div className="text-center py-8 text-sm" style={{ color: KP.dim }}>Detecting hardware…</div>;
-
-  const gpuTierLabel = hw.gpuTier === "high" ? "High" : hw.gpuTier === "mid" ? "Medium" : "Basic";
-  const gpuTierColor = hw.gpuTier === "high" ? KP.green : hw.gpuTier === "mid" ? KP.gold : KP.dim;
+  if (!hw) return <div className="text-center py-8 text-sm" style={{ color: DT.textDim, fontFamily: DT.mono }}>Detecting hardware…</div>;
 
   return (
     <div className="space-y-4">
-      {/* Device overview cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Cores</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: KP.text }}>{hw.logicalCores}</div>
-          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>logical threads</div>
-        </div>
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Memory</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: hw.deviceMemoryGb ? KP.text : KP.dim }}>
-            {hw.deviceMemoryGb ? `${hw.deviceMemoryGb} GB` : "—"}
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>device RAM</div>
-        </div>
-        <div className="rounded-lg p-3" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Display</div>
-          <div className="text-lg font-semibold tabular-nums" style={{ color: KP.purple }}>
-            {hw.refreshHz} Hz
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: KP.dim }}>{hw.dpr.toFixed(1)}x · {hw.screenWidth}×{hw.screenHeight}</div>
-        </div>
-      </div>
+      {/* ── Top readout bar ──────────────────────────────────────── */}
+      <InsetPanel>
+        <SegmentedBar value={hw.logicalCores} max={32} segments={16} color={DT.cyan} label="CPU" unit="cores" />
+        <SegmentedBar value={hw.deviceMemoryGb ?? 0} max={64} segments={16} color={DT.gold} label="MEM" unit="GB" />
+        <SegmentedBar value={hw.refreshHz} max={240} segments={16} color={DT.purple} label="DISP" unit="Hz" />
+        {hw.batteryLevel !== null && (
+          <SegmentedBar value={hw.batteryLevel * 100} max={100} segments={16} color={hw.batteryLevel > 0.2 ? DT.green : DT.red} label="BATT" unit="%" />
+        )}
+      </InsetPanel>
 
-      {/* GPU */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Graphics Processing Unit</SectionLabel>
-        <div className="rounded-lg p-3 space-y-2" style={{ background: "hsla(30, 8%, 14%, 0.4)", border: `1px solid ${KP.cardBorder}` }}>
-          <div className="text-xs break-all leading-relaxed" style={{ color: KP.text }}>{hw.gpuRenderer}</div>
-          <div className="text-[11px]" style={{ color: KP.muted }}>{hw.gpuVendor}</div>
-          <div className="flex gap-4 text-[11px] pt-1" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-            <span style={{ color: KP.dim }}>Quality tier: <span style={{ color: gpuTierColor }}>{gpuTierLabel}</span></span>
-            <span style={{ color: KP.dim }}>Color: <span style={{ color: KP.muted }}>{hw.colorGamut}</span></span>
-            {hw.hdr && <span style={{ color: KP.purple }}>HDR ✓</span>}
+      {/* GPU card */}
+      <InsetPanel>
+        <Section title="Graphics Processor">
+          <div className="text-[11px] break-all leading-relaxed mb-1" style={{ color: DT.textBright, fontFamily: DT.mono }}>{hw.gpuRenderer}</div>
+          <div className="text-[10px] mb-2" style={{ color: DT.textLabel, fontFamily: DT.mono }}>{hw.gpuVendor}</div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center">
+              <div className="text-[8px] uppercase tracking-wider" style={{ color: DT.textDim }}>Tier</div>
+              <div className="text-sm font-bold" style={{ color: hw.gpuTier === "high" ? DT.green : hw.gpuTier === "mid" ? DT.gold : DT.textDim, fontFamily: DT.mono }}>
+                {hw.gpuTier === "high" ? "HIGH" : hw.gpuTier === "mid" ? "MED" : "BASIC"}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-[8px] uppercase tracking-wider" style={{ color: DT.textDim }}>Color</div>
+              <div className="text-sm font-bold" style={{ color: DT.textBright, fontFamily: DT.mono }}>{hw.colorGamut === "Display P3" ? "P3" : hw.colorGamut === "Rec. 2020" ? "2020" : "sRGB"}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[8px] uppercase tracking-wider" style={{ color: DT.textDim }}>HDR</div>
+              <div className="text-sm font-bold" style={{ color: hw.hdr ? DT.green : DT.textDim, fontFamily: DT.mono }}>{hw.hdr ? "ON" : "OFF"}</div>
+            </div>
           </div>
-        </div>
-      </div>
+        </Section>
+      </InsetPanel>
 
-      {/* Live Memory */}
+      {/* Memory gauges */}
       {hw.jsHeapUsedMb !== null && (
-        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-          <SectionLabel>JavaScript Memory (Live)</SectionLabel>
-          <UsageBar
-            value={hw.jsHeapUsedMb}
-            max={hw.jsHeapLimitMb || 4096}
-            color="hsl(38, 60%, 55%)"
-            label={`Heap: ${hw.jsHeapUsedMb.toFixed(0)} MB / ${hw.jsHeapLimitMb?.toFixed(0)} MB limit`}
-          />
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-2">
-            <MetricRow label="Used" value={`${hw.jsHeapUsedMb.toFixed(1)} MB`} accent={KP.gold} />
-            <MetricRow label="Allocated" value={`${hw.jsHeapTotalMb?.toFixed(1)} MB`} />
-          </div>
-        </div>
+        <InsetPanel>
+          <Section title="Memory">
+            <SliderGauge value={hw.jsHeapUsedMb} max={hw.jsHeapLimitMb || 4096} color={DT.gold} label="JS Heap" displayValue={`${hw.jsHeapUsedMb.toFixed(0)} / ${hw.jsHeapLimitMb?.toFixed(0)} MB`} />
+            {hw.storageEstimate && (
+              <div className="mt-2">
+                <SliderGauge value={hw.storageEstimate.usage} max={hw.storageEstimate.quota} color="hsl(200, 50%, 55%)" label="Storage" displayValue={`${formatBytes(hw.storageEstimate.usage)}`} />
+              </div>
+            )}
+          </Section>
+        </InsetPanel>
       )}
 
-      {/* Storage */}
-      {hw.storageEstimate && (
-        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-          <SectionLabel>Local Storage</SectionLabel>
-          <UsageBar
-            value={hw.storageEstimate.usage}
-            max={hw.storageEstimate.quota}
-            color="hsl(200, 50%, 55%)"
-            label={`${formatBytes(hw.storageEstimate.usage)} / ${formatBytes(hw.storageEstimate.quota)}`}
-          />
-        </div>
-      )}
-
-      {/* Display details */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Display &amp; Input</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Screen resolution" value={`${hw.screenWidth} × ${hw.screenHeight}`} />
-          <MetricRow label="Viewport" value={`${hw.viewportWidth} × ${hw.viewportHeight}`} />
-          <MetricRow label="Color depth" value={`${hw.colorDepth}-bit`} />
-          <MetricRow label="Orientation" value={hw.orientation} />
-          <MetricRow label="Touch support" value={hw.touchPoints > 0 ? `${hw.touchPoints} points` : "None"} accent={hw.touchPoints > 0 ? KP.green : KP.dim} />
-          <MetricRow label="Cameras" value={hw.videoInputs > 0 ? `${hw.videoInputs}` : "None"} />
-          <MetricRow label="Audio outputs" value={`${hw.audioOutputs}`} />
-        </div>
+      {/* Display & Network */}
+      <div className="grid grid-cols-2 gap-3">
+        <InsetPanel>
+          <Section title="Display">
+            <div className="space-y-1">
+              <MetricRow label="Resolution" value={`${hw.screenWidth}×${hw.screenHeight}`} />
+              <MetricRow label="Viewport" value={`${hw.viewportWidth}×${hw.viewportHeight}`} />
+              <MetricRow label="DPR" value={`${hw.dpr.toFixed(1)}x`} accent={DT.cyan} />
+              <MetricRow label="Color depth" value={`${hw.colorDepth}-bit`} />
+              <MetricRow label="Touch" value={hw.touchPoints > 0 ? `${hw.touchPoints}pt` : "No"} />
+            </div>
+          </Section>
+        </InsetPanel>
+        <InsetPanel>
+          <Section title="Network">
+            <div className="space-y-1">
+              <MetricRow label="Status" value={hw.onLine ? "Online" : "Offline"} accent={hw.onLine ? DT.green : DT.red} />
+              {hw.connectionType && <MetricRow label="Type" value={hw.connectionType.toUpperCase()} accent={DT.cyan} />}
+              {hw.downlinkMbps !== null && <MetricRow label="Speed" value={`${hw.downlinkMbps} Mbps`} accent={hw.downlinkMbps >= 10 ? DT.green : DT.gold} />}
+              {hw.rtt !== null && <MetricRow label="Latency" value={`${hw.rtt}ms`} accent={hw.rtt <= 50 ? DT.green : DT.gold} />}
+            </div>
+          </Section>
+        </InsetPanel>
       </div>
-
-      {/* Network */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Network</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Status" value={hw.onLine ? "Online" : "Offline"} accent={hw.onLine ? KP.green : KP.red} />
-          {hw.connectionType && <MetricRow label="Connection" value={hw.connectionType.toUpperCase()} accent={hw.connectionType === "4g" ? KP.green : KP.gold} />}
-          {hw.downlinkMbps !== null && <MetricRow label="Downlink" value={`${hw.downlinkMbps} Mbps`} accent={hw.downlinkMbps >= 10 ? KP.green : KP.gold} />}
-          {hw.rtt !== null && <MetricRow label="Latency (RTT)" value={`${hw.rtt} ms`} accent={hw.rtt <= 50 ? KP.green : hw.rtt <= 150 ? KP.gold : KP.red} />}
-          {hw.saveData && <MetricRow label="Data saver" value="Enabled" accent={KP.gold} />}
-        </div>
-      </div>
-
-      {/* Battery */}
-      {hw.batteryLevel !== null && (
-        <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-          <SectionLabel>Battery</SectionLabel>
-          <UsageBar
-            value={hw.batteryLevel * 100}
-            max={100}
-            color={hw.batteryLevel > 0.2 ? "hsl(152, 44%, 50%)" : "hsl(0, 65%, 55%)"}
-            label={`${(hw.batteryLevel * 100).toFixed(0)}%${hw.batteryCharging ? " · Charging" : ""}`}
-          />
-        </div>
-      )}
 
       {/* Platform */}
-      <div style={{ borderTop: `1px solid ${KP.cardBorder}` }} className="pt-3">
-        <SectionLabel>Platform</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-          <MetricRow label="Platform" value={hw.platform} />
-          <MetricRow label="Language" value={hw.language} />
+      <InsetPanel>
+        <div className="text-[10px] break-all leading-relaxed" style={{ color: DT.textDim, fontFamily: DT.mono }}>
+          {hw.platform} · {hw.language}
         </div>
-        <div className="mt-2 text-[10px] break-all leading-relaxed rounded p-2" style={{ color: KP.dim, background: "hsla(30, 8%, 14%, 0.4)" }}>
-          {hw.userAgent}
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 }
@@ -1117,142 +989,123 @@ export default function KernelDevTools() {
   // Poll stats at ~20Hz when visible
   useEffect(() => {
     if (!visible) return;
-
     const projector = getKernelProjector();
     const adapter = getBrowserAdapter();
-
-    // Track render count via frame listener
-    const unsub = projector.onFrame(() => {
-      renderCountRef.current++;
-    });
+    const unsub = projector.onFrame(() => { renderCountRef.current++; });
 
     const poll = () => {
       const now = performance.now();
       const ps = projector.getStreamStats();
       const is = adapter.getInterpStats();
-
       const dt = now - lastTickRef.current;
       lastTickRef.current = now;
       if (dt > 0 && dt < 200) {
         fpsAccumRef.current.push(1000 / dt);
         if (fpsAccumRef.current.length > 20) fpsAccumRef.current.shift();
       }
-      const measuredFps =
-        fpsAccumRef.current.length > 0
-          ? fpsAccumRef.current.reduce((a, b) => a + b, 0) / fpsAccumRef.current.length
-          : 0;
-
+      const measuredFps = fpsAccumRef.current.length > 0
+        ? fpsAccumRef.current.reduce((a, b) => a + b, 0) / fpsAccumRef.current.length : 0;
       const br = projector.getBreathingRhythm();
       const dc = projector.getDisplayCapabilities();
-
-      // Compute renders per second
       const renderWindowDt = now - renderWindowRef.current;
       const rendersPerSec = renderWindowDt > 0 ? Math.round(renderCountRef.current / (renderWindowDt / 1000)) : 0;
-      // Reset window every 2 seconds for fresh measurement
-      if (renderWindowDt > 2000) {
-        renderCountRef.current = 0;
-        renderWindowRef.current = now;
-      }
-
-      // Kernel tick rate = ticks delta / time delta
+      if (renderWindowDt > 2000) { renderCountRef.current = 0; renderWindowRef.current = now; }
       const tickDelta = ps.tickCount - lastTickCountRef.current;
       lastTickCountRef.current = ps.tickCount;
       const kernelTickRateHz = dt > 0 ? Math.round(tickDelta / (dt / 1000)) : 0;
-
-      // Frame drops = expected frames - actual frames (when active)
       const expectedFrames = dt > 0 ? Math.round(dc.refreshHz * (dt / 1000)) : 0;
-      if (ps.isActive && tickDelta < expectedFrames * 0.5 && expectedFrames > 1) {
-        frameDropRef.current++;
-      }
-
+      if (ps.isActive && tickDelta < expectedFrames * 0.5 && expectedFrames > 1) { frameDropRef.current++; }
       setStats({
         ...ps,
-        interpRunning: is.running,
-        interpSleeping: is.sleeping,
-        interpTickMs: is.tickMs,
-        interpPhase: is.phase,
-        interpHasPrev: is.hasPrev,
+        interpRunning: is.running, interpSleeping: is.sleeping,
+        interpTickMs: is.tickMs, interpPhase: is.phase, interpHasPrev: is.hasPrev,
         measuredFps,
-        displayRefreshHz: dc.refreshHz,
-        displayDpr: dc.dpr,
-        displayGpuTier: dc.gpuTier,
-        displayQuality: dc.quality,
-        breathPeriodMs: br.breathPeriodMs,
-        breathEventCount: br.eventCount,
-        breathIntervalCount: br.intervals.length,
-        breathDwellMs: br.dwellMs,
-        renderCount: rendersPerSec,
-        kernelTickRateHz,
-        frameDrops: frameDropRef.current,
+        displayRefreshHz: dc.refreshHz, displayDpr: dc.dpr,
+        displayGpuTier: dc.gpuTier, displayQuality: dc.quality,
+        breathPeriodMs: br.breathPeriodMs, breathEventCount: br.eventCount,
+        breathIntervalCount: br.intervals.length, breathDwellMs: br.dwellMs,
+        renderCount: rendersPerSec, kernelTickRateHz, frameDrops: frameDropRef.current,
       });
     };
-
     const id = setInterval(poll, 50);
     poll();
-    return () => {
-      unsub();
-      clearInterval(id);
-    };
+    return () => { unsub(); clearInterval(id); };
   }, [visible]);
 
   if (!visible || !stats) return null;
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: "hsla(25, 10%, 4%, 0.6)", backdropFilter: "blur(8px)" }}>
-      {/* Window */}
+    <div
+      className="fixed inset-0 z-[9998] flex items-center justify-center"
+      style={{ background: "hsla(215, 15%, 3%, 0.75)", backdropFilter: "blur(12px)" }}
+    >
+      {/* Window — Afterburner-style frame */}
       <div
-        className="w-full max-w-[640px] rounded-xl overflow-hidden shadow-2xl select-none"
+        className="w-full max-w-[720px] rounded-xl overflow-hidden select-none"
         style={{
-          background: "hsla(25, 8%, 8%, 0.97)",
-          border: `1px solid ${KP.cardBorder}`,
-          fontFamily: KP.font,
-          maxHeight: "80vh",
+          background: DT.panelBg,
+          border: `1px solid ${DT.panelBorder}`,
+          boxShadow: `0 0 60px hsla(185, 40%, 15%, 0.15), 0 25px 50px -12px hsla(0, 0%, 0%, 0.5), inset 0 1px 0 hsla(200, 20%, 40%, 0.08)`,
+          fontFamily: DT.font,
+          maxHeight: "85vh",
         }}
       >
-        {/* Title bar */}
+        {/* ── Title bar — dark metallic ───────────────────────────── */}
         <div
-          className="flex items-center justify-between px-4 py-2.5"
-          style={{ borderBottom: `1px solid ${KP.cardBorder}` }}
+          className="flex items-center justify-between px-5 py-3"
+          style={{
+            background: "hsla(210, 12%, 8%, 0.9)",
+            borderBottom: `1px solid ${DT.panelBorder}`,
+          }}
         >
-          <div className="flex items-center gap-2">
-            <IconCpu size={14} style={{ color: KP.gold }} />
-            <span className="text-sm font-semibold" style={{ color: KP.text, fontFamily: KP.serif }}>
-              Task Manager
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <IconCpu size={16} style={{ color: DT.cyan }} />
+              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: stats.isActive ? DT.green : DT.textDim, boxShadow: stats.isActive ? `0 0 4px ${DT.green}` : "none" }} />
+            </div>
+            <span className="text-sm font-bold tracking-wide" style={{ color: DT.textBright, fontFamily: DT.mono }}>
+              HOLOGRAM TASK MANAGER
             </span>
           </div>
           <button
             onClick={() => setVisible(false)}
-            className="p-1 rounded hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded transition-colors"
             title="Close (Ctrl+Shift+D)"
+            style={{ color: DT.textDim }}
+            onMouseEnter={e => { (e.currentTarget.style.background = "hsla(0, 60%, 40%, 0.2)"); (e.currentTarget.style.color = DT.red); }}
+            onMouseLeave={e => { (e.currentTarget.style.background = "transparent"); (e.currentTarget.style.color = DT.textDim); }}
           >
-            <IconX size={14} style={{ color: KP.muted }} />
+            <IconX size={14} />
           </button>
         </div>
 
-        {/* Tab bar */}
-        <div className="flex px-2 pt-1" style={{ borderBottom: `1px solid ${KP.cardBorder}` }}>
-          {TAB_META.map(({ id, label, icon: Icon }) => {
+        {/* ── Tab bar — numbered tabs like MSI Afterburner's side panel ── */}
+        <div className="flex px-1 pt-0.5" style={{ background: "hsla(210, 10%, 7%, 0.8)", borderBottom: `1px solid ${DT.sectionBorder}` }}>
+          {TAB_META.map(({ id, label, icon: Icon }, idx) => {
             const active = tab === id;
             return (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-t transition-colors relative"
+                className="flex items-center gap-1.5 px-3 py-2.5 text-[10px] uppercase tracking-[0.12em] rounded-t transition-all relative"
                 style={{
-                  color: active ? KP.text : KP.dim,
-                  background: active ? "hsla(30, 8%, 14%, 0.8)" : "transparent",
-                  borderBottom: active ? `2px solid hsl(38, 60%, 55%)` : "2px solid transparent",
+                  color: active ? DT.cyan : DT.textDim,
+                  background: active ? DT.sectionBg : "transparent",
+                  fontFamily: DT.mono,
+                  fontWeight: active ? 700 : 500,
+                  borderBottom: active ? `2px solid ${DT.cyan}` : "2px solid transparent",
                 }}
               >
-                <Icon size={13} />
-                {label}
+                <Icon size={12} />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{idx + 1}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Tab content */}
-        <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(80vh - 88px)" }}>
+        {/* ── Tab content ────────────────────────────────────────── */}
+        <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(85vh - 100px)" }}>
           {tab === "processes" && <ProcessesTab stats={stats} />}
           {tab === "performance" && <PerformanceTab stats={stats} />}
           {tab === "processor" && <ProcessorTab stats={stats} />}
@@ -1261,17 +1114,24 @@ export default function KernelDevTools() {
           {tab === "details" && <DetailsTab stats={stats} />}
         </div>
 
-        {/* Status bar */}
+        {/* ── Status bar — bottom strip with live readouts ────── */}
         <div
-          className="flex items-center justify-between px-4 py-1.5 text-[10px]"
-          style={{ borderTop: `1px solid ${KP.cardBorder}`, color: KP.dim }}
+          className="flex items-center justify-between px-5 py-2 text-[9px] tracking-[0.1em] uppercase"
+          style={{
+            background: "hsla(210, 12%, 6%, 0.9)",
+            borderTop: `1px solid ${DT.panelBorder}`,
+            color: DT.textDim,
+            fontFamily: DT.mono,
+          }}
         >
-          <span>
+          <span className="flex items-center gap-1.5">
             <StatusDot active={stats.isActive} />
-            {stats.isActive ? "Engine active" : "Engine idle"}
+            {stats.isActive ? "Active" : "Idle"}
           </span>
-          <span className="tabular-nums">{stats.measuredFps.toFixed(0)} fps · {stats.kernelTickRateHz}Hz tick · {stats.renderCount} renders/s · {stats.displayRefreshHz}Hz display</span>
-          <span>Ctrl+Shift+D to close</span>
+          <span className="tabular-nums" style={{ color: DT.textLabel }}>
+            {stats.measuredFps.toFixed(0)} fps · {stats.kernelTickRateHz}Hz · {stats.renderCount}/s · {stats.displayRefreshHz}Hz
+          </span>
+          <span style={{ color: DT.textDim }}>Ctrl+Shift+D</span>
         </div>
       </div>
     </div>
