@@ -64,7 +64,7 @@ function palette(m: DesktopMode) {
 }
 
 /* ── Typewriter ──────────────────────────────────────── */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 
 function getLumenSubtitle(): string {
   const h = new Date().getHours();
@@ -158,7 +158,7 @@ interface DesktopSurfaceProps {
   chatContext?: { role: "user" | "assistant"; content: string }[];
 }
 
-export default function DesktopSurface({
+export default memo(function DesktopSurface({
   mode,
   isActive,
   isDeparting,
@@ -257,8 +257,9 @@ export default function DesktopSurface({
               decoding="async"
               style={{
                 animation: "ken-burns-breathe 42s cubic-bezier(0.25, 0.1, 0.25, 1) forwards",
+                animationPlayState: isActive ? "running" : "paused",
                 imageRendering: "auto",
-                willChange: "transform",
+                willChange: isActive ? "transform" : "auto",
               }}
             />
             <div
@@ -653,4 +654,4 @@ export default function DesktopSurface({
       </div>
     </div>
   );
-}
+});
