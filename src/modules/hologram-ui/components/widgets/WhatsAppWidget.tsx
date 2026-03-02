@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Check, Loader2 } from "lucide-react";
+import { MessageCircle, X, Check, Loader2, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import { useDraggablePosition } from "../../hooks/useDraggablePosition";
@@ -205,8 +205,8 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                 </p>
               </motion.div>
             ) : connected ? (
-              /* Already connected */
-              <div className="space-y-3">
+              /* Already connected — show voice-enabled status */
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -220,6 +220,32 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                     </p>
                     <p className="text-[11px]" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                       Lumen is available on WhatsApp
+                    </p>
+                  </div>
+                </div>
+
+                {/* Voice note feature badge */}
+                <div
+                  className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
+                  style={{
+                    background: isLight ? "hsla(152, 40%, 94%, 0.8)" : "hsla(152, 30%, 12%, 0.6)",
+                    border: `1px solid ${isLight ? "hsla(152, 40%, 70%, 0.2)" : "hsla(152, 40%, 40%, 0.15)"}`,
+                  }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: "hsla(152, 60%, 42%, 0.15)",
+                    }}
+                  >
+                    <Mic className="w-3.5 h-3.5" style={{ color: "hsl(152, 60%, 42%)" }} />
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-medium" style={{ color: textColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      Voice notes enabled
+                    </p>
+                    <p className="text-[10px] leading-snug" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      Send a voice note in WhatsApp — Lumen will listen, understand, and reply with voice
                     </p>
                   </div>
                 </div>
