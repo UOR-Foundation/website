@@ -398,12 +398,13 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               Quantum Inference Engine
             </h1>
             <p style={{ fontSize: "12px", color: P.textMuted, margin: 0, lineHeight: 1.5 }}>
-              96 virtual qubits · [[96,48,2]] stabilizer code · Any model, constant cost
+              Atlas manifold projection · AI gateway inference · Real-time quantum coherence verification
             </p>
           </div>
-          <div style={{ display: "flex", gap: "5px", flexShrink: 0, flexWrap: "wrap", maxWidth: "280px", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", gap: "5px", flexShrink: 0, flexWrap: "wrap", maxWidth: "340px", justifyContent: "flex-end" }}>
             <Badge P={P} label="96 Qubits" active />
             <Badge P={P} label="384B KV" active />
+            <Badge P={P} label="Hybrid" active />
             <Badge P={P} label={gpuAvailable ? "WebGPU" : "CPU"} active={!!gpuAvailable} />
           </div>
           {onClose && (
@@ -646,23 +647,30 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               </div>
               <div style={{ textAlign: "center" }}>
                 <h2 style={{ fontSize: "20px", fontWeight: 600, fontFamily: P.serif, color: P.text, margin: "0 0 8px" }}>
-                  Real-time AI, powered by topology
+                  Hybrid Quantum-AI Inference
                 </h2>
                 <p style={{ fontSize: "13px", color: P.textMuted, lineHeight: 1.7, maxWidth: "480px", margin: "0 auto" }}>
-                  Select a model and hit Run. The engine projects any model onto 96 virtual qubits,
-                  applies [[96,48,2]] stabilizer error correction, and performs coherence inference at constant cost.
-                  Real AI text streams while qubits navigate the Atlas manifold.
+                  The engine projects model architectures onto 96 virtual qubits via Atlas manifold decomposition.
+                  Text generation flows through an AI gateway, while the quantum substrate performs real-time
+                  coherence verification, stabilizer error correction, and H-score navigation — all client-side.
                 </p>
               </div>
 
-              {/* Three-layer diagram */}
+              {/* Architecture diagram */}
               <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxWidth: "500px", width: "100%" }}>
-                <LayerCard P={P} num={3} title="Coherence Inference" desc="H-score navigation · O(96) fixed cost · Model-size-invariant" color={P.accent} />
+                <LayerCard P={P} num={4} title="AI Gateway" desc="Text generation · Real model inference · Cloud-hosted" color={P.textMuted} />
+                <LayerConnector P={P} />
+                <LayerCard P={P} num={3} title="Coherence Verification" desc="H-score navigation · O(96) fixed cost · Model-size-invariant" color={P.accent} />
                 <LayerConnector P={P} />
                 <LayerCard P={P} num={2} title="Virtual Qubit Substrate" desc="96 qubits · [[96,48,2]] stabilizer · Self-correcting" color={P.green} />
                 <LayerConnector P={P} />
                 <LayerCard P={P} num={1} title="Hardware Emulation" desc={`${gpuAvailable ? "WebGPU" : "CPU"} · Only job: instantiate qubits · Quality-invariant`} color={P.purple} />
               </div>
+
+              <p style={{ fontSize: "10px", color: P.textDim, textAlign: "center", maxWidth: "400px", lineHeight: 1.6, marginTop: "4px" }}>
+                Layers 1–3 run entirely in your browser. Layer 4 streams from the cloud.
+                The quantum engine verifies every token against the Atlas manifold in real time.
+              </p>
             </div>
           )}
 
@@ -689,7 +697,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
                   transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
                   style={{ height: "12px", width: "40%", borderRadius: "6px", background: P.accent }} />
                 <p style={{ fontSize: "11px", color: P.textMuted, marginTop: "8px" }}>
-                  Streaming from quantum inference engine…
+                  Gateway streaming → quantum coherence verification in progress…
                 </p>
               </div>
             </div>
@@ -704,7 +712,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
               <p style={{ color: P.textDim, fontSize: "14px", marginBottom: "16px", paddingBottom: "12px", borderBottom: `1px solid ${P.borderSubtle}` }}>{prompt}</p>
               <div style={{ marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: P.accent }}>
-                  {selectedModel.name} {selectedModel.params} · Quantum Inference
+                  {selectedModel.name} {selectedModel.params} · Gateway → Atlas Coherence
                 </span>
               </div>
               <div>
