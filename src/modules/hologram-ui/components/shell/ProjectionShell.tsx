@@ -26,7 +26,7 @@ import {
 const SIDEBAR_WIDTH = 56;
 
 /** Slightly longer duration for the holographic reveal for elegance */
-const REVEAL_MS = Math.round(DURATION_PROJECT_MS * 1.05); // ~504ms
+const REVEAL_MS = Math.round(DURATION_PROJECT_MS * 1.2); // ~576ms — unhurried holographic sweep
 
 interface ProjectionShellProps {
   /** Panel is visible and interactive */
