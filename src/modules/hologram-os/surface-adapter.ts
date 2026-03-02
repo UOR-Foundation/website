@@ -89,12 +89,58 @@ export class BrowserSurfaceAdapter {
   private frameArrivalTime = 0;
   private interpRafId = 0;
   private interpRunning = false;
-  private interpSleeping = false; // NEW: idle-gate flag
+  private interpSleeping = false; // idle-gate flag
   private interpTickMs = 100;
   private lastKernelTick = 0;
+  private displayVarsApplied = false;
 
   // Batched CSS cache — avoid redundant DOM writes
   private lastCssHash = "";
+
+  /**
+   * Inject display capability CSS custom properties into :root.
+   * Called once after boot when display is discovered. Enables CSS-level
+   * adaptation: GPU-tier-aware animations, DPR-responsive images, and
+   * refresh-rate-tuned transitions.
+   *
+   * Properties set:
+   *   --display-dpr          (e.g., 2)
+   *   --display-refresh-hz   (e.g., 120)
+   *   --display-gpu-tier     ("low" | "mid" | "high")
+   *   --display-frame-ms     (e.g., 8.33)
+   *   --display-quality      ("low" | "standard" | "ultra") — derived composite
+   *   --anim-duration-scale  (0.6–1.0) — GPU-adaptive animation speed multiplier
+   */
+  applyDisplayCapabilities(caps: {
+    refreshHz: number;
+    frameMs: number;
+    dpr: number;
+    gpuTier: "low" | "mid" | "high";
+  }): void {
+    if (this.displayVarsApplied) return;
+    this.displayVarsApplied = true;
+
+    const root = document.documentElement;
+    root.style.setProperty("--display-dpr", caps.dpr.toFixed(1));
+    root.style.setProperty("--display-refresh-hz", caps.refreshHz.toString());
+    root.style.setProperty("--display-gpu-tier", caps.gpuTier);
+    root.style.setProperty("--display-frame-ms", caps.frameMs.toFixed(2));
+
+    // Derived quality level for CSS consumption
+    const quality =
+      caps.gpuTier === "high" && caps.dpr >= 2 ? "ultra" :
+      caps.gpuTier === "low" ? "low" : "standard";
+    root.style.setProperty("--display-quality", quality);
+
+    // Animation duration multiplier: fast GPUs get full-length animations,
+    // slow GPUs get shortened durations for perceived snappiness
+    const animScale = caps.gpuTier === "high" ? 1.0 : caps.gpuTier === "mid" ? 0.85 : 0.6;
+    root.style.setProperty("--anim-duration-scale", animScale.toFixed(2));
+
+    // High-refresh displays get shorter transition durations (feels crisper)
+    const transitionScale = caps.refreshHz >= 120 ? 0.75 : caps.refreshHz >= 90 ? 0.85 : 1.0;
+    root.style.setProperty("--transition-scale", transitionScale.toFixed(2));
+  }
 
   /**
    * Apply a projection frame to the browser DOM.

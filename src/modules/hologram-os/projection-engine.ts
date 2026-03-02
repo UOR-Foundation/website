@@ -159,6 +159,16 @@ export interface AgentFrameSource {
   readonly idle: boolean;
 }
 
+/** Display capabilities — discovered at boot, stable for session lifetime */
+export interface DisplayCapabilities {
+  readonly refreshHz: number;
+  readonly frameMs: number;
+  readonly dpr: number;
+  readonly gpuTier: "low" | "mid" | "high";
+  /** Derived composite quality level */
+  readonly quality: "low" | "standard" | "ultra";
+}
+
 /** A single projection frame — one tick's worth of visual state */
 export interface ProjectionFrame {
   readonly tick: number;
@@ -186,6 +196,7 @@ export interface ProjectionFrame {
   readonly mirrorProjection: MirrorProjection;
   readonly breathPeriodMs: number;
   readonly agentSources: readonly AgentFrameSource[];
+  readonly displayCapabilities: DisplayCapabilities;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -611,17 +622,16 @@ export class KernelProjector {
   }
 
   /** Get discovered display capabilities */
-  getDisplayCapabilities(): {
-    refreshHz: number;
-    frameMs: number;
-    dpr: number;
-    gpuTier: "low" | "mid" | "high";
-  } {
+  getDisplayCapabilities(): DisplayCapabilities {
+    const quality: DisplayCapabilities["quality"] =
+      this.displayGpuTier === "high" && this.displayDpr >= 2 ? "ultra" :
+      this.displayGpuTier === "low" ? "low" : "standard";
     return {
       refreshHz: this.displayRefreshHz,
       frameMs: this.displayFrameMs,
       dpr: this.displayDpr,
       gpuTier: this.displayGpuTier,
+      quality,
     };
   }
 
@@ -1436,6 +1446,7 @@ export class KernelProjector {
       mirrorProjection,
       breathPeriodMs: this.config.breathingRhythm.breathPeriodMs,
       agentSources: this.agentSources,
+      displayCapabilities: this.getDisplayCapabilities(),
     };
   }
 
