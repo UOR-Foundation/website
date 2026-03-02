@@ -5,7 +5,7 @@ import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
 
@@ -310,7 +310,7 @@ const App = () => {
             <Route path="/projection-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
             <Route path="/ai-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
             {/* Debug routes removed — private */}
-            <Route path="*" element={<NotFoundPage />} />
+            <Route path="*" element={<Navigate to="/hologram-os" replace />} />
           </Routes>
         </Suspense>
         </ScreenContextProvider>
