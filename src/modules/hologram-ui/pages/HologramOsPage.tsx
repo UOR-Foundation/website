@@ -106,17 +106,31 @@ export default function HologramOsPage() {
   const kIsBooting = k.isBooting;
   const kBoot = k.boot;
   useEffect(() => {
-    if (!kIsBooted && !kIsBooting && !bootAttempted.current) {
-      bootAttempted.current = true;
-      const skipAnim = sessionStorage.getItem("kernel:booted") === "1";
-      hasBootedBefore.current = skipAnim;
-      kBoot().then(() => {
-        sessionStorage.setItem("kernel:booted", "1");
-      });
-    } else if (kIsBooted) {
-      setKernelEntered(true);
-      hasBootedBefore.current = true;
-    }
+    let cancelled = false;
+
+    const boot = async () => {
+      if (!kIsBooted && !kIsBooting && !bootAttempted.current) {
+        bootAttempted.current = true;
+        const skipAnim = sessionStorage.getItem("kernel:booted") === "1";
+        hasBootedBefore.current = skipAnim;
+
+        try {
+          await kBoot();
+          if (!cancelled) sessionStorage.setItem("kernel:booted", "1");
+        } catch (error) {
+          console.error("[HologramOsPage] Kernel boot failed:", error);
+          bootAttempted.current = false;
+        }
+      } else if (kIsBooted) {
+        setKernelEntered(true);
+        hasBootedBefore.current = true;
+      }
+    };
+
+    void boot();
+    return () => {
+      cancelled = true;
+    };
   }, [kIsBooted, kIsBooting, kBoot]);
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -153,6 +167,15 @@ export default function HologramOsPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      console.error("[HologramOsPage] Unhandled rejection:", event.reason);
+      event.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
   }, []);
 
   // ── Panel preloading — prescience-driven + hover-triggered ─────────────
@@ -235,32 +258,56 @@ export default function HologramOsPage() {
 
   const handleVoiceExchange = useCallback(async (userText: string, assistantText: string) => {
     if (!chatHistory.isAuthenticated) return;
-    let convId = voiceConversationRef.current;
-    if (!convId) {
-      convId = await chatHistory.createConversation("Voice Session", "voice");
-      if (!convId) return;
-      voiceConversationRef.current = convId;
+
+    try {
+      let convId = voiceConversationRef.current;
+      if (!convId) {
+        convId = await chatHistory.createConversation("Voice Session", "voice");
+        if (!convId) return;
+        voiceConversationRef.current = convId;
+      }
+      await chatHistory.saveMessage(convId, "user", userText, { source: "voice" });
+      await chatHistory.saveMessage(convId, "assistant", assistantText, { source: "voice" });
+      if (userText) await chatHistory.autoTitle(convId, userText);
+    } catch (error) {
+      console.error("[HologramOsPage] Voice exchange persistence failed:", error);
     }
-    await chatHistory.saveMessage(convId, "user", userText, { source: "voice" });
-    await chatHistory.saveMessage(convId, "assistant", assistantText, { source: "voice" });
-    if (userText) await chatHistory.autoTitle(convId, userText);
   }, [chatHistory.isAuthenticated, chatHistory.createConversation, chatHistory.saveMessage, chatHistory.autoTitle]);
 
   const [voiceChatContext, setVoiceChatContext] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!chatHistory.activeConversationId || !chatHistory.isAuthenticated) {
       setVoiceChatContext([]);
       return;
     }
-    chatHistory.loadMessages(chatHistory.activeConversationId).then((msgs) => {
-      setVoiceChatContext(
-        msgs
-          .filter((m) => m.role === "user" || m.role === "assistant")
-          .slice(-20)
-          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
-      );
-    });
+
+    const loadVoiceContext = async () => {
+      try {
+        const msgs = await chatHistory.loadMessages(chatHistory.activeConversationId!);
+        if (cancelled) return;
+
+        setVoiceChatContext(
+          msgs
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .slice(-20)
+            .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
+        );
+      } catch (error) {
+        if (!cancelled) {
+          console.error("[HologramOsPage] Failed to load chat context:", error);
+          setVoiceChatContext([]);
+        }
+      }
+    };
+
+    void loadVoiceContext();
+
+    return () => {
+      cancelled = true;
+    };
   }, [chatHistory.activeConversationId, chatHistory.isAuthenticated]);
 
   // ── Auto-hide widgets in focus mode — kernel syscall ────────────────

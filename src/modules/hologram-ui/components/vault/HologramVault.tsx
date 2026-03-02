@@ -493,20 +493,30 @@ export default function HologramVault({ onClose, onOpenPanel }: HologramVaultPro
     setSelectedItem(null);
   }, []);
 
-  const handleItemClick = useCallback((item: VaultItem) => {
-    setSelectedItem(item.id);
+  const executeItemAction = useCallback((item: VaultItem) => {
+    if (!item.action) return;
+    try {
+      // Opening a new panel already replaces "vault" in kernel state.
+      // Calling onClose() afterwards would immediately close that new panel.
+      item.action();
+    } catch (error) {
+      console.error("[HologramVault] Failed to open item:", item.id, error);
+    }
   }, []);
 
+  const handleItemClick = useCallback((item: VaultItem) => {
+    setSelectedItem(item.id);
+    executeItemAction(item);
+  }, [executeItemAction]);
+
   const handleItemDoubleClick = useCallback((item: VaultItem) => {
-    if (item.action) {
-      item.action();
-      onClose();
-    }
-  }, [onClose]);
+    setSelectedItem(item.id);
+    executeItemAction(item);
+  }, [executeItemAction]);
 
   const handleItemOpen = useCallback((item: VaultItem) => {
-    if (item.action) { item.action(); onClose(); }
-  }, [onClose]);
+    executeItemAction(item);
+  }, [executeItemAction]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, item: VaultItem) => {
     e.preventDefault();
@@ -827,7 +837,12 @@ export default function HologramVault({ onClose, onOpenPanel }: HologramVaultPro
           onClose={() => setContextMenu(null)}
           onOpen={() => handleItemOpen(contextMenu.item)}
           onToggleFavorite={() => toggleFavorite(contextMenu.item.id)}
-          onCopyName={() => navigator.clipboard?.writeText(contextMenu.item.name)}
+          onCopyName={() => {
+            if (!navigator.clipboard) return;
+            void navigator.clipboard.writeText(contextMenu.item.name).catch((error) => {
+              console.error("[HologramVault] Failed to copy item name:", error);
+            });
+          }}
           onGetInfo={() => setInfoItem(contextMenu.item)}
           onToggleTag={toggleItemTag}
         />
