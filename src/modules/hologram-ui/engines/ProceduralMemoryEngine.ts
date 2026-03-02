@@ -17,6 +17,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { habitFireFeedback, habitPromotedFeedback } from "@/modules/hologram-ui/utils/habitFeedback";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -201,6 +202,7 @@ export async function promoteToHabit(candidate: PatternCandidate, agentId = DEFA
 
   if (error || !data) return null;
 
+  habitPromotedFeedback();
   return mapRow(data);
 }
 
@@ -259,6 +261,8 @@ export async function fireHabit(habitId: string): Promise<void> {
       total_time_saved_ms: (data.total_time_saved_ms ?? 0) + 200,
     })
     .eq("habit_id", habitId);
+
+  habitFireFeedback();
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
