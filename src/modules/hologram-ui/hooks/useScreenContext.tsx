@@ -62,7 +62,7 @@ export interface ScreenContextDigest {
 // ── Route → Section mapping ────────────────────────────────────────────────
 
 const ROUTE_SECTIONS: Record<string, string> = {
-  "/hologram-console": "Hologram Home",
+  "/hologram-os": "Hologram Home",
   "/console/apps": "App Library",
   "/console/overview": "System Overview",
   "/console/dns": "DNS & Resolution",
