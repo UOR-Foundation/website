@@ -489,37 +489,38 @@ export default memo(function DesktopSurface({
               onClick={onOpenConvergence}
               aria-label="Open Lumen"
             >
-              {/* Static monad ring — the container circle, always visible */}
+              {/* Monad ring — high contrast, coherent with the line above */}
               <div
                 className="absolute rounded-full"
                 style={{
-                  width: 36,
-                  height: 36,
-                  border: `1.5px solid ${
+                  width: 38,
+                  height: 38,
+                  border: `1.8px solid ${
                     mode === "white"
-                      ? "hsla(32, 35%, 45%, 0.5)"
-                      : "hsla(38, 45%, 55%, 0.35)"
+                      ? "hsla(0, 0%, 8%, 0.55)"
+                      : "hsla(0, 0%, 5%, 0.45)"
                   }`,
                   boxShadow: mode === "white"
-                    ? "0 0 12px hsla(32, 40%, 45%, 0.1), inset 0 0 8px hsla(32, 40%, 45%, 0.05)"
-                    : `0 0 calc(10px + 8px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.08 + 0.12 * var(--h-score, 0.5))), inset 0 0 6px hsla(38, 50%, 55%, 0.04)`,
-                  transition: "border-color 0.4s ease, box-shadow 0.4s ease",
+                    ? "0 0 12px hsla(0, 0%, 0%, 0.06)"
+                    : `0 0 calc(12px + 10px * var(--h-score, 0.5)) hsla(38, 50%, 55%, calc(0.06 + 0.1 * var(--h-score, 0.5)))`,
+                  transition: "border-color 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease",
+                  animation: "monad-breathe var(--kernel-breath-period, 4s) ease-in-out infinite",
                 }}
               />
-              {/* Ripple rings — emanate outward from the monad */}
+              {/* Ripple rings — kernel-synced emanation */}
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
                   className="absolute rounded-full"
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 38,
+                    height: 38,
                     border: `1px solid ${
                       mode === "white"
-                        ? "hsla(32, 35%, 45%, 0.3)"
-                        : "hsla(38, 45%, 55%, 0.25)"
+                        ? "hsla(0, 0%, 8%, 0.25)"
+                        : "hsla(0, 0%, 5%, 0.2)"
                     }`,
-                    animation: `genesis-ripple 3s ease-out ${i * 1}s infinite`,
+                    animation: `genesis-ripple calc(var(--kernel-breath-period, 4s) * 0.85) ease-out ${i * 1.1}s infinite`,
                   }}
                 />
               ))}

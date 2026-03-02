@@ -609,6 +609,13 @@
   100% { transform: scale(calc(2.2 + 0.8 * var(--h-score, 0.6))); opacity: 0; }
 }
 
+/* Monad ring breathing — synced to kernel breath period */
+@keyframes monad-breathe {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.06); opacity: 0.85; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
 @keyframes pill-glow-pulse {
   0%   { box-shadow: 0 0 0 hsla(38, 50%, 50%, 0), 0 0 0 hsla(38, 50%, 50%, 0); }
   13%  { box-shadow: 0 0 calc(12px + 12px * var(--h-score, 0.5)) hsla(38, 50%, 50%, calc(0.2 + 0.2 * var(--h-score, 0.5))), 0 0 calc(24px + 24px * var(--h-score, 0.5)) hsla(38, 50%, 50%, 0.15); }
