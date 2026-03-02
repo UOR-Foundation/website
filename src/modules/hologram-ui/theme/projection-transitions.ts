@@ -14,16 +14,16 @@
  */
 
 /** Primary interaction curve — organic ease-out with gentle deceleration */
-export const EASE_PROJECT = "cubic-bezier(0.23, 1, 0.32, 1)";
+export const EASE_PROJECT = "cubic-bezier(0.16, 1, 0.3, 1)";
 
-/** Exit curve — balanced departure, not abrupt */
-export const EASE_DISMISS = "cubic-bezier(0.2, 0.8, 0.4, 1)";
+/** Exit curve — gentle, natural retrace back into the sidebar */
+export const EASE_DISMISS = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 /** Micro interaction curve — for hovers, toggles, small state changes */
 export const EASE_MICRO = "cubic-bezier(0.25, 0.1, 0.25, 1)";
 
-/** Panel projection (sidebar panels, chat) — harmonious, balanced slide */
-export const DURATION_PROJECT_MS = 340;
+/** Panel projection (sidebar panels, chat) — harmonious, human-paced slide */
+export const DURATION_PROJECT_MS = 480;
 
 /** Overlay reveal (legal panel, modals) — slightly longer for presence */
 export const DURATION_OVERLAY_MS = 400;
