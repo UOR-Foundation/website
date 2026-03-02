@@ -8,11 +8,13 @@
  * @module hologram-ui/components/lumen/BloomTrustProjection
  */
 
-import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Shield, Users, Star } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, Users, Star, UserPlus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
+import BloomFAB from "./BloomFAB";
+import type { FABAction } from "./BloomFAB";
 
 interface TrustNode {
   id: string;
@@ -25,6 +27,41 @@ interface TrustNode {
 export default function BloomTrustProjection() {
   const [nodes, setNodes] = useState<TrustNode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showConnect, setShowConnect] = useState(false);
+  const [searchHandle, setSearchHandle] = useState("");
+  const [searchResults, setSearchResults] = useState<{ user_id: string; display_name: string; handle: string; uor_glyph: string }[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sending, setSending] = useState<string | null>(null);
+
+  const handleSearch = useCallback(async () => {
+    if (searchHandle.trim().length < 2) return;
+    setSearching(true);
+    const { data } = await supabase.rpc("search_profiles_by_handle", { search_handle: searchHandle.trim() });
+    setSearchResults(data ?? []);
+    setSearching(false);
+  }, [searchHandle]);
+
+  const sendRequest = useCallback(async (targetId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    setSending(targetId);
+    const attestation = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, "0")).join("");
+    await supabase.from("trust_connections").insert({
+      requester_id: session.user.id,
+      responder_id: targetId,
+      requester_attestation: attestation,
+      message: "Trust request from bloom",
+    });
+    setSending(null);
+    setShowConnect(false);
+    setSearchHandle("");
+    setSearchResults([]);
+  }, []);
+
+  const fabActions: FABAction[] = useMemo(() => [
+    { id: "new-connection", label: "New Connection", icon: UserPlus, onTap: () => setShowConnect(true) },
+  ], []);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,7 +142,72 @@ export default function BloomTrustProjection() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto px-4 py-3 gap-3">
+    <div className="flex-1 relative flex flex-col overflow-y-auto px-4 py-3 gap-3">
+      {/* Quick-connect sheet */}
+      <AnimatePresence>
+        {showConnect && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="rounded-xl p-3 space-y-2"
+            style={{ background: PP.canvasSubtle, border: `1px solid ${PP.bloomCardBorder}` }}
+          >
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5" strokeWidth={1.5} style={{ color: PP.textWhisper }} />
+              <input
+                value={searchHandle}
+                onChange={e => setSearchHandle(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="Search by handle…"
+                autoFocus
+                className="flex-1 bg-transparent outline-none"
+                style={{ fontFamily: PP.font, fontSize: "13px", color: PP.text }}
+              />
+              <button
+                onClick={handleSearch}
+                className="px-2.5 py-1 rounded-lg active:scale-95 transition-transform"
+                style={{ background: `${PP.accent}15`, border: `1px solid ${PP.accent}20` }}
+              >
+                <span style={{ fontFamily: PP.font, fontSize: "11px", color: PP.accent }}>Find</span>
+              </button>
+              <button onClick={() => { setShowConnect(false); setSearchResults([]); setSearchHandle(""); }}>
+                <span style={{ fontFamily: PP.font, fontSize: "11px", color: PP.textWhisper }}>✕</span>
+              </button>
+            </div>
+            {searching && (
+              <div className="flex justify-center py-2">
+                <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: `${PP.accent}30`, borderTopColor: PP.accent }} />
+              </div>
+            )}
+            {searchResults.map(r => (
+              <div key={r.user_id} className="flex items-center gap-2 px-2 py-2 rounded-lg" style={{ background: `${PP.accent}06` }}>
+                <span style={{ fontSize: "14px" }}>{r.uor_glyph || "◯"}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate" style={{ fontFamily: PP.font, fontSize: "13px", color: PP.text }}>{r.display_name || r.handle}</p>
+                  <p style={{ fontFamily: PP.font, fontSize: "10px", color: PP.textWhisper }}>@{r.handle}</p>
+                </div>
+                <button
+                  onClick={() => sendRequest(r.user_id)}
+                  disabled={sending === r.user_id}
+                  className="px-2.5 py-1 rounded-lg active:scale-95 transition-transform"
+                  style={{ background: PP.accent, opacity: sending === r.user_id ? 0.5 : 1 }}
+                >
+                  <span style={{ fontFamily: PP.font, fontSize: "10px", fontWeight: 600, color: PP.canvas }}>
+                    {sending === r.user_id ? "…" : "Connect"}
+                  </span>
+                </button>
+              </div>
+            ))}
+            {!searching && searchResults.length === 0 && searchHandle.length >= 2 && (
+              <p style={{ fontFamily: PP.font, fontSize: "11px", color: PP.textWhisper, textAlign: "center", padding: "4px 0" }}>
+                No results found
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Summary bar */}
       <div
         className="flex items-center justify-between px-4 py-3 rounded-xl"
@@ -180,6 +282,9 @@ export default function BloomTrustProjection() {
           </div>
         </motion.div>
       ))}
+
+      {/* FAB */}
+      <BloomFAB actions={fabActions} />
     </div>
   );
 }

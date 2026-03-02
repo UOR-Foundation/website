@@ -8,12 +8,14 @@
  * @module hologram-ui/components/lumen/BloomCalendarProjection
  */
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CalendarDays, Clock, MapPin, CalendarPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PP } from "@/modules/hologram-ui/theme/portal-palette";
-import { format, isToday, isTomorrow, parseISO, startOfDay, addDays } from "date-fns";
+import { format, isToday, isTomorrow, parseISO, startOfDay, addDays, addHours } from "date-fns";
+import BloomFAB from "./BloomFAB";
+import type { FABAction } from "./BloomFAB";
 
 interface CalEvent {
   id: string;
@@ -28,6 +30,36 @@ interface CalEvent {
 export default function BloomCalendarProjection() {
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDate, setNewDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [newTime, setNewTime] = useState(format(addHours(new Date(), 1), "HH:mm"));
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = useCallback(async () => {
+    if (!newTitle.trim()) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    setCreating(true);
+    const start = new Date(`${newDate}T${newTime}`);
+    const end = addHours(start, 1);
+    const { data } = await supabase.from("calendar_events").insert({
+      user_id: session.user.id,
+      title: newTitle.trim(),
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+    }).select().single();
+    if (data) {
+      setEvents(prev => [...prev, data as CalEvent].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+    }
+    setCreating(false);
+    setShowCreate(false);
+    setNewTitle("");
+  }, [newTitle, newDate, newTime]);
+
+  const fabActions: FABAction[] = useMemo(() => [
+    { id: "new-event", label: "New Event", icon: CalendarPlus, onTap: () => setShowCreate(true) },
+  ], []);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,7 +128,63 @@ export default function BloomCalendarProjection() {
   }, {});
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+    <div className="flex-1 relative overflow-y-auto px-4 py-3 space-y-4">
+      {/* Quick-create event sheet */}
+      <AnimatePresence>
+        {showCreate && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="rounded-xl p-3 space-y-2.5"
+            style={{ background: PP.canvasSubtle, border: `1px solid ${PP.bloomCardBorder}` }}
+          >
+            <input
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              placeholder="Event title…"
+              autoFocus
+              className="w-full bg-transparent outline-none"
+              style={{ fontFamily: PP.font, fontSize: "14px", color: PP.text }}
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="bg-transparent outline-none flex-1"
+                style={{ fontFamily: PP.font, fontSize: "12px", color: PP.textSecondary, colorScheme: "dark" }}
+              />
+              <input
+                type="time"
+                value={newTime}
+                onChange={e => setNewTime(e.target.value)}
+                className="bg-transparent outline-none"
+                style={{ fontFamily: PP.font, fontSize: "12px", color: PP.textSecondary, colorScheme: "dark" }}
+              />
+            </div>
+            <div className="flex items-center gap-2 justify-end">
+              <button
+                onClick={() => { setShowCreate(false); setNewTitle(""); }}
+                className="px-3 py-1.5 rounded-lg"
+              >
+                <span style={{ fontFamily: PP.font, fontSize: "11px", color: PP.textWhisper }}>Cancel</span>
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={creating || !newTitle.trim()}
+                className="px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+                style={{ background: PP.accent, opacity: creating || !newTitle.trim() ? 0.5 : 1 }}
+              >
+                <span style={{ fontFamily: PP.font, fontSize: "11px", fontWeight: 600, color: PP.canvas }}>
+                  {creating ? "Creating…" : "Create"}
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {Object.entries(grouped).map(([dayLabel, dayEvents]) => (
         <div key={dayLabel}>
           <p
@@ -122,7 +210,6 @@ export default function BloomCalendarProjection() {
                 className="flex gap-3 px-4 py-3 rounded-xl"
                 style={{ background: PP.canvasSubtle, border: `1px solid ${PP.bloomCardBorder}` }}
               >
-                {/* Time accent bar */}
                 <div
                   className="w-[3px] rounded-full self-stretch"
                   style={{ background: ev.color || PP.accent, opacity: 0.6 }}
@@ -159,6 +246,9 @@ export default function BloomCalendarProjection() {
           </div>
         </div>
       ))}
+
+      {/* FAB */}
+      <BloomFAB actions={fabActions} />
     </div>
   );
 }
