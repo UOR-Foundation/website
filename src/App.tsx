@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import DevGate from "@/components/DevGate";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
@@ -210,30 +211,30 @@ const App = () => {
             <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
             <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
             <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
-            <Route path="/api" element={<ApiPage />} />
-            <Route path="/ring-explorer" element={<RingExplorerPage />} />
-            <Route path="/derivation-lab" element={<DerivationLabPage />} />
-            <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
-            <Route path="/sparql-editor" element={<SparqlEditorPage />} />
-            <Route path="/conformance" element={<ConformancePage />} />
-            <Route path="/code-knowledge-graph" element={<CodeKnowledgeGraphPage />} />
-            <Route path="/agent-console" element={<AgentConsolePage />} />
-            <Route path="/audit" element={<AuditPage />} />
-            <Route path="/sessions" element={<SessionsPage />} />
-            <Route path="/verify" element={<VerifyPage />} />
-            <Route path="/epistemic" element={<EpistemicPage />} />
-            <Route path="/certificates" element={<CertificatesPage />} />
-            <Route path="/sparql" element={<SparqlPage />} />
-            <Route path="/tools" element={<ToolRegistryPage />} />
-            <Route path="/prism" element={<PrismPipelinePage />} />
-            <Route path="/shacl" element={<ShaclIndexPage />} />
-            <Route path="/formats" element={<FormatsPage />} />
-            <Route path="/u/:iri" element={<DatumPage />} />
-            <Route path="/trust-score-preview" element={<TrustScorePreview />} />
-            <Route path="/bulk-pin" element={<BulkPinPage />} />
-            <Route path="/oracle" element={<OraclePage />} />
-            <Route path="/uns" element={<UnsPage />} />
-            <Route path="/console" element={<ConsoleLayout />}>
+            <Route path="/api" element={<DevGate><ApiPage /></DevGate>} />
+            <Route path="/ring-explorer" element={<DevGate><RingExplorerPage /></DevGate>} />
+            <Route path="/derivation-lab" element={<DevGate><DerivationLabPage /></DevGate>} />
+            <Route path="/knowledge-graph" element={<DevGate><KnowledgeGraphPage /></DevGate>} />
+            <Route path="/sparql-editor" element={<DevGate><SparqlEditorPage /></DevGate>} />
+            <Route path="/conformance" element={<DevGate><ConformancePage /></DevGate>} />
+            <Route path="/code-knowledge-graph" element={<DevGate><CodeKnowledgeGraphPage /></DevGate>} />
+            <Route path="/agent-console" element={<DevGate><AgentConsolePage /></DevGate>} />
+            <Route path="/audit" element={<DevGate><AuditPage /></DevGate>} />
+            <Route path="/sessions" element={<DevGate><SessionsPage /></DevGate>} />
+            <Route path="/verify" element={<DevGate><VerifyPage /></DevGate>} />
+            <Route path="/epistemic" element={<DevGate><EpistemicPage /></DevGate>} />
+            <Route path="/certificates" element={<DevGate><CertificatesPage /></DevGate>} />
+            <Route path="/sparql" element={<DevGate><SparqlPage /></DevGate>} />
+            <Route path="/tools" element={<DevGate><ToolRegistryPage /></DevGate>} />
+            <Route path="/prism" element={<DevGate><PrismPipelinePage /></DevGate>} />
+            <Route path="/shacl" element={<DevGate><ShaclIndexPage /></DevGate>} />
+            <Route path="/formats" element={<DevGate><FormatsPage /></DevGate>} />
+            <Route path="/u/:iri" element={<DevGate><DatumPage /></DevGate>} />
+            <Route path="/trust-score-preview" element={<DevGate><TrustScorePreview /></DevGate>} />
+            <Route path="/bulk-pin" element={<DevGate><BulkPinPage /></DevGate>} />
+            <Route path="/oracle" element={<DevGate><OraclePage /></DevGate>} />
+            <Route path="/uns" element={<DevGate><UnsPage /></DevGate>} />
+            <Route path="/console" element={<DevGate><ConsoleLayout /></DevGate>}>
               <Route index element={<AppConsoleApps />} />
               <Route path="overview" element={<ConsoleOverview />} />
               <Route path="dns" element={<ConsoleDns />} />
@@ -252,23 +253,23 @@ const App = () => {
               <Route path="pq-bridge" element={<ConsolePqBridge />} />
               <Route path="ethereum" element={<ConsoleEthereum />} />
             </Route>
-            <Route path="/developers" element={<DevelopersPage />} />
-            <Route path="/developers/directory" element={<DirectoryPage />} />
-            <Route path="/developers/getting-started" element={<GettingStartedDocPage />} />
-            <Route path="/developers/fundamentals" element={<FundamentalsDocPage />} />
-            <Route path="/developers/concepts" element={<ConceptsDocPage />} />
-            <Route path="/developers/dns" element={<DnsDocPage />} />
-            <Route path="/developers/compute" element={<ComputeDocPage />} />
-            <Route path="/developers/store" element={<StoreDocPage />} />
-            <Route path="/developers/kv" element={<KvDocPage />} />
-            <Route path="/developers/ledger" element={<LedgerDocPage />} />
-            <Route path="/developers/shield" element={<ShieldDocPage />} />
-            <Route path="/developers/trust" element={<TrustDocPage />} />
-            <Route path="/developers/agents" element={<AgentsDocPage />} />
-            <Route path="/developers/sdk" element={<SdkDocPage />} />
-            <Route path="/cartridge" element={<CartridgePage />} />
+            <Route path="/developers" element={<DevGate><DevelopersPage /></DevGate>} />
+            <Route path="/developers/directory" element={<DevGate><DirectoryPage /></DevGate>} />
+            <Route path="/developers/getting-started" element={<DevGate><GettingStartedDocPage /></DevGate>} />
+            <Route path="/developers/fundamentals" element={<DevGate><FundamentalsDocPage /></DevGate>} />
+            <Route path="/developers/concepts" element={<DevGate><ConceptsDocPage /></DevGate>} />
+            <Route path="/developers/dns" element={<DevGate><DnsDocPage /></DevGate>} />
+            <Route path="/developers/compute" element={<DevGate><ComputeDocPage /></DevGate>} />
+            <Route path="/developers/store" element={<DevGate><StoreDocPage /></DevGate>} />
+            <Route path="/developers/kv" element={<DevGate><KvDocPage /></DevGate>} />
+            <Route path="/developers/ledger" element={<DevGate><LedgerDocPage /></DevGate>} />
+            <Route path="/developers/shield" element={<DevGate><ShieldDocPage /></DevGate>} />
+            <Route path="/developers/trust" element={<DevGate><TrustDocPage /></DevGate>} />
+            <Route path="/developers/agents" element={<DevGate><AgentsDocPage /></DevGate>} />
+            <Route path="/developers/sdk" element={<DevGate><SdkDocPage /></DevGate>} />
+            <Route path="/cartridge" element={<DevGate><CartridgePage /></DevGate>} />
             <Route path="/your-space" element={<YourSpacePage />} />
-            <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/sandbox" element={<DevGate><SandboxPage /></DevGate>} />
             <Route path="/claim-identity" element={<ClaimIdentityPage />} />
             <Route path="/ceremony" element={<CeremonyPage />} />
             <Route path="/bitcoin" element={<BitcoinScriptPage />} />
@@ -286,28 +287,28 @@ const App = () => {
             <Route path="/consciousness/god-conjecture" element={<GodConjecturePage />} />
             <Route path="/trust-graph" element={<TrustGraphPage />} />
             <Route path="/hologram-os" element={<HologramOsPage />} />
-            <Route path="/hologram" element={<HologramConsolePage />} />
-            <Route path="/code-kg" element={<CodeKgPage />} />
-            <Route path="/convergence" element={<ConvergencePage />} />
-            <Route path="/meta-observer" element={<MetaObserverPage />} />
-            <Route path="/multi-scale" element={<MultiScalePage />} />
-            <Route path="/stream-projection" element={<StreamProjectionPage />} />
-            <Route path="/console/observer" element={<ObserverHubPage />} />
-            <Route path="/interoperability" element={<InteroperabilityPage />} />
-            <Route path="/continuity" element={<ContinuityPage />} />
-            <Route path="/lens-inspector" element={<LensInspectorPage />} />
-            <Route path="/schema-org" element={<SchemaOrgExplorerPage />} />
+            <Route path="/hologram" element={<DevGate><HologramConsolePage /></DevGate>} />
+            <Route path="/code-kg" element={<DevGate><CodeKgPage /></DevGate>} />
+            <Route path="/convergence" element={<DevGate><ConvergencePage /></DevGate>} />
+            <Route path="/meta-observer" element={<DevGate><MetaObserverPage /></DevGate>} />
+            <Route path="/multi-scale" element={<DevGate><MultiScalePage /></DevGate>} />
+            <Route path="/stream-projection" element={<DevGate><StreamProjectionPage /></DevGate>} />
+            <Route path="/console/observer" element={<DevGate><ObserverHubPage /></DevGate>} />
+            <Route path="/interoperability" element={<DevGate><InteroperabilityPage /></DevGate>} />
+            <Route path="/continuity" element={<DevGate><ContinuityPage /></DevGate>} />
+            <Route path="/lens-inspector" element={<DevGate><LensInspectorPage /></DevGate>} />
+            <Route path="/schema-org" element={<DevGate><SchemaOrgExplorerPage /></DevGate>} />
             <Route path="/leaderboard" element={<ReferralLeaderboardPage />} />
             <Route path="/genesis" element={<GenesisBootPage />} />
-            <Route path="/artifact" element={<ArtifactInspectorPage />} />
-            <Route path="/kernel-graph" element={<KernelGraphPage />} />
-            <Route path="/triword" element={<TriwordLookupPage />} />
-            <Route path="/code-nexus" element={<CodeNexusPage />} />
-            <Route path="/atlas" element={<AtlasVisualizationPage />} />
-            <Route path="/quantum" element={<QuantumDashboardPage />} />
-            <Route path="/q-shell" element={<QShellPage />} />
-            <Route path="/projection-lab" element={<AtlasProjectionLab />} />
-            <Route path="/ai-lab" element={<AtlasProjectionLab />} />
+            <Route path="/artifact" element={<DevGate><ArtifactInspectorPage /></DevGate>} />
+            <Route path="/kernel-graph" element={<DevGate><KernelGraphPage /></DevGate>} />
+            <Route path="/triword" element={<DevGate><TriwordLookupPage /></DevGate>} />
+            <Route path="/code-nexus" element={<DevGate><CodeNexusPage /></DevGate>} />
+            <Route path="/atlas" element={<DevGate><AtlasVisualizationPage /></DevGate>} />
+            <Route path="/quantum" element={<DevGate><QuantumDashboardPage /></DevGate>} />
+            <Route path="/q-shell" element={<DevGate><QShellPage /></DevGate>} />
+            <Route path="/projection-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
+            <Route path="/ai-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
             {/* Debug routes removed — private */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
