@@ -36,10 +36,14 @@ interface Stats {
   displayRefreshHz: number;
   displayDpr: number;
   displayGpuTier: string;
+  displayQuality: string;
   breathPeriodMs: number;
   breathEventCount: number;
   breathIntervalCount: number;
   breathDwellMs: number;
+  renderCount: number;
+  kernelTickRateHz: number;
+  frameDrops: number;
 }
 
 // ─── Sparkline History ──────────────────────────────────────────────────
@@ -195,53 +199,134 @@ function ProcessesTab({ stats }: { stats: Stats }) {
 
 function PerformanceTab({ stats }: { stats: Stats }) {
   const fpsHistory = useHistory(stats.measuredFps);
-  const frameAgeHistory = useHistory(stats.lastFrameAge);
-  const interpHistory = useHistory(stats.interpPhase * 100);
+  const tickRateHistory = useHistory(stats.kernelTickRateHz);
+  const renderHistory = useHistory(stats.renderCount);
+  const frameDropHistory = useHistory(stats.frameDrops);
+
+  // Health assessment
+  const fpsHealth = stats.measuredFps >= stats.displayRefreshHz * 0.9 ? "excellent"
+    : stats.measuredFps >= 30 ? "good"
+    : stats.measuredFps >= 15 ? "degraded" : "poor";
+  const fpsColor = fpsHealth === "excellent" ? KP.green : fpsHealth === "good" ? KP.gold : KP.red;
 
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-4" style={{ minHeight: 280 }}>
-      {/* Left sidebar — resource list */}
-      <div className="space-y-1.5 pr-3" style={{ borderRight: `1px solid ${KP.cardBorder}` }}>
-        {[
-          { label: "Frame Rate", detail: `${stats.measuredFps.toFixed(0)} fps`, color: KP.green },
-          { label: "Rendering", detail: stats.isActive ? "Active" : "Idle", color: stats.isActive ? KP.green : KP.dim },
-          { label: "Display", detail: `${stats.displayRefreshHz}Hz`, color: KP.purple },
-          { label: "Smoothing", detail: stats.interpSleeping ? "Sleeping" : "Running", color: stats.interpSleeping ? KP.gold : KP.green },
-          { label: "Breathing", detail: `${(stats.breathPeriodMs / 1000).toFixed(1)}s`, color: KP.purple },
-        ].map(({ label, detail, color }) => (
-          <div key={label} className="rounded-md px-2.5 py-2 cursor-default hover:bg-white/[0.03] transition-colors">
-            <div className="text-xs font-medium" style={{ color: KP.text }}>{label}</div>
-            <div className="text-[10px] mt-0.5" style={{ color }}>{detail}</div>
+    <div className="space-y-4">
+      {/* ── Live Gauges Row ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-4 gap-3">
+        {/* FPS Gauge */}
+        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>FPS</div>
+          <div className="text-2xl font-bold tabular-nums" style={{ color: fpsColor }}>
+            {stats.measuredFps.toFixed(0)}
           </div>
-        ))}
+          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
+            {fpsHealth === "excellent" ? "✓ Smooth" : fpsHealth === "good" ? "~ Acceptable" : "⚠ Dropping"}
+          </div>
+        </div>
+
+        {/* Kernel Tick Rate */}
+        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Tick Rate</div>
+          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.isActive ? KP.purple : KP.dim }}>
+            {stats.kernelTickRateHz}
+          </div>
+          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
+            Hz · {stats.isActive ? "Active" : "Idle"}
+          </div>
+        </div>
+
+        {/* Re-render Count */}
+        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Renders</div>
+          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.renderCount > 120 ? KP.gold : KP.green }}>
+            {stats.renderCount > 999 ? `${(stats.renderCount / 1000).toFixed(1)}k` : stats.renderCount}
+          </div>
+          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
+            per second
+          </div>
+        </div>
+
+        {/* Frame Drops */}
+        <div className="rounded-lg p-3 text-center" style={{ background: "hsla(30, 8%, 14%, 0.6)", border: `1px solid ${KP.cardBorder}` }}>
+          <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: KP.dim }}>Drops</div>
+          <div className="text-2xl font-bold tabular-nums" style={{ color: stats.frameDrops > 0 ? KP.red : KP.green }}>
+            {stats.frameDrops}
+          </div>
+          <div className="text-[9px] mt-1" style={{ color: KP.dim }}>
+            {stats.frameDrops === 0 ? "✓ None" : "frames missed"}
+          </div>
+        </div>
       </div>
 
-      {/* Right — charts & detail */}
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between items-baseline mb-2">
-            <span className="text-sm font-medium" style={{ color: KP.text }}>Frame Rate</span>
-            <span className="text-lg tabular-nums font-semibold" style={{ color: KP.green }}>
-              {stats.measuredFps.toFixed(1)} <span className="text-xs font-normal" style={{ color: KP.muted }}>fps</span>
-            </span>
-          </div>
-          <Sparkline data={fpsHistory} color="hsl(152, 44%, 50%)" label="60 seconds" />
+      {/* ── FPS Sparkline ────────────────────────────────────────────── */}
+      <div>
+        <div className="flex justify-between items-baseline mb-2">
+          <span className="text-sm font-medium" style={{ color: KP.text }}>Frame Rate Over Time</span>
+          <span className="text-lg tabular-nums font-semibold" style={{ color: fpsColor }}>
+            {stats.measuredFps.toFixed(1)} <span className="text-xs font-normal" style={{ color: KP.muted }}>fps</span>
+          </span>
         </div>
-
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-          <MetricRow label="Display refresh" value={`${stats.displayRefreshHz} Hz`} />
-          <MetricRow label="Pixel density" value={`${stats.displayDpr.toFixed(1)}x`} />
-          <MetricRow label="Graphics quality" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} accent={stats.displayGpuTier === "high" ? KP.green : stats.displayGpuTier === "mid" ? KP.gold : KP.dim} />
-          <MetricRow label="Frame age" value={`${stats.lastFrameAge.toFixed(0)} ms`} accent={stats.lastFrameAge > 150 ? KP.gold : KP.muted} />
-          <MetricRow label="Smoothing phase" value={`${(stats.interpPhase * 100).toFixed(0)}%`} />
-          <MetricRow label="Blend mode" value={stats.interpHasPrev ? "Smooth" : "Instant"} accent={stats.interpHasPrev ? KP.green : KP.gold} />
+        <Sparkline data={fpsHistory} color="hsl(152, 44%, 50%)" label="60 samples" />
+        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
+          How many frames your display paints per second. Should match your display's {stats.displayRefreshHz}Hz refresh rate.
+          Dips indicate the system is doing heavy work or re-rendering too many components.
         </div>
+      </div>
 
-        <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
-          <div className="flex justify-between items-baseline mb-2">
-            <span className="text-xs" style={{ color: KP.muted }}>Frame Timing</span>
-          </div>
-          <Sparkline data={frameAgeHistory} color="hsl(38, 60%, 55%)" height={32} label="age (ms)" />
+      {/* ── Kernel Tick Sparkline ─────────────────────────────────────── */}
+      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
+        <div className="flex justify-between items-baseline mb-2">
+          <span className="text-sm font-medium" style={{ color: KP.text }}>Kernel Tick Rate</span>
+          <span className="text-base tabular-nums font-semibold" style={{ color: KP.purple }}>
+            {stats.kernelTickRateHz} <span className="text-xs font-normal" style={{ color: KP.muted }}>Hz</span>
+          </span>
+        </div>
+        <Sparkline data={tickRateHistory} color="hsl(280, 45%, 60%)" height={32} label="ticks/sec" />
+        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
+          How often the kernel recomputes the projection frame. Runs at {stats.displayRefreshHz}Hz when active (responding to your input),
+          drops to 10Hz when idle to save energy. The system automatically scales between these rates.
+        </div>
+      </div>
+
+      {/* ── Re-render Sparkline ──────────────────────────────────────── */}
+      <div className="pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
+        <div className="flex justify-between items-baseline mb-2">
+          <span className="text-sm font-medium" style={{ color: KP.text }}>React Renders</span>
+          <span className="text-base tabular-nums font-semibold" style={{ color: stats.renderCount > 120 ? KP.gold : KP.green }}>
+            {stats.renderCount} <span className="text-xs font-normal" style={{ color: KP.muted }}>/sec</span>
+          </span>
+        </div>
+        <Sparkline data={renderHistory} color="hsl(38, 60%, 55%)" height={32} label="renders/sec" />
+        <div className="text-[10px] mt-1.5 leading-relaxed" style={{ color: KP.dim }}>
+          How many React component re-renders occur per second. Low numbers mean the system is efficiently
+          skipping unnecessary updates. High numbers (&gt;120) may indicate components reacting to every kernel tick.
+        </div>
+      </div>
+
+      {/* ── Detailed Metrics Grid ────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1 pt-2" style={{ borderTop: `1px solid ${KP.cardBorder}` }}>
+        <MetricRow label="Display refresh" value={`${stats.displayRefreshHz} Hz`} />
+        <MetricRow label="Pixel density" value={`${stats.displayDpr.toFixed(1)}x`} />
+        <MetricRow label="Quality tier" value={stats.displayQuality === "ultra" ? "Ultra" : stats.displayQuality === "standard" ? "Standard" : "Basic"} accent={stats.displayQuality === "ultra" ? KP.green : stats.displayQuality === "standard" ? KP.gold : KP.dim} />
+        <MetricRow label="GPU tier" value={stats.displayGpuTier === "high" ? "High" : stats.displayGpuTier === "mid" ? "Medium" : "Basic"} accent={stats.displayGpuTier === "high" ? KP.green : stats.displayGpuTier === "mid" ? KP.gold : KP.dim} />
+        <MetricRow label="Frame age" value={`${stats.lastFrameAge.toFixed(0)} ms`} accent={stats.lastFrameAge > 150 ? KP.gold : KP.muted} />
+        <MetricRow label="Smoothing" value={stats.interpSleeping ? "Sleeping (idle)" : stats.interpHasPrev ? "Blending" : "Instant"} accent={stats.interpSleeping ? KP.dim : KP.green} />
+      </div>
+
+      {/* ── Health Summary ────────────────────────────────────────────── */}
+      <div className="rounded-lg p-3" style={{ background: fpsHealth === "excellent" ? "hsla(152, 30%, 15%, 0.4)" : fpsHealth === "good" ? "hsla(38, 30%, 15%, 0.4)" : "hsla(0, 30%, 15%, 0.4)", border: `1px solid ${KP.cardBorder}` }}>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold" style={{ color: fpsColor }}>
+            {fpsHealth === "excellent" ? "✓ Excellent Performance" : fpsHealth === "good" ? "~ Good Performance" : fpsHealth === "degraded" ? "⚠ Degraded Performance" : "✗ Poor Performance"}
+          </span>
+        </div>
+        <div className="text-[10px] leading-relaxed" style={{ color: KP.muted }}>
+          {fpsHealth === "excellent"
+            ? `Your system is running at peak efficiency. FPS matches your ${stats.displayRefreshHz}Hz display. Kernel tick rate adapts automatically, and React renders are minimal.`
+            : fpsHealth === "good"
+            ? `Performance is acceptable but not at native refresh rate. The kernel is compensating with frame interpolation to maintain smooth visuals.`
+            : `Frame rate is below optimal. The kernel has reduced tick rate to conserve resources. Consider closing unused panels or reducing animation complexity.`
+          }
         </div>
       </div>
     </div>
@@ -671,6 +756,10 @@ export default function KernelDevTools() {
   const [stats, setStats] = useState<Stats | null>(null);
   const fpsAccumRef = useRef<number[]>([]);
   const lastTickRef = useRef(performance.now());
+  const renderCountRef = useRef(0);
+  const renderWindowRef = useRef(performance.now());
+  const lastTickCountRef = useRef(0);
+  const frameDropRef = useRef(0);
 
   // Toggle with Ctrl+Shift+D
   useEffect(() => {
@@ -691,6 +780,11 @@ export default function KernelDevTools() {
     const projector = getKernelProjector();
     const adapter = getBrowserAdapter();
 
+    // Track render count via frame listener
+    const unsub = projector.onFrame(() => {
+      renderCountRef.current++;
+    });
+
     const poll = () => {
       const now = performance.now();
       const ps = projector.getStreamStats();
@@ -710,6 +804,26 @@ export default function KernelDevTools() {
       const br = projector.getBreathingRhythm();
       const dc = projector.getDisplayCapabilities();
 
+      // Compute renders per second
+      const renderWindowDt = now - renderWindowRef.current;
+      const rendersPerSec = renderWindowDt > 0 ? Math.round(renderCountRef.current / (renderWindowDt / 1000)) : 0;
+      // Reset window every 2 seconds for fresh measurement
+      if (renderWindowDt > 2000) {
+        renderCountRef.current = 0;
+        renderWindowRef.current = now;
+      }
+
+      // Kernel tick rate = ticks delta / time delta
+      const tickDelta = ps.tickCount - lastTickCountRef.current;
+      lastTickCountRef.current = ps.tickCount;
+      const kernelTickRateHz = dt > 0 ? Math.round(tickDelta / (dt / 1000)) : 0;
+
+      // Frame drops = expected frames - actual frames (when active)
+      const expectedFrames = dt > 0 ? Math.round(dc.refreshHz * (dt / 1000)) : 0;
+      if (ps.isActive && tickDelta < expectedFrames * 0.5 && expectedFrames > 1) {
+        frameDropRef.current++;
+      }
+
       setStats({
         ...ps,
         interpRunning: is.running,
@@ -721,16 +835,23 @@ export default function KernelDevTools() {
         displayRefreshHz: dc.refreshHz,
         displayDpr: dc.dpr,
         displayGpuTier: dc.gpuTier,
+        displayQuality: dc.quality,
         breathPeriodMs: br.breathPeriodMs,
         breathEventCount: br.eventCount,
         breathIntervalCount: br.intervals.length,
         breathDwellMs: br.dwellMs,
+        renderCount: rendersPerSec,
+        kernelTickRateHz,
+        frameDrops: frameDropRef.current,
       });
     };
 
     const id = setInterval(poll, 50);
     poll();
-    return () => clearInterval(id);
+    return () => {
+      unsub();
+      clearInterval(id);
+    };
   }, [visible]);
 
   if (!visible || !stats) return null;
@@ -807,7 +928,7 @@ export default function KernelDevTools() {
             <StatusDot active={stats.isActive} />
             {stats.isActive ? "Engine active" : "Engine idle"}
           </span>
-          <span className="tabular-nums">{stats.measuredFps.toFixed(0)} fps · {stats.displayRefreshHz}Hz display</span>
+          <span className="tabular-nums">{stats.measuredFps.toFixed(0)} fps · {stats.kernelTickRateHz}Hz tick · {stats.renderCount} renders/s · {stats.displayRefreshHz}Hz display</span>
           <span>Ctrl+Shift+D to close</span>
         </div>
       </div>
