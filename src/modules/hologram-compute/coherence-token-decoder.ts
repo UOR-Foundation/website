@@ -19,7 +19,7 @@
  */
 
 import { ATLAS_VERTEX_COUNT } from "../atlas/atlas";
-import { VocabularyPartitioner } from "./vocabulary-partitioner";
+import { VocabularyPartitioner, type EnhancedSampleResult } from "./vocabulary-partitioner";
 import { loadTokenizerVocabulary, simpleEncode, simpleDecode, type TokenizerInfo } from "./tokenizer-bridge";
 import { CoherenceNavigator, type NavigatorState, type NavigationDiagnostics } from "./coherence-navigator";
 
@@ -83,6 +83,16 @@ export interface GenerationToken {
   dHdt: number;
   /** Time for this token (ms) */
   timeMs: number;
+  /** Phase 3: H-score contribution of this token */
+  hScoreContrib: number;
+  /** Phase 3: Phase alignment with current φ [0, 1] */
+  phaseAlignment: number;
+  /** Phase 3: Whether stabilizer parity passed cleanly */
+  parityClean: boolean;
+  /** Phase 3: Candidates rejected by stabilizer filter */
+  rejectedByStabilizer: number;
+  /** Phase 3: Which sampling strategies were active */
+  samplingStrategy: string;
 }
 
 export interface GenerationResult {
@@ -241,8 +251,16 @@ export class CoherenceTokenDecoder {
         if (state.fanoActivations[li] > 0.1) fanoChannelsActive++;
       }
 
-      // Sample token from navigated activations
-      const sampled = this.partitioner.sampleFromActivations(activations, this.config.temperature);
+      // ── Phase 3: Enhanced three-strategy sampling ──
+      // Composes: stabilizer filter → coherence bias → phase modulation
+      const sampled = this.partitioner.enhancedSample(
+        activations,
+        this.config.temperature,
+        state.hScore,
+        state.phi,
+        0.15, // mirror tolerance
+        40,   // top-K
+      );
 
       const genToken: GenerationToken = {
         text: sampled.tokenString,
@@ -255,6 +273,11 @@ export class CoherenceTokenDecoder {
         syndromeCount: state.syndromeCount,
         dHdt: state.dHdt,
         timeMs: performance.now() - tokenT0,
+        hScoreContrib: sampled.hScoreContrib,
+        phaseAlignment: sampled.phaseAlignment,
+        parityClean: sampled.parityClean,
+        rejectedByStabilizer: sampled.rejectedByStabilizer,
+        samplingStrategy: sampled.samplingStrategy,
       };
 
       generatedTokens.push(genToken);
