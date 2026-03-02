@@ -46,7 +46,7 @@ const MODELS: ModelProfile[] = [
   { id: "smollm", name: "SmolLM2", params: "1.7B", fullParams: "1,700,000,000", atlasSize: "~45MB", kvTraditional: "~800MB", manifest: "smollm2-1.7b", tagline: "Small but mighty" },
   { id: "mistral", name: "Mistral", params: "7B", fullParams: "7,000,000,000", atlasSize: "~180MB", kvTraditional: "~2GB", manifest: "mistral-7b", tagline: "Efficient powerhouse" },
   { id: "llama8b", name: "Llama 3.1", params: "8B", fullParams: "8,000,000,000", atlasSize: "~200MB", kvTraditional: "~4GB", manifest: "llama-3.1-8b", tagline: "Meta's flagship" },
-  { id: "llama70b", name: "Llama 3.1", params: "70B", fullParams: "70,000,000,000", atlasSize: "~380MB", kvTraditional: "~40GB", manifest: "llama-3.1-70b", tagline: "The impossible demo" },
+  { id: "llama70b", name: "Llama 3", params: "70B", fullParams: "70,554,383,360", atlasSize: "~380MB", kvTraditional: "~40GB", manifest: "llama-3-70b", tagline: "Meta's flagship · 70B parameters on 96 qubits" },
 ];
 
 const DEMO_PROMPTS = [
