@@ -332,17 +332,16 @@ export default memo(function DesktopOsSidebar({
     return () => window.removeEventListener("hologram:tee-update", handler);
   }, []);
 
-  // Focus-responsive overrides
-  const focusOverrides = useMemo((): Record<string, string> => {
-    if (!isFocused) return {};
-    const t = Math.min(1, (aperture - 0.3) / 0.7);
-    return {
-      "--sb-border": `hsla(38, 10%, 50%, ${(0.04 + (1 - t) * 0.06).toFixed(3)})`,
-      "--sb-hover": `hsla(30, 12%, 95%, ${(0.03 + (1 - t) * 0.05).toFixed(3)})`,
-      "--sb-muted": bgMode === "white" ? "hsl(25, 8%, 40%)" : "hsl(30, 6%, 60%)",
-      "--sb-text": bgMode === "white" ? "hsl(25, 8%, 25%)" : "hsl(30, 8%, 82%)",
-    };
-  }, [isFocused, aperture, bgMode]);
+   // Focus-responsive overrides — keep sidebar clearly readable in focus mode
+    const focusOverrides = useMemo((): Record<string, string> => {
+      if (!isFocused) return {};
+      return {
+        "--sb-border": "hsla(38, 10%, 50%, 0.08)",
+        "--sb-hover": "hsla(30, 12%, 95%, 0.06)",
+        "--sb-muted": bgMode === "white" ? "hsl(25, 8%, 38%)" : "hsl(30, 6%, 65%)",
+        "--sb-text": bgMode === "white" ? "hsl(25, 8%, 22%)" : "hsl(30, 8%, 85%)",
+      };
+    }, [isFocused, bgMode]);
 
   // Flyout state
   const [toolsFlyout, setToolsFlyout] = useState(false);
@@ -436,7 +435,7 @@ export default memo(function DesktopOsSidebar({
           transition: "width 180ms cubic-bezier(0.25, 0.1, 0.25, 1)",
           fontFamily: "'DM Sans', system-ui, sans-serif",
           contain: "layout style",
-          opacity: isFocused ? 0.75 : 1,
+          opacity: isFocused ? 0.88 : 1,
         } as React.CSSProperties}
       >
         {/* ── Logo / Toggle ──────────────────────────────────── */}

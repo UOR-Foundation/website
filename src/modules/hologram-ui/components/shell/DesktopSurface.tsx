@@ -323,16 +323,16 @@ export default memo(function DesktopSurface({
         </div>
       )}
 
-      {/* ── Chrome: Focus Toggle — always accessible, subtler in focus mode ── */}
+      {/* ── Chrome: Focus Toggle — always clearly visible so user can exit focus ── */}
       <div
         className="absolute right-4 top-1/2 -translate-y-1/2 z-[400] group/focus-toggle"
         style={{
-          opacity: isFocus ? 0.35 : 1,
+          opacity: isFocus ? 0.7 : 1,
           pointerEvents: "auto",
           transition: "opacity 600ms cubic-bezier(0.4, 0, 0.2, 1)",
         }}
-        onMouseEnter={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
-        onMouseLeave={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.35"; }}
+        onMouseEnter={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+        onMouseLeave={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
       >
         <AttentionToggle bgMode={mode} />
       </div>
