@@ -199,7 +199,16 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       const assertion = await bridge.assert("hologram:login:verify");
 
       if (assertion.userVerified || assertion.userPresent) {
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        // Try getting current session first
+        let { data: { session: existingSession } } = await supabase.auth.getSession();
+
+        // If no session, attempt a token refresh — the JWT may have expired
+        // but the refresh token (stored in localStorage) may still be valid
+        if (!existingSession) {
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          existingSession = refreshData?.session ?? null;
+        }
+
         if (existingSession) {
           // Check if profile has completed ceremony
           const { data: profileData } = await supabase
@@ -222,7 +231,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           setPhase("naming");
           return;
         }
-        // Session expired — need email/OAuth recovery
+        // Session truly expired (refresh token also invalid) — need email/OAuth recovery
         setTeeStatus("idle");
         toast.info("Session expired. Please sign in with email or Google to reconnect.");
         setAuthMode("email");
