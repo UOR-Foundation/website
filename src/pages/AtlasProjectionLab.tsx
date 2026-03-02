@@ -2,9 +2,11 @@
  * Atlas Projection Lab — AI Lab
  * ══════════════════════════════
  *
- * A beautiful, full-screen AI laboratory for understanding how
- * language models think. Designed to be approachable, delightful,
- * and deeply useful.
+ * A full-screen AI laboratory organized into four intuitive sections:
+ *   1. Discover  — Browse open-source models from HuggingFace
+ *   2. Project   — Load and project a model onto the Atlas manifold
+ *   3. Play      — Generate text and explore model behavior
+ *   4. Benchmark — Live side-by-side performance comparison
  */
 
 import { useState, useCallback, useRef, lazy, Suspense } from "react";
@@ -12,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconBrain, IconAtom, IconChartBar, IconPlayerPlay,
   IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu,
-  IconSparkles, IconEye, IconWand,
+  IconSparkles, IconEye, IconWand, IconFlask, IconArrowRight,
 } from "@tabler/icons-react";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 
@@ -80,10 +82,10 @@ const btnPrimary: React.CSSProperties = {
 };
 
 // ── Tabs ──
-type LabTab = "explore" | "benchmark" | "playground";
+type LabTab = "discover" | "project" | "play" | "benchmark";
 
 export default function AtlasProjectionLab() {
-  const [activeTab, setActiveTab] = useState<LabTab>("explore");
+  const [activeTab, setActiveTab] = useState<LabTab>("discover");
   const [selectedModel, setSelectedModel] = useState<string>("smollm2-135m");
   const [useRealModel, setUseRealModel] = useState(false);
   const [loadStatus, setLoadStatus] = useState<ModelLoadStatus>({ stage: "idle", progress: 0, message: "" });
@@ -255,10 +257,11 @@ export default function AtlasProjectionLab() {
 
   const stageColor = pipelineStatus.stage === "ready" ? KP.green : pipelineStatus.stage === "error" ? KP.red : KP.gold;
 
-  const tabs: { key: LabTab; label: string; icon: React.ReactNode; desc: string }[] = [
-    { key: "explore", label: "Discover Models", icon: <IconEye size={16} />, desc: "Browse and download open-source AI models" },
-    { key: "benchmark", label: "Compare Performance", icon: <IconChartBar size={16} />, desc: "Run side-by-side benchmarks on real models" },
-    { key: "playground", label: "Generate Text", icon: <IconWand size={16} />, desc: "Load a model and create text completions" },
+  const tabs: { key: LabTab; label: string; icon: React.ReactNode; desc: string; hint: string }[] = [
+    { key: "discover", label: "Discover", icon: <IconEye size={16} />, desc: "Browse thousands of open-source AI models", hint: "Find models on HuggingFace" },
+    { key: "project", label: "Project", icon: <IconAtom size={16} />, desc: "Load a model and project it onto the Atlas manifold", hint: "Initialize the pipeline" },
+    { key: "play", label: "Play", icon: <IconWand size={16} />, desc: "Generate text and explore how the model thinks", hint: "Try text generation" },
+    { key: "benchmark", label: "Benchmark", icon: <IconFlask size={16} />, desc: "Live performance comparison across real models", hint: "Run live benchmarks" },
   ];
 
   return (
@@ -272,12 +275,8 @@ export default function AtlasProjectionLab() {
       }}>
         {/* Ambient glow */}
         <div style={{
-          position: "absolute",
-          top: "-120px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "600px",
-          height: "300px",
+          position: "absolute", top: "-120px", left: "50%", transform: "translateX(-50%)",
+          width: "600px", height: "300px",
           background: "radial-gradient(ellipse, hsla(38, 50%, 50%, 0.06), transparent 70%)",
           pointerEvents: "none",
         }} />
@@ -297,8 +296,7 @@ export default function AtlasProjectionLab() {
             <div>
               <h1 style={{
                 fontSize: "32px", fontWeight: 600, fontFamily: KP.serif,
-                color: KP.text, margin: 0, lineHeight: 1.2,
-                letterSpacing: "-0.02em",
+                color: KP.text, margin: 0, lineHeight: 1.2, letterSpacing: "-0.02em",
               }}>
                 AI Lab
               </h1>
@@ -308,38 +306,30 @@ export default function AtlasProjectionLab() {
             </div>
           </div>
 
-          {/* Mission statement — naturally flows why → how → what */}
+          {/* Mission statement */}
           <div style={{
-            ...card,
-            padding: "24px 28px",
-            marginTop: "24px",
+            ...card, padding: "24px 28px", marginTop: "24px",
             background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.06), hsla(260, 20%, 50%, 0.03))",
             borderColor: "hsla(38, 30%, 50%, 0.1)",
           }}>
-            <p style={{
-              fontSize: "15px", lineHeight: 1.8, color: KP.muted, margin: 0,
-              maxWidth: "720px",
-            }}>
-              Most AI feels like a black box — you type something, something comes back, and you're 
-              asked to trust it. <span style={{ color: KP.text }}>This lab changes that.</span> It lets 
-              you load real open-source models right in your browser, watch how they process language 
-              through geometric projection, and compare their quality side by side. 
+            <p style={{ fontSize: "15px", lineHeight: 1.8, color: KP.muted, margin: 0, maxWidth: "720px" }}>
+              Most AI feels like a black box — you type something, something comes back, and you're
+              asked to trust it. <span style={{ color: KP.text }}>This lab changes that.</span> It lets
+              you load real open-source models right in your browser, watch how they process language
+              through geometric projection, and compare their quality side by side.
               <span style={{ color: "hsl(38, 40%, 55%)" }}> Everything here is real, auditable, and yours to explore.</span>
             </p>
           </div>
 
           {/* ── Tab Navigation ── */}
-          <div style={{
-            display: "flex", gap: "8px", marginTop: "32px", paddingBottom: "0",
-          }}>
+          <div style={{ display: "flex", gap: "4px", marginTop: "32px" }}>
             {tabs.map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
                 style={{
                   display: "flex", alignItems: "center", gap: "8px",
-                  padding: "12px 20px",
-                  fontSize: "13px", fontWeight: 500,
+                  padding: "12px 20px", fontSize: "13px", fontWeight: 500,
                   fontFamily: KP.font,
                   background: activeTab === key ? "hsla(25, 8%, 12%, 0.8)" : "transparent",
                   color: activeTab === key ? KP.text : KP.dim,
@@ -347,14 +337,11 @@ export default function AtlasProjectionLab() {
                   borderColor: activeTab === key ? "hsla(38, 12%, 70%, 0.1)" : "transparent",
                   borderBottom: activeTab === key ? "1px solid hsla(25, 8%, 12%, 0.8)" : "1px solid transparent",
                   borderRadius: "14px 14px 0 0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  position: "relative",
-                  top: "1px",
+                  cursor: "pointer", transition: "all 0.2s",
+                  position: "relative", top: "1px",
                 }}
               >
-                {icon}
-                {label}
+                {icon} {label}
               </button>
             ))}
           </div>
@@ -368,99 +355,129 @@ export default function AtlasProjectionLab() {
         maxWidth: "1200px",
         margin: "0 auto",
       }}>
-        {/* Tab description */}
-        <p style={{
-          fontSize: "13px", color: KP.dim, marginBottom: "24px",
-          display: "flex", alignItems: "center", gap: "8px",
-        }}>
-          {tabs.find(t => t.key === activeTab)?.icon}
-          {tabs.find(t => t.key === activeTab)?.desc}
-        </p>
+        {/* Tab header */}
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            {tabs.find(t => t.key === activeTab)?.icon}
+            <h2 style={{ fontSize: "18px", fontWeight: 600, color: KP.text, margin: 0 }}>
+              {tabs.find(t => t.key === activeTab)?.label}
+            </h2>
+          </div>
+          <p style={{ fontSize: "13px", color: KP.dim, margin: 0 }}>
+            {tabs.find(t => t.key === activeTab)?.desc}
+          </p>
+        </div>
 
         <AnimatePresence mode="wait">
-          {activeTab === "explore" && (
-            <motion.div
-              key="explore"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
+          {/* ════════════════════════════════════════════════════════
+              DISCOVER — Browse models from HuggingFace
+              ════════════════════════════════════════════════════════ */}
+          {activeTab === "discover" && (
+            <motion.div key="discover" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+              {/* Intro card */}
+              <div style={{
+                ...card, marginBottom: "24px",
+                background: "linear-gradient(135deg, hsla(200, 30%, 50%, 0.04), hsla(38, 20%, 50%, 0.02))",
+                borderColor: "hsla(200, 20%, 50%, 0.08)",
+              }}>
+                <p style={{ fontSize: "14px", color: KP.muted, margin: 0, lineHeight: 1.7 }}>
+                  HuggingFace hosts over <span style={{ color: KP.text, fontWeight: 600 }}>500,000 open-source AI models</span> — 
+                  from tiny 135M-parameter models that run on any phone, to massive 70B+ research models. 
+                  Search by task (text generation, translation, image classification) or by name. 
+                  When you find one you like, you can seed it into Hologram for local projection and inference.
+                </p>
+              </div>
+
               <Suspense fallback={<LoadingPlaceholder text="Loading model browser…" />}>
                 <HuggingFaceModelBrowser />
               </Suspense>
+
+              {/* CTA to next step */}
+              <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
+                <button
+                  onClick={() => setActiveTab("project")}
+                  style={{
+                    ...btnPrimary,
+                    background: "transparent",
+                    color: KP.gold,
+                    border: `1px solid hsla(38, 40%, 50%, 0.2)`,
+                    boxShadow: "none",
+                  }}
+                >
+                  Found a model? Project it onto Atlas
+                  <IconArrowRight size={14} />
+                </button>
+              </div>
             </motion.div>
           )}
 
-          {activeTab === "benchmark" && (
-            <motion.div
-              key="benchmark"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Suspense fallback={<LoadingPlaceholder text="Loading benchmark suite…" />}>
-                <MultiModelBenchmark />
-              </Suspense>
-            </motion.div>
-          )}
+          {/* ════════════════════════════════════════════════════════
+              PROJECT — Load & project a model onto Atlas manifold
+              ════════════════════════════════════════════════════════ */}
+          {activeTab === "project" && (
+            <motion.div key="project" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+              {/* Explanation */}
+              <div style={{
+                ...card, marginBottom: "24px",
+                background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.04), hsla(260, 20%, 50%, 0.02))",
+                borderColor: "hsla(38, 20%, 50%, 0.08)",
+              }}>
+                <p style={{ fontSize: "14px", color: KP.muted, margin: 0, lineHeight: 1.7 }}>
+                  Traditional AI models process language using <span style={{ color: KP.text }}>quadratic attention</span> — 
+                  comparing every word to every other word. Atlas replaces this with a 
+                  <span style={{ color: KP.gold }}> geometric manifold</span> of 96 vertices, 
+                  reducing complexity from O(N²) to O(96). Select a model below, initialize the pipeline, 
+                  and watch the projection happen in real time.
+                </p>
+              </div>
 
-          {activeTab === "playground" && (
-            <motion.div
-              key="playground"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* ── Getting Started Guide ── */}
+              {/* Step-by-step guide */}
               {pipelineStatus.stage === "idle" && (
                 <div style={{
-                  ...card,
-                  marginBottom: "24px",
-                  background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.04), hsla(200, 20%, 50%, 0.02))",
-                  borderColor: "hsla(38, 20%, 50%, 0.08)",
+                  ...card, marginBottom: "24px",
                   padding: "28px",
+                  background: "hsla(25, 8%, 9%, 0.4)",
                 }}>
-                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: KP.text, margin: "0 0 12px" }}>
-                    Getting started
+                  <h3 style={{ fontSize: "15px", fontWeight: 600, color: KP.text, margin: "0 0 16px" }}>
+                    How it works
                   </h3>
                   <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
                     {[
-                      { step: "1", text: "Choose a model from the dropdown below — smaller models load faster" },
-                      { step: "2", text: "Click 'Initialize' to load and project the model onto the Atlas manifold" },
-                      { step: "3", text: "Type any prompt and generate text to see how the model completes it" },
-                    ].map(({ step, text }) => (
-                      <div key={step} style={{ flex: "1 1 220px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                      { step: "1", title: "Choose a model", text: "Pick from browser-viable models (real weights) or larger synthetic projections" },
+                      { step: "2", title: "Initialize", text: "The pipeline downloads weights, decomposes tensors, and encodes them on the Atlas manifold" },
+                      { step: "3", title: "Explore", text: "Once projected, head to Play to generate text or Benchmark to compare performance" },
+                    ].map(({ step, title, text }) => (
+                      <div key={step} style={{ flex: "1 1 240px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
                         <div style={{
-                          width: "28px", height: "28px", borderRadius: "10px", flexShrink: 0,
+                          width: "32px", height: "32px", borderRadius: "10px", flexShrink: 0,
                           display: "flex", alignItems: "center", justifyContent: "center",
                           background: "hsla(38, 40%, 50%, 0.1)",
-                          color: KP.gold, fontSize: "13px", fontWeight: 700,
+                          color: KP.gold, fontSize: "14px", fontWeight: 700,
                           border: "1px solid hsla(38, 40%, 50%, 0.15)",
                         }}>
                           {step}
                         </div>
-                        <p style={{ fontSize: "13px", color: KP.muted, margin: 0, lineHeight: 1.6 }}>{text}</p>
+                        <div>
+                          <p style={{ fontSize: "13px", color: KP.text, margin: "0 0 4px", fontWeight: 500 }}>{title}</p>
+                          <p style={{ fontSize: "12px", color: KP.dim, margin: 0, lineHeight: 1.6 }}>{text}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* ── Controls ── */}
+              {/* Controls */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                 {/* Model Selection */}
                 <div style={card}>
-                  <p style={sectionTitle}>Model</p>
+                  <p style={sectionTitle}>Select Model</p>
                   <div style={{ marginTop: "14px" }}>
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value)}
                       style={{
-                        ...inputStyle,
-                        cursor: "pointer",
+                        ...inputStyle, cursor: "pointer",
                         appearance: "none" as const,
                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
                         backgroundRepeat: "no-repeat",
@@ -486,8 +503,7 @@ export default function AtlasProjectionLab() {
                     marginTop: "14px", cursor: "pointer", fontSize: "13px", color: KP.muted,
                   }}>
                     <input
-                      type="checkbox"
-                      checked={useRealModel}
+                      type="checkbox" checked={useRealModel}
                       onChange={(e) => setUseRealModel(e.target.checked)}
                       style={{ accentColor: KP.gold, width: "16px", height: "16px" }}
                     />
@@ -499,21 +515,18 @@ export default function AtlasProjectionLab() {
                     onClick={handleInitialize}
                     disabled={pipelineStatus.stage !== "idle" && pipelineStatus.stage !== "ready" && pipelineStatus.stage !== "error"}
                     style={{
-                      ...btnPrimary,
-                      width: "100%",
-                      justifyContent: "center",
-                      marginTop: "18px",
+                      ...btnPrimary, width: "100%", justifyContent: "center", marginTop: "18px",
                       opacity: (pipelineStatus.stage !== "idle" && pipelineStatus.stage !== "ready" && pipelineStatus.stage !== "error") ? 0.5 : 1,
                     }}
                   >
                     <IconRocket size={16} />
-                    Initialize Pipeline
+                    {pipelineStatus.stage === "ready" ? "Re-initialize" : "Initialize Pipeline"}
                   </button>
                 </div>
 
                 {/* Status */}
                 <div style={card}>
-                  <p style={sectionTitle}>Status</p>
+                  <p style={sectionTitle}>Pipeline Status</p>
 
                   {useRealModel && loadStatus.stage !== "idle" && (
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "14px", fontSize: "13px", color: KP.muted }}>
@@ -527,7 +540,6 @@ export default function AtlasProjectionLab() {
                     <span>{pipelineStatus.message}</span>
                   </div>
 
-                  {/* Progress bar */}
                   <div style={{
                     width: "100%", height: "6px", borderRadius: "3px",
                     background: "hsla(38, 12%, 70%, 0.08)", marginTop: "14px", overflow: "hidden",
@@ -539,7 +551,6 @@ export default function AtlasProjectionLab() {
                     />
                   </div>
 
-                  {/* Metrics */}
                   {report && (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "18px" }}>
                       <Metric label="Compression" value={`${report.holographicEncoding.compressionRatio.toFixed(1)}×`} />
@@ -547,29 +558,106 @@ export default function AtlasProjectionLab() {
                       <Metric label="Tok/s" value={`${report.benchmarkResult.tokensPerSecond.toFixed(0)}`} />
                     </div>
                   )}
+
+                  {/* Navigate to play */}
+                  {pipelineStatus.stage === "ready" && (
+                    <button
+                      onClick={() => setActiveTab("play")}
+                      style={{
+                        ...btnPrimary, width: "100%", justifyContent: "center", marginTop: "18px",
+                        background: "linear-gradient(135deg, hsl(152, 44%, 45%), hsl(152, 44%, 38%))",
+                        boxShadow: "0 4px 16px hsla(152, 44%, 40%, 0.2)",
+                      }}
+                    >
+                      <IconWand size={16} />
+                      Pipeline Ready — Start Playing
+                      <IconArrowRight size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* ── Inference ── */}
-              <AnimatePresence>
-                {pipelineStatus.stage === "ready" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{ ...card, marginTop: "20px" }}
-                  >
+              {/* Reports */}
+              {report && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "20px" }}>
+                  <ReportPanel title="Atlas Projection" icon={<IconAtom size={14} style={{ color: KP.gold }} />} content={report.projectionReport} />
+                  <ReportPanel title="Holographic Codec" icon={<IconChartBar size={14} style={{ color: KP.gold }} />} content={report.holographicReport} />
+                </div>
+              )}
+
+              {/* Log */}
+              <div style={{ ...card, marginTop: "20px" }}>
+                <button
+                  onClick={() => setShowLogs((p) => !p)}
+                  style={{
+                    ...sectionTitle, background: "none", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: "8px", padding: 0,
+                  }}
+                >
+                  Pipeline Log
+                  <span style={{ fontSize: "10px", color: KP.dim, fontWeight: 400 }}>
+                    {showLogs ? "▲ hide" : `▼ ${logs.length} entries`}
+                  </span>
+                </button>
+                {showLogs && (
+                  <div style={{
+                    marginTop: "14px", maxHeight: "200px", overflowY: "auto",
+                    fontFamily: "monospace", fontSize: "11px", color: KP.dim,
+                    padding: "14px", borderRadius: "12px",
+                    background: "hsla(25, 8%, 6%, 0.6)",
+                    border: "1px solid hsla(38, 12%, 70%, 0.06)",
+                    lineHeight: 1.7,
+                  }}>
+                    {logs.length === 0 ? (
+                      <span style={{ opacity: 0.5 }}>Waiting for initialization…</span>
+                    ) : logs.map((log, i) => (
+                      <div key={i} style={{ color: log.includes("✓") ? KP.green : log.includes("✗") ? KP.red : KP.dim }}>{log}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════
+              PLAY — Generate text with the projected model
+              ════════════════════════════════════════════════════════ */}
+          {activeTab === "play" && (
+            <motion.div key="play" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+              {pipelineStatus.stage !== "ready" ? (
+                /* Not ready state */
+                <div style={{
+                  ...card, textAlign: "center", padding: "48px",
+                  background: "hsla(25, 8%, 9%, 0.4)",
+                }}>
+                  <IconAtom size={40} style={{ color: KP.dim, margin: "0 auto 16px" }} />
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: KP.text, margin: "0 0 8px" }}>
+                    No model projected yet
+                  </h3>
+                  <p style={{ fontSize: "13px", color: KP.dim, margin: "0 0 20px", maxWidth: "400px", marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+                    To generate text, you need to first select and project a model onto the Atlas manifold. 
+                    This takes about 10–30 seconds depending on the model size.
+                  </p>
+                  <button onClick={() => setActiveTab("project")} style={btnPrimary}>
+                    <IconRocket size={16} />
+                    Go to Project
+                  </button>
+                </div>
+              ) : (
+                /* Ready — show inference UI */
+                <>
+                  <div style={{ ...card, marginBottom: "20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
                       <IconCpu size={16} style={{ color: KP.gold }} />
                       <span style={{ fontSize: "14px", fontWeight: 500, color: KP.text }}>Generate Text</span>
                       <span style={{ fontSize: "11px", color: KP.dim, marginLeft: "auto" }}>
-                        Type a prompt and press Enter or click Generate
+                        Type a prompt and press Enter
                       </span>
                     </div>
 
                     <div style={{ display: "flex", gap: "10px" }}>
                       <input
-                        type="text"
-                        value={prompt}
+                        type="text" value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         placeholder="Type anything — the model will complete your thought…"
                         onKeyDown={(e) => e.key === "Enter" && handleInfer()}
@@ -603,151 +691,125 @@ export default function AtlasProjectionLab() {
                       </div>
                     )}
 
-                    {/* Coherence Journey */}
                     {inferenceResult && inferenceResult.steps.length > 0 && (
                       <div style={{ marginTop: "18px" }}>
                         <p style={{ ...sectionTitle, marginBottom: "10px" }}>Coherence Journey</p>
                         <div style={{ display: "flex", alignItems: "flex-end", gap: "2px", height: "56px" }}>
                           {inferenceResult.steps.map((step, i) => (
-                            <div
-                              key={i}
-                              style={{
-                                flex: 1,
-                                borderRadius: "3px 3px 0 0",
-                                height: `${step.state.hScore * 100}%`,
-                                background: step.state.zone === "convergent" ? KP.green
-                                  : step.state.zone === "exploring" ? KP.gold : KP.red,
-                                opacity: 0.4 + step.state.hScore * 0.6,
-                                transition: "height 0.3s",
-                              }}
-                              title={`Step ${i}: H=${step.state.hScore.toFixed(3)} (${step.state.zone})`}
-                            />
+                            <div key={i} style={{
+                              flex: 1, borderRadius: "3px 3px 0 0",
+                              height: `${step.state.hScore * 100}%`,
+                              background: step.state.zone === "convergent" ? KP.green : step.state.zone === "exploring" ? KP.gold : KP.red,
+                              opacity: 0.4 + step.state.hScore * 0.6,
+                              transition: "height 0.3s",
+                            }} title={`Step ${i}: H=${step.state.hScore.toFixed(3)} (${step.state.zone})`} />
                           ))}
                         </div>
                       </div>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* ── Comparison ── */}
-              {baselineResult && inferenceResult && (
-                <div style={{ ...card, marginTop: "20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                    <IconChartBar size={16} style={{ color: KP.gold }} />
-                    <span style={{ fontSize: "14px", fontWeight: 500, color: KP.text }}>Atlas vs Standard Transformer</span>
                   </div>
 
-                  {perplexityStats.atlas && perplexityStats.baseline && (
-                    <div style={{
-                      padding: "18px", borderRadius: "14px", marginBottom: "18px",
-                      background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.04), hsla(260, 20%, 50%, 0.02))",
-                      border: "1px solid hsla(38, 12%, 70%, 0.06)",
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
-                        <span style={sectionTitle}>Perplexity</span>
-                        <span style={{ fontSize: "10px", color: KP.dim }}>lower = more coherent</span>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                        <Metric label="Atlas PPL" value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)} />
-                        <Metric label="Baseline PPL" value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)} />
-                        <Metric label="Quality Ratio" value={
-                          perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
-                            ? "N/A" : `${(perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity).toFixed(2)}×`
-                        } />
-                        <QualityGradeBadge ratio={
-                          perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
-                            ? Infinity : perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity
-                        } />
+                  {/* Comparison */}
+                  {baselineResult && inferenceResult && (
+                    <div style={{ ...card, marginTop: "20px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+                        <IconChartBar size={16} style={{ color: KP.gold }} />
+                        <span style={{ fontSize: "14px", fontWeight: 500, color: KP.text }}>Atlas vs Standard Transformer</span>
                       </div>
 
-                      {perplexityStats.atlas.perplexity !== Infinity && perplexityStats.baseline.perplexity !== Infinity && (
-                        <div style={{ marginTop: "14px" }}>
-                          <PerplexityBar label="Atlas" value={perplexityStats.atlas.perplexity}
-                            maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)} color={KP.gold} />
-                          <PerplexityBar label="Baseline" value={perplexityStats.baseline.perplexity}
-                            maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)} color={KP.purple} />
+                      {perplexityStats.atlas && perplexityStats.baseline && (
+                        <div style={{
+                          padding: "18px", borderRadius: "14px", marginBottom: "18px",
+                          background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.04), hsla(260, 20%, 50%, 0.02))",
+                          border: "1px solid hsla(38, 12%, 70%, 0.06)",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
+                            <span style={sectionTitle}>Perplexity</span>
+                            <span style={{ fontSize: "10px", color: KP.dim }}>lower = more coherent</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                            <Metric label="Atlas PPL" value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)} />
+                            <Metric label="Baseline PPL" value={perplexityStats.baseline.perplexity === Infinity ? "∞" : perplexityStats.baseline.perplexity.toFixed(1)} />
+                            <Metric label="Quality Ratio" value={
+                              perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
+                                ? "N/A" : `${(perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity).toFixed(2)}×`
+                            } />
+                            <QualityGradeBadge ratio={
+                              perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
+                                ? Infinity : perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity
+                            } />
+                          </div>
+                          {perplexityStats.atlas.perplexity !== Infinity && perplexityStats.baseline.perplexity !== Infinity && (
+                            <div style={{ marginTop: "14px" }}>
+                              <PerplexityBar label="Atlas" value={perplexityStats.atlas.perplexity}
+                                maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)} color={KP.gold} />
+                              <PerplexityBar label="Baseline" value={perplexityStats.baseline.perplexity}
+                                maxVal={Math.max(perplexityStats.atlas.perplexity, perplexityStats.baseline.perplexity)} color={KP.purple} />
+                            </div>
+                          )}
                         </div>
                       )}
+
+                      {perTokenNLL.atlas.length > 0 && perTokenNLL.baseline.length > 0 && (
+                        <NLLChart atlas={perTokenNLL.atlas} baseline={perTokenNLL.baseline} />
+                      )}
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "18px" }}>
+                        <ComparisonPanel
+                          title="Atlas Coherence (O(96))"
+                          titleColor={KP.gold}
+                          text={generatedText}
+                          metrics={[
+                            { label: "Tok/s", value: `${inferenceResult.tokensPerSecond.toFixed(0)}` },
+                            { label: "Time", value: `${inferenceResult.totalTimeMs.toFixed(0)}ms` },
+                            { label: "H-score", value: inferenceResult.meanHScore.toFixed(3) },
+                          ]}
+                          ppl={perplexityStats.atlas}
+                        />
+                        <ComparisonPanel
+                          title="Standard Attention (O(N²))"
+                          titleColor={KP.muted}
+                          text={baselineResult.text.slice(0, 200)}
+                          metrics={[
+                            { label: "Tok/s", value: `${baselineResult.tokensPerSecond.toFixed(0)}` },
+                            { label: "Time", value: `${baselineResult.timeMs.toFixed(0)}ms` },
+                            { label: "Speedup", value: `${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×` },
+                          ]}
+                          ppl={perplexityStats.baseline}
+                        />
+                      </div>
                     </div>
                   )}
-
-                  {perTokenNLL.atlas.length > 0 && perTokenNLL.baseline.length > 0 && (
-                    <NLLChart atlas={perTokenNLL.atlas} baseline={perTokenNLL.baseline} />
-                  )}
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginTop: "18px" }}>
-                    <ComparisonPanel
-                      title="Atlas Coherence (O(96))"
-                      titleColor={KP.gold}
-                      text={generatedText}
-                      metrics={[
-                        { label: "Tok/s", value: `${inferenceResult.tokensPerSecond.toFixed(0)}` },
-                        { label: "Time", value: `${inferenceResult.totalTimeMs.toFixed(0)}ms` },
-                        { label: "H-score", value: inferenceResult.meanHScore.toFixed(3) },
-                      ]}
-                      ppl={perplexityStats.atlas}
-                    />
-                    <ComparisonPanel
-                      title="Standard Attention (O(N²))"
-                      titleColor={KP.muted}
-                      text={baselineResult.text.slice(0, 200)}
-                      metrics={[
-                        { label: "Tok/s", value: `${baselineResult.tokensPerSecond.toFixed(0)}` },
-                        { label: "Time", value: `${baselineResult.timeMs.toFixed(0)}ms` },
-                        { label: "Speedup", value: `${(baselineResult.timeMs / Math.max(inferenceResult.totalTimeMs, 0.01)).toFixed(1)}×` },
-                      ]}
-                      ppl={perplexityStats.baseline}
-                    />
-                  </div>
-                </div>
+                </>
               )}
+            </motion.div>
+          )}
 
-              {/* ── Reports ── */}
-              {report && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "20px" }}>
-                  <ReportPanel title="Atlas Projection" icon={<IconAtom size={14} style={{ color: KP.gold }} />} content={report.projectionReport} />
-                  <ReportPanel title="Holographic Codec" icon={<IconChartBar size={14} style={{ color: KP.gold }} />} content={report.holographicReport} />
-                </div>
-              )}
-
-              {/* ── Log ── */}
-              <div style={{ ...card, marginTop: "20px" }}>
-                <button
-                  onClick={() => setShowLogs((p) => !p)}
-                  style={{
-                    ...sectionTitle,
-                    background: "none", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: "8px", padding: 0,
-                  }}
-                >
-                  Pipeline Log
-                  <span style={{ fontSize: "10px", color: KP.dim, fontWeight: 400 }}>
-                    {showLogs ? "▲ hide" : `▼ ${logs.length} entries`}
-                  </span>
-                </button>
-
-                {showLogs && (
-                  <div style={{
-                    marginTop: "14px", maxHeight: "200px", overflowY: "auto",
-                    fontFamily: "monospace", fontSize: "11px", color: KP.dim,
-                    padding: "14px", borderRadius: "12px",
-                    background: "hsla(25, 8%, 6%, 0.6)",
-                    border: "1px solid hsla(38, 12%, 70%, 0.06)",
-                    lineHeight: 1.7,
-                  }}>
-                    {logs.length === 0 ? (
-                      <span style={{ opacity: 0.5 }}>Waiting for initialization…</span>
-                    ) : (
-                      logs.map((log, i) => (
-                        <div key={i} style={{ color: log.includes("✓") ? KP.green : log.includes("✗") ? KP.red : KP.dim }}>
-                          {log}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+          {/* ════════════════════════════════════════════════════════
+              BENCHMARK — Live multi-model performance comparison
+              ════════════════════════════════════════════════════════ */}
+          {activeTab === "benchmark" && (
+            <motion.div key="benchmark" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+              {/* Explanation */}
+              <div style={{
+                ...card, marginBottom: "24px",
+                background: "linear-gradient(135deg, hsla(260, 20%, 50%, 0.04), hsla(38, 20%, 50%, 0.02))",
+                borderColor: "hsla(260, 20%, 50%, 0.08)",
+              }}>
+                <p style={{ fontSize: "14px", color: KP.muted, margin: 0, lineHeight: 1.7 }}>
+                  This benchmark downloads <span style={{ color: KP.text, fontWeight: 500 }}>three real AI models</span> from 
+                  HuggingFace, runs them through both the Atlas coherence pipeline and standard transformer attention, 
+                  and compares the results side by side. You'll see the actual
+                  <span style={{ color: KP.gold }}> tokens per second</span>,
+                  <span style={{ color: KP.gold }}> compression ratio</span>, and
+                  <span style={{ color: KP.gold }}> generated text</span> — 
+                  all running live in your browser. Nothing is simulated.
+                </p>
               </div>
+
+              <Suspense fallback={<LoadingPlaceholder text="Loading benchmark suite…" />}>
+                <MultiModelBenchmark />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>
@@ -851,17 +913,11 @@ function ReportPanel({ title, icon, content }: { title: string; icon: React.Reac
 
 function QualityGradeBadge({ ratio }: { ratio: number }) {
   let grade: string, color: string, bg: string;
-  if (!isFinite(ratio)) {
-    grade = "—"; color = KP.dim; bg = `${KP.dim}15`;
-  } else if (ratio <= 1.0) {
-    grade = "A"; color = KP.green; bg = `${KP.green}18`;
-  } else if (ratio <= 1.25) {
-    grade = "B"; color = "hsl(200, 50%, 55%)"; bg = "hsla(200, 50%, 55%, 0.12)";
-  } else if (ratio <= 2.0) {
-    grade = "C"; color = KP.gold; bg = `${KP.gold}15`;
-  } else {
-    grade = "D"; color = KP.red; bg = `${KP.red}15`;
-  }
+  if (!isFinite(ratio)) { grade = "—"; color = KP.dim; bg = `${KP.dim}15`; }
+  else if (ratio <= 1.0) { grade = "A"; color = KP.green; bg = `${KP.green}18`; }
+  else if (ratio <= 1.25) { grade = "B"; color = "hsl(200, 50%, 55%)"; bg = "hsla(200, 50%, 55%, 0.12)"; }
+  else if (ratio <= 2.0) { grade = "C"; color = KP.gold; bg = `${KP.gold}15`; }
+  else { grade = "D"; color = KP.red; bg = `${KP.red}15`; }
 
   return (
     <div style={{
@@ -890,19 +946,15 @@ function NLLChart({ atlas, baseline }: {
   const PAD = { top: 20, right: 20, bottom: 40, left: 50 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
-
   const maxLen = Math.max(atlas.length, baseline.length);
   const allNLL = [...atlas.map(d => d.nll), ...baseline.map(d => d.nll)];
   const maxNLL = Math.max(...allNLL, 1);
   const minNLL = Math.min(...allNLL, 0);
   const nllRange = maxNLL - minNLL || 1;
-
   const toX = (i: number, total: number) => PAD.left + (i / Math.max(total - 1, 1)) * chartW;
   const toY = (nll: number) => PAD.top + (1 - (nll - minNLL) / nllRange) * chartH;
-
   const buildPath = (data: { nll: number }[]) =>
     data.map((d, i) => `${i === 0 ? "M" : "L"}${toX(i, data.length).toFixed(1)},${toY(d.nll).toFixed(1)}`).join(" ");
-
   const yTicks = 5;
   const yLabels = Array.from({ length: yTicks }, (_, i) => {
     const val = minNLL + (nllRange * i) / (yTicks - 1);
