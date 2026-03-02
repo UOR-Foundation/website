@@ -11,11 +11,11 @@
  * is always visible as a subtle arc; details unfold on interaction.
  */
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import ContextualBloom from "./ContextualBloom";
-import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronRight, Shield, Lightbulb, ExternalLink, Fingerprint, Copy, Check, RotateCcw, Link2, HelpCircle, ArrowRight, SlidersHorizontal, Bookmark, Sparkles, Lock } from "lucide-react";
 
 // ── Bloom Toggle (persisted, default ON) ─────────────────────────────
 const BLOOM_KEY = "lumen:bloom-enabled";
@@ -40,6 +40,20 @@ const C = {
 } as const;
 
 // ── Types ────────────────────────────────────────────────────────────
+interface ProofOfThoughtMeta {
+  cid: string;
+  spectralGrade: string;
+  driftDelta0: number;
+  triadicPhase: 3 | 6 | 9;
+  fidelity: number;
+  eigenvaluesLocked: number;
+  converged: boolean;
+  compressionRatio: number;
+  zk: boolean;
+  freeParameters: number;
+  verified: boolean;
+}
+
 interface ExchangeMeta {
   grade?: string;
   curvature?: number;
@@ -49,6 +63,7 @@ interface ExchangeMeta {
   habitFired?: boolean;
   inferenceMs?: number;
   claims?: any[];
+  proofOfThought?: ProofOfThoughtMeta;
 }
 
 interface ExchangeData {
@@ -383,8 +398,207 @@ function SentenceDiff({ original, remixed }: { original: string; remixed: string
   );
 }
 
+// ── Proof Badge ──────────────────────────────────────────────────────
+function ProofBadge({ proof }: { proof: ProofOfThoughtMeta }) {
+  const badgeColor = proof.verified
+    ? proof.spectralGrade === "A" ? "hsla(152, 50%, 55%, 0.7)"
+    : proof.spectralGrade === "B" ? "hsla(38, 45%, 58%, 0.65)"
+    : "hsla(30, 20%, 55%, 0.5)"
+    : "hsla(0, 30%, 55%, 0.5)";
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <motion.div
+        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md"
+        style={{
+          background: `${badgeColor.replace(/[\d.]+\)$/, "0.06)")}`,
+          border: `1px solid ${badgeColor.replace(/[\d.]+\)$/, "0.12)")}`,
+        }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.8 }}
+      >
+        <span className="text-[8px]" style={{ color: badgeColor }}>✦</span>
+        <span className="text-[8px] font-mono tracking-wider" style={{ color: badgeColor }}>
+          {proof.spectralGrade}
+        </span>
+        <span className="text-[7px]" style={{ color: badgeColor.replace(/[\d.]+\)$/, "0.45)") }}>
+          · {proof.freeParameters} free
+        </span>
+        {proof.verified && (
+          <span className="text-[7px]" style={{ color: "hsla(152, 45%, 55%, 0.5)" }}>
+            · verified
+          </span>
+        )}
+      </motion.div>
+      {proof.zk && (
+        <motion.div
+          className="flex items-center gap-0.5 px-1 py-0.5 rounded-md"
+          style={{
+            background: "hsla(200, 30%, 20%, 0.08)",
+            border: "1px solid hsla(200, 35%, 40%, 0.1)",
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 1.0 }}
+          title="Zero-knowledge: verified without accessing content"
+        >
+          <Lock className="w-2.5 h-2.5" style={{ color: "hsla(200, 45%, 60%, 0.5)" }} />
+          <span className="text-[7px] tracking-wider uppercase" style={{ color: "hsla(200, 40%, 60%, 0.45)" }}>
+            ZK
+          </span>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ── Proof Drawer ─────────────────────────────────────────────────────
+function ProofDrawer({ proof }: { proof: ProofOfThoughtMeta }) {
+  const phaseLabel = proof.triadicPhase === 3 ? "Structure" : proof.triadicPhase === 6 ? "Evolution" : "Completion";
+  const phaseColor = proof.triadicPhase === 3 ? "hsla(210, 40%, 60%, 0.6)"
+    : proof.triadicPhase === 6 ? "hsla(38, 45%, 58%, 0.6)"
+    : "hsla(152, 45%, 55%, 0.6)";
+
+  // Spectral grade arc (mini visualization)
+  const gradeAngle = proof.spectralGrade === "A" ? 0.95
+    : proof.spectralGrade === "B" ? 0.72
+    : proof.spectralGrade === "C" ? 0.45
+    : 0.2;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="overflow-hidden"
+    >
+      <div className="mt-3 p-4 rounded-xl" style={{
+        background: "hsla(220, 12%, 7%, 0.4)",
+        border: "1px solid hsla(220, 20%, 25%, 0.08)",
+      }}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[8px]" style={{ color: "hsla(38, 40%, 55%, 0.3)" }}>✦</span>
+            <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "hsla(220, 20%, 55%, 0.4)" }}>
+              Proof-of-Thought
+            </p>
+          </div>
+          {proof.zk && (
+            <div className="flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5" style={{ color: "hsla(200, 40%, 55%, 0.35)" }} />
+              <span className="text-[8px] tracking-wider" style={{ color: "hsla(200, 35%, 55%, 0.3)" }}>
+                Content-blind verification
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Metrics grid */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* Spectral Grade */}
+          <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg" style={{ background: "hsla(220, 10%, 10%, 0.3)" }}>
+            <div className="relative w-10 h-10">
+              <svg viewBox="0 0 40 40" className="w-full h-full">
+                <circle cx="20" cy="20" r="16" fill="none"
+                  stroke="hsla(220, 15%, 25%, 0.1)" strokeWidth="2.5"
+                  strokeDasharray={`${Math.PI * 32 * 0.75} ${Math.PI * 32 * 0.25}`}
+                  transform="rotate(135 20 20)" strokeLinecap="round"
+                />
+                <motion.circle cx="20" cy="20" r="16" fill="none"
+                  stroke={gradeColor(proof.spectralGrade)} strokeWidth="2.5"
+                  strokeDasharray={`${Math.PI * 32 * 0.75 * gradeAngle} ${Math.PI * 32 - Math.PI * 32 * 0.75 * gradeAngle}`}
+                  transform="rotate(135 20 20)" strokeLinecap="round"
+                  initial={{ strokeDasharray: `0 ${Math.PI * 32}` }}
+                  animate={{ strokeDasharray: `${Math.PI * 32 * 0.75 * gradeAngle} ${Math.PI * 32 - Math.PI * 32 * 0.75 * gradeAngle}` }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono" style={{ color: gradeColor(proof.spectralGrade) }}>
+                {proof.spectralGrade}
+              </span>
+            </div>
+            <span className="text-[8px] tracking-wider uppercase" style={{ color: "hsla(220, 15%, 55%, 0.35)" }}>Grade</span>
+          </div>
+
+          {/* Drift */}
+          <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg" style={{ background: "hsla(220, 10%, 10%, 0.3)" }}>
+            <span className="text-[14px] font-mono tabular-nums" style={{ color: "hsla(38, 25%, 65%, 0.6)" }}>
+              {proof.driftDelta0.toFixed(4)}
+            </span>
+            <span className="text-[8px] tracking-wider uppercase" style={{ color: "hsla(220, 15%, 55%, 0.35)" }}>Drift δ₀</span>
+          </div>
+
+          {/* Phase */}
+          <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg" style={{ background: "hsla(220, 10%, 10%, 0.3)" }}>
+            <span className="text-[14px] font-mono" style={{ color: phaseColor }}>
+              {proof.triadicPhase}
+            </span>
+            <span className="text-[8px] tracking-wider uppercase" style={{ color: "hsla(220, 15%, 55%, 0.35)" }}>{phaseLabel}</span>
+          </div>
+        </div>
+
+        {/* Detail rows */}
+        <div className="space-y-2">
+          <DetailRow label="Fidelity" value={`${(proof.fidelity * 100).toFixed(1)}%`} />
+          <DetailRow label="Eigenvalues locked" value={`${proof.eigenvaluesLocked}/5`} />
+          <DetailRow label="Compression" value={proof.compressionRatio.toExponential(2)} />
+          <DetailRow label="Converged" value={proof.converged ? "Yes" : "No"} positive={proof.converged} />
+          <DetailRow label="Free parameters" value={String(proof.freeParameters)} positive={proof.freeParameters === 0} />
+        </div>
+
+        {/* CID */}
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid hsla(220, 15%, 22%, 0.06)" }}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[8px] tracking-[0.15em] uppercase" style={{ color: "hsla(220, 15%, 50%, 0.3)" }}>
+              Content-addressed ID
+            </span>
+          </div>
+          <div className="px-2 py-1.5 rounded-md font-mono text-[9px] break-all leading-relaxed" style={{
+            background: "hsla(220, 10%, 8%, 0.4)",
+            color: "hsla(200, 20%, 60%, 0.4)",
+            border: "1px solid hsla(220, 15%, 20%, 0.06)",
+          }}>
+            {proof.cid}
+          </div>
+        </div>
+
+        {/* Verification status */}
+        <div className="mt-3 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{
+            background: proof.verified ? "hsla(152, 55%, 50%, 0.6)" : "hsla(0, 40%, 50%, 0.5)",
+          }} />
+          <span className="text-[9px]" style={{
+            color: proof.verified ? "hsla(152, 40%, 55%, 0.5)" : "hsla(0, 30%, 55%, 0.4)",
+          }}>
+            {proof.verified
+              ? "Geometrically verified against {3,3,5} lattice · O(1) · <1ms"
+              : "Verification failed — geometric inconsistency detected"}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function DetailRow({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
+  return (
+    <div className="flex items-center justify-between px-2 py-1 rounded-md" style={{ background: "hsla(220, 8%, 10%, 0.15)" }}>
+      <span className="text-[9px] tracking-wider" style={{ color: "hsla(220, 12%, 55%, 0.35)" }}>{label}</span>
+      <span className="text-[10px] font-mono tabular-nums" style={{
+        color: positive === true ? "hsla(152, 40%, 55%, 0.55)"
+          : positive === false ? "hsla(0, 30%, 55%, 0.45)"
+          : "hsla(38, 20%, 65%, 0.5)",
+      }}>{value}</span>
+    </div>
+  );
+}
+
 // ── Trust Arc ────────────────────────────────────────────────────────
 function TrustArc({ score, grade }: { score: number; grade?: string }) {
+  // ... keep existing code
   const radius = 18;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference * 0.75; // 270° arc
@@ -434,6 +648,7 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
   const [showTrace, setShowTrace] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showGuarantees, setShowGuarantees] = useState(false);
+  const [showProof, setShowProof] = useState(false);
   const isConverged = ex.pipeline.stage === "converged";
   const score = trustScore(ex.meta);
   const active = activeGuarantees(ex.meta, ex.understanding);
@@ -441,6 +656,7 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
   const traceNarrative = buildTraceNarrative(ex);
   const sources = extractSources(ex.understanding, ex.meta?.claims ?? []);
   const [traceCopied, setTraceCopied] = useState(false);
+  const proof = ex.meta?.proofOfThought;
 
   const handleFollowUp = useCallback((question: string) => {
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: question }));
@@ -711,8 +927,8 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                 className="mt-4 pt-3"
                 style={{ borderTop: "1px solid hsla(38, 15%, 25%, 0.06)" }}
               >
-                {/* Top row: grade + status + interactive toggles */}
-                <div className="flex items-center justify-between">
+                {/* Top row: grade + proof badge + status */}
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-3">
                     {ex.meta.grade && (
                       <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: gradeColor(ex.meta.grade) }}>
@@ -732,9 +948,11 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       </span>
                     )}
                   </div>
+                  {/* Proof Badge — always visible */}
+                  {proof && <ProofBadge proof={proof} />}
 
                   {/* Interactive toggles */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {/* Chain of Thought toggle */}
                     <button
                       onClick={() => setShowTrace(v => !v)}
@@ -767,6 +985,19 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       <Fingerprint className="w-3 h-3" />
                       <span className="text-[9px] tracking-[0.12em] uppercase">{active.length}</span>
                     </button>
+
+                    {/* Proof-of-Thought toggle */}
+                    {proof && (
+                      <button
+                        onClick={() => setShowProof(v => !v)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-300 hover:bg-[hsla(220,15%,25%,0.08)]"
+                        style={{ color: showProof ? "hsla(200, 50%, 60%, 0.7)" : "hsla(38, 15%, 50%, 0.3)" }}
+                        title="View geometric proof receipt"
+                      >
+                        <span className="text-[9px]">✦</span>
+                        <span className="text-[9px] tracking-[0.12em] uppercase">Proof</span>
+                      </button>
+                    )}
 
                     {/* Remix with current mix */}
                     <button
@@ -1052,6 +1283,11 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                       </div>
                     </motion.div>
                   )}
+                </AnimatePresence>
+
+                {/* ── Expandable: Proof-of-Thought ── */}
+                <AnimatePresence>
+                  {showProof && proof && <ProofDrawer proof={proof} />}
                 </AnimatePresence>
               </motion.div>
             )}
