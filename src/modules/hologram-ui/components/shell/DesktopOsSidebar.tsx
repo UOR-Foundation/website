@@ -110,10 +110,9 @@ function FlyoutItem({
 }) {
   return (
     <button
-      onPointerDown={(e) => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        onClick();
+      onClick={(e) => {
+        e.stopPropagation();
+        try { onClick(); } catch (err) { console.error("[FlyoutItem]", err); }
       }}
       className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-[var(--sb-hover)]"
       style={{ color: "var(--sb-text)" }}
@@ -287,22 +286,27 @@ export default memo(function DesktopOsSidebar({
   );
 
   /**
-   * Collapse and fire action simultaneously — zero delay.
-   * Used with onPointerDown for instant response (saves ~80ms vs onClick).
+   * Fire action and close flyouts. Does NOT collapse the sidebar —
+   * users who expanded it did so intentionally.
+   * Wrapped in try/catch to prevent unhandled errors from freezing the UI.
    */
   const collapseAndDo = useCallback((action: () => void) => {
-    if (expanded) setExpanded(false);
     setToolsFlyoutOpen(false);
     setSystemFlyoutOpen(false);
-    action();
-  }, [expanded]);
+    try {
+      action();
+    } catch (err) {
+      console.error("[Sidebar] Action failed:", err);
+    }
+  }, []);
 
-  /** onPointerDown handler factory — fires on press, not release, for instant projection */
-  const pointerDown = useCallback((action: () => void) => (e: React.PointerEvent) => {
-    // Only primary button (left click)
-    if (e.button !== 0) return;
-    e.preventDefault();
-    collapseAndDo(action);
+  /** Safe onClick handler factory for tool buttons */
+  const safeClick = useCallback((action: () => void) => () => {
+    try {
+      collapseAndDo(action);
+    } catch (err) {
+      console.error("[Sidebar] Tool action failed:", err);
+    }
   }, [collapseAndDo]);
 
   const w = expanded ? EXPANDED_W : COLLAPSED_W;
@@ -436,23 +440,19 @@ export default memo(function DesktopOsSidebar({
           return (
             <IconTooltip key={item.label} label={item.label} show={!expanded}>
               <button
-                onPointerDown={(e) => {
-                  if (e.button !== 0) return;
-                  e.preventDefault();
-                  collapseAndDo(() => {
-                    if (item.panel === "apps" && onOpenApps) {
-                      onOpenApps();
-                    } else if (item.panel === "myspace" && onOpenMySpace) {
-                      onOpenMySpace();
-                    } else if (item.label === "Home" && onGoHome) {
-                      onGoHome();
-                    } else if (item.label === "My Space") {
-                      navigate("/ceremony");
-                    } else if (item.path) {
-                      navigate(item.path);
-                    }
-                  });
-                }}
+                onClick={() => collapseAndDo(() => {
+                  if (item.panel === "apps" && onOpenApps) {
+                    onOpenApps();
+                  } else if (item.panel === "myspace" && onOpenMySpace) {
+                    onOpenMySpace();
+                  } else if (item.label === "Home" && onGoHome) {
+                    onGoHome();
+                  } else if (item.label === "My Space") {
+                    navigate("/ceremony");
+                  } else if (item.path) {
+                    navigate(item.path);
+                  }
+                })}
                 onMouseEnter={() => item.panel ? onHoverPanel?.(item.panel) : undefined}
                 className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                   !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -479,7 +479,7 @@ export default memo(function DesktopOsSidebar({
         {onOpenBrowser && (
           <IconTooltip label="Web" show={!expanded}>
             <button
-              onPointerDown={pointerDown(onOpenBrowser)}
+              onClick={safeClick(onOpenBrowser)}
               onMouseEnter={() => onHoverPanel?.("browser")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -496,7 +496,7 @@ export default memo(function DesktopOsSidebar({
         {onOpenVault && (
           <IconTooltip label="Vault" show={!expanded}>
             <button
-              onPointerDown={pointerDown(onOpenVault)}
+              onClick={safeClick(onOpenVault)}
               onMouseEnter={() => onHoverPanel?.("vault")}
               className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
                 !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -540,7 +540,7 @@ export default memo(function DesktopOsSidebar({
               <div className="pl-2">
                 {onOpenTerminal && (
                   <button
-                    onPointerDown={pointerDown(onOpenTerminal)}
+                    onClick={safeClick(onOpenTerminal)}
                     onMouseEnter={() => onHoverPanel?.("terminal")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -551,7 +551,7 @@ export default memo(function DesktopOsSidebar({
                 )}
                 {onOpenJupyter && (
                   <button
-                    onPointerDown={pointerDown(onOpenJupyter)}
+                    onClick={safeClick(onOpenJupyter)}
                     onMouseEnter={() => onHoverPanel?.("jupyter")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -562,7 +562,7 @@ export default memo(function DesktopOsSidebar({
                 )}
                 {onOpenQuantumWorkspace && (
                   <button
-                    onPointerDown={pointerDown(onOpenQuantumWorkspace)}
+                    onClick={safeClick(onOpenQuantumWorkspace)}
                     onMouseEnter={() => onHoverPanel?.("quantum-workspace")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -573,7 +573,7 @@ export default memo(function DesktopOsSidebar({
                 )}
                 {onOpenAILab && (
                   <button
-                    onPointerDown={pointerDown(onOpenAILab)}
+                    onClick={safeClick(onOpenAILab)}
                     onMouseEnter={() => onHoverPanel?.("ai-lab")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -584,7 +584,7 @@ export default memo(function DesktopOsSidebar({
                 )}
                 {onOpenCode && (
                   <button
-                    onPointerDown={pointerDown(onOpenCode)}
+                    onClick={safeClick(onOpenCode)}
                     onMouseEnter={() => onHoverPanel?.("code")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -595,7 +595,7 @@ export default memo(function DesktopOsSidebar({
                 )}
                 {onOpenPackages && (
                   <button
-                    onPointerDown={pointerDown(onOpenPackages)}
+                    onClick={safeClick(onOpenPackages)}
                     onMouseEnter={() => onHoverPanel?.("packages")}
                     className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                     style={{ color: "var(--sb-text)" }}
@@ -708,7 +708,7 @@ export default memo(function DesktopOsSidebar({
         )}
         <IconTooltip label={`Messages (${MOD_KEY} M)`} show={!expanded}>
           <button
-            onPointerDown={pointerDown(() => onOpenMessenger?.())}
+            onClick={safeClick(() => onOpenMessenger?.())}
             onMouseEnter={() => onHoverPanel?.("messenger")}
             className={`sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 ${
               !expanded ? "justify-center px-0 py-3.5" : "px-3.5 py-3.5"
@@ -750,7 +750,7 @@ export default memo(function DesktopOsSidebar({
             {systemOpen && (
               <div className="pl-2">
                 <button
-                  onPointerDown={pointerDown(() => onOpenMemory?.())}
+                  onClick={safeClick(() => onOpenMemory?.())}
                   onMouseEnter={() => onHoverPanel?.("memory")}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
@@ -759,7 +759,7 @@ export default memo(function DesktopOsSidebar({
                   <span className="text-[13px] font-light tracking-wide">Storage</span>
                 </button>
                 <button
-                  onPointerDown={pointerDown(() => onOpenCompute?.())}
+                  onClick={safeClick(() => onOpenCompute?.())}
                   onMouseEnter={() => onHoverPanel?.("compute")}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
@@ -768,7 +768,7 @@ export default memo(function DesktopOsSidebar({
                   <span className="text-[13px] font-light tracking-wide">Compute</span>
                 </button>
                 <button
-                  onPointerDown={pointerDown(() => navigate("/settings"))}
+                  onClick={safeClick(() => navigate("/settings"))}
                   className="sidebar-nav-btn w-full flex items-center gap-3 rounded-xl transition-colors duration-200 px-3.5 py-3"
                   style={{ color: "var(--sb-text)" }}
                 >
