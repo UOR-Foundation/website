@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { initializeRegistry } from "@/lib/uor-registry";
+import { preseedSmolLM2 } from "@/modules/hologram-compute/model-preseeder";
 
 import { ScreenContextProvider } from "@/modules/hologram-ui/hooks/useScreenContext";
 import FocusVignette from "@/modules/hologram-ui/components/FocusVignette";
@@ -161,6 +162,7 @@ const App = () => {
       initializeRegistry().catch(console.error);
       initializeContentRegistry(true).catch(console.error);
       initTriwordGenesis().catch(console.error);
+      preseedSmolLM2().catch(console.error);
     };
     if ("requestIdleCallback" in window) {
       (window as Window).requestIdleCallback(init);
