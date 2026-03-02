@@ -778,27 +778,31 @@ export default function MobileOsShell() {
                       <button
                         key={item.label}
                         onClick={() => handleNav(item.action)}
-                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl active:scale-[0.95] transition-all duration-200"
+                        className="group flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl active:scale-[0.93] transition-all duration-200 hover:bg-[var(--console-hover)]"
                         style={{
                           color: PP.text,
                           touchAction: "manipulation",
                           WebkitTapHighlightColor: "transparent",
                           background: "transparent",
+                          // @ts-ignore CSS custom property for hover
+                          "--console-hover": `${PP.accent}0c`,
                           animation: "portal-stagger-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) both",
                           animationDelay: `${100 + zi * 80 + i * 50}ms`,
-                        }}
+                        } as React.CSSProperties}
                       >
                         <div
-                          className="flex items-center justify-center rounded-xl"
+                          className="flex items-center justify-center rounded-xl transition-all duration-200 group-hover:shadow-[0_0_16px_var(--console-glow)] group-active:shadow-[0_0_20px_var(--console-glow)] group-active:bg-[var(--console-active)]"
                           style={{
                             width: `${GR.xxl}px`,
                             height: `${GR.xxl}px`,
                             background: `${PP.accent}08`,
                             border: `1px solid ${PP.accent}0a`,
-                          }}
+                            "--console-glow": `${PP.accent}18`,
+                            "--console-active": `${PP.accent}12`,
+                          } as React.CSSProperties}
                         >
                           <item.icon
-                            className="w-5 h-5"
+                            className="w-5 h-5 transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
                             strokeWidth={1.2}
                             style={{ color: item.iconColor || PP.accentMuted }}
                           />
