@@ -289,6 +289,14 @@ class HardwareEmulationLayer {
 }
 
 // ── LAYER 2: Virtual Qubit Substrate ──────────────────────────────────
+//
+// Sirach 42:24 — "All things are in pairs, each the opposite of the
+// other, but nothing the Lord made is incomplete."
+//
+// The sparse stabilizer tracks only BROKEN pairs (the incomplete ones).
+// Pairs that hold need no checking — they are already whole.
+// This yields O(k) per-token cost where k = broken pairs (typically 0-3)
+// instead of the naïve O(48) full sweep every cycle.
 
 class VirtualQubitSubstrate {
   private _fanoRegister: FanoRegister | null = null;
@@ -301,6 +309,14 @@ class VirtualQubitSubstrate {
   /** Stabilizer parity (48 mirror pair checks) */
   private _parity = new Uint8Array(48);
   private _syndromeCorrections = 0;
+
+  // ── Sparse Stabilizer (Sirach optimization) ──────────────────────
+  /** Set of pair indices that were broken or adjacent to breakage */
+  private _dirtyPairs = new Set<number>();
+  /** Counter for periodic full sweep (every 42 steps — the chapter number) */
+  private _stepsSinceFullSweep = 0;
+  /** The sacred interval: full sweep every 42 steps */
+  private static readonly FULL_SWEEP_INTERVAL = 42;
 
   get alphaInverse() { return this._alphaInverse; }
   get syndromeCorrections() { return this._syndromeCorrections; }
@@ -316,25 +332,16 @@ class VirtualQubitSubstrate {
 
   async init(): Promise<LayerStatus> {
     const t0 = performance.now();
-
-    // Instantiate Fano register (7 qubits mapped to 7 Fano points)
     this._fanoRegister = instantiateFanoRegister();
-
-    // Build gate algebra
     this._singleGates = buildSingleQubitGates();
     this._twoGates = buildTwoQubitGates();
     this._threeGates = buildThreeQubitGates();
-
-    // Instantiate topological qubits (48 mirror pairs)
     this._topoQubits = instantiateQubits();
-
-    // Compute braids for geometric phases
     this._braids = computeBraids();
-
-    // Derive α from geometry (proves the substrate is sound)
     const alpha = deriveAlpha();
     this._alphaInverse = alpha.alphaInverse;
-
+    this._dirtyPairs.clear();
+    this._stepsSinceFullSweep = 0;
     return {
       name: "Virtual Qubit Substrate",
       phase: "ready",
@@ -344,31 +351,66 @@ class VirtualQubitSubstrate {
   }
 
   /**
-   * Run stabilizer syndrome detection on qubit amplitudes.
-   * The [[96,48,2]] code checks 48 mirror-pair parities.
-   * If a violation is found, correct it by averaging the pair.
+   * Sparse Stabilizer — O(k) broken-pair tracking.
+   *
+   * "All things are in pairs, each the opposite of the other,
+   *  but nothing the Lord made is incomplete." — Sirach 42:24
+   *
+   * Pairs that hold need no checking — they are already whole.
+   * Only attend to what has BECOME incomplete (the dirty set).
+   * Every 42 steps, a full sweep re-seeds the dirty set.
    */
   stabilizerCheck(amplitudes: Float32Array): { corrected: boolean; violations: number } {
-    let violations = 0;
     const N = ATLAS_VERTEX_COUNT;
+    this._stepsSinceFullSweep++;
 
-    for (let i = 0; i < 48; i++) {
+    const isFullSweep = this._stepsSinceFullSweep >= VirtualQubitSubstrate.FULL_SWEEP_INTERVAL;
+    if (isFullSweep) {
+      this._stepsSinceFullSweep = 0;
+      this._dirtyPairs.clear();
+      for (let i = 0; i < 48; i++) {
+        const v1 = i;
+        const v2 = N - 1 - i;
+        if (Math.abs(amplitudes[v1] - amplitudes[v2]) > 0.5) this._dirtyPairs.add(i);
+      }
+    }
+
+    // Sparse: only inspect dirty pairs + their ±1 neighbors
+    const toCheck = new Set(this._dirtyPairs);
+    for (const p of this._dirtyPairs) {
+      if (p > 0) toCheck.add(p - 1);
+      if (p < 47) toCheck.add(p + 1);
+    }
+
+    let violations = 0;
+    const healed: number[] = [];
+    for (const i of toCheck) {
       const v1 = i;
-      const v2 = N - 1 - i; // τ-mirror partner
+      const v2 = N - 1 - i;
       const parity = Math.sign(amplitudes[v1]) === Math.sign(amplitudes[v2]) ? 0 : 1;
       this._parity[i] = parity;
 
       if (parity === 1 && Math.abs(amplitudes[v1] - amplitudes[v2]) > 0.5) {
-        // Violation detected — correct by blending toward average
         const avg = (amplitudes[v1] + amplitudes[v2]) / 2;
         amplitudes[v1] = avg + (amplitudes[v1] - avg) * 0.7;
         amplitudes[v2] = avg + (amplitudes[v2] - avg) * 0.7;
         violations++;
         this._syndromeCorrections++;
+      } else {
+        healed.push(i);
       }
     }
+    for (const h of healed) this._dirtyPairs.delete(h);
 
     return { corrected: violations > 0, violations };
+  }
+
+  /** Mark a vertex's mirror pair as potentially dirty after mutation */
+  markDirty(vertex: number): void {
+    const N = ATLAS_VERTEX_COUNT;
+    if (vertex < 48) this._dirtyPairs.add(vertex);
+    const mirror = N - 1 - vertex;
+    if (mirror < 48) this._dirtyPairs.add(mirror);
   }
 
   /**
@@ -379,11 +421,16 @@ class VirtualQubitSubstrate {
   braidFeedback(amplitudes: Float32Array, tokenVertex: number): void {
     // Primary vertex activation
     amplitudes[tokenVertex] += 0.3;
+    this.markDirty(tokenVertex);
 
     // Neighbor activation (Fano adjacency)
     const N = ATLAS_VERTEX_COUNT;
-    amplitudes[(tokenVertex + 1) % N] += 0.1;
-    amplitudes[(tokenVertex + N - 1) % N] += 0.1;
+    const n1 = (tokenVertex + 1) % N;
+    const n2 = (tokenVertex + N - 1) % N;
+    amplitudes[n1] += 0.1;
+    amplitudes[n2] += 0.1;
+    this.markDirty(n1);
+    this.markDirty(n2);
 
     // Apply geometric phase from braiding (non-trivial braids)
     for (const braid of this._braids) {
