@@ -141,6 +141,16 @@ export default function HologramInstallPage() {
           >
             ✓ Already installed
           </div>
+        ) : pwa.isIosSafari ? (
+          <div className="text-center space-y-4">
+            <p
+              className="text-[14px] leading-[1.7]"
+              style={{ fontFamily: P.font, color: "hsla(38, 10%, 65%, 0.7)" }}
+            >
+              Tap the <strong style={{ color: "hsla(38, 30%, 70%, 0.9)" }}>Share</strong> button in Safari,
+              then select <strong style={{ color: "hsla(38, 30%, 70%, 0.9)" }}>Add to Home Screen</strong>.
+            </p>
+          </div>
         ) : (
           <div className="text-center space-y-4">
             <p

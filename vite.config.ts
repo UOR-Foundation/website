@@ -75,10 +75,31 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#0b1420",
         background_color: "#0b1420",
         display: "standalone",
+        display_override: ["window-controls-overlay", "standalone"],
         orientation: "any",
         scope: "/",
         start_url: "/hologram",
+        id: "/hologram",
         categories: ["productivity", "utilities", "developer tools"],
+        launch_handler: {
+          client_mode: "focus-existing",
+        },
+        shortcuts: [
+          {
+            name: "Open Lumen",
+            short_name: "Lumen",
+            description: "Talk to your intelligent companion",
+            url: "/hologram?open=lumen",
+            icons: [{ src: "/pwa-icon-192.png", sizes: "192x192" }],
+          },
+          {
+            name: "Convergence Dashboard",
+            short_name: "Convergence",
+            description: "View the Quantum-AI phase dashboard",
+            url: "/hologram?open=convergence",
+            icons: [{ src: "/pwa-icon-192.png", sizes: "192x192" }],
+          },
+        ],
         icons: [
           {
             src: "/pwa-icon-192.png",
