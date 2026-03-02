@@ -38,8 +38,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Home, Compass, User, Globe, Shield, Settings,
+  Home, User, Globe, Settings, LayoutGrid,
   Sparkles, X, Download, ChevronUp, Sun, Moon, Ear, EarOff,
+  Fingerprint, Inbox, Terminal, Beaker, Atom, Code2, Package,
 } from "lucide-react";
 import { useWakeWord } from "@/modules/hologram-ui/hooks/useWakeWord";
 import MySpacePanel from "../MySpacePanel";
@@ -68,20 +69,46 @@ function softHaptic() {
   navigator.vibrate(15);
 }
 
-// ── Nav items ──────────────────────────────────────────────────────────
-interface NavItem {
+// ── Console zones — Sanctuary → Explore → Create ──────────────────────
+interface ConsoleItem {
   label: string;
   icon: React.ElementType;
   action: string;
+  iconColor?: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: "Home",       icon: Home,     action: "/hologram-os" },
-  { label: "Explore",    icon: Compass,  action: "/hologram-os?open=explore" },
-  { label: "Your Space", icon: User,     action: "/your-space" },
-  { label: "Community",  icon: Globe,    action: "/research" },
-  { label: "My Space",   icon: Shield,   action: "__myspace" },
-  { label: "Settings",   icon: Settings, action: "/settings" },
+interface ConsoleZone {
+  label: string;
+  items: ConsoleItem[];
+}
+
+const CONSOLE_ZONES: ConsoleZone[] = [
+  {
+    label: "Sanctuary",
+    items: [
+      { label: "Home",     icon: Home,        action: "/hologram-os" },
+      { label: "My Space", icon: Fingerprint,  action: "__myspace" },
+    ],
+  },
+  {
+    label: "Explore",
+    items: [
+      { label: "Apps",     icon: LayoutGrid,  action: "/hologram-os?open=explore" },
+      { label: "Web",      icon: Globe,       action: "/research" },
+      { label: "Messages", icon: Inbox,       action: "__messages" },
+    ],
+  },
+  {
+    label: "Create",
+    items: [
+      { label: "Terminal",    icon: Terminal,  action: "__terminal" },
+      { label: "Jupyter",     icon: Beaker,    action: "__jupyter",     iconColor: "hsl(34, 35%, 70%)" },
+      { label: "AI Lab",      icon: Sparkles,  action: "__ailab",       iconColor: "hsl(260, 60%, 65%)" },
+      { label: "Quantum Lab", icon: Atom,      action: "__quantum",     iconColor: "hsl(200, 60%, 60%)" },
+      { label: "Code",        icon: Code2,     action: "__code",        iconColor: "hsl(210, 80%, 60%)" },
+      { label: "Packages",    icon: Package,   action: "__packages",    iconColor: "hsl(38, 50%, 55%)" },
+    ],
+  },
 ];
 
 // ── New User Narrative ─────────────────────────────────────────────────
@@ -266,8 +293,14 @@ export default function MobileOsShell() {
   const handleNav = useCallback(
     (action: string) => {
       setDrawerOpen(false);
+      softHaptic();
       if (action === "__claim" || action === "__myspace") return setClaimOpen(true);
       if (action === "__chat") return setChatOpen(true);
+      if (action === "__messages") return setChatOpen(true); // opens Lumen for now
+      // Dev tools — open Lumen with context
+      if (["__terminal", "__jupyter", "__ailab", "__quantum", "__code", "__packages"].includes(action)) {
+        return setChatOpen(true);
+      }
       navigate(action);
     },
     [navigate],
@@ -617,75 +650,146 @@ export default function MobileOsShell() {
             }}
           >
             {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
+            <div className="flex justify-center pt-3 pb-1">
               <div
                 className="w-10 h-1 rounded-full"
                 style={{ background: PP.orbBreathRing }}
               />
             </div>
 
-            {/* Close */}
-            <div className="flex justify-end px-5 pb-2">
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="p-2 rounded-full active:scale-90 transition-transform"
-                style={{ color: PP.textSecondary }}
+            {/* Header bar */}
+            <div className="flex items-center justify-between px-6 pt-2 pb-3">
+              <p
+                className="tracking-[0.3em] uppercase"
+                style={{
+                  fontFamily: PP.fontDisplay,
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: PP.textSecondary,
+                  letterSpacing: "0.3em",
+                }}
               >
-                <X className="w-5 h-5" strokeWidth={1.2} />
-              </button>
+                Console
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setDrawerOpen(false); navigate("/settings"); }}
+                  className="p-2 rounded-full active:scale-90 transition-transform"
+                  style={{ color: PP.textSecondary }}
+                >
+                  <Settings className="w-4 h-4" strokeWidth={1.3} />
+                </button>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-2 rounded-full active:scale-90 transition-transform"
+                  style={{ color: PP.textSecondary }}
+                >
+                  <X className="w-4 h-4" strokeWidth={1.3} />
+                </button>
+              </div>
             </div>
 
-            {/* Nav items */}
-            <nav className="px-6 pb-4 space-y-1">
-              {NAV_ITEMS.map((item, i) => (
-                <button
-                  key={item.label}
-                  onClick={() => handleNav(item.action)}
-                  className="w-full flex items-center gap-4 py-4 px-4 rounded-2xl active:scale-[0.98] transition-all duration-200"
-                  style={{
-                    color: PP.text,
-                    fontFamily: PP.font,
-                    touchAction: "manipulation",
-                    WebkitTapHighlightColor: "transparent",
-                    animation: "portal-stagger-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) both",
-                    animationDelay: `${80 + i * 60}ms`,
-                  }}
-                >
-                  <item.icon className="w-5 h-5" strokeWidth={1.3} style={{ color: PP.accentMuted }} />
-                  <span className="text-[16px] font-light tracking-wide">{item.label}</span>
-                </button>
+            {/* Console zones */}
+            <nav className="px-5 pb-3" style={{ fontFamily: PP.font }}>
+              {CONSOLE_ZONES.map((zone, zi) => (
+                <div key={zone.label} style={{ marginBottom: `${GR.lg}px` }}>
+                  {/* Zone label */}
+                  <p
+                    className="tracking-[0.25em] uppercase mb-2 px-3"
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      color: PP.textWhisper,
+                      letterSpacing: "0.25em",
+                      animation: "portal-stagger-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) both",
+                      animationDelay: `${50 + zi * 80}ms`,
+                    }}
+                  >
+                    {zone.label}
+                  </p>
+                  {/* Items grid — 2 or 3 columns */}
+                  <div
+                    className="grid gap-1.5"
+                    style={{
+                      gridTemplateColumns: zone.items.length <= 2 ? "1fr 1fr" : "1fr 1fr 1fr",
+                    }}
+                  >
+                    {zone.items.map((item, i) => (
+                      <button
+                        key={item.label}
+                        onClick={() => handleNav(item.action)}
+                        className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl active:scale-[0.95] transition-all duration-200"
+                        style={{
+                          color: PP.text,
+                          touchAction: "manipulation",
+                          WebkitTapHighlightColor: "transparent",
+                          background: "transparent",
+                          animation: "portal-stagger-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) both",
+                          animationDelay: `${100 + zi * 80 + i * 50}ms`,
+                        }}
+                      >
+                        <div
+                          className="flex items-center justify-center rounded-xl"
+                          style={{
+                            width: `${GR.xxl}px`,
+                            height: `${GR.xxl}px`,
+                            background: `${PP.accent}08`,
+                            border: `1px solid ${PP.accent}0a`,
+                          }}
+                        >
+                          <item.icon
+                            className="w-5 h-5"
+                            strokeWidth={1.2}
+                            style={{ color: item.iconColor || PP.accentMuted }}
+                          />
+                        </div>
+                        <span
+                          className="text-center leading-tight"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 400,
+                            color: PP.textSecondary,
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </nav>
 
-            {/* Actions */}
-            <div className="px-6 pb-4 space-y-2">
+            {/* Primary action */}
+            <div className="px-5 pb-4 space-y-2">
               {(pwa.canInstall || pwa.isIosSafari) && !pwa.isStandalone && (
                 <button
                   onClick={() => { setDrawerOpen(false); pwa.canInstall ? pwa.install() : window.location.assign("/install"); }}
-                  className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl active:scale-[0.97] transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl active:scale-[0.97] transition-all duration-200"
                   style={{
-                    background: `${PP.accent}12`,
-                    border: `1px solid ${PP.accent}15`,
+                    background: `${PP.accent}0a`,
+                    border: `1px solid ${PP.accent}0d`,
                     color: PP.accentMuted,
                     fontFamily: PP.font,
                   }}
                 >
                   <Download className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="text-[14px] font-light tracking-wide">Install Hologram</span>
+                  <span className="text-[13px] font-light tracking-wide">Install Hologram</span>
                 </button>
               )}
               <button
                 onClick={() => { setDrawerOpen(false); setChatOpen(true); heartbeatHaptic(); }}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl active:scale-[0.97] transition-all duration-200"
+                className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl active:scale-[0.97] transition-all duration-200"
                 style={{
-                  background: `${PP.accent}15`,
-                  border: `1px solid ${PP.accent}18`,
+                  background: `${PP.accent}12`,
+                  border: `1px solid ${PP.accent}15`,
                   color: PP.accent,
                   fontFamily: PP.font,
                 }}
               >
                 <Sparkles className="w-4 h-4" strokeWidth={1.5} />
-                <span className="text-[15px] font-light tracking-wide">Open Lumen</span>
+                <span className="text-[14px] font-light tracking-wide">Open Lumen</span>
               </button>
             </div>
           </div>
