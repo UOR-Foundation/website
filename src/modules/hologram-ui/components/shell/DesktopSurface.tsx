@@ -191,7 +191,6 @@ export default memo(function DesktopSurface({
     if (displayCaps.gpuTier === "high" && displayCaps.refreshHz >= 120) return "52s";
     return "42s";
   }, [displayCaps]);
-  }, [displayCaps]);
   const dayRingDrag = useDraggablePosition({
     storageKey: `hologram-pos:day-ring:${mode}`,
     defaultPos: { x: 0, y: 0 },
