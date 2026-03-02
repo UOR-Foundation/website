@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.deploy-test]
 verify_jwt = false
+
+[functions.confidential-inference]
+verify_jwt = false
