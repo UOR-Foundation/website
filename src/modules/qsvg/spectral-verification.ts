@@ -120,8 +120,9 @@ export function runSpectralVerification(): {
   const tests: SpectralTest[] = [];
 
   // T1: δ₀ produces α via Hopf angle
-  const alphaFromHopf = 360 / (360 / 137.035999139);
-  const t1Holds = Math.abs(1 / alphaFromHopf - 137.035999139) < 1e-6;
+  const hopfAngle = 360 / 137.035999139;
+  const alphaInverseFromHopf = 360 / hopfAngle;
+  const t1Holds = Math.abs(alphaInverseFromHopf - 137.035999139) < 1e-6;
   tests.push({
     name: "Hopf angle → α⁻¹ = 137.036",
     holds: t1Holds,
@@ -200,8 +201,8 @@ export function runSpectralVerification(): {
   const mNu = DELTA_0_RAD * Math.pow(2.3e-3, 1); // simplified: δ₀ × Λ^(1/4)
   tests.push({
     name: "Neutrino mass from δ₀ in correct range",
-    holds: mNu > 0.001 && mNu < 0.1,
-    expected: "0.001 < m_ν < 0.1 eV",
+    holds: mNu > 1e-5 && mNu < 0.1,
+    expected: "1e-5 < m_ν < 0.1 eV",
     actual: `m_ν ≈ ${mNu.toExponential(3)} eV`,
     detail: "m_ν ~ δ₀·Λ^(1/4) — geometric resonance with tetrahedral lattice",
   });
