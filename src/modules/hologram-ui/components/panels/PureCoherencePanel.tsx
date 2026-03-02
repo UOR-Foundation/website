@@ -10,11 +10,12 @@
  *   → Token Emitter (stabilizer-verified sampling)
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconPlayerPlay, IconPlayerStop, IconSparkles, IconAtom,
-  IconBolt, IconShield, IconFlame, IconRefresh,
+  IconBolt, IconShield, IconFlame, IconRefresh, IconGrid4x4,
+  IconTypography,
 } from "@tabler/icons-react";
 import type { PagePalette } from "@/modules/hologram-ui/hooks/usePageTheme";
 import {
@@ -23,6 +24,7 @@ import {
   type GenerationToken,
   type GenerationResult,
 } from "@/modules/hologram-compute/coherence-token-decoder";
+import type { VertexCluster } from "@/modules/hologram-compute/vocabulary-partitioner";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -49,6 +51,8 @@ export default function PureCoherencePanel({ P }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(64);
+  const [activeTab, setActiveTab] = useState<"stream" | "clusters">("stream");
+  const [hoveredCluster, setHoveredCluster] = useState<number | null>(null);
 
   const decoderRef = useRef<CoherenceTokenDecoder | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
@@ -157,7 +161,7 @@ export default function PureCoherencePanel({ P }: Props) {
           </select>
 
           {isGenerating ? (
-            <button onClick={() => { /* can't stop sync loop, but future impl */ }}
+            <button onClick={() => {}}
               style={{ padding: "8px 14px", borderRadius: "8px", background: `${P.red}20`, color: P.red, border: `1px solid ${P.red}30`, fontSize: "12px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
               <IconPlayerStop size={13} /> Stop
             </button>
@@ -205,88 +209,118 @@ export default function PureCoherencePanel({ P }: Props) {
         )}
       </AnimatePresence>
 
+      {/* ── Tab bar ── */}
+      {isReady && (
+        <div style={{ display: "flex", borderBottom: `1px solid ${P.borderSubtle}`, background: P.cardBgSubtle }}>
+          {([
+            { key: "stream" as const, label: "Token Stream", icon: <IconTypography size={11} /> },
+            { key: "clusters" as const, label: "Vocab Clusters", icon: <IconGrid4x4 size={11} /> },
+          ]).map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              style={{
+                display: "flex", alignItems: "center", gap: "4px", padding: "7px 14px",
+                fontSize: "10px", fontWeight: activeTab === tab.key ? 700 : 500,
+                color: activeTab === tab.key ? P.accent : P.textDim,
+                background: activeTab === tab.key ? P.bg : "transparent",
+                borderBottom: activeTab === tab.key ? `2px solid ${P.accent}` : "2px solid transparent",
+                border: "none", borderTop: "none", cursor: "pointer",
+              }}>
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Main Content ── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* Token stream */}
-        <div ref={outputRef} style={{ flex: 1, overflowY: "auto", padding: "20px 24px", fontSize: "14px", lineHeight: 1.85 }}>
-          {/* Empty state */}
-          {!hasTokens && !isGenerating && isReady && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "20px" }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.green}08`, border: `1px solid ${P.green}12` }}>
-                <IconAtom size={28} style={{ color: P.green, opacity: 0.5 }} />
-              </div>
-              <div style={{ textAlign: "center", maxWidth: "420px" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: 600, fontFamily: P.serif, color: P.text, margin: "0 0 8px" }}>
-                  Pure Coherence Inference
-                </h3>
-                <p style={{ fontSize: "12px", color: P.textMuted, lineHeight: 1.7 }}>
-                  Text generation via three-scale Atlas manifold navigation.
-                  No weight tensors are loaded — token selection is driven entirely by
-                  coherence gradient descent through 96 Atlas vertex clusters.
-                </p>
-              </div>
+        <div ref={outputRef} style={{ flex: 1, overflowY: "auto", padding: activeTab === "clusters" ? "12px" : "20px 24px", fontSize: "14px", lineHeight: 1.85 }}>
 
-              {/* Pipeline visualization */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxWidth: "400px", width: "100%" }}>
-                {[
-                  { label: "Engram Vocabulary Cache", desc: `${status.partitionStats?.totalTokens?.toLocaleString() ?? "49K"} tokens → ${status.partitionStats?.activeClusters ?? 96} clusters`, color: P.purple },
-                  { label: "Coherence Navigator", desc: "Fano routing · Edge diffusion · Vertex sharpening", color: P.accent },
-                  { label: "Token Emitter", desc: "τ-mirror verified sampling · Prescience modulation", color: P.green },
-                ].map((layer, i) => (
-                  <div key={i}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderRadius: "8px", background: P.cardBg, border: `1px solid ${P.cardBorder}` }}>
-                      <div style={{ width: "24px", height: "24px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", background: `${layer.color}12`, border: `1px solid ${layer.color}25`, fontSize: "10px", fontWeight: 800, color: layer.color, flexShrink: 0 }}>
-                        {i + 1}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: P.text }}>{layer.label}</div>
-                        <div style={{ fontSize: "10px", color: P.textDim }}>{layer.desc}</div>
-                      </div>
-                    </div>
-                    {i < 2 && <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "4px", background: P.borderSubtle }} /></div>}
+          {/* ── Clusters tab ── */}
+          {activeTab === "clusters" && isReady && decoderRef.current && (
+            <VocabClusterHeatmap P={P} decoder={decoderRef.current} hoveredCluster={hoveredCluster} setHoveredCluster={setHoveredCluster} />
+          )}
+
+          {/* ── Stream tab ── */}
+          {activeTab === "stream" && (
+            <>
+              {/* Empty state */}
+              {!hasTokens && !isGenerating && isReady && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "20px" }}>
+                  <div style={{ width: "56px", height: "56px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.green}08`, border: `1px solid ${P.green}12` }}>
+                    <IconAtom size={28} style={{ color: P.green, opacity: 0.5 }} />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  <div style={{ textAlign: "center", maxWidth: "420px" }}>
+                    <h3 style={{ fontSize: "18px", fontWeight: 600, fontFamily: P.serif, color: P.text, margin: "0 0 8px" }}>
+                      Pure Coherence Inference
+                    </h3>
+                    <p style={{ fontSize: "12px", color: P.textMuted, lineHeight: 1.7 }}>
+                      Text generation via three-scale Atlas manifold navigation.
+                      No weight tensors are loaded — token selection is driven entirely by
+                      coherence gradient descent through 96 Atlas vertex clusters.
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxWidth: "400px", width: "100%" }}>
+                    {[
+                      { label: "Engram Vocabulary Cache", desc: `${status.partitionStats?.totalTokens?.toLocaleString() ?? "49K"} tokens → ${status.partitionStats?.activeClusters ?? 96} clusters`, color: P.purple },
+                      { label: "Coherence Navigator", desc: "Fano routing · Edge diffusion · Vertex sharpening", color: P.accent },
+                      { label: "Token Emitter", desc: "τ-mirror verified sampling · Prescience modulation", color: P.green },
+                    ].map((layer, i) => (
+                      <div key={i}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderRadius: "8px", background: P.cardBg, border: `1px solid ${P.cardBorder}` }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", background: `${layer.color}12`, border: `1px solid ${layer.color}25`, fontSize: "10px", fontWeight: 800, color: layer.color, flexShrink: 0 }}>
+                            {i + 1}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 600, color: P.text }}>{layer.label}</div>
+                            <div style={{ fontSize: "10px", color: P.textDim }}>{layer.desc}</div>
+                          </div>
+                        </div>
+                        {i < 2 && <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "4px", background: P.borderSubtle }} /></div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Loading state */}
-          {isLoading && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "16px" }}>
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                style={{ width: "32px", height: "32px", borderRadius: "50%", border: `3px solid ${P.accent}20`, borderTopColor: P.accent }} />
-              <p style={{ fontSize: "12px", color: P.textMuted }}>{status.message}</p>
-            </div>
-          )}
+              {/* Loading state */}
+              {isLoading && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "16px" }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    style={{ width: "32px", height: "32px", borderRadius: "50%", border: `3px solid ${P.accent}20`, borderTopColor: P.accent }} />
+                  <p style={{ fontSize: "12px", color: P.textMuted }}>{status.message}</p>
+                </div>
+              )}
 
-          {/* Token output */}
-          {hasTokens && (
-            <div>
-              <div style={{ marginBottom: "8px" }}>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: P.textDim }}>Prompt</span>
-              </div>
-              <p style={{ color: P.textDim, fontSize: "13px", marginBottom: "14px", paddingBottom: "10px", borderBottom: `1px solid ${P.borderSubtle}` }}>{prompt}</p>
-              <div style={{ marginBottom: "6px" }}>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: P.green }}>
-                  Pure Coherence · SmolLM2 1.7B Vocabulary · No Weights
-                </span>
-              </div>
-              <div>
-                {tokens.map((tok, i) => (
-                  <CoherenceStreamToken key={i} token={tok} P={P} />
-                ))}
-                {isGenerating && (
-                  <motion.span animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }}
-                    style={{ display: "inline-block", width: "2px", height: "14px", background: P.green, borderRadius: "1px", verticalAlign: "middle", marginLeft: "1px" }} />
-                )}
-              </div>
-            </div>
+              {/* Token output */}
+              {hasTokens && (
+                <div>
+                  <div style={{ marginBottom: "8px" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: P.textDim }}>Prompt</span>
+                  </div>
+                  <p style={{ color: P.textDim, fontSize: "13px", marginBottom: "14px", paddingBottom: "10px", borderBottom: `1px solid ${P.borderSubtle}` }}>{prompt}</p>
+                  <div style={{ marginBottom: "6px" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: P.green }}>
+                      Pure Coherence · SmolLM2 1.7B Vocabulary · No Weights
+                    </span>
+                  </div>
+                  <div>
+                    {tokens.map((tok, i) => (
+                      <CoherenceStreamToken key={i} token={tok} P={P} />
+                    ))}
+                    {isGenerating && (
+                      <motion.span animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }}
+                        style={{ display: "inline-block", width: "2px", height: "14px", background: P.green, borderRadius: "1px", verticalAlign: "middle", marginLeft: "1px" }} />
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* ── Right sidebar (diagnostics) ── */}
         <AnimatePresence>
-          {(hasTokens || result) && (
+          {(hasTokens || result) && activeTab === "stream" && (
             <motion.div initial={{ width: 0, opacity: 0 }} animate={{ width: 220, opacity: 1 }} exit={{ width: 0, opacity: 0 }}
               style={{ borderLeft: `1px solid ${P.borderSubtle}`, overflowY: "auto", overflowX: "hidden", background: P.cardBgSubtle, flexShrink: 0 }}>
               <div style={{ padding: "14px 10px" }}>
@@ -348,6 +382,257 @@ export default function PureCoherencePanel({ P }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Vocabulary Cluster Heatmap
+// ═══════════════════════════════════════════════════════════════
+
+const SIGN_CLASS_LABELS = ["sc₀", "sc₁", "sc₂", "sc₃", "sc₄", "sc₅", "sc₆", "sc₇"];
+const SIGN_CLASS_HUES = [200, 160, 120, 80, 40, 320, 280, 240];
+
+function VocabClusterHeatmap({
+  P, decoder, hoveredCluster, setHoveredCluster,
+}: {
+  P: PagePalette;
+  decoder: CoherenceTokenDecoder;
+  hoveredCluster: number | null;
+  setHoveredCluster: (v: number | null) => void;
+}) {
+  const partitioner = decoder.getPartitioner();
+  const stats = partitioner.getStats();
+  const clusters = useMemo(() => partitioner.getAllClusters(), [partitioner]);
+
+  // Compute derived stats
+  const maxSize = useMemo(() => Math.max(...clusters.map(c => c.size), 1), [clusters]);
+  const maxEntropy = useMemo(() => Math.max(...clusters.map(c => c.entropy), 0.01), [clusters]);
+
+  const hovered = hoveredCluster !== null ? clusters[hoveredCluster] : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", height: "100%" }}>
+      {/* Summary stats bar */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        {[
+          { label: "Total Tokens", value: stats?.totalTokens?.toLocaleString() ?? "—" },
+          { label: "Active Clusters", value: `${stats?.activeClusters ?? 0}/96` },
+          { label: "Mean Size", value: stats?.meanClusterSize?.toFixed(0) ?? "—" },
+          { label: "Std Dev", value: stats?.stdClusterSize?.toFixed(0) ?? "—" },
+          { label: "Min/Max", value: `${stats?.minClusterSize ?? 0}/${stats?.maxClusterSize ?? 0}` },
+          { label: "Entropy", value: stats?.partitionEntropy?.toFixed(2) ?? "—" },
+        ].map(s => (
+          <div key={s.label} style={{ padding: "4px 10px", borderRadius: "6px", background: P.cardBg, border: `1px solid ${P.cardBorder}`, display: "flex", gap: "6px", alignItems: "baseline" }}>
+            <span style={{ fontSize: "8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: P.textDim }}>{s.label}</span>
+            <span style={{ fontSize: "12px", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: P.text }}>{s.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Heatmap grid: 12 rows × 8 columns (96 vertices) */}
+      <div style={{ display: "flex", gap: "12px", flex: 1, minHeight: 0 }}>
+        {/* Grid */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
+          {/* Column headers (sign classes) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: "2px", marginBottom: "2px" }}>
+            {SIGN_CLASS_LABELS.map((sc, i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: "7px", fontWeight: 700, color: `hsl(${SIGN_CLASS_HUES[i]}, 50%, 55%)`, letterSpacing: "0.05em" }}>
+                {sc}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid cells */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: "2px", flex: 1 }}>
+            {clusters.map((cluster, idx) => {
+              const sizeRatio = cluster.size / maxSize;
+              const entropyRatio = cluster.entropy / maxEntropy;
+              const sc = idx % 8;
+              const hue = SIGN_CLASS_HUES[sc];
+              const isHovered = hoveredCluster === idx;
+
+              // Color: saturation from size, lightness from entropy
+              const sat = 20 + sizeRatio * 60;
+              const light = 85 - sizeRatio * 55;
+              const alpha = 0.15 + sizeRatio * 0.85;
+
+              return (
+                <motion.div
+                  key={idx}
+                  onMouseEnter={() => setHoveredCluster(idx)}
+                  onMouseLeave={() => setHoveredCluster(null)}
+                  whileHover={{ scale: 1.08, zIndex: 10 }}
+                  style={{
+                    position: "relative",
+                    borderRadius: "4px",
+                    background: `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`,
+                    border: isHovered
+                      ? `2px solid hsl(${hue}, 70%, 50%)`
+                      : `1px solid hsla(${hue}, 30%, 50%, 0.15)`,
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "2px",
+                    minHeight: "32px",
+                    transition: "border 0.15s",
+                  }}
+                >
+                  <span style={{
+                    fontSize: "8px", fontWeight: 800,
+                    color: sizeRatio > 0.5 ? `hsl(${hue}, 20%, 95%)` : `hsl(${hue}, 50%, 40%)`,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {cluster.size}
+                  </span>
+                  <span style={{
+                    fontSize: "6px",
+                    color: sizeRatio > 0.5 ? `hsl(${hue}, 20%, 80%)` : `hsl(${hue}, 30%, 55%)`,
+                  }}>
+                    v{idx}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px", justifyContent: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <div style={{ width: "24px", height: "6px", borderRadius: "3px", background: "linear-gradient(to right, hsla(200,30%,85%,0.3), hsla(200,70%,35%,1))" }} />
+              <span style={{ fontSize: "7px", color: P.textDim }}>Cluster size</span>
+            </div>
+            <span style={{ fontSize: "7px", color: P.textDim }}>·</span>
+            <span style={{ fontSize: "7px", color: P.textDim }}>12 rows × 8 sign classes = 96 Atlas vertices</span>
+          </div>
+        </div>
+
+        {/* Detail panel for hovered cluster */}
+        <div style={{
+          width: "220px", flexShrink: 0, borderRadius: "8px",
+          background: P.cardBg, border: `1px solid ${P.cardBorder}`,
+          padding: "12px", overflowY: "auto", overflowX: "hidden",
+        }}>
+          {hovered ? (
+            <ClusterDetail P={P} cluster={hovered} maxSize={maxSize} />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "8px" }}>
+              <IconGrid4x4 size={20} style={{ color: P.textDim, opacity: 0.3 }} />
+              <p style={{ fontSize: "10px", color: P.textDim, textAlign: "center" }}>
+                Hover a cell to inspect cluster tokens, entropy, and coherence distribution
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClusterDetail({ P, cluster, maxSize }: { P: PagePalette; cluster: VertexCluster; maxSize: number }) {
+  const sc = cluster.vertexIndex % 8;
+  const hue = SIGN_CLASS_HUES[sc];
+  const topTokens = cluster.tokens.slice(0, 20);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{
+          width: "28px", height: "28px", borderRadius: "7px",
+          background: `hsl(${hue}, 50%, 40%)`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "10px", fontWeight: 800, color: "#fff",
+        }}>
+          {cluster.vertexIndex}
+        </div>
+        <div>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: P.text }}>Vertex {cluster.vertexIndex}</div>
+          <div style={{ fontSize: "9px", color: `hsl(${hue}, 50%, 55%)` }}>
+            Sign class {sc} · {SIGN_CLASS_LABELS[sc]}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
+        {[
+          { label: "Tokens", value: cluster.size.toString() },
+          { label: "Entropy", value: cluster.entropy.toFixed(2) },
+          { label: "Fill %", value: `${((cluster.size / maxSize) * 100).toFixed(0)}%` },
+          { label: "Row", value: `${Math.floor(cluster.vertexIndex / 8)}` },
+        ].map(s => (
+          <div key={s.label} style={{ padding: "3px 6px", borderRadius: "4px", background: P.cardBgSubtle, border: `1px solid ${P.borderSubtle}` }}>
+            <div style={{ fontSize: "7px", fontWeight: 600, textTransform: "uppercase", color: P.textDim, letterSpacing: "0.05em" }}>{s.label}</div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: P.text, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Weight distribution bar */}
+      <div>
+        <div style={{ fontSize: "7px", fontWeight: 700, textTransform: "uppercase", color: P.textDim, marginBottom: "3px", letterSpacing: "0.1em" }}>
+          Weight Distribution
+        </div>
+        <div style={{ height: "12px", borderRadius: "3px", overflow: "hidden", display: "flex", background: P.cardBgSubtle, border: `1px solid ${P.borderSubtle}` }}>
+          {topTokens.slice(0, 8).map((t, i) => {
+            const totalW = topTokens.reduce((s, tk) => s + tk.weight, 0);
+            const w = totalW > 0 ? (t.weight / totalW) * 100 : 0;
+            return (
+              <div key={i} style={{
+                width: `${w}%`, height: "100%",
+                background: `hsl(${hue}, ${50 + i * 5}%, ${45 + i * 5}%)`,
+                minWidth: w > 0.5 ? "1px" : 0,
+              }}
+                title={`"${t.tokenString}" — ${(w).toFixed(1)}%`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Top tokens list */}
+      <div>
+        <div style={{ fontSize: "7px", fontWeight: 700, textTransform: "uppercase", color: P.textDim, marginBottom: "4px", letterSpacing: "0.1em" }}>
+          Top Tokens ({cluster.size} total)
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+          {topTokens.map((t, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: "6px", padding: "2px 4px",
+              borderRadius: "3px",
+              background: i % 2 === 0 ? "transparent" : P.cardBgSubtle,
+              fontSize: "9px",
+            }}>
+              <span style={{ width: "16px", textAlign: "right", fontWeight: 600, color: P.textDim, fontVariantNumeric: "tabular-nums", fontSize: "8px" }}>
+                #{t.rank}
+              </span>
+              <span style={{
+                flex: 1, fontFamily: "monospace", color: P.text, fontWeight: 500,
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                maxWidth: "100px",
+              }}
+                title={t.tokenString}
+              >
+                {JSON.stringify(t.tokenString)}
+              </span>
+              {/* Weight bar */}
+              <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: P.cardBgSubtle, overflow: "hidden", flexShrink: 0 }}>
+                <div style={{
+                  width: `${(t.weight / (topTokens[0]?.weight || 1)) * 100}%`,
+                  height: "100%", borderRadius: "2px",
+                  background: `hsl(${hue}, 55%, 50%)`,
+                }} />
+              </div>
+              <span style={{ fontSize: "7px", color: P.textDim, fontVariantNumeric: "tabular-nums", width: "28px", textAlign: "right" }}>
+                {t.weight.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
