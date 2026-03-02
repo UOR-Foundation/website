@@ -23,7 +23,7 @@ import { ShareTheLoveModal } from "../ShareTheLoveModal";
 import TextSizeControl from "../TextSizeControl";
 import { useTextSize, type TextSize } from "@/modules/hologram-ui/hooks/useTextSize";
 import { useAttentionMode } from "@/modules/hologram-ui/hooks/useAttentionMode";
-import { TEEBridge } from "@/hologram/kernel/tee-bridge";
+// TEE state is event-driven from MySpacePanel — no direct bridge import needed
 
 
 /* ── Tooltip wrapper ───────────────────────────────────────── */
@@ -253,15 +253,23 @@ export default memo(function DesktopOsSidebar({
   const { aperture } = useAttentionMode();
   const isFocused = aperture >= 0.5;
 
-  // TEE trust status for Genesis dot
-  const [isTrusted, setIsTrusted] = useState(false);
+  // TEE trust status for Genesis dot — driven by ceremony/login events
+  // No auto-trigger for visitors; only reflects state from MySpacePanel
+  const [isTrusted, setIsTrusted] = useState(() => {
+    // Check if credential exists from a previous ceremony
+    try {
+      return !!localStorage.getItem("hologram:tee:credential");
+    } catch { return false; }
+  });
+
+  // Listen for TEE state updates from MySpacePanel (ceremony/login)
   useEffect(() => {
-    const bridge = new TEEBridge();
-    bridge.detect().then(caps => {
-      if (caps.hardwareAttestation && bridge.hasCredential) {
-        setIsTrusted(true);
-      }
-    }).catch(() => {});
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setIsTrusted(!!detail?.trusted);
+    };
+    window.addEventListener("hologram:tee-update", handler);
+    return () => window.removeEventListener("hologram:tee-update", handler);
   }, []);
 
   // Focus-responsive palette overrides — when focused, the sidebar becomes

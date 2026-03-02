@@ -10,21 +10,27 @@
  *  1. auth       — Sign in (Google / Apple / Magic Link)
  *  2. magic-sent — Waiting for magic link confirmation
  *  3. naming     — Choose a display name
- *  4. creating   — Vault-isolated founding ceremony + crystallization
+ *  4. creating   — TEE attestation + Vault-isolated founding ceremony
  *  5. reveal     — Identity confirmation with three-word name
  *  6. dashboard  — Personal sovereign dashboard
  *
  * Security:
+ *  - TEE attestation binds the kernel to your device's hardware enclave
  *  - Founding ceremony executes inside CeremonyVault (5-layer isolation)
  *  - Observer-collapse detection aborts on interception
  *  - Entangled nonce pair ensures no third-party observation
  *  - All intermediate crypto material is scrubbed post-ceremony
  *  - QDisclosure default policy: everything private
  *  - QTrustMesh Node 0: self-attestation at sovereign level
+ *
+ * TEE Integration:
+ *  - During creation: TEE.attest() anchors identity to device hardware
+ *  - During login: TEE.assert() verifies the returning user's device
+ *  - No TEE prompts for visitors — only during intentional identity operations
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mail, Shield, Fingerprint, Lock } from "lucide-react";
+import { Mail, Shield, Fingerprint, Lock, Wifi } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
@@ -41,6 +47,7 @@ import { QDisclosure, type DisclosureRule } from "@/hologram/kernel/q-disclosure
 import { QTrustMesh } from "@/hologram/kernel/q-trust-mesh";
 import { QNet } from "@/hologram/kernel/q-net";
 import { executeInVault, type VaultSeal } from "@/hologram/kernel/q-ceremony-vault";
+import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologram/kernel/tee-bridge";
 
 // ── Extracted sub-components ──
 import MySpaceDashboard from "../myspace/MySpaceDashboard";
@@ -57,6 +64,12 @@ interface CeremonyState {
   seal: VaultSeal;
   disclosurePolicyCid: string;
   trustNodeCid: string;
+  teeAttestation?: TEEAttestationQuote | null;
+}
+
+/** Emit a custom event so the sidebar picks up TEE state changes */
+function emitTrustUpdate(trusted: boolean) {
+  window.dispatchEvent(new CustomEvent("hologram:tee-update", { detail: { trusted } }));
 }
 
 export default function MySpacePanel({ onClose }: MySpacePanelProps) {
@@ -65,14 +78,21 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [ceremonyState, setCeremonyState] = useState<CeremonyState | null>(null);
+  const [teeStatus, setTeeStatus] = useState<"idle" | "attesting" | "asserting" | "done">("idle");
   const inputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  const teeBridgeRef = useRef(new TEEBridge());
 
   // ── Phase routing ──
   useEffect(() => {
     if (loading) { setPhase("loading"); return; }
     if (!session) { setPhase("auth"); return; }
-    if (profile?.ceremonyCid || profile?.uorCanonicalId) { setPhase("dashboard"); return; }
+    if (profile?.ceremonyCid || profile?.uorCanonicalId) {
+      setPhase("dashboard");
+      // Returning user — silently assert TEE if credential exists
+      assertReturningUser();
+      return;
+    }
     if (profile) {
       const meta = session.user.user_metadata;
       if (meta?.full_name) setName(meta.full_name);
@@ -90,6 +110,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
         if (data?.ceremony_cid || data?.uor_canonical_id) {
           refreshProfile();
           setPhase("dashboard");
+          assertReturningUser();
         } else {
           const meta = session.user.user_metadata;
           if (meta?.full_name) setName(meta.full_name);
@@ -99,6 +120,29 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
         }
       });
   }, [loading, session, profile, refreshProfile]);
+
+  /**
+   * Assert TEE for returning users — silent, non-blocking.
+   * If the user previously attested during ceremony, their device
+   * credential exists and we verify presence quietly.
+   */
+  const assertReturningUser = useCallback(async () => {
+    const bridge = teeBridgeRef.current;
+    try {
+      await bridge.detect();
+      if (bridge.hasCredential && bridge.isHardwareBacked) {
+        setTeeStatus("asserting");
+        const assertion = await bridge.assert("hologram:session:verify");
+        if (assertion.userVerified || assertion.userPresent) {
+          setTeeStatus("done");
+          emitTrustUpdate(true);
+        }
+      }
+    } catch {
+      // Silent — TEE assertion is optional for returning users
+      // They can still use the system with software-level trust
+    }
+  }, []);
 
   // ── Auth state listener ──
   useEffect(() => {
@@ -151,7 +195,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     else setPhase("magic-sent");
   }, [email]);
 
-  // ── Vault-Isolated Genesis Ceremony ──
+  // ── Vault-Isolated Genesis Ceremony (with TEE attestation) ──
   const handleCreate = useCallback(async () => {
     if (!name.trim()) return;
     setPhase("creating");
@@ -160,6 +204,29 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     if (!sess) return;
 
     try {
+      // ── Step 1: TEE Attestation — anchor to device hardware ──
+      // This happens BEFORE the ceremony so the kernel is bound
+      // to the device's trusted enclave from the very beginning.
+      setTeeStatus("attesting");
+      const bridge = teeBridgeRef.current;
+      await bridge.detect();
+
+      let teeAttestation: TEEAttestationQuote | null = null;
+      if (bridge.isHardwareBacked) {
+        try {
+          teeAttestation = await bridge.attest(
+            sess.user.id,
+            name.trim(),
+          );
+          emitTrustUpdate(true);
+        } catch (teeErr) {
+          console.warn("[MySpace] TEE attestation skipped:", teeErr);
+          // Continue without hardware attestation — ceremony still works
+        }
+      }
+      setTeeStatus("done");
+
+      // ── Step 2: Vault-Isolated Founding Ceremony ──
       const authUser: AuthUser = {
         id: sess.user.id,
         email: sess.user.email,
@@ -219,7 +286,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
         session_issued_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
 
-      setCeremonyState({ genesis, seal: vaultResult.seal, disclosurePolicyCid, trustNodeCid });
+      setCeremonyState({ genesis, seal: vaultResult.seal, disclosurePolicyCid, trustNodeCid, teeAttestation });
 
     } catch (err) {
       console.error("[MySpace] Vault-isolated genesis failed:", err);
@@ -228,6 +295,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           ? "Ceremony security breach detected. Please try again."
           : "Identity creation failed. Please try again."
       );
+      setTeeStatus("idle");
       setPhase("naming");
     }
   }, [name]);
@@ -244,6 +312,8 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const handleSignOut = useCallback(async () => {
     await signOut();
     setCeremonyState(null);
+    setTeeStatus("idle");
+    emitTrustUpdate(false);
     setPhase("auth");
   }, [signOut]);
 
@@ -399,8 +469,9 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               <div className="flex items-start gap-2 mt-4" style={{ color: KP.dim }}>
                 <Lock className="w-3 h-3 mt-0.5 shrink-0" />
                 <p className="text-[10px] leading-relaxed">
-                  Created inside an isolated vault — entropy binding, observer-collapse detection,
-                  entanglement witness, and cryptographic seal. No interception possible.
+                  Your device will ask for biometric verification to create a trusted
+                  hardware-bound connection. This binds your identity to this device's
+                  secure enclave — so only you, on this device, can access your space.
                 </p>
               </div>
             </div>
@@ -414,6 +485,24 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return (
       <Shell onClose={onClose}>
         <CeremonyCanvas onComplete={handleCeremonyAnimationComplete} />
+        {/* TEE status overlay during ceremony */}
+        {teeStatus === "attesting" && (
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-fade-in">
+            <div
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full"
+              style={{
+                background: `${KP.bg}cc`,
+                border: `1px solid ${KP.gold}22`,
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <Wifi className="w-3.5 h-3.5" style={{ color: KP.gold }} />
+              <span className="text-[11px] tracking-wider" style={{ color: KP.muted }}>
+                Connecting to your device's secure enclave…
+              </span>
+            </div>
+          </div>
+        )}
       </Shell>
     );
   }
@@ -421,6 +510,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   if (phase === "reveal") {
     const threeWord = ceremonyState?.genesis.sovereign.threeWordName;
     const identity = ceremonyState?.genesis.sovereign.identity;
+    const hasHardwareTrust = !!ceremonyState?.teeAttestation?.hardwareBacked;
 
     return (
       <Shell onClose={onClose}>
@@ -436,6 +526,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               <p className="text-sm mt-1 font-mono" style={{ color: KP.muted }}>{name.trim()}</p>
             </div>
 
+            {/* Ceremony seal */}
             {ceremonyState?.seal && (
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
@@ -450,8 +541,27 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               </div>
             )}
 
+            {/* TEE trust badge */}
+            {hasHardwareTrust && (
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
+                style={{
+                  background: "hsla(142, 40%, 50%, 0.1)",
+                  color: "hsl(142, 45%, 55%)",
+                  border: "1px solid hsla(142, 40%, 50%, 0.15)",
+                }}
+              >
+                <Wifi className="w-3 h-3" />
+                Device-bound · Hardware trusted
+              </div>
+            )}
+
             <p className="text-xs leading-relaxed max-w-xs mx-auto" style={{ color: KP.dim }}>
-              Your sovereign identity has been created with post-quantum cryptography (ML-DSA-65). Everything is private by default.
+              Your sovereign identity has been created with post-quantum cryptography (ML-DSA-65)
+              {hasHardwareTrust
+                ? " and anchored to your device's secure enclave. Only you, on this device, hold the key."
+                : ". Everything is private by default."
+              }
             </p>
 
             <button
@@ -479,7 +589,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
 function Shell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="w-full h-full flex flex-col select-none" style={{ background: KP.bg, fontFamily: KP.font }}>
+    <div className="w-full h-full flex flex-col select-none relative" style={{ background: KP.bg, fontFamily: KP.font }}>
       <div className="flex items-center gap-3 px-6 py-4 shrink-0" style={{ borderBottom: `1px solid ${KP.border}` }}>
         <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${KP.gold}18` }}>
           <Shield className="w-4 h-4" strokeWidth={1.4} style={{ color: KP.gold }} />

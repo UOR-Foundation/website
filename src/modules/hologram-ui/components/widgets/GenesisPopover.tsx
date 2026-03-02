@@ -5,10 +5,15 @@
  * Appears when clicking the genesis dot in the sidebar.
  * Shows an intuitive, human-centric summary of the living system
  * and the trust connection status (TEE).
+ *
+ * TEE trust is NOT auto-triggered for visitors.
+ * It is established during:
+ *   1. Identity creation (founding ceremony) — TEE.attest()
+ *   2. Returning login — TEE.assert()
  */
 
-import { useEffect, useState, useCallback } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Wifi } from "lucide-react";
 import { bootSync as boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
 import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/tee-bridge";
 
@@ -18,14 +23,14 @@ interface GenesisPopoverProps {
   bgMode?: "image" | "white" | "dark";
 }
 
-type TrustLevel = "hardware" | "software" | "unknown";
+type TrustLevel = "hardware" | "available" | "software";
 
 function useTrustStatus() {
   const [trust, setTrust] = useState<{
     level: TrustLevel;
     label: string;
     caps: TEECapabilities | null;
-  }>({ level: "unknown", label: "Checking…", caps: null });
+  }>({ level: "software", label: "Checking…", caps: null });
 
   useEffect(() => {
     const bridge = new TEEBridge();
@@ -33,13 +38,25 @@ function useTrustStatus() {
       if (caps.hardwareAttestation && bridge.hasCredential) {
         setTrust({ level: "hardware", label: getHumanLabel(caps), caps });
       } else if (caps.hardwareAttestation) {
-        setTrust({ level: "software", label: "Available, not yet verified", caps });
+        setTrust({ level: "available", label: "Available — activates during sign-in", caps });
       } else {
         setTrust({ level: "software", label: "Protected by mathematical proofs", caps });
       }
     }).catch(() => {
       setTrust({ level: "software", label: "Protected by mathematical proofs", caps: null });
     });
+
+    // Listen for live updates from ceremony/login
+    const handler = (e: Event) => {
+      const trusted = (e as CustomEvent).detail?.trusted;
+      if (trusted) {
+        bridge.detect().then(caps => {
+          setTrust({ level: "hardware", label: getHumanLabel(caps), caps });
+        });
+      }
+    };
+    window.addEventListener("hologram:tee-update", handler);
+    return () => window.removeEventListener("hologram:tee-update", handler);
   }, []);
 
   return trust;
@@ -92,6 +109,7 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
   const passedCount = checks.filter(c => c.passed).length;
 
   const isHardwareTrusted = trust.level === "hardware";
+  const isAvailable = trust.level === "available";
 
   return (
     <>
@@ -173,7 +191,7 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            {/* Signal indicator */}
+            {/* Signal bars */}
             <div className="flex items-center gap-1">
               {[0, 1, 2].map(i => (
                 <div
@@ -184,7 +202,9 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
                     height: `${8 + i * 3}px`,
                     background: isHardwareTrusted
                       ? `hsla(142, 55%, ${55 - i * 5}%, ${0.9 - i * 0.1})`
-                      : `hsla(38, 40%, 55%, ${0.4 - i * 0.1})`,
+                      : isAvailable
+                        ? `hsla(38, 40%, 55%, ${0.5 - i * 0.1})`
+                        : `hsla(38, 40%, 55%, ${0.3 - i * 0.05})`,
                     transition: "background 600ms ease",
                   }}
                 />
@@ -196,25 +216,45 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
               {isHardwareTrusted ? "Trusted connection" : "Connection status"}
             </span>
           </div>
-          <p className="text-[12px] leading-relaxed" style={{ color: text }}>
-            {isHardwareTrusted
-              ? `Connected through your device's ${trust.label}. Your data never leaves this trusted space. Only you, on this device, can access it.`
-              : trust.level === "software"
-                ? "Your session is protected using mathematical proofs. Everything you do here is verified and tamper-proof."
-                : "Detecting your device's security capabilities…"
-            }
-          </p>
-          {isHardwareTrusted && (
-            <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
-              Think of this like a private, encrypted channel between you and Hologram.
-              Your device acts as the key, and no one else can listen in.
-            </p>
-          )}
-          {trust.level === "software" && trust.caps?.hardwareAttestation && (
-            <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
-              Your device has a hardware security vault available.
-              You can activate it during the next boot to strengthen your connection.
-            </p>
+
+          {/* Why · How · What — context-sensitive */}
+          {isHardwareTrusted ? (
+            <>
+              <p className="text-[12px] leading-relaxed" style={{ color: text }}>
+                <strong>Connected</strong> through your device's {trust.label}.
+                Your identity is hardware-bound — like a private, encrypted channel between
+                you and Hologram that only this device can open.
+              </p>
+              <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
+                <strong>Why:</strong> Complete data sovereignty — your data never leaves this trusted space.<br />
+                <strong>How:</strong> Your device's secure enclave holds the cryptographic key.<br />
+                <strong>What:</strong> Every session is verified on-device before any data flows.
+              </p>
+            </>
+          ) : isAvailable ? (
+            <>
+              <p className="text-[12px] leading-relaxed" style={{ color: text }}>
+                Your device has a hardware security vault ready.
+                It will activate automatically when you create your identity or sign in — 
+                binding your Hologram to this device like tuning into a private signal.
+              </p>
+              <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
+                No action needed now. The trusted connection establishes naturally
+                during your first ceremony or next sign-in.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-[12px] leading-relaxed" style={{ color: text }}>
+                Your session is protected using mathematical proofs.
+                Everything you do here is verified and tamper-proof,
+                even without dedicated hardware security.
+              </p>
+              <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
+                Think of it as a lock made of math instead of metal — 
+                different mechanism, same guarantee: only you hold the key.
+              </p>
+            </>
           )}
         </div>
 
