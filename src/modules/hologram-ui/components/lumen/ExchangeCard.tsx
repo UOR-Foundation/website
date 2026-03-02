@@ -24,7 +24,9 @@ import {
   type CompressionSchedule,
 } from "@/modules/hologram-ui/engine/attention-compression";
 import HabitRing from "./HabitRing";
+import MirrorWeb from "./MirrorWeb";
 import { getProceduralMemory, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
+import { getMirrorProtocol, type MirrorProjection } from "@/hologram/kernel/mirror-protocol";
 
 // ── Bloom Toggle (persisted, default ON) ─────────────────────────────
 const BLOOM_KEY = "lumen:bloom-enabled";
@@ -695,6 +697,9 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
   // Procedural memory projection (cerebellum state)
   const proceduralProjection = useMemo(() => getProceduralMemory().project(), [ex.id]);
 
+  // Mirror protocol projection (mirror neurons)
+  const mirrorProjection = useMemo(() => getMirrorProtocol().project(), [ex.id]);
+
   const handleFollowUp = useCallback((question: string) => {
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: question }));
   }, []);
@@ -1025,6 +1030,14 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                   {shouldShowElement("low", compression) && proceduralProjection.patternCount > 0 && (
                     <HabitRing
                       projection={proceduralProjection}
+                      scale={compression.trustArcScale}
+                    />
+                  )}
+
+                  {/* Mirror Web — mirror neuron bond visualization */}
+                  {shouldShowElement("low", compression) && mirrorProjection.bondCount > 0 && (
+                    <MirrorWeb
+                      projection={mirrorProjection}
                       scale={compression.trustArcScale}
                     />
                   )}
