@@ -2223,6 +2223,89 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_connections: {
+        Row: {
+          conversation_context: Json
+          created_at: string
+          display_name: string | null
+          id: string
+          last_message_at: string | null
+          onboarding_complete: boolean
+          onboarding_step: string
+          phone_number: string
+          phone_verified: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_context?: Json
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          onboarding_complete?: boolean
+          onboarding_step?: string
+          phone_number: string
+          phone_verified?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_context?: Json
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          onboarding_complete?: boolean
+          onboarding_step?: string
+          phone_number?: string
+          phone_verified?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          connection_id: string
+          content: string
+          created_at: string
+          direction: string
+          id: string
+          message_type: string
+          meta: Json | null
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          connection_id: string
+          content: string
+          created_at?: string
+          direction?: string
+          id?: string
+          message_type?: string
+          meta?: Json | null
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          connection_id?: string
+          content?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          message_type?: string
+          meta?: Json | null
+          whatsapp_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

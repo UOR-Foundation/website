@@ -47,3 +47,9 @@ verify_jwt = false
 
 [functions.confidential-inference]
 verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.whatsapp-send]
+verify_jwt = false
