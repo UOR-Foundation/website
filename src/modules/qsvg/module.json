@@ -1,0 +1,21 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "qsvg",
+  "version": "1.0.0",
+  "description": "Quantum Self-Verification Geometry — bridges the QSVG physical theory (Morató de Dalmases, 2026) with the Atlas geometric substrate. Encodes foundational constants (δ₀, D, α, M*), formal correspondences, and the spectral verification pipeline connecting the CronNet-Holo operator to the Riemann zeta function.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["qsvg:"],
+  "exports": [
+    "DELTA_0_RAD", "FRACTAL_DIMENSION", "ALPHA_QSVG",
+    "CORRESPONDENCES", "verifyAlphaCrossFramework",
+    "selfVerifyGeometry", "generateBridgeReport",
+    "completedZeta", "runSpectralVerification", "spectralGrade"
+  ],
+  "dependencies": {
+    "atlas": "^1.0.0"
+  },
+  "routes": [],
+  "api_endpoints": [],
+  "assets": []
+}
