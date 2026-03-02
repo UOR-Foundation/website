@@ -26,6 +26,7 @@ const BloomCalendarProjection = lazy(() => import("./BloomCalendarProjection"));
 const BloomKnowledgeProjection = lazy(() => import("./BloomKnowledgeProjection"));
 const BloomHabitsProjection = lazy(() => import("./BloomHabitsProjection"));
 const BloomMirrorProjection = lazy(() => import("./BloomMirrorProjection"));
+const BloomConvergenceProjection = lazy(() => import("./BloomConvergenceProjection"));
 
 interface MobileLumenBloomProps {
   open: boolean;
@@ -35,7 +36,7 @@ interface MobileLumenBloomProps {
 
 const ORGANIC_EASE = [0.23, 1, 0.32, 1] as const;
 const BLOOM_DURATION = 0.7;
-const PROJECTION_ORDER: BloomProjection[] = ["conversation", "trust", "calendar", "knowledge", "habits", "mirror"];
+const PROJECTION_ORDER: BloomProjection[] = ["conversation", "trust", "calendar", "knowledge", "habits", "mirror", "convergence"];
 
 function ProjectionSpinner() {
   return (
@@ -244,6 +245,11 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
                   {activeProjection === "mirror" && (
                     <Suspense fallback={<ProjectionSpinner />}>
                       <BloomMirrorProjection />
+                    </Suspense>
+                  )}
+                  {activeProjection === "convergence" && (
+                    <Suspense fallback={<ProjectionSpinner />}>
+                      <BloomConvergenceProjection />
                     </Suspense>
                   )}
                 </motion.div>
