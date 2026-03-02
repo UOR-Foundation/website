@@ -11,8 +11,9 @@
  * @module hologram-ui/components/lumen/MirrorWebWidget
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Eye, Link2, Sparkles, RotateCw,
   ChevronDown, ChevronUp, Share2,
@@ -60,6 +61,22 @@ export default function MirrorWebWidget() {
 
   useEffect(() => {
     fetchBonds();
+
+    // Realtime subscription for live bond updates
+    const channel = supabase
+      .channel("mirror-bonds-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "mirror_bonds" },
+        () => {
+          fetchBonds();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchBonds]);
 
   const activeBonds = bonds.filter(b => b.status !== "observing");
