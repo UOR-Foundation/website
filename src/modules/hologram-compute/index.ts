@@ -212,3 +212,13 @@ export type {
   ProjectionResult,
   ProjectionProgress,
 } from "./projection-worker";
+
+// GPU Coherence Streamer — real-time Atlas inference via WebGPU
+export {
+  GpuCoherenceStreamer,
+} from "./gpu-coherence-streamer";
+export type {
+  StreamToken,
+  StreamerConfig,
+  StreamerStats,
+} from "./gpu-coherence-streamer";
