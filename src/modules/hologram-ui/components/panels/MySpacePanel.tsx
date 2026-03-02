@@ -48,7 +48,7 @@ import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologr
 import MySpaceDashboard from "../myspace/MySpaceDashboard";
 import CeremonyCanvas from "../myspace/CeremonyCanvas";
 
-type Phase = "loading" | "auth" | "magic-sent" | "naming" | "creating" | "reveal" | "dashboard";
+type Phase = "loading" | "auth" | "magic-sent" | "naming" | "creating" | "genesis" | "reveal" | "dashboard";
 type AuthMode = "unified" | "email";
 
 interface MySpacePanelProps {
@@ -155,6 +155,14 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return () => subscription.unsubscribe();
   }, [refreshProfile]);
 
+  // ── Auto-advance from genesis animation to reveal ──
+  useEffect(() => {
+    if (phase === "genesis") {
+      const timer = setTimeout(() => setPhase("reveal"), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase]);
+
   // ── Auto-focus ──
   useEffect(() => {
     if (phase === "auth" && authMode === "email") {
@@ -171,6 +179,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   // Auth handlers
   // ══════════════════════════════════════════════════════════════
 
+  /** Returning user: biometric assert → straight to dashboard */
   const handleDeviceSignIn = useCallback(async () => {
     const bridge = teeBridgeRef.current;
     try {
@@ -178,27 +187,44 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       const assertion = await bridge.assert("hologram:login:verify");
 
       if (assertion.userVerified || assertion.userPresent) {
-        const linkedUserId = localStorage.getItem("hologram:tee:linked-user");
-        if (linkedUserId) {
-          const { data: { session: existingSession } } = await supabase.auth.getSession();
-          if (existingSession) {
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession) {
+          // Check if profile has completed ceremony
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("ceremony_cid, uor_canonical_id")
+            .eq("user_id", existingSession.user.id)
+            .maybeSingle();
+
+          if (profileData?.ceremony_cid || profileData?.uor_canonical_id) {
             setTeeStatus("done");
             emitTrustUpdate(true);
             refreshProfile();
+            setPhase("dashboard");
             return;
           }
+          // Has session but no ceremony — needs founding
+          setTeeStatus("done");
+          emitTrustUpdate(true);
+          setPhase("naming");
+          return;
         }
+        // Session expired — need email/OAuth recovery
         setTeeStatus("idle");
-        toast.info("Device verified. Confirm with your email to complete sign-in.");
+        toast.info("Session expired. Please sign in with email or Google to reconnect.");
         setAuthMode("email");
       }
     } catch (err) {
       console.warn("[MySpace] Device sign-in failed:", err);
       setTeeStatus("idle");
       toast.error("Biometric cancelled. Try another method.");
-      setAuthMode("email");
     }
   }, [refreshProfile]);
+
+  /** New user: biometric-first entry → naming phase */
+  const handleBiometricNew = useCallback(() => {
+    setPhase("naming");
+  }, []);
 
   const handleGoogleSignIn = useCallback(async () => {
     sessionStorage.setItem("auth_return_to", "/hologram-os");
@@ -231,8 +257,24 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     if (!name.trim()) return;
     setPhase("creating");
 
-    const { data: { session: sess } } = await supabase.auth.getSession();
-    if (!sess) return;
+    let { data: { session: sess } } = await supabase.auth.getSession();
+    if (!sess) {
+      // Biometric-only new user — create anonymous session
+      const { error: anonErr } = await supabase.auth.signInAnonymously();
+      if (anonErr) {
+        console.error("[MySpace] Anonymous auth failed:", anonErr);
+        toast.error("Could not create your space. Try signing in with email or Google.");
+        setPhase("naming");
+        return;
+      }
+      const { data: { session: newSess } } = await supabase.auth.getSession();
+      sess = newSess;
+      if (!sess) {
+        toast.error("Session creation failed. Try another method.");
+        setPhase("naming");
+        return;
+      }
+    }
 
     try {
       // ── Step 1: TEE Attestation — anchor to device hardware ──
@@ -323,7 +365,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   }, [name]);
 
   const handleCeremonyAnimationComplete = useCallback(() => {
-    if (ceremonyState) setPhase("reveal");
+    if (ceremonyState) setPhase("genesis");
   }, [ceremonyState]);
 
   const handleFinishReveal = useCallback(() => {
@@ -341,6 +383,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   }, [signOut]);
 
   const canUseDevice = deviceBiometricAvailable && deviceHasCredential;
+  const canUseBiometric = deviceBiometricAvailable;
 
   // ═══════════════════════════════════════════════════════════
   // RENDER
@@ -394,23 +437,25 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               </h1>
               <p className="text-sm mt-3 leading-relaxed max-w-[280px] mx-auto" style={{ color: KP.muted }}>
                 {canUseDevice
-                  ? "Welcome back. Sign in with your biometrics, or use another method below."
-                  : "Sign in to enter, or create your identity. Private by default, yours forever."
+                  ? "Welcome back. One touch to enter."
+                  : canUseBiometric
+                    ? "Your device is your key. One touch to create your sovereign identity."
+                    : "Sign in to create your identity. Private by default, yours forever."
                 }
               </p>
             </div>
 
             <div className="space-y-3">
-              {/* ── Biometric button (returning users with credential) ── */}
+              {/* ── Biometric button — primary for ALL biometric-capable devices ── */}
               <AnimatePresence>
-                {canUseDevice && authMode === "unified" && (
+                {canUseBiometric && authMode === "unified" && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                   >
                     <button
-                      onClick={handleDeviceSignIn}
+                      onClick={canUseDevice ? handleDeviceSignIn : handleBiometricNew}
                       disabled={teeStatus === "asserting"}
                       className="w-full min-h-[52px] flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl text-[15px] font-semibold active:scale-[0.98] hover:brightness-110 transition-all cursor-pointer disabled:opacity-60"
                       style={{ background: KP.gold, color: KP.bg }}
@@ -427,7 +472,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                       ) : (
                         <>
                           <Fingerprint className="w-5 h-5" />
-                          Sign in with this device
+                          {canUseDevice ? "Sign in with this device" : "Enter with biometrics"}
                         </>
                       )}
                     </button>
@@ -436,7 +481,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               </AnimatePresence>
 
               {/* ── Divider (only if biometric shown) ── */}
-              {canUseDevice && authMode === "unified" && (
+              {canUseBiometric && authMode === "unified" && (
                 <div className="flex items-center gap-4 py-1">
                   <div className="flex-1 h-px" style={{ background: KP.border }} />
                   <span className="text-[11px] uppercase tracking-widest" style={{ color: KP.dim }}>or</span>
@@ -505,8 +550,10 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
             >
               <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <p className="text-[13px] leading-relaxed">
-                New here? Any sign-in method creates your account automatically.
-                {canUseDevice ? " Lost your device? Email recovers access." : ""}
+                {canUseBiometric
+                  ? "Your biometrics create your identity instantly. Email and social sign-in are always available as recovery."
+                  : "Any sign-in method creates your identity automatically."
+                }
               </p>
             </motion.div>
           </motion.div>
@@ -655,6 +702,98 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
             </motion.div>
           )}
         </AnimatePresence>
+      </Shell>
+    );
+  }
+
+  if (phase === "genesis") {
+    const threeWord = ceremonyState?.genesis.sovereign.threeWordName;
+    const glyph = ceremonyState?.genesis.sovereign.identity["u:glyph"];
+
+    return (
+      <Shell onClose={onClose}>
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ background: KP.bg }}>
+          {/* Expanding radial golden glow */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 3, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(circle at 50% 45%, ${KP.gold}15 0%, transparent 55%)` }}
+          />
+
+          {/* Outer breathing ring */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: [0, 0.3, 0.15, 0.3], scale: [0.5, 1, 1.05, 1] }}
+            transition={{ duration: 4, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: 200, height: 200,
+              border: `1px solid ${KP.gold}18`,
+            }}
+          />
+
+          <div className="relative z-10 text-center space-y-8 px-8">
+            {/* Glyph orb */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1.8, ease: [0.23, 1, 0.32, 1] }}
+              className="mx-auto flex items-center justify-center rounded-full"
+              style={{
+                width: 96, height: 96,
+                background: `radial-gradient(circle, ${KP.gold}20 0%, transparent 70%)`,
+                border: `1px solid ${KP.gold}25`,
+              }}
+            >
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+                className="text-4xl"
+              >
+                {glyph || "✦"}
+              </motion.span>
+            </motion.div>
+
+            {/* Three-word name */}
+            <motion.h2
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0, duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+              className="text-[28px] font-display font-semibold tracking-tight"
+              style={{ color: KP.text }}
+            >
+              {threeWord?.display || name.trim()}
+            </motion.h2>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.0, duration: 1.2 }}
+              className="text-[15px] leading-relaxed max-w-[280px] mx-auto"
+              style={{ color: KP.muted }}
+            >
+              Your identity has been woven into the fabric.
+            </motion.p>
+
+            {/* Trust seal indicator */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 3.0, duration: 0.8 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{ background: `${KP.gold}0a`, border: `1px solid ${KP.gold}15` }}
+            >
+              <Shield className="w-3 h-3" style={{ color: KP.gold }} />
+              <span className="text-[11px] tracking-wider uppercase" style={{ color: KP.muted }}>
+                Ceremony sealed · ML-DSA-65
+              </span>
+            </motion.div>
+          </div>
+        </div>
       </Shell>
     );
   }
