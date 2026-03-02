@@ -283,3 +283,31 @@ export type {
   NavigatorConfig,
   NavigationDiagnostics,
 } from "./coherence-navigator";
+
+// Atlas Grammar Kernel — Minimalist Grammar on 96-vertex manifold (transformer-free)
+export {
+  AtlasGrammarKernel,
+  DEFAULT_GRAMMAR_CONFIG,
+  featureToVertex,
+  vertexToFeature,
+  tauMirror,
+  createFeature,
+  lexicalItem,
+  buildDefaultLexicon,
+  merge,
+  move,
+  SYNTACTIC_CATEGORIES,
+  FEATURE_POLARITIES,
+} from "./atlas-grammar-kernel";
+export type {
+  SyntacticCategory,
+  FeaturePolarity,
+  SyntacticFeature,
+  LexicalItem,
+  SyntacticObject,
+  GrammarProduction,
+  DerivationStep,
+  GrammarDerivation,
+  GrammarKernelConfig,
+  GrammarKernelSnapshot,
+} from "./atlas-grammar-kernel";
