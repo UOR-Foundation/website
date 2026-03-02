@@ -25,6 +25,7 @@ import {
   type QuantumInferenceStats,
   type LayerStatus,
 } from "@/modules/hologram-compute/quantum-inference-engine";
+import { computeHScore, classifyZone } from "@/modules/hologram-compute/coherence-inference";
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -130,7 +131,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
       const manifest = MODEL_MANIFESTS[selectedModel.manifest];
       if (!manifest) throw new Error(`Unknown manifest: ${selectedModel.manifest}`);
 
-      const pipeline = new AtlasProjectionPipeline({ manifest, maxLayers: 4 });
+      const pipeline = new AtlasProjectionPipeline({ manifest, maxLayers: 2 });
       pipeline.onStatusChange((s) => setInitMessage(s.message));
       await pipeline.initialize();
 
@@ -227,7 +228,6 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             engine["layer2"].braidFeedback(amplitudes, vertex);
 
             // Compute metrics
-            const { computeHScore, classifyZone } = await import("@/modules/hologram-compute/coherence-inference");
             const hScore = computeHScore(amplitudes);
             const zone = classifyZone(hScore);
             const phi = Math.atan2(amplitudes[1] || 0, amplitudes[0] || 0);
@@ -236,7 +236,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             const tps = (tokenIndex / elapsed) * 1000;
 
             setLiveTps(tps);
-            if (tps > peakTps) setPeakTps(tps);
+            setPeakTps(prev => Math.max(prev, tps));
             setLiveH(hScore);
             setLiveZone(zone);
             setTotalTokenCount(tokenIndex);
