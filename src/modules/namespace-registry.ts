@@ -179,6 +179,15 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 2,
     icon: "🎵",
   },
+  {
+    prefix: "tee:",
+    label: "Trusted Execution Environment",
+    space: "bridge",
+    modules: ["tee-bridge"],
+    barrel: "@/hologram/kernel/tee-bridge",
+    depth: 3,
+    icon: "🔐",
+  },
 ] as const;
 
 // ── Lookup Helpers ─────────────────────────────────────────────────────────
@@ -203,7 +212,7 @@ export const ONTOLOGICAL_MODULES = new Set(
   CANONICAL_NAMESPACES.flatMap((ns) => ns.modules)
 );
 
-/** Count: 15 canonical namespaces (14 original + audio) */
+/** Count: 16 canonical namespaces (14 original + audio + tee) */
 export const NAMESPACE_COUNT = CANONICAL_NAMESPACES.length;
 
 /**

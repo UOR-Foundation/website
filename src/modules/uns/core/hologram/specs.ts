@@ -6120,4 +6120,191 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIER 38 — TRUSTED EXECUTION ENVIRONMENT (TEE) PROJECTIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Hardware-rooted attestation projections that map a UOR canonical identity
+  // to TEE-native attestation identifiers. Each projection deterministically
+  // derives a protocol-native attestation URI from the SHA-256 hash bytes,
+  // enabling unified verification across heterogeneous secure hardware.
+  //
+  // Architecture:
+  //   UOR Hash (256-bit) → TEE Attestation CID → Hardware Quote
+  //
+  // The TEE projections form a coherent sub-graph:
+  //   tee-attestation (unified) ←── tee-tdx (Intel)
+  //                              ←── tee-trustzone (ARM)
+  //                              ←── tee-secure-enclave (Apple)
+  //                              ←── tee-fido2 (WebAuthn/FIDO2)
+  //
+  // All TEE projections are lossless: the full 256-bit hash is embedded in
+  // the attestation URI, allowing round-trip verification back to the
+  // canonical identity.
+
+  // ── Intel TDX — Trust Domain Extensions ───────────────────────────────
+  // Intel TDX provides hardware-isolated Trust Domains (TDs) with memory
+  // encryption (MKTME), remote attestation via DCAP quotes, and measurement
+  // registers (MRTD, RTMR). The projection maps the UOR hash to a TDX
+  // measurement report URI that can be verified against Intel's attestation
+  // service (IAS/DCAP).
+  //
+  // Canonical pipeline:
+  //   UOR Hash → TDX Report Data field → MRTD measurement → DCAP quote
+  //
+  // Cross-projection bridges:
+  //   tee-tdx + did → hardware-attested DID resolution
+  //   tee-tdx + vc  → hardware-sealed verifiable credential
+  //   tee-tdx + tee-attestation → unified attestation chain
+  //
+  //   Format: urn:uor:tee:tdx:report:{hex}
+  //   Fidelity: lossless (full hash embedded as REPORTDATA)
+
+  ["tee-tdx", {
+    project: ({ hex }) => `urn:uor:tee:tdx:report:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/documentation.html",
+  }],
+
+  // ── ARM TrustZone — Secure World Isolation ────────────────────────────
+  // ARM TrustZone partitions the processor into Normal World and Secure
+  // World, with hardware-enforced memory isolation via TZASC. Trusted
+  // Applications (TAs) run in the Secure World under a Trusted OS (OP-TEE,
+  // Trusty). The projection maps the UOR hash to a TrustZone TA measurement
+  // URI compatible with GlobalPlatform TEE specifications.
+  //
+  // Canonical pipeline:
+  //   UOR Hash → TA UUID namespace → Secure World measurement → PSA attestation token
+  //
+  // Cross-projection bridges:
+  //   tee-trustzone + did → ARM-attested sovereign identity
+  //   tee-trustzone + tee-attestation → unified attestation chain
+  //   tee-trustzone + webauthn → platform authenticator attestation
+  //
+  //   Format: urn:uor:tee:trustzone:ta:{hex}
+  //   Fidelity: lossless (full hash embedded as TA measurement)
+
+  ["tee-trustzone", {
+    project: ({ hex }) => `urn:uor:tee:trustzone:ta:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.arm.com/technologies/trustzone-for-cortex-a",
+  }],
+
+  // ── Apple Secure Enclave — Hardware Key Manager ───────────────────────
+  // Apple's Secure Enclave Processor (SEP) provides a dedicated security
+  // coprocessor with its own boot ROM, AES engine, and TRNG. Keys generated
+  // in the SEP never leave the hardware boundary. The projection maps the
+  // UOR hash to a Secure Enclave key reference URI compatible with Apple's
+  // CryptoKit attestation model.
+  //
+  // Canonical pipeline:
+  //   UOR Hash → SEP Key Tag → DeviceCheck attestation → App Attest key ID
+  //
+  // Cross-projection bridges:
+  //   tee-secure-enclave + did → Apple-attested DID
+  //   tee-secure-enclave + tee-fido2 → platform authenticator chain
+  //   tee-secure-enclave + tee-attestation → unified attestation chain
+  //
+  //   Format: urn:uor:tee:secure-enclave:key:{hex}
+  //   Fidelity: lossless (full hash as key tag derivation input)
+
+  ["tee-secure-enclave", {
+    project: ({ hex }) => `urn:uor:tee:secure-enclave:key:${hex}`,
+    fidelity: "lossless",
+    spec: "https://support.apple.com/guide/security/secure-enclave-sec59b0b31ff/web",
+  }],
+
+  // ── WebAuthn / FIDO2 — Universal Platform Attestation ─────────────────
+  // FIDO2/WebAuthn provides a cross-platform standard for hardware-bound
+  // credential creation and assertion. Platform authenticators leverage the
+  // device's TEE (Secure Enclave, TrustZone, TPM) while roaming authenticators
+  // use dedicated security keys. The projection maps the UOR hash to a
+  // WebAuthn credential ID URI, enabling attestation verification via the
+  // FIDO Metadata Service (MDS3).
+  //
+  // Canonical pipeline:
+  //   UOR Hash → RP ID + User Handle → navigator.credentials.create() → attestation object
+  //
+  // Cross-projection bridges:
+  //   tee-fido2 + did → WebAuthn-attested DID authentication
+  //   tee-fido2 + vc  → FIDO-bound verifiable presentation
+  //   tee-fido2 + tee-secure-enclave → Apple platform attestation
+  //   tee-fido2 + tee-trustzone → Android platform attestation
+  //   tee-fido2 + tee-attestation → unified attestation chain
+  //
+  //   Format: urn:uor:tee:fido2:credential:{hex}
+  //   Fidelity: lossless (full hash as user handle / challenge)
+
+  ["tee-fido2", {
+    project: ({ hex }) => `urn:uor:tee:fido2:credential:${hex}`,
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/webauthn-3/",
+  }],
+
+  // ── Unified TEE Attestation — Cross-Platform Attestation Root ─────────
+  // The unified TEE attestation projection is the convergence point for all
+  // hardware-specific TEE projections. It produces a platform-agnostic
+  // attestation URI that can be resolved against ANY TEE backend. The first
+  // 2 bytes of the hash encode a provider discriminant that routes verification
+  // to the correct hardware attestation service:
+  //
+  //   Byte[0] high nibble:
+  //     0x0-0x3 → Intel TDX/SGX
+  //     0x4-0x7 → ARM TrustZone
+  //     0x8-0xB → Apple Secure Enclave
+  //     0xC-0xF → FIDO2/WebAuthn (generic)
+  //
+  // This deterministic routing ensures that a single attestation URI can
+  // identify both the TEE provider AND the attested identity without
+  // requiring out-of-band provider discovery.
+  //
+  // Canonical pipeline:
+  //   UOR Hash → provider discriminant + measurement → unified attestation CID
+  //
+  // Cross-projection bridges:
+  //   tee-attestation + did → hardware-attested DID document
+  //   tee-attestation + vc  → TEE-sealed verifiable credential
+  //   tee-attestation + cid → attestation-annotated content address
+  //   tee-attestation + jsonld → attestation graph in RDF
+  //
+  //   Format: urn:uor:tee:attestation:{provider}:{hex}
+  //   Fidelity: lossless (full hash + provider discriminant)
+
+  ["tee-attestation", {
+    project: ({ hashBytes, hex }) => {
+      const discriminant = (hashBytes[0] >> 4) & 0x0F;
+      let provider: string;
+      if (discriminant <= 3) provider = "tdx";
+      else if (discriminant <= 7) provider = "trustzone";
+      else if (discriminant <= 11) provider = "secure-enclave";
+      else provider = "fido2";
+      return `urn:uor:tee:attestation:${provider}:${hex}`;
+    },
+    fidelity: "lossless",
+    spec: "https://www.w3.org/TR/webauthn-3/#sctn-attestation",
+  }],
+
+  // ── TCB Measurement — Trusted Computing Base Hash Chain ───────────────
+  // Extends the TEE projections with a TCB measurement projection that
+  // encodes the full software stack measurement (firmware, kernel, runtime)
+  // as a hash chain. This enables remote verification that the entire
+  // execution environment — not just the TEE hardware — is trustworthy.
+  //
+  // Canonical pipeline:
+  //   UOR Hash → PCR extend chain → TCB measurement log → endorsement
+  //
+  // Cross-projection bridges:
+  //   tee-tcb + tee-attestation → complete platform integrity proof
+  //   tee-tcb + proof-of-thought → attested reasoning chain
+  //   tee-tcb + cid → measurement-annotated content address
+  //
+  //   Format: urn:uor:tee:tcb:measurement:{hex}
+  //   Fidelity: lossless (full hash as measurement register input)
+
+  ["tee-tcb", {
+    project: ({ hex }) => `urn:uor:tee:tcb:measurement:${hex}`,
+    fidelity: "lossless",
+    spec: "https://trustedcomputinggroup.org/resource/tpm-library-specification/",
+  }],
 ]);
