@@ -158,7 +158,7 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
           <h1 className="text-xl font-display font-semibold" style={{ color: KP.text }}>
             Security methods
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: KP.dim }}>
+          <p className="text-sm mt-0.5" style={{ color: KP.muted }}>
             Each method is a key to your space. More keys, more resilience.
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
                     : "No methods — set up authentication"
                 }
               </p>
-              <p className="text-[11px] mt-1" style={{ color: KP.dim }}>
+              <p className="text-[13px] mt-1" style={{ color: KP.muted }}>
                 {activeCount} of {methods.length} methods active.
                 {activeCount < 2 && " We recommend at least two."}
               </p>
@@ -244,7 +244,7 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
                   </span>
                   {method.active && (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
                       style={{ background: `${KP.gold}18`, color: KP.gold }}
                     >
                       <Check className="w-2.5 h-2.5" />
@@ -252,7 +252,7 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
                     </span>
                   )}
                 </div>
-                <p className="text-[12px] mt-1 leading-relaxed" style={{ color: KP.dim }}>
+                <p className="text-[13px] mt-1 leading-relaxed" style={{ color: KP.muted }}>
                   {method.description}
                 </p>
               </div>
@@ -262,7 +262,7 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
                 <button
                   onClick={method.onAdd}
                   disabled={method.id === "tee" && attestingTee}
-                  className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all hover:brightness-110 active:scale-[0.97] cursor-pointer disabled:opacity-50"
+                  className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all hover:brightness-110 active:scale-[0.97] cursor-pointer disabled:opacity-50"
                   style={{ background: `${KP.gold}18`, color: KP.gold }}
                 >
                   {method.id === "tee" && attestingTee ? (
@@ -336,8 +336,8 @@ export default function SecurityMethodsPanel({ onBack }: SecurityMethodsPanelPro
       {/* ── Philosophy note ── */}
       <div className="px-6 mt-8 mb-10">
         <div className="flex items-start gap-3">
-          <Key className="w-4 h-4 mt-0.5 shrink-0" style={{ color: KP.dim }} />
-          <p className="text-[11px] leading-relaxed" style={{ color: KP.dim }}>
+          <Key className="w-4 h-4 mt-0.5 shrink-0" style={{ color: KP.muted }} />
+          <p className="text-[13px] leading-relaxed" style={{ color: KP.muted }}>
             Each method is a fallback for the others. Lose your device? Email recovers access.
             Lose your email? Your device biometric unlocks your space.
             The more methods you link, the more resilient your identity becomes.
