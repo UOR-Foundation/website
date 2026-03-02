@@ -320,16 +320,16 @@ export default memo(function DesktopSurface({
         </div>
       )}
 
-      {/* ── Chrome: Focus Toggle — fades in focus mode, reveals on hover ── */}
+      {/* ── Chrome: Focus Toggle — always accessible, subtler in focus mode ── */}
       <div
         className="absolute right-4 top-1/2 -translate-y-1/2 z-[400] group/focus-toggle"
         style={{
-          opacity: isFocus ? 0.08 : 1,
+          opacity: isFocus ? 0.35 : 1,
           pointerEvents: "auto",
           transition: "opacity 600ms cubic-bezier(0.4, 0, 0.2, 1)",
         }}
-        onMouseEnter={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
-        onMouseLeave={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.08"; }}
+        onMouseEnter={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
+        onMouseLeave={e => { if (isFocus) (e.currentTarget as HTMLElement).style.opacity = "0.35"; }}
       >
         <AttentionToggle bgMode={mode} />
       </div>
@@ -567,11 +567,11 @@ export default memo(function DesktopSurface({
         </div>
       </div>
 
-      {/* ── Frame switcher (bottom center) ────────── */}
+      {/* ── Frame switcher (bottom center) — always visible, even in focus ── */}
       <div
         className="absolute bottom-14 left-0 right-0 flex flex-col items-center gap-2 z-[500]"
         style={{
-          opacity: isFocus ? 0 : 1,
+          opacity: isFocus ? 0.6 : 1,
           transition: "opacity 0.7s ease",
         }}
       >

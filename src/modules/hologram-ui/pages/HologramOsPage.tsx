@@ -385,10 +385,7 @@ export default function HologramOsPage() {
         <div
           className="shrink-0 overflow-visible"
           style={{
-            width: isFocus ? 0 : undefined,
-            opacity: isFocus ? 0 : 1,
-            pointerEvents: isFocus ? "none" : "auto",
-            transition: isFocus ? "all 300ms ease-out" : "none",
+            transition: "opacity 600ms ease",
           }}
         >
           <DesktopOsSidebar
