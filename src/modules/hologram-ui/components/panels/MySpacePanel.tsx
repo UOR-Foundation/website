@@ -2,39 +2,35 @@
  * MySpacePanel — "One Moment, One Identity"
  * ═══════════════════════════════════════════
  *
- * THE canonical single entry point for identity.
- * Sign-in, ceremony, and dashboard all flow through this panel.
- * No alternate auth paths exist — one door in, one door out.
+ * THE canonical single entry point for sovereign identity.
+ * Both new and returning users flow through this panel.
+ * No alternate auth paths exist: one door in, one door out.
+ *
+ * Architecture:
+ *  - Unified welcome screen for new + returning users
+ *  - Primary: Device biometric (TEE) for returning users
+ *  - Universal: Email magic link / Google / Apple OAuth
+ *  - TEE attestation happens ONLY here during the founding ceremony
+ *  - Multi-device: each device registers its own credential
+ *  - Email serves as recovery channel for device loss
  *
  * Phases:
- *  1. auth       — Primary: Device biometric (TEE). Fallback: Email/OAuth
- *  2. magic-sent — Waiting for magic link confirmation
- *  3. naming     — Choose a display name
- *  4. creating   — TEE attestation + Vault-isolated founding ceremony
- *  5. reveal     — Identity confirmation with three-word name
- *  6. dashboard  — Personal sovereign dashboard
- *
- * Login Architecture:
- *  - Primary: "Sign in with this device" → WebAuthn assertion (biometric)
- *    Matches stored credential → resolves linked Supabase account
- *  - Fallback: Email magic link / Google / Apple OAuth
- *  - Device loss: Email recovery → re-anchor TEE on new device
- *
- * Security:
- *  - TEE attestation binds the kernel to your device's hardware enclave
- *  - Founding ceremony executes inside CeremonyVault (5-layer isolation)
- *  - Observer-collapse detection aborts on interception
- *  - Multi-device: users can register multiple trusted devices
- *  - Email serves as the recovery channel for device loss
+ *  1. auth       — Unified entry: biometric, email, or OAuth
+ *  2. magic-sent — Awaiting email confirmation
+ *  3. naming     — Choose a display name (new users)
+ *  4. creating   — TEE attestation + vault-isolated founding ceremony
+ *  5. reveal     — Identity confirmation with sovereign markers
+ *  6. dashboard  — Personal sovereign space
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mail, Shield, Fingerprint, Lock, Wifi, Smartphone, ChevronDown } from "lucide-react";
+import { Mail, Shield, Fingerprint, Lock, Smartphone, ArrowRight, Sparkles, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ── Kernel imports ──
 import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/q-sovereignty";
@@ -53,6 +49,7 @@ import MySpaceDashboard from "../myspace/MySpaceDashboard";
 import CeremonyCanvas from "../myspace/CeremonyCanvas";
 
 type Phase = "loading" | "auth" | "magic-sent" | "naming" | "creating" | "reveal" | "dashboard";
+type AuthMode = "unified" | "email";
 
 interface MySpacePanelProps {
   onClose: () => void;
@@ -81,11 +78,11 @@ function hasDeviceCredential(): boolean {
 export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const { session, profile, loading, signOut, refreshProfile } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
+  const [authMode, setAuthMode] = useState<AuthMode>("unified");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [ceremonyState, setCeremonyState] = useState<CeremonyState | null>(null);
   const [teeStatus, setTeeStatus] = useState<"idle" | "attesting" | "asserting" | "done">("idle");
-  const [showEmailFallback, setShowEmailFallback] = useState(false);
   const [deviceBiometricAvailable, setDeviceBiometricAvailable] = useState(false);
   const [deviceHasCredential, setDeviceHasCredential] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +104,6 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     if (!session) { setPhase("auth"); return; }
     if (profile?.ceremonyCid || profile?.uorCanonicalId) {
       setPhase("dashboard");
-      // Returning user — emit trust if credential exists
       if (hasDeviceCredential()) emitTrustUpdate(true);
       return;
     }
@@ -118,7 +114,6 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       setPhase("naming");
       return;
     }
-    // Session but no profile loaded yet — check DB directly
     supabase
       .from("profiles")
       .select("display_name, ceremony_cid, uor_canonical_id")
@@ -162,7 +157,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
   // ── Auto-focus ──
   useEffect(() => {
-    if (phase === "auth" && showEmailFallback) {
+    if (phase === "auth" && authMode === "email") {
       const t = setTimeout(() => inputRef.current?.focus(), 400);
       return () => clearTimeout(t);
     }
@@ -170,17 +165,12 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       const t = setTimeout(() => nameRef.current?.focus(), 400);
       return () => clearTimeout(t);
     }
-  }, [phase, showEmailFallback]);
+  }, [phase, authMode]);
 
   // ══════════════════════════════════════════════════════════════
   // Auth handlers
   // ══════════════════════════════════════════════════════════════
 
-  /**
-   * PRIMARY LOGIN: Sign in with device biometric (WebAuthn assertion).
-   * This uses the TEE credential stored during the founding ceremony.
-   * After successful biometric, we look up the linked Supabase session.
-   */
   const handleDeviceSignIn = useCallback(async () => {
     const bridge = teeBridgeRef.current;
     try {
@@ -188,31 +178,25 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       const assertion = await bridge.assert("hologram:login:verify");
 
       if (assertion.userVerified || assertion.userPresent) {
-        // Credential verified — now we need to restore the Supabase session.
-        // The credential is linked to a Supabase user via localStorage mapping.
         const linkedUserId = localStorage.getItem("hologram:tee:linked-user");
         if (linkedUserId) {
-          // Check if there's an active session already
           const { data: { session: existingSession } } = await supabase.auth.getSession();
           if (existingSession) {
-            // Session exists, biometric confirmed — proceed
             setTeeStatus("done");
             emitTrustUpdate(true);
             refreshProfile();
             return;
           }
         }
-
-        // No linked session — need email fallback
         setTeeStatus("idle");
-        toast.info("Device verified. Please confirm with your email to complete sign-in.");
-        setShowEmailFallback(true);
+        toast.info("Device verified. Confirm with your email to complete sign-in.");
+        setAuthMode("email");
       }
     } catch (err) {
       console.warn("[MySpace] Device sign-in failed:", err);
       setTeeStatus("idle");
-      toast.error("Device authentication cancelled or failed. Try email instead.");
-      setShowEmailFallback(true);
+      toast.error("Biometric cancelled. Try another method.");
+      setAuthMode("email");
     }
   }, [refreshProfile]);
 
@@ -259,11 +243,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       let teeAttestation: TEEAttestationQuote | null = null;
       if (bridge.isHardwareBacked) {
         try {
-          teeAttestation = await bridge.attest(
-            sess.user.id,
-            name.trim(),
-          );
-          // Link TEE credential to Supabase user for future device-only logins
+          teeAttestation = await bridge.attest(sess.user.id, name.trim());
           localStorage.setItem("hologram:tee:linked-user", sess.user.id);
           emitTrustUpdate(true);
         } catch (teeErr) {
@@ -273,11 +253,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       setTeeStatus("done");
 
       // ── Step 2: Vault-Isolated Founding Ceremony ──
-      const authUser: AuthUser = {
-        id: sess.user.id,
-        email: sess.user.email,
-        displayName: name.trim(),
-      };
+      const authUser: AuthUser = { id: sess.user.id, email: sess.user.email, displayName: name.trim() };
 
       const vaultResult = await executeInVault(async () => {
         const ecc = new QEcc();
@@ -306,7 +282,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           genesis.sovereign.identity["u:canonicalId"],
           genesis.sovereign.threeWordName.display,
           "sovereign",
-          "Founding self-attestation — genesis node",
+          "Founding self-attestation: genesis node",
         );
 
         return { genesis, disclosurePolicyCid: policy.policyId, trustNodeCid: selfAttestation.attestationCid };
@@ -360,11 +336,11 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     setCeremonyState(null);
     setTeeStatus("idle");
     emitTrustUpdate(false);
-    setShowEmailFallback(false);
+    setAuthMode("unified");
     setPhase("auth");
   }, [signOut]);
 
-  const radialBg = "radial-gradient(ellipse at 50% 40%, hsl(38 60% 60% / 0.04) 0%, transparent 70%)";
+  const canUseDevice = deviceBiometricAvailable && deviceHasCredential;
 
   // ═══════════════════════════════════════════════════════════
   // RENDER
@@ -374,123 +350,166 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return (
       <Shell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <motion.div
+            className="w-10 h-10 rounded-full"
+            style={{ border: `2px solid ${KP.gold}33`, borderTopColor: KP.gold }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
         </div>
       </Shell>
     );
   }
 
   if (phase === "auth") {
-    const canUseDevice = deviceBiometricAvailable && deviceHasCredential;
-
     return (
       <Shell onClose={onClose}>
-        <div className="flex-1 flex items-center justify-center relative">
-          <div className="absolute inset-0 pointer-events-none" style={{ background: radialBg }} />
-          <div className="relative z-10 w-full max-w-sm px-8 animate-fade-in">
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+          {/* Ambient glow */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 50% 30%, hsl(38 60% 60% / 0.05) 0%, transparent 70%)" }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative z-10 w-full max-w-sm px-8"
+          >
+            {/* ── Header ── */}
             <div className="text-center mb-10">
-              <h1 className="text-[28px] font-display font-semibold leading-snug" style={{ color: KP.text }}>
-                {canUseDevice ? (
-                  <>
-                    Welcome back.
-                    <br />
-                    <span style={{ color: KP.gold }}>Your device knows you.</span>
-                  </>
-                ) : (
-                  <>
-                    Let's create something
-                    <br />
-                    <span style={{ color: KP.gold }}>only yours.</span>
-                  </>
-                )}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
+                style={{ background: `${KP.gold}12`, border: `1px solid ${KP.gold}22` }}
+              >
+                <Eye className="w-7 h-7" style={{ color: KP.gold }} />
+              </motion.div>
+
+              <h1 className="text-[26px] font-display font-semibold leading-snug" style={{ color: KP.text }}>
+                Your sovereign space
               </h1>
-              <p className="text-sm mt-4" style={{ color: KP.muted }}>
+              <p className="text-sm mt-3 leading-relaxed max-w-[280px] mx-auto" style={{ color: KP.muted }}>
                 {canUseDevice
-                  ? "Sign in with your biometrics — instant, private, hardware-secured."
-                  : "Sign in to anchor your identity."
+                  ? "Welcome back. Sign in with your biometrics, or use another method below."
+                  : "Sign in to enter, or create your identity. Private by default, yours forever."
                 }
               </p>
             </div>
 
             <div className="space-y-3">
-              {/* ── PRIMARY: Device biometric (if credential exists) ── */}
-              {canUseDevice && (
-                <>
-                  <button
-                    onClick={handleDeviceSignIn}
-                    disabled={teeStatus === "asserting"}
-                    className="w-full min-h-[56px] flex items-center justify-center gap-3 px-6 py-4 rounded-full text-base font-semibold active:scale-[0.98] hover:opacity-90 transition-all cursor-pointer disabled:opacity-60"
-                    style={{ background: KP.gold, color: KP.bg }}
+              {/* ── Biometric button (returning users with credential) ── */}
+              <AnimatePresence>
+                {canUseDevice && authMode === "unified" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
                   >
-                    {teeStatus === "asserting" ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                        Verifying…
-                      </>
-                    ) : (
-                      <>
-                        <Fingerprint className="w-5 h-5" />
-                        Sign in with this device
-                      </>
-                    )}
-                  </button>
+                    <button
+                      onClick={handleDeviceSignIn}
+                      disabled={teeStatus === "asserting"}
+                      className="w-full min-h-[52px] flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl text-[15px] font-semibold active:scale-[0.98] hover:brightness-110 transition-all cursor-pointer disabled:opacity-60"
+                      style={{ background: KP.gold, color: KP.bg }}
+                    >
+                      {teeStatus === "asserting" ? (
+                        <>
+                          <motion.div
+                            className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                          Verifying…
+                        </>
+                      ) : (
+                        <>
+                          <Fingerprint className="w-5 h-5" />
+                          Sign in with this device
+                        </>
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                  {/* Expandable fallback section */}
-                  <button
-                    onClick={() => setShowEmailFallback(prev => !prev)}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-sm transition-colors cursor-pointer"
-                    style={{ color: KP.muted }}
-                  >
-                    <span>Other sign-in methods</span>
-                    <ChevronDown
-                      className="w-3.5 h-3.5 transition-transform duration-200"
-                      style={{ transform: showEmailFallback ? "rotate(180deg)" : "rotate(0deg)" }}
-                    />
-                  </button>
-
-                  <div
-                    className="overflow-hidden transition-all duration-300 ease-out"
-                    style={{
-                      maxHeight: showEmailFallback ? "400px" : "0",
-                      opacity: showEmailFallback ? 1 : 0,
-                    }}
-                  >
-                    <div className="space-y-3 pt-1">
-                      <EmailAndOAuthSection
-                        email={email}
-                        setEmail={setEmail}
-                        inputRef={inputRef}
-                        handleMagicLink={handleMagicLink}
-                        handleGoogleSignIn={handleGoogleSignIn}
-                        handleAppleSignIn={handleAppleSignIn}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Device recovery hint */}
-                  <div className="flex items-start gap-2 mt-4 px-2" style={{ color: KP.dim }}>
-                    <Smartphone className="w-3 h-3 mt-0.5 shrink-0" />
-                    <p className="text-[10px] leading-relaxed">
-                      Lost your device? Use email to recover access and re-anchor
-                      your identity to a new device.
-                    </p>
-                  </div>
-                </>
+              {/* ── Divider (only if biometric shown) ── */}
+              {canUseDevice && authMode === "unified" && (
+                <div className="flex items-center gap-4 py-1">
+                  <div className="flex-1 h-px" style={{ background: KP.border }} />
+                  <span className="text-[11px] uppercase tracking-widest" style={{ color: KP.dim }}>or</span>
+                  <div className="flex-1 h-px" style={{ background: KP.border }} />
+                </div>
               )}
 
-              {/* ── No device credential: Show standard auth ── */}
-              {!canUseDevice && (
-                <EmailAndOAuthSection
-                  email={email}
-                  setEmail={setEmail}
-                  inputRef={inputRef}
-                  handleMagicLink={handleMagicLink}
-                  handleGoogleSignIn={handleGoogleSignIn}
-                  handleAppleSignIn={handleAppleSignIn}
+              {/* ── OAuth buttons ── */}
+              <OAuthButton onClick={handleGoogleSignIn} icon={<GoogleIcon />} label="Continue with Google" />
+              <OAuthButton onClick={handleAppleSignIn} icon={<AppleIcon />} label="Continue with Apple" />
+
+              {/* ── Email divider ── */}
+              <div className="flex items-center gap-4 py-1">
+                <div className="flex-1 h-px" style={{ background: KP.border }} />
+                <span className="text-[11px] uppercase tracking-widest" style={{ color: KP.dim }}>or</span>
+                <div className="flex-1 h-px" style={{ background: KP.border }} />
+              </div>
+
+              {/* ── Email input ── */}
+              <div className="space-y-3">
+                <input
+                  ref={inputRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleMagicLink()}
+                  onFocus={() => setAuthMode("email")}
+                  placeholder="your@email.com"
+                  className="w-full min-h-[48px] bg-transparent rounded-2xl px-6 py-3 text-[15px] text-center outline-none transition-all focus:ring-1"
+                  style={{
+                    border: `1px solid ${KP.border}`,
+                    color: KP.text,
+                  }}
+                  autoComplete="email"
+                  enterKeyHint="send"
                 />
-              )}
+                <AnimatePresence>
+                  {email.trim() && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      className="flex justify-center"
+                    >
+                      <button
+                        onClick={handleMagicLink}
+                        className="w-full min-h-[48px] flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-[15px] font-semibold active:scale-[0.98] hover:brightness-110 transition-all cursor-pointer"
+                        style={{ background: KP.gold, color: KP.bg }}
+                      >
+                        <Mail className="w-4 h-4" />
+                        Send magic link
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
+
+            {/* ── Context hint ── */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-start gap-2.5 mt-8 px-1"
+              style={{ color: KP.dim }}
+            >
+              <Lock className="w-3 h-3 mt-0.5 shrink-0" />
+              <p className="text-[10px] leading-relaxed">
+                New here? Any sign-in method creates your account automatically.
+                {canUseDevice ? " Lost your device? Email recovers access." : ""}
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
       </Shell>
     );
@@ -500,21 +519,32 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return (
       <Shell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center relative">
-          <div className="absolute inset-0 pointer-events-none" style={{ background: radialBg }} />
-          <div className="relative z-10 text-center px-8 animate-fade-in space-y-6 max-w-sm">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full mx-auto" style={{ border: `1px solid ${KP.gold}33`, background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)` }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 40%, hsl(38 60% 60% / 0.04) 0%, transparent 70%)" }} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-10 text-center px-8 space-y-6 max-w-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="inline-flex items-center justify-center h-16 w-16 rounded-2xl mx-auto"
+              style={{ border: `1px solid ${KP.gold}33`, background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)` }}
+            >
               <Mail className="h-7 w-7" style={{ color: KP.gold }} />
-            </div>
+            </motion.div>
             <div>
               <h2 className="text-2xl font-display font-semibold" style={{ color: KP.text }}>Check your email</h2>
-              <p className="text-base mt-3 leading-relaxed" style={{ color: KP.muted }}>
-                We sent a link to <span className="font-medium" style={{ color: KP.text }}>{email}</span>. Click it to continue.
+              <p className="text-[15px] mt-3 leading-relaxed" style={{ color: KP.muted }}>
+                We sent a link to <span className="font-medium" style={{ color: KP.text }}>{email}</span>.
+                <br />Click it to continue.
               </p>
             </div>
-            <button onClick={() => setPhase("auth")} className="text-sm hover:opacity-80 transition-colors cursor-pointer" style={{ color: KP.muted }}>
+            <button onClick={() => { setPhase("auth"); setAuthMode("unified"); }} className="text-sm hover:opacity-80 transition-colors cursor-pointer" style={{ color: KP.muted }}>
               Use a different method
             </button>
-          </div>
+          </motion.div>
         </div>
       </Shell>
     );
@@ -524,15 +554,28 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return (
       <Shell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center relative">
-          <div className="absolute inset-0 pointer-events-none" style={{ background: radialBg }} />
-          <div className="relative z-10 w-full max-w-md px-8 animate-fade-in">
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 40%, hsl(38 60% 60% / 0.04) 0%, transparent 70%)" }} />
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative z-10 w-full max-w-md px-8"
+          >
             <div className="text-center mb-10">
-              <h1 className="text-[28px] font-display font-semibold leading-snug" style={{ color: KP.text }}>
-                What should we
-                <br /><span style={{ color: KP.gold }}>call you?</span>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
+                style={{ background: `${KP.gold}12`, border: `1px solid ${KP.gold}22` }}
+              >
+                <Sparkles className="w-6 h-6" style={{ color: KP.gold }} />
+              </motion.div>
+              <h1 className="text-[26px] font-display font-semibold leading-snug" style={{ color: KP.text }}>
+                What should we call you?
               </h1>
-              <p className="text-xs mt-3" style={{ color: KP.dim }}>
-                Your sovereign identity will be anchored to this name.
+              <p className="text-xs mt-3 max-w-[260px] mx-auto leading-relaxed" style={{ color: KP.dim }}>
+                This name anchors your sovereign identity. You can always change it later.
               </p>
             </div>
 
@@ -543,7 +586,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && name.trim() && handleCreate()}
-                placeholder="Choose a name"
+                placeholder="Your name"
                 maxLength={30}
                 className="w-full bg-transparent text-center text-xl font-display py-4 outline-none transition-colors"
                 style={{ borderBottom: `2px solid ${KP.border}`, color: KP.text }}
@@ -554,30 +597,35 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 enterKeyHint="done"
               />
 
-              <div
-                className="flex justify-center transition-all duration-500"
-                style={{ opacity: name.trim() ? 1 : 0, transform: name.trim() ? "translateY(0)" : "translateY(8px)", pointerEvents: name.trim() ? "auto" : "none" }}
-              >
-                <button
-                  onClick={handleCreate}
-                  className="min-w-[160px] min-h-[48px] px-10 py-3.5 rounded-full text-base font-semibold active:scale-95 hover:opacity-90 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  style={{ background: KP.gold, color: KP.bg }}
-                >
-                  <Fingerprint className="w-4 h-4" />
-                  Begin Ceremony
-                </button>
-              </div>
+              <AnimatePresence>
+                {name.trim() && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="flex justify-center"
+                  >
+                    <button
+                      onClick={handleCreate}
+                      className="min-w-[180px] min-h-[48px] px-10 py-3.5 rounded-2xl text-[15px] font-semibold active:scale-95 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2.5"
+                      style={{ background: KP.gold, color: KP.bg }}
+                    >
+                      <Fingerprint className="w-4 h-4" />
+                      Begin Ceremony
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="flex items-start gap-2 mt-4" style={{ color: KP.dim }}>
+              <div className="flex items-start gap-2.5 mt-4 px-1" style={{ color: KP.dim }}>
                 <Lock className="w-3 h-3 mt-0.5 shrink-0" />
                 <p className="text-[10px] leading-relaxed">
-                  Your device will ask for biometric verification to create a trusted
-                  hardware-bound connection. This binds your identity to this device's
-                  secure enclave — so only you, on this device, can access your space.
+                  Your device will ask for biometric verification to create a hardware-bound
+                  identity. Only you, on this device, can access your space.
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </Shell>
     );
@@ -587,24 +635,26 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     return (
       <Shell onClose={onClose}>
         <CeremonyCanvas onComplete={handleCeremonyAnimationComplete} />
-        {/* TEE status overlay during ceremony */}
-        {teeStatus === "attesting" && (
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-fade-in">
-            <div
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full"
-              style={{
-                background: `${KP.bg}cc`,
-                border: `1px solid ${KP.gold}22`,
-                backdropFilter: "blur(12px)",
-              }}
+        <AnimatePresence>
+          {teeStatus === "attesting" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-8 left-0 right-0 flex justify-center"
             >
-              <Wifi className="w-3.5 h-3.5" style={{ color: KP.gold }} />
-              <span className="text-[11px] tracking-wider" style={{ color: KP.muted }}>
-                Connecting to your device's secure enclave…
-              </span>
-            </div>
-          </div>
-        )}
+              <div
+                className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl"
+                style={{ background: `${KP.bg}cc`, border: `1px solid ${KP.gold}22`, backdropFilter: "blur(12px)" }}
+              >
+                <Smartphone className="w-3.5 h-3.5" style={{ color: KP.gold }} />
+                <span className="text-[11px] tracking-wider" style={{ color: KP.muted }}>
+                  Connecting to your device's secure enclave…
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Shell>
     );
   }
@@ -618,17 +668,26 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       <Shell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center relative">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% 40%, hsl(38 60% 60% / 0.06) 0%, transparent 60%)" }} />
-          <div className="relative z-10 text-center px-8 animate-fade-in space-y-6 max-w-sm">
-            <div className="inline-flex items-center justify-center h-24 w-24 rounded-full mx-auto" style={{ border: `1px solid ${KP.gold}33`, background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)` }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-10 text-center px-8 space-y-6 max-w-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", damping: 12 }}
+              className="inline-flex items-center justify-center h-24 w-24 rounded-3xl mx-auto"
+              style={{ border: `1px solid ${KP.gold}33`, background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)` }}
+            >
               <span className="text-3xl">{identity?.["u:glyph"] || name.trim().charAt(0).toUpperCase()}</span>
-            </div>
+            </motion.div>
 
             <div>
               <h2 className="text-2xl font-display font-semibold" style={{ color: KP.text }}>{threeWord?.display || name.trim()}</h2>
               <p className="text-sm mt-1 font-mono" style={{ color: KP.muted }}>{name.trim()}</p>
             </div>
 
-            {/* Ceremony seal */}
             {ceremonyState?.seal && (
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
@@ -639,41 +698,37 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 }}
               >
                 <Shield className="w-3 h-3" />
-                {ceremonyState.seal.clean ? "Ceremony sealed · No interception" : "Seal compromised"}
+                {ceremonyState.seal.clean ? "Ceremony sealed, no interception" : "Seal compromised"}
               </div>
             )}
 
-            {/* TEE trust badge */}
             {hasHardwareTrust && (
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
-                style={{
-                  background: "hsla(142, 40%, 50%, 0.1)",
-                  color: "hsl(142, 45%, 55%)",
-                  border: "1px solid hsla(142, 40%, 50%, 0.15)",
-                }}
+                style={{ background: "hsla(142, 40%, 50%, 0.1)", color: "hsl(142, 45%, 55%)", border: "1px solid hsla(142, 40%, 50%, 0.15)" }}
               >
-                <Wifi className="w-3 h-3" />
-                Device-bound · Hardware trusted
+                <Smartphone className="w-3 h-3" />
+                Device-bound, hardware trusted
               </div>
             )}
 
             <p className="text-xs leading-relaxed max-w-xs mx-auto" style={{ color: KP.dim }}>
               Your sovereign identity has been created with post-quantum cryptography (ML-DSA-65)
               {hasHardwareTrust
-                ? " and anchored to your device's secure enclave. Only you, on this device, hold the key."
+                ? " and anchored to your device's secure enclave."
                 : ". Everything is private by default."
               }
             </p>
 
             <button
               onClick={handleFinishReveal}
-              className="min-w-[160px] min-h-[48px] px-10 py-3.5 rounded-full text-base font-semibold active:scale-95 hover:opacity-90 transition-all cursor-pointer"
+              className="min-w-[180px] min-h-[48px] px-10 py-3.5 rounded-2xl text-[15px] font-semibold active:scale-95 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2 mx-auto"
               style={{ background: KP.gold, color: KP.bg }}
             >
               Enter My Space
+              <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
+          </motion.div>
         </div>
       </Shell>
     );
@@ -691,61 +746,6 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 // Extracted components
 // ═══════════════════════════════════════════════════════════════
 
-/** Reusable email + OAuth section — used both as primary (new users) and fallback (returning) */
-function EmailAndOAuthSection({
-  email, setEmail, inputRef, handleMagicLink, handleGoogleSignIn, handleAppleSignIn,
-}: {
-  email: string;
-  setEmail: (v: string) => void;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  handleMagicLink: () => void;
-  handleGoogleSignIn: () => void;
-  handleAppleSignIn: () => void;
-}) {
-  return (
-    <>
-      <OAuthButton onClick={handleGoogleSignIn} icon={<GoogleIcon />} label="Continue with Google" />
-      <OAuthButton onClick={handleAppleSignIn} icon={<AppleIcon />} label="Continue with Apple" />
-
-      <div className="flex items-center gap-4 py-2">
-        <div className="flex-1 h-px" style={{ background: KP.border }} />
-        <span className="text-xs" style={{ color: KP.muted }}>or</span>
-        <div className="flex-1 h-px" style={{ background: KP.border }} />
-      </div>
-
-      <div className="space-y-3">
-        <input
-          ref={inputRef}
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleMagicLink()}
-          placeholder="your@email.com"
-          className="w-full min-h-[48px] bg-transparent rounded-full px-6 py-3 text-base text-center outline-none transition-colors"
-          style={{ border: `1px solid ${KP.border}`, color: KP.text }}
-          autoComplete="email"
-          enterKeyHint="send"
-        />
-        <div
-          className="flex justify-center transition-all duration-500"
-          style={{ opacity: email.trim() ? 1 : 0, transform: email.trim() ? "translateY(0)" : "translateY(8px)", pointerEvents: email.trim() ? "auto" : "none" }}
-        >
-          <button
-            onClick={handleMagicLink}
-            className="w-full min-h-[48px] flex items-center justify-center gap-2 px-6 py-3 rounded-full text-base font-semibold active:scale-[0.98] hover:opacity-90 transition-all cursor-pointer"
-            style={{ background: KP.gold, color: KP.bg }}
-          >
-            <Mail className="w-4 h-4" />
-            Send magic link
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-/* ── Shell ──────────────────────────────────────────────── */
-
 function Shell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="w-full h-full flex flex-col select-none relative" style={{ background: KP.bg, fontFamily: KP.font }}>
@@ -753,7 +753,7 @@ function Shell({ onClose, children }: { onClose: () => void; children: React.Rea
         <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${KP.gold}18` }}>
           <Shield className="w-4 h-4" strokeWidth={1.4} style={{ color: KP.gold }} />
         </div>
-        <span className="text-[16px] font-semibold tracking-wide" style={{ color: KP.text }}>My Space</span>
+        <span className="text-[15px] font-semibold tracking-wide" style={{ color: KP.text }}>My Space</span>
         <div className="flex-1" />
         <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer" style={{ color: KP.muted }}>
           ✕
@@ -764,13 +764,11 @@ function Shell({ onClose, children }: { onClose: () => void; children: React.Rea
   );
 }
 
-/* ── OAuth Button ──────────────────────────────────────── */
-
 function OAuthButton({ onClick, icon, label }: { onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button
       onClick={onClick}
-      className="w-full min-h-[48px] flex items-center justify-center gap-3 px-6 py-3 rounded-full text-base font-medium hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+      className="w-full min-h-[48px] flex items-center justify-center gap-3 px-6 py-3 rounded-2xl text-[15px] font-medium hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
       style={{ border: `1px solid ${KP.border}`, background: KP.card, color: KP.text }}
     >
       {icon}
@@ -778,8 +776,6 @@ function OAuthButton({ onClick, icon, label }: { onClick: () => void; icon: Reac
     </button>
   );
 }
-
-/* ── Icons ──────────────────────────────────────────────── */
 
 function GoogleIcon() {
   return (
