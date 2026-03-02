@@ -354,3 +354,43 @@ export type {
   OntogenesisConfig,
   OntogenesisSnapshot,
 } from "./ontogenesis-engine";
+
+// Holographic Ontology — Knowledge Graph on the Atlas Manifold
+export {
+  HolographicOntology,
+  DEFAULT_ONTOLOGY_CONFIG,
+  ONTOLOGY_PREDICATES,
+} from "./holographic-ontology";
+export type {
+  SemanticTriple,
+  OntologyPredicate,
+  TripleQueryResult,
+  InferredTriple,
+  OntologySnapshot,
+  HolographicOntologyConfig,
+} from "./holographic-ontology";
+
+// Coherence Reasoner — Logical Inference via Manifold Navigation
+export {
+  CoherenceReasoner,
+  DEFAULT_REASONER_CONFIG,
+} from "./coherence-reasoner";
+export type {
+  ReasoningMode,
+  Premise,
+  ReasoningStep,
+  ReasoningResult,
+  ReasonerConfig,
+  ReasonerSnapshot,
+} from "./coherence-reasoner";
+
+// Semantic Feedback Loop — Self-Organizing Semantics (Phase 4)
+export {
+  SemanticFeedbackLoop,
+  DEFAULT_FEEDBACK_CONFIG,
+} from "./semantic-feedback-loop";
+export type {
+  FeedbackLoopConfig,
+  FeedbackLoopSnapshot,
+  TokenFeedback,
+} from "./semantic-feedback-loop";
