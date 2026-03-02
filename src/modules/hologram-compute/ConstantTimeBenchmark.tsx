@@ -1360,15 +1360,27 @@ export default function ConstantTimeBenchmark() {
       // Timer overhead measurement
       const timerOverheadMs = measureTimerOverhead();
 
-      // Adaptive JIT stabilization warmup
+      // Adaptive JIT stabilization warmup (CPU + vGPU cache)
       const warmups = warmupCount(n);
       for (let w = 0; w < warmups; w++) {
         standardMatmul(a, b, n);
         cache.retrieve(a, b, n);
       }
+
+      // GPU warmup — pipeline compilation, buffer allocation, shader JIT
+      // Must run BEFORE measurement to avoid cold-start bias
+      let gpuWarmupDone = false;
+      if (demo === "gpu") {
+        try {
+          for (let w = 0; w < Math.max(warmups, 3); w++) {
+            await gpuMatmul(a, b, n);
+          }
+          gpuWarmupDone = true;
+        } catch { gpuWarmupDone = false; }
+      }
       await new Promise((r) => setTimeout(r, 5));
 
-      // CPU measurement with work amplification
+      // ── CPU measurement (sequential — runs first, GPU idle) ───────
       const cpuSamples: number[] = [];
       let stdResult: Uint8Array = new Uint8Array(0);
       let cpuReps = 1;
@@ -1381,12 +1393,15 @@ export default function ConstantTimeBenchmark() {
       const stdMs = median(cpuSamples);
       const meanCpuMs = cpuSamples.reduce((s, v) => s + v, 0) / cpuSamples.length;
 
-      // GPU measurement
+      // Brief pause between tests to let CPU thermals settle
+      await new Promise((r) => setTimeout(r, 10));
+
+      // ── GPU measurement (sequential — runs second, CPU idle) ──────
       let gpuMs = 0;
       let gpuResult: Uint8Array | null = null;
       let gpuAvailable = false;
       const gpuSamples: number[] = [];
-      if (demo === "gpu") {
+      if (demo === "gpu" && gpuWarmupDone) {
         try {
           for (let s = 0; s < numSamples; s++) {
             const g0 = performance.now();
@@ -1397,6 +1412,9 @@ export default function ConstantTimeBenchmark() {
           gpuAvailable = gpuResult !== null;
         } catch { gpuAvailable = false; }
       }
+
+      // Brief pause before vGPU measurement
+      await new Promise((r) => setTimeout(r, 5));
 
       // vGPU measurement with work amplification
       const fpKey = fingerprint(a, b, n);
