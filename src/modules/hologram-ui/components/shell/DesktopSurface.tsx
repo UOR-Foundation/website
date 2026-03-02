@@ -23,6 +23,7 @@ import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "../widgets/WeatherWidget";
 import ProductivityTimerWidget from "../widgets/ProductivityTimerWidget";
 import BreathingWidget from "../widgets/BreathingWidget";
+import WhatsAppWidget from "../widgets/WhatsAppWidget";
 
 import { SNAP_ANCHOR_EVENT } from "../../hooks/useDraggablePosition";
 // VoiceOrb lifted to page level for single-instance efficiency
@@ -569,6 +570,19 @@ export default memo(function DesktopSurface({
 
           {/* Queue pill removed — Genesis dot now opens Lumen directly */}
         </div>
+      </div>
+
+      {/* ── Chrome: WhatsApp Widget (bottom-left, near frame widget) ── */}
+      <div
+        className="absolute bottom-[3vh] left-6 z-[400]"
+        style={{
+          opacity: isFocus ? 0 : 1,
+          pointerEvents: isFocus ? "none" : "auto",
+          transition: "opacity 300ms",
+          animation: "stagger-fade-in 1s ease-out 0.9s both",
+        }}
+      >
+        <WhatsAppWidget bgMode={mode} />
       </div>
 
       {/* ── Frame switcher (bottom center) — always visible, even in focus ── */}

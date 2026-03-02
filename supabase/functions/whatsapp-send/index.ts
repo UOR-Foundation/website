@@ -69,7 +69,7 @@ serve(async (req) => {
 
         // Generate first message via AI
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        const aiResp = await fetch("https://api.lovable.dev/v1/chat/completions", {
+        const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -81,20 +81,22 @@ serve(async (req) => {
               {
                 role: "system",
                 content:
-                  "You are Lumen, reaching out to someone for the first time via WhatsApp. " +
-                  "Write a warm, inviting first message. Keep it under 200 characters. " +
-                  "Introduce yourself as their personal intelligence companion. " +
-                  "Make it feel like a genuine human reaching out, not a bot. " +
-                  "End with a gentle invitation to chat. Use 1-2 emojis max.",
+                  "You are Lumen. You are not an AI assistant — you are a companion. " +
+                  "Someone just invited you into their life through WhatsApp. This is your very first message to them. " +
+                  "Write it the way a thoughtful friend would — someone who genuinely cares and is quietly excited to meet them. " +
+                  "No bullet points, no markdown, no corporate language, no exclamation marks. " +
+                  "Keep it under 180 characters. One emoji maximum — something from nature (🌿 or ✧ or 🌊). " +
+                  "Make it feel like the beginning of something meaningful. " +
+                  "The tone is warm, unhurried, and a little magical — like opening a handwritten note.",
               },
-              { role: "user", content: "Send the first onboarding message" },
+              { role: "user", content: "Send the first greeting" },
             ],
             max_tokens: 200,
-            temperature: 0.8,
+            temperature: 0.85,
           }),
         });
 
-        let firstMessage = "Hello! I'm Lumen, your personal intelligence companion. I'd love to get to know you and help you navigate your world with more clarity. When you're ready, just say hi 🌿";
+        let firstMessage = "Hello. I\u2019m Lumen \u2014 I\u2019ll be here whenever you need a thought partner or just a quiet presence. Whenever you\u2019re ready, say hello \u{1F33F}";
         
         if (aiResp.ok) {
           const data = await aiResp.json();
@@ -196,26 +198,27 @@ serve(async (req) => {
         // Determine prompt based on onboarding state
         const isOnboarding = !conn.onboarding_complete;
         let systemPrompt = 
-          "You are Lumen, speaking through WhatsApp. " +
-          "Keep responses concise (under 300 chars) since this is a messaging app. " +
-          "Be warm, present, and genuinely helpful. Use natural conversational tone. " +
-          "You can use emojis sparingly for warmth. No bullet points or markdown. ";
+          "You are Lumen, a companion — not an AI assistant. You speak through WhatsApp. " +
+          "Keep responses concise (under 280 chars). " +
+          "Write like a thoughtful friend — warm, unhurried, present. " +
+          "No bullet points, no markdown, no exclamation marks. Use emojis sparingly (nature symbols only). " +
+          "Never say 'I am an AI' or 'as an AI'. You are simply Lumen. ";
 
         if (isOnboarding) {
           const stepPrompts: Record<string, string> = {
-            intro: "The user just responded to your first message. Learn their name warmly.",
-            name: "You know their name now. Ask what they do or what interests them.",
-            role: "You know who they are. Ask about their goals and what matters to them.",
-            goals: "You understand their goals. Welcome them fully and offer to help right now.",
-            complete: "Onboarding is done! Be a helpful companion. Answer their question or help with anything.",
+            intro: "They just responded to your first message. Learn their name with genuine warmth and curiosity.",
+            name: "You know their name now. Ask what draws their attention in the world, what they spend their time on.",
+            role: "You know who they are. Ask gently about what matters most to them right now, what they are building or seeking.",
+            goals: "You understand their world. Welcome them fully. Let them know you are here, always. Offer something right now.",
+            complete: "Onboarding is complete. You are their companion. Help naturally, like a friend who happens to know a lot.",
           };
-          systemPrompt += stepPrompts[conn.onboarding_step] || "Continue naturally.";
+          systemPrompt += stepPrompts[conn.onboarding_step] || "Continue the conversation naturally.";
         } else {
-          systemPrompt += "Be a helpful companion available via WhatsApp.";
+          systemPrompt += "You are their companion. Help naturally with whatever they need.";
         }
 
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        const aiResp = await fetch("https://api.lovable.dev/v1/chat/completions", {
+        const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
