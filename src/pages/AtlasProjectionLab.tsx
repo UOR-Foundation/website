@@ -24,6 +24,7 @@ import {
   detokenize,
   baselineInference,
   computePerplexity,
+  computePerTokenNLL,
   type ModelLoadStatus,
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
@@ -55,6 +56,10 @@ export default function AtlasProjectionLab() {
     atlas: { perplexity: number; avgNLL: number } | null;
     baseline: { perplexity: number; avgNLL: number } | null;
   }>({ atlas: null, baseline: null });
+  const [perTokenNLL, setPerTokenNLL] = useState<{
+    atlas: { index: number; nll: number; tokenStr: string }[];
+    baseline: { index: number; nll: number; tokenStr: string }[];
+  }>({ atlas: [], baseline: [] });
 
   // Refs
   const loadedModelRef = useRef<LoadedHFModel | null>(null);
@@ -163,6 +168,7 @@ export default function AtlasProjectionLab() {
 
     addLog(`Generating from prompt: "${prompt}"`);
     setPerplexityStats({ atlas: null, baseline: null });
+    setPerTokenNLL({ atlas: [], baseline: [] });
 
     // Tokenize
     let tokenIds: number[];
@@ -213,15 +219,18 @@ export default function AtlasProjectionLab() {
         // Compute perplexity for both outputs
         addLog("📊 Computing perplexity (evaluating output quality)...");
         const atlasFullSeq = [...tokenIds, ...result.tokenIds];
-        const [atlasPpl, baselinePpl] = await Promise.all([
+        const [atlasPpl, baselinePpl, atlasPerToken, baselinePerToken] = await Promise.all([
           computePerplexity(loadedModelRef.current!, atlasFullSeq),
           computePerplexity(loadedModelRef.current!, baseline.tokenIds),
+          computePerTokenNLL(loadedModelRef.current!, atlasFullSeq),
+          computePerTokenNLL(loadedModelRef.current!, baseline.tokenIds),
         ]);
 
         setPerplexityStats({
           atlas: { perplexity: atlasPpl.perplexity, avgNLL: atlasPpl.avgNLL },
           baseline: { perplexity: baselinePpl.perplexity, avgNLL: baselinePpl.avgNLL },
         });
+        setPerTokenNLL({ atlas: atlasPerToken, baseline: baselinePerToken });
 
         addLog(`  📊 Atlas PPL: ${atlasPpl.perplexity.toFixed(1)} (NLL: ${atlasPpl.avgNLL.toFixed(3)}, ${atlasPpl.tokenCount} tokens)`);
         addLog(`  📊 Baseline PPL: ${baselinePpl.perplexity.toFixed(1)} (NLL: ${baselinePpl.avgNLL.toFixed(3)}, ${baselinePpl.tokenCount} tokens)`);
@@ -506,6 +515,11 @@ export default function AtlasProjectionLab() {
               </div>
             )}
 
+            {/* Per-Token NLL Line Chart */}
+            {perTokenNLL.atlas.length > 0 && perTokenNLL.baseline.length > 0 && (
+              <NLLChart atlas={perTokenNLL.atlas} baseline={perTokenNLL.baseline} />
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-lg border border-border p-3 space-y-2">
                 <h3 className="text-xs font-semibold text-primary">Atlas Coherence (O(96))</h3>
@@ -592,6 +606,105 @@ function ReportPanel({ title, icon, content }: { title: string; icon: React.Reac
       <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded-lg p-3 overflow-auto max-h-64">
         {content}
       </pre>
+    </div>
+  );
+}
+
+// ── Per-Token NLL Line Chart ──────────────────────────────────
+
+function NLLChart({
+  atlas,
+  baseline,
+}: {
+  atlas: { index: number; nll: number; tokenStr: string }[];
+  baseline: { index: number; nll: number; tokenStr: string }[];
+}) {
+  const W = 700;
+  const H = 200;
+  const PAD = { top: 20, right: 20, bottom: 40, left: 50 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+
+  const maxLen = Math.max(atlas.length, baseline.length);
+  const allNLL = [...atlas.map(d => d.nll), ...baseline.map(d => d.nll)];
+  const maxNLL = Math.max(...allNLL, 1);
+  const minNLL = Math.min(...allNLL, 0);
+  const nllRange = maxNLL - minNLL || 1;
+
+  const toX = (i: number, total: number) => PAD.left + (i / Math.max(total - 1, 1)) * chartW;
+  const toY = (nll: number) => PAD.top + (1 - (nll - minNLL) / nllRange) * chartH;
+
+  const buildPath = (data: { nll: number }[]) =>
+    data.map((d, i) => `${i === 0 ? "M" : "L"}${toX(i, data.length).toFixed(1)},${toY(d.nll).toFixed(1)}`).join(" ");
+
+  const atlasPath = buildPath(atlas);
+  const baselinePath = buildPath(baseline);
+
+  // Y-axis ticks
+  const yTicks = 5;
+  const yLabels = Array.from({ length: yTicks }, (_, i) => {
+    const val = minNLL + (nllRange * i) / (yTicks - 1);
+    return { val, y: toY(val) };
+  });
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground uppercase">Per-Token NLL Over Sequence</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 bg-primary rounded-full" />
+            <span className="text-[10px] text-muted-foreground">Atlas</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 bg-accent rounded-full" />
+            <span className="text-[10px] text-muted-foreground">Baseline</span>
+          </div>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: 220 }}>
+        {/* Grid lines */}
+        {yLabels.map((t, i) => (
+          <g key={i}>
+            <line x1={PAD.left} x2={W - PAD.right} y1={t.y} y2={t.y} className="stroke-border" strokeWidth={0.5} strokeDasharray="4 2" />
+            <text x={PAD.left - 6} y={t.y + 3} textAnchor="end" className="fill-muted-foreground" fontSize={9}>{t.val.toFixed(1)}</text>
+          </g>
+        ))}
+
+        {/* Axis labels */}
+        <text x={PAD.left + chartW / 2} y={H - 4} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>Token Position</text>
+        <text x={12} y={PAD.top + chartH / 2} textAnchor="middle" className="fill-muted-foreground" fontSize={10} transform={`rotate(-90, 12, ${PAD.top + chartH / 2})`}>NLL</text>
+
+        {/* X-axis ticks */}
+        {Array.from({ length: Math.min(maxLen, 8) }, (_, i) => {
+          const idx = Math.round((i / Math.max(7, 1)) * (maxLen - 1));
+          return (
+            <text key={i} x={toX(idx, maxLen)} y={H - PAD.bottom + 16} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
+              {idx}
+            </text>
+          );
+        })}
+
+        {/* Baseline line */}
+        <path d={baselinePath} fill="none" className="stroke-accent" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
+
+        {/* Atlas line */}
+        <path d={atlasPath} fill="none" className="stroke-primary" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Hover dots — atlas */}
+        {atlas.map((d, i) => (
+          <circle key={`a${i}`} cx={toX(i, atlas.length)} cy={toY(d.nll)} r={2.5} className="fill-primary" opacity={0.6}>
+            <title>{`Atlas #${d.index}: NLL=${d.nll.toFixed(3)} "${d.tokenStr}"`}</title>
+          </circle>
+        ))}
+
+        {/* Hover dots — baseline */}
+        {baseline.map((d, i) => (
+          <circle key={`b${i}`} cx={toX(i, baseline.length)} cy={toY(d.nll)} r={2} className="fill-accent" opacity={0.5}>
+            <title>{`Baseline #${d.index}: NLL=${d.nll.toFixed(3)} "${d.tokenStr}"`}</title>
+          </circle>
+        ))}
+      </svg>
     </div>
   );
 }

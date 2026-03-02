@@ -153,6 +153,7 @@ export {
   baselineInference,
   getNextTokenLogits,
   computePerplexity,
+  computePerTokenNLL,
   BROWSER_MODELS,
 } from "./hf-model-bridge";
 export type {
