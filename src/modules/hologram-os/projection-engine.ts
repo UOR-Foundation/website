@@ -462,7 +462,9 @@ export class KernelProjector {
    * Only includes values that actually affect rendering.
    */
   private computeFrameFingerprint(frame: ProjectionFrame): string {
-    return `${frame.stage}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}|${frame.compositorProjection.kernelCount}|${frame.mirrorProjection.bondCount}`;
+    // CRITICAL: activePanel and chatOpen MUST be in the fingerprint
+    // or panel-switch syscalls are silently swallowed by the diff guard.
+    return `${frame.stage}|${this.config.activePanel}|${this.config.chatOpen}|${frame.systemCoherence.meanH.toFixed(4)}|${frame.systemCoherence.processCount}|${frame.typography.userScale}|${frame.palette.mode}|${frame.attention.aperture.toFixed(3)}|${frame.breathPeriodMs.toFixed(0)}|${frame.panels.length}|${frame.coherenceGradient.dh.toFixed(3)}|${frame.agentSources.length}|${frame.rewardProjection.trend}|${frame.stabilizerProjection.syndromeWeight}|${frame.stabilizerProjection.health.toFixed(3)}|${frame.compositorProjection.kernelCount}|${frame.mirrorProjection.bondCount}`;
   }
 
   /**
