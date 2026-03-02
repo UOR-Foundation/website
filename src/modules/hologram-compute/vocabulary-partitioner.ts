@@ -476,17 +476,24 @@ export class VocabularyPartitioner {
     const topCandidates = candidates.slice(0, topK);
 
     // Temperature-scaled softmax
+    const safeTemp = Math.max(temperature, 1e-8);
     let maxScore = topCandidates[0].score;
     let sumExp = 0;
     const probs = topCandidates.map(c => {
-      const exp = Math.exp((c.score - maxScore) / temperature);
+      const exp = Math.exp((c.score - maxScore) / safeTemp);
       sumExp += exp;
       return { tokenId: c.tokenId, exp };
     });
 
+    if (sumExp < 1e-30 || !isFinite(sumExp)) {
+      // Fallback to uniform over top-K
+      const uniform = 1 / topCandidates.length;
+      return topCandidates.map(c => ({ tokenId: c.tokenId, probability: uniform }));
+    }
+
     return probs.map(p => ({
       tokenId: p.tokenId,
-      probability: p.exp / sumExp,
+      probability: isFinite(p.exp) ? p.exp / sumExp : 0,
     }));
   }
 
