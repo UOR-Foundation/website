@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.whatsapp-send]
 verify_jwt = false
+
+[functions.quantum-inference-stream]
+verify_jwt = false
+
+[functions.hologram-code-ai]
+verify_jwt = false
