@@ -271,3 +271,14 @@ export type {
   GenerationToken,
   GenerationResult,
 } from "./coherence-token-decoder";
+
+// Coherence Navigator — Topology-aware H-score gradient descent on Atlas manifold
+export {
+  CoherenceNavigator,
+  DEFAULT_NAVIGATOR_CONFIG,
+} from "./coherence-navigator";
+export type {
+  NavigatorState,
+  NavigatorConfig,
+  NavigationDiagnostics,
+} from "./coherence-navigator";

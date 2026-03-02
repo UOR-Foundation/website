@@ -21,14 +21,7 @@
 import { ATLAS_VERTEX_COUNT } from "../atlas/atlas";
 import { VocabularyPartitioner } from "./vocabulary-partitioner";
 import { loadTokenizerVocabulary, simpleEncode, simpleDecode, type TokenizerInfo } from "./tokenizer-bridge";
-import {
-  CoherenceInferenceEngine,
-  computeHScore,
-  computeGradient,
-  classifyZone,
-  type CoherenceState,
-} from "./coherence-inference";
-import { EngramCache } from "./engram-cache";
+import { CoherenceNavigator, type NavigatorState, type NavigationDiagnostics } from "./coherence-navigator";
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -82,6 +75,12 @@ export interface GenerationToken {
   zone: "convergent" | "exploring" | "divergent";
   /** Active vertex count */
   activeVertices: number;
+  /** Fano channels activated */
+  fanoChannelsActive: number;
+  /** Stabilizer syndromes */
+  syndromeCount: number;
+  /** ∂H/∂t (coherence velocity) */
+  dHdt: number;
   /** Time for this token (ms) */
   timeMs: number;
 }
@@ -111,22 +110,28 @@ export interface GenerationResult {
  * CoherenceTokenDecoder — Full pipeline for text generation via
  * pure Atlas manifold navigation. No weights. No matrix multiply.
  * 
- * This is the realization of the coherence-based inference thesis:
- * knowledge is stored as geometric relationships in the Atlas manifold,
- * and inference is navigation along coherence gradients.
+ * Uses the topology-aware CoherenceNavigator with:
+ *   - Three-scale navigation (Fano macro / edge meso / vertex micro)
+ *   - τ-mirror stabilizer correction
+ *   - Prescience explore/exploit modulation via ∂H/∂t
  */
 export class CoherenceTokenDecoder {
   private config: DecoderConfig;
   private partitioner: VocabularyPartitioner;
+  private navigator: CoherenceNavigator;
   private tokenizerInfo: TokenizerInfo | null = null;
   private status: DecoderStatus = { stage: "idle", progress: 0, message: "Not initialized" };
-  private momentumBuffer: Float32Array;
   private onStatusChange?: (status: DecoderStatus) => void;
 
   constructor(config: Partial<DecoderConfig> = {}) {
     this.config = { ...DEFAULT_DECODER_CONFIG, ...config };
     this.partitioner = new VocabularyPartitioner();
-    this.momentumBuffer = new Float32Array(ATLAS_VERTEX_COUNT);
+    this.navigator = new CoherenceNavigator({
+      stepsPerRound: config.stepsPerToken ?? DEFAULT_DECODER_CONFIG.stepsPerToken,
+      learningRate: config.gradientLR ?? DEFAULT_DECODER_CONFIG.gradientLR,
+      momentum: config.momentum ?? DEFAULT_DECODER_CONFIG.momentum,
+      convergenceThreshold: config.convergenceThreshold ?? DEFAULT_DECODER_CONFIG.convergenceThreshold,
+    });
   }
 
   /**
@@ -146,7 +151,6 @@ export class CoherenceTokenDecoder {
    */
   async initialize(): Promise<void> {
     try {
-      // Step 1: Load tokenizer
       this.updateStatus({ stage: "loading-tokenizer", progress: 0, message: "Loading tokenizer..." });
 
       this.tokenizerInfo = await loadTokenizerVocabulary(
@@ -154,7 +158,6 @@ export class CoherenceTokenDecoder {
         (p) => this.updateStatus({ progress: p.progress * 0.4, message: p.message }),
       );
 
-      // Step 2: Partition vocabulary into Atlas clusters
       this.updateStatus({ stage: "partitioning", progress: 0.4, message: "Partitioning vocabulary..." });
 
       const stats = this.partitioner.partition(
@@ -182,7 +185,8 @@ export class CoherenceTokenDecoder {
   /**
    * Generate text from a prompt using pure coherence-based inference.
    *
-   * No matrix multiplication. No weight tensors. Pure manifold navigation.
+   * No matrix multiplication. No weight tensors.
+   * Three-scale manifold navigation with stabilizer correction.
    *
    * @param prompt - Input text
    * @param onToken - Callback for each generated token (for streaming)
@@ -198,85 +202,58 @@ export class CoherenceTokenDecoder {
     this.updateStatus({ stage: "generating", message: "Generating..." });
     const t0 = performance.now();
 
+    // Reset navigator state
+    this.navigator.reset();
+
     // Encode prompt
     const promptTokens = simpleEncode(prompt, this.tokenizerInfo.vocabulary);
     const context = [...promptTokens];
     const generatedTokens: GenerationToken[] = [];
     let fullText = "";
 
-    // Initialize manifold state from prompt
+    // Initialize manifold state from prompt using topology-aware seeding
     const activations = new Float32Array(ATLAS_VERTEX_COUNT);
-    this.momentumBuffer.fill(0);
-
-    // Seed: each prompt token activates its primary vertex
-    for (const tokenId of promptTokens) {
-      const vertex = this.partitioner.getTokenVertex(tokenId);
-      if (vertex !== undefined) {
-        activations[vertex] += 0.5;
-      } else {
-        // Fallback: hash to vertex
-        activations[tokenId % ATLAS_VERTEX_COUNT] += 0.3;
-      }
-    }
-
-    // Add positional diversity
-    for (let i = 0; i < promptTokens.length; i++) {
-      const v = (promptTokens[i] + i * 7) % ATLAS_VERTEX_COUNT;
-      activations[v] += 0.1;
-    }
+    const tokenVertices = promptTokens.map(tid => {
+      const v = this.partitioner.getTokenVertex(tid);
+      return v !== undefined ? v : tid % ATLAS_VERTEX_COUNT;
+    });
+    this.navigator.seedFromTokens(activations, tokenVertices);
 
     // ── Generation loop ──
     for (let t = 0; t < this.config.maxTokens; t++) {
       const tokenT0 = performance.now();
 
-      // Coherence navigation steps
-      for (let step = 0; step < this.config.stepsPerToken; step++) {
-        const gradient = computeGradient(activations);
+      // ── Three-scale coherence navigation ──
+      // The navigator performs:
+      //   1. Fano-plane routing (macro: long-range semantic direction)
+      //   2. Atlas edge diffusion (meso: local meaning refinement)
+      //   3. Vertex sharpening (micro: precise token selection)
+      //   4. τ-mirror stabilizer correction
+      //   5. Prescience modulation (∂H/∂t → explore/exploit)
+      const { state, diagnostics } = this.navigator.navigate(activations);
 
-        // Momentum-accelerated gradient descent
-        for (let d = 0; d < ATLAS_VERTEX_COUNT; d++) {
-          this.momentumBuffer[d] = this.config.momentum * this.momentumBuffer[d]
-            + this.config.gradientLR * gradient[d];
-          activations[d] += this.momentumBuffer[d];
-        }
+      // Copy navigated activations back
+      activations.set(state.activations);
 
-        // Engram-style context injection: recent tokens bias neighbors
-        if (context.length > 0) {
-          const lastToken = context[context.length - 1];
-          const lastV = this.partitioner.getTokenVertex(lastToken);
-          if (lastV !== undefined) {
-            // Boost neighbors of last token's vertex
-            for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
-              const dist = Math.abs(v - lastV);
-              const minDist = Math.min(dist, ATLAS_VERTEX_COUNT - dist);
-              if (minDist <= 3) {
-                activations[v] += 0.05 * Math.exp(-minDist);
-              }
-            }
-          }
-        }
+      // Count Fano channels with significant activation
+      let fanoChannelsActive = 0;
+      for (let li = 0; li < 7; li++) {
+        if (state.fanoActivations[li] > 0.1) fanoChannelsActive++;
       }
 
-      // Compute coherence metrics
-      const hScore = computeHScore(activations);
-      const zone = classifyZone(hScore);
-
-      // Count active vertices
-      let activeVertices = 0;
-      for (let v = 0; v < ATLAS_VERTEX_COUNT; v++) {
-        if (activations[v] > 0.01) activeVertices++;
-      }
-
-      // Sample token from activations
+      // Sample token from navigated activations
       const sampled = this.partitioner.sampleFromActivations(activations, this.config.temperature);
 
       const genToken: GenerationToken = {
         text: sampled.tokenString,
         tokenId: sampled.tokenId,
         probability: sampled.probability,
-        hScore,
-        zone,
-        activeVertices,
+        hScore: state.hScore,
+        zone: state.zone,
+        activeVertices: state.activeVertexCount,
+        fanoChannelsActive,
+        syndromeCount: state.syndromeCount,
+        dHdt: state.dHdt,
         timeMs: performance.now() - tokenT0,
       };
 
@@ -289,20 +266,10 @@ export class CoherenceTokenDecoder {
 
       onToken?.(genToken, fullText);
 
-      // Inject generated token back into activations (autoregressive feedback)
+      // Inject generated token back via topology-aware feedback
       const tokenV = this.partitioner.getTokenVertex(sampled.tokenId);
       if (tokenV !== undefined) {
-        activations[tokenV] += 0.3;
-        // Neighbor perturbation for diversity
-        const prevV = (tokenV + ATLAS_VERTEX_COUNT - 1) % ATLAS_VERTEX_COUNT;
-        const nextV = (tokenV + 1) % ATLAS_VERTEX_COUNT;
-        activations[prevV] += 0.1;
-        activations[nextV] += 0.1;
-      }
-
-      // Gentle decay to prevent saturation
-      for (let d = 0; d < ATLAS_VERTEX_COUNT; d++) {
-        activations[d] *= 0.95;
+        this.navigator.injectToken(activations, tokenV, 0.3);
       }
 
       // Early stop on EOS tokens
@@ -312,13 +279,15 @@ export class CoherenceTokenDecoder {
     }
 
     const totalMs = performance.now() - t0;
-    const meanH = generatedTokens.reduce((s, t) => s + t.hScore, 0) / generatedTokens.length;
+    const meanH = generatedTokens.length > 0
+      ? generatedTokens.reduce((s, t) => s + t.hScore, 0) / generatedTokens.length
+      : 0;
 
     const result: GenerationResult = {
       text: fullText,
       tokens: generatedTokens,
       meanHScore: meanH,
-      tokensPerSecond: (generatedTokens.length / totalMs) * 1000,
+      tokensPerSecond: generatedTokens.length > 0 ? (generatedTokens.length / totalMs) * 1000 : 0,
       totalTimeMs: totalMs,
       modelId: this.config.modelId,
       pureCoherence: true,
@@ -334,23 +303,22 @@ export class CoherenceTokenDecoder {
     return result;
   }
 
-  /**
-   * Get current decoder status.
-   */
+  /** Get current decoder status. */
   getStatus(): DecoderStatus {
     return { ...this.status };
   }
 
-  /**
-   * Get the vocabulary partitioner (for visualization).
-   */
+  /** Get the vocabulary partitioner (for visualization). */
   getPartitioner(): VocabularyPartitioner {
     return this.partitioner;
   }
 
-  /**
-   * Get tokenizer info.
-   */
+  /** Get the coherence navigator (for diagnostics). */
+  getNavigator(): CoherenceNavigator {
+    return this.navigator;
+  }
+
+  /** Get tokenizer info. */
   getTokenizerInfo(): TokenizerInfo | null {
     return this.tokenizerInfo;
   }
