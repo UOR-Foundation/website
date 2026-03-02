@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { loadResonanceProfile } from "@/modules/hologram-ui/engine/resonanceObserver";
 
 interface AmbientWhisper {
   /** The whisper text to display */
@@ -34,6 +35,31 @@ function getTimeGreeting(): string {
   if (h < 17) return "Good afternoon.";
   if (h < 20) return "Good evening.";
   return "Quiet hours.";
+}
+
+/**
+ * Generate a coherence-aware greeting that subtly reflects system state.
+ * Never technical — always human, warm, and understated.
+ */
+function getCoherenceWhisper(resonanceScore: number, confidence: number): string | null {
+  // Don't show coherence whispers until we have meaningful data
+  if (confidence < 0.3) return null;
+
+  if (resonanceScore > 0.75) {
+    const phrases = [
+      "Everything is in tune.",
+      "Ready when you are.",
+      "All clear.",
+    ];
+    return phrases[Math.floor(Date.now() / 60000) % phrases.length];
+  }
+
+  if (resonanceScore > 0.5) {
+    return "Here if you need anything.";
+  }
+
+  // Low resonance — the system is still learning
+  return "Still learning your rhythm.";
 }
 
 export function useAmbientWhisper(): AmbientWhisper {
@@ -90,6 +116,17 @@ export function useAmbientWhisper(): AmbientWhisper {
           category: "temporal",
           hasAction: true,
         });
+        return;
+      }
+
+      // Coherence-aware ambient — blend with time greeting
+      const rp = loadResonanceProfile();
+      const confidence = Math.min(1, rp.observationCount / 20);
+      const coherenceText = getCoherenceWhisper(rp.resonanceScore, confidence);
+
+      if (coherenceText && Math.random() < 0.4) {
+        // 40% chance to show coherence whisper, 60% time greeting
+        setWhisper({ text: coherenceText, category: "coherence", hasAction: false });
         return;
       }
 
