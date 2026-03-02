@@ -576,6 +576,52 @@ export async function computePerplexity(
   return { perplexity, avgNLL, tokenCount: count };
 }
 
+/**
+ * Compute per-token NLL for a token sequence.
+ * Returns an array of { index, nll, token } for each evaluated position.
+ */
+export async function computePerTokenNLL(
+  loadedModel: LoadedHFModel,
+  tokenIds: number[],
+): Promise<{ index: number; nll: number; tokenStr: string }[]> {
+  const results: { index: number; nll: number; tokenStr: string }[] = [];
+  if (tokenIds.length < 2) return results;
+
+  for (let i = 1; i < tokenIds.length; i++) {
+    const contextStart = Math.max(0, i - 32);
+    const context = tokenIds.slice(contextStart, i);
+    const targetToken = tokenIds[i];
+
+    try {
+      const logits = await getNextTokenLogits(loadedModel, context);
+      if (logits.length === 0) continue;
+
+      let maxLogit = -Infinity;
+      for (let v = 0; v < logits.length; v++) {
+        if (logits[v] > maxLogit) maxLogit = logits[v];
+      }
+      let sumExp = 0;
+      for (let v = 0; v < logits.length; v++) {
+        sumExp += Math.exp(logits[v] - maxLogit);
+      }
+      const logSumExp = maxLogit + Math.log(sumExp);
+
+      const logProb = (targetToken < logits.length)
+        ? logits[targetToken] - logSumExp
+        : -20;
+
+      const nll = -logProb;
+      const tokenStr = loadedModel.tokenizer.decode([targetToken], { skip_special_tokens: true }) ?? `[${targetToken}]`;
+
+      results.push({ index: i, nll, tokenStr });
+    } catch {
+      // Skip failed forward passes
+    }
+  }
+
+  return results;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Baseline Inference
 // ═══════════════════════════════════════════════════════════════
