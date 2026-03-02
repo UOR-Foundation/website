@@ -22,6 +22,8 @@ export default function AILabProjection({ open, preload, onClose }: Props) {
       preload={preload}
       onClose={onClose}
       id="ai-lab"
+      backdropColor="hsla(260, 15%, 4%, 0.5)"
+      beamGradient="linear-gradient(to bottom, hsla(260, 50%, 55%, 0.0), hsla(260, 50%, 55%, 0.25), hsla(260, 50%, 55%, 0.0))"
     >
       <div className="flex-1 overflow-y-auto" style={{
         background: "hsl(25, 8%, 7%)",
@@ -29,7 +31,7 @@ export default function AILabProjection({ open, preload, onClose }: Props) {
       }}>
         <Suspense fallback={
           <div className="flex items-center justify-center h-full">
-            <span className="text-sm font-mono" style={{ color: "hsl(30, 6%, 45%)" }}>Loading AI Lab…</span>
+            <span className="text-sm font-mono" style={{ color: "hsl(260, 40%, 55%)" }}>Loading AI Lab…</span>
           </div>
         }>
           <AtlasProjectionLab />
