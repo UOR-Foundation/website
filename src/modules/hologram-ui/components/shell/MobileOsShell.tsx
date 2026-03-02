@@ -658,9 +658,9 @@ export default function MobileOsShell() {
 
             {/* Actions */}
             <div className="px-6 pb-4 space-y-2">
-              {pwa.canInstall && !pwa.isStandalone && (
+              {(pwa.canInstall || pwa.isIosSafari) && !pwa.isStandalone && (
                 <button
-                  onClick={() => { setDrawerOpen(false); pwa.install(); }}
+                  onClick={() => { setDrawerOpen(false); pwa.canInstall ? pwa.install() : window.location.assign("/install"); }}
                   className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl active:scale-[0.97] transition-all duration-200"
                   style={{
                     background: `${PP.accent}12`,
