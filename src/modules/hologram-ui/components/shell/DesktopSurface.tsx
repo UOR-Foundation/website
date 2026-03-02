@@ -19,6 +19,7 @@ import DayProgressRing from "../DayProgressRing";
 import AttentionToggle from "../AttentionToggle";
 import { useDraggablePosition } from "../../hooks/useDraggablePosition";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
+import { getKernelProjector } from "@/modules/hologram-os/projection-engine";
 import WeatherWidget from "../widgets/WeatherWidget";
 import ProductivityTimerWidget from "../widgets/ProductivityTimerWidget";
 import BreathingWidget from "../widgets/BreathingWidget";
@@ -181,6 +182,16 @@ export default memo(function DesktopSurface({
 }: DesktopSurfaceProps) {
   const navigate = useNavigate();
   const P = useMemo(() => palette(mode), [mode]);
+
+  // ── Display-adaptive rendering ──────────────────────────────────────
+  const displayCaps = useMemo(() => getKernelProjector().getDisplayCapabilities(), []);
+  const kenBurnsDuration = useMemo(() => {
+    // High-refresh displays: smoother, longer animations. Low GPU: shorter.
+    if (displayCaps.gpuTier === "low") return "28s";
+    if (displayCaps.gpuTier === "high" && displayCaps.refreshHz >= 120) return "52s";
+    return "42s";
+  }, [displayCaps]);
+  }, [displayCaps]);
   const dayRingDrag = useDraggablePosition({
     storageKey: `hologram-pos:day-ring:${mode}`,
     defaultPos: { x: 0, y: 0 },
@@ -256,10 +267,13 @@ export default memo(function DesktopSurface({
               loading="eager"
               decoding="async"
               style={{
-                animation: "ken-burns-breathe 42s cubic-bezier(0.25, 0.1, 0.25, 1) forwards",
+                animation: `ken-burns-breathe ${kenBurnsDuration} cubic-bezier(0.25, 0.1, 0.25, 1) forwards`,
                 animationPlayState: isActive ? "running" : "paused",
-                imageRendering: "auto",
+                imageRendering: "auto" as const,
                 willChange: isActive ? "transform" : "auto",
+                // High-DPR: ensure sub-pixel rendering for maximum sharpness
+                backfaceVisibility: "hidden",
+                transform: "translateZ(0)",
               }}
             />
             <div

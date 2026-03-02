@@ -26,6 +26,7 @@ import {
   type KernelConfig,
   type PanelId,
   type DesktopMode,
+  type DisplayCapabilities,
 } from "../projection-engine";
 import { getBrowserAdapter } from "../surface-adapter";
 import type { QKernelBoot, BootStage } from "@/hologram/kernel/q-boot";
@@ -108,6 +109,8 @@ export interface UseKernelResult {
   bootTimeMs: number;
   /** Prescience preload hints — panels predicted to be opened next */
   prescienceHints: PreloadHint[];
+  /** Display surface capabilities — discovered at boot */
+  displayCapabilities: DisplayCapabilities;
 }
 
 export function useKernel(): UseKernelResult {
@@ -161,8 +164,10 @@ export function useKernel(): UseKernelResult {
       setFrame(projector.projectFrame());
       setBootEvents([...projector.getBootEvents()]);
       bootedRef.current = true;
+      // Ensure display CSS vars are applied on HMR
+      adapter.applyDisplayCapabilities(projector.getDisplayCapabilities());
     }
-  }, [projector]);
+  }, [projector, adapter]);
 
   const bootKernel = useCallback(async () => {
     if (bootedRef.current || isBooting) {
@@ -173,11 +178,13 @@ export function useKernel(): UseKernelResult {
       const result = await projector.boot();
       setKernel(result);
       bootedRef.current = true;
+      // Inject display capability CSS vars into :root (once)
+      adapter.applyDisplayCapabilities(projector.getDisplayCapabilities());
       return result;
     } finally {
       setIsBooting(false);
     }
-  }, [projector, isBooting]);
+  }, [projector, adapter, isBooting]);
 
   // ── Kernel syscalls ───────────────────────────────────────────────────
 
@@ -287,5 +294,6 @@ export function useKernel(): UseKernelResult {
     config: projector.getConfig(),
     bootTimeMs: kernel?.bootTimeMs ?? 0,
     prescienceHints,
+    displayCapabilities: projector.getDisplayCapabilities(),
   };
 }
