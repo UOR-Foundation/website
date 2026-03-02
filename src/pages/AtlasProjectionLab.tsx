@@ -7,9 +7,11 @@
  * and compare with baseline transformer inference.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconBrain, IconAtom, IconChartBar, IconPlayerPlay, IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu } from "@tabler/icons-react";
+
+const MultiModelBenchmark = lazy(() => import("./MultiModelBenchmark"));
 import {
   AtlasProjectionPipeline,
   MODEL_MANIFESTS,
@@ -272,6 +274,11 @@ export default function AtlasProjectionLab() {
             </p>
           </div>
         </div>
+
+        {/* Multi-Model Benchmark */}
+        <Suspense fallback={<div className="text-muted-foreground text-sm font-mono p-4">Loading multi-model benchmark…</div>}>
+          <MultiModelBenchmark />
+        </Suspense>
 
         {/* Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
