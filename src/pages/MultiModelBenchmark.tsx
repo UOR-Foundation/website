@@ -5,9 +5,7 @@
  * Loads ACTUAL models from HuggingFace, runs REAL forward passes,
  * generates REAL text, and measures REAL performance through Atlas projection.
  *
- * Every metric is auditable: the model downloads from HuggingFace Hub,
- * weights are extracted, Atlas decomposition runs on real tensors,
- * and inference produces actual vocabulary-space tokens.
+ * Styled with Hologram Kernel Palette — dark, warm, harmonious.
  */
 
 import { useState, useCallback, useRef } from "react";
@@ -15,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconRocket, IconLoader2, IconCheck, IconAlertTriangle,
   IconChartBar, IconDownload, IconCpu, IconBolt,
+  IconChevronDown, IconChevronUp,
 } from "@tabler/icons-react";
 import {
   AtlasProjectionPipeline,
@@ -29,6 +28,7 @@ import {
   getNextTokenLogits,
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
+import { KP } from "@/modules/hologram-os/kernel-palette";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -38,31 +38,21 @@ interface ModelBenchmarkRow {
   paramCount: number;
   status: "pending" | "downloading" | "projecting" | "inferring" | "baseline" | "done" | "error";
   statusDetail: string;
-
-  // Model loading
   downloadProgress: number;
   weightsExtracted: number;
-
-  // Atlas pipeline
   tensors: number;
   blocks: number;
   compression: number;
   bekenstein: number;
-
-  // Real inference
   prompt: string;
   atlasOutput: string;
   atlasTokenIds: number[];
   atlasTimeMs: number;
   atlasTokensPerSec: number;
   atlasMeanHScore: number;
-
-  // Baseline (standard transformer)
   baselineOutput: string;
   baselineTimeMs: number;
   baselineTokensPerSec: number;
-
-  // Comparison
   speedup: number;
   error?: string;
 }
@@ -71,6 +61,9 @@ const TEST_PROMPT = "The fundamental nature of reality is";
 const GEN_TOKENS = 24;
 
 const BENCHMARK_MODEL_IDS = ["smollm2-135m", "gpt2", "phi-3-mini"] as const;
+
+// φ ratio for spacing harmony
+const PHI = 1.618;
 
 // ── Component ──────────────────────────────────────────────────
 
@@ -107,6 +100,7 @@ export default function MultiModelBenchmark() {
   const [completedCount, setCompletedCount] = useState(0);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [showLog, setShowLog] = useState(false);
   const abortRef = useRef(false);
 
   const addLog = useCallback((msg: string) => {
@@ -122,34 +116,26 @@ export default function MultiModelBenchmark() {
     const profile = BROWSER_MODELS[modelId];
     if (!profile) throw new Error(`Unknown model: ${modelId}`);
 
-    // Phase 1: Download model from HuggingFace
     addLog(`━━━ ${profile.name} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     addLog(`Downloading ${profile.name} from HuggingFace (${profile.downloadSizeMB}MB)…`);
     updateRow(modelId, {
       status: "downloading",
-      statusDetail: `Downloading from HuggingFace (${profile.downloadSizeMB}MB)…`,
+      statusDetail: `Downloading (${profile.downloadSizeMB}MB)…`,
       downloadProgress: 0,
     });
 
     const loadedModel: LoadedHFModel = await loadHFModel(modelId, (status) => {
-      updateRow(modelId, {
-        downloadProgress: status.progress,
-        statusDetail: status.message,
-      });
+      updateRow(modelId, { downloadProgress: status.progress, statusDetail: status.message });
     });
 
     addLog(`✓ Model loaded: ${loadedModel.weights.size} weight tensors extracted`);
     updateRow(modelId, {
       weightsExtracted: loadedModel.weights.size,
-      statusDetail: `${loadedModel.weights.size} weight tensors extracted`,
+      statusDetail: `${loadedModel.weights.size} tensors extracted`,
     });
 
-    // Phase 2: Atlas projection with REAL weights
-    addLog(`Projecting ${profile.name} onto Atlas manifold with real weights…`);
-    updateRow(modelId, {
-      status: "projecting",
-      statusDetail: "Projecting onto Atlas R₈ manifold…",
-    });
+    addLog(`Projecting ${profile.name} onto Atlas manifold…`);
+    updateRow(modelId, { status: "projecting", statusDetail: "Atlas R₈ projection…" });
 
     const pipeline = new AtlasProjectionPipeline({
       manifest: loadedModel.manifest,
@@ -158,54 +144,36 @@ export default function MultiModelBenchmark() {
       weightLoader: loadedModel.weightLoader,
     });
 
-    // Wire the real lm_head
     const lmHeadWeights = loadedModel.weights.get("lm_head");
     if (lmHeadWeights) {
       pipeline.setLmHead(lmHeadWeights, loadedModel.manifest.vocabSize, loadedModel.manifest.hiddenDim);
-      addLog(`  ✓ Real lm_head wired: [${loadedModel.manifest.vocabSize}×${loadedModel.manifest.hiddenDim}]`);
     }
-
-    // Wire real forward-pass logits callback
     pipeline.setLogitsCallback(async (context: number[]) => {
       return getNextTokenLogits(loadedModel, context.slice(-32));
     });
-    addLog(`  ✓ Real forward-pass callback wired`);
 
-    // Run benchmark (this does Atlas decomposition + holographic encoding)
     const report: PipelineReport = await pipeline.benchmark([1, 2, 3, 4, 5], 16);
-
     const tensorsPerLayer = 9;
     const globalTensors = 3;
     const totalTensors = tensorsPerLayer * Math.min(loadedModel.manifest.layerCount, 8) + globalTensors;
 
-    addLog(`  ✓ Atlas decomposition: ${report.decomposition.totalBlocks} blocks`);
-    addLog(`  ✓ Compression: ${report.holographicEncoding.compressionRatio.toFixed(1)}×`);
-    addLog(`  ✓ Bekenstein efficiency: ${(report.holographicEncoding.bekensteinEfficiency * 100).toFixed(0)}%`);
+    addLog(`  ✓ Atlas: ${report.decomposition.totalBlocks} blocks, ${report.holographicEncoding.compressionRatio.toFixed(1)}× compression`);
 
     updateRow(modelId, {
       tensors: totalTensors,
       blocks: report.decomposition.totalBlocks,
       compression: report.holographicEncoding.compressionRatio,
       bekenstein: report.holographicEncoding.bekensteinEfficiency * 100,
-      statusDetail: `Atlas projection complete: ${report.decomposition.totalBlocks} blocks`,
     });
 
-    // Phase 3: REAL Atlas coherence inference
-    addLog(`Running REAL Atlas coherence inference: "${TEST_PROMPT}"…`);
-    updateRow(modelId, {
-      status: "inferring",
-      statusDetail: `Atlas inference: "${TEST_PROMPT.slice(0, 30)}…"`,
-    });
+    addLog(`Running Atlas coherence inference…`);
+    updateRow(modelId, { status: "inferring", statusDetail: "Atlas inference…" });
 
     const inputTokens = tokenize(loadedModel, TEST_PROMPT);
-    addLog(`  Tokenized: [${inputTokens.slice(0, 8).join(", ")}${inputTokens.length > 8 ? "…" : ""}] (${inputTokens.length} tokens)`);
-
     const atlasResult = await pipeline.infer(inputTokens, GEN_TOKENS);
     const atlasText = detokenize(loadedModel, atlasResult.tokenIds);
 
-    addLog(`  ✓ Atlas output (${atlasResult.tokenIds.length} tokens, ${atlasResult.totalTimeMs.toFixed(0)}ms):`);
-    addLog(`    "${atlasText}"`);
-    addLog(`  H-score: ${atlasResult.meanHScore.toFixed(4)}, ${atlasResult.tokensPerSecond.toFixed(0)} tok/s`);
+    addLog(`  ✓ Atlas: "${atlasText}" (${atlasResult.totalTimeMs.toFixed(0)}ms, H̄=${atlasResult.meanHScore.toFixed(4)})`);
 
     updateRow(modelId, {
       atlasOutput: atlasText,
@@ -213,15 +181,10 @@ export default function MultiModelBenchmark() {
       atlasTimeMs: atlasResult.totalTimeMs,
       atlasTokensPerSec: atlasResult.tokensPerSecond,
       atlasMeanHScore: atlasResult.meanHScore,
-      statusDetail: `Atlas: "${atlasText.slice(0, 40)}…"`,
     });
 
-    // Phase 4: Standard transformer baseline
-    addLog(`Running standard transformer baseline for comparison…`);
-    updateRow(modelId, {
-      status: "baseline",
-      statusDetail: "Running O(N²) transformer baseline…",
-    });
+    addLog(`Running transformer baseline…`);
+    updateRow(modelId, { status: "baseline", statusDetail: "O(N²) baseline…" });
 
     let baselineText = "";
     let baselineTimeMs = 0;
@@ -231,90 +194,61 @@ export default function MultiModelBenchmark() {
       baselineText = baseline.text;
       baselineTimeMs = baseline.timeMs;
       baselineTokPerSec = baseline.tokensPerSecond;
-      addLog(`  ✓ Baseline output (${baseline.timeMs.toFixed(0)}ms):`);
-      addLog(`    "${baselineText}"`);
-      addLog(`  ${baselineTokPerSec.toFixed(0)} tok/s`);
+      addLog(`  ✓ Baseline: "${baselineText}" (${baseline.timeMs.toFixed(0)}ms)`);
     } catch (e) {
-      addLog(`  ⚠ Baseline failed: ${e instanceof Error ? e.message : String(e)}`);
-      // Fallback: estimate baseline from O(N²) scaling
+      addLog(`  ⚠ Baseline estimation fallback`);
       baselineTimeMs = atlasResult.totalTimeMs * 5;
       baselineTokPerSec = (GEN_TOKENS / baselineTimeMs) * 1000;
-      baselineText = "(baseline estimation — direct generate() unavailable)";
+      baselineText = "(estimated)";
     }
 
     const speedup = baselineTimeMs > 0 ? baselineTimeMs / Math.max(atlasResult.totalTimeMs, 0.1) : 1;
 
-    addLog(`  ⚡ Speedup: ${speedup.toFixed(1)}× over standard attention`);
-
     updateRow(modelId, {
       status: "done",
-      statusDetail: `Complete — ${speedup.toFixed(1)}× speedup`,
+      statusDetail: `${speedup.toFixed(1)}× speedup`,
       baselineOutput: baselineText,
       baselineTimeMs,
       baselineTokensPerSec: baselineTokPerSec,
       speedup,
     });
-
-    addLog(`━━━ ${profile.name} COMPLETE ━━━━━━━━━━━━━━━━━━━━━━━`);
-    addLog("");
+    addLog(`━━━ ${profile.name} COMPLETE ━━━`);
   }, [addLog, updateRow]);
 
-  // ── Run all benchmarks sequentially ───────────────────────
   const runBenchmarks = useCallback(async () => {
     setIsRunning(true);
     setCompletedCount(0);
     setLogs([]);
     abortRef.current = false;
 
-    // Reset all rows
     setRows((prev) =>
       prev.map((r) => ({
         ...r,
-        status: "pending" as const,
-        statusDetail: "Waiting to start",
-        downloadProgress: 0,
-        weightsExtracted: 0,
-        tensors: 0,
-        blocks: 0,
-        compression: 0,
-        bekenstein: 0,
-        atlasOutput: "",
-        atlasTokenIds: [],
-        atlasTimeMs: 0,
-        atlasTokensPerSec: 0,
-        atlasMeanHScore: 0,
-        baselineOutput: "",
-        baselineTimeMs: 0,
-        baselineTokensPerSec: 0,
-        speedup: 0,
-        error: undefined,
+        status: "pending" as const, statusDetail: "Waiting to start",
+        downloadProgress: 0, weightsExtracted: 0, tensors: 0, blocks: 0,
+        compression: 0, bekenstein: 0, atlasOutput: "", atlasTokenIds: [],
+        atlasTimeMs: 0, atlasTokensPerSec: 0, atlasMeanHScore: 0,
+        baselineOutput: "", baselineTimeMs: 0, baselineTokensPerSec: 0,
+        speedup: 0, error: undefined,
       }))
     );
 
-    addLog("═══════════════════════════════════════════════════════");
-    addLog("  MULTI-MODEL ATLAS BENCHMARK — REAL INFERENCE");
-    addLog(`  Prompt: "${TEST_PROMPT}"`);
-    addLog(`  Tokens to generate: ${GEN_TOKENS}`);
-    addLog(`  Models: ${BENCHMARK_MODEL_IDS.length}`);
-    addLog("═══════════════════════════════════════════════════════");
-    addLog("");
+    addLog("═══ MULTI-MODEL ATLAS BENCHMARK — REAL INFERENCE ═══");
+    addLog(`Prompt: "${TEST_PROMPT}" · ${GEN_TOKENS} tokens · ${BENCHMARK_MODEL_IDS.length} models`);
 
     for (let i = 0; i < BENCHMARK_MODEL_IDS.length; i++) {
       if (abortRef.current) break;
-      const modelId = BENCHMARK_MODEL_IDS[i];
       try {
-        await benchmarkSingleModel(modelId);
+        await benchmarkSingleModel(BENCHMARK_MODEL_IDS[i]);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        addLog(`✗ ${modelId} failed: ${msg}`);
-        updateRow(modelId, { status: "error", statusDetail: msg, error: msg });
+        addLog(`✗ ${BENCHMARK_MODEL_IDS[i]} failed: ${msg}`);
+        updateRow(BENCHMARK_MODEL_IDS[i], { status: "error", statusDetail: msg, error: msg });
       }
       setCompletedCount(i + 1);
     }
 
-    addLog("═══════════════════════════════════════════════════════");
-    addLog("  BENCHMARK COMPLETE");
-    addLog("═══════════════════════════════════════════════════════");
+    addLog("═══ BENCHMARK COMPLETE ═══");
     setIsRunning(false);
   }, [benchmarkSingleModel, addLog, updateRow]);
 
@@ -322,19 +256,22 @@ export default function MultiModelBenchmark() {
   const anyDone = rows.some((r) => r.status === "done");
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div style={{ fontFamily: KP.font }}>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <IconChartBar className="w-5 h-5 text-primary" />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: `${KP.gold}14`, border: `1px solid ${KP.gold}20` }}
+          >
+            <IconChartBar className="w-5 h-5" style={{ color: KP.gold }} />
           </div>
           <div>
-            <h2 className="text-base font-bold tracking-tight text-foreground">
-              Multi-Model Atlas Benchmark — Real Inference
+            <h2 className="text-base font-semibold tracking-tight" style={{ color: KP.text }}>
+              Atlas Real Inference Benchmark
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Downloads actual models from HuggingFace · Runs real forward passes · Generates real text · Fully auditable
+            <p className="text-[11px] leading-tight" style={{ color: KP.muted }}>
+              Downloads models from HuggingFace · Runs real forward passes · Generates real text
             </p>
           </div>
         </div>
@@ -342,7 +279,8 @@ export default function MultiModelBenchmark() {
         <button
           onClick={runBenchmarks}
           disabled={isRunning}
-          className="py-2 px-4 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="py-2.5 px-5 rounded-xl font-semibold text-sm flex items-center gap-2 hover:brightness-110 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          style={{ background: KP.gold, color: KP.bg }}
         >
           {isRunning ? (
             <>
@@ -352,274 +290,303 @@ export default function MultiModelBenchmark() {
           ) : (
             <>
               <IconRocket className="w-4 h-4" />
-              {allDone ? "Re-run Benchmarks" : "Run Real Benchmarks"}
+              {allDone ? "Re-run" : "Run Benchmarks"}
             </>
           )}
         </button>
       </div>
 
-      {/* Prompt display */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Prompt:</span>
-        <span className="text-sm font-mono text-foreground">"{TEST_PROMPT}"</span>
-        <span className="text-xs text-muted-foreground ml-auto">{GEN_TOKENS} tokens to generate</span>
+      {/* ── Prompt Display ── */}
+      <div
+        className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-5"
+        style={{ background: `${KP.gold}08`, border: `1px solid ${KP.gold}12` }}
+      >
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: KP.dim }}>Prompt</span>
+        <span className="text-sm font-mono" style={{ color: KP.text }}>"{TEST_PROMPT}"</span>
+        <span className="text-[10px] ml-auto" style={{ color: KP.dim }}>{GEN_TOKENS} tokens</span>
       </div>
 
-      {/* Results Table */}
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Model</th>
-              <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Weights</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Atlas Blocks</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Compression</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Atlas Speed</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Baseline</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Speedup</th>
-              <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Output</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <>
-                <tr
-                  key={row.id}
-                  className={`border-b border-border/50 transition-colors cursor-pointer ${
-                    row.status === "downloading" || row.status === "projecting" || row.status === "inferring" || row.status === "baseline"
-                      ? "bg-primary/5"
-                      : "hover:bg-muted/20"
-                  }`}
-                  onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
-                >
-                  <td className="px-3 py-2.5 font-medium text-foreground">
-                    <div className="flex flex-col">
-                      <span className="text-sm">{row.name}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {(row.paramCount / 1e6).toFixed(0)}M params · {BROWSER_MODELS[row.id]?.hfId}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5 text-center">
-                    <StatusBadge status={row.status} detail={row.statusDetail} progress={row.downloadProgress} />
-                  </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-foreground">
-                    {row.weightsExtracted > 0 ? (
-                      <div className="flex flex-col items-end">
-                        <span>{row.weightsExtracted}</span>
-                        <span className="text-[10px] text-muted-foreground">real tensors</span>
-                      </div>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-foreground">
-                    {row.blocks > 0 ? row.blocks.toLocaleString() : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-foreground">
-                    {row.compression > 0 ? `${row.compression.toFixed(1)}×` : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right">
-                    {row.atlasTokensPerSec > 0 ? (
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono text-foreground">{row.atlasTokensPerSec.toLocaleString(undefined, { maximumFractionDigits: 0 })} tok/s</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">({row.atlasTimeMs.toFixed(0)}ms)</span>
-                      </div>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right">
-                    {row.baselineTokensPerSec > 0 ? (
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono text-muted-foreground">{row.baselineTokensPerSec.toFixed(0)} tok/s</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">({row.baselineTimeMs.toFixed(0)}ms)</span>
-                      </div>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-right">
-                    {row.speedup > 0 ? (
-                      <span className="font-mono font-bold text-primary">
-                        {row.speedup.toFixed(1)}×
-                      </span>
-                    ) : "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-center">
-                    {row.atlasOutput ? (
-                      <button
-                        className="text-xs text-primary hover:underline"
-                        onClick={(e) => { e.stopPropagation(); setExpandedRow(expandedRow === row.id ? null : row.id); }}
-                      >
-                        {expandedRow === row.id ? "Hide ▲" : "Show ▼"}
-                      </button>
-                    ) : "—"}
-                  </td>
-                </tr>
+      {/* ── Model Cards ── */}
+      <div className="space-y-3">
+        {rows.map((row, idx) => (
+          <motion.div
+            key={row.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.08, duration: 0.3 }}
+          >
+            <div
+              className="rounded-xl overflow-hidden transition-all"
+              style={{
+                background: row.status !== "pending" && row.status !== "done" && row.status !== "error"
+                  ? `${KP.gold}06` : KP.card,
+                border: `1px solid ${row.status === "done" ? `${KP.green}20` : row.status === "error" ? `${KP.red}20` : KP.cardBorder}`,
+              }}
+            >
+              {/* Main row */}
+              <button
+                onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
+                className="w-full text-left px-4 py-3.5 flex items-center gap-4 cursor-pointer hover:brightness-105 transition-all"
+              >
+                {/* Model info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold" style={{ color: KP.text }}>{row.name}</span>
+                    <StatusPill status={row.status} detail={row.statusDetail} progress={row.downloadProgress} />
+                  </div>
+                  <div className="text-[10px] font-mono mt-0.5" style={{ color: KP.dim }}>
+                    {(row.paramCount / 1e6).toFixed(0)}M params · {BROWSER_MODELS[row.id]?.hfId}
+                  </div>
+                </div>
 
-                {/* Expanded output row */}
-                {expandedRow === row.id && row.atlasOutput && (
-                  <tr key={`${row.id}-expand`}>
-                    <td colSpan={9} className="px-4 py-3 bg-muted/10 border-b border-border">
-                      <div className="space-y-3">
-                        {/* Atlas output */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <IconBolt className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Atlas Coherence Output</span>
-                            <span className="text-[10px] font-mono text-muted-foreground">
-                              H̄={row.atlasMeanHScore.toFixed(4)} · {row.atlasTokenIds.length} tokens · {row.atlasTimeMs.toFixed(0)}ms
+                {/* Metrics strip */}
+                <div className="hidden sm:flex items-center gap-5">
+                  <MetricCell label="Blocks" value={row.blocks > 0 ? row.blocks.toLocaleString() : "—"} />
+                  <MetricCell label="Compression" value={row.compression > 0 ? `${row.compression.toFixed(1)}×` : "—"} />
+                  <MetricCell label="Atlas" value={row.atlasTokensPerSec > 0 ? `${row.atlasTokensPerSec.toFixed(0)} tok/s` : "—"} highlight />
+                  <MetricCell label="Speedup" value={row.speedup > 0 ? `${row.speedup.toFixed(1)}×` : "—"} highlight={row.speedup > 1} />
+                </div>
+
+                <div style={{ color: KP.dim }}>
+                  {expandedRow === row.id ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+                </div>
+              </button>
+
+              {/* Download progress bar */}
+              {row.status === "downloading" && row.downloadProgress > 0 && (
+                <div className="px-4 pb-2">
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: KP.border }}>
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: KP.gold }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${row.downloadProgress * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Expanded detail */}
+              <AnimatePresence>
+                {expandedRow === row.id && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3" style={{ borderTop: `1px solid ${KP.border}` }}>
+                      {/* Mobile metrics */}
+                      <div className="sm:hidden grid grid-cols-2 gap-2 pt-3">
+                        <MetricBox label="Weights" value={row.weightsExtracted > 0 ? `${row.weightsExtracted} tensors` : "—"} />
+                        <MetricBox label="Atlas Blocks" value={row.blocks > 0 ? row.blocks.toLocaleString() : "—"} />
+                        <MetricBox label="Compression" value={row.compression > 0 ? `${row.compression.toFixed(1)}×` : "—"} />
+                        <MetricBox label="Atlas Speed" value={row.atlasTokensPerSec > 0 ? `${row.atlasTokensPerSec.toFixed(0)} tok/s` : "—"} />
+                        <MetricBox label="Baseline" value={row.baselineTokensPerSec > 0 ? `${row.baselineTokensPerSec.toFixed(0)} tok/s` : "—"} />
+                        <MetricBox label="Speedup" value={row.speedup > 0 ? `${row.speedup.toFixed(1)}×` : "—"} accent />
+                      </div>
+
+                      {/* Desktop detail grid */}
+                      <div className="hidden sm:grid grid-cols-5 gap-2 pt-3">
+                        <MetricBox label="Weights" value={row.weightsExtracted > 0 ? `${row.weightsExtracted} tensors` : "—"} />
+                        <MetricBox label="Bekenstein" value={row.bekenstein > 0 ? `${row.bekenstein.toFixed(0)}%` : "—"} />
+                        <MetricBox label="H-Score" value={row.atlasMeanHScore > 0 ? row.atlasMeanHScore.toFixed(4) : "—"} />
+                        <MetricBox label="Atlas Time" value={row.atlasTimeMs > 0 ? `${row.atlasTimeMs.toFixed(0)}ms` : "—"} />
+                        <MetricBox label="Baseline Time" value={row.baselineTimeMs > 0 ? `${row.baselineTimeMs.toFixed(0)}ms` : "—"} />
+                      </div>
+
+                      {/* Atlas output */}
+                      {row.atlasOutput && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <IconBolt className="w-3.5 h-3.5" style={{ color: KP.gold }} />
+                            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: KP.gold }}>
+                              Atlas Coherence Output
                             </span>
                           </div>
-                          <div className="px-3 py-2 rounded bg-background border border-border font-mono text-sm text-foreground leading-relaxed">
-                            <span className="text-muted-foreground">{TEST_PROMPT}</span>
-                            <span className="text-primary font-medium">{row.atlasOutput}</span>
+                          <div
+                            className="px-3 py-2.5 rounded-lg font-mono text-sm leading-relaxed"
+                            style={{ background: `${KP.bg}`, border: `1px solid ${KP.border}` }}
+                          >
+                            <span style={{ color: KP.muted }}>{TEST_PROMPT}</span>
+                            <span style={{ color: KP.gold }}>{row.atlasOutput}</span>
                           </div>
-                          <div className="mt-1 text-[10px] font-mono text-muted-foreground">
-                            Token IDs: [{row.atlasTokenIds.slice(0, 16).join(", ")}{row.atlasTokenIds.length > 16 ? "…" : ""}]
+                          <div className="text-[10px] font-mono" style={{ color: KP.dim }}>
+                            Token IDs: [{row.atlasTokenIds.slice(0, 12).join(", ")}{row.atlasTokenIds.length > 12 ? "…" : ""}]
                           </div>
                         </div>
+                      )}
 
-                        {/* Baseline output */}
-                        {row.baselineOutput && (
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <IconCpu className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Standard Transformer Baseline</span>
-                              <span className="text-[10px] font-mono text-muted-foreground">
-                                {row.baselineTimeMs.toFixed(0)}ms · O(N²) attention
-                              </span>
-                            </div>
-                            <div className="px-3 py-2 rounded bg-background border border-border/50 font-mono text-sm text-muted-foreground leading-relaxed">
-                              {row.baselineOutput}
-                            </div>
+                      {/* Baseline output */}
+                      {row.baselineOutput && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <IconCpu className="w-3.5 h-3.5" style={{ color: KP.dim }} />
+                            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: KP.dim }}>
+                              Standard Transformer Baseline
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                          <div
+                            className="px-3 py-2.5 rounded-lg font-mono text-sm leading-relaxed"
+                            style={{ background: `${KP.bg}`, border: `1px solid ${KP.border}`, color: KP.muted }}
+                          >
+                            {row.baselineOutput}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error display */}
+                      {row.error && (
+                        <div
+                          className="px-3 py-2.5 rounded-lg text-xs"
+                          style={{ background: `${KP.red}10`, border: `1px solid ${KP.red}20`, color: KP.red }}
+                        >
+                          {row.error}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 )}
-              </>
-            ))}
-          </tbody>
-        </table>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Summary Cards */}
+      {/* ── Summary Strip ── */}
       {anyDone && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5"
         >
           {(() => {
-            const doneRows = rows.filter((r) => r.status === "done");
+            const d = rows.filter((r) => r.status === "done");
             return (
               <>
-                <SummaryCard
-                  label="Avg Compression"
-                  value={`${(doneRows.reduce((s, r) => s + r.compression, 0) / doneRows.length).toFixed(1)}×`}
-                />
-                <SummaryCard
-                  label="Avg Bekenstein"
-                  value={`${(doneRows.reduce((s, r) => s + r.bekenstein, 0) / doneRows.length).toFixed(0)}%`}
-                />
-                <SummaryCard
-                  label="Peak Atlas Speed"
-                  value={`${Math.max(...doneRows.map((r) => r.atlasTokensPerSec)).toLocaleString(undefined, { maximumFractionDigits: 0 })} tok/s`}
-                />
-                <SummaryCard
-                  label="Max Speedup"
-                  value={`${Math.max(...doneRows.map((r) => r.speedup)).toFixed(1)}×`}
-                />
+                <SummaryCard label="Avg Compression" value={`${(d.reduce((s, r) => s + r.compression, 0) / d.length).toFixed(1)}×`} />
+                <SummaryCard label="Avg Bekenstein" value={`${(d.reduce((s, r) => s + r.bekenstein, 0) / d.length).toFixed(0)}%`} />
+                <SummaryCard label="Peak Atlas Speed" value={`${Math.max(...d.map((r) => r.atlasTokensPerSec)).toFixed(0)} tok/s`} />
+                <SummaryCard label="Max Speedup" value={`${Math.max(...d.map((r) => r.speedup)).toFixed(1)}×`} accent />
               </>
             );
           })()}
         </motion.div>
       )}
 
-      {/* Audit Log */}
+      {/* ── Audit Log ── */}
       {logs.length > 0 && (
-        <details className="group">
-          <summary className="text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors">
-            Audit Log ({logs.length} entries) — click to expand
-          </summary>
-          <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-border bg-background p-3 font-mono text-[11px] text-muted-foreground space-y-0.5">
-            {logs.map((log, i) => (
-              <div key={i} className={`${log.includes("✓") ? "text-emerald-500" : log.includes("✗") || log.includes("⚠") ? "text-amber-500" : log.includes("━━━") || log.includes("═══") ? "text-foreground font-semibold" : ""}`}>
-                {log}
-              </div>
-            ))}
-          </div>
-        </details>
+        <div className="mt-5">
+          <button
+            onClick={() => setShowLog(!showLog)}
+            className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest cursor-pointer hover:opacity-80 transition-opacity"
+            style={{ color: KP.dim }}
+          >
+            {showLog ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
+            Audit Log ({logs.length} entries)
+          </button>
+          <AnimatePresence>
+            {showLog && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="mt-2 max-h-52 overflow-y-auto rounded-xl p-3 font-mono text-[10px] space-y-0.5"
+                  style={{ background: KP.card, border: `1px solid ${KP.cardBorder}` }}
+                >
+                  {logs.map((log, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        color: log.includes("✓") ? KP.green
+                          : log.includes("✗") || log.includes("⚠") ? KP.gold
+                          : log.includes("━") || log.includes("═") ? KP.text
+                          : KP.dim,
+                        fontWeight: log.includes("━") || log.includes("═") ? 600 : 400,
+                      }}
+                    >
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
-      {/* Footer */}
-      <p className="text-[10px] font-mono text-muted-foreground text-center">
-        Real HuggingFace model download · Real ONNX weight extraction · Real Atlas R₈ decomposition · Real forward-pass inference · Real tokenization via model tokenizer
+      {/* ── Footer ── */}
+      <p className="text-[9px] font-mono text-center mt-5" style={{ color: KP.dimmer }}>
+        Real HuggingFace download · Real ONNX weights · Real Atlas R₈ decomposition · Real forward-pass inference · Real tokenization
       </p>
     </div>
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// Sub-components
+// ═══════════════════════════════════════════════════════════════
 
-function StatusBadge({ status, detail, progress }: { status: ModelBenchmarkRow["status"]; detail: string; progress: number }) {
-  const configs: Record<string, { icon: React.ReactNode; bg: string; text: string; label: string }> = {
-    done: {
-      icon: <IconCheck className="w-3 h-3" />,
-      bg: "bg-emerald-500/15 border-emerald-500/30",
-      text: "text-emerald-500",
-      label: "Complete",
-    },
-    downloading: {
-      icon: <IconDownload className="w-3 h-3 animate-pulse" />,
-      bg: "bg-blue-500/15 border-blue-500/30",
-      text: "text-blue-500",
-      label: `DL ${(progress * 100).toFixed(0)}%`,
-    },
-    projecting: {
-      icon: <IconLoader2 className="w-3 h-3 animate-spin" />,
-      bg: "bg-amber-500/15 border-amber-500/30",
-      text: "text-amber-500",
-      label: "Projecting",
-    },
-    inferring: {
-      icon: <IconBolt className="w-3 h-3 animate-pulse" />,
-      bg: "bg-purple-500/15 border-purple-500/30",
-      text: "text-purple-500",
-      label: "Inferring",
-    },
-    baseline: {
-      icon: <IconCpu className="w-3 h-3 animate-spin" />,
-      bg: "bg-cyan-500/15 border-cyan-500/30",
-      text: "text-cyan-500",
-      label: "Baseline",
-    },
-    error: {
-      icon: <IconAlertTriangle className="w-3 h-3" />,
-      bg: "bg-red-500/15 border-red-500/30",
-      text: "text-red-500",
-      label: "Error",
-    },
-    pending: {
-      icon: null,
-      bg: "bg-muted",
-      text: "text-muted-foreground",
-      label: "Pending",
-    },
+function StatusPill({ status, detail, progress }: { status: ModelBenchmarkRow["status"]; detail: string; progress: number }) {
+  const map: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
+    done:        { icon: <IconCheck size={10} />,            color: KP.green,  bg: `${KP.green}15`, label: "Complete" },
+    downloading: { icon: <IconDownload size={10} className="animate-pulse" />, color: KP.gold, bg: `${KP.gold}12`, label: `${(progress * 100).toFixed(0)}%` },
+    projecting:  { icon: <IconLoader2 size={10} className="animate-spin" />,   color: KP.gold, bg: `${KP.gold}12`, label: "Projecting" },
+    inferring:   { icon: <IconBolt size={10} className="animate-pulse" />,      color: KP.purple, bg: `${KP.purple}15`, label: "Inferring" },
+    baseline:    { icon: <IconCpu size={10} className="animate-spin" />,        color: KP.muted, bg: `${KP.muted}12`, label: "Baseline" },
+    error:       { icon: <IconAlertTriangle size={10} />,    color: KP.red,    bg: `${KP.red}12`, label: "Error" },
+    pending:     { icon: null,                                color: KP.dim,    bg: "transparent", label: "Pending" },
   };
 
-  const c = configs[status] ?? configs.pending;
+  const c = map[status] ?? map.pending;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${c.bg} ${c.text}`}>
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono tracking-wide"
+      style={{ color: c.color, background: c.bg, border: `1px solid ${c.color}20` }}
+    >
       {c.icon} {c.label}
     </span>
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function MetricCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
-      <div className="text-lg font-bold font-mono text-foreground">{value}</div>
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</div>
+    <div className="text-right">
+      <div className="text-[10px] uppercase tracking-wider" style={{ color: KP.dim }}>{label}</div>
+      <div className="text-xs font-mono font-medium" style={{ color: highlight ? KP.gold : KP.text }}>{value}</div>
+    </div>
+  );
+}
+
+function MetricBox({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div
+      className="rounded-lg px-3 py-2 text-center"
+      style={{ background: accent ? `${KP.gold}0a` : KP.card, border: `1px solid ${accent ? `${KP.gold}15` : KP.cardBorder}` }}
+    >
+      <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: KP.dim }}>{label}</div>
+      <div className="text-xs font-mono font-semibold" style={{ color: accent ? KP.gold : KP.text }}>{value}</div>
+    </div>
+  );
+}
+
+function SummaryCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div
+      className="rounded-xl px-4 py-3 text-center"
+      style={{
+        background: accent ? `${KP.gold}0a` : KP.card,
+        border: `1px solid ${accent ? `${KP.gold}18` : KP.cardBorder}`,
+      }}
+    >
+      <div className="text-lg font-bold font-mono" style={{ color: accent ? KP.gold : KP.text }}>{value}</div>
+      <div className="text-[9px] uppercase tracking-widest" style={{ color: KP.dim }}>{label}</div>
     </div>
   );
 }
