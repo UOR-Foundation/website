@@ -197,3 +197,14 @@ export {
   type SpectralHealth,
   type SpectralFeedbackCycle,
 } from "@/modules/qsvg";
+
+// ── Attention-Driven Compression ──────────────────────────────────────
+export {
+  computeCompression,
+  compressProofSummary,
+  compressTrace,
+  shouldShowElement,
+  type CompressionSchedule,
+  type CompressedProofSummary,
+  type ElementPriority,
+} from "@/modules/hologram-ui/engine/attention-compression";
