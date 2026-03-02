@@ -145,6 +145,31 @@ export type {
   PhaseStats,
 } from "./holographic-codec";
 
+// Compute Dispatcher — tiered GPU/vGPU/CPU cascade with structural sharing
+export {
+  ComputeDispatcher,
+  getDispatcher,
+} from "./compute-dispatcher";
+export type {
+  ComputeTier,
+  TierCapability,
+  DispatchDecision,
+  DispatcherSnapshot,
+  OperationKind,
+} from "./compute-dispatcher";
+
+// Adaptive Clock Booster — decoupled compute clock with idle overclocking
+export {
+  AdaptiveClockBooster,
+  getClock,
+  DEFAULT_CLOCK_CONFIG,
+} from "./adaptive-clock";
+export type {
+  ClockConfig,
+  ClockSnapshot,
+  ClockCallback,
+} from "./adaptive-clock";
+
 // HuggingFace Model Bridge — real model loading for Atlas projection
 export {
   loadHFModel,
