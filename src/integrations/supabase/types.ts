@@ -2225,6 +2225,7 @@ export type Database = {
       }
       whatsapp_connections: {
         Row: {
+          context_encrypted: boolean
           conversation_context: Json
           created_at: string
           display_name: string | null
@@ -2232,12 +2233,14 @@ export type Database = {
           last_message_at: string | null
           onboarding_complete: boolean
           onboarding_step: string
+          phone_hash: string | null
           phone_number: string
           phone_verified: boolean
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          context_encrypted?: boolean
           conversation_context?: Json
           created_at?: string
           display_name?: string | null
@@ -2245,12 +2248,14 @@ export type Database = {
           last_message_at?: string | null
           onboarding_complete?: boolean
           onboarding_step?: string
+          phone_hash?: string | null
           phone_number: string
           phone_verified?: boolean
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          context_encrypted?: boolean
           conversation_context?: Json
           created_at?: string
           display_name?: string | null
@@ -2258,10 +2263,11 @@ export type Database = {
           last_message_at?: string | null
           onboarding_complete?: boolean
           onboarding_step?: string
+          phone_hash?: string | null
           phone_number?: string
           phone_verified?: boolean
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

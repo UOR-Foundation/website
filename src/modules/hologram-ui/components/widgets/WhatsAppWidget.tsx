@@ -2,15 +2,16 @@
  * WhatsAppWidget — Desktop icon for Lumen WhatsApp integration
  * ═══════════════════════════════════════════════════════════════
  *
- * A compact desktop icon that opens an inline WhatsApp connection
- * dialog. Once connected, shows a subtle active indicator.
+ * Available to ALL users — authenticated or not.
+ * Unauthenticated: onboarding-first flow, connection stored by phone hash.
+ * Authenticated: full encrypted context, enriched Lumen experience.
  *
  * @module hologram-ui/components/widgets/WhatsAppWidget
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Check, Loader2, Mic } from "lucide-react";
+import { MessageCircle, X, Check, Loader2, Mic, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
 import { useDraggablePosition } from "../../hooks/useDraggablePosition";
@@ -32,25 +33,82 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
   const [connected, setConnected] = useState(false);
   const [greeting, setGreeting] = useState("");
   const [error, setError] = useState("");
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
 
-  // Check existing connection
+  // Check auth state + existing connection
   useEffect(() => {
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data } = await supabase
-          .from("whatsapp_connections")
-          .select("id, phone_number")
-          .eq("user_id", user.id)
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          setConnected(true);
-          setPhone(data.phone_number);
+        setIsAuthed(!!user);
+
+        if (user) {
+          // Authenticated: check for existing connection
+          const { data } = await supabase
+            .from("whatsapp_connections")
+            .select("id, phone_number")
+            .eq("user_id", user.id)
+            .limit(1)
+            .maybeSingle();
+          if (data) {
+            setConnected(true);
+            setPhone(data.phone_number);
+            setConnectionId(data.id);
+          }
+        } else {
+          // Unauthenticated: check localStorage for pending connection
+          const stored = localStorage.getItem("uor:whatsapp:connection");
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              if (parsed.connectionId) {
+                setConnected(true);
+                setPhone(parsed.phone || "");
+                setConnectionId(parsed.connectionId);
+              }
+            } catch {}
+          }
         }
       } catch {}
     })();
+
+    // Listen for auth changes to link anonymous connections
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setIsAuthed(!!session?.user);
+        if (session?.user) {
+          // Attempt to claim any anonymous connection
+          const stored = localStorage.getItem("uor:whatsapp:connection");
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              if (parsed.connectionId) {
+                await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-send`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({
+                      action: "claim_connection",
+                      connectionId: parsed.connectionId,
+                      phoneHash: parsed.phoneHash,
+                    }),
+                  },
+                );
+                localStorage.removeItem("uor:whatsapp:connection");
+              }
+            } catch {}
+          }
+        }
+      },
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleConnect = useCallback(async () => {
@@ -60,24 +118,41 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
     setError("");
     try {
       const session = (await supabase.auth.getSession()).data.session;
-      if (!session) { setError("Please sign in first"); setLoading(false); return; }
+
+      // Build request — works with or without auth
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      if (session) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
 
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-send`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers,
           body: JSON.stringify({ action: "initiate_onboarding", phoneNumber: cleaned }),
         },
       );
       const data = await resp.json();
       if (data.connection_id) {
         setConnected(true);
+        setConnectionId(data.connection_id);
         setGreeting(data.message || "");
+
+        // If unauthenticated, persist connection locally for later claiming
+        if (!session) {
+          localStorage.setItem(
+            "uor:whatsapp:connection",
+            JSON.stringify({
+              connectionId: data.connection_id,
+              phoneHash: data.phone_hash,
+              phone: cleaned,
+            }),
+          );
+        }
       } else {
         setError(data.error || "Connection failed");
       }
@@ -116,7 +191,6 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
           }}
         >
           <MessageCircle className="w-6 h-6" style={{ color: iconColor }} />
-          {/* Active indicator */}
           {connected && (
             <div
               className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full"
@@ -197,6 +271,17 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                     {greeting}
                   </p>
                 </div>
+                {!isAuthed && (
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    style={{ background: isLight ? "hsla(38, 50%, 95%, 0.8)" : "hsla(38, 30%, 12%, 0.6)", border: `1px solid ${isLight ? "hsla(38, 40%, 70%, 0.2)" : "hsla(38, 40%, 30%, 0.15)"}` }}
+                  >
+                    <Shield className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(38, 60%, 55%)" }} />
+                    <p className="text-[10px] leading-snug" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      Sign in later to unlock encrypted context — your conversations stay private and enriched across devices.
+                    </p>
+                  </div>
+                )}
                 <p
                   className="text-[11px] text-center"
                   style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}
@@ -205,7 +290,7 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                 </p>
               </motion.div>
             ) : connected ? (
-              /* Already connected — show voice-enabled status */
+              /* Already connected */
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div
@@ -220,6 +305,42 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                     </p>
                     <p className="text-[11px]" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                       Lumen is available on WhatsApp
+                    </p>
+                  </div>
+                </div>
+
+                {/* Privacy status badge */}
+                <div
+                  className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
+                  style={{
+                    background: isAuthed
+                      ? (isLight ? "hsla(152, 40%, 94%, 0.8)" : "hsla(152, 30%, 12%, 0.6)")
+                      : (isLight ? "hsla(38, 50%, 95%, 0.8)" : "hsla(38, 30%, 12%, 0.6)"),
+                    border: `1px solid ${isAuthed
+                      ? (isLight ? "hsla(152, 40%, 70%, 0.2)" : "hsla(152, 40%, 40%, 0.15)")
+                      : (isLight ? "hsla(38, 40%, 70%, 0.2)" : "hsla(38, 40%, 30%, 0.15)")}`,
+                  }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isAuthed ? "hsla(152, 60%, 42%, 0.15)" : "hsla(38, 60%, 55%, 0.15)",
+                    }}
+                  >
+                    {isAuthed ? (
+                      <Shield className="w-3.5 h-3.5" style={{ color: "hsl(152, 60%, 42%)" }} />
+                    ) : (
+                      <Shield className="w-3.5 h-3.5" style={{ color: "hsl(38, 60%, 55%)" }} />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-medium" style={{ color: textColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      {isAuthed ? "Encrypted context active" : "Basic mode"}
+                    </p>
+                    <p className="text-[10px] leading-snug" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      {isAuthed
+                        ? "Your context is AES-256 encrypted — only you and Lumen can access it"
+                        : "Sign in to enable encrypted context and richer conversations"}
                     </p>
                   </div>
                 </div>
@@ -251,7 +372,7 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                 </div>
               </div>
             ) : (
-              /* Setup state */
+              /* Setup state — NO sign-in required */
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <p
@@ -315,6 +436,11 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
                     </span>
                   ) : "Send Lumen to WhatsApp"}
                 </button>
+
+                {/* Privacy note */}
+                <p className="text-[10px] text-center leading-snug" style={{ color: mutedColor, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                  No account needed. Sign in later to unlock encrypted, context-aware conversations.
+                </p>
               </div>
             )}
           </motion.div>
