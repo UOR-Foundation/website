@@ -222,3 +222,16 @@ export type {
   StreamerConfig,
   StreamerStats,
 } from "./gpu-coherence-streamer";
+
+// Quantum Inference Engine — three-layer architecture
+export {
+  QuantumInferenceEngine,
+} from "./quantum-inference-engine";
+export type {
+  QuantumToken,
+  QuantumInferenceStats,
+  QuantumEngineConfig,
+  LayerStatus,
+  HardwareBackend,
+  QubitSubstrateState,
+} from "./quantum-inference-engine";
