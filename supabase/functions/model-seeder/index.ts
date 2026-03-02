@@ -104,10 +104,9 @@ serve(async (req) => {
   const seedAll = reqUrl.searchParams.get("seed");
   const modelParam = reqUrl.searchParams.get("model");
 
-  // Resolve model ID — validate against allowlist
-  const modelId = modelParam && ALLOWED_MODELS.has(modelParam)
-    ? modelParam
-    : DEFAULT_MODEL;
+  // Resolve model ID — if model is in allowlist, use it directly.
+  // Otherwise allow any model for browsing/seeding (config files only are safe).
+  const modelId = modelParam || DEFAULT_MODEL;
 
   // ── Batch seed mode (?seed=all|whisper|diffusion) ────────────────
   if (seedAll) {

@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IconBrain, IconAtom, IconChartBar, IconPlayerPlay, IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu } from "@tabler/icons-react";
 
 const MultiModelBenchmark = lazy(() => import("./MultiModelBenchmark"));
+const HuggingFaceModelBrowser = lazy(() => import("./HuggingFaceModelBrowser"));
 import {
   AtlasProjectionPipeline,
   MODEL_MANIFESTS,
@@ -274,6 +275,11 @@ export default function AtlasProjectionLab() {
             </p>
           </div>
         </div>
+
+        {/* HuggingFace Model Browser */}
+        <Suspense fallback={<div className="text-muted-foreground text-sm font-mono p-4">Loading model browser…</div>}>
+          <HuggingFaceModelBrowser />
+        </Suspense>
 
         {/* Multi-Model Benchmark */}
         <Suspense fallback={<div className="text-muted-foreground text-sm font-mono p-4">Loading multi-model benchmark…</div>}>
