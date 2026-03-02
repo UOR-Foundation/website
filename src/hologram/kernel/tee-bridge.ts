@@ -141,7 +141,7 @@ export interface TEEFusedAttestation {
 // ═══════════════════════════════════════════════════════════════════════
 
 /** Relying party ID for WebAuthn — the hologram kernel identity */
-const RP_NAME = "Hologram Kernel";
+const RP_NAME = "Hologram";
 
 /** Credential storage key prefix */
 const CREDENTIAL_STORE_KEY = "hologram:tee:credential";
@@ -264,8 +264,8 @@ export class TEEBridge {
           rp: { id: rpId, name: RP_NAME },
           user: {
             id: Uint8Array.from(userId, c => c.charCodeAt(0)),
-            name: userName,
-            displayName: userName,
+            name: `Your Hologram signal`,
+            displayName: `Your trusted connection`,
           },
           challenge: Uint8Array.from(challenge, c => c.charCodeAt(0)),
           pubKeyCredParams: [

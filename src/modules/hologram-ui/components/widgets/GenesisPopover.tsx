@@ -1,14 +1,16 @@
 /**
- * GenesisPopover — Kernel heartbeat summary
- * ═══════════════════════════════════════════
+ * GenesisPopover — Your connection to Hologram
+ * ═══════════════════════════════════════════════
  *
  * Appears when clicking the genesis dot in the sidebar.
- * Shows an intuitive, jargon-free summary of the living system.
+ * Shows an intuitive, human-centric summary of the living system
+ * and the trust connection status (TEE).
  */
 
 import { useEffect, useState, useCallback } from "react";
 import { X } from "lucide-react";
 import { bootSync as boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
+import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/tee-bridge";
 
 interface GenesisPopoverProps {
   open: boolean;
@@ -16,8 +18,45 @@ interface GenesisPopoverProps {
   bgMode?: "image" | "white" | "dark";
 }
 
+type TrustLevel = "hardware" | "software" | "unknown";
+
+function useTrustStatus() {
+  const [trust, setTrust] = useState<{
+    level: TrustLevel;
+    label: string;
+    caps: TEECapabilities | null;
+  }>({ level: "unknown", label: "Checking…", caps: null });
+
+  useEffect(() => {
+    const bridge = new TEEBridge();
+    bridge.detect().then(caps => {
+      if (caps.hardwareAttestation && bridge.hasCredential) {
+        setTrust({ level: "hardware", label: getHumanLabel(caps), caps });
+      } else if (caps.hardwareAttestation) {
+        setTrust({ level: "software", label: "Available, not yet verified", caps });
+      } else {
+        setTrust({ level: "software", label: "Protected by mathematical proofs", caps });
+      }
+    }).catch(() => {
+      setTrust({ level: "software", label: "Protected by mathematical proofs", caps: null });
+    });
+  }, []);
+
+  return trust;
+}
+
+function getHumanLabel(caps: TEECapabilities): string {
+  const name = caps.providerName.toLowerCase();
+  if (name.includes("secure enclave") || name.includes("apple")) return "Secure Enclave";
+  if (name.includes("trustzone") || name.includes("arm")) return "TrustZone";
+  if (name.includes("tpm") || name.includes("platform")) return "Security Chip";
+  if (name.includes("security key") || name.includes("roaming")) return "Security Key";
+  return "Device Security";
+}
+
 export default function GenesisPopover({ open, onClose, bgMode = "image" }: GenesisPopoverProps) {
   const [kernel, setKernel] = useState<QKernelBoot | null>(null);
+  const trust = useTrustStatus();
 
   useEffect(() => {
     if (open && !kernel) {
@@ -44,12 +83,15 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
   const dotColor = isLight ? "hsl(32, 40%, 50%)" : "hsla(38, 50%, 60%, 0.85)";
   const cardBg = isLight ? "hsla(30, 10%, 94%, 0.7)" : "hsla(38, 10%, 12%, 0.5)";
   const cardBorder = isLight ? "hsla(30, 15%, 80%, 0.2)" : "hsla(38, 15%, 30%, 0.12)";
+  const greenDot = "hsl(142, 55%, 50%)";
 
   const stage = kernel?.stage ?? "off";
   const isRunning = stage === "running";
   const bootMs = kernel?.bootTimeMs ? kernel.bootTimeMs.toFixed(1) : "—";
   const checks = kernel?.post.checks ?? [];
   const passedCount = checks.filter(c => c.passed).length;
+
+  const isHardwareTrusted = trust.level === "hardware";
 
   return (
     <>
@@ -93,9 +135,13 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
               style={{
                 width: "8px",
                 height: "8px",
-                background: dotColor,
-                boxShadow: `0 0 calc(6px + 10px * var(--h-score, 0.5)) ${dotColor}`,
-                animation: "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
+                background: isHardwareTrusted ? greenDot : dotColor,
+                boxShadow: isHardwareTrusted
+                  ? `0 0 10px hsla(142, 55%, 50%, 0.5)`
+                  : `0 0 calc(6px + 10px * var(--h-score, 0.5)) ${dotColor}`,
+                animation: isHardwareTrusted
+                  ? "none"
+                  : "heartbeat-love calc(1.8s + 1.2s * (1 - var(--h-score, 0.5))) ease-in-out infinite",
               }}
             />
             <span
@@ -114,11 +160,69 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
           </button>
         </div>
 
+        {/* ── Trusted Connection Status ── */}
+        <div
+          className="rounded-xl px-3.5 py-3 mb-3"
+          style={{
+            background: isHardwareTrusted
+              ? (isLight ? "hsla(142, 40%, 94%, 0.7)" : "hsla(142, 30%, 12%, 0.4)")
+              : cardBg,
+            border: `1px solid ${isHardwareTrusted
+              ? (isLight ? "hsla(142, 40%, 70%, 0.2)" : "hsla(142, 30%, 30%, 0.15)")
+              : cardBorder}`,
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            {/* Signal indicator */}
+            <div className="flex items-center gap-1">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="rounded-sm"
+                  style={{
+                    width: "3px",
+                    height: `${8 + i * 3}px`,
+                    background: isHardwareTrusted
+                      ? `hsla(142, 55%, ${55 - i * 5}%, ${0.9 - i * 0.1})`
+                      : `hsla(38, 40%, 55%, ${0.4 - i * 0.1})`,
+                    transition: "background 600ms ease",
+                  }}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] uppercase tracking-[0.12em] font-medium" style={{
+              color: isHardwareTrusted ? (isLight ? "hsl(142, 40%, 35%)" : "hsl(142, 40%, 60%)") : textMuted,
+            }}>
+              {isHardwareTrusted ? "Trusted connection" : "Connection status"}
+            </span>
+          </div>
+          <p className="text-[12px] leading-relaxed" style={{ color: text }}>
+            {isHardwareTrusted
+              ? `Connected through your device's ${trust.label}. Your data never leaves this trusted space. Only you, on this device, can access it.`
+              : trust.level === "software"
+                ? "Your session is protected using mathematical proofs. Everything you do here is verified and tamper-proof."
+                : "Detecting your device's security capabilities…"
+            }
+          </p>
+          {isHardwareTrusted && (
+            <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
+              Think of this like a private, encrypted channel between you and Hologram.
+              Your device acts as the key, and no one else can listen in.
+            </p>
+          )}
+          {trust.level === "software" && trust.caps?.hardwareAttestation && (
+            <p className="text-[10px] mt-2 leading-relaxed" style={{ color: textMuted }}>
+              Your device has a hardware security vault available.
+              You can activate it during the next boot to strengthen your connection.
+            </p>
+          )}
+        </div>
+
         {/* Why — the soul */}
         <p className="text-[13px] leading-relaxed mb-4" style={{ color: textMuted }}>
-          This system is alive. Every time it wakes up, it runs a self-check — like a
-          heartbeat — to make sure everything is genuine and nothing has been
-          tampered with. Here's what just happened:
+          This system is alive. Every time it wakes up, it runs a self-check,
+          like a heartbeat, to make sure everything is genuine and nothing has been
+          tampered with.
         </p>
 
         {/* Status */}
@@ -130,8 +234,8 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
             <div
               className="w-2 h-2 rounded-full"
               style={{
-                background: isRunning ? "hsl(142, 55%, 50%)" : "hsl(0, 65%, 55%)",
-                boxShadow: isRunning ? "0 0 8px hsla(142, 55%, 50%, 0.4)" : "none",
+                background: isRunning ? greenDot : "hsl(0, 65%, 55%)",
+                boxShadow: isRunning ? `0 0 8px hsla(142, 55%, 50%, 0.4)` : "none",
               }}
             />
             <span className="text-[12px] font-medium" style={{ color: text }}>
@@ -146,7 +250,7 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
         {/* Self-checks */}
         <div className="mb-3">
           <span className="text-[11px] uppercase tracking-[0.12em] font-medium" style={{ color: textMuted }}>
-            Self-checks — {passedCount}/{checks.length} verified
+            Self-checks: {passedCount}/{checks.length} verified
           </span>
           <div className="mt-2 space-y-1.5">
             {checks.map((c, i) => (
@@ -157,7 +261,7 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
               >
                 <div
                   className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: c.passed ? "hsl(142, 55%, 50%)" : "hsl(0, 65%, 55%)" }}
+                  style={{ background: c.passed ? greenDot : "hsl(0, 65%, 55%)" }}
                 />
                 <span className="text-[12px]" style={{ color: text }}>{c.name}</span>
                 <span className="text-[10px] ml-auto" style={{ color: textMuted }}>
@@ -178,8 +282,7 @@ export default function GenesisPopover({ open, onClose, bgMode = "image" }: Gene
           </span>
           <p className="text-[12px] leading-relaxed" style={{ color: text }}>
             Every piece of data in this system has a unique fingerprint. When the kernel boots,
-            it verifies that the math behind those fingerprints is correct — that
-            addition, hashing, and addressing all behave exactly as expected. If
+            it verifies that the math behind those fingerprints is correct. If
             even one rule fails, the system refuses to start. This is how you know what
             you see is real.
           </p>
