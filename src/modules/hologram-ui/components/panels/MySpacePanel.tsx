@@ -328,21 +328,10 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
     let { data: { session: sess } } = await supabase.auth.getSession();
     if (!sess) {
-      // Biometric-only new user — create anonymous session
-      const { error: anonErr } = await supabase.auth.signInAnonymously();
-      if (anonErr) {
-        console.error("[MySpace] Anonymous auth failed:", anonErr);
-        toast.error("Could not create your space. Try signing in with email or Google.");
-        setPhase("naming");
-        return;
-      }
-      const { data: { session: newSess } } = await supabase.auth.getSession();
-      sess = newSess;
-      if (!sess) {
-        toast.error("Session creation failed. Try another method.");
-        setPhase("naming");
-        return;
-      }
+      // No session — biometric-only users must sign in first
+      toast.error("Please sign in with email or Google first, then your biometrics will be linked to your account.");
+      setPhase("auth");
+      return;
     }
 
     try {
