@@ -219,11 +219,19 @@ export function useConvergenceVoice(options: {
     if (phase === "listening") {
       stopListening();
     } else if (phase === "speaking") {
-      cancel();
+      // Interrupt: stop speaking and immediately start listening
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPhase("idle");
+      onSpeakingEnd?.();
+      // Start listening on next tick to allow state to settle
+      setTimeout(() => startListening(), 50);
     } else if (phase === "idle" || phase === "error") {
       startListening();
     }
-  }, [phase, startListening, stopListening, cancel]);
+  }, [phase, startListening, stopListening, onSpeakingEnd]);
 
   // ── Cleanup ─────────────────────────────────────────────────────
 
