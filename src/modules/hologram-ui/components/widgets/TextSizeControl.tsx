@@ -14,10 +14,11 @@ interface TextSizeControlProps {
   bgMode?: "image" | "white" | "dark";
 }
 
+/* Golden ratio sizing: 13 × φ⁰ ≈ 13, 13 × φ¹ ≈ 21, 13 × φ² ≈ 34 — but capped for legibility */
 const OPTIONS: { value: TextSize; fontSize: number }[] = [
-  { value: "compact", fontSize: 12 },
-  { value: "default", fontSize: 16 },
-  { value: "large",   fontSize: 21 },
+  { value: "compact", fontSize: 13 },
+  { value: "default", fontSize: 18 },
+  { value: "large",   fontSize: 24 },
 ];
 
 export default function TextSizeControl({ textSize, setTextSize, bgMode = "dark" }: TextSizeControlProps) {
@@ -33,11 +34,11 @@ export default function TextSizeControl({ textSize, setTextSize, bgMode = "dark"
         display: "flex",
         alignItems: "flex-end",
         justifyContent: "center",
-        gap: 0,
-        borderRadius: "10px",
-        padding: "3px",
+        gap: 5,           /* GR.xs — golden ratio smallest step */
+        borderRadius: "13px",  /* GR.md */
+        padding: "5px 8px",   /* GR.xs / GR.sm */
         background: trackBg,
-        margin: "0 8px 4px",
+        margin: "0 13px 5px", /* GR.md horizontal, GR.xs bottom */
       }}
     >
       {OPTIONS.map((opt) => {
@@ -52,8 +53,9 @@ export default function TextSizeControl({ textSize, setTextSize, bgMode = "dark"
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: 36,
-              borderRadius: "7px",
+              height: 42,           /* ~GR.xl × φ⁻¹ ≈ 34 × 1.24, comfortable touch target */
+              minWidth: 42,
+              borderRadius: "8px",
               border: "none",
               cursor: "pointer",
               transition: "background 180ms ease, color 180ms ease, transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1)",
