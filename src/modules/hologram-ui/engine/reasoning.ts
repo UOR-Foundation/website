@@ -139,6 +139,34 @@ export {
   type ProofCheck,
 } from "@/modules/qsvg";
 
+// ── ZK Three-Layer Separation ─────────────────────────────────────────
+export {
+  // L1 Substrate
+  type SubstrateValue,
+  verifySubstrateIntegrity,
+  S_DELTA_0 as ZK_DELTA_0,
+  S_ALPHA as ZK_ALPHA,
+  S_EIGENVALUE_COUNT as ZK_EIGENVALUE_COUNT,
+  // L2 Geometry
+  type GeometryValue,
+  type GeometricProofEnvelope,
+  type GeometricVerification,
+  type SpectralGrade as ZKSpectralGrade,
+  type GeometricCID,
+  geometry,
+  createGeometricEnvelope,
+  verifyEnvelope,
+  envelopeToRaw,
+  // L3 Content
+  type ContentValue,
+  type UserQuery,
+  type LLMResponse,
+  type AssertNotContent,
+  content,
+  contentToHash,
+  contentToHashSync,
+} from "@/modules/qsvg";
+
 // ── QSVG Geometric Tick ───────────────────────────────────────────────
 export {
   // Geometric Units
