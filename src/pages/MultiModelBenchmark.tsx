@@ -8,7 +8,7 @@
  * Styled with Hologram Kernel Palette — dark, warm, harmonious.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconRocket, IconLoader2, IconCheck, IconAlertTriangle,
@@ -26,7 +26,9 @@ import {
   detokenize,
   baselineInference,
   getNextTokenLogits,
+  detectWebGPU,
   type LoadedHFModel,
+  type WebGPUStatus,
 } from "@/modules/hologram-compute/hf-model-bridge";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 
@@ -54,6 +56,7 @@ interface ModelBenchmarkRow {
   baselineTimeMs: number;
   baselineTokensPerSec: number;
   speedup: number;
+  usingGPU: boolean;
   error?: string;
 }
 
@@ -93,6 +96,7 @@ export default function MultiModelBenchmark() {
         baselineTimeMs: 0,
         baselineTokensPerSec: 0,
         speedup: 0,
+        usingGPU: false,
       };
     })
   );
@@ -101,7 +105,13 @@ export default function MultiModelBenchmark() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [showLog, setShowLog] = useState(false);
+  const [gpuStatus, setGpuStatus] = useState<WebGPUStatus | null>(null);
   const abortRef = useRef(false);
+
+  // Detect WebGPU on mount
+  useEffect(() => {
+    detectWebGPU().then(setGpuStatus);
+  }, []);
 
   const addLog = useCallback((msg: string) => {
     setLogs((prev) => [...prev.slice(-200), `[${new Date().toLocaleTimeString()}] ${msg}`]);
@@ -128,10 +138,12 @@ export default function MultiModelBenchmark() {
       updateRow(modelId, { downloadProgress: status.progress, statusDetail: status.message });
     });
 
-    addLog(`✓ Model loaded: ${loadedModel.weights.size} weight tensors extracted`);
+    const gpuLabel = loadedModel.usingWebGPU ? " · WebGPU ✓" : " · CPU/WASM";
+    addLog(`✓ Model loaded: ${loadedModel.weights.size} weight tensors extracted${gpuLabel}`);
     updateRow(modelId, {
       weightsExtracted: loadedModel.weights.size,
-      statusDetail: `${loadedModel.weights.size} tensors extracted`,
+      statusDetail: `${loadedModel.weights.size} tensors extracted${gpuLabel}`,
+      usingGPU: loadedModel.usingWebGPU,
     });
 
     addLog(`Projecting ${profile.name} onto Atlas manifold…`);
@@ -229,11 +241,13 @@ export default function MultiModelBenchmark() {
         compression: 0, bekenstein: 0, atlasOutput: "", atlasTokenIds: [],
         atlasTimeMs: 0, atlasTokensPerSec: 0, atlasMeanHScore: 0,
         baselineOutput: "", baselineTimeMs: 0, baselineTokensPerSec: 0,
-        speedup: 0, error: undefined,
+        speedup: 0, usingGPU: false, error: undefined,
       }))
     );
 
+    const gpu = await detectWebGPU();
     addLog("═══ MULTI-MODEL ATLAS BENCHMARK — REAL INFERENCE ═══");
+    addLog(`Device: ${gpu.available ? `WebGPU · ${gpu.adapterName}` : "CPU/WASM (no WebGPU)"}`);
     addLog(`Prompt: "${TEST_PROMPT}" · ${GEN_TOKENS} tokens · ${BENCHMARK_MODEL_IDS.length} models`);
 
     for (let i = 0; i < BENCHMARK_MODEL_IDS.length; i++) {
@@ -296,7 +310,25 @@ export default function MultiModelBenchmark() {
         </button>
       </div>
 
-      {/* ── Prompt Display ── */}
+      {/* ── GPU Status + Prompt Display ── */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        {gpuStatus && (
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-wide"
+            style={{
+              background: gpuStatus.available ? `${KP.green}10` : `${KP.red}08`,
+              border: `1px solid ${gpuStatus.available ? `${KP.green}20` : `${KP.red}15`}`,
+              color: gpuStatus.available ? KP.green : KP.dim,
+            }}
+          >
+            <IconBolt className="w-3 h-3" />
+            {gpuStatus.available
+              ? `WebGPU · ${gpuStatus.adapterName}`
+              : "WebGPU unavailable · CPU/WASM"}
+          </div>
+        )}
+      </div>
+
       <div
         className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-5"
         style={{ background: `${KP.gold}08`, border: `1px solid ${KP.gold}12` }}
@@ -334,8 +366,13 @@ export default function MultiModelBenchmark() {
                     <span className="text-sm font-semibold" style={{ color: KP.text }}>{row.name}</span>
                     <StatusPill status={row.status} detail={row.statusDetail} progress={row.downloadProgress} />
                   </div>
-                  <div className="text-[10px] font-mono mt-0.5" style={{ color: KP.dim }}>
+                  <div className="text-[10px] font-mono mt-0.5 flex items-center gap-2" style={{ color: KP.dim }}>
                     {(row.paramCount / 1e6).toFixed(0)}M params · {BROWSER_MODELS[row.id]?.hfId}
+                    {row.usingGPU && (
+                      <span className="px-1.5 py-0.5 rounded text-[8px] font-semibold uppercase tracking-wider" style={{ background: `${KP.green}15`, color: KP.green, border: `1px solid ${KP.green}20` }}>
+                        GPU
+                      </span>
+                    )}
                   </div>
                 </div>
 

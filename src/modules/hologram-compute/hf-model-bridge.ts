@@ -21,6 +21,48 @@ import type { ModelManifest, WeightMatrixType } from "./atlas-model-projector";
 import { quantizeToR8 } from "./atlas-model-projector";
 
 // ═══════════════════════════════════════════════════════════════
+// WebGPU Detection
+// ═══════════════════════════════════════════════════════════════
+
+export interface WebGPUStatus {
+  available: boolean;
+  adapterName: string | null;
+  vendor: string | null;
+  architecture: string | null;
+}
+
+let _gpuStatusCache: WebGPUStatus | null = null;
+
+/** Detect WebGPU availability and adapter info. Cached after first call. */
+export async function detectWebGPU(): Promise<WebGPUStatus> {
+  if (_gpuStatusCache) return _gpuStatusCache;
+
+  if (!("gpu" in navigator)) {
+    _gpuStatusCache = { available: false, adapterName: null, vendor: null, architecture: null };
+    return _gpuStatusCache;
+  }
+
+  try {
+    const adapter = await (navigator as any).gpu.requestAdapter();
+    if (!adapter) {
+      _gpuStatusCache = { available: false, adapterName: null, vendor: null, architecture: null };
+      return _gpuStatusCache;
+    }
+    const info = (adapter as any).info ?? {};
+    _gpuStatusCache = {
+      available: true,
+      adapterName: info.description || info.device || adapter.name || "GPU",
+      vendor: info.vendor || null,
+      architecture: info.architecture || null,
+    };
+    return _gpuStatusCache;
+  } catch {
+    _gpuStatusCache = { available: false, adapterName: null, vendor: null, architecture: null };
+    return _gpuStatusCache;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════
 
@@ -46,6 +88,8 @@ export interface LoadedHFModel {
   weights: Map<string, Float32Array>;
   /** Weight loader function compatible with projectModel() */
   weightLoader: (layer: number, matrix: WeightMatrixType) => Float32Array | null;
+  /** Whether this model is running on WebGPU */
+  usingWebGPU: boolean;
 }
 
 /** Pre-configured model profiles for browser loading */
@@ -199,7 +243,11 @@ export async function loadHFModel(
       },
     });
 
-    emit({ stage: "loading-model", progress: 0.2, message: `Downloading ${profile.name} (${profile.downloadSizeMB}MB)...` });
+    // ── WebGPU detection for GPU-accelerated inference ──
+    const gpuStatus = await detectWebGPU();
+    const useGPU = gpuStatus.available;
+
+    emit({ stage: "loading-model", progress: 0.2, message: `Downloading ${profile.name} (${profile.downloadSizeMB}MB)${useGPU ? " · WebGPU" : ""}...` });
 
     const modelOptions: any = {
       progress_callback: (p: any) => {
@@ -213,10 +261,34 @@ export async function loadHFModel(
       modelOptions.dtype = profile.dtype;
     }
 
-    const model = await transformers.AutoModelForCausalLM.from_pretrained(
-      profile.hfId,
-      modelOptions,
-    );
+    // GPU acceleration: pass device to transformers.js
+    if (useGPU) {
+      modelOptions.device = "webgpu";
+      emit({ stage: "loading-model", progress: 0.2, message: `GPU detected: ${gpuStatus.adapterName} · Loading ${profile.name}…` });
+    }
+
+    let model: any;
+    try {
+      model = await transformers.AutoModelForCausalLM.from_pretrained(
+        profile.hfId,
+        modelOptions,
+      );
+    } catch (gpuErr) {
+      // Fallback to CPU if WebGPU loading fails
+      if (useGPU) {
+        console.warn("[HF-Bridge] WebGPU model load failed, falling back to CPU:", gpuErr);
+        emit({ stage: "loading-model", progress: 0.2, message: `GPU fallback → CPU. Reloading ${profile.name}…` });
+        delete modelOptions.device;
+        model = await transformers.AutoModelForCausalLM.from_pretrained(
+          profile.hfId,
+          modelOptions,
+        );
+      } else {
+        throw gpuErr;
+      }
+    }
+
+    const actuallyUsingGPU = useGPU && !!modelOptions.device;
 
     emit({ stage: "extracting-weights", progress: 0.75, message: "Extracting weight tensors for Atlas projection..." });
 
@@ -228,7 +300,8 @@ export async function loadHFModel(
     // Build the weight loader function
     const weightLoader = createWeightLoader(weights, profile.manifest);
 
-    emit({ stage: "ready", progress: 1.0, message: `${profile.name} ready for Atlas projection (${weights.size} tensors)` });
+    const deviceLabel = actuallyUsingGPU ? `WebGPU (${gpuStatus.adapterName})` : "CPU/WASM";
+    emit({ stage: "ready", progress: 1.0, message: `${profile.name} ready · ${deviceLabel} · ${weights.size} tensors` });
 
     return {
       modelId: profile.hfId,
@@ -237,6 +310,7 @@ export async function loadHFModel(
       model,
       weights,
       weightLoader,
+      usingWebGPU: actuallyUsingGPU,
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
