@@ -465,7 +465,7 @@ export default function AtlasProjectionLab() {
                   <span className="text-xs font-semibold text-muted-foreground uppercase">Perplexity Comparison</span>
                   <span className="text-xs text-muted-foreground">(lower = more coherent)</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-4 gap-3 text-center">
                   <MetricCard
                     label="Atlas PPL"
                     value={perplexityStats.atlas.perplexity === Infinity ? "∞" : perplexityStats.atlas.perplexity.toFixed(1)}
@@ -480,6 +480,13 @@ export default function AtlasProjectionLab() {
                       perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
                         ? "N/A"
                         : `${(perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity).toFixed(2)}×`
+                    }
+                  />
+                  <QualityGradeBadge
+                    ratio={
+                      perplexityStats.atlas.perplexity === Infinity || perplexityStats.baseline.perplexity === Infinity
+                        ? Infinity
+                        : perplexityStats.atlas.perplexity / perplexityStats.baseline.perplexity
                     }
                   />
                 </div>
@@ -705,6 +712,44 @@ function NLLChart({
           </circle>
         ))}
       </svg>
+    </div>
+  );
+}
+
+function QualityGradeBadge({ ratio }: { ratio: number }) {
+  let grade: string;
+  let color: string;
+  let label: string;
+
+  if (!isFinite(ratio)) {
+    grade = "—";
+    color = "bg-muted text-muted-foreground";
+    label = "No data";
+  } else if (ratio <= 1.0) {
+    grade = "A";
+    color = "bg-emerald-500/15 text-emerald-500 border-emerald-500/30";
+    label = "Superior";
+  } else if (ratio <= 1.25) {
+    grade = "B";
+    color = "bg-sky-500/15 text-sky-500 border-sky-500/30";
+    label = "Near-parity";
+  } else if (ratio <= 2.0) {
+    grade = "C";
+    color = "bg-amber-500/15 text-amber-500 border-amber-500/30";
+    label = "Acceptable";
+  } else {
+    grade = "D";
+    color = "bg-red-500/15 text-red-500 border-red-500/30";
+    label = "Degraded";
+  }
+
+  return (
+    <div className="p-2 rounded-lg bg-muted/50 flex flex-col items-center justify-center">
+      <div className="text-xs text-muted-foreground">Grade</div>
+      <div className={`mt-1 w-9 h-9 rounded-lg border flex items-center justify-center text-lg font-black ${color}`}>
+        {grade}
+      </div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
     </div>
   );
 }
