@@ -464,7 +464,7 @@ export default memo(function DesktopOsSidebar({
           {expanded ? (
             <>
               <div className="flex items-center gap-2.5 px-2 py-1 overflow-hidden">
-                <HologramLogo size={28} color={bgMode === "white" ? "hsl(30, 15%, 30%)" : "hsl(38, 25%, 80%)"} className="shrink-0" />
+                <HologramLogo size={28} color={bgMode === "white" ? "hsl(30, 15%, 30%)" : "hsl(38, 25%, 80%)"} className="shrink-0" animate />
                 <svg viewBox="0 0 360 40" className="select-none" style={{ width: "115px", height: "auto", opacity: 0.9 }}>
                   <g fill="none" stroke="var(--sb-text)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="10" y1="6" x2="10" y2="34" /><line x1="30" y1="6" x2="30" y2="34" /><line x1="10" y1="20" x2="30" y2="20" />
