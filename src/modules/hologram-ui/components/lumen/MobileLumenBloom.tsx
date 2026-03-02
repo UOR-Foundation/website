@@ -17,6 +17,7 @@ import SessionVerifyAnimation from "./SessionVerifyAnimation";
 import ObserverCollapseTrap from "./ObserverCollapseTrap";
 import ZKDisclosurePanel from "./ZKDisclosurePanel";
 import BloomProjectionTabs, { type BloomProjection } from "./BloomProjectionTabs";
+import AmbientCardStack from "./AmbientCardStack";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 import { Fingerprint } from "lucide-react";
 
@@ -157,6 +158,14 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
                 play={open}
                 onComplete={() => setVerifyComplete(true)}
                 onCollapseDetected={handleCollapseDetected}
+              />
+            )}
+
+            {/* Ambient intelligence cards */}
+            {verifyComplete && (
+              <AmbientCardStack
+                active={open}
+                onNavigate={setActiveProjection}
               />
             )}
 
