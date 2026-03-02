@@ -12,7 +12,7 @@ export const researchCategories = [
   { iconKey: "BarChart3", label: "Data Science", slug: "data-science", description: "Semantic datasets, reproducible pipelines, and interoperable analytics.", active: false },
   { iconKey: "HeartPulse", label: "Healthcare", slug: "healthcare", description: "Medical data interoperability, patient-centric identity, and open health standards.", active: false },
   { iconKey: "Globe", label: "Web3", slug: "web3", description: "Decentralized protocols, on-chain identity, and content-addressed storage.", active: false },
-  { iconKey: "Microscope", label: "Physics", slug: "physics", description: "Simulation frameworks, open research data, and computational physics tooling.", active: false },
+  { iconKey: "Microscope", label: "Physics", slug: "physics", description: "Discrete spacetime geometry, self-verification, and the geometric origin of fundamental constants.", active: true },
   { iconKey: "Rocket", label: "Frontier Tech", slug: "frontier-tech", description: "Emerging technology exploration at the intersection of UOR and next-gen infrastructure.", active: false },
   { iconKey: "Leaf", label: "Climate & Energy", slug: "climate-energy", description: "Sustainable infrastructure, carbon accounting, and open energy data standards.", active: false },
 ];
