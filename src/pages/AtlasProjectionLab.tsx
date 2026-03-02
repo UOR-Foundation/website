@@ -2,15 +2,14 @@
  * Atlas Inference Lab — Quantum AI Showcase
  * ══════════════════════════════════════════
  *
- * A visceral demonstration of real AI inference powered by the three-layer
- * Quantum Inference Engine. Real coherent text streams from the AI gateway
- * while the quantum engine provides live coherence metrics, stabilizer
- * corrections, and qubit state visualization.
+ * Two modes:
+ *   1. Gateway Hybrid — AI gateway inference + quantum coherence verification
+ *   2. Pure Coherence — No weights, no gateway, three-scale Atlas navigation
  *
  * "96 virtual qubits · Any model · 384 bytes KV · Real-time inference"
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconBolt, IconBrain, IconCpu, IconPlayerPlay, IconPlayerStop,
@@ -26,6 +25,8 @@ import {
   type LayerStatus,
 } from "@/modules/hologram-compute/quantum-inference-engine";
 import { computeHScore, classifyZone } from "@/modules/hologram-compute/coherence-inference";
+
+const PureCoherencePanel = lazy(() => import("@/modules/hologram-ui/components/panels/PureCoherencePanel"));
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ interface AtlasProjectionLabProps { onClose?: () => void; }
 export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps) {
   const P = usePageTheme("ai-lab");
 
+  const [inferenceMode, setInferenceMode] = useState<"gateway" | "coherence">("gateway");
   const [selectedModel, setSelectedModel] = useState<ModelProfile>(MODELS[3]);
   const [prompt, setPrompt] = useState(DEMO_PROMPTS[0]);
   const [tokens, setTokens] = useState<CoherenceToken[]>([]);
@@ -414,8 +416,21 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
           )}
         </div>
 
-        {/* Model + Prompt */}
-        <div style={{ display: "flex", gap: "8px", marginTop: "16px", position: "relative" }}>
+        {/* Mode toggle */}
+        <div style={{ display: "flex", gap: "2px", marginTop: "12px", background: P.cardBgSubtle, borderRadius: "8px", padding: "2px", border: `1px solid ${P.borderSubtle}`, width: "fit-content" }}>
+          <button onClick={() => setInferenceMode("gateway")}
+            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", border: "none", background: inferenceMode === "gateway" ? P.accent : "transparent", color: inferenceMode === "gateway" ? P.btnPrimaryText : P.textDim, transition: "all 0.15s" }}>
+            Gateway Hybrid
+          </button>
+          <button onClick={() => setInferenceMode("coherence")}
+            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", border: "none", background: inferenceMode === "coherence" ? P.green : "transparent", color: inferenceMode === "coherence" ? "#fff" : P.textDim, transition: "all 0.15s" }}>
+            🧬 Pure Coherence
+          </button>
+        </div>
+
+        {/* Model + Prompt (gateway mode only) */}
+        {inferenceMode === "gateway" && (<>
+        <div style={{ display: "flex", gap: "8px", marginTop: "12px", position: "relative" }}>
           <div style={{ position: "relative" }}
             onMouseEnter={() => !showModelPicker && !isStreaming && setShowModelTooltip(true)}
             onMouseLeave={() => setShowModelTooltip(false)}
@@ -590,7 +605,18 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             </motion.div>
           )}
         </AnimatePresence>
+        </>)}
       </div>
+
+      {/* ── Pure Coherence Mode ── */}
+      {inferenceMode === "coherence" ? (
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <Suspense fallback={<div style={{ padding: "40px", textAlign: "center", color: P.textMuted }}>Loading Pure Coherence engine…</div>}>
+            <PureCoherencePanel P={P} />
+          </Suspense>
+        </div>
+      ) : (
+      <>
 
       {/* ── Live Metrics Bar ── */}
       <AnimatePresence>
@@ -791,6 +817,8 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
           </motion.div>
         )}
       </AnimatePresence>
+      </>
+      )}
     </div>
   );
 }
