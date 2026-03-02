@@ -11,7 +11,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   Shield, Fingerprint, Lock, LogOut, Copy, Check,
-  Camera, ChevronRight, Settings, Plus, Users,
+  Camera, ChevronRight, Settings, Plus, Users, Key,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import PrivacySettingsPanel from "./PrivacySettingsPanel";
 import TrustCeremonyPanel from "./TrustCeremonyPanel";
+import SecurityMethodsPanel from "./SecurityMethodsPanel";
 
 interface MySpaceDashboardProps {
   onClose: () => void;
@@ -33,6 +34,7 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
   const [saving, setSaving] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [trustOpen, setTrustOpen] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [pendingCount, setPendingCount] = useState(0);
@@ -128,6 +130,10 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
 
   if (privacyOpen) {
     return <PrivacySettingsPanel onBack={() => setPrivacyOpen(false)} />;
+  }
+
+  if (securityOpen) {
+    return <SecurityMethodsPanel onBack={() => setSecurityOpen(false)} />;
   }
 
   if (trustOpen) {
@@ -424,6 +430,15 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
               {pendingCount}
             </span>
           )}
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => setSecurityOpen(true)}
+          className="flex items-center gap-2 mt-2 cursor-pointer group"
+          style={{ color: KP.gold, background: "none", border: "none" }}
+        >
+          <Key className="w-3.5 h-3.5" />
+          <span className="text-sm font-medium group-hover:opacity-80 transition-opacity">Security methods</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
