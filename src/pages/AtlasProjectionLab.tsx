@@ -9,14 +9,15 @@
  *   4. Benchmark — Live side-by-side performance comparison
  */
 
-import { useState, useCallback, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   IconBrain, IconAtom, IconChartBar, IconPlayerPlay,
   IconLoader2, IconCheck, IconAlertTriangle, IconRocket, IconCpu,
-  IconSparkles, IconEye, IconWand, IconFlask, IconArrowRight,
+  IconSparkles, IconEye, IconWand, IconFlask, IconArrowRight, IconX,
 } from "@tabler/icons-react";
 import { KP } from "@/modules/hologram-os/kernel-palette";
+import { usePageTheme, type PagePalette } from "@/modules/hologram-ui/hooks/usePageTheme";
 
 const MultiModelBenchmark = lazy(() => import("./MultiModelBenchmark"));
 const HuggingFaceModelBrowser = lazy(() => import("./HuggingFaceModelBrowser"));
@@ -39,52 +40,62 @@ import {
   type LoadedHFModel,
 } from "@/modules/hologram-compute/hf-model-bridge";
 
-// ── Shared styles ────────────────────────────────────────────
-const card: React.CSSProperties = {
-  background: "hsla(25, 8%, 10%, 0.5)",
-  border: "1px solid hsla(38, 12%, 70%, 0.08)",
-  borderRadius: "20px",
-  padding: "24px",
-  backdropFilter: "blur(20px)",
-};
-const sectionTitle: React.CSSProperties = {
-  fontSize: "10px",
-  fontWeight: 600,
-  letterSpacing: "0.15em",
-  textTransform: "uppercase" as const,
-  color: KP.dim,
-};
-const inputStyle: React.CSSProperties = {
-  background: "hsla(25, 8%, 8%, 0.6)",
-  border: "1px solid hsla(38, 12%, 70%, 0.1)",
-  borderRadius: "14px",
-  padding: "12px 16px",
-  color: KP.text,
-  fontSize: "14px",
-  outline: "none",
-  width: "100%",
-  transition: "border-color 0.2s, box-shadow 0.2s",
-};
-const btnPrimary: React.CSSProperties = {
-  background: "linear-gradient(135deg, hsl(38, 50%, 50%), hsl(32, 55%, 42%))",
-  color: "hsl(30, 20%, 95%)",
-  borderRadius: "14px",
-  padding: "12px 24px",
-  fontSize: "14px",
-  fontWeight: 600,
-  cursor: "pointer",
-  border: "none",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  transition: "transform 0.15s, box-shadow 0.15s",
-  boxShadow: "0 4px 16px hsla(38, 50%, 40%, 0.2)",
-};
+// ── Palette-driven shared styles ─────────────────────────────
+function makeStyles(P: PagePalette) {
+  const card: React.CSSProperties = {
+    background: P.cardBg,
+    border: `1px solid ${P.cardBorder}`,
+    borderRadius: "20px",
+    padding: "24px",
+    backdropFilter: "blur(20px)",
+  };
+  const sectionTitle: React.CSSProperties = {
+    fontSize: "10px",
+    fontWeight: 600,
+    letterSpacing: "0.15em",
+    textTransform: "uppercase" as const,
+    color: P.textDim,
+  };
+  const inputStyle: React.CSSProperties = {
+    background: P.inputBg,
+    border: `1px solid ${P.inputBorder}`,
+    borderRadius: "14px",
+    padding: "12px 16px",
+    color: P.text,
+    fontSize: "14px",
+    outline: "none",
+    width: "100%",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+  };
+  const btnPrimary: React.CSSProperties = {
+    background: P.btnPrimary,
+    color: P.btnPrimaryText,
+    borderRadius: "14px",
+    padding: "12px 24px",
+    fontSize: "14px",
+    fontWeight: 600,
+    cursor: "pointer",
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "transform 0.15s, box-shadow 0.15s",
+    boxShadow: P.btnPrimaryShadow,
+  };
+  return { card, sectionTitle, inputStyle, btnPrimary };
+}
 
 // ── Tabs ──
 type LabTab = "discover" | "project" | "play" | "benchmark";
 
-export default function AtlasProjectionLab() {
+interface AtlasProjectionLabProps {
+  onClose?: () => void;
+}
+
+export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps) {
+  const P = usePageTheme("ai-lab");
+  const { card, sectionTitle, inputStyle, btnPrimary } = useMemo(() => makeStyles(P), [P]);
+
   const [activeTab, setActiveTab] = useState<LabTab>("discover");
   const [selectedModel, setSelectedModel] = useState<string>("smollm2-135m");
   const [useRealModel, setUseRealModel] = useState(false);
@@ -265,11 +276,11 @@ export default function AtlasProjectionLab() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: KP.bg, color: KP.text, fontFamily: KP.font }}>
+    <div style={{ minHeight: "100vh", background: P.bg, color: P.text, fontFamily: P.font }}>
       {/* ── Hero Header ── */}
       <div style={{
         padding: "48px 32px 0",
-        background: "linear-gradient(180deg, hsla(25, 12%, 8%, 1) 0%, hsla(25, 8%, 6%, 0) 100%)",
+        background: P.headerGradient,
         position: "relative",
         overflow: "hidden",
       }}>
@@ -277,47 +288,60 @@ export default function AtlasProjectionLab() {
         <div style={{
           position: "absolute", top: "-120px", left: "50%", transform: "translateX(-50%)",
           width: "600px", height: "300px",
-          background: "radial-gradient(ellipse, hsla(38, 50%, 50%, 0.06), transparent 70%)",
+          background: P.ambientGlow,
           pointerEvents: "none",
         }} />
 
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
-          {/* Icon + Title */}
+          {/* Close + Title */}
           <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
             <div style={{
               width: "56px", height: "56px", borderRadius: "16px",
               display: "flex", alignItems: "center", justifyContent: "center",
-              background: "linear-gradient(145deg, hsla(38, 50%, 50%, 0.15), hsla(260, 30%, 50%, 0.08))",
-              border: "1px solid hsla(38, 50%, 50%, 0.15)",
-              boxShadow: "0 0 40px hsla(38, 50%, 50%, 0.08)",
+              background: P.accentBg,
+              border: `1px solid ${P.border}`,
+              boxShadow: `0 0 40px ${P.accentBg}`,
             }}>
-              <IconSparkles size={26} style={{ color: KP.gold }} />
+              <IconSparkles size={26} style={{ color: P.accent }} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h1 style={{
-                fontSize: "32px", fontWeight: 600, fontFamily: KP.serif,
-                color: KP.text, margin: 0, lineHeight: 1.2, letterSpacing: "-0.02em",
+                fontSize: "32px", fontWeight: 600, fontFamily: P.serif,
+                color: P.text, margin: 0, lineHeight: 1.2, letterSpacing: "-0.02em",
               }}>
                 AI Lab
               </h1>
-              <p style={{ fontSize: "14px", color: KP.muted, margin: "4px 0 0", lineHeight: 1.5 }}>
+              <p style={{ fontSize: "14px", color: P.textMuted, margin: "4px 0 0", lineHeight: 1.5 }}>
                 Understand how AI models think — transparently and beautifully
               </p>
             </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  width: "36px", height: "36px", borderRadius: "10px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: P.cardBg, border: `1px solid ${P.borderSubtle}`,
+                  cursor: "pointer", color: P.textDim, transition: "all 0.2s",
+                }}
+              >
+                <IconX size={16} />
+              </button>
+            )}
           </div>
 
           {/* Mission statement */}
           <div style={{
             ...card, padding: "24px 28px", marginTop: "24px",
-            background: "linear-gradient(135deg, hsla(38, 30%, 50%, 0.06), hsla(260, 20%, 50%, 0.03))",
-            borderColor: "hsla(38, 30%, 50%, 0.1)",
+            background: P.sectionHighlight,
+            borderColor: P.border,
           }}>
-            <p style={{ fontSize: "15px", lineHeight: 1.8, color: KP.muted, margin: 0, maxWidth: "720px" }}>
+            <p style={{ fontSize: "15px", lineHeight: 1.8, color: P.textMuted, margin: 0, maxWidth: "720px" }}>
               Most AI feels like a black box — you type something, something comes back, and you're
-              asked to trust it. <span style={{ color: KP.text }}>This lab changes that.</span> It lets
+              asked to trust it. <span style={{ color: P.text }}>This lab changes that.</span> It lets
               you load real open-source models right in your browser, watch how they process language
               through geometric projection, and compare their quality side by side.
-              <span style={{ color: "hsl(38, 40%, 55%)" }}> Everything here is real, auditable, and yours to explore.</span>
+              <span style={{ color: P.accent }}> Everything here is real, auditable, and yours to explore.</span>
             </p>
           </div>
 
@@ -330,12 +354,12 @@ export default function AtlasProjectionLab() {
                 style={{
                   display: "flex", alignItems: "center", gap: "8px",
                   padding: "12px 20px", fontSize: "13px", fontWeight: 500,
-                  fontFamily: KP.font,
-                  background: activeTab === key ? "hsla(25, 8%, 12%, 0.8)" : "transparent",
-                  color: activeTab === key ? KP.text : KP.dim,
-                  border: "1px solid",
-                  borderColor: activeTab === key ? "hsla(38, 12%, 70%, 0.1)" : "transparent",
-                  borderBottom: activeTab === key ? "1px solid hsla(25, 8%, 12%, 0.8)" : "1px solid transparent",
+                  fontFamily: P.font,
+                  background: activeTab === key ? P.glassBg : "transparent",
+                  color: activeTab === key ? P.text : P.textDim,
+                  border: `1px solid`,
+                  borderColor: activeTab === key ? P.borderSubtle : "transparent",
+                  borderBottom: activeTab === key ? `1px solid ${P.glassBg}` : "1px solid transparent",
                   borderRadius: "14px 14px 0 0",
                   cursor: "pointer", transition: "all 0.2s",
                   position: "relative", top: "1px",
@@ -350,7 +374,7 @@ export default function AtlasProjectionLab() {
 
       {/* ── Tab Content ── */}
       <div style={{
-        borderTop: "1px solid hsla(38, 12%, 70%, 0.06)",
+        borderTop: `1px solid ${P.borderSubtle}`,
         padding: "32px",
         maxWidth: "1200px",
         margin: "0 auto",
@@ -359,11 +383,11 @@ export default function AtlasProjectionLab() {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
             {tabs.find(t => t.key === activeTab)?.icon}
-            <h2 style={{ fontSize: "18px", fontWeight: 600, color: KP.text, margin: 0 }}>
+            <h2 style={{ fontSize: "18px", fontWeight: 600, color: P.text, margin: 0 }}>
               {tabs.find(t => t.key === activeTab)?.label}
             </h2>
           </div>
-          <p style={{ fontSize: "13px", color: KP.dim, margin: 0 }}>
+          <p style={{ fontSize: "13px", color: P.textDim, margin: 0 }}>
             {tabs.find(t => t.key === activeTab)?.desc}
           </p>
         </div>
@@ -893,11 +917,22 @@ function ComparisonPanel({ title, titleColor, text, metrics, ppl }: {
 }
 
 function ReportPanel({ title, icon, content }: { title: string; icon: React.ReactNode; content: string }) {
+  const cardStyle: React.CSSProperties = {
+    background: "hsla(25, 8%, 10%, 0.5)",
+    border: "1px solid hsla(38, 12%, 70%, 0.08)",
+    borderRadius: "20px",
+    padding: "24px",
+    backdropFilter: "blur(20px)",
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: "10px", fontWeight: 600, letterSpacing: "0.15em",
+    textTransform: "uppercase" as const, color: KP.dim,
+  };
   return (
-    <div style={card}>
+    <div style={cardStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
         {icon}
-        <span style={sectionTitle}>{title}</span>
+        <span style={labelStyle}>{title}</span>
       </div>
       <pre style={{
         fontSize: "11px", fontFamily: "monospace", color: KP.dim,
@@ -964,7 +999,7 @@ function NLLChart({ atlas, baseline }: {
   return (
     <div style={{ padding: "18px", borderRadius: "14px", background: "hsla(25, 8%, 10%, 0.5)", border: "1px solid hsla(38, 12%, 70%, 0.06)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-        <span style={sectionTitle}>Per-Token NLL</span>
+        <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: KP.dim }}>Per-Token NLL</span>
         <div style={{ display: "flex", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             <div style={{ width: "12px", height: "2px", borderRadius: "1px", background: KP.gold }} />
