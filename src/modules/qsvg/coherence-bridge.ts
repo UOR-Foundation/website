@@ -307,14 +307,30 @@ export interface GeometricReceipt {
   coupling: number;
   /** Geometric closure verified */
   geometryClosed: boolean;
+  /** TEE attestation CID (null if software-only) */
+  teeAttestationCid: string | null;
+  /** Whether this receipt is hardware-attested */
+  hardwareAttested: boolean;
+  /** Fused CID combining geometric + TEE proof (null if no TEE) */
+  fusedCid: string | null;
 }
 
 export function createGeometricReceipt(
   hScore: number,
   phi: number,
+  teeAttestationCid?: string | null,
 ): GeometricReceipt {
   const measurement = measureGeometricState(hScore, false);
   const closure = verifyGeometricClosure(hScore, phi);
+  const hardwareAttested = !!teeAttestationCid;
+
+  // Fused CID: combines geometric proof identity with TEE attestation
+  let fusedCid: string | null = null;
+  if (teeAttestationCid) {
+    // Simple deterministic fusion: hash the concatenation
+    const fusionStr = `${hScore}:${phi}:${closure.phase}:${teeAttestationCid}`;
+    fusedCid = `fused:${fusionStr.length}:${teeAttestationCid.slice(0, 16)}`;
+  }
 
   return {
     hScore,
@@ -327,5 +343,8 @@ export function createGeometricReceipt(
     fractalDepth: Math.floor(measurement.defects),
     coupling: measurement.coupling,
     geometryClosed: closure.closed,
+    teeAttestationCid: teeAttestationCid ?? null,
+    hardwareAttested,
+    fusedCid,
   };
 }

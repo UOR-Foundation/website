@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { X } from "lucide-react";
-import { boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
+import { bootSync as boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
 
 interface GenesisPopoverProps {
   open: boolean;

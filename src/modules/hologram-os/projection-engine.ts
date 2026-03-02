@@ -801,6 +801,9 @@ export class KernelProjector {
       bootTimeMs: performance.now() - t0,
       kernelCid,
       constitutionCid,
+      tee: { provider: "software", providerName: "Projection Engine", hardwareAttestation: false, sealedStorage: false, userVerification: false, residentKeys: false, detectedAt: Date.now() },
+      teeAttestation: null,
+      teeAssertion: null,
     };
 
     // Final boot event

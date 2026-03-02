@@ -7,7 +7,7 @@ import { QNet } from "../q-net";
 import { QIpc } from "../q-ipc";
 import { QEcc } from "../q-ecc";
 import { QSecurity } from "../q-security";
-import { boot } from "../q-boot";
+import { bootSync as boot } from "../q-boot";
 
 describe("Crystallization Phase 2 — q-syscall, q-net, q-ipc, q-boot, q-driver, q-security", () => {
   const mmu = new QMmu();
