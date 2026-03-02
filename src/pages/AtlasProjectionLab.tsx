@@ -682,16 +682,8 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
                 </p>
               </div>
 
-              {/* Architecture diagram */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxWidth: "500px", width: "100%" }}>
-                <LayerCard P={P} num={4} title="AI Gateway" desc="Text generation · Real model inference · Cloud-hosted" color={P.textMuted} />
-                <LayerConnector P={P} />
-                <LayerCard P={P} num={3} title="Coherence Verification" desc="H-score navigation · O(96) fixed cost · Model-size-invariant" color={P.accent} />
-                <LayerConnector P={P} />
-                <LayerCard P={P} num={2} title="Virtual Qubit Substrate" desc="96 qubits · [[96,48,2]] stabilizer · Self-correcting" color={P.green} />
-                <LayerConnector P={P} />
-                <LayerCard P={P} num={1} title="Hardware Emulation" desc={`${gpuAvailable ? "WebGPU" : "CPU"} · Only job: instantiate qubits · Quality-invariant`} color={P.purple} />
-              </div>
+              {/* 5-Layer Architecture Diagram */}
+              <ArchitectureDiagram P={P} gpuAvailable={gpuAvailable} />
 
               <p style={{ fontSize: "10px", color: P.textDim, textAlign: "center", maxWidth: "400px", lineHeight: 1.6, marginTop: "4px" }}>
                 Layers 1–3 run entirely in your browser. Layer 4 streams from the cloud.
@@ -850,23 +842,70 @@ function MetricCell({ P, label, value, icon, highlight, sub }: { P: PagePalette;
   );
 }
 
-function LayerCard({ P, num, title, desc, color }: { P: PagePalette; num: number; title: string; desc: string; color: string }) {
+function ArchitectureDiagram({ P, gpuAvailable, live }: { P: PagePalette; gpuAvailable: boolean; live?: { tps?: number; hScore?: number; zone?: string; syndromes?: number; interference?: number } }) {
+  const layers: { num: number; title: string; desc: string; color: string; metric?: string; icon: React.ReactNode; location: string }[] = [
+    { num: 5, title: "Token Emission", desc: "Vocabulary → text decoding · Temperature sampling", color: P.text, icon: <IconBolt size={14} />, location: "Browser", metric: live?.tps ? `${live.tps.toFixed(0)} tok/s` : undefined },
+    { num: 4, title: "AI Gateway", desc: "Real model inference · Cloud-hosted · Any architecture", color: P.textMuted, icon: <IconExternalLink size={14} />, location: "Cloud" },
+    { num: 3, title: "Coherence Verification", desc: "H-score gradient · O(96) fixed cost · Model-size-invariant", color: P.accent, icon: <IconSparkles size={14} />, location: "Browser", metric: live?.hScore ? `H=${live.hScore.toFixed(3)}` : undefined },
+    { num: 2, title: "Virtual Qubit Substrate", desc: "96 qubits · [[96,48,2]] stabilizer code · Self-correcting", color: P.green, icon: <IconAtom size={14} />, location: "Browser", metric: live?.syndromes !== undefined ? `${live.syndromes} syndromes` : undefined },
+    { num: 1, title: "Hardware Emulation", desc: `${gpuAvailable ? "WebGPU" : "CPU fallback"} · Qubit instantiation · Quality-invariant`, color: P.purple, icon: <IconCpu size={14} />, location: "Browser" },
+  ];
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", borderRadius: "10px", background: P.cardBg, border: `1px solid ${P.cardBorder}` }}>
-      <div style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: `${color}12`, border: `1px solid ${color}25`, flexShrink: 0, color, fontSize: "12px", fontWeight: 800 }}>
-        L{num}
+    <div style={{ maxWidth: "540px", width: "100%", position: "relative" }}>
+      {/* Vertical spine */}
+      <div style={{ position: "absolute", left: "26px", top: "28px", bottom: "28px", width: "1px", background: `linear-gradient(to bottom, ${P.accent}30, ${P.green}30, ${P.purple}30)` }} />
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        {layers.map((l, i) => (
+          <div key={l.num}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderRadius: "10px", background: P.cardBg, border: `1px solid ${P.cardBorder}`, position: "relative" }}>
+              {/* Number badge */}
+              <div style={{ width: "28px", height: "28px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: `${l.color}12`, border: `1px solid ${l.color}25`, fontSize: "11px", fontWeight: 800, color: l.color, flexShrink: 0, zIndex: 1 }}>
+                {l.num}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: P.text }}>{l.title}</span>
+                  <span style={{ fontSize: "8px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: l.location === "Cloud" ? P.accent : P.green, background: l.location === "Cloud" ? `${P.accent}10` : `${P.green}08`, padding: "1px 5px", borderRadius: "3px", border: `1px solid ${l.location === "Cloud" ? `${P.accent}15` : `${P.green}12`}` }}>
+                    {l.location}
+                  </span>
+                </div>
+                <div style={{ fontSize: "10px", color: P.textDim, marginTop: "2px" }}>{l.desc}</div>
+              </div>
+              {l.metric && (
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  style={{ padding: "3px 8px", borderRadius: "6px", background: `${l.color}12`, border: `1px solid ${l.color}20`, fontSize: "10px", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: l.color, flexShrink: 0 }}>
+                  {l.metric}
+                </motion.div>
+              )}
+              <div style={{ color: `${l.color}60`, flexShrink: 0 }}>{l.icon}</div>
+            </div>
+            {i < layers.length - 1 && (
+              <div style={{ display: "flex", justifyContent: "center", height: "4px" }}>
+                <div style={{ width: "1px", height: "4px", background: P.borderSubtle }} />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: P.text }}>{title}</div>
-        <div style={{ fontSize: "11px", color: P.textDim, marginTop: "1px" }}>{desc}</div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "12px" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", color: P.textDim }}>
+          <span style={{ width: "6px", height: "6px", borderRadius: "2px", background: P.green }} /> Client-side
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", color: P.textDim }}>
+          <span style={{ width: "6px", height: "6px", borderRadius: "2px", background: P.accent }} /> Cloud
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", color: P.textDim }}>
+          <span style={{ width: "1px", height: "10px", background: `linear-gradient(to bottom, ${P.accent}40, ${P.green}40)` }} /> Data flow
+        </span>
       </div>
     </div>
   );
 }
 
-function LayerConnector({ P }: { P: PagePalette }) {
-  return <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "6px", background: P.borderSubtle }} /></div>;
-}
 
 function ThreeLayerBoot({ P, phase, message, model }: { P: PagePalette; phase: string; message: string; model: ModelProfile }) {
   const layers = [
