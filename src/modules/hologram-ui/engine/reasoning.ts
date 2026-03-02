@@ -105,3 +105,20 @@ export {
   type MirrorProjection,
   type MirrorBondEntry,
 } from "@/hologram/kernel/mirror-protocol";
+
+// ── QSVG Spectral Verification ────────────────────────────────────────
+export {
+  completedZeta,
+  runSpectralVerification,
+  spectralGrade,
+  coherenceCoupling,
+  torsionCoupling,
+  generateBridgeReport,
+  verifyAlphaCrossFramework,
+  selfVerifyGeometry,
+  ALPHA_QSVG,
+  DELTA_0_RAD,
+  FRACTAL_DIMENSION,
+  type SpectralTest,
+  type QSVGAtlasBridgeReport,
+} from "@/modules/qsvg";
