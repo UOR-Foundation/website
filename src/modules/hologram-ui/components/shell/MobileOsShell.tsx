@@ -69,6 +69,47 @@ function softHaptic() {
   navigator.vibrate(15);
 }
 
+/**
+ * narrativePulse — A soft heartbeat combining haptic + synthesised tone.
+ * Two gentle low-frequency thumps (lub-dub) via Web Audio API,
+ * paired with a matching vibration pattern.
+ */
+let _audioCtx: AudioContext | null = null;
+function narrativePulse(intensity: number = 0.12) {
+  // Haptic: gentle double-tap pattern (lub … dub)
+  if ("vibrate" in navigator) {
+    navigator.vibrate([30, 100, 20]);
+  }
+
+  // Synthesised heartbeat tone
+  try {
+    if (!_audioCtx) _audioCtx = new AudioContext();
+    const ctx = _audioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+
+    // Helper: create a short sub-bass thump
+    const thump = (time: number, freq: number, dur: number, gain: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, time);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, time + dur);
+      g.gain.setValueAtTime(gain, time);
+      g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + dur);
+    };
+
+    // Lub (lower, longer) then dub (higher, shorter) — like a heartbeat
+    thump(now, 55, 0.18, intensity);
+    thump(now + 0.22, 70, 0.12, intensity * 0.7);
+  } catch {
+    // Audio context blocked — haptic alone is fine
+  }
+}
+
 // ── Console zones — Sanctuary → Explore → Create ──────────────────────
 interface ConsoleItem {
   label: string;
@@ -149,6 +190,17 @@ function useNarrative(isNewUser: boolean) {
 
     return () => { clearTimeout(breathTimer); clearTimeout(typeTimer); };
   }, [isNewUser, complete]);
+
+  // Fire heartbeat pulse when each new line begins
+  const prevLineRef = useRef(-1);
+  useEffect(() => {
+    if (lineIndex >= 0 && lineIndex !== prevLineRef.current) {
+      prevLineRef.current = lineIndex;
+      // Intensity tapers with golden ratio — first line strongest
+      const intensity = 0.14 * Math.pow(0.618, Math.min(lineIndex, 3));
+      narrativePulse(intensity);
+    }
+  }, [lineIndex]);
 
   useEffect(() => {
     if (!started || lineIndex < 0 || lineIndex >= NARRATIVE_LINES.length) return;
