@@ -47,6 +47,7 @@ import PwaInstallBanner from "../PwaInstallBanner";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import { usePwaInstall } from "@/modules/hologram-ui/hooks/usePwaInstall";
 import { useAmbientWhisper } from "@/modules/hologram-ui/hooks/useAmbientWhisper";
+import { usePortalCoherence } from "@/modules/hologram-ui/hooks/usePortalCoherence";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 import { getPrimeTheme, setPrimeTheme } from "@/modules/hologram-ui/theme/prime-palette";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,6 +159,7 @@ export default function MobileOsShell() {
   const whisper = useAmbientWhisper();
   const pwa = usePwaInstall();
   const narrative = useNarrative(isNewUser);
+  const coherence = usePortalCoherence();
 
   // Check if user is new (no glyph yet)
   useEffect(() => {
@@ -403,6 +405,27 @@ export default function MobileOsShell() {
             paddingBottom: `calc(env(safe-area-inset-bottom, 16px) + ${GR.xl}px)`,
           }}
         >
+          {/* Resonance indicator — subtle arc above orb */}
+          {coherence.resonanceConfidence > 0.15 && (
+            <div
+              className="mb-3 flex items-center gap-2"
+              style={{
+                animation: "portal-fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) both",
+                animationDelay: "1.2s",
+              }}
+            >
+              <div
+                className="h-[2px] rounded-full"
+                style={{
+                  width: `${32 + coherence.resonanceScore * 40}px`,
+                  background: `linear-gradient(90deg, transparent, ${PP.accent}, transparent)`,
+                  opacity: 0.15 + coherence.resonanceScore * 0.35,
+                  transition: "all 1.5s ease",
+                }}
+              />
+            </div>
+          )}
+
           <button
             ref={orbRef}
             onClick={handleLumenTap}
@@ -414,13 +437,13 @@ export default function MobileOsShell() {
             }}
             aria-label="Open Lumen"
           >
-            {/* Outer breathing ring */}
+            {/* Outer breathing ring — synced to coherence */}
             <div
               className="absolute rounded-full pointer-events-none"
               style={{
                 inset: -(GR.md),
                 border: `1px solid ${PP.orbBreathRing}`,
-                animation: "portal-orb-breathe 5s ease-in-out infinite",
+                animation: `portal-orb-breathe var(--portal-breath-duration, 5s) ease-in-out infinite`,
               }}
             />
             {/* Secondary ring — offset phase */}
@@ -430,16 +453,17 @@ export default function MobileOsShell() {
                 inset: -(GR.lg),
                 border: `1px solid ${PP.orbBreathRing}`,
                 opacity: 0.5,
-                animation: "portal-orb-breathe 5s ease-in-out infinite 2.5s",
+                animation: `portal-orb-breathe var(--portal-breath-duration, 5s) ease-in-out infinite calc(var(--portal-breath-duration, 5s) / 2)`,
               }}
             />
-            {/* Glow field */}
+            {/* Coherence glow field */}
             <div
               className="absolute rounded-full pointer-events-none"
               style={{
                 inset: -4,
                 background: `radial-gradient(circle, ${PP.orbGlow}, transparent 70%)`,
-                transition: "all 0.4s ease",
+                opacity: `var(--portal-glow-intensity, 0.15)`,
+                transition: "opacity 1.5s ease",
               }}
             />
             {/* Center point */}
@@ -450,8 +474,8 @@ export default function MobileOsShell() {
                 height: 10,
                 background: PP.orbCenter,
                 opacity: 0.8,
-                boxShadow: `0 0 12px ${PP.orbGlow}`,
-                transition: "all 0.4s ease",
+                boxShadow: `0 0 ${8 + coherence.hScore * 12}px ${PP.orbGlow}`,
+                transition: "box-shadow 1.5s ease",
               }}
             />
           </button>
