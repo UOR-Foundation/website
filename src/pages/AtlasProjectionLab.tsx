@@ -268,7 +268,7 @@ export default function AtlasProjectionLab() {
             <IconBrain className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Atlas Projection Lab</h1>
+            <h1 className="text-2xl font-bold tracking-tight">AI Lab</h1>
             <p className="text-sm text-muted-foreground">
               Project open-source LLMs onto the Atlas manifold — coherence-guided inference
             </p>
