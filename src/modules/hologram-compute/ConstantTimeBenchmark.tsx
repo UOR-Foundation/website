@@ -1306,12 +1306,20 @@ export default function ConstantTimeBenchmark() {
   const cancelRef = useRef(false);
   const cacheRef = useRef<HologramComputeCache | null>(null);
 
-  const precompute = useCallback(async () => {
+  const precompute = useCallback(async (forceCpuOnly?: boolean) => {
+    // Always rebuild cache when switching between CPU-only and GPU-assisted modes
+    if (cacheRef.current) {
+      const currentMethod = cacheRef.current.stats.method;
+      const wantsCpuOnly = forceCpuOnly ?? false;
+      if ((wantsCpuOnly && currentMethod === "gpu") || (!wantsCpuOnly && currentMethod === "lut-cpu")) {
+        cacheRef.current = null; // invalidate — wrong mode
+      }
+    }
     if (cacheRef.current) return;
     const cache = new HologramComputeCache();
     await cache.precompute(ALL_SIZES, SEED_A, SEED_B, (_i, n, method) => {
       setCurrentSize(`crystallizing ${n}×${n} [${method}]`);
-    });
+    }, forceCpuOnly);
     setPrecomputeMs(cache.precomputeTimeMs);
     setPrecomputeMethod(cache.stats.method);
     setCacheEntries(cache.entries);
@@ -1328,7 +1336,11 @@ export default function ConstantTimeBenchmark() {
     setState("precomputing");
     setPoints([]);
     await new Promise((r) => setTimeout(r, 50));
-    await precompute();
+    // CPU tab: force CPU-only LUT path for fair apples-to-apples comparison
+    // GPU tab: allow real GPU for precomputation
+    const forceCpuOnly = demo === "cpu";
+    cacheRef.current = null; // always rebuild for the correct mode
+    await precompute(forceCpuOnly);
     await new Promise((r) => setTimeout(r, 150));
     setState("running");
 

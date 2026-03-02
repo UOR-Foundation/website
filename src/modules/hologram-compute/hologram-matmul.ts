@@ -1068,18 +1068,22 @@ export class HologramComputeCache {
     seedA: number,
     seedB: number,
     onProgress?: (i: number, n: number, method: string) => void,
+    /** Force CPU-only LUT path — skips GPU even if available. Use for fair CPU vs vGPU benchmarks. */
+    forceCpuOnly?: boolean,
   ): Promise<void> {
     this.cache.clear();
     const start = performance.now();
     let entries = 0;
     let totalBytes = 0;
 
-    // Probe GPU availability once
+    // Probe GPU availability once (skip if forceCpuOnly)
     let useGpu = false;
-    try {
-      const probe = await gpuMatmul(new Uint8Array(4), new Uint8Array(4), 2);
-      useGpu = probe !== null;
-    } catch { useGpu = false; }
+    if (!forceCpuOnly) {
+      try {
+        const probe = await gpuMatmul(new Uint8Array(4), new Uint8Array(4), 2);
+        useGpu = probe !== null;
+      } catch { useGpu = false; }
+    }
 
     const method = useGpu ? "gpu" : "lut-cpu";
 
