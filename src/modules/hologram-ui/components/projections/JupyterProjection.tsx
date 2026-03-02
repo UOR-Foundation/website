@@ -2,8 +2,10 @@
  * JupyterProjection — Keep-alive Jupyter panel with hover preloading
  */
 
+import { lazy, Suspense } from "react";
 import ProjectionShell from "../shell/ProjectionShell";
-import QuantumJupyterWorkspace from "@/hologram/kernel/notebook/QuantumJupyterWorkspace";
+
+const QuantumJupyterWorkspace = lazy(() => import("@/hologram/kernel/notebook/QuantumJupyterWorkspace"));
 
 interface JupyterProjectionProps {
   open: boolean;
@@ -21,9 +23,14 @@ export default function JupyterProjection({ open, preload, onClose }: JupyterPro
       backdropColor="hsla(0, 0%, 0%, 0.4)"
       beamGradient="linear-gradient(to bottom, hsla(38, 50%, 55%, 0.0), hsla(38, 50%, 55%, 0.25), hsla(38, 50%, 55%, 0.0))"
     >
-      {/* Background is now controlled by the workspace itself based on theme */}
       <div className="flex-1 overflow-hidden">
-        <QuantumJupyterWorkspace onClose={onClose} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full" style={{ background: "hsl(25, 8%, 7%)", color: "hsl(38, 50%, 55%)" }}>
+            <span className="text-sm font-mono">Loading Jupyter…</span>
+          </div>
+        }>
+          <QuantumJupyterWorkspace onClose={onClose} />
+        </Suspense>
       </div>
     </ProjectionShell>
   );
