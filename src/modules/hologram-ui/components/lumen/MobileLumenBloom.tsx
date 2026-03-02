@@ -8,7 +8,7 @@
  * @module hologram-ui/components/lumen/MobileLumenBloom
  */
 
-import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import HologramAiChat from "./HologramAiChat";
 import VoiceOrb from "./VoiceOrb";
@@ -33,6 +33,7 @@ interface MobileLumenBloomProps {
 
 const ORGANIC_EASE = [0.23, 1, 0.32, 1] as const;
 const BLOOM_DURATION = 0.7;
+const PROJECTION_ORDER: BloomProjection[] = ["conversation", "trust", "calendar", "knowledge"];
 
 function ProjectionSpinner() {
   return (
@@ -48,11 +49,13 @@ function ProjectionSpinner() {
 export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBloomProps) {
   const [mounted, setMounted] = useState(false);
   const [activeProjection, setActiveProjection] = useState<BloomProjection>("conversation");
+  const [swipeDir, setSwipeDir] = useState<1 | -1>(1);
   const [verifyComplete, setVerifyComplete] = useState(false);
   const [collapseTriggered, setCollapseTriggered] = useState(false);
   const [collapseInfo, setCollapseInfo] = useState({ zone: "COLLAPSE", hScore: 0.12 });
   const [zkPanelOpen, setZkPanelOpen] = useState(false);
   const swipeStartY = useRef<number | null>(null);
+  const projSwipeX = useRef<number | null>(null);
 
   useEffect(() => {
     if (open && !mounted) setMounted(true);
@@ -84,6 +87,30 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
     swipeStartY.current = null;
     if (dy > 80) onClose();
   }, [onClose]);
+
+  const changeProjection = useCallback((proj: BloomProjection) => {
+    const oldIdx = PROJECTION_ORDER.indexOf(activeProjection);
+    const newIdx = PROJECTION_ORDER.indexOf(proj);
+    setSwipeDir(newIdx >= oldIdx ? 1 : -1);
+    setActiveProjection(proj);
+  }, [activeProjection]);
+
+  const handleProjTouchStart = useCallback((e: React.TouchEvent) => {
+    projSwipeX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleProjTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (projSwipeX.current === null) return;
+    const dx = e.changedTouches[0].clientX - projSwipeX.current;
+    projSwipeX.current = null;
+    if (Math.abs(dx) < 50) return;
+    const idx = PROJECTION_ORDER.indexOf(activeProjection);
+    if (dx < 0 && idx < PROJECTION_ORDER.length - 1) {
+      changeProjection(PROJECTION_ORDER[idx + 1]);
+    } else if (dx > 0 && idx > 0) {
+      changeProjection(PROJECTION_ORDER[idx - 1]);
+    }
+  }, [activeProjection, changeProjection]);
 
   const handleVoiceExchange = useCallback((userText: string, assistantText: string) => {
     console.log("[LumenBloom] Voice exchange completed");
@@ -165,24 +192,28 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
             {verifyComplete && (
               <AmbientCardStack
                 active={open}
-                onNavigate={setActiveProjection}
+                onNavigate={changeProjection}
               />
             )}
 
             {/* Projection tabs */}
             <div className="py-2">
-              <BloomProjectionTabs active={activeProjection} onChange={setActiveProjection} />
+              <BloomProjectionTabs active={activeProjection} onChange={changeProjection} />
             </div>
 
-            {/* Active projection */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <AnimatePresence mode="wait">
+            {/* Active projection — swipeable */}
+            <div
+              className="flex-1 overflow-hidden flex flex-col"
+              onTouchStart={handleProjTouchStart}
+              onTouchEnd={handleProjTouchEnd}
+            >
+              <AnimatePresence mode="wait" custom={swipeDir}>
                 <motion.div
                   key={activeProjection}
                   className="flex-1 flex flex-col overflow-hidden"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
+                  initial={{ opacity: 0, x: swipeDir * 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: swipeDir * -40 }}
                   transition={{ duration: 0.25, ease: ORGANIC_EASE }}
                 >
                   {activeProjection === "conversation" && (
