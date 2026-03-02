@@ -235,3 +235,39 @@ export type {
   HardwareBackend,
   QubitSubstrateState,
 } from "./quantum-inference-engine";
+
+// Vocabulary Partitioner — Token Space → 96 Atlas Vertex Clusters
+export {
+  VocabularyPartitioner,
+  computeCoherenceSignature,
+} from "./vocabulary-partitioner";
+export type {
+  TokenProjection,
+  VertexCluster,
+  ClusterToken,
+  PartitionStats,
+  VocabularyEngram,
+} from "./vocabulary-partitioner";
+
+// Tokenizer Bridge — Load real vocabularies for Atlas partitioning
+export {
+  loadTokenizerVocabulary,
+  simpleEncode,
+  simpleDecode,
+} from "./tokenizer-bridge";
+export type {
+  TokenizerInfo,
+  TokenizerLoadProgress,
+} from "./tokenizer-bridge";
+
+// Coherence Token Decoder — Pure manifold navigation → token emission
+export {
+  CoherenceTokenDecoder,
+  DEFAULT_DECODER_CONFIG,
+} from "./coherence-token-decoder";
+export type {
+  DecoderConfig,
+  DecoderStatus,
+  GenerationToken,
+  GenerationResult,
+} from "./coherence-token-decoder";
