@@ -29,13 +29,15 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // Map model selection to appropriate gateway model
-    const gatewayModel = model === "70B" || model === "8B"
+    const gatewayModel = model === "70B"
+      ? "google/gemini-3-flash-preview"
+      : model === "8B"
       ? "google/gemini-2.5-flash"
       : "google/gemini-2.5-flash-lite";
 
     const systemPrompt = model === "70B"
-      ? `You are an advanced AI assistant with deep expertise. Respond thoughtfully, precisely, and comprehensively. Your responses should demonstrate sophisticated understanding and nuanced reasoning. Be articulate and insightful.`
-      : `You are a helpful AI assistant. Keep answers clear and concise.`;
+      ? `You are an advanced AI assistant demonstrating deep expertise. Respond thoughtfully, precisely, and comprehensively in clear human language. Use natural paragraphs. Be articulate, insightful, and accessible.`
+      : `You are a helpful AI assistant. Respond in clear, natural human language. Keep answers concise and readable.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -50,7 +52,7 @@ serve(async (req) => {
           { role: "user", content: prompt },
         ],
         stream: true,
-        max_tokens: 800,
+        max_tokens: 4096,
         temperature: 0.7,
       }),
     });
