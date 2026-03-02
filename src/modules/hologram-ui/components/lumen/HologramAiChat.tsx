@@ -89,6 +89,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Mic, MicOff, Brain } from "lucide-react";
 import SavedResponsesPanel from "@/modules/hologram-ui/components/SavedResponsesPanel";
 import { sf } from "@/modules/hologram-ui/utils/scaledFontSize";
+import { GR } from "@/modules/hologram-ui/theme/portal-palette";
 
 // ── Palette constants ──────────────────────────────────────────────────────
 
@@ -157,11 +158,13 @@ interface HologramAiChatProps {
   resizeHandleProps?: Record<string, any>;
   /** Whether the panel is being resized */
   isResizing?: boolean;
+  /** Mobile portal mode — strips all chrome for pure conversation */
+  mobilePortalMode?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt, panelWidth, resizeHandleProps, isResizing }: HologramAiChatProps) {
+export default function HologramAiChat({ open, onClose, onPhaseChange, creatorStage = 1, replayGuideKey = 0, initialPrompt, panelWidth, resizeHandleProps, isResizing, mobilePortalMode = false }: HologramAiChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -1086,8 +1089,8 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           contain: "layout style paint",
         }}
       >
-        {/* ── Resize handle — left edge drag strip ─────────────────── */}
-        {resizeHandleProps && (
+        {/* ── Resize handle — left edge drag strip (desktop only) ──── */}
+        {!mobilePortalMode && resizeHandleProps && (
           <div
             {...resizeHandleProps}
             className="absolute top-0 bottom-0 -left-[3px] w-[7px] z-[62] group flex items-center justify-center"
@@ -1111,11 +1114,12 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
         <div
           className="flex-1 flex flex-col h-full relative"
           style={{
-            background: "hsl(25, 8%, 8%)",
-            borderLeft: "1px solid hsla(38, 15%, 30%, 0.05)",
+            background: mobilePortalMode ? "transparent" : "hsl(25, 8%, 8%)",
+            borderLeft: mobilePortalMode ? "none" : "1px solid hsla(38, 15%, 30%, 0.05)",
           }}
         >
-        {/* ── Header — whisper-quiet ────────────────────────────────── */}
+        {/* ── Header — whisper-quiet (hidden in portal mode) ─────────── */}
+        {!mobilePortalMode && (
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid hsla(38, 15%, 25%, 0.06)" }}>
           <div className="flex items-center gap-2">
             <div
@@ -1175,14 +1179,15 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             </button>
           </div>
         </div>
+        )}
 
         {/* Skill bar removed — cleaner, less clutter */}
 
-        {/* ── Trust Trend (appears after 2+ graded responses) ────────── */}
-        <TrustTrendBar messages={messages} />
+        {/* ── Trust Trend (hidden in portal mode) ────────────────── */}
+        {!mobilePortalMode && <TrustTrendBar messages={messages} />}
 
-        {/* ── Messages / Welcome ─────────────────────────────────────── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 lumen-scroll">
+        {/* ── Messages / Welcome ─────────────────────────────────── */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto lumen-scroll" style={{ padding: mobilePortalMode ? `${GR.lg}px ${GR.lg}px` : "20px 20px" }}>
           {!hasMessages && !isLoadingModel && (
             <TriadicWelcome
               key={replayGuideKey}
@@ -1299,11 +1304,19 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           )}
         </div>
 
-        {/* ── Input Bar — bottom-anchored, centered ────────────────── */}
-        <div className="flex justify-center px-4 pb-4 pt-1 flex-shrink-0 pointer-events-auto">
+        {/* ── Input Bar — bottom-anchored ────────────────────────── */}
+        <div
+          className="flex justify-center flex-shrink-0 pointer-events-auto"
+          style={{
+            padding: mobilePortalMode
+              ? `${GR.xs}px ${GR.md}px calc(env(safe-area-inset-bottom, 8px) + ${GR.sm}px)`
+              : "4px 16px 16px",
+          }}
+        >
           <div className="w-full max-w-2xl">
 
-          {/* ── Context Awareness Chip ─────────────────────────── */}
+          {/* ── Context Awareness Chip (hidden in portal mode) ───── */}
+          {!mobilePortalMode && (
           <AnimatePresence mode="wait">
           {(() => {
             // Private session — show minimal chip
@@ -1396,9 +1409,10 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             );
           })()}
           </AnimatePresence>
+          )}
 
-          {/* ── QDisclosure Active Indicator ────────────────────── */}
-          {authProfile?.privacyRules && Object.values(authProfile.privacyRules).some(v => v === false) && !privateSession && (
+          {/* ── QDisclosure Active Indicator (hidden in portal mode) ── */}
+          {!mobilePortalMode && authProfile?.privacyRules && Object.values(authProfile.privacyRules).some(v => v === false) && !privateSession && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1418,8 +1432,13 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
           {/* Context topics removed — less clutter, more focus */}
 
           <div
-            className="rounded-xl overflow-visible transition-all"
-            style={{
+            className="overflow-visible transition-all"
+            style={mobilePortalMode ? {
+              borderRadius: "13px",
+              background: "transparent",
+              borderTop: `1px solid ${P.borderLight}`,
+            } : {
+              borderRadius: "12px",
               background: "hsla(25, 8%, 9%, 0.9)",
               border: "1px solid hsla(38, 15%, 25%, 0.1)",
               boxShadow: "0 1px 8px hsla(25, 10%, 5%, 0.15)",
@@ -1505,7 +1524,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
             )}
 
             {/* Text input area */}
-            <div className="px-4 pt-3 pb-2">
+            <div style={{ padding: mobilePortalMode ? `${GR.md}px ${GR.md}px ${GR.sm}px` : "12px 16px 8px" }}>
               <textarea
                 ref={inputRef}
                 value={input}
@@ -1514,20 +1533,22 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                 placeholder={whisper.isRecording ? "Listening…" : whisper.isTranscribing ? "Transcribing…" : "Ask anything…"}
                 disabled={isGenerating}
                 rows={2}
-                className="w-full bg-transparent border-none outline-none resize-none text-[14px] placeholder:opacity-25 leading-relaxed block py-1"
+                className="w-full bg-transparent border-none outline-none resize-none placeholder:opacity-25 leading-relaxed block py-1"
                 style={{
                   color: P.text,
                   fontFamily: P.font,
-                  maxHeight: "100px",
+                  fontSize: mobilePortalMode ? "17px" : "14px",
+                  maxHeight: "120px",
                   letterSpacing: "0.015em",
                 }}
               />
             </div>
 
             {/* Bottom toolbar */}
-            <div className="flex items-center justify-between px-3 pb-2.5">
+            <div className="flex items-center justify-between px-3" style={{ paddingBottom: mobilePortalMode ? `${GR.xs}px` : "10px" }}>
 
-              {/* Left: Plus menu */}
+              {/* Left: Plus menu (hidden in portal mode) */}
+              {!mobilePortalMode && (
               <div className="flex items-center gap-1">
                 <div className="relative" ref={inputMenuRef}>
                   <button
@@ -1633,9 +1654,11 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                   }}
                 />
               </div>
+              )}
 
               <div className="flex items-center gap-2">
-                {/* Model selector dropdown */}
+                {/* Model selector dropdown (hidden in portal mode) */}
+                {!mobilePortalMode && (
                 <div className="relative" ref={modelPickerRef}>
                   <button
                     onClick={() => setShowModelPicker((p) => !p)}
@@ -1712,6 +1735,7 @@ export default function HologramAiChat({ open, onClose, onPhaseChange, creatorSt
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Voice input button + waveform */}
                 <div className="flex items-center gap-1">
@@ -1901,8 +1925,8 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                   </div>
                 )}
                 <p
-                  className="text-[14px] leading-[1.7] whitespace-pre-wrap"
-                  style={{ color: P.text, fontFamily: P.font }}
+                  className="leading-[1.7] whitespace-pre-wrap"
+                  style={{ color: "hsl(38, 20%, 92%)", fontFamily: P.font, fontSize: "16px" }}
                 >
                   {content}
                 </p>
@@ -1922,10 +1946,11 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
               </div>
             ) : (
               <div
-                className={`text-[14px] leading-[1.85] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
+                className={`leading-[1.85] prose prose-invert max-w-none ${isStreaming ? "streaming-reveal" : ""}`}
                 style={{
-                  color: "hsl(30, 12%, 72%)",
+                  color: "hsl(38, 18%, 85%)",
                   fontFamily: P.font,
+                  fontSize: "16px",
                   textRendering: "optimizeLegibility",
                   letterSpacing: "0.01em",
                   ['--tw-prose-headings' as string]: "hsl(38, 30%, 70%)",
@@ -1978,7 +2003,7 @@ function MessageBubble({ message, isStreaming = false, onSendFollowUp, userQuery
                       <ol className="space-y-2.5 my-4 pl-1" style={{ listStyle: "none", counterReset: "item" }}>{children}</ol>
                     ),
                     li: ({ children }) => (
-                      <li className="flex gap-3 items-start text-base" style={{ color: "hsl(30, 14%, 76%)" }}>
+                      <li className="flex gap-3 items-start text-base" style={{ color: "hsl(38, 18%, 85%)" }}>
                         <span
                           className="flex-shrink-0 mt-[10px]"
                           style={{ color: "hsl(38, 35%, 52%)", fontSize: sf(5) }}
