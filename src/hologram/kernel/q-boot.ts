@@ -230,25 +230,15 @@ export async function boot(): Promise<QKernelBoot> {
   const firmware = hydrateFirmware();
   const genesis = createGenesisProcess();
 
-  // ── TEE Detection & Attestation ──────────────────────────────
+  // ── TEE Detection (no auto-attestation) ───────────────────────
+  // TEE attestation is deferred to the MySpacePanel identity ceremony.
+  // Boot only detects capabilities — the single canonical entry point
+  // (MySpacePanel) triggers attestation when the user authenticates.
   const teeBridge = getTEEBridge();
   const tee = await teeBridge.detect();
 
-  let teeAttestation: TEEAttestationQuote | null = null;
-  let teeAssertion: TEEAssertion | null = null;
-
-  try {
-    // Attest the kernel identity to the device's TEE
-    teeAttestation = await teeBridge.attest(
-      genesis.sessionCid,
-      "Hologram Kernel (PID 0)",
-    );
-
-    // Assert that the kernel is running on the attested device
-    teeAssertion = await teeBridge.assert(genesis.sessionCid);
-  } catch (error) {
-    console.warn("[Q-Boot] TEE attestation/assertion skipped:", error);
-  }
+  const teeAttestation: TEEAttestationQuote | null = null;
+  const teeAssertion: TEEAssertion | null = null;
 
   const constitutionCid = getConstitutionCid().string;
 
