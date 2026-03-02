@@ -1,17 +1,18 @@
 /**
- * ProjectionShell — GPU-promoted panel projection from the sidebar
+ * ProjectionShell — Holographic panel projection from the sidebar
  * ═══════════════════════════════════════════════════════════════════
  *
- * Performance architecture:
- *   - Pure CSS transitions (no framer-motion JS interpolation)
- *   - translate3d for compositor-promoted animation
- *   - contain: layout style paint for isolation
- *   - Keep-alive: once opened, content stays mounted for instant re-open
- *   - Preload: can be pre-mounted via `preload` prop (hover-triggered)
- *   - onPointerDown-ready: caller fires instantly, shell animates
+ * Visual metaphor: the sidebar is the base of a holographic projector.
+ * Each panel EMANATES from the sidebar edge, sweeping left-to-right
+ * as if projected by light. On close, it retraces right-to-left back
+ * into the sidebar — a seamless, organic reveal/collapse.
  *
- * The projection metaphor: panels emanate from the sidebar edge,
- * sliding left-to-right as if projected by the kernel.
+ * Performance architecture:
+ *   - clip-path for the projection reveal (GPU-composited)
+ *   - translate3d for content momentum (compositor-promoted)
+ *   - No framer-motion JS — pure CSS transitions
+ *   - Keep-alive: once opened, content stays mounted
+ *   - Preload: can be pre-mounted via `preload` prop
  */
 
 import { useState, useEffect, memo, useRef } from "react";
@@ -23,6 +24,9 @@ import {
 } from "@/modules/hologram-ui/theme/projection-transitions";
 
 const SIDEBAR_WIDTH = 56;
+
+/** Slightly longer duration for the holographic reveal for elegance */
+const REVEAL_MS = Math.round(DURATION_PROJECT_MS * 1.1); // ~374ms
 
 interface ProjectionShellProps {
   /** Panel is visible and interactive */
@@ -62,18 +66,18 @@ export default memo(function ProjectionShell({
     }
   }, [open, preload, everMounted]);
 
-  // Backdrop lifecycle: mount instantly on open, delayed unmount on close
+  // Backdrop lifecycle
   useEffect(() => {
     if (open) {
       clearTimeout(backdropTimeout.current);
       setBackdropVisible(true);
     } else {
-      backdropTimeout.current = setTimeout(() => setBackdropVisible(false), DURATION_PROJECT_MS);
+      backdropTimeout.current = setTimeout(() => setBackdropVisible(false), REVEAL_MS + 50);
     }
     return () => clearTimeout(backdropTimeout.current);
   }, [open]);
 
-  // Close on Escape — immediate response
+  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -83,12 +87,11 @@ export default memo(function ProjectionShell({
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  // Nothing to render yet
   if (!everMounted) return null;
 
   return (
     <>
-      {/* Backdrop — pure CSS opacity transition */}
+      {/* ── Backdrop — fades with the projection ── */}
       {backdropVisible && (
         <div
           className="fixed inset-0 z-[499]"
@@ -102,49 +105,79 @@ export default memo(function ProjectionShell({
         />
       )}
 
-      {/* Panel — GPU-promoted translate3d projection from sidebar edge */}
+      {/* ── Holographic Projection Container ── 
+           Uses clip-path to create the left-to-right reveal effect.
+           The panel is always positioned flush against the sidebar edge
+           with zero gap, and the clip sweeps from 0% to 100% width. */}
       <div
-        className={`fixed top-0 bottom-0 z-[500] flex ${open ? "will-change-active" : "will-change-idle"}`}
+        className="fixed top-0 bottom-0 z-[500]"
         style={{
           left: SIDEBAR_WIDTH,
           right: 0,
-          // GPU-promoted transform for smooth left-to-right projection
-          transform: open ? "translate3d(0, 0, 0)" : "translate3d(-40px, 0, 0)",
-          opacity: open ? 1 : 0,
+          // Holographic reveal: clip-path sweeps from left edge to full width
+          clipPath: open ? "inset(0 0 0 0)" : "inset(0 100% 0 0)",
           transition: open
-            ? `transform ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}, opacity ${Math.round(DURATION_PROJECT_MS * 0.6)}ms ${EASE_PROJECT}`
-            : `transform ${DURATION_PROJECT_MS}ms ${EASE_DISMISS}, opacity ${Math.round(DURATION_PROJECT_MS * 0.4)}ms ease-out`,
+            ? `clip-path ${REVEAL_MS}ms ${EASE_PROJECT}`
+            : `clip-path ${REVEAL_MS}ms ${EASE_DISMISS}`,
           pointerEvents: open ? "auto" : "none",
-          // §6 content-visibility: skip rendering when closed (keep-alive but zero cost)
-          contentVisibility: open ? "visible" : "auto",
-          containIntrinsicSize: "auto 100vh",
-          // Isolation: prevent layout thrashing from panel content
+          // Isolation
           contain: "layout style",
+          willChange: open ? "clip-path" : "auto",
         }}
       >
-        {/* Projection beam — light edge emanating from sidebar */}
+        {/* ── Content with subtle momentum shift ── 
+             The content slides slightly from left during reveal,
+             creating depth and the feeling of projection. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: open ? "translate3d(0, 0, 0)" : "translate3d(-24px, 0, 0)",
+            opacity: open ? 1 : 0.7,
+            transition: open
+              ? `transform ${REVEAL_MS}ms ${EASE_PROJECT}, opacity ${Math.round(REVEAL_MS * 0.5)}ms ${EASE_PROJECT}`
+              : `transform ${Math.round(REVEAL_MS * 0.8)}ms ${EASE_DISMISS}, opacity ${Math.round(REVEAL_MS * 0.3)}ms ease-out`,
+            // Skip rendering when closed
+            contentVisibility: open ? "visible" : "auto",
+            containIntrinsicSize: "auto 100vh",
+          }}
+        >
+          {children}
+        </div>
+
+        {/* ── Projection beam — thin light edge at the sidebar boundary ── */}
         <div
           className="absolute top-0 bottom-0 left-0 pointer-events-none z-10 hdr-beam"
           style={{
-            width: open ? "2px" : "0px",
+            width: "2px",
             background: beamGradient,
             opacity: open ? 1 : 0,
-            transition: `opacity ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}, width ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}`,
+            transition: `opacity ${Math.round(REVEAL_MS * 0.6)}ms ${EASE_PROJECT}`,
           }}
         />
 
-        {/* Projection glow — subtle light sweep on open */}
+        {/* ── Projection glow — soft light sweep emanating from sidebar ── */}
         <div
           className="absolute top-0 bottom-0 left-0 pointer-events-none z-[9] hdr-beam"
           style={{
-            width: "80px",
-            background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.06), transparent)",
+            width: "120px",
+            background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.07), hsla(38, 30%, 65%, 0.02) 40%, transparent)",
             opacity: open ? 1 : 0,
-            transition: `opacity ${Math.round(DURATION_PROJECT_MS * 1.5)}ms ${EASE_PROJECT}`,
+            transition: `opacity ${REVEAL_MS}ms ${EASE_PROJECT}`,
           }}
         />
 
-        {children}
+        {/* ── Leading edge highlight — the "projection wavefront" ── 
+             A subtle bright edge that appears at the expanding frontier */}
+        <div
+          className="absolute top-0 bottom-0 pointer-events-none z-[11]"
+          style={{
+            right: 0,
+            width: "1px",
+            background: "linear-gradient(to bottom, hsla(38, 40%, 70%, 0), hsla(38, 40%, 70%, 0.08), hsla(38, 40%, 70%, 0))",
+            opacity: open ? 0 : 0,
+            transition: `opacity ${Math.round(REVEAL_MS * 0.3)}ms ease-out`,
+          }}
+        />
       </div>
     </>
   );
