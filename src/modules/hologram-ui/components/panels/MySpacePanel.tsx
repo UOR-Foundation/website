@@ -48,7 +48,7 @@ import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologr
 import MySpaceDashboard from "../myspace/MySpaceDashboard";
 import CeremonyCanvas from "../myspace/CeremonyCanvas";
 
-type Phase = "loading" | "auth" | "magic-sent" | "naming" | "creating" | "genesis" | "reveal" | "dashboard";
+type Phase = "loading" | "auth" | "magic-sent" | "greeting" | "naming" | "creating" | "genesis" | "reveal" | "dashboard";
 type AuthMode = "unified" | "email";
 
 interface MySpacePanelProps {
@@ -85,6 +85,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const [teeStatus, setTeeStatus] = useState<"idle" | "attesting" | "asserting" | "done">("idle");
   const [deviceBiometricAvailable, setDeviceBiometricAvailable] = useState(false);
   const [deviceHasCredential, setDeviceHasCredential] = useState(false);
+  const [greetingName, setGreetingName] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const teeBridgeRef = useRef(new TEEBridge());
@@ -163,6 +164,17 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     }
   }, [phase]);
 
+  // ── Auto-advance from greeting to dashboard ──
+  useEffect(() => {
+    if (phase === "greeting") {
+      const timer = setTimeout(() => {
+        refreshProfile();
+        setPhase("dashboard");
+      }, 2800);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, refreshProfile]);
+
   // ── Auto-focus ──
   useEffect(() => {
     if (phase === "auth" && authMode === "email") {
@@ -179,7 +191,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   // Auth handlers
   // ══════════════════════════════════════════════════════════════
 
-  /** Returning user: biometric assert → straight to dashboard */
+  /** Returning user: biometric assert → greeting → dashboard */
   const handleDeviceSignIn = useCallback(async () => {
     const bridge = teeBridgeRef.current;
     try {
@@ -192,15 +204,16 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           // Check if profile has completed ceremony
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("ceremony_cid, uor_canonical_id")
+            .select("ceremony_cid, uor_canonical_id, display_name, three_word_name, uor_glyph")
             .eq("user_id", existingSession.user.id)
             .maybeSingle();
 
           if (profileData?.ceremony_cid || profileData?.uor_canonical_id) {
             setTeeStatus("done");
             emitTrustUpdate(true);
-            refreshProfile();
-            setPhase("dashboard");
+            // Show greeting before entering sovereign space
+            setGreetingName(profileData.display_name || profileData.three_word_name || "Sovereign");
+            setPhase("greeting");
             return;
           }
           // Has session but no ceremony — needs founding
@@ -221,9 +234,65 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     }
   }, [refreshProfile]);
 
-  /** New user: biometric-first entry → naming phase */
-  const handleBiometricNew = useCallback(() => {
-    setPhase("naming");
+  /** New user on biometric-capable device: activate TEE first, then check for linked ID */
+  const handleBiometricNew = useCallback(async () => {
+    const bridge = teeBridgeRef.current;
+    try {
+      setTeeStatus("asserting");
+
+      // Activate the Trusted Execution Environment
+      await bridge.detect();
+
+      // Attempt assertion first — maybe device has a credential we don't know about
+      if (bridge.isHardwareBacked) {
+        try {
+          const assertion = await bridge.assert("hologram:login:verify");
+
+          if (assertion.userVerified || assertion.userPresent) {
+            // TEE responded — check if there's a linked user
+            const linkedUserId = localStorage.getItem("hologram:tee:linked-user");
+            if (linkedUserId) {
+              // Check Supabase for existing profile
+              const { data: { session: existingSession } } = await supabase.auth.getSession();
+              if (existingSession && existingSession.user.id === linkedUserId) {
+                const { data: profileData } = await supabase
+                  .from("profiles")
+                  .select("ceremony_cid, uor_canonical_id, display_name, three_word_name")
+                  .eq("user_id", linkedUserId)
+                  .maybeSingle();
+
+                if (profileData?.ceremony_cid || profileData?.uor_canonical_id) {
+                  // Returning user via TEE — show greeting
+                  setTeeStatus("done");
+                  emitTrustUpdate(true);
+                  setGreetingName(profileData.display_name || profileData.three_word_name || "Sovereign");
+                  setPhase("greeting");
+                  return;
+                }
+              }
+            }
+            // TEE verified but no linked profile — proceed to naming
+            setTeeStatus("done");
+            emitTrustUpdate(true);
+            setPhase("naming");
+            return;
+          }
+        } catch {
+          // No existing credential — this is truly a new user
+          console.info("[MySpace] No existing TEE credential — new user flow");
+        }
+      }
+
+      // New user: TEE activated but no credential yet — proceed to naming
+      // (credential will be created during the ceremony)
+      setTeeStatus("done");
+      setPhase("naming");
+    } catch (err) {
+      console.warn("[MySpace] TEE activation failed:", err);
+      setTeeStatus("idle");
+      // Gracefully fall through to naming even without TEE
+      setPhase("naming");
+    }
   }, []);
 
   const handleGoogleSignIn = useCallback(async () => {
@@ -591,6 +660,92 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
             <button onClick={() => { setPhase("auth"); setAuthMode("unified"); }} className="text-sm hover:opacity-80 transition-colors cursor-pointer" style={{ color: KP.muted }}>
               Use a different method
             </button>
+          </motion.div>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (phase === "greeting") {
+    return (
+      <Shell onClose={onClose}>
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ background: KP.bg }}>
+          {/* Warm radial glow */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.6, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at 50% 40%, ${KP.gold}12 0%, transparent 62%)` }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+            className="relative z-10 text-center px-8 space-y-6"
+          >
+            {/* Golden shield orb */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 1, type: "spring", damping: 14 }}
+              className="mx-auto flex items-center justify-center rounded-full"
+              style={{
+                width: 80, height: 80,
+                background: `radial-gradient(circle, ${KP.gold}1a 0%, transparent 70%)`,
+                border: `1px solid ${KP.gold}20`,
+              }}
+            >
+              <Shield className="w-8 h-8" style={{ color: KP.gold }} />
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-[28px] font-display font-semibold"
+              style={{ color: KP.text }}
+            >
+              Welcome back, {greetingName}
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0, duration: 0.8 }}
+              className="text-[15px] leading-relaxed max-w-[280px] mx-auto"
+              style={{ color: KP.muted }}
+            >
+              Your trusted environment verified. Entering your sovereign space…
+            </motion.p>
+
+            {/* Animated progress line */}
+            <motion.div
+              className="w-48 h-px mx-auto rounded-full overflow-hidden"
+              style={{ background: `${KP.border}` }}
+            >
+              <motion.div
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 0.8, duration: 2.0, ease: "easeInOut" }}
+                className="h-full rounded-full"
+                style={{ background: KP.gold }}
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4, duration: 0.6 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{ background: `${KP.gold}0a`, border: `1px solid ${KP.gold}15` }}
+            >
+              <Fingerprint className="w-3 h-3" style={{ color: KP.gold }} />
+              <span className="text-[11px] tracking-wider uppercase" style={{ color: KP.muted }}>
+                TEE verified · Hardware-bound
+              </span>
+            </motion.div>
           </motion.div>
         </div>
       </Shell>
