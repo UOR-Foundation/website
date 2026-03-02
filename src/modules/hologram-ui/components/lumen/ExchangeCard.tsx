@@ -23,6 +23,8 @@ import {
   shouldShowElement,
   type CompressionSchedule,
 } from "@/modules/hologram-ui/engine/attention-compression";
+import HabitRing from "./HabitRing";
+import { getProceduralMemory, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
 
 // ── Bloom Toggle (persisted, default ON) ─────────────────────────────
 const BLOOM_KEY = "lumen:bloom-enabled";
@@ -690,6 +692,9 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
     }
   }, [compression.autoCollapse]);
 
+  // Procedural memory projection (cerebellum state)
+  const proceduralProjection = useMemo(() => getProceduralMemory().project(), [ex.id]);
+
   const handleFollowUp = useCallback((question: string) => {
     window.dispatchEvent(new CustomEvent("lumen:follow-up", { detail: question }));
   }, []);
@@ -1014,6 +1019,14 @@ function ExchangeCard({ exchange: ex, isActive, pipelineSlot, isRemixSaved, onTo
                         {compression.label}
                       </span>
                     </motion.div>
+                  )}
+
+                  {/* Habit Ring — procedural memory visualization */}
+                  {shouldShowElement("low", compression) && proceduralProjection.patternCount > 0 && (
+                    <HabitRing
+                      projection={proceduralProjection}
+                      scale={compression.trustArcScale}
+                    />
                   )}
 
                   {/* Interactive toggles */}
