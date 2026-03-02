@@ -13,12 +13,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DesktopMode } from "@/modules/hologram-os/projection-engine";
+import { useDraggablePosition } from "../../hooks/useDraggablePosition";
 
 interface WhatsAppWidgetProps {
   bgMode: DesktopMode;
 }
 
 export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
+  const { style: dragStyle, handlers, wasDragged } = useDraggablePosition({
+    storageKey: "hologram-pos:whatsapp",
+    defaultPos: { x: 24, y: window.innerHeight - 120 },
+    snapSize: { width: 52, height: 72 },
+    mode: "absolute",
+  });
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,10 +98,11 @@ export default function WhatsAppWidget({ bgMode }: WhatsAppWidgetProps) {
   const inputBg = isLight ? "hsla(0, 0%, 96%, 0.9)" : "hsla(0, 0%, 14%, 0.9)";
 
   return (
-    <div className="relative">
+    <div className="fixed z-[400]" style={dragStyle}>
       {/* Desktop icon */}
       <button
-        onClick={() => setOpen(!open)}
+        {...handlers}
+        onClick={() => { if (!wasDragged()) setOpen(!open); }}
         className="relative flex flex-col items-center gap-1.5 group"
         style={{ background: "none", border: "none", cursor: "pointer" }}
         aria-label="Lumen on WhatsApp"

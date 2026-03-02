@@ -572,18 +572,8 @@ export default memo(function DesktopSurface({
         </div>
       </div>
 
-      {/* ── Chrome: WhatsApp Widget (bottom-left, near frame widget) ── */}
-      <div
-        className="absolute bottom-[3vh] left-6 z-[400]"
-        style={{
-          opacity: isFocus ? 0 : 1,
-          pointerEvents: isFocus ? "none" : "auto",
-          transition: "opacity 300ms",
-          animation: "stagger-fade-in 1s ease-out 0.9s both",
-        }}
-      >
-        <WhatsAppWidget bgMode={mode} />
-      </div>
+      {/* ── Chrome: WhatsApp Widget (draggable) ── */}
+      {!isFocus && <WhatsAppWidget bgMode={mode} />}
 
       {/* ── Frame switcher (bottom center) — always visible, even in focus ── */}
       <div
