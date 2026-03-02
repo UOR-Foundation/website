@@ -123,3 +123,39 @@ export {
   type ProofVerification,
   type ProofCheck,
 } from "./proof-of-thought";
+
+// ── ZK Three-Layer Separation ────────────────────────────────────────────────
+export {
+  // L1 Substrate
+  type SubstrateValue,
+  S_DELTA_0,
+  S_FRACTAL_DIM,
+  S_ANOMALOUS,
+  S_ALPHA,
+  S_ALPHA_INV,
+  S_EIGENVALUES,
+  S_EIGENVALUE_COUNT,
+  S_GRADE_DRIFT_BOUNDS,
+  verifySubstrateIntegrity,
+  // L2 Geometry
+  type GeometryValue,
+  type GeometricProofEnvelope,
+  type GeometricVerification,
+  type GeometricCheck,
+  type SpectralGrade,
+  type GeometricCID,
+  geometry,
+  createGeometricEnvelope,
+  verifyEnvelope,
+  envelopeToRaw,
+  // L3 Content
+  type ContentValue,
+  type UserQuery,
+  type LLMResponse,
+  type ContentTriple,
+  type EncryptedContent,
+  type AssertNotContent,
+  content,
+  contentToHash,
+  contentToHashSync,
+} from "./zk-layers";
