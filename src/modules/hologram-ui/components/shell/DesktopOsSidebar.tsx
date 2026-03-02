@@ -178,10 +178,27 @@ function Flyout({
   label: string; children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [top, setTop] = useState(0);
+  const [pos, setPos] = useState<{ top: number; maxH: number }>({ top: 0, maxH: 400 });
+
+  // φ-based viewport margin (golden ratio inset)
+  const MARGIN = 21; // ~13 × φ
 
   useEffect(() => {
-    if (open && anchorRef.current) setTop(anchorRef.current.getBoundingClientRect().top);
+    if (!open || !anchorRef.current) return;
+    const anchorRect = anchorRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    // Measure after a tick so children are rendered
+    requestAnimationFrame(() => {
+      const flyoutH = ref.current?.offsetHeight ?? 200;
+      // Clamp: prefer aligning to anchor top, but never spill below viewport
+      let top = anchorRect.top;
+      const maxBottom = vh - MARGIN;
+      if (top + flyoutH > maxBottom) {
+        top = Math.max(MARGIN, maxBottom - flyoutH);
+      }
+      setPos({ top, maxH: vh - MARGIN * 2 });
+    });
   }, [open, anchorRef]);
 
   useEffect(() => {
@@ -203,7 +220,11 @@ function Flyout({
       ref={ref}
       className="fixed z-[200] py-1.5 rounded-xl sb-flyout"
       style={{
-        left: "62px", top: `${top}px`, minWidth: "170px",
+        left: "62px",
+        top: `${pos.top}px`,
+        minWidth: "170px",
+        maxHeight: `${pos.maxH}px`,
+        overflowY: "auto",
         background: "var(--sb-bg-flat)",
         border: "1px solid var(--sb-border)",
         boxShadow: "8px 4px 32px -4px hsla(25, 10%, 0%, 0.4), 0 0 0 1px hsla(38, 20%, 90%, 0.04)",
