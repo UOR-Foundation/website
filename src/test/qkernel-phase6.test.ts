@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { boot } from "@/hologram/kernel/q-boot";
+import { bootSync as boot } from "@/hologram/kernel/q-boot";
 import { QSched } from "@/hologram/kernel/q-sched";
 import { QIpc } from "@/hologram/kernel/q-ipc";
 import { QNet } from "@/hologram/kernel/q-net";

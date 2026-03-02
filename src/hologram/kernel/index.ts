@@ -145,7 +145,17 @@ export type {
   SecurityStats,
 } from "./q-security";
 
-// Q-Secure Mesh: Phase 8 — Security ↔ Agent Mesh Integration
+// TEE Bridge: Hardware Trusted Execution Environment
+export { TEEBridge, getTEEBridge, resetTEEBridge } from "./tee-bridge";
+export type {
+  TEEProvider,
+  TEECapabilities,
+  TEEAttestationQuote,
+  TEEAssertion,
+  SealedEnvelope,
+  TEEFusedAttestation,
+} from "./tee-bridge";
+
 export { QSecureMesh } from "./q-secure-mesh";
 export type {
   SecureResult,

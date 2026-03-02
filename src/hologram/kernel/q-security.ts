@@ -1,9 +1,15 @@
 /**
- * Q-Security — Capability-Based Access Control
- * ═════════════════════════════════════════════
+ * Q-Security — Capability-Based Access Control + TEE Sealing
+ * ═══════════════════════════════════════════════════════════
  *
  * Every classical security concept maps to a content-addressed equivalent.
  * Now derived from genesis/ axioms — zero external crypto deps.
+ *
+ * TEE Integration:
+ *   When a hardware TEE is available, capability tokens can be SEALED
+ *   to the device's secure enclave. Sealed tokens survive browser restarts
+ *   but are cryptographically bound to the physical hardware — they cannot
+ *   be extracted, cloned, or transferred to another device.
  *
  * @module qkernel/q-security
  */
@@ -13,6 +19,7 @@ import { sha256 } from "@/hologram/genesis/axiom-hash";
 import { createCid } from "@/hologram/genesis/axiom-cid";
 import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
 import { QEcc, CODE_K } from "./q-ecc";
+import type { TEEBridge, SealedEnvelope } from "./tee-bridge";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types
@@ -103,6 +110,8 @@ export class QSecurity {
   private elevations: ElevationRequest[] = [];
   private auditLog: SecurityEvent[] = [];
   private ecc: QEcc;
+  private teeBridge: TEEBridge | null = null;
+  private sealedTokens = new Map<string, SealedEnvelope>();
 
   private totalChecks = 0;
   private deniedChecks = 0;
@@ -110,11 +119,55 @@ export class QSecurity {
 
   constructor(ecc: QEcc) { this.ecc = ecc; }
 
+  /** Bind a TEE bridge for hardware-sealed capability tokens */
+  bindTEE(bridge: TEEBridge): void {
+    this.teeBridge = bridge;
+  }
+
+  /** Whether TEE sealing is available */
+  get teeAvailable(): boolean {
+    return this.teeBridge !== null && this.teeBridge.isHardwareBacked && this.teeBridge.hasCredential;
+  }
+
   // ── Process Registration ────────────────────────────────────────
 
   registerProcess(pid: number, ring: IsolationRing): CapabilityToken {
     this.pidRings.set(pid, ring);
     return this.createCapability(pid, ring, RING_DEFAULT_OPS[ring], "*", null);
+  }
+
+  /**
+   * Seal a capability token to the hardware TEE.
+   * The token can only be unsealed on the same physical device.
+   */
+  async sealCapability(capCid: string): Promise<SealedEnvelope | null> {
+    if (!this.teeBridge || !this.teeBridge.hasCredential) return null;
+    const cap = this.capabilities.get(capCid);
+    if (!cap) return null;
+
+    const payload = canonicalEncode({
+      capCid: cap.capCid,
+      ownerPid: cap.ownerPid,
+      ring: cap.ring,
+      operations: cap.operations,
+      resourcePattern: cap.resourcePattern,
+    });
+
+    try {
+      const envelope = await this.teeBridge.seal(new Uint8Array(payload));
+      this.sealedTokens.set(capCid, envelope);
+      this.logEvent("grant", cap.ownerPid, "execute", `tee:seal:${capCid.slice(0, 16)}`, capCid, true,
+        `Capability sealed to hardware TEE`);
+      return envelope;
+    } catch (error) {
+      console.warn("[Q-Security] TEE seal failed:", error);
+      return null;
+    }
+  }
+
+  /** Check if a capability is hardware-sealed */
+  isSealed(capCid: string): boolean {
+    return this.sealedTokens.has(capCid);
   }
 
   getProcessRing(pid: number): IsolationRing | undefined { return this.pidRings.get(pid); }

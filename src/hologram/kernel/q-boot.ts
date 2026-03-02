@@ -38,6 +38,12 @@ import {
   type PostCheck as GenesisPostCheck,
   type PostResult as GenesisPostResult,
 } from "@/hologram/genesis/axiom-post";
+import {
+  getTEEBridge,
+  type TEECapabilities,
+  type TEEAttestationQuote,
+  type TEEAssertion,
+} from "./tee-bridge";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Boot Status Types
@@ -100,6 +106,12 @@ export interface QKernelBoot {
   readonly bootTimeMs: number;
   readonly kernelCid: string;
   readonly constitutionCid: string;
+  /** TEE capabilities detected on this device */
+  readonly tee: TEECapabilities;
+  /** TEE attestation quote (null if software fallback) */
+  readonly teeAttestation: TEEAttestationQuote | null;
+  /** TEE assertion verifying kernel integrity (null if software) */
+  readonly teeAssertion: TEEAssertion | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -194,17 +206,23 @@ export function createGenesisProcess(): GenesisProcess {
 // Full Boot Sequence
 // ═══════════════════════════════════════════════════════════════════════
 
-export function boot(): QKernelBoot {
+export async function boot(): Promise<QKernelBoot> {
   const t0 = performance.now();
 
   const postResult = post();
   if (!postResult.allPassed) {
+    const softwareTee: TEECapabilities = {
+      provider: "software", providerName: "POST failed",
+      hardwareAttestation: false, sealedStorage: false,
+      userVerification: false, residentKeys: false, detectedAt: Date.now(),
+    };
     return {
       stage: "panic", post: postResult,
       hardware: { vertexCount: 0, edgeCount: 0, fanoPoints: 0, fanoLines: 0, mirrorPairs: 0, signClasses: 0, verified: false },
       firmware: { levels: 0, algebras: [], properties: [], triangleIdentitiesHold: false, roundTripLossless: false },
       genesis: { pid: 0, name: "init", sessionCid: "", hScore: 0, zone: "convergent", createdAt: "", parentPid: null, state: "running" },
       bootTimeMs: performance.now() - t0, kernelCid: "", constitutionCid: "",
+      tee: softwareTee, teeAttestation: null, teeAssertion: null,
     };
   }
 
@@ -212,14 +230,41 @@ export function boot(): QKernelBoot {
   const firmware = hydrateFirmware();
   const genesis = createGenesisProcess();
 
+  // ── TEE Detection & Attestation ──────────────────────────────
+  const teeBridge = getTEEBridge();
+  const tee = await teeBridge.detect();
+
+  let teeAttestation: TEEAttestationQuote | null = null;
+  let teeAssertion: TEEAssertion | null = null;
+
+  try {
+    // Attest the kernel identity to the device's TEE
+    teeAttestation = await teeBridge.attest(
+      genesis.sessionCid,
+      "Hologram Kernel (PID 0)",
+    );
+
+    // Assert that the kernel is running on the attested device
+    teeAssertion = await teeBridge.assert(genesis.sessionCid);
+  } catch (error) {
+    console.warn("[Q-Boot] TEE attestation/assertion skipped:", error);
+  }
+
   const constitutionCid = getConstitutionCid().string;
 
+  // ── Kernel CID now includes TEE attestation ──────────────────
   const kernelState = canonicalEncode({
     post: postResult.allPassed,
     hw: { v: hardware.vertexCount, e: hardware.edgeCount, f: hardware.fanoLines, m: hardware.mirrorPairs },
     fw: { levels: firmware.levels, tri: firmware.triangleIdentitiesHold, rt: firmware.roundTripLossless },
     genesis: genesis.sessionCid,
     constitution: constitutionCid,
+    tee: {
+      provider: tee.provider,
+      hardwareAttested: teeAttestation?.hardwareBacked ?? false,
+      attestationCid: teeAttestation?.attestationCid ?? null,
+      assertionCid: teeAssertion?.assertionCid ?? null,
+    },
   });
   const kernelHash = sha256(kernelState);
   const kernelCid = createCid(kernelHash).string;
@@ -228,5 +273,54 @@ export function boot(): QKernelBoot {
     stage: "running", post: postResult,
     hardware, firmware, genesis,
     bootTimeMs: performance.now() - t0, kernelCid, constitutionCid,
+    tee, teeAttestation, teeAssertion,
+  };
+}
+
+/**
+ * Synchronous boot (legacy compatibility) — no TEE attestation.
+ * Use async boot() for full TEE integration.
+ */
+export function bootSync(): QKernelBoot {
+  const t0 = performance.now();
+  const postResult = post();
+  const softwareTee: TEECapabilities = {
+    provider: "software", providerName: "Sync boot (no TEE)",
+    hardwareAttestation: false, sealedStorage: false,
+    userVerification: false, residentKeys: false, detectedAt: Date.now(),
+  };
+
+  if (!postResult.allPassed) {
+    return {
+      stage: "panic", post: postResult,
+      hardware: { vertexCount: 0, edgeCount: 0, fanoPoints: 0, fanoLines: 0, mirrorPairs: 0, signClasses: 0, verified: false },
+      firmware: { levels: 0, algebras: [], properties: [], triangleIdentitiesHold: false, roundTripLossless: false },
+      genesis: { pid: 0, name: "init", sessionCid: "", hScore: 0, zone: "convergent", createdAt: "", parentPid: null, state: "running" },
+      bootTimeMs: performance.now() - t0, kernelCid: "", constitutionCid: "",
+      tee: softwareTee, teeAttestation: null, teeAssertion: null,
+    };
+  }
+
+  const hardware = loadHardware();
+  const firmware = hydrateFirmware();
+  const genesis = createGenesisProcess();
+  const constitutionCid = getConstitutionCid().string;
+
+  const kernelState = canonicalEncode({
+    post: postResult.allPassed,
+    hw: { v: hardware.vertexCount, e: hardware.edgeCount, f: hardware.fanoLines, m: hardware.mirrorPairs },
+    fw: { levels: firmware.levels, tri: firmware.triangleIdentitiesHold, rt: firmware.roundTripLossless },
+    genesis: genesis.sessionCid,
+    constitution: constitutionCid,
+    tee: { provider: "software", hardwareAttested: false, attestationCid: null, assertionCid: null },
+  });
+  const kernelHash = sha256(kernelState);
+  const kernelCid = createCid(kernelHash).string;
+
+  return {
+    stage: "running", post: postResult,
+    hardware, firmware, genesis,
+    bootTimeMs: performance.now() - t0, kernelCid, constitutionCid,
+    tee: softwareTee, teeAttestation: null, teeAssertion: null,
   };
 }
