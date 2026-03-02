@@ -24,6 +24,7 @@ import { Fingerprint } from "lucide-react";
 const BloomTrustProjection = lazy(() => import("./BloomTrustProjection"));
 const BloomCalendarProjection = lazy(() => import("./BloomCalendarProjection"));
 const BloomKnowledgeProjection = lazy(() => import("./BloomKnowledgeProjection"));
+const BloomHabitsProjection = lazy(() => import("./BloomHabitsProjection"));
 
 interface MobileLumenBloomProps {
   open: boolean;
@@ -33,7 +34,7 @@ interface MobileLumenBloomProps {
 
 const ORGANIC_EASE = [0.23, 1, 0.32, 1] as const;
 const BLOOM_DURATION = 0.7;
-const PROJECTION_ORDER: BloomProjection[] = ["conversation", "trust", "calendar", "knowledge"];
+const PROJECTION_ORDER: BloomProjection[] = ["conversation", "trust", "calendar", "knowledge", "habits"];
 
 function ProjectionSpinner() {
   return (
@@ -232,6 +233,11 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
                   {activeProjection === "knowledge" && (
                     <Suspense fallback={<ProjectionSpinner />}>
                       <BloomKnowledgeProjection />
+                    </Suspense>
+                  )}
+                  {activeProjection === "habits" && (
+                    <Suspense fallback={<ProjectionSpinner />}>
+                      <BloomHabitsProjection />
                     </Suspense>
                   )}
                 </motion.div>

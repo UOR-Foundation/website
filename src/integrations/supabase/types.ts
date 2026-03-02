@@ -599,6 +599,81 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_kernels: {
+        Row: {
+          acceleration_factor: number
+          agent_id: string
+          avg_reward: number
+          circuit_template: Json
+          consecutive_successes: number
+          created_at: string
+          description: string | null
+          epistemic_grade: string
+          fire_count: number
+          habit_id: string
+          id: string
+          min_reward_threshold: number
+          name: string
+          pattern_actions: string[]
+          pattern_hash: string
+          promoted_at: string | null
+          source_session_cids: string[]
+          status: string
+          success_count: number
+          success_rate: number
+          total_time_saved_ms: number
+          updated_at: string
+        }
+        Insert: {
+          acceleration_factor?: number
+          agent_id: string
+          avg_reward?: number
+          circuit_template?: Json
+          consecutive_successes?: number
+          created_at?: string
+          description?: string | null
+          epistemic_grade?: string
+          fire_count?: number
+          habit_id: string
+          id?: string
+          min_reward_threshold?: number
+          name?: string
+          pattern_actions?: string[]
+          pattern_hash: string
+          promoted_at?: string | null
+          source_session_cids?: string[]
+          status?: string
+          success_count?: number
+          success_rate?: number
+          total_time_saved_ms?: number
+          updated_at?: string
+        }
+        Update: {
+          acceleration_factor?: number
+          agent_id?: string
+          avg_reward?: number
+          circuit_template?: Json
+          consecutive_successes?: number
+          created_at?: string
+          description?: string | null
+          epistemic_grade?: string
+          fire_count?: number
+          habit_id?: string
+          id?: string
+          min_reward_threshold?: number
+          name?: string
+          pattern_actions?: string[]
+          pattern_hash?: string
+          promoted_at?: string | null
+          source_session_cids?: string[]
+          status?: string
+          success_count?: number
+          success_rate?: number
+          total_time_saved_ms?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hologram_sessions: {
         Row: {
           blueprint: Json
