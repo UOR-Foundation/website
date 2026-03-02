@@ -99,20 +99,25 @@ export default function HologramOsPage() {
 
   const [kernelEntered, setKernelEntered] = useState(false);
   const hasBootedBefore = useRef(false);
+  const bootAttempted = useRef(false);
 
-  // Boot the kernel on mount (once)
+  // Boot the kernel on mount (once) — ref-gated to prevent re-runs
+  const kIsBooted = k.isBooted;
+  const kIsBooting = k.isBooting;
+  const kBoot = k.boot;
   useEffect(() => {
-    if (!k.isBooted && !k.isBooting) {
+    if (!kIsBooted && !kIsBooting && !bootAttempted.current) {
+      bootAttempted.current = true;
       const skipAnim = sessionStorage.getItem("kernel:booted") === "1";
       hasBootedBefore.current = skipAnim;
-      k.boot().then(() => {
+      kBoot().then(() => {
         sessionStorage.setItem("kernel:booted", "1");
       });
-    } else if (k.isBooted) {
+    } else if (kIsBooted) {
       setKernelEntered(true);
       hasBootedBefore.current = true;
     }
-  }, [k.isBooted, k.isBooting]);
+  }, [kIsBooted, kIsBooting, kBoot]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // DERIVED FROM KERNEL — no local state for panels, chat, or desktop
@@ -176,6 +181,7 @@ export default function HologramOsPage() {
   const [departingDesktop, setDepartingDesktop] = useState<DesktopMode | null>(null);
   const [sidebarBgMode, setSidebarBgMode] = useState<DesktopMode>(activeDesktop);
 
+  const kSwitchDesktop = k.switchDesktop;
   const switchDesktop = useCallback((target: DesktopMode) => {
     if (target === activeDesktop || departingDesktop) return;
 
@@ -183,7 +189,7 @@ export default function HologramOsPage() {
     setDepartingDesktop(activeDesktop);
 
     // Kernel syscall: switch desktop mode → re-projection
-    k.switchDesktop(target as DesktopMode);
+    kSwitchDesktop(target as DesktopMode);
 
     // After peel animation completes — with safety ceiling
     const t = setTimeout(() => {
@@ -191,7 +197,7 @@ export default function HologramOsPage() {
       setDepartingDesktop(null);
     }, 1000);
     return () => clearTimeout(t);
-  }, [activeDesktop, departingDesktop, k.switchDesktop]);
+  }, [activeDesktop, departingDesktop, kSwitchDesktop]);
 
   // Safety: clear stuck departing state if it persists beyond 1.5s
   useEffect(() => {
@@ -201,9 +207,13 @@ export default function HologramOsPage() {
   }, [departingDesktop]);
 
   // ── Widget visibility — projected from kernel ─────────────────────────
-  const isWidgetVisible = useCallback((id: string) => k.isDesktopWidgetVisible(activeDesktop, id), [k, activeDesktop]);
-  const removeWidget = useCallback((id: string) => k.hideDesktopWidget(activeDesktop, id), [k, activeDesktop]);
-  const toggleAllWidgets = useCallback(() => k.toggleAllDesktopWidgets(activeDesktop), [k, activeDesktop]);
+  // Use stable kernel method refs to avoid recreating on every frame
+  const kIsDesktopWidgetVisible = k.isDesktopWidgetVisible;
+  const kHideDesktopWidget = k.hideDesktopWidget;
+  const kToggleAllDesktopWidgets = k.toggleAllDesktopWidgets;
+  const isWidgetVisible = useCallback((id: string) => kIsDesktopWidgetVisible(activeDesktop, id), [kIsDesktopWidgetVisible, activeDesktop]);
+  const removeWidget = useCallback((id: string) => kHideDesktopWidget(activeDesktop, id), [kHideDesktopWidget, activeDesktop]);
+  const toggleAllWidgets = useCallback(() => kToggleAllDesktopWidgets(activeDesktop), [kToggleAllDesktopWidgets, activeDesktop]);
   const [departing, setDeparting] = useState(false);
   const { greeting, name } = useGreeting();
   const triadicActivity = useTriadicActivity();
@@ -254,9 +264,10 @@ export default function HologramOsPage() {
   }, [chatHistory.activeConversationId, chatHistory.isAuthenticated]);
 
   // ── Auto-hide widgets in focus mode — kernel syscall ────────────────
+  const kSetDesktopAllHidden = k.setDesktopAllHidden;
   useEffect(() => {
-    k.setDesktopAllHidden(activeDesktop, isFocus);
-  }, [isFocus, activeDesktop]);
+    kSetDesktopAllHidden(activeDesktop, isFocus);
+  }, [isFocus, activeDesktop, kSetDesktopAllHidden]);
 
   const contextHints = useMemo(() => {
     const entries = Object.entries(ctx.profile.interests);
@@ -273,13 +284,16 @@ export default function HologramOsPage() {
   });
 
   // ── Listen for global lumen:open event → kernel syscall ───────────────
+  const kSetChatOpen = k.setChatOpen;
   useEffect(() => {
-    const handler = () => k.setChatOpen(true);
+    const handler = () => kSetChatOpen(true);
     window.addEventListener("lumen:open", handler);
     return () => window.removeEventListener("lumen:open", handler);
-  }, [k.setChatOpen]);
+  }, [kSetChatOpen]);
 
   // ── Global keyboard shortcuts → kernel syscalls ────────────────────────
+  const kOpenPanel = k.openPanel;
+  const kClosePanel = k.closePanel;
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -297,7 +311,7 @@ export default function HologramOsPage() {
       if (!mod) return;
 
       switch (e.key) {
-        case ";": e.preventDefault(); mastery.record(";"); k.setChatOpen(true); break;
+        case ";": e.preventDefault(); mastery.record(";"); kSetChatOpen(true); break;
         case "]": e.preventDefault(); mastery.record("]"); attention.toggle(); break;
         case "[":
           e.preventDefault();
@@ -305,15 +319,34 @@ export default function HologramOsPage() {
           const nextIdx = (ALL_DESKTOPS.indexOf(activeDesktop) + 1) % ALL_DESKTOPS.length;
           switchDesktop(ALL_DESKTOPS[nextIdx]);
           break;
-        case ",": e.preventDefault(); mastery.record(","); k.openPanel("messenger"); break;
-        case ".": e.preventDefault(); mastery.record("."); k.setChatOpen(false); k.closePanel(); break;
+        case ",": e.preventDefault(); mastery.record(","); kOpenPanel("messenger"); break;
+        case ".": e.preventDefault(); mastery.record("."); kSetChatOpen(false); kClosePanel(); break;
         case "\\": e.preventDefault(); mastery.record("\\"); toggleAllWidgets(); break;
         case "/": e.preventDefault(); mastery.record("/"); setShortcutsOpen(prev => !prev); break;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate, attention, activeDesktop, switchDesktop, toggleAllWidgets, k.setChatOpen, k.openPanel, k.closePanel]);
+  }, [navigate, attention, activeDesktop, switchDesktop, toggleAllWidgets, kSetChatOpen, kOpenPanel, kClosePanel]);
+
+  // ── Memoized sidebar callbacks — prevent re-renders on every frame tick ──
+  const openChatCb = useCallback(() => kSetChatOpen(true), [kSetChatOpen]);
+  const hoverChatCb = useCallback(() => setChatPrewarmed(true), []);
+  const openBrowserCb = useCallback(() => kOpenPanel("browser"), [kOpenPanel]);
+  const openComputeCb = useCallback(() => kOpenPanel("compute"), [kOpenPanel]);
+  const openTerminalCb = useCallback(() => kOpenPanel("terminal"), [kOpenPanel]);
+  const openMemoryCb = useCallback(() => kOpenPanel("memory"), [kOpenPanel]);
+  const openMessengerCb = useCallback(() => kOpenPanel("messenger"), [kOpenPanel]);
+  const openJupyterCb = useCallback(() => kOpenPanel("jupyter"), [kOpenPanel]);
+  const openQuantumCb = useCallback(() => kOpenPanel("quantum-workspace"), [kOpenPanel]);
+  const openAILabCb = useCallback(() => kOpenPanel("ai-lab"), [kOpenPanel]);
+  const openCodeCb = useCallback(() => kOpenPanel("code"), [kOpenPanel]);
+  const openPackagesCb = useCallback(() => kOpenPanel("packages"), [kOpenPanel]);
+  const openVaultCb = useCallback(() => kOpenPanel("vault"), [kOpenPanel]);
+  const openAppsCb = useCallback(() => kOpenPanel("apps"), [kOpenPanel]);
+  const openMySpaceCb = useCallback(() => kOpenPanel("myspace"), [kOpenPanel]);
+  const goHomeCb = useCallback(() => { kSetChatOpen(false); kClosePanel(); }, [kSetChatOpen, kClosePanel]);
+  const replayGuideCb = useCallback(() => setShortcutsOpen(true), []);
 
   // ── Mobile: iOS homescreen ──
   if (isMobile) return <MobileOsShell />;
@@ -359,24 +392,24 @@ export default function HologramOsPage() {
           }}
         >
           <DesktopOsSidebar
-            onNewChat={() => k.setChatOpen(true)}
-            onOpenChat={() => k.setChatOpen(true)}
-            onHoverChat={() => setChatPrewarmed(true)}
-            onOpenBrowser={() => k.openPanel("browser")}
-            onOpenCompute={() => k.openPanel("compute")}
-            onOpenTerminal={() => k.openPanel("terminal")}
-            onOpenMemory={() => k.openPanel("memory")}
-            onOpenMessenger={() => k.openPanel("messenger")}
-            onOpenJupyter={() => k.openPanel("jupyter")}
-            onOpenQuantumWorkspace={() => k.openPanel("quantum-workspace")}
-            onOpenAILab={() => k.openPanel("ai-lab")}
-            onOpenCode={() => k.openPanel("code")}
-            onOpenPackages={() => k.openPanel("packages")}
-            onOpenVault={() => k.openPanel("vault")}
-            onOpenApps={() => k.openPanel("apps")}
-            onOpenMySpace={() => k.openPanel("myspace")}
-            onGoHome={() => { k.setChatOpen(false); k.closePanel(); }}
-            onReplayGuide={() => setShortcutsOpen(true)}
+            onNewChat={openChatCb}
+            onOpenChat={openChatCb}
+            onHoverChat={hoverChatCb}
+            onOpenBrowser={openBrowserCb}
+            onOpenCompute={openComputeCb}
+            onOpenTerminal={openTerminalCb}
+            onOpenMemory={openMemoryCb}
+            onOpenMessenger={openMessengerCb}
+            onOpenJupyter={openJupyterCb}
+            onOpenQuantumWorkspace={openQuantumCb}
+            onOpenAILab={openAILabCb}
+            onOpenCode={openCodeCb}
+            onOpenPackages={openPackagesCb}
+            onOpenVault={openVaultCb}
+            onOpenApps={openAppsCb}
+            onOpenMySpace={openMySpaceCb}
+            onGoHome={goHomeCb}
+            onReplayGuide={replayGuideCb}
             onHoverPanel={handleHoverPanel}
             hintOpacity={mastery.hintOpacity}
             bgMode={sidebarBgMode}

@@ -8,7 +8,7 @@
  *   - will-change: width for compositor-promoted expansion
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, memo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home, LayoutGrid, Fingerprint, Globe, Cpu, Database,
@@ -215,7 +215,7 @@ interface DesktopOsSidebarProps {
 }
 
 /* ── Component ─────────────────────────────────────────────── */
-export default function DesktopOsSidebar({
+export default memo(function DesktopOsSidebar({
   onNewChat,
   onOpenBrowser,
   onOpenCompute,
@@ -846,4 +846,4 @@ export default function DesktopOsSidebar({
     <GenesisPopover open={genesisOpen} onClose={() => setGenesisOpen(false)} bgMode={bgMode} />
     </>
   );
-}
+});
