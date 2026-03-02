@@ -114,7 +114,14 @@ serve(async (req) => {
             .eq("id", connection.id);
         }
 
-        // Generate first message via AI
+        // ── Message template configuration ──────────────────────
+        // Meta requires approved templates for business-initiated conversations.
+        // Template name and language must match what's configured in WhatsApp Manager.
+        // Set WHATSAPP_TEMPLATE_NAME secret to override (default: "lumen_greeting").
+        const TEMPLATE_NAME = Deno.env.get("WHATSAPP_TEMPLATE_NAME") || "hello_world";
+        const TEMPLATE_LANG = Deno.env.get("WHATSAPP_TEMPLATE_LANG") || "en_US";
+
+        // Generate a personalized AI message (stored in DB for context, shown in-app)
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
         const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -150,7 +157,9 @@ serve(async (req) => {
           firstMessage = data.choices?.[0]?.message?.content || firstMessage;
         }
 
-        // Send via WhatsApp Business API (Cloud API)
+        // Send via WhatsApp Business API using MESSAGE TEMPLATE
+        // Templates are required for business-initiated conversations (24h rule).
+        // Once the user replies, a 24h conversation window opens for free-form messages.
         const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
         const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
         let sent = false;
@@ -169,8 +178,11 @@ serve(async (req) => {
                 body: JSON.stringify({
                   messaging_product: "whatsapp",
                   to: phoneCleaned,
-                  type: "text",
-                  text: { body: firstMessage },
+                  type: "template",
+                  template: {
+                    name: TEMPLATE_NAME,
+                    language: { code: TEMPLATE_LANG },
+                  },
                 }),
               },
             );
