@@ -2,15 +2,15 @@
  * MobileOsShell — The Portal
  * ═══════════════════════════════════════════════════════════════════
  *
- * The device screen is a portal into Hologram. Inspired by the Star Trek
- * computer: ubiquitous presence, voice-first interaction, instant response,
- * context-aware ambient intelligence.
+ * The device screen is a portal into Hologram. Designed for ubiquitous
+ * presence, voice-first interaction, instant response, and context-aware
+ * ambient intelligence.
  *
  * Architecture:
  *   ┌─────────────────────────────┐
  *   │        The Void             │  ← canvas (dark or light)
  *   │                             │
- *   │     ◇ sovereign glyph      │  ← subtle identity anchor
+ *   │     ◇ your identity mark   │  ← subtle personal anchor
  *   │                             │
  *   │   "Good evening."          │  ← ambient whisper (contextual)
  *   │                             │
@@ -35,27 +35,27 @@
  * @module hologram-ui/components/shell/MobileOsShell
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home, Compass, User, Globe, Shield, Settings,
   Sparkles, X, Download, ChevronUp, Sun, Moon,
 } from "lucide-react";
 import MySpacePanel from "../MySpacePanel";
-import HologramAiChat from "../HologramAiChat";
+import MobileLumenBloom from "../lumen/MobileLumenBloom";
 import PwaInstallBanner from "../PwaInstallBanner";
 import { useGreeting } from "@/modules/hologram-ui/hooks/useGreeting";
 import { usePwaInstall } from "@/modules/hologram-ui/hooks/usePwaInstall";
 import { useAmbientWhisper } from "@/modules/hologram-ui/hooks/useAmbientWhisper";
-import { PP, GR, PHI_INV } from "@/modules/hologram-ui/theme/portal-palette";
+import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 import { getPrimeTheme, setPrimeTheme } from "@/modules/hologram-ui/theme/prime-palette";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Golden Ratio Helpers ──────────────────────────────────────────────
 const ORB_SIZE = 68;
-const ORB_BREATH_SIZE = ORB_SIZE + GR.lg;
+const ORB_BREATH_SIZE = ORB_SIZE + GR.lg; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-// ── Haptic heartbeat — coherent, loving pulse ──────────────────────────
+// ── Haptic feedback — warm, responsive ─────────────────────────────────
 function heartbeatHaptic() {
   if (!("vibrate" in navigator)) return;
   navigator.vibrate([60, 80, 40, 400, 60, 80, 40]);
@@ -148,11 +148,11 @@ export default function MobileOsShell() {
   const [claimOpen, setClaimOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [pressing, setPressing] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [userGlyph, setUserGlyph] = useState<string | null>(null);
   const [themeKey, setThemeKey] = useState(getPrimeTheme());
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [orbY, setOrbY] = useState<number | undefined>(undefined);
+  const orbRef = useRef<HTMLButtonElement>(null);
 
   const { name } = useGreeting();
   const whisper = useAmbientWhisper();
@@ -206,14 +206,15 @@ export default function MobileOsShell() {
     }
   }, []);
 
-  // ── Orb press ──────────────────────────────────────────────────────
-  const handleLumenPress = useCallback(() => {
-    setPressing(true);
-    heartbeatHaptic();
-    pressTimer.current = setTimeout(() => {
-      setPressing(false);
-      setChatOpen(true);
-    }, 750);
+  // ── Orb tap — instant Lumen activation ─────────────────────────────
+  const handleLumenTap = useCallback(() => {
+    // Capture orb position for bloom origin
+    if (orbRef.current) {
+      const rect = orbRef.current.getBoundingClientRect();
+      setOrbY(rect.top + rect.height / 2);
+    }
+    softHaptic();
+    setChatOpen(true);
   }, []);
 
   const handleNav = useCallback(
@@ -337,8 +338,8 @@ export default function MobileOsShell() {
           {/* ── Resting State (post-narrative or returning user) ──── */}
           {(narrative.complete || !isNewUser) && (
             <>
-              {/* Sovereign glyph — floating subtly */}
-              {userGlyph && (
+               {/* Identity mark — your personal anchor */}
+               {userGlyph && (
                 <div
                   className="flex items-center justify-center mb-8"
                   style={{
@@ -395,7 +396,7 @@ export default function MobileOsShell() {
           )}
         </div>
 
-        {/* ── Lumen Orb — the soul of the portal ──────────────────── */}
+        {/* ── Lumen Orb — your point of contact ─────────────────── */}
         <div
           className="flex flex-col items-center"
           style={{
@@ -403,7 +404,8 @@ export default function MobileOsShell() {
           }}
         >
           <button
-            onClick={handleLumenPress}
+            ref={orbRef}
+            onClick={handleLumenTap}
             className="relative flex items-center justify-center active:scale-95 transition-transform duration-300"
             style={{
               width: ORB_SIZE,
@@ -436,7 +438,7 @@ export default function MobileOsShell() {
               className="absolute rounded-full pointer-events-none"
               style={{
                 inset: -4,
-                background: `radial-gradient(circle, ${pressing ? PP.orbGlow.replace("0.12", "0.3").replace("0.1", "0.25") : PP.orbGlow}, transparent 70%)`,
+                background: `radial-gradient(circle, ${PP.orbGlow}, transparent 70%)`,
                 transition: "all 0.4s ease",
               }}
             />
@@ -447,10 +449,8 @@ export default function MobileOsShell() {
                 width: 10,
                 height: 10,
                 background: PP.orbCenter,
-                opacity: pressing ? 1 : 0.8,
-                boxShadow: pressing
-                  ? `0 0 20px ${PP.orbGlow}, 0 0 40px ${PP.orbGlow}`
-                  : `0 0 12px ${PP.orbGlow}`,
+                opacity: 0.8,
+                boxShadow: `0 0 12px ${PP.orbGlow}`,
                 transition: "all 0.4s ease",
               }}
             />
@@ -603,7 +603,7 @@ export default function MobileOsShell() {
           <MySpacePanel onClose={() => setClaimOpen(false)} />
         </div>
       )}
-      <HologramAiChat open={chatOpen} onClose={() => setChatOpen(false)} />
+      <MobileLumenBloom open={chatOpen} onClose={() => setChatOpen(false)} orbY={orbY} />
       <PwaInstallBanner pwa={pwa} />
 
       {/* ════════════════════════════════════════════════════════════
