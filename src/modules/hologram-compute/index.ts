@@ -311,3 +311,31 @@ export type {
   GrammarKernelConfig,
   GrammarKernelSnapshot,
 } from "./atlas-grammar-kernel";
+
+// Atlas Semantic Kernel — Meaning as Holographic Interference (transformer-free)
+export {
+  AtlasSemanticKernel,
+  DEFAULT_SEMANTIC_CONFIG,
+  buildSignature,
+  compose as semanticCompose,
+  checkEntailment,
+  detectContradiction,
+  semanticVertex,
+  vertexSemantics,
+  SEMANTIC_DOMAINS,
+  THEMATIC_ROLES,
+  SEMANTIC_PRIMES,
+  GROUNDED_LEXICON,
+} from "./atlas-semantic-kernel";
+export type {
+  SemanticDomain,
+  ThematicRole,
+  SemanticPrime,
+  SemanticSignature,
+  CompositionResult,
+  EntailmentResult,
+  ContradictionResult,
+  SemanticLexEntry,
+  SemanticKernelConfig,
+  SemanticKernelSnapshot,
+} from "./atlas-semantic-kernel";
