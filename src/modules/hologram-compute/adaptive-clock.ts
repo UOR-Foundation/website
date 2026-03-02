@@ -213,6 +213,8 @@ export class AdaptiveClockBooster {
   destroy(): void {
     this.stop();
     this._callbacks = [];
+    this._boosting = false;
+    this._coherenceGradient = 0;
     this.tickCount = 0;
     this.idleTicks = 0;
     this.prefetchedFrames = 0;
