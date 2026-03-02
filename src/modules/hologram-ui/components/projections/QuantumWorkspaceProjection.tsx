@@ -19,6 +19,7 @@ export default function QuantumWorkspaceProjection({ open, preload, onClose }: P
     <ProjectionShell
       open={open}
       preload={preload}
+      keepAlive={false}
       onClose={onClose}
       id="quantum-workspace"
       backdropColor="hsla(220, 15%, 4%, 0.5)"

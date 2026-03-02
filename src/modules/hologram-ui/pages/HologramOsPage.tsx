@@ -89,6 +89,16 @@ function DepthShiftSync({ active }: { active: boolean }) {
 
 const ALL_DESKTOPS: DesktopMode[] = ["image", "white", "dark"];
 
+// Heavy Studio panels should not be hover-preloaded (prevents main-thread spikes)
+const NO_HOVER_PRELOAD_PANELS = new Set([
+  "terminal",
+  "jupyter",
+  "quantum-workspace",
+  "ai-lab",
+  "code",
+  "packages",
+]);
+
 export default function HologramOsPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -182,6 +192,7 @@ export default function HologramOsPage() {
   // ── Panel preloading — prescience-driven + hover-triggered ─────────────
   const [preloadedPanels, setPreloadedPanels] = useState<Set<string>>(new Set());
   const handleHoverPanel = useCallback((panel: string) => {
+    if (NO_HOVER_PRELOAD_PANELS.has(panel)) return;
     setPreloadedPanels(prev => prev.has(panel) ? prev : new Set(prev).add(panel));
   }, []);
 
@@ -192,6 +203,7 @@ export default function HologramOsPage() {
       const next = new Set(prev);
       let changed = false;
       for (const hint of k.prescienceHints) {
+        if (NO_HOVER_PRELOAD_PANELS.has(hint.panel)) continue;
         if (!next.has(hint.panel)) {
           next.add(hint.panel);
           changed = true;

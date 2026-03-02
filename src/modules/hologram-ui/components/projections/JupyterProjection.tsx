@@ -18,6 +18,7 @@ export default function JupyterProjection({ open, preload, onClose }: JupyterPro
     <ProjectionShell
       open={open}
       preload={preload}
+      keepAlive={false}
       onClose={onClose}
       id="jupyter"
       backdropColor="hsla(0, 0%, 0%, 0.4)"

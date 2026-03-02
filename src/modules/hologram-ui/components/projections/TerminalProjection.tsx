@@ -19,6 +19,7 @@ export default function TerminalProjection({ open, preload, onClose, onOpenJupyt
     <ProjectionShell
       open={open}
       preload={preload}
+      keepAlive={false}
       onClose={onClose}
       id="terminal"
       backdropColor="hsla(0, 0%, 0%, 0.4)"
