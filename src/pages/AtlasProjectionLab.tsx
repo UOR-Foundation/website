@@ -181,7 +181,9 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
 
       if (!resp.ok || !resp.body) {
         const errData = await resp.json().catch(() => ({ error: "Stream failed" }));
-        throw new Error(errData.error || `HTTP ${resp.status}`);
+        if (resp.status === 429) throw new Error("The inference engine is busy. Please wait a moment and try again.");
+        if (resp.status === 402) throw new Error("Usage credits have been exhausted. Please add credits to continue.");
+        throw new Error(errData.error || `Something went wrong (HTTP ${resp.status}). Please try again.`);
       }
 
       // ── Parse SSE and merge with quantum metrics ──
@@ -217,6 +219,9 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (!content) continue;
+
+            // Guard against garbled output (e.g. repeated single chars)
+            if (content.length > 3 && /^(.)\1+$/.test(content)) continue;
 
             // ── Run quantum engine per token ──
             // L1: Hardware gradient step
@@ -452,11 +457,15 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
 
           {/* Error */}
           {error && !isInitializing && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "12px" }}>
-              <p style={{ color: P.red, fontSize: "14px", fontWeight: 600 }}>⚠ {error}</p>
-              <button onClick={() => { setError(null); startInference(); }}
-                style={{ padding: "8px 18px", borderRadius: "8px", background: P.btnPrimary, color: P.btnPrimaryText, border: "none", fontSize: "13px", cursor: "pointer" }}>
-                Retry
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "16px", maxWidth: "420px", margin: "0 auto", textAlign: "center" }}>
+              <div style={{ width: "52px", height: "52px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", background: `${P.red}12`, border: `1px solid ${P.red}20` }}>
+                <IconFlame size={24} style={{ color: P.red }} />
+              </div>
+              <p style={{ color: P.text, fontSize: "15px", fontWeight: 600, margin: 0 }}>Inference interrupted</p>
+              <p style={{ color: P.textMuted, fontSize: "13px", lineHeight: 1.7, margin: 0 }}>{error}</p>
+              <button onClick={() => { setError(null); setTokens([]); startInference(); }}
+                style={{ padding: "10px 24px", borderRadius: "10px", background: P.btnPrimary, color: P.btnPrimaryText, border: "none", fontSize: "13px", fontWeight: 600, cursor: "pointer", marginTop: "4px" }}>
+                Try again
               </button>
             </div>
           )}
