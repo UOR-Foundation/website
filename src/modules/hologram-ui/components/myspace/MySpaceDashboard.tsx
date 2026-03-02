@@ -379,10 +379,10 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
           >
             <Shield className="w-4 h-4 shrink-0" style={{ color: KP.gold }} />
             <div className="flex-1 min-w-0">
-              <span className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: KP.gold }}>
+              <span className="text-[13px] font-semibold tracking-wider uppercase" style={{ color: KP.gold }}>
                 Sovereign · {profile?.pqcAlgorithm || "ML-DSA-65"}
               </span>
-              <span className="text-[10px] ml-2" style={{ color: KP.dim }}>
+              <span className="text-[12px] ml-2" style={{ color: KP.muted }}>
                 {profile?.collapseIntact ? "Collapse intact" : "Observed"}
               </span>
             </div>
@@ -424,7 +424,7 @@ export default function MySpaceDashboard({ onClose, onSignOut }: MySpaceDashboar
           <span className="text-sm font-medium group-hover:opacity-80 transition-opacity">Trust network</span>
           {pendingCount > 0 && (
             <span
-              className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold animate-pulse"
+              className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold animate-pulse"
               style={{ background: KP.gold, color: KP.bg }}
             >
               {pendingCount}
@@ -464,7 +464,7 @@ function IdentityRow({ label, value }: { label: string; value: string }) {
       onClick={handleCopy}
       className="w-full flex items-center gap-3 group text-left hover:opacity-80 transition-opacity cursor-pointer"
     >
-      <span className="text-[11px] font-medium tracking-wider uppercase shrink-0 w-20" style={{ color: KP.dim }}>
+      <span className="text-[12px] font-medium tracking-wider uppercase shrink-0 w-20" style={{ color: KP.muted }}>
         {label}
       </span>
       <span className="text-xs font-mono truncate flex-1" style={{ color: KP.muted }}>

@@ -501,10 +501,10 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
               className="flex items-start gap-2.5 mt-8 px-1"
-              style={{ color: KP.dim }}
+              style={{ color: KP.muted }}
             >
-              <Lock className="w-3 h-3 mt-0.5 shrink-0" />
-              <p className="text-[10px] leading-relaxed">
+              <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <p className="text-[13px] leading-relaxed">
                 New here? Any sign-in method creates your account automatically.
                 {canUseDevice ? " Lost your device? Email recovers access." : ""}
               </p>
@@ -617,9 +617,9 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
                 )}
               </AnimatePresence>
 
-              <div className="flex items-start gap-2.5 mt-4 px-1" style={{ color: KP.dim }}>
-                <Lock className="w-3 h-3 mt-0.5 shrink-0" />
-                <p className="text-[10px] leading-relaxed">
+              <div className="flex items-start gap-2.5 mt-4 px-1" style={{ color: KP.muted }}>
+                <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <p className="text-[13px] leading-relaxed">
                   Your device will ask for biometric verification to create a hardware-bound
                   identity. Only you, on this device, can access your space.
                 </p>
@@ -690,7 +690,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
             {ceremonyState?.seal && (
               <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] tracking-wider uppercase"
                 style={{
                   background: ceremonyState.seal.clean ? `${KP.gold}12` : "hsl(0, 60%, 50%, 0.12)",
                   color: ceremonyState.seal.clean ? KP.gold : "hsl(0, 60%, 60%)",
@@ -704,7 +704,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
             {hasHardwareTrust && (
               <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-wider uppercase"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] tracking-wider uppercase"
                 style={{ background: "hsla(142, 40%, 50%, 0.1)", color: "hsl(142, 45%, 55%)", border: "1px solid hsla(142, 40%, 50%, 0.15)" }}
               >
                 <Smartphone className="w-3 h-3" />
@@ -712,7 +712,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
               </div>
             )}
 
-            <p className="text-xs leading-relaxed max-w-xs mx-auto" style={{ color: KP.dim }}>
+            <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: KP.muted }}>
               Your sovereign identity has been created with post-quantum cryptography (ML-DSA-65)
               {hasHardwareTrust
                 ? " and anchored to your device's secure enclave."
