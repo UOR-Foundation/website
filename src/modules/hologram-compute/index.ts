@@ -339,3 +339,18 @@ export type {
   SemanticKernelConfig,
   SemanticKernelSnapshot,
 } from "./atlas-semantic-kernel";
+
+// Ontogenesis Engine — Self-Organizing Ontology via Coherence Crystallization
+export {
+  OntogenesisEngine,
+  DEFAULT_ONTOGENESIS_CONFIG,
+} from "./ontogenesis-engine";
+export type {
+  ActivationTrace,
+  ConceptCrystal,
+  OntologyRelation,
+  RelationKind,
+  ConceptHypothesis,
+  OntogenesisConfig,
+  OntogenesisSnapshot,
+} from "./ontogenesis-engine";
