@@ -63,7 +63,7 @@ interface ModelBenchmarkRow {
 const TEST_PROMPT = "The fundamental nature of reality is";
 const GEN_TOKENS = 24;
 
-const BENCHMARK_MODEL_IDS = ["smollm2-135m", "gpt2", "phi-3-mini"] as const;
+const BENCHMARK_MODEL_IDS = ["smollm2-135m", "gpt2", "phi-3-mini", "llama-3.2-1b"] as const;
 
 // φ ratio for spacing harmony
 const PHI = 1.618;
