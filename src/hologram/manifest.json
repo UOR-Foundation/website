@@ -11,7 +11,8 @@
     "u:", "schema:", "op:", "proof:", "partition:", "cert:",
     "derivation:", "morphism:", "store:", "state:", "trace:",
     "observable:", "tsp:", "fpp:", "trqp:", "polytree:",
-    "kernel:", "hologram:", "lens:", "projection:", "compute:"
+    "kernel:", "hologram:", "lens:", "projection:", "compute:",
+    "tee:"
   ],
 
   "subsystems": {
