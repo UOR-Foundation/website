@@ -247,6 +247,7 @@ export type {
   ClusterToken,
   PartitionStats,
   VocabularyEngram,
+  EnhancedSampleResult,
 } from "./vocabulary-partitioner";
 
 // Tokenizer Bridge — Load real vocabularies for Atlas partitioning
