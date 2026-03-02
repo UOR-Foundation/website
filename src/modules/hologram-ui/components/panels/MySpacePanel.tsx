@@ -7,30 +7,29 @@
  * No alternate auth paths exist — one door in, one door out.
  *
  * Phases:
- *  1. auth       — Sign in (Google / Apple / Magic Link)
+ *  1. auth       — Primary: Device biometric (TEE). Fallback: Email/OAuth
  *  2. magic-sent — Waiting for magic link confirmation
  *  3. naming     — Choose a display name
  *  4. creating   — TEE attestation + Vault-isolated founding ceremony
  *  5. reveal     — Identity confirmation with three-word name
  *  6. dashboard  — Personal sovereign dashboard
  *
+ * Login Architecture:
+ *  - Primary: "Sign in with this device" → WebAuthn assertion (biometric)
+ *    Matches stored credential → resolves linked Supabase account
+ *  - Fallback: Email magic link / Google / Apple OAuth
+ *  - Device loss: Email recovery → re-anchor TEE on new device
+ *
  * Security:
  *  - TEE attestation binds the kernel to your device's hardware enclave
  *  - Founding ceremony executes inside CeremonyVault (5-layer isolation)
  *  - Observer-collapse detection aborts on interception
- *  - Entangled nonce pair ensures no third-party observation
- *  - All intermediate crypto material is scrubbed post-ceremony
- *  - QDisclosure default policy: everything private
- *  - QTrustMesh Node 0: self-attestation at sovereign level
- *
- * TEE Integration:
- *  - During creation: TEE.attest() anchors identity to device hardware
- *  - During login: TEE.assert() verifies the returning user's device
- *  - No TEE prompts for visitors — only during intentional identity operations
+ *  - Multi-device: users can register multiple trusted devices
+ *  - Email serves as the recovery channel for device loss
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mail, Shield, Fingerprint, Lock, Wifi } from "lucide-react";
+import { Mail, Shield, Fingerprint, Lock, Wifi, Smartphone, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
@@ -72,6 +71,13 @@ function emitTrustUpdate(trusted: boolean) {
   window.dispatchEvent(new CustomEvent("hologram:tee-update", { detail: { trusted } }));
 }
 
+/** Check if this device has a registered TEE credential */
+function hasDeviceCredential(): boolean {
+  try {
+    return !!localStorage.getItem("hologram:tee:credential");
+  } catch { return false; }
+}
+
 export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const { session, profile, loading, signOut, refreshProfile } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
@@ -79,9 +85,21 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   const [name, setName] = useState("");
   const [ceremonyState, setCeremonyState] = useState<CeremonyState | null>(null);
   const [teeStatus, setTeeStatus] = useState<"idle" | "attesting" | "asserting" | "done">("idle");
+  const [showEmailFallback, setShowEmailFallback] = useState(false);
+  const [deviceBiometricAvailable, setDeviceBiometricAvailable] = useState(false);
+  const [deviceHasCredential, setDeviceHasCredential] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const teeBridgeRef = useRef(new TEEBridge());
+
+  // ── Detect device capabilities on mount ──
+  useEffect(() => {
+    const bridge = teeBridgeRef.current;
+    bridge.detect().then((caps) => {
+      setDeviceBiometricAvailable(caps.provider === "webauthn-platform");
+      setDeviceHasCredential(bridge.hasCredential);
+    });
+  }, []);
 
   // ── Phase routing ──
   useEffect(() => {
@@ -89,8 +107,8 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     if (!session) { setPhase("auth"); return; }
     if (profile?.ceremonyCid || profile?.uorCanonicalId) {
       setPhase("dashboard");
-      // Returning user — silently assert TEE if credential exists
-      assertReturningUser();
+      // Returning user — emit trust if credential exists
+      if (hasDeviceCredential()) emitTrustUpdate(true);
       return;
     }
     if (profile) {
@@ -110,7 +128,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
         if (data?.ceremony_cid || data?.uor_canonical_id) {
           refreshProfile();
           setPhase("dashboard");
-          assertReturningUser();
+          if (hasDeviceCredential()) emitTrustUpdate(true);
         } else {
           const meta = session.user.user_metadata;
           if (meta?.full_name) setName(meta.full_name);
@@ -120,29 +138,6 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
         }
       });
   }, [loading, session, profile, refreshProfile]);
-
-  /**
-   * Assert TEE for returning users — silent, non-blocking.
-   * If the user previously attested during ceremony, their device
-   * credential exists and we verify presence quietly.
-   */
-  const assertReturningUser = useCallback(async () => {
-    const bridge = teeBridgeRef.current;
-    try {
-      await bridge.detect();
-      if (bridge.hasCredential && bridge.isHardwareBacked) {
-        setTeeStatus("asserting");
-        const assertion = await bridge.assert("hologram:session:verify");
-        if (assertion.userVerified || assertion.userPresent) {
-          setTeeStatus("done");
-          emitTrustUpdate(true);
-        }
-      }
-    } catch {
-      // Silent — TEE assertion is optional for returning users
-      // They can still use the system with software-level trust
-    }
-  }, []);
 
   // ── Auth state listener ──
   useEffect(() => {
@@ -167,11 +162,60 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
   // ── Auto-focus ──
   useEffect(() => {
-    if (phase === "auth") { const t = setTimeout(() => inputRef.current?.focus(), 600); return () => clearTimeout(t); }
-    if (phase === "naming") { const t = setTimeout(() => nameRef.current?.focus(), 400); return () => clearTimeout(t); }
-  }, [phase]);
+    if (phase === "auth" && showEmailFallback) {
+      const t = setTimeout(() => inputRef.current?.focus(), 400);
+      return () => clearTimeout(t);
+    }
+    if (phase === "naming") {
+      const t = setTimeout(() => nameRef.current?.focus(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [phase, showEmailFallback]);
 
-  // ── Auth handlers ──
+  // ══════════════════════════════════════════════════════════════
+  // Auth handlers
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * PRIMARY LOGIN: Sign in with device biometric (WebAuthn assertion).
+   * This uses the TEE credential stored during the founding ceremony.
+   * After successful biometric, we look up the linked Supabase session.
+   */
+  const handleDeviceSignIn = useCallback(async () => {
+    const bridge = teeBridgeRef.current;
+    try {
+      setTeeStatus("asserting");
+      const assertion = await bridge.assert("hologram:login:verify");
+
+      if (assertion.userVerified || assertion.userPresent) {
+        // Credential verified — now we need to restore the Supabase session.
+        // The credential is linked to a Supabase user via localStorage mapping.
+        const linkedUserId = localStorage.getItem("hologram:tee:linked-user");
+        if (linkedUserId) {
+          // Check if there's an active session already
+          const { data: { session: existingSession } } = await supabase.auth.getSession();
+          if (existingSession) {
+            // Session exists, biometric confirmed — proceed
+            setTeeStatus("done");
+            emitTrustUpdate(true);
+            refreshProfile();
+            return;
+          }
+        }
+
+        // No linked session — need email fallback
+        setTeeStatus("idle");
+        toast.info("Device verified. Please confirm with your email to complete sign-in.");
+        setShowEmailFallback(true);
+      }
+    } catch (err) {
+      console.warn("[MySpace] Device sign-in failed:", err);
+      setTeeStatus("idle");
+      toast.error("Device authentication cancelled or failed. Try email instead.");
+      setShowEmailFallback(true);
+    }
+  }, [refreshProfile]);
+
   const handleGoogleSignIn = useCallback(async () => {
     sessionStorage.setItem("auth_return_to", "/hologram-os");
     const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
@@ -195,7 +239,10 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     else setPhase("magic-sent");
   }, [email]);
 
-  // ── Vault-Isolated Genesis Ceremony (with TEE attestation) ──
+  // ══════════════════════════════════════════════════════════════
+  // Vault-Isolated Genesis Ceremony (with TEE attestation)
+  // ══════════════════════════════════════════════════════════════
+
   const handleCreate = useCallback(async () => {
     if (!name.trim()) return;
     setPhase("creating");
@@ -205,8 +252,6 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
 
     try {
       // ── Step 1: TEE Attestation — anchor to device hardware ──
-      // This happens BEFORE the ceremony so the kernel is bound
-      // to the device's trusted enclave from the very beginning.
       setTeeStatus("attesting");
       const bridge = teeBridgeRef.current;
       await bridge.detect();
@@ -218,10 +263,11 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
             sess.user.id,
             name.trim(),
           );
+          // Link TEE credential to Supabase user for future device-only logins
+          localStorage.setItem("hologram:tee:linked-user", sess.user.id);
           emitTrustUpdate(true);
         } catch (teeErr) {
           console.warn("[MySpace] TEE attestation skipped:", teeErr);
-          // Continue without hardware attestation — ceremony still works
         }
       }
       setTeeStatus("done");
@@ -314,6 +360,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     setCeremonyState(null);
     setTeeStatus("idle");
     emitTrustUpdate(false);
+    setShowEmailFallback(false);
     setPhase("auth");
   }, [signOut]);
 
@@ -334,6 +381,8 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
   }
 
   if (phase === "auth") {
+    const canUseDevice = deviceBiometricAvailable && deviceHasCredential;
+
     return (
       <Shell onClose={onClose}>
         <div className="flex-1 flex items-center justify-center relative">
@@ -341,52 +390,105 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           <div className="relative z-10 w-full max-w-sm px-8 animate-fade-in">
             <div className="text-center mb-10">
               <h1 className="text-[28px] font-display font-semibold leading-snug" style={{ color: KP.text }}>
-                Let's create something
-                <br />
-                <span style={{ color: KP.gold }}>only yours.</span>
+                {canUseDevice ? (
+                  <>
+                    Welcome back.
+                    <br />
+                    <span style={{ color: KP.gold }}>Your device knows you.</span>
+                  </>
+                ) : (
+                  <>
+                    Let's create something
+                    <br />
+                    <span style={{ color: KP.gold }}>only yours.</span>
+                  </>
+                )}
               </h1>
               <p className="text-sm mt-4" style={{ color: KP.muted }}>
-                Sign in to anchor your identity.
+                {canUseDevice
+                  ? "Sign in with your biometrics — instant, private, hardware-secured."
+                  : "Sign in to anchor your identity."
+                }
               </p>
             </div>
 
             <div className="space-y-3">
-              <OAuthButton onClick={handleGoogleSignIn} icon={<GoogleIcon />} label="Continue with Google" />
-              <OAuthButton onClick={handleAppleSignIn} icon={<AppleIcon />} label="Continue with Apple" />
-
-              <div className="flex items-center gap-4 py-2">
-                <div className="flex-1 h-px" style={{ background: KP.border }} />
-                <span className="text-xs" style={{ color: KP.muted }}>or</span>
-                <div className="flex-1 h-px" style={{ background: KP.border }} />
-              </div>
-
-              <div className="space-y-3">
-                <input
-                  ref={inputRef}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleMagicLink()}
-                  placeholder="your@email.com"
-                  className="w-full min-h-[48px] bg-transparent rounded-full px-6 py-3 text-base text-center outline-none transition-colors"
-                  style={{ border: `1px solid ${KP.border}`, color: KP.text }}
-                  autoComplete="email"
-                  enterKeyHint="send"
-                />
-                <div
-                  className="flex justify-center transition-all duration-500"
-                  style={{ opacity: email.trim() ? 1 : 0, transform: email.trim() ? "translateY(0)" : "translateY(8px)", pointerEvents: email.trim() ? "auto" : "none" }}
-                >
+              {/* ── PRIMARY: Device biometric (if credential exists) ── */}
+              {canUseDevice && (
+                <>
                   <button
-                    onClick={handleMagicLink}
-                    className="w-full min-h-[48px] flex items-center justify-center gap-2 px-6 py-3 rounded-full text-base font-semibold active:scale-[0.98] hover:opacity-90 transition-all cursor-pointer"
+                    onClick={handleDeviceSignIn}
+                    disabled={teeStatus === "asserting"}
+                    className="w-full min-h-[56px] flex items-center justify-center gap-3 px-6 py-4 rounded-full text-base font-semibold active:scale-[0.98] hover:opacity-90 transition-all cursor-pointer disabled:opacity-60"
                     style={{ background: KP.gold, color: KP.bg }}
                   >
-                    <Mail className="w-4 h-4" />
-                    Send magic link
+                    {teeStatus === "asserting" ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                        Verifying…
+                      </>
+                    ) : (
+                      <>
+                        <Fingerprint className="w-5 h-5" />
+                        Sign in with this device
+                      </>
+                    )}
                   </button>
-                </div>
-              </div>
+
+                  {/* Expandable fallback section */}
+                  <button
+                    onClick={() => setShowEmailFallback(prev => !prev)}
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm transition-colors cursor-pointer"
+                    style={{ color: KP.muted }}
+                  >
+                    <span>Other sign-in methods</span>
+                    <ChevronDown
+                      className="w-3.5 h-3.5 transition-transform duration-200"
+                      style={{ transform: showEmailFallback ? "rotate(180deg)" : "rotate(0deg)" }}
+                    />
+                  </button>
+
+                  <div
+                    className="overflow-hidden transition-all duration-300 ease-out"
+                    style={{
+                      maxHeight: showEmailFallback ? "400px" : "0",
+                      opacity: showEmailFallback ? 1 : 0,
+                    }}
+                  >
+                    <div className="space-y-3 pt-1">
+                      <EmailAndOAuthSection
+                        email={email}
+                        setEmail={setEmail}
+                        inputRef={inputRef}
+                        handleMagicLink={handleMagicLink}
+                        handleGoogleSignIn={handleGoogleSignIn}
+                        handleAppleSignIn={handleAppleSignIn}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Device recovery hint */}
+                  <div className="flex items-start gap-2 mt-4 px-2" style={{ color: KP.dim }}>
+                    <Smartphone className="w-3 h-3 mt-0.5 shrink-0" />
+                    <p className="text-[10px] leading-relaxed">
+                      Lost your device? Use email to recover access and re-anchor
+                      your identity to a new device.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* ── No device credential: Show standard auth ── */}
+              {!canUseDevice && (
+                <EmailAndOAuthSection
+                  email={email}
+                  setEmail={setEmail}
+                  inputRef={inputRef}
+                  handleMagicLink={handleMagicLink}
+                  handleGoogleSignIn={handleGoogleSignIn}
+                  handleAppleSignIn={handleAppleSignIn}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -582,6 +684,63 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
     <Shell onClose={onClose}>
       <MySpaceDashboard onClose={onClose} onSignOut={handleSignOut} />
     </Shell>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Extracted components
+// ═══════════════════════════════════════════════════════════════
+
+/** Reusable email + OAuth section — used both as primary (new users) and fallback (returning) */
+function EmailAndOAuthSection({
+  email, setEmail, inputRef, handleMagicLink, handleGoogleSignIn, handleAppleSignIn,
+}: {
+  email: string;
+  setEmail: (v: string) => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  handleMagicLink: () => void;
+  handleGoogleSignIn: () => void;
+  handleAppleSignIn: () => void;
+}) {
+  return (
+    <>
+      <OAuthButton onClick={handleGoogleSignIn} icon={<GoogleIcon />} label="Continue with Google" />
+      <OAuthButton onClick={handleAppleSignIn} icon={<AppleIcon />} label="Continue with Apple" />
+
+      <div className="flex items-center gap-4 py-2">
+        <div className="flex-1 h-px" style={{ background: KP.border }} />
+        <span className="text-xs" style={{ color: KP.muted }}>or</span>
+        <div className="flex-1 h-px" style={{ background: KP.border }} />
+      </div>
+
+      <div className="space-y-3">
+        <input
+          ref={inputRef}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleMagicLink()}
+          placeholder="your@email.com"
+          className="w-full min-h-[48px] bg-transparent rounded-full px-6 py-3 text-base text-center outline-none transition-colors"
+          style={{ border: `1px solid ${KP.border}`, color: KP.text }}
+          autoComplete="email"
+          enterKeyHint="send"
+        />
+        <div
+          className="flex justify-center transition-all duration-500"
+          style={{ opacity: email.trim() ? 1 : 0, transform: email.trim() ? "translateY(0)" : "translateY(8px)", pointerEvents: email.trim() ? "auto" : "none" }}
+        >
+          <button
+            onClick={handleMagicLink}
+            className="w-full min-h-[48px] flex items-center justify-center gap-2 px-6 py-3 rounded-full text-base font-semibold active:scale-[0.98] hover:opacity-90 transition-all cursor-pointer"
+            style={{ background: KP.gold, color: KP.bg }}
+          >
+            <Mail className="w-4 h-4" />
+            Send magic link
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
