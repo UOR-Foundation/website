@@ -849,14 +849,14 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(0)}ms`}</span>
+                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
                   <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 6px hsla(38, 40%, 65%, 0.4)" }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs.toFixed(1)}ms</span>
+                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
             </div>
 
@@ -893,7 +893,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               </button>
             </div>
             <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
-              <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>2N³ / time</code> · Median of {sampleCount(16)}–{sampleCount(1024)} samples · Adaptive warmup · Work-amplified timing · All values measured live.
+              <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>INT8 OPS = 2N³ / time</code> · Median of {sampleCount(16)}–{sampleCount(1024)} samples · Adaptive warmup · Work-amplified timing · Energy ↓ = measured time reduction (not theoretical).
             </p>
           </div>
 
@@ -903,11 +903,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               <thead>
                 <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
                   <th className="text-left py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>INT8 Ops</th>
                   <th className="text-right py-1 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
                   <th className="text-right py-1 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
                   <th className="text-right py-1 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy</th>
+                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy ↓</th>
                   <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
                   <th className="text-center py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
                 </tr>
@@ -925,7 +925,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                       <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                       <td className="py-1 px-2 text-right tabular-nums" style={{ color: baseColor }}>
-                        {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs >= 1000 ? `${(baseMs / 1000).toFixed(1)}s` : baseMs.toFixed(1)}
+                        {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs >= 1000 ? `${(baseMs / 1000).toFixed(2)}s` : baseMs >= 10 ? baseMs.toFixed(1) : baseMs >= 1 ? baseMs.toFixed(2) : baseMs.toFixed(3)}
                       </td>
                       <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
                       <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
@@ -1460,7 +1460,18 @@ export default function ConstantTimeBenchmark() {
       const sampleCpu = matrixSample(stdResult, n);
       const sampleHolo = holoResult ? matrixSample(holoResult, n) : { topLeft: [], bottomRight: [] };
 
-      const ops = n * n * n;
+      const ops = totalOps(n); // 2N³ (1 multiply + 1 add per element)
+      
+      // Energy: compare actual compute time ratio, not a mathematical identity
+      // vGPU retrieval cost is proportional to input fingerprinting (O(N²)), not compute (O(N³))
+      const baselineEnergyPj = ops * ENERGY_PER_INT8_MAC_PJ;
+      const retrievalOps = 2 * n * n;
+      const retrievalEnergyPj = retrievalOps * ENERGY_PER_INT8_MAC_PJ;
+      const energySavedPj = Math.max(baselineEnergyPj - retrievalEnergyPj, 0);
+      // Energy saved % based on actual measured time ratio (most rigorous)
+      const baseTimeForEnergy = demo === "cpu" ? stdMs : (gpuAvailable ? gpuMs : stdMs);
+      const energySavedPercent = baseTimeForEnergy > 0 ? Math.max((1 - holoMs / baseTimeForEnergy) * 100, 0) : 0;
+
       const point: BenchPoint = {
         n, ops,
         matrixElements: n * n,
@@ -1490,8 +1501,8 @@ export default function ConstantTimeBenchmark() {
         stdDevHolo: round(stddev(holoSamples)),
         cvCpu: round(coeffOfVariation(cpuSamples)),
         cvHolo: round(coeffOfVariation(holoSamples)),
-        energySavedPj: ops * ENERGY_PER_INT8_MAC_PJ,
-        energySavedPercent: ops > 0 ? (1 - (n * n) / ops) * 100 : 0,
+        energySavedPj,
+        energySavedPercent: round(energySavedPercent),
         // NEW rigorous statistics
         meanCpu: round(meanCpuMs),
         meanHolo: round(meanHoloMs),
