@@ -998,6 +998,60 @@ export type Database = {
         }
         Relationships: []
       }
+      mirror_bonds: {
+        Row: {
+          actual_h_score: number
+          agent_id: string
+          bond_strength: number
+          created_at: string
+          empathy_score: number
+          id: string
+          interaction_count: number
+          last_sync_at: string | null
+          predicted_h_score: number
+          prediction_error: number
+          shared_habit_count: number
+          shared_habit_ids: string[]
+          status: string
+          target_agent_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_h_score?: number
+          agent_id: string
+          bond_strength?: number
+          created_at?: string
+          empathy_score?: number
+          id?: string
+          interaction_count?: number
+          last_sync_at?: string | null
+          predicted_h_score?: number
+          prediction_error?: number
+          shared_habit_count?: number
+          shared_habit_ids?: string[]
+          status?: string
+          target_agent_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_h_score?: number
+          agent_id?: string
+          bond_strength?: number
+          created_at?: string
+          empathy_score?: number
+          id?: string
+          interaction_count?: number
+          last_sync_at?: string | null
+          predicted_h_score?: number
+          prediction_error?: number
+          shared_habit_count?: number
+          shared_habit_ids?: string[]
+          status?: string
+          target_agent_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
