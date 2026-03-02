@@ -104,7 +104,7 @@ export default memo(function ProjectionShell({
 
       {/* Panel — GPU-promoted translate3d projection from sidebar edge */}
       <div
-        className="fixed top-0 bottom-0 z-[500] flex"
+        className={`fixed top-0 bottom-0 z-[500] flex ${open ? "will-change-active" : "will-change-idle"}`}
         style={{
           left: SIDEBAR_WIDTH,
           right: 0,
@@ -115,14 +115,16 @@ export default memo(function ProjectionShell({
             ? `transform ${DURATION_PROJECT_MS}ms ${EASE_PROJECT}, opacity ${Math.round(DURATION_PROJECT_MS * 0.6)}ms ${EASE_PROJECT}`
             : `transform ${DURATION_PROJECT_MS}ms ${EASE_DISMISS}, opacity ${Math.round(DURATION_PROJECT_MS * 0.4)}ms ease-out`,
           pointerEvents: open ? "auto" : "none",
-          willChange: open ? "transform, opacity" : "auto",
+          // §6 content-visibility: skip rendering when closed (keep-alive but zero cost)
+          contentVisibility: open ? "visible" : "auto",
+          containIntrinsicSize: "auto 100vh",
           // Isolation: prevent layout thrashing from panel content
           contain: "layout style",
         }}
       >
         {/* Projection beam — light edge emanating from sidebar */}
         <div
-          className="absolute top-0 bottom-0 left-0 pointer-events-none z-10"
+          className="absolute top-0 bottom-0 left-0 pointer-events-none z-10 hdr-beam"
           style={{
             width: open ? "2px" : "0px",
             background: beamGradient,
@@ -133,7 +135,7 @@ export default memo(function ProjectionShell({
 
         {/* Projection glow — subtle light sweep on open */}
         <div
-          className="absolute top-0 bottom-0 left-0 pointer-events-none z-[9]"
+          className="absolute top-0 bottom-0 left-0 pointer-events-none z-[9] hdr-beam"
           style={{
             width: "80px",
             background: "linear-gradient(to right, hsla(38, 30%, 65%, 0.06), transparent)",

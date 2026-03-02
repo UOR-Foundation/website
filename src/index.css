@@ -12,6 +12,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════
+   §1  Retina-Sharp: CSS @layer ordering
+   Ensures animation styles never fight layout styles — zero invisible
+   repaints. Cascade: base → tokens → components → animations → utilities.
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer base, tokens, components, animations, utilities;
+
 @layer base {
   :root {
     /* ── Hologram Adaptive Scale ─────────────────────────────────────
@@ -159,22 +166,132 @@
     scroll-behavior: smooth;
   }
 
+  /* ── §2  Subpixel Font Rendering — platform-adaptive smoothing ──── */
   body {
     @apply bg-background text-foreground antialiased;
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', Georgia, serif;
     letter-spacing: -0.02em;
+    font-optical-sizing: auto;
+  }
+
+  /* Windows ClearType optimization — subpixel rendering */
+  @supports (-ms-accelerator: true) {
+    body { -webkit-font-smoothing: subpixel-antialiased; }
   }
 
   ::selection {
     background: hsl(var(--primary) / 0.15);
     color: hsl(var(--foreground));
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §3  Native P3 Color Gamut — wider-gamut for richer earth-tone palette
+   On Display P3 screens, golds and greens are significantly richer.
+   Falls back gracefully to sRGB on non-P3 displays.
+   ═══════════════════════════════════════════════════════════════════════ */
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    :root {
+      --hologram-gold-p3: color(display-p3 0.78 0.62 0.32);
+      --hologram-green-p3: color(display-p3 0.28 0.72 0.48);
+      --hologram-purple-p3: color(display-p3 0.52 0.32 0.68);
+      --hologram-amber-p3: color(display-p3 0.85 0.68 0.25);
+    }
+
+    /* Apply P3 overrides on hologram surfaces */
+    .p3-gold { color: var(--hologram-gold-p3) !important; }
+    .p3-green { color: var(--hologram-green-p3) !important; }
+    .p3-accent-glow {
+      box-shadow: 0 0 20px color(display-p3 0.78 0.62 0.32 / 0.2),
+                  0 0 40px color(display-p3 0.78 0.62 0.32 / 0.08);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §4  HDR Metadata — boost projection beam & coherence into HDR range
+   On HDR-capable displays, glow effects reach beyond sRGB luminance.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (dynamic-range: high) {
+  :root {
+    --hdr-boost: 1.4;
+    --hdr-glow-intensity: 1.5;
+  }
+
+  .hologram-glass::after,
+  .coherence-ambient::after {
+    filter: brightness(var(--hdr-boost, 1));
+  }
+
+  .hdr-beam {
+    filter: brightness(var(--hdr-glow-intensity, 1));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §5  Scroll & Touch Physics — platform-native momentum & overscroll
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer base {
+  html {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS rubber-band on scrollable panels */
+  .scroll-native {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Snap scrolling for frame switcher and carousels */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-snap-x > * {
+    scroll-snap-align: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §6  content-visibility: auto — skip rendering for offscreen panels
+   Keep-alive mounted panels that are hidden get zero compositor cost.
+   ═══════════════════════════════════════════════════════════════════════ */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §7  Variable Refresh Rate Awareness
+   ProMotion displays drop to 10Hz when static. Strategic will-change
+   usage ensures the display refreshes only when animating.
+   ═══════════════════════════════════════════════════════════════════════ */
+.will-change-active {
+  will-change: transform, opacity;
+}
+.will-change-idle {
+  will-change: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §8  Resolution-native image rendering
+   CSS image-set for DPR-aware rendering. Components use srcSet.
+   ═══════════════════════════════════════════════════════════════════════ */
+.image-retina {
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
 }
 
 @layer components {
