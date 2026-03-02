@@ -9,10 +9,10 @@
  */
 
 import { motion } from "framer-motion";
-import { MessageCircle, Network, CalendarDays, Brain, Zap, Eye, TrendingUp } from "lucide-react";
+import { MessageCircle, Network, CalendarDays, Brain, Zap, Eye, TrendingUp, MessageSquare } from "lucide-react";
 import { PP } from "@/modules/hologram-ui/theme/portal-palette";
 
-export type BloomProjection = "conversation" | "trust" | "calendar" | "knowledge" | "habits" | "mirror" | "convergence";
+export type BloomProjection = "conversation" | "trust" | "calendar" | "knowledge" | "habits" | "mirror" | "convergence" | "whatsapp";
 
 interface BloomProjectionTabsProps {
   active: BloomProjection;
@@ -27,6 +27,7 @@ const TABS: { id: BloomProjection; label: string; icon: React.ElementType }[] = 
   { id: "habits",       label: "Habits", icon: Zap },
   { id: "mirror",       label: "Mirror", icon: Eye },
   { id: "convergence",  label: "Conv", icon: TrendingUp },
+  { id: "whatsapp",     label: "WA", icon: MessageSquare },
 ];
 
 export default function BloomProjectionTabs({ active, onChange }: BloomProjectionTabsProps) {
