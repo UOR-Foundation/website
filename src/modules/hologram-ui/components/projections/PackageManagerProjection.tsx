@@ -15,7 +15,7 @@ interface PackageManagerProjectionProps {
 
 export default function PackageManagerProjection({ open, preload, onClose }: PackageManagerProjectionProps) {
   return (
-    <ProjectionShell open={open} preload={preload} onClose={onClose} id="packages">
+    <ProjectionShell open={open} preload={preload} keepAlive={false} onClose={onClose} id="packages">
       <Suspense fallback={
         <div className="flex items-center justify-center h-full" style={{ background: "hsl(25, 8%, 7%)", color: "hsl(30, 8%, 75%)" }}>
           <span className="text-sm font-mono">Loading Packages…</span>

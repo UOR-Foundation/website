@@ -20,6 +20,7 @@ export default function AILabProjection({ open, preload, onClose }: Props) {
     <ProjectionShell
       open={open}
       preload={preload}
+      keepAlive={false}
       onClose={onClose}
       id="ai-lab"
       backdropColor="hsla(25, 10%, 4%, 0.5)"

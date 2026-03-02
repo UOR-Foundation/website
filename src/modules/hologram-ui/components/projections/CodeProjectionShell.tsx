@@ -22,6 +22,7 @@ export default function CodeProjectionShell({ open, preload, onClose }: CodeProj
     <ProjectionShell
       open={open}
       preload={preload}
+      keepAlive={false}
       onClose={onClose}
       id="code"
       backdropColor="hsla(220, 15%, 4%, 0.5)"

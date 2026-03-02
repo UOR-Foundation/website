@@ -33,6 +33,8 @@ interface ProjectionShellProps {
   open: boolean;
   /** Pre-mount content without showing (hover preload) */
   preload?: boolean;
+  /** Keep mounted after close (default true). Set false for heavy panels. */
+  keepAlive?: boolean;
   /** Close handler */
   onClose: () => void;
   /** Unique key */
@@ -48,6 +50,7 @@ interface ProjectionShellProps {
 export default memo(function ProjectionShell({
   open,
   preload = false,
+  keepAlive = true,
   onClose,
   id,
   backdropColor = "hsla(25, 8%, 4%, 0.25)",
@@ -59,12 +62,22 @@ export default memo(function ProjectionShell({
   // Track if backdrop should render (delayed unmount for exit animation)
   const [backdropVisible, setBackdropVisible] = useState(false);
   const backdropTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const unmountTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    if ((open || preload) && !everMounted) {
-      setEverMounted(true);
+    clearTimeout(unmountTimeout.current);
+
+    if (open || preload) {
+      if (!everMounted) setEverMounted(true);
+      return;
     }
-  }, [open, preload, everMounted]);
+
+    if (!keepAlive && everMounted) {
+      unmountTimeout.current = setTimeout(() => setEverMounted(false), REVEAL_MS + 60);
+    }
+
+    return () => clearTimeout(unmountTimeout.current);
+  }, [open, preload, keepAlive, everMounted]);
 
   // Backdrop lifecycle
   useEffect(() => {
