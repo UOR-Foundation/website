@@ -136,9 +136,10 @@ export default memo(function ProjectionShell({
             transition: open
               ? `transform ${REVEAL_MS}ms ${EASE_PROJECT}, opacity ${Math.round(REVEAL_MS * 0.5)}ms ${EASE_PROJECT}`
               : `transform ${Math.round(REVEAL_MS * 0.8)}ms ${EASE_DISMISS}, opacity ${Math.round(REVEAL_MS * 0.3)}ms ease-out`,
-            // Skip rendering when closed
-            contentVisibility: open ? "visible" : "auto",
+            // Skip rendering when closed — critical for performance
+            contentVisibility: open ? "visible" : "hidden",
             containIntrinsicSize: "auto 100vh",
+            contain: open ? "layout style" : "layout style size paint",
           }}
         >
           {children}
