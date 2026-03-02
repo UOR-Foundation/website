@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconBolt, IconBrain, IconCpu, IconPlayerPlay, IconPlayerStop,
   IconSparkles, IconX, IconAtom, IconCircuitDiode,
-  IconChevronDown, IconFlame, IconDatabase, IconShield, IconExternalLink,
+  IconChevronDown, IconFlame, IconDatabase, IconShield, IconExternalLink, IconColumns,
 } from "@tabler/icons-react";
 import { usePageTheme, type PagePalette } from "@/modules/hologram-ui/hooks/usePageTheme";
 import { AtlasProjectionPipeline, MODEL_MANIFESTS } from "@/modules/hologram-compute";
@@ -95,6 +95,7 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
   const [error, setError] = useState<string | null>(null);
   const [liveMode, setLiveMode] = useState(true);
   const [liveStatus, setLiveStatus] = useState<"idle" | "waiting" | "firing">("idle");
+  const [showComparison, setShowComparison] = useState(false);
 
   // Live metrics
   const [liveTps, setLiveTps] = useState(0);
@@ -513,14 +514,81 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
         </div>
 
         {/* Quick prompts */}
-        <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap", alignItems: "center" }}>
           {DEMO_PROMPTS.map((p, i) => (
             <button key={i} onClick={() => !isStreaming && handlePromptChange(p)} disabled={isStreaming}
               style={{ fontSize: "10px", color: prompt === p ? P.accent : P.textDim, background: prompt === p ? `${P.accent}10` : P.cardBgSubtle, padding: "3px 9px", borderRadius: "5px", border: prompt === p ? `1px solid ${P.accent}25` : `1px solid ${P.borderSubtle}`, cursor: isStreaming ? "default" : "pointer" }}>
               {p}
             </button>
           ))}
+          <button onClick={() => setShowComparison(c => !c)}
+            style={{ fontSize: "10px", color: showComparison ? P.accent : P.textDim, background: showComparison ? `${P.accent}10` : "transparent", padding: "3px 9px", borderRadius: "5px", border: `1px solid ${showComparison ? P.accent + "25" : P.borderSubtle}`, cursor: "pointer", display: "flex", alignItems: "center", gap: "3px", marginLeft: "auto" }}>
+            <IconColumns size={10} /> Compare Models
+          </button>
         </div>
+
+        {/* ── Model Comparison Panel ── */}
+        <AnimatePresence>
+          {showComparison && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ overflow: "hidden", marginTop: "10px" }}>
+              <div style={{ background: P.cardBg, border: `1px solid ${P.cardBorder}`, borderRadius: "12px", padding: "16px", overflow: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${P.borderSubtle}` }}>
+                      {["", "SmolLM2 1.7B", "Mistral 7B", "Llama 3.1 8B", "Llama 3 70B"].map((h, i) => (
+                        <th key={i} style={{ padding: "6px 8px", textAlign: i === 0 ? "left" : "center", color: i === 0 ? P.textDim : P.text, fontWeight: i === 0 ? 500 : 700, fontSize: i === 0 ? "10px" : "11px", letterSpacing: "0.02em" }}>
+                          {h}
+                          {i === 4 && <span style={{ display: "block", fontSize: "8px", color: P.accent, fontWeight: 700, letterSpacing: "0.08em", marginTop: "2px" }}>FEATURED</span>}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: "Parameters", values: MODELS.map(m => m.fullParams) },
+                      { label: "Layers", values: MODELS.map(m => String(m.arch.layers)) },
+                      { label: "Hidden Dim", values: MODELS.map(m => m.arch.hiddenDim.toLocaleString()) },
+                      { label: "Attn Heads", values: MODELS.map(m => String(m.arch.heads)) },
+                      { label: "Head Dim", values: MODELS.map(m => String(m.arch.headDim)) },
+                      { label: "Vocab Size", values: MODELS.map(m => m.arch.vocab) },
+                      { label: "Context", values: MODELS.map(m => m.arch.ctx) },
+                      { label: "Traditional KV", values: MODELS.map(m => m.kvTraditional), highlight: false },
+                      { label: "Atlas KV", values: MODELS.map(() => "384 B"), highlight: true },
+                      { label: "Atlas Projection", values: MODELS.map(m => m.atlasSize) },
+                      { label: "Compression", values: MODELS.map(m => {
+                        const raw = parseFloat(m.kvTraditional.replace("~", "").replace("GB", "").replace("MB", ""));
+                        const unit = m.kvTraditional.includes("GB") ? 1e9 : 1e6;
+                        return `${Math.round((raw * unit) / 384).toLocaleString()}×`;
+                      }), highlight: true },
+                    ].map((row, ri) => (
+                      <tr key={ri} style={{ borderBottom: `1px solid ${P.borderSubtle}08` }}>
+                        <td style={{ padding: "5px 8px", color: P.textDim, fontWeight: 500, fontSize: "10px", letterSpacing: "0.03em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{row.label}</td>
+                        {row.values.map((v, vi) => (
+                          <td key={vi} style={{ padding: "5px 8px", textAlign: "center", fontFamily: "monospace", fontSize: "10px", fontWeight: 600, color: row.highlight ? P.accent : (vi === 3 ? P.text : P.textMuted), background: vi === 3 ? `${P.accent}06` : "transparent" }}>
+                            {v}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    <tr>
+                      <td style={{ padding: "5px 8px", color: P.textDim, fontWeight: 500, fontSize: "10px", letterSpacing: "0.03em", textTransform: "uppercase" }}>Source</td>
+                      {MODELS.map((m, i) => (
+                        <td key={i} style={{ padding: "5px 8px", textAlign: "center" }}>
+                          <a href={m.hfUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "9px", color: P.accent, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                            <IconExternalLink size={9} /> HF ↗
+                          </a>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Live Metrics Bar ── */}
