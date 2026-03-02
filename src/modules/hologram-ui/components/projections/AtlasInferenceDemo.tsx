@@ -265,7 +265,7 @@ export default function AtlasInferenceDemo() {
             exit={{ height: 0, opacity: 0 }}
             className="border-b border-border/30 overflow-hidden"
           >
-            <div className="grid grid-cols-4 gap-px bg-border/20">
+            <div className="grid grid-cols-5 gap-px bg-border/20">
               <MetricCell
                 label="tok/s"
                 value={stats ? stats.tokensPerSecond.toFixed(0) : liveTps.toFixed(0)}
@@ -283,6 +283,12 @@ export default function AtlasInferenceDemo() {
                 value={stats ? classifyZoneLabel(stats.meanHScore) : liveZone}
                 icon={<IconCpu className="w-3.5 h-3.5" />}
                 highlight={liveZone === "convergent"}
+              />
+              <MetricCell
+                label="KV-Cache"
+                value="384B"
+                icon={<IconChevronRight className="w-3.5 h-3.5" />}
+                highlight={true}
               />
               <MetricCell
                 label="Tokens"
@@ -362,10 +368,18 @@ export default function AtlasInferenceDemo() {
                 {stats.gpuAccelerated && " ⚡ GPU"}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-3 mt-1">
               <span className="text-[10px] text-muted-foreground/60">
                 Peak: {stats.peakTokPerSec.toFixed(0)} tok/s · Mean H: {stats.meanHScore.toFixed(3)}
               </span>
+              <span className="text-[10px] text-muted-foreground/60">
+                KV-cache: {stats.kvCacheBytes}B (vs ~{selectedModel.id === "llama70b" ? "40GB" : selectedModel.id === "llama8b" ? "4GB" : "2GB"} transformer)
+              </span>
+              {stats.speculativeAcceptRate > 0 && (
+                <span className="text-[10px] text-primary/60">
+                  Speculative: {(stats.speculativeAcceptRate * 100).toFixed(0)}% accept
+                </span>
+              )}
             </div>
           </motion.div>
         )}
