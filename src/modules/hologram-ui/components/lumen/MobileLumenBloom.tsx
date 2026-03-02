@@ -17,6 +17,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import HologramAiChat from "./HologramAiChat";
 import VoiceOrb from "./VoiceOrb";
+import TrustStatusBar from "./TrustStatusBar";
 import { PP, GR } from "@/modules/hologram-ui/theme/portal-palette";
 
 interface MobileLumenBloomProps {
@@ -95,15 +96,18 @@ export default function MobileLumenBloom({ open, onClose, orbY }: MobileLumenBlo
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Swipe-down indicator */}
+          {/* Top bar: swipe indicator + trust status */}
           <div
-            className="flex justify-center pt-2 pb-0"
+            className="px-4"
             style={{ paddingTop: `calc(env(safe-area-inset-top, 8px) + 4px)` }}
           >
-            <div
-              className="w-10 h-1 rounded-full"
-              style={{ background: PP.orbBreathRing }}
-            />
+            <div className="flex justify-center pt-1 pb-2">
+              <div
+                className="w-10 h-1 rounded-full"
+                style={{ background: PP.orbBreathRing }}
+              />
+            </div>
+            <TrustStatusBar />
           </div>
 
           {/* Lumen Chat — main area */}
