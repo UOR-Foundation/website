@@ -150,29 +150,46 @@ serve(async (req) => {
           firstMessage = data.choices?.[0]?.message?.content || firstMessage;
         }
 
-        // Send via WhatsApp API
+        // Send via WhatsApp Business API (Cloud API)
         const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
         const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
         let sent = false;
+        let waError: string | null = null;
 
         if (WHATSAPP_TOKEN && PHONE_NUMBER_ID) {
-          const waResp = await fetch(
-            `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-                "Content-Type": "application/json",
+          try {
+            const waResp = await fetch(
+              `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  messaging_product: "whatsapp",
+                  to: phoneCleaned,
+                  type: "text",
+                  text: { body: firstMessage },
+                }),
               },
-              body: JSON.stringify({
-                messaging_product: "whatsapp",
-                to: phoneCleaned,
-                type: "text",
-                text: { body: firstMessage },
-              }),
-            },
-          );
-          sent = waResp.ok;
+            );
+
+            if (waResp.ok) {
+              sent = true;
+              console.log("[WhatsApp] Message sent successfully to", phoneCleaned);
+            } else {
+              const errBody = await waResp.text();
+              waError = `WhatsApp API ${waResp.status}: ${errBody}`;
+              console.error("[WhatsApp] Send failed:", waResp.status, errBody);
+            }
+          } catch (fetchErr) {
+            waError = `WhatsApp fetch error: ${fetchErr}`;
+            console.error("[WhatsApp] Fetch error:", fetchErr);
+          }
+        } else {
+          waError = `Missing credentials: TOKEN=${!!WHATSAPP_TOKEN}, PHONE_ID=${!!PHONE_NUMBER_ID}`;
+          console.error("[WhatsApp] Missing credentials:", waError);
         }
 
         // Log
@@ -193,6 +210,7 @@ serve(async (req) => {
             sent_via_whatsapp: sent,
             demo_mode: !sent,
             context_encrypted: !!user,
+            ...(waError && { whatsapp_error: waError }),
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
