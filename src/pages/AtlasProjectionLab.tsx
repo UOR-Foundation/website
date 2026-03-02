@@ -489,6 +489,35 @@ export default function AtlasProjectionLab({ onClose }: AtlasProjectionLabProps)
             </div>
           )}
 
+          {/* Waiting for first token — skeleton */}
+          {isStreaming && !isInitializing && tokens.length === 0 && !error && (
+            <div>
+              <div style={{ marginBottom: "12px" }}>
+                <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: P.textDim }}>Prompt</span>
+              </div>
+              <p style={{ color: P.textDim, fontSize: "14px", marginBottom: "16px", paddingBottom: "12px", borderBottom: `1px solid ${P.borderSubtle}` }}>{prompt}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <motion.div
+                    animate={{ opacity: [0.15, 0.35, 0.15] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ height: "12px", width: "70%", borderRadius: "6px", background: P.accent }} />
+                </div>
+                <motion.div
+                  animate={{ opacity: [0.1, 0.25, 0.1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+                  style={{ height: "12px", width: "55%", borderRadius: "6px", background: P.accent }} />
+                <motion.div
+                  animate={{ opacity: [0.08, 0.2, 0.08] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+                  style={{ height: "12px", width: "40%", borderRadius: "6px", background: P.accent }} />
+                <p style={{ fontSize: "11px", color: P.textMuted, marginTop: "8px" }}>
+                  Streaming from quantum inference engine…
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Streaming tokens — real text with coherence coloring */}
           {tokens.length > 0 && (
             <div>
