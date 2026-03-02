@@ -456,11 +456,11 @@ export default memo(function DesktopSurface({
             {welcomeName}.
           </h1>
 
-          {/* Vertical line */}
-          <div className="flex justify-center" style={{ marginTop: "clamp(16px, 2.5vh, 32px)" }}>
+          {/* Vertical line — φ-proportioned height */}
+          <div className="flex justify-center" style={{ marginTop: "clamp(20px, 3.09vh, 40px)" }}>
             <div
               style={{
-                height: "clamp(48px, 7vh, 100px)",
+                height: "clamp(68px, 10vh, 140px)",
                 width: 0,
                 borderLeft: `1px solid ${
                   mode === "white"
@@ -475,11 +475,11 @@ export default memo(function DesktopSurface({
             />
           </div>
 
-          {/* ── Genesis-synced circle + dot — directly below line ── */}
+          {/* ── Genesis monad — φ-spaced below line ── */}
           <div
             className="flex flex-col items-center"
             style={{
-              marginTop: "clamp(8px, 1.2vh, 16px)",
+              marginTop: "clamp(5px, 0.76vh, 10px)",
               animation: "stagger-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both",
             }}
           >
@@ -542,11 +542,11 @@ export default memo(function DesktopSurface({
             </button>
           </div>
 
-          {/* Subtitle text — below the circle */}
+          {/* Subtitle — φ-spaced below monad */}
           <div
             className="flex flex-col items-center"
             style={{
-              marginTop: "clamp(4px, 0.8vh, 12px)",
+              marginTop: "clamp(6px, 1vh, 14px)",
               animation: "stagger-fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) 2.2s both",
             }}
           >
