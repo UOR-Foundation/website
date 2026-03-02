@@ -244,6 +244,49 @@ export const BROWSER_MODELS: Record<string, BrowserModelProfile> = {
   },
 };
 
+/**
+ * Large models that use server-side Atlas projection via the
+ * atlas-projector edge function. These can't load in-browser
+ * directly but their Atlas projections (~200-400MB) can.
+ */
+export const ATLAS_PROJECTED_MODELS: Record<string, {
+  id: string;
+  name: string;
+  hfId: string;
+  parameterCount: number;
+  layers: number;
+  hiddenDim: number;
+  estimatedProjectionMB: number;
+}> = {
+  "llama-3.1-8b": {
+    id: "llama-3.1-8b",
+    name: "Llama 3.1 8B",
+    hfId: "meta-llama/Llama-3.1-8B",
+    parameterCount: 8_000_000_000,
+    layers: 32,
+    hiddenDim: 4096,
+    estimatedProjectionMB: 250,
+  },
+  "llama-3.1-70b": {
+    id: "llama-3.1-70b",
+    name: "Llama 3.1 70B",
+    hfId: "meta-llama/Llama-3.1-70B",
+    parameterCount: 70_000_000_000,
+    layers: 80,
+    hiddenDim: 8192,
+    estimatedProjectionMB: 380,
+  },
+  "llama-3.1-405b": {
+    id: "llama-3.1-405b",
+    name: "Llama 3.1 405B",
+    hfId: "meta-llama/Llama-3.1-405B",
+    parameterCount: 405_000_000_000,
+    layers: 126,
+    hiddenDim: 16384,
+    estimatedProjectionMB: 400,
+  },
+};
+
 // ═══════════════════════════════════════════════════════════════
 // Model Loading
 // ═══════════════════════════════════════════════════════════════

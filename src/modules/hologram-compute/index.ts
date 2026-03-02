@@ -186,3 +186,14 @@ export type {
   LoadedHFModel,
   BrowserModelProfile,
 } from "./hf-model-bridge";
+
+// HoloMem — Holographic Virtual Memory (browser-native SDM)
+export {
+  HoloMem,
+  getHoloMem,
+  PAGE_SIZE,
+} from "./holomem";
+export type {
+  HoloMemConfig,
+  HoloMemStats,
+} from "./holomem";
