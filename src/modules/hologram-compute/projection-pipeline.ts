@@ -357,15 +357,30 @@ export async function quickProject(
 /** Pre-built model manifests */
 export const MODEL_MANIFESTS: Record<string, ModelManifest> = {
   "llama-3.1-8b": LLAMA_31_8B_MANIFEST,
-  "llama-3.1-70b": {
+  "llama-3-70b": {
     ...LLAMA_31_8B_MANIFEST,
-    name: "Meta-Llama-3.1-70B",
-    parameterCount: 70_600_000_000,
+    name: "Meta-Llama-3-70B",
+    parameterCount: 70_554_383_360,
     layerCount: 80,
     hiddenDim: 8192,
     headCount: 64,
     headDim: 128,
     intermediateDim: 28672,
+    vocabSize: 128256,
+    contextLength: 8192,
+  },
+  // Keep legacy alias
+  "llama-3.1-70b": {
+    ...LLAMA_31_8B_MANIFEST,
+    name: "Meta-Llama-3-70B",
+    parameterCount: 70_554_383_360,
+    layerCount: 80,
+    hiddenDim: 8192,
+    headCount: 64,
+    headDim: 128,
+    intermediateDim: 28672,
+    vocabSize: 128256,
+    contextLength: 8192,
   },
   "phi-3-mini": {
     name: "Phi-3-mini-4k",
