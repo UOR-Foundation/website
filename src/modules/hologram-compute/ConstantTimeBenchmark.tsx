@@ -1155,7 +1155,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           <IconInfoCircle size={18} style={{ color: P.blue }} />
           <span className="text-base font-semibold" style={{ color: P.text }}>Methodology & Environment</span>
         </div>
-        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(0, 0%, 100%, 0.05)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
