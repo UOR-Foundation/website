@@ -24,9 +24,9 @@
  * @module qkernel/q-fs
  */
 
-import { sha256 } from "../genesis/axiom-hash";
-import { createCid } from "../genesis/axiom-cid";
-import { encodeUtf8 } from "../genesis/axiom-ring";
+import { sha256 } from "../../genesis/axiom-hash";
+import { createCid } from "../../genesis/axiom-cid";
+import { encodeUtf8 } from "../../genesis/axiom-ring";
 import type { QMmu } from "./q-mmu";
 
 // ═══════════════════════════════════════════════════════════════════════

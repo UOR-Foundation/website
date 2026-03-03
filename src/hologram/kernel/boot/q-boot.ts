@@ -23,27 +23,27 @@
 import {
   verifyCriticalIdentity,
   encodeUtf8, toHex,
-} from "../genesis/axiom-ring";
-import { sha256 } from "../genesis/axiom-hash";
-import { createCid } from "../genesis/axiom-cid";
-import { canonicalEncode } from "../genesis/axiom-codec";
-import { getConstitutionCid, getConstitutionalAttestation } from "../genesis/axiom-constitution";
+} from "../../genesis/axiom-ring";
+import { sha256 } from "../../genesis/axiom-hash";
+import { createCid } from "../../genesis/axiom-cid";
+import { canonicalEncode } from "../../genesis/axiom-codec";
+import { getConstitutionCid, getConstitutionalAttestation } from "../../genesis/axiom-constitution";
 import {
   verifyTauInvolution, verifyMirrorCoherence,
   MIRROR_PAIRS, MIRROR_COUNT, ATLAS_VERTICES,
   FANO_POINTS, FANO_LINES,
-} from "../genesis/axiom-mirror";
+} from "../../genesis/axiom-mirror";
 import {
   post as genesisPost,
   type PostCheck as GenesisPostCheck,
   type PostResult as GenesisPostResult,
-} from "../genesis/axiom-post";
+} from "../../genesis/axiom-post";
 import {
   getTEEBridge,
   type TEECapabilities,
   type TEEAttestationQuote,
   type TEEAssertion,
-} from "./tee-bridge";
+} from "../security/tee-bridge";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Boot Status Types

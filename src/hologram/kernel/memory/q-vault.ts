@@ -8,11 +8,11 @@
  * @module qkernel/q-vault
  */
 
-import { toHex, encodeUtf8, fromHex } from "../genesis/axiom-ring";
-import { sha256 } from "../genesis/axiom-hash";
-import { createCid } from "../genesis/axiom-cid";
+import { toHex, encodeUtf8, fromHex } from "../../genesis/axiom-ring";
+import { sha256 } from "../../genesis/axiom-hash";
+import { createCid } from "../../genesis/axiom-cid";
 import type { QFs } from "./q-fs";
-import type { QSecurity, CapabilityToken } from "./q-security";
+import type { QSecurity, CapabilityToken } from "../security/q-security";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

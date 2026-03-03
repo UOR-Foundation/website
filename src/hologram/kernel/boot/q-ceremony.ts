@@ -28,10 +28,10 @@
  * @module qkernel/q-ceremony
  */
 
-import { toHex } from "../genesis/axiom-ring";
-import { sha256 } from "../genesis/axiom-hash";
-import { getIdentity } from "../platform";
-import type { CanonicalIdentity as UorCanonicalIdentity, Keypair as UnsKeypair, SignedRecord } from "../platform/identity-types";
+import { toHex } from "../../genesis/axiom-ring";
+import { sha256 } from "../../genesis/axiom-hash";
+import { getIdentity } from "../../platform";
+import type { CanonicalIdentity as UorCanonicalIdentity, Keypair as UnsKeypair, SignedRecord } from "../../platform/identity-types";
 import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 
 // ═══════════════════════════════════════════════════════════════════════
