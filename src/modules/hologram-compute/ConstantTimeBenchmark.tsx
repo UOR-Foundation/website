@@ -735,8 +735,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   return (
     <div className="space-y-2">
       {/* ── Run Button ── */}
-      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
-        <p className="text-sm" style={{ color: P.muted }}>
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: "hsla(0, 0%, 100%, 0.03)", border: `1px solid hsla(0, 0%, 100%, 0.06)` }}>
+        <p className="text-base" style={{ color: P.muted }}>
           {isCpu ? (
             <>
               <strong style={{ color: P.text }}>CPU baseline</strong> — single-threaded INT8 matmul vs pre-computed retrieval.
@@ -750,8 +750,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
-          style={{ background: baseColor, color: "white" }}
+          className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-base font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
+          style={{ background: "hsl(0, 0%, 100%)", color: "hsl(248, 40%, 12%)" }}
         >
           {state === "precomputing" ? (
             <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Precomputing…</>
