@@ -507,7 +507,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
         <text x={46} y={12} fill={baselineColor} fontSize={18} fontFamily={P.font} fontWeight="800">{baselineLabel}</text>
         <line x1={4} y1={38} x2={36} y2={38} stroke={P.gold} strokeWidth={4.5} strokeLinecap="round" />
         <circle cx={20} cy={38} r={5} fill={P.gold} />
-        <text x={46} y={44} fill={P.gold} fontSize={18} fontFamily={P.font} fontWeight="800">Hologram vGPU — O(N²)</text>
+        <text x={46} y={44} fill={P.gold} fontSize={18} fontFamily={P.font} fontWeight="800">Hologram vGPU — O(1) retrieval</text>
       </g>
     </svg>
   );
