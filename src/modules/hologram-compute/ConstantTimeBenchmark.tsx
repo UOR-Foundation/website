@@ -1173,7 +1173,7 @@ function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType:
 // ══════════════════════════════════════════════════════════════════════════════
 
 function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
@@ -1184,108 +1184,51 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
       >
         <div className="flex items-center gap-2.5">
           <IconInfoCircle size={16} style={{ color: P.blue }} />
-          <span className="text-sm font-semibold" style={{ color: P.text }}>How This Benchmark Works</span>
+          <span className="text-sm font-semibold" style={{ color: P.text }}>Methodology</span>
         </div>
         <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
       </button>
 
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-4" style={{ background: P.card, color: P.muted }}>
-          {/* What we measure */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>What This Measures</h4>
-            <p className="text-[13px] leading-relaxed">
-              Integer matrix multiplication (INT8 GEMM) at increasing sizes. This is the <strong style={{ color: P.text }}>core operation behind all AI inference</strong>. Larger matrices mean exponentially more work.
-            </p>
-          </div>
-
-          {/* Two Tests */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>Two Tests</h4>
-          </div>
+          {/* Core explanation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
+            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>Test 1: CPU Tab</h4>
+                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>CPU Tab</h4>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native single threaded CPU matmul. No GPU involved.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed via CPU lookup table (64KB). Retrieval is a CPU memory read. No GPU involved.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                Both paths are <strong style={{ color: P.text }}>CPU only</strong>. Pure apples to apples.
+              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+                <strong style={{ color: P.text }}>Baseline:</strong> Native single-threaded CPU matmul.{" "}
+                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed lookup table (64KB). Both CPU only.
               </p>
             </div>
 
-            <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
+            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.blue }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>Test 2: GPU Tab</h4>
+                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>GPU Tab</h4>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native hardware GPU matmul via WebGPU compute shader. Live computation each time.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.gold }}>vGPU:</strong> Crystallized via one GPU pass, then retrieved from CPU memory. GPU is freed after crystallization.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available on this device." : "WebGPU not available on this device."}</span>
+              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+                <strong style={{ color: P.text }}>Baseline:</strong> WebGPU compute shader.{" "}
+                <strong style={{ color: P.gold }}>vGPU:</strong> One GPU pass → CPU memory retrieval.
+                {" "}<span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available." : "WebGPU not available."}</span>
               </p>
             </div>
           </div>
 
-          {/* Hologram vGPU */}
-          <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
-              <h4 className="text-[13px] font-bold" style={{ color: P.gold }}>How the Hologram vGPU Works</h4>
-            </div>
-            <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during a crystallization phase, then stores the results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong>, not a re-computation. The cost is always the same regardless of matrix size. This is O(1) retrieval.
+          {/* How it works — one line */}
+          <div className="rounded-xl p-3.5" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
+            <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
             </p>
           </div>
 
-          {/* Fairness & Verification */}
-          <div className="rounded-xl p-3.5 space-y-2" style={{ background: `${P.green}06`, border: `1px solid ${P.green}12` }}>
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.green }}>Verification Controls</h4>
-            <ul className="space-y-1.5 text-[13px] leading-relaxed" style={{ color: P.muted }}>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical inputs.</strong> All methods receive the same matrices from a deterministic seed. Reproducible by anyone.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical outputs.</strong> Every result is verified byte for byte using SHA-256 cryptographic fingerprinting.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Sequential execution.</strong> Tests run one at a time. No concurrent resource contention.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Warmup phase.</strong> Adaptive warmup iterations eliminate JIT and pipeline compilation bias before measurement.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Live on your device.</strong> Nothing simulated. This runs in your browser right now.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Your Device */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>Your Device</h4>
-            <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-1 text-[13px]">
-              <span style={{ color: P.dim }}>System</span><span style={{ color: P.text }}>{hw.oscpu}, {hw.platform}</span>
-              <span style={{ color: P.dim }}>Processor</span><span style={{ color: P.text }}>{hw.cpuCores} cores, {hw.cpuArch}</span>
-              {hw.totalMemoryGB && <><span style={{ color: P.dim }}>Memory</span><span style={{ color: P.text }}>{hw.totalMemoryGB} GB</span></>}
-              <span style={{ color: P.dim }}>Browser</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion}</span>
-              {hw.glRenderer && <><span style={{ color: P.dim }}>Graphics</span><span style={{ color: P.text }}>{hw.glRenderer}</span></>}
-              <span style={{ color: P.dim }}>GPU Compute</span><span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Not available"}</span>
-            </div>
+          {/* Device info — compact */}
+          <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-0.5 text-[12px]">
+            <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
+            <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
+            {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
           </div>
         </div>
       )}
