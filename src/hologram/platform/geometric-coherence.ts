@@ -170,7 +170,7 @@ export function spectralHealth(hScore: number, phi: number): SpectralHealth {
 
 export interface GeometricClosure {
   closed: boolean;
-  checksPasssed: number;
+  checksPassed: number;
   totalChecks: number;
   residualDefects: number;
   correctedFidelity: number;
