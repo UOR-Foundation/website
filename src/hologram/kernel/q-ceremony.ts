@@ -30,10 +30,8 @@
 
 import { toHex } from "@/hologram/genesis/axiom-ring";
 import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { singleProofHash } from "@/modules/uns/core/identity";
-import type { UorCanonicalIdentity } from "@/modules/uns/core/identity";
-import { generateKeypair, signRecord } from "@/modules/uns/core/keypair";
-import type { UnsKeypair, SignedRecord } from "@/modules/uns/core/keypair";
+import { getIdentity } from "@/hologram/platform";
+import type { CanonicalIdentity as UorCanonicalIdentity, Keypair as UnsKeypair, SignedRecord } from "@/hologram/platform/identity-types";
 import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -158,14 +156,16 @@ function computeCollapseHash(
 export async function executeFoundingCeremony(
   initialAttributes: CeremonyAttribute[] = []
 ): Promise<CeremonyResult> {
+  const identity = getIdentity();
+
   // ── Step 1: Generate post-quantum keypair ──────────────────────
-  const keypair = await generateKeypair();
+  const keypair = await identity.generateKeypair();
 
   // ── Step 2: Derive identity (URDNA2015 → SHA-256 → identity) ──
-  const identity = await singleProofHash(keypair.publicKeyObject);
+  const canonicalId = await identity.singleProofHash(keypair.publicKeyObject);
 
   // ── Step 3: Extract hash bytes for three-word derivation ───────
-  const hexStr = identity["u:canonicalId"].split(":").pop() ?? "";
+  const hexStr = canonicalId["u:canonicalId"].split(":").pop() ?? "";
   const hashBytes = new Uint8Array(
     (hexStr.match(/.{2}/g) ?? []).map(h => parseInt(h, 16))
   );
@@ -178,7 +178,7 @@ export async function executeFoundingCeremony(
   const collapseNonce = generateCollapseNonce();
   const { collapseHash, entanglementBit } = computeCollapseHash(
     collapseNonce,
-    identity["u:canonicalId"],
+    canonicalId["u:canonicalId"],
     timestamp
   );
 
@@ -186,10 +186,10 @@ export async function executeFoundingCeremony(
   const ceremony: FoundingCeremony = {
     "@type": "uor:FoundingCeremony",
     "uor:subject": {
-      canonicalId: identity["u:canonicalId"],
-      cid: identity["u:cid"],
-      ipv6: identity["u:ipv6"],
-      glyph: identity["u:glyph"],
+      canonicalId: canonicalId["u:canonicalId"],
+      cid: canonicalId["u:cid"],
+      ipv6: canonicalId["u:ipv6"],
+      glyph: canonicalId["u:glyph"],
     },
     "uor:threeWord": {
       display: threeWordName.display,
@@ -211,14 +211,14 @@ export async function executeFoundingCeremony(
   };
 
   // ── Step 7: Sign with Dilithium-3 ─────────────────────────────
-  const signedCeremony = await signRecord(ceremony, keypair);
+  const signedCeremony = await identity.signRecord(ceremony, keypair as any);
 
   // ── Step 8: Content-address the signed ceremony ───────────────
-  const ceremonyIdentity = await singleProofHash(signedCeremony);
+  const ceremonyIdentity = await identity.singleProofHash(signedCeremony);
   const ceremonyCid = ceremonyIdentity["u:cid"];
 
   return {
-    identity,
+    identity: canonicalId,
     keypair,
     threeWordName,
     signedCeremony,

@@ -38,7 +38,7 @@ import {
   type GeometricMeasurement,
   type SpectralHealth,
   type GeometricZone,
-} from "@/modules/qsvg";
+} from "@/hologram/platform";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types — the language of the surface

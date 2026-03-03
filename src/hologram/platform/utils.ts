@@ -2,20 +2,12 @@
  * Platform Utilities — Internalized common helpers
  * ═════════════════════════════════════════════════
  *
- * Small, self-contained utilities that eliminate external deps.
+ * Small, self-contained utilities. Zero npm dependencies.
  *
  * @module hologram/platform/utils
  */
 
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-/** Tailwind class merge (replaces @/lib/utils). */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-/** SHA-256 hex digest of a UTF-8 string (replaces @/lib/crypto). */
+/** SHA-256 hex digest of a UTF-8 string. */
 export async function sha256hex(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -24,8 +16,20 @@ export async function sha256hex(input: string): Promise<string> {
     .join("");
 }
 
-/** Check if viewport is mobile-width (replaces @/hooks/use-mobile). */
+/** Check if viewport is mobile-width. */
 export function isMobileViewport(breakpoint = 768): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth < breakpoint;
+}
+
+/** Minimal kernel logger — replaces external kernelLog dependency. */
+export function kernelLog(
+  subsystem: string,
+  action: string,
+  detail?: string,
+  meta?: Record<string, unknown>,
+): void {
+  if (typeof console !== "undefined") {
+    console.debug(`[kernel:${subsystem}] ${action}${detail ? ` — ${detail}` : ""}`, meta ?? "");
+  }
 }
