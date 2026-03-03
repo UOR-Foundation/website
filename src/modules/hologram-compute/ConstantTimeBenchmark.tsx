@@ -440,15 +440,15 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
     <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full h-full">
       <defs>
         <linearGradient id="base-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.01" />
         </linearGradient>
         <linearGradient id="holo-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={P.gold} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={P.gold} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={P.gold} stopOpacity="0.08" />
+          <stop offset="100%" stopColor={P.gold} stopOpacity="0.01" />
         </linearGradient>
         <filter id="glow-gold">
-          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
         <filter id="glow-base">
