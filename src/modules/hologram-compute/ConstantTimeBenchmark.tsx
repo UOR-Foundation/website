@@ -896,7 +896,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               <tbody>
                 {points.map((p, i) => {
                   const baseMs = isCpu ? p.stdMs : p.gpuMs;
-                  const speedup = isCpu ? p.speedupVsCpu : p.speedupVsGpu;
+                  const speedup = Math.max(0, isCpu ? p.speedupVsCpu : p.speedupVsGpu);
                   const shaMatch = isCpu
                     ? p.sha256Cpu === p.sha256Holo
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
