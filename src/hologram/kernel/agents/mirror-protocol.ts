@@ -18,8 +18,8 @@
  * @module hologram/kernel/mirror-protocol
  */
 
-import type { CoherenceVector, CoherenceContext } from "./q-coherence-head";
-import { classifyZone, type CoherenceZone } from "./q-sched";
+import type { CoherenceVector, CoherenceContext } from "../compute/q-coherence-head";
+import { classifyZone, type CoherenceZone } from "../compute/q-sched";
 import type { Habit, HabitResult } from "./procedural-memory";
 
 // ═══════════════════════════════════════════════════════════════════════

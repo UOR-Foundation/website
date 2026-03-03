@@ -31,7 +31,7 @@
  * @module hologram/kernel/procedural-memory
  */
 
-import type { CircuitResult, CircuitProjection } from "./circuit-compiler";
+import type { CircuitResult, CircuitProjection } from "../compute/circuit-compiler";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

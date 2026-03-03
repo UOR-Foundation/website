@@ -28,15 +28,15 @@
  * @module qkernel/q-agent
  */
 
-import { toHex, encodeUtf8 } from "../genesis/axiom-ring";
-import { sha256 } from "../genesis/axiom-hash";
-import { createCid } from "../genesis/axiom-cid";
-import { canonicalEncode } from "../genesis/axiom-codec";
-import { QMmu } from "./q-mmu";
-import { QSched, classifyZone, type QProcess, type CoherenceZone } from "./q-sched";
-import { QSyscall, type SyscallResult } from "./q-syscall";
-import { QIpc, type QChannel, type QMessage } from "./q-ipc";
-import { QNet } from "./q-net";
+import { toHex, encodeUtf8 } from "../../genesis/axiom-ring";
+import { sha256 } from "../../genesis/axiom-hash";
+import { createCid } from "../../genesis/axiom-cid";
+import { canonicalEncode } from "../../genesis/axiom-codec";
+import { QMmu } from "../memory/q-mmu";
+import { QSched, classifyZone, type QProcess, type CoherenceZone } from "../compute/q-sched";
+import { QSyscall, type SyscallResult } from "../compute/q-syscall";
+import { QIpc, type QChannel, type QMessage } from "../network/q-ipc";
+import { QNet } from "../network/q-net";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

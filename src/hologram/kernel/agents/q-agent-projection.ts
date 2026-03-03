@@ -19,9 +19,9 @@
  */
 
 import type { QAgent, AgentState } from "./q-agent";
-import type { CoherenceHead, CoherenceContext, CoherenceVector } from "./q-coherence-head";
-import { HammingCoherenceHead, MultiHeadCoherence } from "./q-coherence-head";
-import { classifyZone, type CoherenceZone } from "./q-sched";
+import type { CoherenceHead, CoherenceContext, CoherenceVector } from "../compute/q-coherence-head";
+import { HammingCoherenceHead, MultiHeadCoherence } from "../compute/q-coherence-head";
+import { classifyZone, type CoherenceZone } from "../compute/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Agent Projection Frame — lightweight per-agent visual contribution

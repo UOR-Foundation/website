@@ -9,11 +9,11 @@
  */
 
 import { QSecurity, type IsolationRing, type SecurityOp, type CapabilityToken, type SecurityStats } from "./q-security";
-import { QAgentMesh, QAgent, type MeshStats, type ResourceEnvelope } from "./q-agent";
-import { QSched } from "./q-sched";
-import { QIpc, type QChannel } from "./q-ipc";
-import { QNet } from "./q-net";
-import { QEcc } from "./q-ecc";
+import { QAgentMesh, QAgent, type MeshStats, type ResourceEnvelope } from "../agents/q-agent";
+import { QSched } from "../compute/q-sched";
+import { QIpc, type QChannel } from "../network/q-ipc";
+import { QNet } from "../network/q-net";
+import { QEcc } from "../compute/q-ecc";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types
