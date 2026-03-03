@@ -18,7 +18,7 @@ import { TEEBridge, resetTEEBridge, getTEEBridge } from "../tee-bridge";
 import { bootSync } from "../q-boot";
 import { QSecurity } from "../q-security";
 import { QEcc } from "../q-ecc";
-import { createGeometricReceipt } from "@/hologram/platform/geometric-coherence";
+import { createGeometricReceipt } from "../../platform/geometric-coherence";
 
 describe("TEE Bridge", () => {
   let bridge: TEEBridge;

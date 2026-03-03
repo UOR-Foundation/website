@@ -23,7 +23,7 @@ import {
   entanglementMap,
   type SimulatorState,
   type SimOp,
-} from "@/hologram/kernel/q-simulator";
+} from "../q-simulator";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

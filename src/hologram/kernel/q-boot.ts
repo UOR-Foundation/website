@@ -23,21 +23,21 @@
 import {
   verifyCriticalIdentity,
   encodeUtf8, toHex,
-} from "@/hologram/genesis/axiom-ring";
-import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { createCid } from "@/hologram/genesis/axiom-cid";
-import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
-import { getConstitutionCid, getConstitutionalAttestation } from "@/hologram/genesis/axiom-constitution";
+} from "../genesis/axiom-ring";
+import { sha256 } from "../genesis/axiom-hash";
+import { createCid } from "../genesis/axiom-cid";
+import { canonicalEncode } from "../genesis/axiom-codec";
+import { getConstitutionCid, getConstitutionalAttestation } from "../genesis/axiom-constitution";
 import {
   verifyTauInvolution, verifyMirrorCoherence,
   MIRROR_PAIRS, MIRROR_COUNT, ATLAS_VERTICES,
   FANO_POINTS, FANO_LINES,
-} from "@/hologram/genesis/axiom-mirror";
+} from "../genesis/axiom-mirror";
 import {
   post as genesisPost,
   type PostCheck as GenesisPostCheck,
   type PostResult as GenesisPostResult,
-} from "@/hologram/genesis/axiom-post";
+} from "../genesis/axiom-post";
 import {
   getTEEBridge,
   type TEECapabilities,

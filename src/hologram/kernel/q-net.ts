@@ -9,10 +9,10 @@
  * @module qkernel/q-net
  */
 
-import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
-import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { createCid } from "@/hologram/genesis/axiom-cid";
-import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
+import { toHex, encodeUtf8 } from "../genesis/axiom-ring";
+import { sha256 } from "../genesis/axiom-hash";
+import { createCid } from "../genesis/axiom-cid";
+import { canonicalEncode } from "../genesis/axiom-codec";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

@@ -8,9 +8,9 @@
  * @module qkernel/q-driver
  */
 
-import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
-import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { createCid } from "@/hologram/genesis/axiom-cid";
+import { toHex, encodeUtf8 } from "../genesis/axiom-ring";
+import { sha256 } from "../genesis/axiom-hash";
+import { createCid } from "../genesis/axiom-cid";
 import type { QMmu } from "./q-mmu";
 import type { QFs } from "./q-fs";
 

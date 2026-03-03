@@ -38,7 +38,7 @@ import {
   type GeometricMeasurement,
   type SpectralHealth,
   type GeometricZone,
-} from "@/hologram/platform";
+} from "../platform";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types — the language of the surface

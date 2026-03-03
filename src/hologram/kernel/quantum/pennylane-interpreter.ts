@@ -31,7 +31,7 @@ import {
   type SimOp,
   type PauliOp,
   type Complex,
-} from "@/hologram/kernel/q-simulator";
+} from "../q-simulator";
 
 /* ── Types ─────────────────────────────────────────────── */
 

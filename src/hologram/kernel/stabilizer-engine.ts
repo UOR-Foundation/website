@@ -33,7 +33,7 @@
 import {
   MIRROR_PAIRS, MIRROR_COUNT, FANO_LINES, FANO_POINTS,
   type MirrorPair,
-} from "@/hologram/genesis/axiom-mirror";
+} from "../genesis/axiom-mirror";
 import { classifyZone, type CoherenceZone } from "./q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -16,7 +16,7 @@ import {
   simulateCircuit,
   measure as simMeasure,
   type SimulatorState,
-} from "@/hologram/kernel/q-simulator";
+} from "../q-simulator";
 
 // ── Result Types ───────────────────────────────────────────────────────────
 

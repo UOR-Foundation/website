@@ -9,11 +9,11 @@
  * @module qkernel/q-sovereignty
  */
 
-import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
-import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { createCid } from "@/hologram/genesis/axiom-cid";
-import { canonicalEncode } from "@/hologram/genesis/axiom-codec";
-import type { CanonicalIdentity as UorCanonicalIdentity } from "@/hologram/platform/identity-types";
+import { toHex, encodeUtf8 } from "../genesis/axiom-ring";
+import { sha256 } from "../genesis/axiom-hash";
+import { createCid } from "../genesis/axiom-cid";
+import { canonicalEncode } from "../genesis/axiom-codec";
+import type { CanonicalIdentity as UorCanonicalIdentity } from "../platform/identity-types";
 import {
   executeFoundingCeremony,
   verifyCollapseIntegrity,
@@ -26,7 +26,7 @@ import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 import type { QFs } from "./q-fs";
 import type { QSecurity, CapabilityToken } from "./q-security";
 import type { QEcc } from "./q-ecc";
-import { signalBus } from "@/hologram/genesis/axiom-signal";
+import { signalBus } from "../genesis/axiom-signal";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types (unchanged)
