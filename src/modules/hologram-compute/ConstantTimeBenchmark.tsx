@@ -791,52 +791,37 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   // Running or done — show chart + speedup
   return (
     <div className="space-y-3">
-      {/* Status bar */}
+      {/* Minimal status bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {state === "running" && (
-            <div className="flex items-center gap-2 text-sm font-mono" style={{ color: P.gold }}>
-              <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
+            <div className="flex items-center gap-2 text-base font-mono" style={{ color: P.gold }}>
+              <div className="w-3.5 h-3.5 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
               {currentSize}
             </div>
           )}
           {state === "done" && !anyIntegrityIssue && (
-            <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: P.green }}>
-              <IconCheck size={16} />
-              SHA-256 verified · {points.length} sizes
-            </div>
-          )}
-          {state === "done" && anyIntegrityIssue && (
-            <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: P.red }}>
-              <IconCheck size={16} />
-              Mismatch detected
+            <div className="flex items-center gap-2 text-base font-semibold" style={{ color: P.green }}>
+              <IconCheck size={18} />
+              All results SHA-256 verified
             </div>
           )}
         </div>
         <div className="flex items-center gap-2">
           {state === "done" && (
-            <>
-              <button
-                onClick={() => setShowDetails(!showDetails)}
-                className="text-xs px-3 py-1 rounded-full font-medium transition-all hover:opacity-80"
-                style={{ background: "hsla(0, 0%, 100%, 0.06)", color: P.muted, border: `1px solid ${P.cardBorder}` }}
-              >
-                {showDetails ? "Hide Details" : "Show Details"}
-              </button>
-              <button
-                onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
-                className="text-xs px-3 py-1 rounded-full font-medium transition-all hover:opacity-80"
-                style={{ background: "hsla(0, 0%, 100%, 0.06)", color: P.muted, border: `1px solid ${P.cardBorder}` }}
-              >
-                <IconDownload size={12} className="inline mr-1" />Export
-              </button>
-            </>
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-sm px-4 py-1.5 rounded-full font-medium transition-all hover:opacity-80"
+              style={{ background: "hsla(0, 0%, 100%, 0.06)", color: P.muted, border: `1px solid ${P.cardBorder}` }}
+            >
+              {showDetails ? "Hide Details" : "Details"}
+            </button>
           )}
           <button
             onClick={onRun}
             disabled={disabled}
-            className="text-xs px-4 py-1.5 rounded-full font-bold transition-all hover:opacity-80 disabled:opacity-40 uppercase"
-            style={{ background: "hsl(0, 0%, 100%)", color: "hsl(248, 40%, 12%)" }}
+            className="text-sm px-5 py-1.5 rounded-full font-bold transition-all hover:opacity-80 disabled:opacity-40 uppercase"
+            style={{ background: P.text, color: P.bg }}
           >
             {state === "running" ? "Running…" : "Re-run"}
           </button>
@@ -844,9 +829,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       </div>
 
       {/* ── Chart + Speedup — fills the viewport ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-4">
         {/* Chart */}
-        <div className="rounded-xl p-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="rounded-2xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <ComparisonChart
             points={points}
             baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
@@ -857,34 +842,34 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         </div>
 
         {/* Speedup panel */}
-        <div className="rounded-xl p-4 flex flex-col items-center justify-center gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="rounded-2xl p-6 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
-          <p className="text-base font-semibold text-center" style={{ color: P.text }}>
+          <p className="text-xl font-bold text-center leading-snug" style={{ color: P.text }}>
             {isCpu ? "GPU-class performance on any CPU" : "Accelerates any GPU"}
           </p>
 
           {/* Compact comparison bars */}
-          <div className="w-full space-y-2 px-2">
+          <div className="w-full space-y-2.5 px-2">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-mono w-10 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
-              <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+              <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
+              <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
               </div>
-              <span className="text-sm font-mono w-20 text-right tabular-nums font-semibold" style={{ color: baseColor }}>
+              <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: baseColor }}>
                 {totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(1)}ms`}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-mono w-10 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
-              <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+              <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
+              <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="h-full rounded-full" style={{
                   width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%`,
                   background: P.gold,
-                  boxShadow: `0 0 12px hsla(170, 85%, 55%, 0.4)`,
+                  boxShadow: `0 0 16px hsla(170, 90%, 55%, 0.5)`,
                 }} />
               </div>
-              <span className="text-sm font-mono w-20 text-right tabular-nums font-semibold" style={{ color: P.gold }}>
+              <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: P.gold }}>
                 {totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}
               </span>
             </div>
@@ -897,15 +882,15 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <div className="space-y-2">
           {/* Data table */}
           <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "280px", overflowY: "auto" }}>
-            <table className="w-full text-[13px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+            <table className="w-full text-[14px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
                 <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
-                  <th className="text-left py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
-                  <th className="text-right py-2 px-3 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel}</th>
-                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
-                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-center py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
+                  <th className="text-left py-2.5 px-4 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                  <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Ops</th>
+                  <th className="text-right py-2.5 px-4 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel}</th>
+                  <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU</th>
+                  <th className="text-right py-2.5 px-4 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                  <th className="text-center py-2.5 px-4 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
                 </tr>
               </thead>
               <tbody>
@@ -916,17 +901,17 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                     ? p.sha256Cpu === p.sha256Holo
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(248, 30%, 18%, 0.5)" }}>
-                      <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                      <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: baseColor }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(240, 50%, 18%, 0.5)" }}>
+                      <td className="py-2 px-4 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                      <td className="py-2 px-4 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                      <td className="py-2 px-4 text-right tabular-nums" style={{ color: baseColor }}>
                         {baseMs >= 1000 ? `${(baseMs / 1000).toFixed(2)}s` : baseMs >= 10 ? baseMs.toFixed(1) : baseMs >= 1 ? baseMs.toFixed(2) : baseMs.toFixed(3)}
                       </td>
-                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                      <td className="py-1.5 px-3 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
+                      <td className="py-2 px-4 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                      <td className="py-2 px-4 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
                         {speedup >= 1000 ? `${(speedup / 1000).toFixed(1)}K×` : `${speedup.toFixed(0)}×`}
                       </td>
-                      <td className="py-1.5 px-3 text-center text-base" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
+                      <td className="py-2 px-4 text-center text-lg" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
                         {shaMatch === null ? "—" : shaMatch ? "✓" : "✗"}
                       </td>
                     </tr>
