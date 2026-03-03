@@ -190,7 +190,8 @@ const App = () => {
         <HologramSearch />
         <Suspense fallback={null}>
           <Routes>
-            <Route path="/" element={<IndexPage />} />
+            <Route path="/" element={<HologramOsPage />} />
+            <Route path="/landing" element={<IndexPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/research" element={<ResearchPage />} />
