@@ -12,7 +12,7 @@ import { useNbTheme } from "./notebook-theme";
 import {
   X, Check, ArrowLeft, ChevronDown, ChevronRight,
   FileText, Plus, Minus, Edit3, Equal,
-} from "lucide-react";
+} from "../../platform/bridge";
 
 // ── Diff algorithm (line-level LCS) ────────────────────────────────────────
 

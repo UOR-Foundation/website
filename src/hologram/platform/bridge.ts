@@ -30,6 +30,33 @@ import { generateKeypair, signRecord } from "@/modules/uns/core/keypair";
 export { useScreenTheme, type ScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
 export { useDataBank, type DataBankHandle } from "@/modules/data-bank";
 
+// ── NPM Peer Dependency Re-exports ─────────────────────
+// These are the ONLY npm packages (beyond react) that
+// hologram/ kernel components may use. By re-exporting
+// them here, we create a single seam: swap this file
+// to swap the animation/icon/routing libraries.
+
+export { motion, AnimatePresence } from "framer-motion";
+export type { Variants as MotionVariants } from "framer-motion";
+
+export { useNavigate, useParams, useLocation } from "react-router-dom";
+
+// Icon re-exports — every icon used inside hologram/ is listed here.
+// This is the complete icon vocabulary of the kernel.
+export {
+  X, Play, Plus, FileText, Terminal,
+  Folder, FolderOpen, Code, Sparkles,
+  Trash2, ArrowUp, ArrowDown, Type, PlayCircle,
+  RotateCcw, ChevronRight, ChevronDown, ChevronUp,
+  Atom, Brain, BarChart3, Shield, Zap, Download,
+  Save, Scissors, Copy, ClipboardPaste, Square, FastForward,
+  StopCircle, SkipForward, Search, Keyboard,
+  Eye, EyeOff, Hash, MoreHorizontal, Settings,
+  Sun, Moon, History, Clock, ArrowLeft,
+  Check, Minus, Edit3, Equal, Loader2,
+  GitCompare,
+} from "lucide-react";
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // INTERNAL IMPORTS — These stay within hologram/
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
