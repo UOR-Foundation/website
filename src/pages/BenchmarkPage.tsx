@@ -4,10 +4,80 @@
  * Large type. Generous spacing. Maximum readability.
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { IconArrowLeft, IconMaximize, IconMinimize } from "@tabler/icons-react";
 import ConstantTimeBenchmark from "@/modules/hologram-compute/ConstantTimeBenchmark";
+
+/** Subtle floating particle canvas for the hero section */
+function HeroParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let raf: number;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Particles — sparse, slow, elegant
+    const COUNT = 40;
+    const particles = Array.from({ length: COUNT }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      r: 1 + Math.random() * 1.5,
+      vx: (Math.random() - 0.5) * 0.0003,
+      vy: -0.0001 - Math.random() * 0.0003,
+      alpha: 0.08 + Math.random() * 0.15,
+    }));
+
+    const draw = () => {
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      ctx.clearRect(0, 0, w, h);
+
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); }
+        if (p.x < -0.02) p.x = 1.02;
+        if (p.x > 1.02) p.x = -0.02;
+
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(248, 60%, 75%, ${p.alpha})`;
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.7 }}
+    />
+  );
+}
 
 export default function BenchmarkPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
