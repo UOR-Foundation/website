@@ -194,8 +194,10 @@ export default function BenchmarkPage() {
           className="text-xl sm:text-2xl max-w-3xl leading-relaxed font-light"
           style={{ color: "hsla(0, 0%, 100%, 0.6)" }}
         >
-          SHA-256 verified, byte-identical results. All measurements executed
-          live on this device. No server computation. No simulation.
+          SHA-256 verified, byte-identical results. The O(N³) multiply-accumulate
+          is eliminated — only O(N²) input fingerprinting remains. All measurements
+          executed live on this device. No server. No simulation.
+        </p>
         </p>
       </section>
 

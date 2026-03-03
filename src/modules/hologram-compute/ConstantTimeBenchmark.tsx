@@ -648,13 +648,14 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       anyMismatchDetected: points.some(p => !p.checksumOk || p.sha256Cpu !== p.sha256Holo),
     },
     claim: {
-      statement: "vGPU delivers N×–N× speedup over single-threaded JS CPU for INT8 GEMM via pre-computed retrieval. Results are byte-identical (SHA-256 verified).",
-      baselineDefinition: "CPU baseline = single-threaded JavaScript reference implementation. No SIMD, no multithreading, no WASM, no Web Workers.",
+      statement: "vGPU eliminates the O(N³) multiply-accumulate entirely. Measured retrieval time is O(N²) — dominated by input fingerprinting (FNV-1a over 2N² bytes). The Map.get() lookup itself is O(1). Results are byte-identical (SHA-256 verified).",
+      baselineDefinition: "CPU tab: both baseline and vGPU run on CPU only (no GPU hardware). GPU tab: baseline uses native WebGPU compute shader; vGPU precomputation uses GPU, retrieval runs on CPU.",
       limitations: [
         "Does NOT claim faster than optimized CPU (WASM SIMD, multithreaded)",
         "Does NOT claim faster than native GPU hardware",
         "Does NOT represent general-purpose acceleration",
         "Specific to INT8 matrix multiplication with deterministic inputs",
+        "Retrieval includes O(N²) fingerprinting — not pure O(1)",
       ],
     },
     independentVerification: {
