@@ -156,11 +156,13 @@ function computeCollapseHash(
 export async function executeFoundingCeremony(
   initialAttributes: CeremonyAttribute[] = []
 ): Promise<CeremonyResult> {
+  const identity = getIdentity();
+
   // ── Step 1: Generate post-quantum keypair ──────────────────────
-  const keypair = await generateKeypair();
+  const keypair = await identity.generateKeypair();
 
   // ── Step 2: Derive identity (URDNA2015 → SHA-256 → identity) ──
-  const identity = await singleProofHash(keypair.publicKeyObject);
+  const canonicalId = await identity.singleProofHash(keypair.publicKeyObject);
 
   // ── Step 3: Extract hash bytes for three-word derivation ───────
   const hexStr = identity["u:canonicalId"].split(":").pop() ?? "";
