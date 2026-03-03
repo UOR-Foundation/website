@@ -19,7 +19,7 @@ import { setPlatform } from "./index";
 // ── Backend Adapter (Supabase) ────────────────────────────────────────
 
 const backendAdapter = {
-  from: (table: string) => supabase.from(table) as any,
+  from: (table: string) => (supabase as any).from(table),
   auth: {
     getSession: () => supabase.auth.getSession(),
     getUser: () => supabase.auth.getUser(),
@@ -75,9 +75,7 @@ const gpuAdapter = {
     const gpu = m.getHologramGpu();
     return gpu.matmul(a, b, M, N, K);
   },
-  destroy: () => {
-    // Lazy — no-op if GPU was never initialized
-  },
+  destroy: () => {},
 };
 
 const lutAdapter = {
@@ -98,15 +96,23 @@ const lutAdapter = {
 const storageAdapter = {
   writeSlot: async (key: string, value: string) => {
     const { writeSlot } = await import("@/modules/data-bank/lib/sync");
-    return writeSlot(key, value);
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session?.user?.id) return;
+    await writeSlot(session.user.id, key, value);
   },
   readSlot: async (key: string) => {
     const { readSlot } = await import("@/modules/data-bank/lib/sync");
-    return readSlot(key);
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session?.user?.id) return null;
+    const result = await readSlot(session.user.id, key);
+    return result?.value ?? null;
   },
   readSlotFromCloud: async (key: string) => {
     const { readSlotFromCloud } = await import("@/modules/data-bank/lib/sync");
-    return readSlotFromCloud(key);
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session?.user?.id) return null;
+    const result = await readSlotFromCloud(session.user.id, key);
+    return result?.value ?? null;
   },
 };
 
@@ -115,7 +121,8 @@ const storageAdapter = {
 const compressionAdapter = {
   compress: async (triples: any[]) => {
     const m = await import("@/modules/data-bank/lib/graph-compression");
-    return m.compressTriples(triples);
+    const result = m.compressTriples(triples);
+    return { data: result.buffer, stats: result.stats };
   },
   decompress: async (data: Uint8Array) => {
     const m = await import("@/modules/data-bank/lib/graph-compression");
