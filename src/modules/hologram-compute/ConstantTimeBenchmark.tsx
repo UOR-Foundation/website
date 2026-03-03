@@ -866,8 +866,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </div>
 
           {/* Data table */}
-          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "240px", overflowY: "auto" }}>
-            <table className="w-full text-[11px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "320px", overflowY: "auto" }}>
+            <table className="w-full text-[13px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
                 <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
                   <th className="text-left py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
