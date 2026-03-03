@@ -35,11 +35,11 @@ const P = {
   cardBorder: "hsla(0, 0%, 100%, 0.08)",
   text: "hsl(0, 0%, 95%)",
   muted: "hsla(0, 0%, 100%, 0.55)",
-  gold: "hsl(0, 0%, 100%)",
+  gold: "hsl(170, 85%, 55%)",      // bright cyan-green — maximum contrast vs red/blue baselines
   dim: "hsla(0, 0%, 100%, 0.3)",
   green: "hsl(152, 50%, 55%)",
-  red: "hsl(0, 55%, 65%)",
-  blue: "hsl(220, 60%, 70%)",
+  red: "hsl(0, 65%, 62%)",          // slightly brighter red for chart visibility
+  blue: "hsl(220, 70%, 68%)",       // slightly brighter blue for chart visibility
   accent: "hsla(0, 0%, 100%, 0.8)",
   font: "'DM Sans', system-ui, sans-serif",
 };
