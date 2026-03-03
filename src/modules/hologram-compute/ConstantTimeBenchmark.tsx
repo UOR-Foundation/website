@@ -30,16 +30,16 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(25, 8%, 8%)",
-  card: "hsla(25, 8%, 12%, 0.6)",
-  cardBorder: "hsla(38, 12%, 70%, 0.08)",
-  text: "hsl(38, 10%, 88%)",
-  muted: "hsl(38, 8%, 55%)",
-  gold: "hsl(38, 40%, 65%)",
-  dim: "hsl(38, 8%, 35%)",
+  bg: "hsl(220, 30%, 8%)",
+  card: "hsla(220, 25%, 13%, 0.7)",
+  cardBorder: "hsla(220, 20%, 40%, 0.1)",
+  text: "hsl(220, 10%, 92%)",
+  muted: "hsl(220, 10%, 55%)",
+  gold: "hsl(220, 50%, 70%)",
+  dim: "hsl(220, 10%, 35%)",
   green: "hsl(152, 44%, 50%)",
-  red: "hsl(0, 55%, 55%)",
-  blue: "hsl(210, 50%, 60%)",
+  red: "hsl(0, 50%, 60%)",
+  blue: "hsl(220, 50%, 65%)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
@@ -487,8 +487,8 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
 function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
   const animValue = useCountUp(value, 800);
-  const sz = 160;
-  const strokeW = 5;
+  const sz = 200;
+  const strokeW = 6;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
@@ -509,22 +509,22 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ width: sz, height: sz }}>
         <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
-          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.08} />
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.1} />
           <circle
             cx={sz / 2} cy={sz / 2} r={r}
             fill="none" stroke={P.gold} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 12px hsla(38, 40%, 65%, 0.5))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(220, 50%, 70%, 0.5))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 40 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 52 }}>
             {value > 0 ? `${displayVal}×` : "—"}
           </span>
-          <span className="text-xs font-medium mt-1.5 tracking-wide" style={{ color: P.muted }}>faster</span>
+          <span className="text-sm font-semibold mt-2 tracking-widest uppercase" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
     </div>
@@ -767,15 +767,15 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {/* ── Idle state ── */}
       {state === "idle" && (
         <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid ${baseColor}15` }}>
-            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: baseColor }}>{baseLabel} Baseline</p>
-            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
-            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Standard recomputation</p>
+          <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid ${baseColor}15` }}>
+            <p className="text-xs uppercase tracking-[0.2em] font-bold mb-3" style={{ color: baseColor }}>{baseLabel} Baseline</p>
+            <p className="text-5xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
+            <p className="text-sm mt-3" style={{ color: P.muted }}>Standard recomputation</p>
           </div>
-          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
-            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: P.gold }}>Hologram vGPU</p>
-            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
-            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Pre-computed retrieval</p>
+          <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid hsla(220, 50%, 70%, 0.12)` }}>
+            <p className="text-xs uppercase tracking-[0.2em] font-bold mb-3" style={{ color: P.gold }}>Hologram vGPU</p>
+            <p className="text-5xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
+            <p className="text-sm mt-3" style={{ color: P.muted }}>Pre-computed retrieval</p>
           </div>
         </div>
       )}
@@ -828,8 +828,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 6px hsla(38, 40%, 65%, 0.4)" }} />
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(220, 50%, 70%, 0.08)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(220, 50%, 70%, 0.4)" }} />
                 </div>
                 <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
@@ -891,7 +891,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
 
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
                       <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                       <td className="py-1 px-2 text-right tabular-nums" style={{ color: baseColor }}>
@@ -1000,7 +1000,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
             {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
           {hasGpu && gpuVerifiedCount < points.length && (
-            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(38, 50%, 50%, 0.1)", color: P.gold }}>
+            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
               GPU: {gpuVerifiedCount}/{points.length} verified
             </span>
           )}
@@ -1040,7 +1040,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
                   const cpuMatch = p.sha256Cpu === p.sha256Holo;
                   const gpuMatch = !isCpu && p.gpuAvailable && p.sha256Gpu !== "N/A" ? p.sha256Gpu === p.sha256Holo : null;
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(38, 8%, 12%, 0.3)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
                       <td className="py-0.5 px-2 font-bold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-0.5 px-2" style={{ color: P.muted }}>{p.sha256Cpu.slice(0, 16)}…</td>
                       {!isCpu && (
@@ -1188,7 +1188,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           </div>
 
           {/* How it works — one line */}
-          <div className="rounded-xl p-3.5" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
+          <div className="rounded-xl p-3.5" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
             <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
               The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
             </p>
@@ -1448,7 +1448,7 @@ export default function ConstantTimeBenchmark() {
               onClick={() => setActiveTab(tab)}
               className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
-                background: activeTab === tab ? "hsla(38, 40%, 65%, 0.15)" : "transparent",
+                background: activeTab === tab ? "hsla(220, 50%, 70%, 0.15)" : "transparent",
                 color: activeTab === tab ? P.gold : P.muted,
               }}
             >
