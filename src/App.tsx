@@ -312,6 +312,7 @@ const App = () => {
             <Route path="/q-shell" element={<DevGate><QShellPage /></DevGate>} />
             <Route path="/projection-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
             <Route path="/ai-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
+            <Route path="/benchmark" element={<BenchmarkPage />} />
             {/* Debug routes removed — private */}
             <Route path="*" element={<Navigate to="/hologram-os" replace />} />
           </Routes>
