@@ -492,7 +492,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
       {/* Legend — top-right, large, high contrast */}
       <g transform={`translate(${CW - PAD.right - 320}, ${PAD.top + 4})`}>
-        <rect x={-10} y={-14} width={320} height={70} rx={10} fill="hsla(240, 55%, 12%, 0.92)" stroke={P.cardBorder} strokeWidth={1} />
+        <rect x={-10} y={-14} width={320} height={70} rx={10} fill="hsla(220, 20%, 6%, 0.94)" stroke={P.cardBorder} strokeWidth={1} />
         <line x1={4} y1={6} x2={36} y2={6} stroke={baselineColor} strokeWidth={4.5} strokeLinecap="round" />
         <circle cx={20} cy={6} r={5} fill={baselineColor} />
         <text x={46} y={12} fill={baselineColor} fontSize={18} fontFamily={P.font} fontWeight="800">{baselineLabel}</text>
