@@ -130,7 +130,7 @@ export function useSovereignty(): SovereigntyState {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = getBackend().auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted.current) return;
 
@@ -150,7 +150,7 @@ export function useSovereignty(): SovereigntyState {
           };
           setAuthUser(user);
 
-          const { data: profile } = await supabase
+          const { data: profile } = await getBackend()
             .from("profiles")
             .select("uor_canonical_id")
             .eq("user_id", session.user.id)
