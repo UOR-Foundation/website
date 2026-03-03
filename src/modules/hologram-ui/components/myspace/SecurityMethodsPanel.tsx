@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import { motion, AnimatePresence } from "framer-motion";
-import { TEEBridge } from "@/hologram/kernel/tee-bridge";
+import { TEEBridge } from "@/hologram/kernel/security/tee-bridge";
 
 interface SecurityMethodsPanelProps {
   onBack: () => void;

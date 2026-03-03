@@ -6,15 +6,15 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QMmu } from "@/hologram/kernel/q-mmu";
-import { QFs } from "@/hologram/kernel/q-fs";
+import { QMmu } from "@/hologram/kernel/memory/q-mmu";
+import { QFs } from "@/hologram/kernel/memory/q-fs";
 import {
   QDriver,
   BlockDevice,
   MemoryBackend,
   type IoResult,
   type DriverStats,
-} from "@/hologram/kernel/q-driver";
+} from "@/hologram/kernel/memory/q-driver";
 
 describe("Q-Driver — Phase 5: Block Device Abstraction", () => {
   let mmu: QMmu;

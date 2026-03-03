@@ -1898,7 +1898,7 @@ export function useQShell(options: UseQShellOptions = {}) {
         // ── library ───────────────────────────────────────────
         if (subcmd === "library" || subcmd === "lib") {
           const libCmd = parts[2]?.toLowerCase();
-          type SimOpType = import("@/hologram/kernel/q-simulator").SimOp;
+          type SimOpType = import("@/hologram/kernel/compute/q-simulator").SimOp;
           const LIBRARY: Record<string, { desc: string; minQ: number; build: (n: number) => SimOpType[] }> = {
             qft: {
               desc: "Quantum Fourier Transform, basis for Shor's algorithm and phase estimation",
@@ -2238,7 +2238,7 @@ export function useQShell(options: UseQShellOptions = {}) {
               const st = createState(circ.numQubits);
               st.ops = circ.ops;
               st.noise = circ.noise;
-              const { measure: simMeas } = await import("@/hologram/kernel/q-simulator");
+              const { measure: simMeas } = await import("@/hologram/kernel/compute/q-simulator");
               const rawCounts: Record<string, number> = simMeas(st, shots);
               const mitigated = applyMeasurementMitigation(rawCounts, calMatrix);
               log("");
@@ -2634,7 +2634,7 @@ export function useQShell(options: UseQShellOptions = {}) {
               log("");
               // Install files into Q-FS if available
               if (subsRef.current?.fs) {
-                const { generateProjectionFiles } = await import("@/hologram/kernel/q-package-projector");
+                const { generateProjectionFiles } = await import("@/hologram/kernel/surface/q-package-projector");
                 const files = generateProjectionFiles(result.metadata);
                 for (const f of files) {
                   const pathParts = f.path.split("/").filter(Boolean);

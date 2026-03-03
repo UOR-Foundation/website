@@ -1414,7 +1414,7 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           applyMeasurementMitigation,
           randomizedCompiling,
           mitigateFull,
-        } = await import("@/hologram/kernel/q-error-mitigation");
+        } = await import("@/hologram/kernel/compute/q-error-mitigation");
         
         const noise = k.circuit.noise;
         const ops = k.circuit.ops;

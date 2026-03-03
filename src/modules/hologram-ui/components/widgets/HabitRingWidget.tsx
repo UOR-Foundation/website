@@ -14,7 +14,7 @@
 import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
-import type { HabitRingEntry, ProceduralProjection } from "@/hologram/kernel/procedural-memory";
+import type { HabitRingEntry, ProceduralProjection } from "@/hologram/kernel/agents/procedural-memory";
 
 // ── Arc geometry helpers ───────────────────────────────────────────────
 

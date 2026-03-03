@@ -21,22 +21,22 @@
  * @module hologram-os/projection-engine
  */
 
-import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/q-boot";
-import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/q-boot";
-import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/q-sched";
+import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/boot/q-boot";
+import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/boot/q-boot";
+import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/compute/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
 import {
   RewardAccumulator, computeReward, projectReward,
   type CoherenceSnapshot, type EpistemicGrade, type RewardSignal, type RewardProjection,
 } from "@/modules/ring-core/reward-circuit";
-import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/holographic-surface";
-import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/stabilizer-engine";
-import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/circuit-compiler";
-import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/projection-compositor";
-import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/kernel-supervisor";
-import { getProceduralMemory, type ProceduralMemoryEngine, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
-import { getMirrorProtocol, type MirrorProtocolEngine, type MirrorProjection } from "@/hologram/kernel/mirror-protocol";
+import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/surface/holographic-surface";
+import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/compute/stabilizer-engine";
+import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/compute/circuit-compiler";
+import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/surface/projection-compositor";
+import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/surface/kernel-supervisor";
+import { getProceduralMemory, type ProceduralMemoryEngine, type ProceduralProjection } from "@/hologram/kernel/agents/procedural-memory";
+import { getMirrorProtocol, type MirrorProtocolEngine, type MirrorProjection } from "@/hologram/kernel/agents/mirror-protocol";
 
 // Re-export surface types for consumers
 export type { SurfaceState, SurfaceGradient, ProjectionReceipt };
@@ -1565,7 +1565,7 @@ export class KernelProjector {
    * Returns the cached result if a matching habit exists, null otherwise.
    * This is the "cerebellum fast-path" — bypasses the full reasoning pipeline.
    */
-  tryHabit(actionType: string): { habitId: string; result: import("@/hologram/kernel/procedural-memory").HabitResult } | null {
+  tryHabit(actionType: string): { habitId: string; result: import("@/hologram/kernel/agents/procedural-memory").HabitResult } | null {
     const fired = this.proceduralMemory.tryFire(actionType);
     if (!fired) return null;
 

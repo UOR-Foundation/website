@@ -28,7 +28,7 @@ import {
   getStateProbabilities,
   type SimOp,
   type Complex,
-} from "@/hologram/kernel/q-simulator";
+} from "@/hologram/kernel/compute/q-simulator";
 import {
   sha256hex,
   createCid,

@@ -7,15 +7,15 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { bootSync as boot } from "@/hologram/kernel/q-boot";
-import { QMmu } from "@/hologram/kernel/q-mmu";
-import { QSched } from "@/hologram/kernel/q-sched";
-import { QSyscall } from "@/hologram/kernel/q-syscall";
-import { QFs } from "@/hologram/kernel/q-fs";
-import { QEcc, CODE_K } from "@/hologram/kernel/q-ecc";
-import { QIsa } from "@/hologram/kernel/q-isa";
-import { QNet } from "@/hologram/kernel/q-net";
-import { QIpc } from "@/hologram/kernel/q-ipc";
+import { bootSync as boot } from "@/hologram/kernel/boot/q-boot";
+import { QMmu } from "@/hologram/kernel/memory/q-mmu";
+import { QSched } from "@/hologram/kernel/compute/q-sched";
+import { QSyscall } from "@/hologram/kernel/compute/q-syscall";
+import { QFs } from "@/hologram/kernel/memory/q-fs";
+import { QEcc, CODE_K } from "@/hologram/kernel/compute/q-ecc";
+import { QIsa } from "@/hologram/kernel/compute/q-isa";
+import { QNet } from "@/hologram/kernel/network/q-net";
+import { QIpc } from "@/hologram/kernel/network/q-ipc";
 
 describe("Q-Kernel: Full System Boot & Integration", () => {
   it("boots and exercises all 8 subsystems end-to-end", async () => {
