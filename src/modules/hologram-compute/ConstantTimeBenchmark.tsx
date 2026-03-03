@@ -734,32 +734,30 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   return (
     <div className="space-y-2">
       {/* ── Run Button ── */}
-      <div className="flex items-center justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
-        <p className="text-[12px]" style={{ color: P.muted }}>
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
+        <p className="text-sm" style={{ color: P.muted }}>
           {isCpu ? (
             <>
-              <strong style={{ color: P.text }}>CPU only.</strong>{" "}
-              Single-threaded matmul vs pre-computed retrieval. SHA-256 verified.
+              <strong style={{ color: P.text }}>CPU baseline</strong> — single-threaded INT8 matmul vs pre-computed retrieval.
             </>
           ) : (
             <>
-              <strong style={{ color: P.text }}>GPU.</strong>{" "}
-              WebGPU compute shader vs pre-computed retrieval. SHA-256 verified.
+              <strong style={{ color: P.text }}>GPU baseline</strong> — WebGPU compute shader vs pre-computed retrieval.
             </>
           )}
         </p>
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
           style={{ background: baseColor, color: "white" }}
         >
           {state === "precomputing" ? (
-            <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Crystallizing…</>
+            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Precomputing…</>
           ) : state === "running" ? (
-            <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
+            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
           ) : (
-            <><IconPlayerPlay size={13} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
+            <><IconPlayerPlay size={14} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
           )}
         </button>
       </div>
