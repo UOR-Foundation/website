@@ -731,7 +731,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   const sizes = isCpu ? CPU_SIZES : GPU_SIZES;
 
   const peakSpeedup = points.length > 0
-    ? Math.max(...points.map((p) => isCpu ? p.speedupVsCpu : p.speedupVsGpu))
+    ? Math.max(0, ...points.map((p) => isCpu ? p.speedupVsCpu : p.speedupVsGpu))
     : 0;
 
   const totalBaseMs = points.reduce((s, p) => s + (isCpu ? p.stdMs : p.gpuMs), 0);
@@ -896,7 +896,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               <tbody>
                 {points.map((p, i) => {
                   const baseMs = isCpu ? p.stdMs : p.gpuMs;
-                  const speedup = isCpu ? p.speedupVsCpu : p.speedupVsGpu;
+                  const speedup = Math.max(0, isCpu ? p.speedupVsCpu : p.speedupVsGpu);
                   const shaMatch = isCpu
                     ? p.sha256Cpu === p.sha256Holo
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
@@ -1404,8 +1404,8 @@ export default function ConstantTimeBenchmark() {
         holoMs: round(holoMs),
         holoFingerprintMs: 0,
         holoLookupMs: round(holoMs),
-        speedupVsCpu: stdMs / Math.max(holoMs, 0.001),
-        speedupVsGpu: gpuAvailable ? gpuMs / Math.max(holoMs, 0.001) : 0,
+        speedupVsCpu: Math.max(0, stdMs / Math.max(holoMs, 0.001)),
+        speedupVsGpu: gpuAvailable ? Math.max(0, gpuMs / Math.max(holoMs, 0.001)) : 0,
         stdTokSec: Math.round(tokensPerSec(stdMs)),
         gpuTokSec: gpuAvailable ? Math.round(tokensPerSec(gpuMs)) : 0,
         holoTokSec: Math.round(tokensPerSec(holoMs)),
@@ -1486,27 +1486,35 @@ export default function ConstantTimeBenchmark() {
   );
 }
 
-// ── Animated counter ────────────────────────────────────────────────────────
+// ── Animated counter (smooth, monotonically increasing, never negative) ─────
 
 function useCountUp(target: number, duration = 800): number {
   const [current, setCurrent] = useState(0);
   const prevTarget = useRef(0);
+  const startValue = useRef(0);
+
+  // Clamp target to never go negative
+  const safeTarget = Math.max(0, target);
 
   useEffect(() => {
-    if (target === prevTarget.current) return;
-    prevTarget.current = target;
+    if (safeTarget === prevTarget.current) return;
+    // Always animate FROM the current displayed value TO the new target
+    startValue.current = prevTarget.current;
+    prevTarget.current = safeTarget;
+    const from = startValue.current;
+    const to = safeTarget;
     const start = performance.now();
     let raf: number;
     const tick = (now: number) => {
       const elapsed = now - start;
       const t = Math.min(elapsed / duration, 1);
       const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-      setCurrent(target * ease);
+      setCurrent(Math.max(0, from + (to - from) * ease));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+  }, [safeTarget, duration]);
 
-  return current;
+  return Math.max(0, current);
 }
