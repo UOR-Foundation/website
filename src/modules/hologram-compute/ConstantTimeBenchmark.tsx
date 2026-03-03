@@ -30,17 +30,17 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(240, 55%, 12%)",           // deep IQT navy
-  card: "hsla(240, 50%, 16%, 0.8)",
-  cardBorder: "hsla(0, 0%, 100%, 0.08)",
-  text: "hsl(0, 0%, 100%)",           // pure white — maximum contrast
-  muted: "hsla(0, 0%, 100%, 0.6)",
-  gold: "hsl(170, 90%, 55%)",         // bright cyan for vGPU — maximum separation from red
-  dim: "hsla(0, 0%, 100%, 0.3)",
-  green: "hsl(152, 55%, 58%)",
-  red: "hsl(4, 78%, 62%)",            // IQT coral-red for baseline
-  blue: "hsl(220, 75%, 68%)",
-  accent: "hsla(0, 0%, 100%, 0.9)",
+  bg: "hsl(220, 20%, 6%)",              // near-black
+  card: "hsl(220, 18%, 10%)",
+  cardBorder: "hsla(0, 0%, 100%, 0.07)",
+  text: "hsl(0, 0%, 100%)",             // pure white
+  muted: "hsla(0, 0%, 100%, 0.55)",
+  gold: "hsl(185, 45%, 55%)",           // muted teal for vGPU — disciplined, not neon
+  dim: "hsla(0, 0%, 100%, 0.25)",
+  green: "hsl(152, 40%, 52%)",
+  red: "hsl(8, 55%, 58%)",              // warm terracotta — reserved, not screaming
+  blue: "hsl(215, 50%, 58%)",
+  accent: "hsla(0, 0%, 100%, 0.85)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
