@@ -852,24 +852,19 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {/* ── Results Table + LINPACK Header ── */}
       {state === "done" && points.length > 0 && (
         <>
-          {/* LINPACK methodology + export */}
-          <div className="rounded-xl p-2 space-y-1" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>
-                {baseLabel} vs Hologram vGPU — INT8 OPS Results
-              </span>
-              <button
-                onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
-                style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
-              >
-                <IconDownload size={13} />
-                Export LINPACK Report
-              </button>
-            </div>
-            <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
-              <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>INT8 OPS = 2N³ / time</code> · Median of {sampleCount(16)}–{sampleCount(1024)} samples · Adaptive warmup · Work-amplified timing · Energy ↓ = measured time reduction (not theoretical).
-            </p>
+          {/* Results header + export */}
+          <div className="rounded-xl p-3 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <span className="text-xs uppercase tracking-[0.1em] font-bold" style={{ color: P.text }}>
+              Results · INT8 GEMM · {points.length} sizes
+            </span>
+            <button
+              onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
+              style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+            >
+              <IconDownload size={13} />
+              Export Report
+            </button>
           </div>
 
           {/* Data table */}
