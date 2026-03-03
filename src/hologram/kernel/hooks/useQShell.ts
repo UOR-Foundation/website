@@ -1898,7 +1898,7 @@ export function useQShell(options: UseQShellOptions = {}) {
         // ── library ───────────────────────────────────────────
         if (subcmd === "library" || subcmd === "lib") {
           const libCmd = parts[2]?.toLowerCase();
-          type SimOpType = import("@/hologram/kernel/q-simulator").SimOp;
+          type SimOpType = import("@/hologram/kernel/compute/q-simulator").SimOp;
           const LIBRARY: Record<string, { desc: string; minQ: number; build: (n: number) => SimOpType[] }> = {
             qft: {
               desc: "Quantum Fourier Transform, basis for Shor's algorithm and phase estimation",
