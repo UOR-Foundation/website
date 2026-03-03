@@ -177,7 +177,7 @@ export default function BenchmarkPage() {
               color: "hsl(0, 0%, 100%)",
             }}
           >
-            O(1) retrieval vs O(N³) recomputation
+            O(N²) retrieval vs O(N³) recomputation
           </h1>
         </div>
       </section>

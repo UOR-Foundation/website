@@ -633,7 +633,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       return {
         cpuScalingExponent: `${cpuFit.exponent.toFixed(3)} (expected: 3.0)`,
         cpuRSquared: cpuFit.rSquared.toFixed(4),
-        vgpuScalingExponent: `${holoFit.exponent.toFixed(3)} (expected: ~0)`,
+        vgpuScalingExponent: `${holoFit.exponent.toFixed(3)} (expected: ≤2.0, fingerprint-dominated)`,
         vgpuRSquared: holoFit.rSquared.toFixed(4),
         fitRange: `N=${stableNs[0]}–${stableNs[stableNs.length - 1]} (${stableNs.length} points, small N excluded)`,
       };
