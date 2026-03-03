@@ -74,7 +74,7 @@ export {
   type ChildKernelState,
   type KernelRole,
   type SupervisorProjection,
-} from "@/hologram/kernel/kernel-supervisor";
+} from "@/hologram/kernel/surface/kernel-supervisor";
 
 export {
   getProjectionCompositor,
