@@ -25,7 +25,7 @@ import {
   StopCircle, SkipForward, ChevronUp, Search, Keyboard,
   Eye, EyeOff, Hash, MoreHorizontal, Settings,
   Sun, Moon, History as HistoryIcon,
-} from "../../platform/bridge";
+} from "../../../platform/bridge";
 import {
   createKernel,
   createNotebook,
