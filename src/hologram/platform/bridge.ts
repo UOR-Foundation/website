@@ -130,11 +130,12 @@ const compressionAdapter = {
   },
   compressToBase64: async (triples: any[]) => {
     const m = await import("@/modules/data-bank/lib/graph-compression");
-    return m.compressToBase64(triples);
+    const result = m.compressToBase64(triples);
+    return typeof result === "string" ? result : (result as any).encoded;
   },
   decompressFromBase64: async (encoded: string) => {
     const m = await import("@/modules/data-bank/lib/graph-compression");
-    return m.decompressFromBase64(encoded);
+    return m.decompressFromBase64(encoded) as any;
   },
 };
 
