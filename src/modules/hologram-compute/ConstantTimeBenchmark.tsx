@@ -474,9 +474,9 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       {/* Legend */}
       <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
         <rect x={0} y={0} width={12} height={2.5} rx={1} fill={baselineColor} />
-        <text x={18} y={5} fill={P.text} fontSize={9} fontFamily={P.font} fontWeight="500">{baselineLabel}</text>
+        <text x={18} y={5} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">{baselineLabel}</text>
         <rect x={0} y={13} width={12} height={2.5} rx={1} fill={P.gold} />
-        <text x={18} y={18} fill={P.text} fontSize={9} fontFamily={P.font} fontWeight="500">Hologram vGPU — O(1) retrieval</text>
+        <text x={18} y={18} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">Hologram vGPU — O(1)</text>
       </g>
     </svg>
   );
