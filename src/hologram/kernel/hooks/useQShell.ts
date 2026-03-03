@@ -10,8 +10,8 @@ import {
   searchPyPI,
   normalizeName,
   type InstalledPackage,
-} from "@/hologram/kernel/q-package-projector";
-import { boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
+} from "../q-package-projector";
+import { boot, type QKernelBoot } from "../q-boot";
 import {
   createState,
   applyOp,
@@ -25,23 +25,23 @@ import {
   type SimulatorState,
   type SimOp,
   type NoiseModel,
-} from "@/hologram/kernel/q-simulator";
+} from "../q-simulator";
 import {
   zeroNoiseExtrapolation,
   buildCalibrationMatrix,
   applyMeasurementMitigation,
   randomizedCompiling,
   mitigateFull,
-} from "@/hologram/kernel/q-error-mitigation";
-import { QMmu } from "@/hologram/kernel/q-mmu";
-import { QSched, type QProcess, type SchedStats } from "@/hologram/kernel/q-sched";
-import { QSyscall } from "@/hologram/kernel/q-syscall";
-import { QFs, type QInode } from "@/hologram/kernel/q-fs";
-import { QEcc } from "@/hologram/kernel/q-ecc";
-import { QIsa } from "@/hologram/kernel/q-isa";
-import { QNet, type FanoNode } from "@/hologram/kernel/q-net";
-import { QIpc, type QChannel } from "@/hologram/kernel/q-ipc";
-import { QAgentMesh, QAgent, type MeshStats } from "@/hologram/kernel/q-agent";
+} from "../q-error-mitigation";
+import { QMmu } from "../q-mmu";
+import { QSched, type QProcess, type SchedStats } from "../q-sched";
+import { QSyscall } from "../q-syscall";
+import { QFs, type QInode } from "../q-fs";
+import { QEcc } from "../q-ecc";
+import { QIsa } from "../q-isa";
+import { QNet, type FanoNode } from "../q-net";
+import { QIpc, type QChannel } from "../q-ipc";
+import { QAgentMesh, QAgent, type MeshStats } from "../q-agent";
 
 export interface KernelState {
   stage: "off" | "booting" | "running" | "panic";

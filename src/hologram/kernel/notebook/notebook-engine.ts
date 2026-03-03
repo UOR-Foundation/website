@@ -20,7 +20,7 @@ import {
   type SimulatorState,
   type SimOp,
   type NoiseModel,
-} from "@/hologram/kernel/q-simulator";
+} from "../q-simulator";
 
 // ── Cell Types ──────────────────────────────────────────────────────────────
 
