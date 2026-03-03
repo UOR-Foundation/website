@@ -1000,7 +1000,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
             {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
           {hasGpu && gpuVerifiedCount < points.length && (
-            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(38, 50%, 50%, 0.1)", color: P.gold }}>
+            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
               GPU: {gpuVerifiedCount}/{points.length} verified
             </span>
           )}
