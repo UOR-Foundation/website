@@ -48,6 +48,7 @@ const ProjectPrism = lazy(() => import("@/modules/projects/pages/ProjectPrism"))
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
 const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
+const BenchmarkPage = lazy(() => import("@/pages/BenchmarkPage"));
 const ApiPage = lazy(() => import("@/modules/api-explorer/pages/ApiPage"));
 const RingExplorerPage = lazy(() => import("@/modules/ring-core/pages/RingExplorerPage"));
 const DerivationLabPage = lazy(() => import("@/modules/derivation/pages/DerivationLabPage"));
