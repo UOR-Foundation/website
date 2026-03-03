@@ -38,7 +38,7 @@ import {
   type NotebookCell,
   type CellOutput,
 } from "./notebook-engine";
-import { createState, simulateCircuit, realisticNoise, measure } from "../compute/q-simulator";
+import { createState, simulateCircuit, realisticNoise, measure } from "../arch/q-simulator";
 import { useScreenTheme } from "../hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 import { CodeProjection } from "../components/CodeProjection";
@@ -1414,7 +1414,7 @@ function DemoViewer({ demo, kernel, onClose, onOpenInWorkspace }: {
           applyMeasurementMitigation,
           randomizedCompiling,
           mitigateFull,
-        } = await import("@/hologram/kernel/compute/q-error-mitigation");
+        } = await import("@/hologram/kernel/arch/q-error-mitigation");
         
         const noise = k.circuit.noise;
         const ops = k.circuit.ops;

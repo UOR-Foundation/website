@@ -1,151 +1,135 @@
-# Hologram Kernel — Rosetta Stone
+# Q-Kernel — Linux-Equivalent Quantum Operating System
 
-> **One-sentence summary**: The Hologram Kernel is a content-addressed operating system
+> **One-sentence summary**: The Q-Kernel is a content-addressed operating system
 > that runs entirely in the browser, using the holographic principle to map every object
-> onto a canonical 256-bit hash surface.
+> onto a canonical 256-bit hash surface — structured as a 1:1 mirror of the Linux kernel.
 
 ---
 
-## Directory Structure
+## Directory Structure (Linux ↔ Q-Kernel)
 
 ```
-kernel/
-├── boot/        ← System initialization & identity ceremony
-├── memory/      ← Content-addressed storage & virtual memory
-├── compute/     ← Execution, scheduling & error correction
-├── network/     ← Inter-process & inter-node communication
-├── security/    ← Access control, attestation & enclaves
-├── agents/      ← Autonomous process containers & learning
-├── surface/     ← Display server, composition & projection
-├── hooks/       ← React hooks for UI integration
-├── notebook/    ← Interactive computation workspace
-└── __tests__/   ← Test suites for all subsystems
+src/hologram/kernel/          ≡  /usr/src/linux/
+├── init/                     ≡  init/          — Boot, PID 0, genesis process
+│   ├── q-boot.ts                               POST → Hardware → Firmware → Genesis
+│   ├── q-sovereignty.ts                        Identity binding (user ↔ kernel)
+│   ├── q-ceremony.ts                           Founding ceremony (constitutional hash)
+│   ├── q-ceremony-vault.ts                     Sealed vault execution
+│   └── q-three-word.ts                         Human-readable identity derivation
+│
+├── kernel/                   ≡  kernel/        — Scheduler, syscall, core process mgmt
+│   ├── q-sched.ts                              Coherence-priority CFS (H-score ≡ nice)
+│   └── q-syscall.ts                            Lens morphism syscall interface
+│
+├── mm/                       ≡  mm/            — Virtual memory management
+│   └── q-mmu.ts                                CID-addressed pages, demand paging, CoW
+│
+├── fs/                       ≡  fs/            — Virtual File System
+│   ├── q-fs.ts                                 Journaled Merkle DAG filesystem
+│   └── q-vault.ts                              Encrypted sealed storage (≡ dm-crypt)
+│
+├── drivers/                  ≡  drivers/       — Storage backend drivers
+│   └── q-driver.ts                             Memory, IndexedDB, Supabase, IPFS
+│
+├── net/                      ≡  net/           — Networking stack
+│   ├── q-net.ts                                Fano mesh topology, routing, firewall
+│   └── q-trust-mesh.ts                         Cryptographic trust attestation
+│
+├── ipc/                      ≡  ipc/           — Inter-process communication
+│   └── q-ipc.ts                                CID-linked message channels
+│
+├── crypto/                   ≡  crypto/        — Cryptographic subsystem
+│   ├── q-ecc.ts                                [[15,1,3]] stabilizer error correction
+│   └── q-coherence-head.ts                     Hamming distance coherence verification
+│
+├── arch/                     ≡  arch/          — Architecture & instruction set
+│   ├── q-isa.ts                                Gate definitions, circuit structure
+│   ├── q-simulator.ts                          Statevector execution engine
+│   ├── q-error-mitigation.ts                   ZNE, measurement mitigation, RC
+│   ├── circuit-compiler.ts                     High-level → gate-level compilation
+│   ├── stabilizer-engine.ts                    Stabilizer tableau simulation
+│   ├── qiskit/                                 Qiskit-compatible circuit API
+│   └── quantum/                                PennyLane interpreter
+│
+├── security/                 ≡  security/      — Access control & TEE
+│   ├── q-security.ts                           4-ring capability model (≡ LSM)
+│   ├── q-disclosure.ts                         Selective attribute disclosure
+│   ├── q-secure-mesh.ts                        Secure agent mesh orchestration
+│   ├── tee-bridge.ts                           Trusted Execution Environment bridge
+│   └── tee-inference.ts                        Confidential AI inference pipeline
+│
+├── agents/                   ★  NOVEL          — Autonomous AI processes
+│   ├── q-agent.ts                              Agent lifecycle, mesh orchestration
+│   ├── q-agent-projection.ts                   Agent → surface projection frames
+│   ├── procedural-memory.ts                    Habit formation & reward learning
+│   └── mirror-protocol.ts                      Inter-agent coherence bonding
+│
+└── surface/                  ★  NOVEL          — Holographic display server
+    ├── holographic-surface.ts                  Self-verify / self-heal / self-improve
+    ├── kernel-supervisor.ts                    Multi-kernel PID 0 orchestrator
+    ├── projection-compositor.ts                N-kernel → 1 composite surface
+    └── q-package-projector.ts                  Package management & projection
 ```
 
----
+## Linux Equivalence Table
 
-## Terminology Map
+| Linux Concept | Linux Implementation | Q-Kernel Equivalent | Key Difference |
+|---|---|---|---|
+| `task_struct` | Process descriptor | `QProcess` | H-score replaces nice value |
+| `fork()` / `clone()` | Process creation | `QSched.fork()` | Content-addressed session chain |
+| CFS scheduler | `kernel/sched/fair.c` | `QSched` | Coherence-priority, not CPU-time fair |
+| Page tables | `mm/mmap.c` | `QMmu` page table | CID-addressed, auto-dedup |
+| VFS inodes | `fs/inode.c` | `QInode` | Immutable Merkle DAG nodes |
+| Block drivers | `drivers/block/` | `BlockDevice` | Virtual: Memory/IndexedDB/IPFS |
+| TCP/IP | `net/ipv4/` | `QNet` | Fano mesh (PG(2,2)), UOR IPv6 |
+| `pipe()` / signals | `ipc/` | `QIpc` channels | Hash-linked CID message chains |
+| LSM / capabilities | `security/` | `QSecurity` 4-ring | ECC-signed capability tokens |
+| `crypto/` | AES, SHA, etc. | `QEcc` | [[15,1,3]] stabilizer codes |
+| `arch/x86/` | x86 ISA | `QIsa` | Quantum gate instruction set |
+| PID 1 (init) | systemd | Genesis process | H-score 1.0, constitutional hash |
 
-Every Hologram concept maps to a well-known systems concept.
-Use this table when reading the codebase for the first time.
+## Hardware Virtualization
 
-### boot/ — System Initialization
+The fundamental innovation: **Q-Kernel virtualizes the entire hardware stack**.
 
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-Boot** | BIOS POST + bootloader | Power-On Self-Test: verifies ring axioms, loads hardware descriptors, hydrates firmware, spawns genesis process |
-| **Q-Sovereignty** | User session manager | Binds an authenticated user to a cryptographic identity (keypair + CID) |
-| **Q-Ceremony** | Key ceremony / onboarding | One-time identity creation: generates PQC keypair, derives canonical CID, issues session token |
-| **Q-Ceremony-Vault** | Secure enclave execution | Runs sensitive operations (key generation, signing) inside an isolated closure |
-| **Q-Three-Word** | Human-readable identifier | Maps a 256-bit hash to a memorable 3-word name (like what3words for identity) |
+| Physical Hardware | Q-Kernel Virtualization |
+|---|---|
+| CPU | Statevector simulator (`arch/q-simulator.ts`) |
+| RAM | CID-addressed virtual memory (`mm/q-mmu.ts`) |
+| Disk | Pluggable backends: Memory, IndexedDB, Supabase, IPFS (`drivers/q-driver.ts`) |
+| NIC | Fano mesh overlay network (`net/q-net.ts`) |
+| TPM / TEE | Software TEE bridge with attestation (`security/tee-bridge.ts`) |
+| GPU | WebGPU compute pipeline (`../compute/`) |
 
-### memory/ — Content-Addressed Storage
+This means Q-Kernel runs identically on desktop, mobile, edge, and cloud —
+the same kernel binary, the same syscall interface, the same process model.
 
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-MMU** | Virtual memory / page table | Content-addressed memory management — every allocation is a CID-keyed page |
-| **Q-FS** | Filesystem (ext4, ZFS) | Merkle DAG filesystem — files and directories are content-addressed inodes |
-| **Q-Vault** | Encrypted volume | Encrypted-at-rest key-value store for sensitive data |
-| **Q-Driver** | Block device driver | Abstraction over storage backends (memory, IndexedDB, cloud) with caching and I/O scheduling |
-
-### compute/ — Execution & Scheduling
-
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-Sched** | Process scheduler | Prioritizes processes by coherence score (not just time-slicing); classifies into zones |
-| **Q-Syscall** | System call interface | Typed morphism dispatch table — every syscall is a lens transformation |
-| **Q-ISA** | Instruction set architecture | 96-gate instruction set for the kernel's computation model |
-| **Q-ECC** | ECC memory / error correction | [[96,48,2]] stabilizer code — detects and corrects single-bit errors in kernel state |
-| **Q-Simulator** | Statevector engine | Quantum circuit simulator: gates, measurement, noise models, OpenQASM export |
-| **Q-Error-Mitigation** | Fault tolerance layer | Zero-noise extrapolation, measurement mitigation, randomized compiling |
-| **Q-Coherence-Head** | Attention head (ML) | Computes coherence vectors across multiple observation modalities |
-| **Circuit-Compiler** | JIT compiler | Compiles reasoning steps into executable gate sequences with convergence tracking |
-| **Stabilizer-Engine** | ECC runtime | Applies stabilizer codes at runtime; projects error correction state |
-| **Qiskit/** | Qiskit SDK (IBM) | Browser-native Qiskit-compatible API: QuantumCircuit, Aer simulator, transpiler |
-| **Quantum/** | PennyLane interpreter | Variational quantum circuit interpreter with automatic differentiation |
-
-### network/ — Communication
-
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-Net** | TCP/IP network stack | Fano-topology routing (7 nodes, 7 lines) with content-addressed packet delivery |
-| **Q-IPC** | Inter-process communication | Typed channels with chain integrity verification — every message is hash-linked |
-| **Q-Trust-Mesh** | Certificate authority / PKI | Decentralized trust graph — agents build and verify trust through mutual attestation |
-
-### security/ — Access Control & Attestation
-
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-Security** | Capability-based access control | Isolation rings (Ring 0–3) with ECC-signed capability tokens |
-| **Q-Disclosure** | Privacy policy engine | Rule-based system controlling what data is revealed to whom |
-| **Q-Secure-Mesh** | Security orchestrator | Coordinates security policies across the agent mesh |
-| **TEE-Bridge** | Trusted Execution Environment | Hardware/software attestation and sealed storage (with software fallback) |
-| **TEE-Inference** | Confidential computing | Runs AI inference inside attestation boundary with proof generation |
-
-### agents/ — Autonomous Processes
-
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Q-Agent** | Container / VM | Autonomous process with lifecycle (spawn → think → communicate → freeze/thaw) |
-| **Q-Agent-Projection** | Agent render bridge | Projects agent state into the compositor for visualization |
-| **Procedural-Memory** | Cerebellum / habit cache | Detects repeated action patterns, promotes them to fast-path habits |
-| **Mirror-Protocol** | Mirror neurons / empathy | Tracks inter-agent coherence bonds, predicts partner state, shares habits |
-
-### surface/ — Display & Composition
-
-| Hologram Term | Traditional Equivalent | What It Does |
-|---|---|---|
-| **Holographic-Surface** | Display server (Wayland) | The 256-bit hash boundary everything projects onto — self-verifying, self-healing |
-| **Projection-Compositor** | Window compositor | Merges multiple projection layers into a single coherent frame |
-| **Kernel-Supervisor** | Process supervisor (systemd) | Manages child kernel instances, health monitoring, restart policies |
-| **Q-Package-Projector** | Package manager (apt, npm) | Installs, resolves, and projects application packages |
-
----
-
-## Key Concepts
-
-### Lens = Codec / Serializer
-A **Lens** is a bidirectional transform: `object ↔ canonical bytes`.
-- **Focus** (dehydrate): Compile any object into its canonical UOR form
-- **Refract** (rehydrate): Unpack canonical bytes into a specific modality (JSON-LD, Turtle, GraphQL, etc.)
-
-### Projection = View / Render
-A **Projection** maps a canonical object onto a target surface.
-Think of it as `SELECT` + `FORMAT` — choose what to show and how to show it.
-
-### Surface = Hash Boundary
-The **Surface** is the 256-bit SHA-256 boundary that every object projects onto.
-It's simultaneously the identity function (content → hash) and the display server (hash → pixels).
-
-### Coherence = System Health
-**Coherence score** (0–1) measures how well the system's state matches its canonical form.
-The scheduler uses it for priority; the surface uses it for self-healing; agents use it for trust.
-
-### Genesis = First Boot
-The **Genesis process** is the first process spawned after boot.
-It establishes the identity ceremony, derives the root CID, and seeds the trust mesh.
-
----
-
-## External Dependencies
-
-**All external imports enter through exactly ONE file**: `platform/bridge.ts`
+## Boot Sequence (Linux ↔ Q-Kernel)
 
 ```
-grep -rn 'from "@/' src/hologram/ --include='*.ts' --include='*.tsx'
-# Must return ONLY platform/bridge.ts
+Linux:     BIOS → GRUB → vmlinuz → start_kernel() → init (PID 1)
+Q-Kernel:  POST → Hardware → Firmware → Genesis (PID 0) → Running
 ```
 
-See [BOUNDARY.md](../BOUNDARY.md) for the complete dependency audit.
+1. **POST** — Ring integrity check (Z/256Z critical identity) ≡ BIOS POST
+2. **Hardware** — Atlas topology hydration (96 vertices, 7 Fano lines) ≡ ACPI/device enumeration
+3. **Firmware** — Cayley-Dickson tower (ℝ→ℂ→ℍ→𝕆→𝕊) ≡ firmware/microcode loading
+4. **Genesis** — PID 0 with H-score 1.0, constitutional hash ≡ start_kernel() + init
+5. **Running** — Scheduler active, syscall interface ready ≡ userspace handoff
 
----
+## Formal Definition
 
-## Reading Order for New Developers
+The Q-Kernel is:
 
-1. **This file** — understand the terminology
-2. **`../genesis/`** — axiom layer (pure math, zero dependencies)
-3. **`boot/q-boot.ts`** — see how the kernel starts
-4. **`memory/q-mmu.ts`** — content-addressed memory model
-5. **`compute/q-sched.ts`** — how processes are scheduled
-6. **`surface/holographic-surface.ts`** — the projection boundary
-7. **`../platform/bridge.ts`** — how external services connect
+> A monolithic, content-addressed operating system kernel that runs in browser
+> privileged context, manages virtualized hardware resources, enforces isolation
+> through a 4-ring capability model, and exposes a lens-morphism syscall interface
+> that defines the execution environment for user-space agents and applications.
+
+It is the **algebraic dual** of the Linux kernel: where Linux maps hardware
+registers to process abstractions, Q-Kernel maps mathematical axioms
+(Z/256Z ring, Fano plane, Cayley-Dickson tower) to the same abstractions.
+The result is a kernel that is simultaneously:
+- **Familiar** — any Linux developer can navigate it
+- **Novel** — it runs without physical hardware
+- **Verifiable** — every state transition is content-addressed and auditable

@@ -23,7 +23,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootEvent } from "../projection-engine";
-import type { BootStage } from "@/hologram/kernel/boot/q-boot";
+import type { BootStage } from "@/hologram/kernel/init/q-boot";
 import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/security/tee-bridge";
 
 interface KernelBootProps {

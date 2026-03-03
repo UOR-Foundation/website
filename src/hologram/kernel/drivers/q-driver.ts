@@ -11,8 +11,8 @@
 import { toHex, encodeUtf8 } from "../../genesis/axiom-ring";
 import { sha256 } from "../../genesis/axiom-hash";
 import { createCid } from "../../genesis/axiom-cid";
-import type { QMmu } from "./q-mmu";
-import type { QFs } from "./q-fs";
+import type { QMmu } from "../mm/q-mmu";
+import type { QFs } from "../fs/q-fs";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types (unchanged)

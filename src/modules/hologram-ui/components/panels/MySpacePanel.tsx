@@ -33,15 +33,15 @@ import { KP } from "@/modules/hologram-os/kernel-palette";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── Kernel imports ──
-import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/boot/q-sovereignty";
-import { QFs } from "@/hologram/kernel/memory/q-fs";
-import { QMmu } from "@/hologram/kernel/memory/q-mmu";
+import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/init/q-sovereignty";
+import { QFs } from "@/hologram/kernel/fs/q-fs";
+import { QMmu } from "@/hologram/kernel/mm/q-mmu";
 import { QSecurity } from "@/hologram/kernel/security/q-security";
-import { QEcc } from "@/hologram/kernel/compute/q-ecc";
+import { QEcc } from "@/hologram/kernel/crypto/q-ecc";
 import { QDisclosure, type DisclosureRule } from "@/hologram/kernel/security/q-disclosure";
-import { QTrustMesh } from "@/hologram/kernel/network/q-trust-mesh";
-import { QNet } from "@/hologram/kernel/network/q-net";
-import { executeInVault, type VaultSeal } from "@/hologram/kernel/boot/q-ceremony-vault";
+import { QTrustMesh } from "@/hologram/kernel/net/q-trust-mesh";
+import { QNet } from "@/hologram/kernel/net/q-net";
+import { executeInVault, type VaultSeal } from "@/hologram/kernel/init/q-ceremony-vault";
 import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologram/kernel/security/tee-bridge";
 
 // ── Extracted sub-components ──

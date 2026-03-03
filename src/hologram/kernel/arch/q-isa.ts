@@ -19,7 +19,7 @@
  * @module qkernel/q-isa
  */
 
-import { QEcc } from "./q-ecc";
+import { QEcc } from "../crypto/q-ecc";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

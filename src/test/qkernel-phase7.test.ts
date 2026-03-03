@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QEcc } from "@/hologram/kernel/compute/q-ecc";
+import { QEcc } from "@/hologram/kernel/crypto/q-ecc";
 import {
   QSecurity,
   RING_NAMES,

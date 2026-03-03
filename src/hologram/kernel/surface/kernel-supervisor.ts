@@ -20,7 +20,7 @@
  * @module hologram/kernel/kernel-supervisor
  */
 
-import { classifyZone, type CoherenceZone } from "../compute/q-sched";
+import { classifyZone, type CoherenceZone } from "../kernel/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

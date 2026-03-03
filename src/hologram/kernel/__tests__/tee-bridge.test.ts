@@ -15,9 +15,9 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { TEEBridge, resetTEEBridge, getTEEBridge } from "../security/tee-bridge";
-import { bootSync } from "../boot/q-boot";
+import { bootSync } from "../init/q-boot";
 import { QSecurity } from "../security/q-security";
-import { QEcc } from "../compute/q-ecc";
+import { QEcc } from "../crypto/q-ecc";
 import { createGeometricReceipt } from "../../platform/geometric-coherence";
 
 describe("TEE Bridge", () => {

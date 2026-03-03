@@ -23,9 +23,9 @@ import {
   type CollapseVerification,
 } from "./q-ceremony";
 import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
-import type { QFs } from "../memory/q-fs";
+import type { QFs } from "../fs/q-fs";
 import type { QSecurity, CapabilityToken } from "../security/q-security";
-import type { QEcc } from "../compute/q-ecc";
+import type { QEcc } from "../crypto/q-ecc";
 import { signalBus } from "../../genesis/axiom-signal";
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -2,98 +2,108 @@
  * Q-Kernel Module — Public API
  *
  * The quantum operating system kernel, built from mathematical axioms up.
+ * Directory structure mirrors Linux kernel source tree:
  *
- * Directory structure:
- *   boot/     — System initialization & identity (q-boot, q-sovereignty, q-ceremony)
- *   memory/   — Content-addressed storage (q-mmu, q-fs, q-vault, q-driver)
- *   compute/  — Execution & scheduling (q-sched, q-ecc, q-isa, q-simulator)
- *   network/  — Communication (q-net, q-ipc, q-trust-mesh)
- *   security/ — Access control & TEE (q-security, tee-bridge, q-disclosure)
- *   agents/   — Autonomous processes (q-agent, procedural-memory, mirror-protocol)
- *   surface/  — Holographic surface & projection (holographic-surface, compositor)
+ *   init/      — System initialization & identity (Linux: init/)
+ *   kernel/    — Scheduler & syscall interface (Linux: kernel/)
+ *   mm/        — Content-addressed virtual memory (Linux: mm/)
+ *   fs/        — Virtual filesystem & vault (Linux: fs/)
+ *   drivers/   — Storage backend drivers (Linux: drivers/)
+ *   net/       — Networking & trust mesh (Linux: net/)
+ *   ipc/       — Inter-process communication (Linux: ipc/)
+ *   crypto/    — ECC & coherence verification (Linux: crypto/)
+ *   arch/      — ISA, simulator & circuit compilation (Linux: arch/)
+ *   security/  — Capability model & TEE (Linux: security/)
+ *   agents/    — Autonomous AI processes (novel — no Linux equivalent)
+ *   surface/   — Holographic projection surface (novel — no Linux equivalent)
  */
 
-// ── boot/ — System Initialization ────────────────────────────────────
+// ── init/ — System Initialization (Linux: init/) ─────────────────────
 export {
   post, loadHardware, hydrateFirmware, createGenesisProcess, boot,
-} from "./boot/q-boot";
+} from "./init/q-boot";
 export type {
   PostCheck, PostResult, BootStage, QHardware, QFirmware, GenesisProcess, QKernelBoot,
-} from "./boot/q-boot";
+} from "./init/q-boot";
 
-export { QSovereignty } from "./boot/q-sovereignty";
-export type { AuthUser, SovereignIdentity, GenesisResult, SovereigntyStats } from "./boot/q-sovereignty";
+export { QSovereignty } from "./init/q-sovereignty";
+export type { AuthUser, SovereignIdentity, GenesisResult, SovereigntyStats } from "./init/q-sovereignty";
 
-export { executeFoundingCeremony, verifyCollapseIntegrity } from "./boot/q-ceremony";
+export { executeFoundingCeremony, verifyCollapseIntegrity } from "./init/q-ceremony";
 export type {
   FoundingCeremony, SignedCeremony, CeremonyResult, CeremonyAttribute, CollapseVerification,
-} from "./boot/q-ceremony";
+} from "./init/q-ceremony";
 
-export { deriveThreeWordName, reverseThreeWordName, parseThreeWordDisplay, verifyThreeWordBijection } from "./boot/q-three-word";
-export type { ThreeWordName } from "./boot/q-three-word";
+export { deriveThreeWordName, reverseThreeWordName, parseThreeWordDisplay, verifyThreeWordBijection } from "./init/q-three-word";
+export type { ThreeWordName } from "./init/q-three-word";
 
-// ── memory/ — Content-Addressed Storage ──────────────────────────────
-export { QMmu } from "./memory/q-mmu";
-export type { StorageTier, Datum, PageTableEntry, PageFault, MmuStats } from "./memory/q-mmu";
+// ── mm/ — Memory Management (Linux: mm/) ─────────────────────────────
+export { QMmu } from "./mm/q-mmu";
+export type { StorageTier, Datum, PageTableEntry, PageFault, MmuStats } from "./mm/q-mmu";
 
-export { QFs } from "./memory/q-fs";
-export type { InodeType, QInode, QPermissions, JournalEntry, JournalOp, MountPoint, FsStats } from "./memory/q-fs";
+// ── fs/ — Virtual File System (Linux: fs/) ───────────────────────────
+export { QFs } from "./fs/q-fs";
+export type { InodeType, QInode, QPermissions, JournalEntry, JournalOp, MountPoint, FsStats } from "./fs/q-fs";
 
-export { QVault } from "./memory/q-vault";
+export { QVault } from "./fs/q-vault";
 export type {
   VaultSlot, VaultManifest, VaultReadResult, VaultWriteResult, VaultExportBundle, VaultExportSlot, VaultStats,
-} from "./memory/q-vault";
+} from "./fs/q-vault";
 
-export { QDriver, BlockDevice, MemoryBackend, IndexedDBBackend, SupabaseBackend, IpfsBackend } from "./memory/q-driver";
+// ── drivers/ — Device Driver Framework (Linux: drivers/) ─────────────
+export { QDriver, BlockDevice, MemoryBackend, IndexedDBBackend, SupabaseBackend, IpfsBackend } from "./drivers/q-driver";
 export type {
   BackendType, DeviceState, Sector, BlockDeviceDescriptor, IoResult, DriverStats, DeviceEvent, StorageBackend,
-} from "./memory/q-driver";
+} from "./drivers/q-driver";
 
-// ── compute/ — Execution & Scheduling ────────────────────────────────
-export { QSched, classifyZone } from "./compute/q-sched";
-export type { CoherenceZone, ProcessState, QProcess, SchedStats, ContextSwitch } from "./compute/q-sched";
+// ── kernel/ — Process Scheduler & Syscall (Linux: kernel/) ───────────
+export { QSched, classifyZone } from "./kernel/q-sched";
+export type { CoherenceZone, ProcessState, QProcess, SchedStats, ContextSwitch } from "./kernel/q-sched";
 
-export { QSyscall, STANDARD_MODALITIES } from "./compute/q-syscall";
+export { QSyscall, STANDARD_MODALITIES } from "./kernel/q-syscall";
 export type {
   MorphismType, SyscallResult, CompiledLens, LensBlueprint, PipelineStage, TrapTableEntry, SyscallStats, Modality,
-} from "./compute/q-syscall";
+} from "./kernel/q-syscall";
 
-export { QEcc, CODE_N, CODE_K, CODE_D } from "./compute/q-ecc";
-export type { StabilizerGenerator, Syndrome, CorrectionResult, EccStats } from "./compute/q-ecc";
+// ── crypto/ — Cryptographic Subsystem (Linux: crypto/) ───────────────
+export { QEcc, CODE_N, CODE_K, CODE_D } from "./crypto/q-ecc";
+export type { StabilizerGenerator, Syndrome, CorrectionResult, EccStats } from "./crypto/q-ecc";
 
-export { QIsa } from "./compute/q-isa";
-export type { GateTier, GateDef, GateOp, QCircuit, IsaStats, TransformElement } from "./compute/q-isa";
+export { HammingCoherenceHead, MultiHeadCoherence } from "./crypto/q-coherence-head";
+export type { CoherenceVector, CoherenceHead, CoherenceContext } from "./crypto/q-coherence-head";
+
+// ── arch/ — Architecture & ISA (Linux: arch/) ────────────────────────
+export { QIsa } from "./arch/q-isa";
+export type { GateTier, GateDef, GateOp, QCircuit, IsaStats, TransformElement } from "./arch/q-isa";
 
 export {
   createState, applyOp, measure as simMeasure, simulateCircuit, formatStatevector,
   drawCircuitASCII, toOpenQASM, entanglementMap, quickRun, noNoise, realisticNoise,
-} from "./compute/q-simulator";
-export type { SimulatorState, SimOp, GateMatrix, NoiseModel } from "./compute/q-simulator";
+} from "./arch/q-simulator";
+export type { SimulatorState, SimOp, GateMatrix, NoiseModel } from "./arch/q-simulator";
 
 export {
   zeroNoiseExtrapolation, buildCalibrationMatrix, applyMeasurementMitigation,
   randomizedCompiling, mitigateFull,
-} from "./compute/q-error-mitigation";
+} from "./arch/q-error-mitigation";
 export type {
   ExtrapolationMethod, ZneResult, CalibrationMatrix, MemResult, RcResult, FullMitigationResult, MitigationConfig,
-} from "./compute/q-error-mitigation";
+} from "./arch/q-error-mitigation";
 
-export { HammingCoherenceHead, MultiHeadCoherence } from "./compute/q-coherence-head";
-export type { CoherenceVector, CoherenceHead, CoherenceContext } from "./compute/q-coherence-head";
+// ── net/ — Networking Stack (Linux: net/) ────────────────────────────
+export { QNet } from "./net/q-net";
+export type { QSocket, SocketState, QProtocol, QEnvelope, FanoNode, QRoute, FirewallRule, NetStats } from "./net/q-net";
 
-// ── network/ — Communication ─────────────────────────────────────────
-export { QNet } from "./network/q-net";
-export type { QSocket, SocketState, QProtocol, QEnvelope, FanoNode, QRoute, FirewallRule, NetStats } from "./network/q-net";
-
-export { QIpc } from "./network/q-ipc";
-export type { QMessage, QChannel, QSubscription, IpcStats } from "./network/q-ipc";
-
-export { QTrustMesh } from "./network/q-trust-mesh";
+export { QTrustMesh } from "./net/q-trust-mesh";
 export type {
   TrustLevel, TrustAttestation, TrustEdge, TrustScore, MutualCeremony, TrustMeshStats,
-} from "./network/q-trust-mesh";
+} from "./net/q-trust-mesh";
 
-// ── security/ — Access Control & TEE ─────────────────────────────────
+// ── ipc/ — Inter-Process Communication (Linux: ipc/) ─────────────────
+export { QIpc } from "./ipc/q-ipc";
+export type { QMessage, QChannel, QSubscription, IpcStats } from "./ipc/q-ipc";
+
+// ── security/ — Access Control & TEE (Linux: security/) ──────────────
 export { QSecurity, RING_NAMES } from "./security/q-security";
 export type {
   IsolationRing, SecurityOp, CapabilityToken, ElevationRequest, SecurityEvent, SecurityStats,
@@ -119,7 +129,7 @@ export type {
   DisclosedAttribute, DisclosureLayer, DisclosureStats,
 } from "./security/q-disclosure";
 
-// ── agents/ — Autonomous Processes ───────────────────────────────────
+// ── agents/ — Autonomous Processes (novel) ───────────────────────────
 export { QAgent, QAgentMesh } from "./agents/q-agent";
 export type {
   AgentState, ResourceEnvelope, SessionEntry, HScoreSample, AgentSnapshot, AgentStats, MeshStats,

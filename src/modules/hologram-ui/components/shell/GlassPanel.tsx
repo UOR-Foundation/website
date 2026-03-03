@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { KP } from "@/modules/hologram-os/kernel-palette";
 import { useKernel } from "@/modules/hologram-os/hooks/useKernel";
 import type { WidgetType } from "@/modules/hologram-os/projection-engine";
-import type { CoherenceZone } from "@/hologram/kernel/compute/q-sched";
+import type { CoherenceZone } from "@/hologram/kernel/kernel/q-sched";
 import { useDraggablePosition } from "../../hooks/useDraggablePosition";
 
 // ── Zone visual mapping ───────────────────────────────────────────────

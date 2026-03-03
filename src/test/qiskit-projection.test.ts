@@ -12,7 +12,7 @@ import {
   Statevector,
   transpile,
   ibm_eagle_target,
-} from "@/hologram/kernel/compute/qiskit";
+} from "@/hologram/kernel/arch/qiskit";
 
 describe("Qiskit Projection: QuantumCircuit", () => {
   it("constructs with correct metadata", () => {

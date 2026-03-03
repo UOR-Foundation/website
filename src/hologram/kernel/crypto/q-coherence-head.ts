@@ -18,7 +18,7 @@
  * @module qkernel/q-coherence-head
  */
 
-import { classifyZone, type CoherenceZone } from "./q-sched";
+import { classifyZone, type CoherenceZone } from "../kernel/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Coherence Vector — the output of a coherence head

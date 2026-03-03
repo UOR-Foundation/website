@@ -63,7 +63,7 @@ export {
   type GateState,
   type Wire,
   type GateResult,
-} from "@/hologram/kernel/compute/circuit-compiler";
+} from "@/hologram/kernel/arch/circuit-compiler";
 
 // ── Multi-Kernel Compositor ───────────────────────────────────────────
 export {

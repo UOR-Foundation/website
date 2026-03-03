@@ -21,9 +21,9 @@
  * @module hologram-os/projection-engine
  */
 
-import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/boot/q-boot";
-import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/boot/q-boot";
-import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/compute/q-sched";
+import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/init/q-boot";
+import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/init/q-boot";
+import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/kernel/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
 import {
@@ -31,8 +31,8 @@ import {
   type CoherenceSnapshot, type EpistemicGrade, type RewardSignal, type RewardProjection,
 } from "@/modules/ring-core/reward-circuit";
 import { getHolographicSurface, type HolographicSurface, type SurfaceState, type SurfaceGradient, type ProjectionReceipt } from "@/hologram/kernel/surface/holographic-surface";
-import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/compute/stabilizer-engine";
-import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/compute/circuit-compiler";
+import { getStabilizerEngine, type StabilizerEngine, type StabilizerProjection } from "@/hologram/kernel/arch/stabilizer-engine";
+import { getCircuitEngine, type CircuitEngine, type CircuitProjection } from "@/hologram/kernel/arch/circuit-compiler";
 import { getProjectionCompositor, type ProjectionCompositor, type CompositorProjection } from "@/hologram/kernel/surface/projection-compositor";
 import { getKernelSupervisor, type KernelSupervisor, type SupervisorProjection } from "@/hologram/kernel/surface/kernel-supervisor";
 import { getProceduralMemory, type ProceduralMemoryEngine, type ProceduralProjection } from "@/hologram/kernel/agents/procedural-memory";
