@@ -4,11 +4,28 @@
  * Large type. Generous spacing. Maximum readability.
  */
 
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconMaximize, IconMinimize } from "@tabler/icons-react";
 import ConstantTimeBenchmark from "@/modules/hologram-compute/ConstantTimeBenchmark";
 
 export default function BenchmarkPage() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
   return (
     <div
       className="min-h-screen"
@@ -35,12 +52,31 @@ export default function BenchmarkPage() {
             <IconArrowLeft size={16} />
             <span className="hidden sm:inline">Back</span>
           </Link>
-          <span
-            className="text-xs tracking-[0.25em] uppercase font-medium"
-            style={{ color: "hsla(0, 0%, 100%, 0.35)" }}
-          >
-            Live Benchmark
-          </span>
+
+          <div className="flex items-center gap-6">
+            <span
+              className="text-xs tracking-[0.25em] uppercase font-medium"
+              style={{ color: "hsla(0, 0%, 100%, 0.35)" }}
+            >
+              Live Benchmark
+            </span>
+            <button
+              onClick={toggleFullscreen}
+              className="flex items-center gap-2 px-3 py-1.5 rounded transition-all hover:opacity-80"
+              style={{
+                background: "hsla(0, 0%, 100%, 0.08)",
+                color: "hsla(0, 0%, 100%, 0.6)",
+                border: "1px solid hsla(0, 0%, 100%, 0.1)",
+                fontSize: "13px",
+              }}
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? <IconMinimize size={15} /> : <IconMaximize size={15} />}
+              <span className="hidden sm:inline">
+                {isFullscreen ? "Exit" : "Fullscreen"}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -85,16 +121,18 @@ export default function BenchmarkPage() {
         <ConstantTimeBenchmark />
       </main>
 
-      {/* Footer */}
-      <footer
-        className="max-w-6xl mx-auto px-8 sm:px-12 py-10"
-        style={{ borderTop: "1px solid hsla(0, 0%, 100%, 0.06)" }}
-      >
-        <div className="flex items-center justify-between text-sm" style={{ color: "hsla(0, 0%, 100%, 0.3)" }}>
-          <span>© {new Date().getFullYear()} UOR Foundation</span>
-          <span>All benchmarks run locally in-browser</span>
-        </div>
-      </footer>
+      {/* Footer — hidden in fullscreen for clean presentation */}
+      {!isFullscreen && (
+        <footer
+          className="max-w-6xl mx-auto px-8 sm:px-12 py-10"
+          style={{ borderTop: "1px solid hsla(0, 0%, 100%, 0.06)" }}
+        >
+          <div className="flex items-center justify-between text-sm" style={{ color: "hsla(0, 0%, 100%, 0.3)" }}>
+            <span>© {new Date().getFullYear()} UOR Foundation</span>
+            <span>All benchmarks run locally in-browser</span>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
