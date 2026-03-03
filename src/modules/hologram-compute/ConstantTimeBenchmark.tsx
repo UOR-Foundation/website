@@ -755,25 +755,20 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   // Waiting to run
   if (state === "idle") {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-6">
-        <div className="text-center space-y-2">
-          <p className="text-lg font-light" style={{ color: P.muted }}>
-            {isCpu
-              ? "Compare standard CPU compute against Hologram vGPU retrieval"
-              : "Compare native GPU shader against Hologram vGPU retrieval"
-            }
-          </p>
-          <p className="text-sm" style={{ color: P.dim }}>
-            {isCpu ? "Both run on CPU only · no GPU hardware" : "Both use GPU hardware · like-for-like"}
-          </p>
-        </div>
+      <div className="flex flex-col items-center justify-center py-20 gap-8">
+        <p className="text-2xl font-light text-center leading-relaxed" style={{ color: P.text }}>
+          {isCpu
+            ? "GPU-class performance on any CPU"
+            : "Accelerate any GPU"
+          }
+        </p>
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-2.5 px-10 py-4 rounded-full text-lg font-bold tracking-wide transition-all duration-300 disabled:opacity-50 uppercase"
-          style={{ background: "hsl(0, 0%, 100%)", color: "hsl(248, 40%, 12%)" }}
+          className="inline-flex items-center gap-3 px-12 py-5 rounded-full text-xl font-bold tracking-wide transition-all duration-300 disabled:opacity-50 uppercase"
+          style={{ background: P.text, color: P.bg }}
         >
-          <IconPlayerPlay size={18} />
+          <IconPlayerPlay size={20} />
           Run {baseLabel} Benchmark
         </button>
       </div>
