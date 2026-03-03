@@ -12,7 +12,7 @@ import {
   Clock, Save, ChevronRight, FileText, Loader2,
 } from "lucide-react";
 import { useNbTheme } from "./notebook-theme";
-import { useDataBank } from "@/hologram/kernel/hooks/useDataBank";
+import { useDataBank } from "../hooks/useDataBank";
 import type { NotebookDocument } from "./notebook-engine";
 
 // ── Snapshot shape ─────────────────────────────────────────────────────────
