@@ -30,16 +30,17 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(220, 30%, 8%)",
-  card: "hsla(220, 25%, 13%, 0.7)",
-  cardBorder: "hsla(220, 20%, 40%, 0.1)",
-  text: "hsl(220, 10%, 92%)",
-  muted: "hsl(220, 10%, 55%)",
-  gold: "hsl(220, 50%, 70%)",
-  dim: "hsl(220, 10%, 35%)",
-  green: "hsl(152, 44%, 50%)",
-  red: "hsl(0, 50%, 60%)",
-  blue: "hsl(220, 50%, 65%)",
+  bg: "hsl(248, 40%, 12%)",
+  card: "hsla(248, 35%, 16%, 0.7)",
+  cardBorder: "hsla(0, 0%, 100%, 0.08)",
+  text: "hsl(0, 0%, 95%)",
+  muted: "hsla(0, 0%, 100%, 0.55)",
+  gold: "hsl(0, 0%, 100%)",
+  dim: "hsla(0, 0%, 100%, 0.3)",
+  green: "hsl(152, 50%, 55%)",
+  red: "hsl(0, 55%, 65%)",
+  blue: "hsl(220, 60%, 70%)",
+  accent: "hsla(0, 0%, 100%, 0.8)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
@@ -448,16 +449,16 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       {gridLines.map((g, i) => (
         <g key={i}>
           <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
-          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">{g.label}</text>
+          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{g.label}</text>
         </g>
       ))}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
-          <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={8} fontFamily="'DM Sans', monospace">{x}</text>
+          <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{x}</text>
         ) : null
       ))}
-      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
-      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
+      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
+      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
       {/* Baseline */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
       <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
@@ -473,9 +474,9 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       {/* Legend */}
       <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
         <rect x={0} y={0} width={12} height={2.5} rx={1} fill={baselineColor} />
-        <text x={18} y={5} fill={P.text} fontSize={9} fontFamily={P.font} fontWeight="500">{baselineLabel}</text>
+        <text x={18} y={5} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">{baselineLabel}</text>
         <rect x={0} y={13} width={12} height={2.5} rx={1} fill={P.gold} />
-        <text x={18} y={18} fill={P.text} fontSize={9} fontFamily={P.font} fontWeight="500">Hologram vGPU — O(1) retrieval</text>
+        <text x={18} y={18} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">Hologram vGPU — O(1)</text>
       </g>
     </svg>
   );
@@ -516,7 +517,7 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(220, 50%, 70%, 0.5))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(0, 0%, 100%, 0.4))` : "none",
             }}
           />
         </svg>
@@ -734,8 +735,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   return (
     <div className="space-y-2">
       {/* ── Run Button ── */}
-      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
-        <p className="text-sm" style={{ color: P.muted }}>
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: "hsla(0, 0%, 100%, 0.03)", border: `1px solid hsla(0, 0%, 100%, 0.06)` }}>
+        <p className="text-base" style={{ color: P.muted }}>
           {isCpu ? (
             <>
               <strong style={{ color: P.text }}>CPU baseline</strong> — single-threaded INT8 matmul vs pre-computed retrieval.
@@ -749,8 +750,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
-          style={{ background: baseColor, color: "white" }}
+          className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-base font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
+          style={{ background: "hsl(0, 0%, 100%)", color: "hsl(248, 40%, 12%)" }}
         >
           {state === "precomputing" ? (
             <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Precomputing…</>
@@ -770,7 +771,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <p className="text-5xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
             <p className="text-sm mt-3" style={{ color: P.muted }}>Standard recomputation</p>
           </div>
-          <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid hsla(220, 50%, 70%, 0.12)` }}>
+          <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid hsla(0, 0%, 100%, 0.08)` }}>
             <p className="text-xs uppercase tracking-[0.2em] font-bold mb-3" style={{ color: P.gold }}>Hologram vGPU</p>
             <p className="text-5xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
             <p className="text-sm mt-3" style={{ color: P.muted }}>Pre-computed retrieval</p>
@@ -816,20 +817,20 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
 
             {/* Runtime comparison bars */}
-            <div className="w-full space-y-1.5 px-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
+            <div className="w-full space-y-2 px-2">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
+                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(220, 50%, 70%, 0.08)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(220, 50%, 70%, 0.4)" }} />
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(0, 0%, 100%, 0.3)" }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
+                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
             </div>
 
@@ -858,7 +859,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <button
               onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all hover:opacity-80 shrink-0"
-              style={{ background: "hsla(220, 50%, 65%, 0.08)", color: P.blue, border: "1px solid hsla(220, 50%, 65%, 0.15)" }}
+              style={{ background: "hsla(0, 0%, 100%, 0.05)", color: P.blue, border: "1px solid hsla(0, 0%, 100%, 0.1)" }}
             >
               <IconDownload size={14} />
               Export JSON Report
@@ -889,7 +890,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
 
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(248, 30%, 18%, 0.5)" }}>
                       <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                       <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: baseColor }}>
@@ -998,12 +999,12 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
             {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
           {hasGpu && gpuVerifiedCount < points.length && (
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{ background: "hsla(0, 0%, 100%, 0.06)", color: P.gold }}>
               GPU: {gpuVerifiedCount}/{points.length} verified
             </span>
           )}
         </div>
-        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(0, 0%, 100%, 0.05)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
@@ -1038,7 +1039,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
                   const cpuMatch = p.sha256Cpu === p.sha256Holo;
                   const gpuMatch = !isCpu && p.gpuAvailable && p.sha256Gpu !== "N/A" ? p.sha256Gpu === p.sha256Holo : null;
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(248, 30%, 18%, 0.5)" }}>
                       <td className="py-0.5 px-2 font-bold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-0.5 px-2" style={{ color: P.muted }}>{p.sha256Cpu.slice(0, 16)}…</td>
                       {!isCpu && (
@@ -1154,7 +1155,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           <IconInfoCircle size={18} style={{ color: P.blue }} />
           <span className="text-base font-semibold" style={{ color: P.text }}>Methodology & Environment</span>
         </div>
-        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(0, 0%, 100%, 0.05)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
@@ -1173,7 +1174,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                 </p>
               </div>
 
-              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(0, 0%, 100%, 0.03)", border: "1px solid hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold }} />
                   <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
@@ -1194,7 +1195,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           </div>
 
           {/* Timing */}
-          <div className="rounded-lg p-4" style={{ background: "hsla(220, 20%, 40%, 0.04)", border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-lg p-4" style={{ background: "hsla(0, 0%, 100%, 0.02)", border: `1px solid ${P.cardBorder}` }}>
             <h4 className="text-sm font-bold mb-1.5" style={{ color: P.text }}>Timing Protocol</h4>
             <ul className="text-sm leading-relaxed space-y-1 list-disc list-inside" style={{ color: P.muted }}>
               <li>Adaptive JIT warmup before each size</li>
@@ -1460,10 +1461,10 @@ export default function ConstantTimeBenchmark() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 tracking-wide uppercase"
+              className="flex items-center gap-2 px-7 py-3 rounded-full text-base font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
-                background: activeTab === tab ? "hsla(220, 50%, 70%, 0.15)" : "transparent",
-                color: activeTab === tab ? P.gold : P.muted,
+                background: activeTab === tab ? "hsla(0, 0%, 100%, 0.1)" : "transparent",
+                color: activeTab === tab ? P.text : P.muted,
               }}
             >
               {tab === "cpu" ? <IconCpu size={15} /> : <IconCpu2 size={15} />}
@@ -1476,7 +1477,7 @@ export default function ConstantTimeBenchmark() {
       {/* Methodology */}
       {hw ? <MethodologyPanel hw={hwSafe} /> : (
         <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[12px] font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
+          <p className="text-base font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
         </div>
       )}
 
