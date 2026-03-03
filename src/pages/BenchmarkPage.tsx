@@ -66,7 +66,7 @@ export default function BenchmarkPage() {
       </header>
 
       {/* Benchmark fills remaining space */}
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-4">
+      <main className="flex-1 min-h-0 w-full mx-auto px-4 py-2">
         <ConstantTimeBenchmark />
       </main>
     </div>

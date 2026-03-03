@@ -829,20 +829,22 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       </div>
 
       {/* ── Chart + Speedup — fills the viewport ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-4">
-        {/* Chart */}
-        <div className="rounded-2xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <ComparisonChart
-            points={points}
-            baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
-            holoMs={points.map(p => p.holoMs)}
-            baselineColor={baseColor}
-            baselineLabel={isCpu ? "CPU — O(N³) compute" : "GPU — O(N³) compute"}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-3" style={{ minHeight: "calc(100vh - 180px)" }}>
+        {/* Chart — stretches to fill */}
+        <div className="rounded-2xl p-3 flex flex-col" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="flex-1 min-h-0">
+            <ComparisonChart
+              points={points}
+              baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
+              holoMs={points.map(p => p.holoMs)}
+              baselineColor={baseColor}
+              baselineLabel={isCpu ? "CPU — O(N³) compute" : "GPU — O(N³) compute"}
+            />
+          </div>
         </div>
 
-        {/* Speedup panel */}
-        <div className="rounded-2xl p-6 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        {/* Speedup panel — stretches to match */}
+        <div className="rounded-2xl p-4 flex flex-col items-center justify-center gap-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
           <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
           <p className="text-xl font-bold text-center leading-snug" style={{ color: P.text }}>
@@ -850,10 +852,10 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </p>
 
           {/* Compact comparison bars */}
-          <div className="w-full space-y-2.5 px-2">
+          <div className="w-full space-y-3 px-2">
             <div className="flex items-center gap-3">
               <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
-              <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+              <div className="flex-1 h-4 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="h-full rounded-full" style={{
                   width: points.length > 0 ? "100%" : "0%",
                   background: baseColor,
@@ -866,7 +868,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
             <div className="flex items-center gap-3">
               <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
-              <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+              <div className="flex-1 h-4 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="h-full rounded-full" style={{
                   width: points.length > 0 ? `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%` : "0%",
                   background: P.gold,
