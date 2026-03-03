@@ -26,7 +26,7 @@ import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 import type { QFs } from "./q-fs";
 import type { QSecurity, CapabilityToken } from "./q-security";
 import type { QEcc } from "./q-ecc";
-import { signalBus } from "@/hologram/genesis/axiom-signal";
+import { signalBus } from "../genesis/axiom-signal";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types (unchanged)
