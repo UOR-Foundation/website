@@ -1,193 +1,168 @@
-# Hologram
+# Hologram — A Browser-Native Operating System
 
-**A virtual operating system that runs entirely in your browser.**
-
-No installation. No server. No trust required.  
-Open a tab — you're running an OS.
+> **One sentence**: A self-contained OS that runs in your browser,
+> structured exactly like Linux, built on mathematical axioms instead of silicon.
 
 ---
 
-## What problem does this solve?
+## What is this?
 
-Today, your digital identity is scattered across dozens of services.
-Your files live on someone else's server. Your data is locked inside
-apps you don't control. If a platform shuts down, you lose everything.
+Hologram is a **virtual operating system** with a real kernel, filesystem,
+process scheduler, memory manager, and security model. If you know Linux,
+you already know how to navigate this codebase.
 
-Hologram eliminates this dependency.
-
-It gives you a **self-contained computing environment** — with a real
-kernel, filesystem, process scheduler, and security model — that runs
-entirely in your browser. Your identity is mathematically derived, not
-assigned by a company. Your data is encrypted and portable. Every
-operation is verifiable.
-
-**You own the machine. The machine runs on math, not on permission.**
+The key innovation: where Linux builds on x86 registers and physical RAM,
+Hologram builds on a mathematical foundation (algebraic ring, SHA-256, 
+Cayley-Dickson tower). The abstractions above that foundation are identical
+to Linux — the same concepts, the same directory layout, the same mental model.
 
 ---
 
-## What does it actually do?
+## Directory Structure — Linux OS Mapping
 
-Hologram is a browser-native operating system built from first
-principles. It provides:
+```
+src/hologram/                     ≡  A Linux Distribution
+│
+├── genesis/                      ≡  /firmware/          — BIOS/UEFI ROM
+│   ├── axiom-ring.ts                                     Z/256Z algebraic ring
+│   ├── axiom-hash.ts                                     SHA-256 hash primitive
+│   ├── axiom-cid.ts                                      Content identifier
+│   ├── axiom-codec.ts                                    Encode/decode
+│   ├── axiom-mirror.ts                                   Mirror/inverse operation
+│   ├── axiom-signal.ts                                   Post-quantum signatures
+│   ├── axiom-post.ts                                     Power-on self-test
+│   ├── axiom-constitution.ts                             8 immutable laws
+│   └── genesis.ts                                        Fuse axioms → identity
+│
+├── kernel/                       ≡  /usr/src/linux/     — Kernel source tree
+│   ├── init/                     ≡  init/                Boot, PID 0, genesis
+│   ├── kernel/                   ≡  kernel/              Scheduler, syscalls
+│   ├── mm/                       ≡  mm/                  Virtual memory (CID-addressed)
+│   ├── fs/                       ≡  fs/                  Journaled filesystem + vault
+│   ├── block/                    ≡  block/               I/O scheduling
+│   ├── drivers/                  ≡  drivers/             Storage backends
+│   ├── net/                      ≡  net/                 Fano mesh networking
+│   ├── ipc/                      ≡  ipc/                 Message channels
+│   ├── crypto/                   ≡  crypto/              Error correction codes
+│   ├── arch/                     ≡  arch/                Quantum gate ISA
+│   ├── security/                 ≡  security/            4-ring capabilities + TEE
+│   ├── lib/                      ≡  lib/                 Kernel utilities
+│   ├── include/                  ≡  include/             Shared type headers
+│   ├── certs/                    ≡  certs/               Certificate management
+│   ├── samples/                  ≡  samples/             Usage examples
+│   ├── scripts/                  ≡  scripts/             Build & verification
+│   ├── tools/                    ≡  tools/               Tests & diagnostics
+│   ├── Documentation/            ≡  Documentation/       Subsystem docs
+│   ├── agents/                   ★  NOVEL                Autonomous AI processes
+│   ├── surface/                  ★  NOVEL                Holographic display server
+│   ├── Kconfig.ts                ≡  Kconfig              Configuration manifest
+│   ├── MAINTAINERS               ≡  MAINTAINERS          Subsystem ownership
+│   └── index.ts                  ≡  vmlinux              Public API (barrel export)
+│
+├── platform/                     ≡  /hal/               — Hardware Abstraction Layer
+│   ├── bridge.ts                                         THE SINGLE GATEWAY (all I/O)
+│   ├── index.ts                                          Adapter interfaces
+│   ├── foundation-types.ts                               Core type definitions
+│   ├── identity-types.ts                                 Identity primitives
+│   ├── geometric-coherence.ts                            Coherence computation
+│   ├── reward-circuit.ts                                 Reward signal processing
+│   ├── triword.ts                                        Three-word name vocabulary
+│   └── utils.ts                                          Platform utilities
+│
+├── usr/                          ≡  /usr/               — User space
+│   ├── bin/                      ≡  /usr/bin/            User programs
+│   │   ├── QShellPage.tsx                                Terminal emulator
+│   │   ├── QShellEmbed.tsx                               Embedded shell widget
+│   │   ├── CeremonyPage.tsx                              Identity ceremony UI
+│   │   └── notebook/                                     Jupyter-equivalent notebook
+│   └── lib/                      ≡  /usr/lib/            Shared libraries
+│       ├── useQShell.ts                                  Shell state management
+│       ├── useSovereignty.ts                             Identity lifecycle
+│       ├── useDataBank.ts                                Encrypted storage
+│       ├── useScreenTheme.ts                             Theme management
+│       └── components/                                   Shared UI components
+│
+├── BOUNDARY.md                   — Dependency isolation rules
+├── PROJECTION_MANIFEST.md        — Universal integration pattern
+├── manifest.json                 — System manifest (UOR metadata)
+└── README.md                     — You are here
+```
 
-### 🔐 Sovereign Identity
-Your identity is a SHA-256 hash of your credentials — not a username
-in someone's database. This hash is your permanent, portable address
-across every protocol: DID, ActivityPub, IPFS, Ethereum, Bitcoin, and
-more. One identity, recognized everywhere, owned by nobody but you.
+---
 
-### 💻 A Real Kernel
-Not a metaphor. Hologram implements the core primitives of an
-operating system:
+## The Four Layers
 
-| What you know | Hologram equivalent |
+```
+┌─────────────────────────────────────────────────────┐
+│                 USER SPACE (usr/)                     │
+│  Shell, notebook, ceremony UI, hooks, components     │
+├─────────────────────────────────────────────────────┤
+│                 KERNEL (kernel/)                      │
+│  20 subsystems mirroring Linux kernel source tree     │
+│  init/ kernel/ mm/ fs/ block/ drivers/ net/ ipc/      │
+│  crypto/ arch/ security/ lib/ include/ certs/         │
+│  samples/ scripts/ tools/ Documentation/              │
+│  + agents/ surface/ (novel extensions)                │
+├─────────────────────────────────────────────────────┤
+│             PLATFORM BRIDGE (platform/)               │
+│  ONE file (bridge.ts) handles ALL external I/O        │
+├─────────────────────────────────────────────────────┤
+│               FIRMWARE (genesis/)                     │
+│  8 mathematical axioms fused to kernel identity       │
+│  Ring · Hash · CID · Codec · Mirror · Signal · POST   │
+│  + Constitution (8 immutable laws)                    │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## For Experienced Developers
+
+**If you know Linux**, here's the mental model:
+
+- `genesis/` is the BIOS ROM — mathematical axioms that the kernel trusts implicitly
+- `kernel/` is the kernel source tree — same directory layout as `/usr/src/linux/`
+- `platform/bridge.ts` is the HAL — one file abstracts all hardware (browser APIs, cloud, GPU)
+- `usr/` is userspace — applications that consume kernel services via hooks
+
+**If you know OS design**, the key differences from Linux:
+
+| Concept | Linux | Hologram |
+|---|---|---|
+| Hardware | Silicon registers | Algebraic axioms (Z/256Z) |
+| Process priority | `nice` value (-20 to 19) | H-score (0.0 to 1.0) |
+| Memory addressing | Virtual → Physical pages | Content-addressed (CID) |
+| Deduplication | Optional (KSM) | Automatic (same content = same CID) |
+| Filesystem integrity | fsck after crash | Self-verifying (CID mismatch = corrupt) |
+| Network topology | Physical ethernet/wifi | Fano plane PG(2,2) mesh |
+| Security model | DAC + MAC (SELinux) | 4-ring capability tokens |
+| System calls | int 0x80 / syscall | Lens morphisms (encode/decode/transform) |
+
+**If you're skeptical**, start here:
+
+1. Read `kernel/init/q-boot.ts` — it's a boot sequence, just like `start_kernel()`
+2. Read `kernel/kernel/q-sched.ts` — it's a scheduler, just like CFS
+3. Read `kernel/mm/q-mmu.ts` — it's a page table, just like Linux's mm
+4. Run `npm test` — 33+ kernel tests verify everything works
+
+---
+
+## Key Properties
+
+| Property | Evidence |
 |---|---|
-| Boot sequence + POST | `q-boot` — hardware checks, firmware load, genesis process |
-| Process scheduler | `q-sched` — coherence-priority scheduling with three zones |
-| Virtual memory | `q-mmu` — content-addressed page tables with tiered storage |
-| Filesystem | `q-fs` — journaled, content-addressed, POSIX-like |
-| System calls | `q-syscall` — lens morphisms (encode/decode/transform) |
-| Network stack | `q-net` — mesh topology with cryptographic routing |
-| Security rings | `q-security` — 4-ring capability-based access control |
-| Device drivers | `q-driver` — memory, IndexedDB, cloud, and IPFS backends |
-
-Every subsystem runs in the browser. No server-side kernel.
-
-### 📡 Universal Protocol Support
-A single identity projects into native addresses for 15+ protocols.
-The same hash produces a valid DID, an ActivityPub handle, a Bitcoin
-address, an Ethereum address, an IPFS CID — simultaneously and
-deterministically. No bridges. No translation layers. Just math.
-
-### 🛡️ Post-Quantum Security
-Identity and signing use Dilithium-3 (ML-DSA-65), a lattice-based
-algorithm that resists quantum attacks. Your identity is secure
-against both classical and quantum adversaries today.
-
-### 🤖 Autonomous Agents
-AI agents run as first-class kernel processes. They follow the same
-scheduler, the same security model, the same memory management as
-human-driven processes. Agents build procedural habits, share
-knowledge through mirror protocols, and optimize for your coherence
-— not their own confidence scores.
-
-### 🔒 Privacy by Architecture
-Selective disclosure is built into the kernel. You control exactly
-which attributes are visible to which context. The system redacts
-by default and reveals by permission — never the reverse.
+| **Self-contained** | Kernel has zero external imports. One bridge file connects to the world. |
+| **Deterministic** | Same input → same output. Every operation is a pure function of content. |
+| **Portable** | Runs in any modern browser. Rewrite `bridge.ts` for any other environment. |
+| **Verifiable** | Every state transition is content-addressed. Tampered state is detectable. |
+| **Auditable** | Every cross-boundary call logged with timestamps and payload sizes. |
+| **Linux-equivalent** | Same directory structure, same concepts, same mental model. |
 
 ---
 
-## How does it work?
+## Further Reading
 
-Three layers. Bottom-up.
-
-### Layer 1: Genesis (the mathematical foundation)
-
-Eight axioms define the algebraic substrate: a ring (`Z/256Z`),
-a hash function (SHA-256), a codec, a content identifier, a mirror
-operation, a signal primitive, a post-quantum signature scheme, and
-a constitution of eight non-overridable laws. These axioms are fused
-to the kernel's identity — if any axiom is tampered with, the system
-refuses to boot.
-
-→ `src/hologram/genesis/`
-
-### Layer 2: Kernel (the operating system)
-
-Built on the genesis axioms, the kernel implements boot, memory,
-compute, networking, security, agents, and a holographic surface
-for rendering. Every operation produces a verifiable receipt. The
-kernel is the single source of truth for all system state.
-
-→ `src/hologram/kernel/`
-
-### Layer 3: Platform Bridge (the single gateway)
-
-The kernel is 100% self-contained. It has **zero** external imports.
-Every connection to the outside world — database, authentication,
-GPU, storage — passes through exactly one file: `bridge.ts`. To
-port Hologram to any environment, you rewrite that single file.
-Everything else comes along unchanged.
-
-→ `src/hologram/platform/bridge.ts`
-
-```
-┌─────────────────────────────────────────────────┐
-│              HOST ENVIRONMENT                    │
-│  (Browser, Server, Embedded, Native App)         │
-└────────────────────┬────────────────────────────┘
-                     │
-                bridge.ts  ← one file, all I/O
-                     │
-┌────────────────────┴────────────────────────────┐
-│              HOLOGRAM KERNEL                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────────────┐ │
-│  │ Genesis  │→│  Kernel  │→│ Surface / Agents │ │
-│  │ (axioms) │ │ (OS)     │ │ (UI / AI)        │ │
-│  └──────────┘ └──────────┘ └──────────────────┘ │
-│            Zero external dependencies            │
-└──────────────────────────────────────────────────┘
-```
-
----
-
-## What can you build with it?
-
-- **Self-sovereign applications** — apps where users own their data
-- **Cross-protocol identity** — one login, every network
-- **Verifiable AI** — agents whose reasoning is auditable
-- **Offline-first tools** — the OS works without a network
-- **Privacy-preserving workflows** — selective disclosure by default
-- **Content-addressed storage** — files identified by what they contain, not where they live
-
----
-
-## Key properties
-
-| Property | What it means |
-|---|---|
-| **Self-contained** | The entire kernel has zero external imports. One bridge file connects it to the world. |
-| **Deterministic** | Same input → same output, always. Every projection is a pure function of the canonical hash. |
-| **Portable** | Runs in any modern browser. Rewrite `bridge.ts` to run it anywhere else. |
-| **Verifiable** | Every operation produces a cryptographic receipt. Tampered state is detectable. |
-| **Quantum-resistant** | Dilithium-3 signatures protect against future quantum attacks. |
-| **Auditable** | Every cross-boundary call is logged with timestamps and payload sizes. |
-
----
-
-## Project structure
-
-```
-src/hologram/
-├── genesis/              ← Mathematical axioms (hash, ring, codec, CID, constitution)
-├── kernel/               ← Operating system (boot, memory, compute, network, security, agents)
-│   ├── boot/             ← System initialization, identity, ceremony
-│   ├── memory/           ← Content-addressed storage, filesystem, vault, drivers
-│   ├── compute/          ← Scheduler, syscalls, ECC, ISA, quantum simulation
-│   ├── network/          ← Mesh networking, IPC, trust mesh
-│   ├── security/         ← Capability rings, TEE bridge, disclosure engine
-│   ├── agents/           ← Autonomous AI processes, mirror protocol
-│   └── surface/          ← Holographic rendering surface
-├── platform/             ← Adapter interfaces + bridge.ts (the single gateway)
-├── BOUNDARY.md           ← Dependency boundary rules and verification
-├── PROJECTION_MANIFEST.md ← How to add any new protocol, model, or system
-└── README.md             ← You are here
-```
-
----
-
-## Further reading
-
-- **[BOUNDARY.md](./BOUNDARY.md)** — The single-gateway architecture and how to verify it
-- **[PROJECTION_MANIFEST.md](./PROJECTION_MANIFEST.md)** — The universal pattern for integrating any external system
-- **[kernel/README.md](./kernel/README.md)** — Rosetta Stone: holographic terminology ↔ traditional OS concepts
-
----
-
-## One sentence
-
-Hologram is a mathematically-grounded, self-verifying, portable
-operating system that runs in your browser, gives you sovereign
-control over your identity and data, and treats every external
-system as a projection of one canonical truth.
+- **[kernel/README.md](./kernel/README.md)** — Complete kernel source tree with Linux equivalences
+- **[BOUNDARY.md](./BOUNDARY.md)** — How the single-gateway architecture works
+- **[PROJECTION_MANIFEST.md](./PROJECTION_MANIFEST.md)** — How to integrate any external system
+- **[kernel/Documentation/](./kernel/Documentation/)** — Deep-dive subsystem documentation
