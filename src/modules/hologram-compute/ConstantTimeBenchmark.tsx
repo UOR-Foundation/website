@@ -890,7 +890,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                     : (p.gpuAvailable ? p.sha256Gpu === p.sha256Holo : null);
 
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(248, 30%, 18%, 0.5)" }}>
                       <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
                       <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: baseColor }}>
