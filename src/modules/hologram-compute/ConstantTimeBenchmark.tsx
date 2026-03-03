@@ -1174,7 +1174,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                 </p>
               </div>
 
-              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(0, 0%, 100%, 0.03)", border: "1px solid hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold }} />
                   <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
