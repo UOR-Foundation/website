@@ -1466,33 +1466,31 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-3" style={{ fontFamily: P.font }}>
-      {/* Tab Toggle — clean pill */}
-      <div className="flex items-center justify-end">
+    <div className="space-y-2" style={{ fontFamily: P.font }}>
+      {/* Compact header: tab toggle left, hardware info right */}
+      <div className="flex items-center justify-between">
         <div className="inline-flex items-center rounded-full p-0.5 gap-0.5" style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}>
           {(["cpu", "gpu"] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-2 px-7 py-3 rounded-full text-base font-semibold transition-all duration-300 tracking-wide uppercase"
+              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 tracking-wide uppercase"
               style={{
                 background: activeTab === tab ? "hsla(0, 0%, 100%, 0.1)" : "transparent",
                 color: activeTab === tab ? P.text : P.muted,
               }}
             >
-              {tab === "cpu" ? <IconCpu size={15} /> : <IconCpu2 size={15} />}
-              {tab === "cpu" ? "CPU" : "GPU"}
+              {tab === "cpu" ? <IconCpu size={14} /> : <IconCpu2 size={14} />}
+              {tab}
             </button>
           ))}
         </div>
+        {hw && (
+          <span className="text-xs font-mono" style={{ color: P.dim }}>
+            {hw.glRenderer ? hw.glRenderer.split(/[,(]/)[0].trim().slice(0, 30) : hw.cpuArch} · {hw.cpuCores} cores
+          </span>
+        )}
       </div>
-
-      {/* Methodology */}
-      {hw ? <MethodologyPanel hw={hwSafe} /> : (
-        <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-base font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
-        </div>
-      )}
 
       {/* Active Tab Content */}
       <TabContent
