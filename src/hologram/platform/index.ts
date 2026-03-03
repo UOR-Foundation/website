@@ -194,9 +194,9 @@ export interface StorageAdapter {
 // ── Data Compression Adapter ──────────────────────────────────────────────
 
 export interface CompressibleTriple {
-  s: string;
-  p: string;
-  o: string;
+  subject: string;
+  predicate: string;
+  object: string;
 }
 
 export interface CompressionStats {
