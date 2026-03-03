@@ -1039,7 +1039,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
                   const cpuMatch = p.sha256Cpu === p.sha256Holo;
                   const gpuMatch = !isCpu && p.gpuAvailable && p.sha256Gpu !== "N/A" ? p.sha256Gpu === p.sha256Holo : null;
                   return (
-                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
+                    <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(248, 30%, 18%, 0.5)" }}>
                       <td className="py-0.5 px-2 font-bold" style={{ color: P.text }}>{p.n}</td>
                       <td className="py-0.5 px-2" style={{ color: P.muted }}>{p.sha256Cpu.slice(0, 16)}…</td>
                       {!isCpu && (
