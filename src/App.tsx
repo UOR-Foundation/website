@@ -153,6 +153,7 @@ const ArtifactInspectorPage = lazy(() => import("@/pages/ArtifactInspectorPage")
 const KernelGraphPage = lazy(() => import("@/pages/KernelGraphPage"));
 const TriwordLookupPage = lazy(() => import("@/pages/TriwordLookupPage"));
 const AtlasProjectionLab = lazy(() => import("@/pages/AtlasProjectionLab"));
+const BenchmarkPage = lazy(() => import("@/pages/BenchmarkPage"));
 
 const queryClient = new QueryClient();
 
