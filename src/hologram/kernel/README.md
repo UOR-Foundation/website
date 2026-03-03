@@ -28,6 +28,9 @@ src/hologram/kernel/          ≡  /usr/src/linux/
 │   ├── q-fs.ts                                 Journaled Merkle DAG filesystem
 │   └── q-vault.ts                              Encrypted sealed storage (≡ dm-crypt)
 │
+├── block/                    ≡  block/         — Block I/O layer ★ NEW
+│   └── q-bio.ts                                I/O request queue and scheduler
+│
 ├── drivers/                  ≡  drivers/       — Storage backend drivers
 │   └── q-driver.ts                             Memory, IndexedDB, Supabase, IPFS
 │
@@ -51,12 +54,26 @@ src/hologram/kernel/          ≡  /usr/src/linux/
 │   ├── qiskit/                                 Qiskit-compatible circuit API
 │   └── quantum/                                PennyLane interpreter
 │
+├── lib/                      ≡  lib/           — Kernel utility library ★ NEW
+│   ├── cid.ts                                  Content identifier utilities
+│   ├── invariants.ts                           Runtime assertions (BUG_ON, WARN_ON)
+│   └── math.ts                                 Numerical helpers (clamp, lerp, EMA)
+│
+├── include/                  ≡  include/       — Shared type definitions ★ NEW
+│   ├── process.ts                              Process descriptor types (≡ sched.h)
+│   └── memory.ts                               Memory management types (≡ mm_types.h)
+│
 ├── security/                 ≡  security/      — Access control & TEE
 │   ├── q-security.ts                           4-ring capability model (≡ LSM)
 │   ├── q-disclosure.ts                         Selective attribute disclosure
 │   ├── q-secure-mesh.ts                        Secure agent mesh orchestration
 │   ├── tee-bridge.ts                           Trusted Execution Environment bridge
 │   └── tee-inference.ts                        Confidential AI inference pipeline
+│
+├── tools/                    ≡  tools/         — Tests & diagnostics ★ NEW
+│   └── testing/                                Kernel subsystem test suites
+│
+├── Documentation/            ≡  Documentation/ — Subsystem docs ★ NEW
 │
 ├── agents/                   ★  NOVEL          — Autonomous AI processes
 │   ├── q-agent.ts                              Agent lifecycle, mesh orchestration
@@ -69,6 +86,27 @@ src/hologram/kernel/          ≡  /usr/src/linux/
     ├── kernel-supervisor.ts                    Multi-kernel PID 0 orchestrator
     ├── projection-compositor.ts                N-kernel → 1 composite surface
     └── q-package-projector.ts                  Package management & projection
+
+src/hologram/usr/              ≡  /usr/          — USER SPACE ★ NEW
+├── bin/                       ≡  /usr/bin/      — User programs
+│   ├── QShellEmbed.tsx                          Terminal emulator
+│   ├── QShellPage.tsx                           Standalone shell route
+│   ├── CeremonyPage.tsx                         Identity ceremony gateway
+│   └── notebook/                                Jupyter-equivalent notebook
+│       ├── QuantumJupyterWorkspace.tsx           Notebook application
+│       ├── notebook-engine.ts                    Cell execution engine
+│       ├── notebook-theme.ts                     Light/dark palette
+│       ├── NotebookDiffView.tsx                  Version diff viewer
+│       └── NotebookVersionHistory.tsx            Cloud snapshot browser
+│
+└── lib/                       ≡  /usr/lib/      — Shared userspace libraries
+    ├── useQShell.ts                              Shell state management
+    ├── useSovereignty.ts                         Identity lifecycle hook
+    ├── useDataBank.ts                            Encrypted storage hook
+    ├── useScreenTheme.ts                         Theme management hook
+    └── components/                               Shared UI components
+        ├── CodeProjection.tsx                     Canonical code editor
+        └── index.ts                              Component barrel export
 ```
 
 ## Linux Equivalence Table

@@ -10,9 +10,9 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   History, RotateCcw, GitCompare, Trash2, X,
   Clock, Save, ChevronRight, FileText, Loader2,
-} from "../../platform/bridge";
+} from "../../../platform/bridge";
 import { useNbTheme } from "./notebook-theme";
-import { useDataBank } from "../hooks/useDataBank";
+import { useDataBank } from "../../lib/useDataBank";
 import type { NotebookDocument } from "./notebook-engine";
 
 // ── Snapshot shape ─────────────────────────────────────────────────────────

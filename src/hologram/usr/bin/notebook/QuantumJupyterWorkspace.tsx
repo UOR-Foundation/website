@@ -25,7 +25,7 @@ import {
   StopCircle, SkipForward, ChevronUp, Search, Keyboard,
   Eye, EyeOff, Hash, MoreHorizontal, Settings,
   Sun, Moon, History as HistoryIcon,
-} from "../../platform/bridge";
+} from "../../../platform/bridge";
 import {
   createKernel,
   createNotebook,
@@ -38,10 +38,10 @@ import {
   type NotebookCell,
   type CellOutput,
 } from "./notebook-engine";
-import { createState, simulateCircuit, realisticNoise, measure } from "../arch/q-simulator";
-import { useScreenTheme } from "../hooks/useScreenTheme";
+import { createState, simulateCircuit, realisticNoise, measure } from "../../../kernel/arch/q-simulator";
+import { useScreenTheme } from "../../lib/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
-import { CodeProjection } from "../components/CodeProjection";
+import { CodeProjection } from "../../lib/components/CodeProjection";
 import { NotebookDiffView } from "./NotebookDiffView";
 import { VersionHistoryPanel, useNotebookVersioning } from "./NotebookVersionHistory";
 

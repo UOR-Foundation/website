@@ -137,3 +137,19 @@ export type {
 
 export { AgentProjector, ProjectionCompositor } from "./agents/q-agent-projection";
 export type { AgentProjectionFrame } from "./agents/q-agent-projection";
+
+// ── block/ — Block I/O Layer (Linux: block/) ─────────────────────────
+export { QBio } from "./block/q-bio";
+export type { IoDirection, IoPriority, BioRequest, BioStats } from "./block/q-bio";
+
+// ── lib/ — Kernel Utility Library (Linux: lib/) ─────────────────────
+export { cidFromBytes, cidSync, isValidCid } from "./lib/cid";
+export { kernelPanic, kernelWarn, kernelAssert, assertNever, kernelClamp } from "./lib/invariants";
+export { clamp, lerp, mod, emaUpdate, entropy, hammingDistance } from "./lib/math";
+
+// ── include/ — Shared Type Definitions (Linux: include/) ─────────────
+// Note: include/ types are canonical reference definitions.
+// Subsystem modules re-export their own types; include/ provides
+// the Linux-equivalent header interface for external consumers.
+export type { ProcessDescriptor } from "./include/process";
+export type { MmuStats as IncludeMmuStats } from "./include/memory";

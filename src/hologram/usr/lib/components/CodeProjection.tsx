@@ -25,7 +25,7 @@ import React, {
   useState, useCallback, useRef, useMemo,
   useEffect, useLayoutEffect, memo,
 } from "react";
-import { useNbTheme, type NbColors } from "../notebook/notebook-theme";
+import { useNbTheme, type NbColors } from "../../bin/notebook/notebook-theme";
 
 /* ── Constants ─────────────────────────────────────────────────── */
 

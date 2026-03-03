@@ -145,8 +145,8 @@ const SchemaOrgExplorerPage = lazy(() => import("@/modules/schema-org/pages/Sche
 const CodeNexusPage = lazy(() => import("@/modules/code-nexus/pages/CodeNexusPage"));
 const AtlasVisualizationPage = lazy(() => import("@/modules/atlas/pages/AtlasVisualizationPage"));
 const QuantumDashboardPage = lazy(() => import("@/modules/quantum/pages/QuantumDashboardPage"));
-const QShellPage = lazy(() => import("@/hologram/kernel/pages/QShellPage"));
-const CeremonyPage = lazy(() => import("@/hologram/kernel/pages/CeremonyPage"));
+const QShellPage = lazy(() => import("@/hologram/usr/bin/QShellPage"));
+const CeremonyPage = lazy(() => import("@/hologram/usr/bin/CeremonyPage"));
 const ReferralLeaderboardPage = lazy(() => import("@/pages/ReferralLeaderboardPage"));
 const GenesisBootPage = lazy(() => import("@/pages/GenesisBootPage"));
 const ArtifactInspectorPage = lazy(() => import("@/pages/ArtifactInspectorPage"));

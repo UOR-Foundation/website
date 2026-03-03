@@ -5,10 +5,10 @@
  * using ONLY genesis/ axioms — zero external dependencies.
  */
 import { describe, it, expect } from "vitest";
-import { QMmu } from "../mm/q-mmu";
-import { QSched } from "../kernel/q-sched";
-import { QFs } from "../fs/q-fs";
-import { encodeUtf8 } from "../../genesis/axiom-ring";
+import { QMmu } from "../../mm/q-mmu";
+import { QSched } from "../../kernel/q-sched";
+import { QFs } from "../../fs/q-fs";
+import { encodeUtf8 } from "../../../genesis/axiom-ring";
 
 describe("Q-MMU (crystallized)", () => {
   it("stores content and returns a CID string", () => {
