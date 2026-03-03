@@ -20,7 +20,7 @@ import {
   type SimulatorState,
   type SimOp,
   type NoiseModel,
-} from "../compute/q-simulator";
+} from "../arch/q-simulator";
 
 // ── Cell Types ──────────────────────────────────────────────────────────────
 

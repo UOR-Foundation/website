@@ -5,7 +5,7 @@
  * compositor, CoherenceHead trait, and ring buffer.
  */
 import { describe, it, expect } from "vitest";
-import { HammingCoherenceHead, MultiHeadCoherence } from "../compute/q-coherence-head";
+import { HammingCoherenceHead, MultiHeadCoherence } from "../crypto/q-coherence-head";
 import { AgentProjector, ProjectionCompositor } from "../agents/q-agent-projection";
 
 // ── CoherenceHead Tests ─────────────────────────────────────────────

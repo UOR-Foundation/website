@@ -30,7 +30,7 @@ import type {
   SupervisorProjection,
 } from "./kernel-supervisor";
 import { getKernelSupervisor, type KernelSupervisor } from "./kernel-supervisor";
-import { classifyZone, type CoherenceZone } from "../compute/q-sched";
+import { classifyZone, type CoherenceZone } from "../kernel/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

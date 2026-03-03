@@ -10,10 +10,10 @@
 
 import { QSecurity, type IsolationRing, type SecurityOp, type CapabilityToken, type SecurityStats } from "./q-security";
 import { QAgentMesh, QAgent, type MeshStats, type ResourceEnvelope } from "../agents/q-agent";
-import { QSched } from "../compute/q-sched";
-import { QIpc, type QChannel } from "../network/q-ipc";
-import { QNet } from "../network/q-net";
-import { QEcc } from "../compute/q-ecc";
+import { QSched } from "../kernel/q-sched";
+import { QIpc, type QChannel } from "../ipc/q-ipc";
+import { QNet } from "../net/q-net";
+import { QEcc } from "../crypto/q-ecc";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

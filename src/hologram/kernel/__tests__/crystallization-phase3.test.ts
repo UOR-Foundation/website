@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { QSched } from "../compute/q-sched";
-import { QIpc } from "../network/q-ipc";
-import { QNet } from "../network/q-net";
+import { QSched } from "../kernel/q-sched";
+import { QIpc } from "../ipc/q-ipc";
+import { QNet } from "../net/q-net";
 import { QAgent, QAgentMesh } from "../agents/q-agent";
-import { QTrustMesh } from "../network/q-trust-mesh";
+import { QTrustMesh } from "../net/q-trust-mesh";
 import { QDisclosure } from "../security/q-disclosure";
 
 describe("Crystallization Phase 3 — q-agent, q-trust-mesh, q-disclosure", () => {
