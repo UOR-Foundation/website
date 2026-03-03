@@ -528,7 +528,7 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
   const dashOffset = circ * (1 - animPct);
 
   const displayVal = animValue >= 10000
-    ? `${(animValue / 1000).toFixed(0)}K`
+    ? `${(animValue / 1000).toFixed(1)}K`
     : animValue >= 1000
     ? `${(animValue / 1000).toFixed(1)}K`
     : animValue >= 100
