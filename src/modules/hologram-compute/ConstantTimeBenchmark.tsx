@@ -1195,7 +1195,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           </div>
 
           {/* Timing */}
-          <div className="rounded-lg p-4" style={{ background: "hsla(220, 20%, 40%, 0.04)", border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-lg p-4" style={{ background: "hsla(0, 0%, 100%, 0.02)", border: `1px solid ${P.cardBorder}` }}>
             <h4 className="text-sm font-bold mb-1.5" style={{ color: P.text }}>Timing Protocol</h4>
             <ul className="text-sm leading-relaxed space-y-1 list-disc list-inside" style={{ color: P.muted }}>
               <li>Adaptive JIT warmup before each size</li>
