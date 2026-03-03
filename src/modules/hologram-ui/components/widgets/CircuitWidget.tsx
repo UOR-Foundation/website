@@ -92,7 +92,8 @@ export function CircuitWidget() {
             >
               {GATE_ICONS[type as GateType] ?? "?"}
             </span>
-          ))}
+            );
+          })}
         </div>
       )}
 
