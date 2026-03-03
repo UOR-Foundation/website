@@ -469,45 +469,45 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       {/* Grid lines */}
       {yTicks.map((g, i) => (
         <g key={i}>
-          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="6,4" opacity={0.2} />
-          <text x={PAD.left - 14} y={g.y + 5} textAnchor="end" fill={P.muted} fontSize={15} fontFamily="'DM Sans', monospace" fontWeight="600">{g.label}</text>
+          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="6,4" opacity={0.15} />
+          <text x={PAD.left - 16} y={g.y + 6} textAnchor="end" fill={P.text} fontSize={17} fontFamily="'DM Sans', monospace" fontWeight="700">{g.label}</text>
         </g>
       ))}
 
       {/* X-axis labels */}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
-          <text key={i} x={xS(x)} y={CH - PAD.bottom + 26} textAnchor="middle" fill={P.muted} fontSize={15} fontFamily="'DM Sans', monospace" fontWeight="600">{x}</text>
+          <text key={i} x={xS(x)} y={CH - PAD.bottom + 30} textAnchor="middle" fill={P.text} fontSize={17} fontFamily="'DM Sans', monospace" fontWeight="700">{x}</text>
         ) : null
       ))}
 
       {/* Axis titles */}
-      <text x={CW / 2} y={CH - 6} textAnchor="middle" fill={P.dim} fontSize={15} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em">Matrix Dimension N</text>
-      <text x={16} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={15} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 16, ${CH / 2})`}>Runtime (log scale)</text>
+      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em">Matrix Dimension N</text>
+      <text x={18} y={CH / 2} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 18, ${CH / 2})`}>Runtime (log scale)</text>
 
       {/* Baseline area + line — thick, high contrast */}
       <polygon points={`${xS(xVals[0])},${yS(minY)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#base-area)" />
-      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-base)" />
+      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-base)" />
       {xVals.map((x, i) => (
-        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={5.5} fill={baselineColor} stroke={P.bg} strokeWidth={2} />
+        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={6} fill={baselineColor} stroke={P.bg} strokeWidth={2.5} />
       ))}
 
       {/* Hologram vGPU line — bright cyan, thick, glowing */}
       <polygon points={`${xS(xVals[0])},${yS(minY)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#holo-area)" />
-      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
+      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
-        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={6} fill={P.gold} stroke={P.bg} strokeWidth={2} />
+        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={6.5} fill={P.gold} stroke={P.bg} strokeWidth={2.5} />
       ))}
 
-      {/* Legend — top-right, large, high contrast with colored backgrounds */}
-      <g transform={`translate(${CW - PAD.right - 280}, ${PAD.top + 6})`}>
-        <rect x={-8} y={-12} width={280} height={60} rx={8} fill="hsla(248, 40%, 12%, 0.85)" stroke={P.cardBorder} strokeWidth={1} />
-        <line x1={4} y1={4} x2={30} y2={4} stroke={baselineColor} strokeWidth={4} strokeLinecap="round" />
-        <circle cx={17} cy={4} r={4.5} fill={baselineColor} />
-        <text x={38} y={9} fill={baselineColor} fontSize={16} fontFamily={P.font} fontWeight="700">{baselineLabel}</text>
-        <line x1={4} y1={32} x2={30} y2={32} stroke={P.gold} strokeWidth={4} strokeLinecap="round" />
-        <circle cx={17} cy={32} r={4.5} fill={P.gold} />
-        <text x={38} y={37} fill={P.gold} fontSize={16} fontFamily={P.font} fontWeight="700">Hologram vGPU — O(N²)</text>
+      {/* Legend — top-right, large, high contrast */}
+      <g transform={`translate(${CW - PAD.right - 320}, ${PAD.top + 4})`}>
+        <rect x={-10} y={-14} width={320} height={70} rx={10} fill="hsla(240, 55%, 12%, 0.92)" stroke={P.cardBorder} strokeWidth={1} />
+        <line x1={4} y1={6} x2={36} y2={6} stroke={baselineColor} strokeWidth={4.5} strokeLinecap="round" />
+        <circle cx={20} cy={6} r={5} fill={baselineColor} />
+        <text x={46} y={12} fill={baselineColor} fontSize={18} fontFamily={P.font} fontWeight="800">{baselineLabel}</text>
+        <line x1={4} y1={38} x2={36} y2={38} stroke={P.gold} strokeWidth={4.5} strokeLinecap="round" />
+        <circle cx={20} cy={38} r={5} fill={P.gold} />
+        <text x={46} y={44} fill={P.gold} fontSize={18} fontFamily={P.font} fontWeight="800">Hologram vGPU — O(N²)</text>
       </g>
     </svg>
   );
