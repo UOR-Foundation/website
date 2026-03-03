@@ -35,11 +35,11 @@ const P = {
   cardBorder: "hsla(0, 0%, 100%, 0.08)",
   text: "hsl(0, 0%, 95%)",
   muted: "hsla(0, 0%, 100%, 0.55)",
-  gold: "hsl(0, 0%, 100%)",
+  gold: "hsl(170, 85%, 55%)",      // bright cyan-green — maximum contrast vs red/blue baselines
   dim: "hsla(0, 0%, 100%, 0.3)",
   green: "hsl(152, 50%, 55%)",
-  red: "hsl(0, 55%, 65%)",
-  blue: "hsl(220, 60%, 70%)",
+  red: "hsl(0, 65%, 62%)",          // slightly brighter red for chart visibility
+  blue: "hsl(220, 70%, 68%)",       // slightly brighter blue for chart visibility
   accent: "hsla(0, 0%, 100%, 0.8)",
   font: "'DM Sans', system-ui, sans-serif",
 };
@@ -397,14 +397,15 @@ function formatNum(n: number): string {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SVG Comparison Chart — Golden Ratio Proportions
-// φ = 1.618 — Chart width:height ≈ φ, padding ratios follow φ cascade
+// SVG Comparison Chart — Log-Scale Y-Axis, Golden Ratio Proportions
+// Log scale ensures both the rising baseline AND the flat vGPU line are visible.
+// Without log scale, the vGPU line would be crushed at y=0.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const PHI = 1.618;
-const CW = 640;
-const CH = Math.round(CW / PHI); // ≈ 396 — golden ratio aspect
-const PAD = { top: 36, right: 28, bottom: 52, left: 64 };
+const CW = 680;
+const CH = Math.round(CW / PHI); // ≈ 420 — golden ratio aspect
+const PAD = { top: 48, right: 32, bottom: 60, left: 76 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
 
@@ -417,79 +418,96 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 }) {
   if (points.length === 0) return null;
   const xVals = points.map((p) => p.n);
-  const allVals = [...baselineMs, ...holoMs];
-  const maxY = Math.max(...allVals, 1);
+  const allVals = [...baselineMs, ...holoMs].filter(v => v > 0);
+  const minY = Math.max(Math.min(...allVals) * 0.5, 0.001);
+  const maxY = Math.max(...allVals) * 1.5;
+  const logMinY = Math.log10(minY);
+  const logMaxY = Math.log10(maxY);
   const minX = Math.min(...xVals);
   const maxX = Math.max(...xVals);
   const xS = (v: number) => PAD.left + ((v - minX) / (maxX - minX || 1)) * IW;
-  const yS = (v: number) => PAD.top + IH - (v / maxY) * IH;
+  const yS = (v: number) => {
+    const logV = Math.log10(Math.max(v, minY));
+    return PAD.top + IH - ((logV - logMinY) / (logMaxY - logMinY)) * IH;
+  };
   const makePath = (vals: number[]) => xVals.map((x, i) => `${xS(x)},${yS(vals[i])}`).join(" ");
   const basePath = makePath(baselineMs);
   const holoPath = makePath(holoMs);
-  const yTicks = 4;
-  const gridLines = Array.from({ length: yTicks + 1 }, (_, i) => {
-    const v = (maxY / yTicks) * i;
-    return { y: yS(v), label: formatNum(v) };
-  });
+
+  // Log-scale Y ticks: powers of 10
+  const yTicks: { y: number; label: string }[] = [];
+  const startPow = Math.floor(logMinY);
+  const endPow = Math.ceil(logMaxY);
+  for (let p = startPow; p <= endPow; p++) {
+    const v = Math.pow(10, p);
+    if (v >= minY && v <= maxY * 1.2) {
+      yTicks.push({ y: yS(v), label: v >= 1000 ? `${(v/1000).toFixed(0)}s` : v >= 1 ? `${v.toFixed(0)}ms` : v >= 0.01 ? `${(v*1000).toFixed(0)}µs` : `${(v*1e6).toFixed(0)}ns` });
+    }
+  }
 
   return (
     <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full h-full">
       <defs>
         <linearGradient id="base-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.22" />
+          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.18" />
           <stop offset="100%" stopColor={baselineColor} stopOpacity="0.02" />
         </linearGradient>
         <linearGradient id="holo-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={P.gold} stopOpacity="0.15" />
+          <stop offset="0%" stopColor={P.gold} stopOpacity="0.12" />
           <stop offset="100%" stopColor={P.gold} stopOpacity="0.02" />
         </linearGradient>
         <filter id="glow-gold">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="glow-base">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
 
       {/* Grid lines */}
-      {gridLines.map((g, i) => (
+      {yTicks.map((g, i) => (
         <g key={i}>
-          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="6,4" opacity={0.18} />
-          <text x={PAD.left - 12} y={g.y + 5} textAnchor="end" fill={P.muted} fontSize={14} fontFamily="'DM Sans', monospace" fontWeight="500">{g.label}</text>
+          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="6,4" opacity={0.2} />
+          <text x={PAD.left - 14} y={g.y + 5} textAnchor="end" fill={P.muted} fontSize={15} fontFamily="'DM Sans', monospace" fontWeight="600">{g.label}</text>
         </g>
       ))}
 
       {/* X-axis labels */}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
-          <text key={i} x={xS(x)} y={CH - PAD.bottom + 22} textAnchor="middle" fill={P.muted} fontSize={14} fontFamily="'DM Sans', monospace" fontWeight="500">{x}</text>
+          <text key={i} x={xS(x)} y={CH - PAD.bottom + 26} textAnchor="middle" fill={P.muted} fontSize={15} fontFamily="'DM Sans', monospace" fontWeight="600">{x}</text>
         ) : null
       ))}
 
       {/* Axis titles */}
-      <text x={CW / 2} y={CH - 6} textAnchor="middle" fill={P.dim} fontSize={14} fontFamily={P.font} fontWeight="600" letterSpacing="0.05em">Matrix Dimension N</text>
-      <text x={16} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={14} fontFamily={P.font} fontWeight="600" letterSpacing="0.05em" transform={`rotate(-90, 16, ${CH / 2})`}>Runtime (ms)</text>
+      <text x={CW / 2} y={CH - 6} textAnchor="middle" fill={P.dim} fontSize={15} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em">Matrix Dimension N</text>
+      <text x={16} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={15} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 16, ${CH / 2})`}>Runtime (log scale)</text>
 
-      {/* Baseline area + line */}
-      <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
-      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Baseline area + line — thick, high contrast */}
+      <polygon points={`${xS(xVals[0])},${yS(minY)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#base-area)" />
+      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-base)" />
       {xVals.map((x, i) => (
-        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={4} fill={baselineColor} stroke={P.bg} strokeWidth={1.5} />
+        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={5.5} fill={baselineColor} stroke={P.bg} strokeWidth={2} />
       ))}
 
-      {/* Hologram area + line */}
-      <polygon points={`${xS(xVals[0])},${yS(0)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#holo-area)" />
-      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
+      {/* Hologram vGPU line — bright cyan, thick, glowing */}
+      <polygon points={`${xS(xVals[0])},${yS(minY)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#holo-area)" />
+      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
-        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={4.5} fill={P.gold} stroke={P.bg} strokeWidth={1.5} />
+        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={6} fill={P.gold} stroke={P.bg} strokeWidth={2} />
       ))}
 
-      {/* Legend — top left, large text */}
-      <g transform={`translate(${PAD.left + 12}, ${PAD.top + 8})`}>
-        <line x1={0} y1={0} x2={20} y2={0} stroke={baselineColor} strokeWidth={3} strokeLinecap="round" />
-        <circle cx={10} cy={0} r={3.5} fill={baselineColor} />
-        <text x={28} y={5} fill={P.text} fontSize={14} fontFamily={P.font} fontWeight="600">{baselineLabel}</text>
-        <line x1={0} y1={22} x2={20} y2={22} stroke={P.gold} strokeWidth={3} strokeLinecap="round" />
-        <circle cx={10} cy={22} r={3.5} fill={P.gold} />
-        <text x={28} y={27} fill={P.text} fontSize={14} fontFamily={P.font} fontWeight="600">Hologram vGPU — O(N²) retrieval</text>
+      {/* Legend — top-right, large, high contrast with colored backgrounds */}
+      <g transform={`translate(${CW - PAD.right - 280}, ${PAD.top + 6})`}>
+        <rect x={-8} y={-12} width={280} height={60} rx={8} fill="hsla(248, 40%, 12%, 0.85)" stroke={P.cardBorder} strokeWidth={1} />
+        <line x1={4} y1={4} x2={30} y2={4} stroke={baselineColor} strokeWidth={4} strokeLinecap="round" />
+        <circle cx={17} cy={4} r={4.5} fill={baselineColor} />
+        <text x={38} y={9} fill={baselineColor} fontSize={16} fontFamily={P.font} fontWeight="700">{baselineLabel}</text>
+        <line x1={4} y1={32} x2={30} y2={32} stroke={P.gold} strokeWidth={4} strokeLinecap="round" />
+        <circle cx={17} cy={32} r={4.5} fill={P.gold} />
+        <text x={38} y={37} fill={P.gold} fontSize={16} fontFamily={P.font} fontWeight="700">Hologram vGPU — O(N²)</text>
       </g>
     </svg>
   );
@@ -510,7 +528,7 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
   const dashOffset = circ * (1 - animPct);
 
   const displayVal = animValue >= 10000
-    ? `${(animValue / 1000).toFixed(0)}K`
+    ? `${(animValue / 1000).toFixed(1)}K`
     : animValue >= 1000
     ? `${(animValue / 1000).toFixed(1)}K`
     : animValue >= 100
