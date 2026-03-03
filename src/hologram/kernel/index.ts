@@ -148,5 +148,8 @@ export { kernelPanic, kernelWarn, kernelAssert, assertNever, kernelClamp } from 
 export { clamp, lerp, mod, emaUpdate, entropy, hammingDistance } from "./lib/math";
 
 // ── include/ — Shared Type Definitions (Linux: include/) ─────────────
-export type { ProcessState, CoherenceZone, ProcessDescriptor, ContextSwitch } from "./include/process";
-export type { StorageTier as IncludeStorageTier, PageTableEntry as IncludePageTableEntry, PageFault, MmuStats as IncludeMmuStats } from "./include/memory";
+// Note: include/ types are canonical reference definitions.
+// Subsystem modules re-export their own types; include/ provides
+// the Linux-equivalent header interface for external consumers.
+export type { ProcessDescriptor } from "./include/process";
+export type { IncludeMmuStats } from "./include/memory";
