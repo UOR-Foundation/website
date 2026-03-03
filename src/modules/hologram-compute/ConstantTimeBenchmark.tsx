@@ -1477,7 +1477,7 @@ export default function ConstantTimeBenchmark() {
       {/* Methodology */}
       {hw ? <MethodologyPanel hw={hwSafe} /> : (
         <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[12px] font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
+          <p className="text-base font-mono animate-pulse" style={{ color: P.muted }}>Detecting hardware…</p>
         </div>
       )}
 
