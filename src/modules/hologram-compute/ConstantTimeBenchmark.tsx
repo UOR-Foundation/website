@@ -859,7 +859,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <button
               onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all hover:opacity-80 shrink-0"
-              style={{ background: "hsla(220, 50%, 65%, 0.08)", color: P.blue, border: "1px solid hsla(220, 50%, 65%, 0.15)" }}
+              style={{ background: "hsla(0, 0%, 100%, 0.05)", color: P.blue, border: "1px solid hsla(0, 0%, 100%, 0.1)" }}
             >
               <IconDownload size={14} />
               Export JSON Report
