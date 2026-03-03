@@ -18,7 +18,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  IconPlayerPlay, IconFlame, IconDownload, IconCheck,
+  IconPlayerPlay, IconDownload, IconCheck,
   IconInfoCircle, IconCpu, IconCpu2, IconBolt, IconGauge
 } from "@tabler/icons-react";
 import {
