@@ -1461,10 +1461,10 @@ export default function ConstantTimeBenchmark() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 tracking-wide uppercase"
+              className="flex items-center gap-2 px-7 py-3 rounded-full text-base font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
-                background: activeTab === tab ? "hsla(220, 50%, 70%, 0.15)" : "transparent",
-                color: activeTab === tab ? P.gold : P.muted,
+                background: activeTab === tab ? "hsla(0, 0%, 100%, 0.1)" : "transparent",
+                color: activeTab === tab ? P.text : P.muted,
               }}
             >
               {tab === "cpu" ? <IconCpu size={15} /> : <IconCpu2 size={15} />}
