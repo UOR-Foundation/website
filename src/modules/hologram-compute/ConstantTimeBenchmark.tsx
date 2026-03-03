@@ -487,7 +487,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
 function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
   const animValue = useCountUp(value, 800);
-  const sz = 140;
+  const sz = 160;
   const strokeW = 5;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
@@ -509,22 +509,22 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ width: sz, height: sz }}>
         <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
-          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.1} />
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.08} />
           <circle
             cx={sz / 2} cy={sz / 2} r={r}
             fill="none" stroke={P.gold} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 10px hsla(38, 40%, 65%, 0.5))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 12px hsla(38, 40%, 65%, 0.5))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 32 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 40 }}>
             {value > 0 ? `${displayVal}×` : "—"}
           </span>
-          <span className="text-[11px] font-medium mt-1" style={{ color: P.muted }}>faster</span>
+          <span className="text-xs font-medium mt-1.5 tracking-wide" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
     </div>
