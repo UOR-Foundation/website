@@ -93,7 +93,7 @@ export {
   type ActionPattern,
   type ProceduralProjection,
   type HabitRingEntry,
-} from "@/hologram/kernel/procedural-memory";
+} from "@/hologram/kernel/agents/procedural-memory";
 
 // ── Mirror Coherence Protocol ─────────────────────────────────────
 export {
