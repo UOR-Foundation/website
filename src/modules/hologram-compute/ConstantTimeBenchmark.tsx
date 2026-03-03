@@ -454,7 +454,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       ))}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
-          <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={8} fontFamily="'DM Sans', monospace">{x}</text>
+          <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{x}</text>
         ) : null
       ))}
       <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
