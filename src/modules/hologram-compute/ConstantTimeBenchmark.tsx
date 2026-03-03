@@ -733,29 +733,25 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
   return (
     <div className="space-y-2">
-      {/* ── Run Button + Description ── */}
-      <div className="flex items-start justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}08`, border: `1px solid ${baseColor}1A` }}>
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-            {isCpu ? (
-              <>
-                <strong style={{ color: P.text }}>Test 1: CPU only.</strong>{" "}
-                Native single threaded CPU matmul vs Hologram vGPU retrieval (also CPU only, no GPU involved).{" "}
-                Same inputs, same outputs, SHA-256 verified. Up to N={sizes[sizes.length - 1]}.
-              </>
-            ) : (
-              <>
-                <strong style={{ color: P.text }}>Test 2: GPU.</strong>{" "}
-                Native hardware GPU matmul (WebGPU compute shader) vs Hologram vGPU retrieval (pre-computed via GPU, retrieved from CPU memory).{" "}
-                Same inputs, same outputs, SHA-256 verified. Up to N={sizes[sizes.length - 1]}.
-              </>
-            )}
-          </p>
-        </div>
+      {/* ── Run Button ── */}
+      <div className="flex items-center justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
+        <p className="text-[12px]" style={{ color: P.muted }}>
+          {isCpu ? (
+            <>
+              <strong style={{ color: P.text }}>CPU only.</strong>{" "}
+              Single-threaded matmul vs pre-computed retrieval. SHA-256 verified.
+            </>
+          ) : (
+            <>
+              <strong style={{ color: P.text }}>GPU.</strong>{" "}
+              WebGPU compute shader vs pre-computed retrieval. SHA-256 verified.
+            </>
+          )}
+        </p>
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-semibold transition-all duration-300 disabled:opacity-50 shrink-0"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
           style={{ background: baseColor, color: "white" }}
         >
           {state === "precomputing" ? (
@@ -763,7 +759,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           ) : state === "running" ? (
             <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
           ) : (
-            <><IconPlayerPlay size={13} />{state === "done" ? "Run Again" : `Run ${baseLabel} Benchmark`}</>
+            <><IconPlayerPlay size={13} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
           )}
         </button>
       </div>
