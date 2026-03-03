@@ -397,9 +397,8 @@ function formatNum(n: number): string {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SVG Comparison Chart — Log-Scale Y-Axis, Golden Ratio Proportions
-// Log scale ensures both the rising baseline AND the flat vGPU line are visible.
-// Without log scale, the vGPU line would be crushed at y=0.
+// SVG Comparison Chart — Linear Y-Axis, Golden Ratio Proportions
+// Linear scale maximizes visual impact: vGPU stays flat at zero while baseline soars.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const PHI = 1.618;
@@ -418,31 +417,23 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 }) {
   if (points.length === 0) return null;
   const xVals = points.map((p) => p.n);
-  const allVals = [...baselineMs, ...holoMs].filter(v => v > 0);
-  const minY = Math.max(Math.min(...allVals) * 0.5, 0.001);
-  const maxY = Math.max(...allVals) * 1.5;
-  const logMinY = Math.log10(minY);
-  const logMaxY = Math.log10(maxY);
+  const maxY = Math.max(...baselineMs, ...holoMs) * 1.15;
+  const minY = 0;
   const minX = Math.min(...xVals);
   const maxX = Math.max(...xVals);
   const xS = (v: number) => PAD.left + ((v - minX) / (maxX - minX || 1)) * IW;
-  const yS = (v: number) => {
-    const logV = Math.log10(Math.max(v, minY));
-    return PAD.top + IH - ((logV - logMinY) / (logMaxY - logMinY)) * IH;
-  };
+  const yS = (v: number) => PAD.top + IH - ((v - minY) / (maxY - minY || 1)) * IH;
   const makePath = (vals: number[]) => xVals.map((x, i) => `${xS(x)},${yS(vals[i])}`).join(" ");
   const basePath = makePath(baselineMs);
   const holoPath = makePath(holoMs);
 
-  // Log-scale Y ticks: powers of 10
+  // Linear Y ticks — ~5 evenly spaced
   const yTicks: { y: number; label: string }[] = [];
-  const startPow = Math.floor(logMinY);
-  const endPow = Math.ceil(logMaxY);
-  for (let p = startPow; p <= endPow; p++) {
-    const v = Math.pow(10, p);
-    if (v >= minY && v <= maxY * 1.2) {
-      yTicks.push({ y: yS(v), label: v >= 1000 ? `${(v/1000).toFixed(0)}s` : v >= 1 ? `${v.toFixed(0)}ms` : v >= 0.01 ? `${(v*1000).toFixed(0)}µs` : `${(v*1e6).toFixed(0)}ns` });
-    }
+  const nTicks = 5;
+  for (let i = 0; i <= nTicks; i++) {
+    const v = (maxY / nTicks) * i;
+    const label = v >= 1000 ? `${(v / 1000).toFixed(1)}s` : v >= 1 ? `${v.toFixed(0)}ms` : `${(v * 1000).toFixed(0)}µs`;
+    yTicks.push({ y: yS(v), label: v === 0 ? "0" : label });
   }
 
   return (
@@ -483,17 +474,17 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
       {/* Axis titles */}
       <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em">Matrix Dimension N</text>
-      <text x={18} y={CH / 2} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 18, ${CH / 2})`}>Runtime (log scale)</text>
+      <text x={18} y={CH / 2} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 18, ${CH / 2})`}>Runtime (ms)</text>
 
       {/* Baseline area + line — thick, high contrast */}
-      <polygon points={`${xS(xVals[0])},${yS(minY)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#base-area)" />
+      <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
       <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-base)" />
       {xVals.map((x, i) => (
         <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={6} fill={baselineColor} stroke={P.bg} strokeWidth={2.5} />
       ))}
 
       {/* Hologram vGPU line — bright cyan, thick, glowing */}
-      <polygon points={`${xS(xVals[0])},${yS(minY)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#holo-area)" />
+      <polygon points={`${xS(xVals[0])},${yS(0)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#holo-area)" />
       <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
         <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={6.5} fill={P.gold} stroke={P.bg} strokeWidth={2.5} />
