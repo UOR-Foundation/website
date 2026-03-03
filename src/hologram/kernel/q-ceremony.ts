@@ -30,10 +30,8 @@
 
 import { toHex } from "@/hologram/genesis/axiom-ring";
 import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { singleProofHash } from "@/modules/uns/core/identity";
-import type { UorCanonicalIdentity } from "@/modules/uns/core/identity";
-import { generateKeypair, signRecord } from "@/modules/uns/core/keypair";
-import type { UnsKeypair, SignedRecord } from "@/modules/uns/core/keypair";
+import { getIdentity } from "@/hologram/platform";
+import type { CanonicalIdentity as UorCanonicalIdentity, Keypair as UnsKeypair, SignedRecord } from "@/hologram/platform/identity-types";
 import { deriveThreeWordName, type ThreeWordName } from "./q-three-word";
 
 // ═══════════════════════════════════════════════════════════════════════

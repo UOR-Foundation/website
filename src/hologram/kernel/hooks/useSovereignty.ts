@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getBackend } from "@/hologram/platform";
 import { QSovereignty, type SovereignIdentity, type GenesisResult, type AuthUser } from "../q-sovereignty";
 import { QFs } from "../q-fs";
 import { QMmu } from "../q-mmu";

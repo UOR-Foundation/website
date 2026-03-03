@@ -9,7 +9,7 @@
  * @module qkernel/q-package-projector
  */
 
-import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
+import { kernelLog } from "@/hologram/platform/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
