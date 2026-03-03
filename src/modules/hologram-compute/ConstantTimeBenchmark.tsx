@@ -519,8 +519,8 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
 function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
   const animValue = useCountUp(value, 800);
-  const sz = 240; // enlarged for TV readability
-  const strokeW = 7;
+  const sz = 260;
+  const strokeW = 8;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
@@ -541,22 +541,22 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ width: sz, height: sz }}>
         <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
-          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.1} />
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.08} />
           <circle
             cx={sz / 2} cy={sz / 2} r={r}
             fill="none" stroke={P.gold} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 20px hsla(0, 0%, 100%, 0.4))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 24px hsla(170, 90%, 55%, 0.5))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 64 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 72 }}>
             {value > 0 ? `${displayVal}×` : "—"}
           </span>
-          <span className="text-lg font-bold mt-3 tracking-[0.2em] uppercase" style={{ color: P.muted }}>faster</span>
+          <span className="text-xl font-bold mt-3 tracking-[0.25em] uppercase" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
     </div>
