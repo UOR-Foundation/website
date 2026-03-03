@@ -269,4 +269,5 @@ export function getStorage(): StorageAdapter {
 export * from "./reward-circuit";
 export * from "./geometric-coherence";
 export * from "./foundation-types";
+export * from "./identity-types";
 export * from "./utils";
