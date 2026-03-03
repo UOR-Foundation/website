@@ -828,8 +828,8 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "hsla(38, 40%, 65%, 0.08)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 6px hsla(38, 40%, 65%, 0.4)" }} />
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(220, 50%, 70%, 0.08)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(220, 50%, 70%, 0.4)" }} />
                 </div>
                 <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
