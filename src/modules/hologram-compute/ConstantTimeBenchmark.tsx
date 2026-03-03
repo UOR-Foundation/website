@@ -834,13 +834,13 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
 
             {/* Verified badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full" style={{
               background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
               border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.12)" : "hsla(152, 44%, 50%, 0.12)"}`,
             }}>
-              <IconCheck size={12} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
-                {anyIntegrityIssue ? "MISMATCH" : "ALL VERIFIED"}
+              <IconCheck size={14} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                {anyIntegrityIssue ? "MISMATCH" : "SHA-256 VERIFIED"}
               </span>
             </div>
           </div>
