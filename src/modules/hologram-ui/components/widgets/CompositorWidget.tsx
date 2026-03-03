@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   getProjectionCompositor,
   type CompositorProjection,
-} from "@/hologram/kernel/projection-compositor";
+} from "@/hologram/kernel/surface/projection-compositor";
 
 const ROLE_ICONS: Record<string, string> = {
   app: "◻",

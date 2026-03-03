@@ -2634,7 +2634,7 @@ export function useQShell(options: UseQShellOptions = {}) {
               log("");
               // Install files into Q-FS if available
               if (subsRef.current?.fs) {
-                const { generateProjectionFiles } = await import("@/hologram/kernel/q-package-projector");
+                const { generateProjectionFiles } = await import("@/hologram/kernel/surface/q-package-projector");
                 const files = generateProjectionFiles(result.metadata);
                 for (const f of files) {
                   const pathParts = f.path.split("/").filter(Boolean);

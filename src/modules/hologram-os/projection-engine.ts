@@ -1565,7 +1565,7 @@ export class KernelProjector {
    * Returns the cached result if a matching habit exists, null otherwise.
    * This is the "cerebellum fast-path" — bypasses the full reasoning pipeline.
    */
-  tryHabit(actionType: string): { habitId: string; result: import("@/hologram/kernel/procedural-memory").HabitResult } | null {
+  tryHabit(actionType: string): { habitId: string; result: import("@/hologram/kernel/agents/procedural-memory").HabitResult } | null {
     const fired = this.proceduralMemory.tryFire(actionType);
     if (!fired) return null;
 

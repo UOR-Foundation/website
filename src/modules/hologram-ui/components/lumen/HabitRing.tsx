@@ -17,7 +17,7 @@
 
 import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { ProceduralProjection, HabitRingEntry } from "@/hologram/kernel/procedural-memory";
+import type { ProceduralProjection, HabitRingEntry } from "@/hologram/kernel/agents/procedural-memory";
 
 // ── Constants ────────────────────────────────────────────────────────────
 

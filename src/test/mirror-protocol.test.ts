@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { MirrorProtocolEngine } from "@/hologram/kernel/mirror-protocol";
-import type { CoherenceVector } from "@/hologram/kernel/q-coherence-head";
+import { MirrorProtocolEngine } from "@/hologram/kernel/agents/mirror-protocol";
+import type { CoherenceVector } from "@/hologram/kernel/compute/q-coherence-head";
 
 function makeVector(h: number, dh = 0, phase = 0): CoherenceVector {
   return {

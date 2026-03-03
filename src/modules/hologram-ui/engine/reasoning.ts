@@ -104,7 +104,7 @@ export {
   type SharedHabit,
   type MirrorProjection,
   type MirrorBondEntry,
-} from "@/hologram/kernel/mirror-protocol";
+} from "@/hologram/kernel/agents/mirror-protocol";
 
 // ── QSVG Spectral Verification ────────────────────────────────────────
 export {

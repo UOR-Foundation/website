@@ -14,10 +14,10 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { TEEBridge, resetTEEBridge, getTEEBridge } from "../tee-bridge";
-import { bootSync } from "../q-boot";
-import { QSecurity } from "../q-security";
-import { QEcc } from "../q-ecc";
+import { TEEBridge, resetTEEBridge, getTEEBridge } from "../security/tee-bridge";
+import { bootSync } from "../boot/q-boot";
+import { QSecurity } from "../security/q-security";
+import { QEcc } from "../compute/q-ecc";
 import { createGeometricReceipt } from "../../platform/geometric-coherence";
 
 describe("TEE Bridge", () => {

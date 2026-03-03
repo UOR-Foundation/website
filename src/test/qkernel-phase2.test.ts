@@ -7,10 +7,10 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QMmu } from "@/hologram/kernel/q-mmu";
-import { QSyscall, STANDARD_MODALITIES } from "@/hologram/kernel/q-syscall";
-import type { LensBlueprint } from "@/hologram/kernel/q-syscall";
-import { QFs } from "@/hologram/kernel/q-fs";
+import { QMmu } from "@/hologram/kernel/memory/q-mmu";
+import { QSyscall, STANDARD_MODALITIES } from "@/hologram/kernel/compute/q-syscall";
+import type { LensBlueprint } from "@/hologram/kernel/compute/q-syscall";
+import { QFs } from "@/hologram/kernel/memory/q-fs";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 2a: Q-Syscall
