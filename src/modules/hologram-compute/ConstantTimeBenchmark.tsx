@@ -806,9 +806,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Chart + Live Speedup (equal width, side by side) ── */}
       {points.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Chart */}
-          <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Chart — golden ratio aspect */}
+          <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <ComparisonChart
               points={points}
               baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
