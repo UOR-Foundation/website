@@ -2238,7 +2238,7 @@ export function useQShell(options: UseQShellOptions = {}) {
               const st = createState(circ.numQubits);
               st.ops = circ.ops;
               st.noise = circ.noise;
-              const { measure: simMeas } = await import("@/hologram/kernel/q-simulator");
+              const { measure: simMeas } = await import("@/hologram/kernel/compute/q-simulator");
               const rawCounts: Record<string, number> = simMeas(st, shots);
               const mitigated = applyMeasurementMitigation(rawCounts, calMatrix);
               log("");
