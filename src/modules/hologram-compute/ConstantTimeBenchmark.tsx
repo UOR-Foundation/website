@@ -772,7 +772,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <p className="text-4xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
             <p className="text-[11px] mt-2" style={{ color: P.muted }}>Standard recomputation</p>
           </div>
-          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid hsla(220, 50%, 70%, 0.12)` }}>
             <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: P.gold }}>Hologram vGPU</p>
             <p className="text-4xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
             <p className="text-[11px] mt-2" style={{ color: P.muted }}>Pre-computed retrieval</p>
