@@ -26,7 +26,7 @@ import { toHex, encodeUtf8 } from "../../genesis/axiom-ring";
 import { sha256 } from "../../genesis/axiom-hash";
 import { createCid } from "../../genesis/axiom-cid";
 import { canonicalEncode } from "../../genesis/axiom-codec";
-import type { QMmu } from "../memory/q-mmu";
+import type { QMmu } from "../mm/q-mmu";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Morphism Types

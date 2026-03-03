@@ -11,7 +11,7 @@ import {
   normalizeName,
   type InstalledPackage,
 } from "../surface/q-package-projector";
-import { boot, type QKernelBoot } from "../boot/q-boot";
+import { boot, type QKernelBoot } from "../init/q-boot";
 import {
   createState,
   applyOp,
@@ -25,22 +25,22 @@ import {
   type SimulatorState,
   type SimOp,
   type NoiseModel,
-} from "../compute/q-simulator";
+} from "../arch/q-simulator";
 import {
   zeroNoiseExtrapolation,
   buildCalibrationMatrix,
   applyMeasurementMitigation,
   randomizedCompiling,
   mitigateFull,
-} from "../compute/q-error-mitigation";
-import { QMmu } from "../memory/q-mmu";
-import { QSched, type QProcess, type SchedStats } from "../compute/q-sched";
-import { QSyscall } from "../compute/q-syscall";
-import { QFs, type QInode } from "../memory/q-fs";
-import { QEcc } from "../compute/q-ecc";
-import { QIsa } from "../compute/q-isa";
-import { QNet, type FanoNode } from "../network/q-net";
-import { QIpc, type QChannel } from "../network/q-ipc";
+} from "../arch/q-error-mitigation";
+import { QMmu } from "../mm/q-mmu";
+import { QSched, type QProcess, type SchedStats } from "../kernel/q-sched";
+import { QSyscall } from "../kernel/q-syscall";
+import { QFs, type QInode } from "../fs/q-fs";
+import { QEcc } from "../crypto/q-ecc";
+import { QIsa } from "../arch/q-isa";
+import { QNet, type FanoNode } from "../net/q-net";
+import { QIpc, type QChannel } from "../ipc/q-ipc";
 import { QAgentMesh, QAgent, type MeshStats } from "../agents/q-agent";
 
 export interface KernelState {

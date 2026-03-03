@@ -18,7 +18,7 @@ import { toHex, encodeUtf8 } from "../../genesis/axiom-ring";
 import { sha256 } from "../../genesis/axiom-hash";
 import { createCid } from "../../genesis/axiom-cid";
 import { canonicalEncode } from "../../genesis/axiom-codec";
-import { QEcc, CODE_K } from "../compute/q-ecc";
+import { QEcc, CODE_K } from "../crypto/q-ecc";
 import type { TEEBridge, SealedEnvelope } from "./tee-bridge";
 
 // ═══════════════════════════════════════════════════════════════════════
