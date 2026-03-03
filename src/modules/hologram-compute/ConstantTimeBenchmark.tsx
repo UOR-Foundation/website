@@ -1448,7 +1448,7 @@ export default function ConstantTimeBenchmark() {
               onClick={() => setActiveTab(tab)}
               className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
-                background: activeTab === tab ? "hsla(38, 40%, 65%, 0.15)" : "transparent",
+                background: activeTab === tab ? "hsla(220, 50%, 70%, 0.15)" : "transparent",
                 color: activeTab === tab ? P.gold : P.muted,
               }}
             >
