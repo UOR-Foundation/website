@@ -780,11 +780,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Precomputing ── */}
       {state === "precomputing" && (
-        <div className="p-5 text-center space-y-2 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-          <p className="text-sm font-medium" style={{ color: P.gold }}>Crystallizing answers…</p>
-          <p className="text-[12px]" style={{ color: P.muted }}>
-            Computing all {ALL_SIZES.length} matrix sizes once via {isCpu ? "CPU lookup table" : "hardware GPU"}. Results stored for O(1) retrieval.
+        <div className="p-6 text-center space-y-3 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="w-7 h-7 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
+          <p className="text-base font-medium" style={{ color: P.gold }}>Precomputing all matrix sizes…</p>
+          <p className="text-sm" style={{ color: P.muted }}>
+            Computing {ALL_SIZES.length} sizes once via {isCpu ? "CPU lookup table" : "hardware GPU"}. Results stored for O(1) retrieval.
           </p>
         </div>
       )}
