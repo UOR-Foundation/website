@@ -18,7 +18,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  IconPlayerPlay, IconFlame, IconDownload, IconCheck,
+  IconPlayerPlay, IconDownload, IconCheck,
   IconInfoCircle, IconCpu, IconCpu2, IconBolt, IconGauge
 } from "@tabler/icons-react";
 import {
@@ -487,7 +487,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
 function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
   const animValue = useCountUp(value, 800);
-  const sz = 140;
+  const sz = 160;
   const strokeW = 5;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
@@ -509,22 +509,22 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ width: sz, height: sz }}>
         <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} className="transform -rotate-90">
-          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.1} />
+          <circle cx={sz / 2} cy={sz / 2} r={r} fill="none" stroke={P.dim} strokeWidth={strokeW} opacity={0.08} />
           <circle
             cx={sz / 2} cy={sz / 2} r={r}
             fill="none" stroke={P.gold} strokeWidth={strokeW} strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 10px hsla(38, 40%, 65%, 0.5))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 12px hsla(38, 40%, 65%, 0.5))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 32 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 40 }}>
             {value > 0 ? `${displayVal}×` : "—"}
           </span>
-          <span className="text-[11px] font-medium mt-1" style={{ color: P.muted }}>faster</span>
+          <span className="text-xs font-medium mt-1.5 tracking-wide" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
     </div>
@@ -733,29 +733,25 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
   return (
     <div className="space-y-2">
-      {/* ── Run Button + Description ── */}
-      <div className="flex items-start justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}08`, border: `1px solid ${baseColor}1A` }}>
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-            {isCpu ? (
-              <>
-                <strong style={{ color: P.text }}>Test 1: CPU only.</strong>{" "}
-                Native single threaded CPU matmul vs Hologram vGPU retrieval (also CPU only, no GPU involved).{" "}
-                Same inputs, same outputs, SHA-256 verified. Up to N={sizes[sizes.length - 1]}.
-              </>
-            ) : (
-              <>
-                <strong style={{ color: P.text }}>Test 2: GPU.</strong>{" "}
-                Native hardware GPU matmul (WebGPU compute shader) vs Hologram vGPU retrieval (pre-computed via GPU, retrieved from CPU memory).{" "}
-                Same inputs, same outputs, SHA-256 verified. Up to N={sizes[sizes.length - 1]}.
-              </>
-            )}
-          </p>
-        </div>
+      {/* ── Run Button ── */}
+      <div className="flex items-center justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
+        <p className="text-[12px]" style={{ color: P.muted }}>
+          {isCpu ? (
+            <>
+              <strong style={{ color: P.text }}>CPU only.</strong>{" "}
+              Single-threaded matmul vs pre-computed retrieval. SHA-256 verified.
+            </>
+          ) : (
+            <>
+              <strong style={{ color: P.text }}>GPU.</strong>{" "}
+              WebGPU compute shader vs pre-computed retrieval. SHA-256 verified.
+            </>
+          )}
+        </p>
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-semibold transition-all duration-300 disabled:opacity-50 shrink-0"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
           style={{ background: baseColor, color: "white" }}
         >
           {state === "precomputing" ? (
@@ -763,40 +759,24 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           ) : state === "running" ? (
             <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
           ) : (
-            <><IconPlayerPlay size={13} />{state === "done" ? "Run Again" : `Run ${baseLabel} Benchmark`}</>
+            <><IconPlayerPlay size={13} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
           )}
         </button>
       </div>
 
       {/* ── Idle state ── */}
       {state === "idle" && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid ${baseColor}1A` }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full" style={{ background: baseColor }} />
-              <h3 className="text-sm font-medium" style={{ color: P.text }}>{baseLabel} Baseline</h3>
-            </div>
-            <p className="text-2xl font-light font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
-             <p className="text-[11px]" style={{ color: P.muted }}>
-               {isCpu
-                 ? `Single ${hw.jsEngine} thread on ${hw.cpuArch} (${hw.cpuCores} cores). No GPU used.`
-                 : `WebGPU compute shader on hardware GPU. Live computation each time.`
-               }
-             </p>
-           </div>
-           <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
-             <div className="flex items-center gap-2">
-               <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
-               <h3 className="text-sm font-medium" style={{ color: P.text }}>Hologram vGPU</h3>
-             </div>
-             <p className="text-2xl font-light font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
-             <p className="text-[11px]" style={{ color: P.muted }}>
-               {isCpu
-                 ? "Crystallized via CPU lookup table (64KB). Retrieval is a CPU memory read."
-                 : "Crystallized via hardware GPU (one pass). Retrieval is a CPU memory read. GPU freed after crystallization."
-               }
-             </p>
-           </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid ${baseColor}15` }}>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: baseColor }}>{baseLabel} Baseline</p>
+            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
+            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Standard recomputation</p>
+          </div>
+          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: P.gold }}>Hologram vGPU</p>
+            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
+            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Pre-computed retrieval</p>
+          </div>
         </div>
       )}
 
@@ -831,14 +811,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
             {/* Key message */}
-            <div className="text-center space-y-1 max-w-[240px]">
+            <div className="text-center space-y-0.5">
               <p className="text-sm font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "No GPU required" : "GPU freed after one pass"}
-              </p>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                {isCpu
-                  ? "CPU only. Retrieval from pre-computed table."
-                  : "One GPU pass to crystallize. Then instant retrieval from CPU memory."}
+                {isCpu ? "CPU only — no GPU required" : "GPU freed after crystallization"}
               </p>
             </div>
 
@@ -877,24 +852,19 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {/* ── Results Table + LINPACK Header ── */}
       {state === "done" && points.length > 0 && (
         <>
-          {/* LINPACK methodology + export */}
-          <div className="rounded-xl p-2 space-y-1" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>
-                {baseLabel} vs Hologram vGPU — INT8 OPS Results
-              </span>
-              <button
-                onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
-                style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
-              >
-                <IconDownload size={13} />
-                Export LINPACK Report
-              </button>
-            </div>
-            <p className="text-[11px] leading-relaxed" style={{ color: P.muted }}>
-              <code style={{ color: P.gold, background: "hsla(38, 40%, 65%, 0.08)", padding: "0px 3px", borderRadius: "3px", fontSize: 10 }}>INT8 OPS = 2N³ / time</code> · Median of {sampleCount(16)}–{sampleCount(1024)} samples · Adaptive warmup · Work-amplified timing · Energy ↓ = measured time reduction (not theoretical).
-            </p>
+          {/* Results header + export */}
+          <div className="rounded-xl p-3 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <span className="text-xs uppercase tracking-[0.1em] font-bold" style={{ color: P.text }}>
+              Results · INT8 GEMM · {points.length} sizes
+            </span>
+            <button
+              onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
+              style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+            >
+              <IconDownload size={13} />
+              Export Report
+            </button>
           </div>
 
           {/* Data table */}
@@ -1173,7 +1143,7 @@ function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType:
 // ══════════════════════════════════════════════════════════════════════════════
 
 function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
@@ -1184,108 +1154,51 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
       >
         <div className="flex items-center gap-2.5">
           <IconInfoCircle size={16} style={{ color: P.blue }} />
-          <span className="text-sm font-semibold" style={{ color: P.text }}>How This Benchmark Works</span>
+          <span className="text-sm font-semibold" style={{ color: P.text }}>Methodology</span>
         </div>
         <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
       </button>
 
       {expanded && (
         <div className="px-4 pb-4 pt-1 space-y-4" style={{ background: P.card, color: P.muted }}>
-          {/* What we measure */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>What This Measures</h4>
-            <p className="text-[13px] leading-relaxed">
-              Integer matrix multiplication (INT8 GEMM) at increasing sizes. This is the <strong style={{ color: P.text }}>core operation behind all AI inference</strong>. Larger matrices mean exponentially more work.
-            </p>
-          </div>
-
-          {/* Two Tests */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>Two Tests</h4>
-          </div>
+          {/* Core explanation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
+            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>Test 1: CPU Tab</h4>
+                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>CPU Tab</h4>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native single threaded CPU matmul. No GPU involved.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed via CPU lookup table (64KB). Retrieval is a CPU memory read. No GPU involved.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                Both paths are <strong style={{ color: P.text }}>CPU only</strong>. Pure apples to apples.
+              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+                <strong style={{ color: P.text }}>Baseline:</strong> Native single-threaded CPU matmul.{" "}
+                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed lookup table (64KB). Both CPU only.
               </p>
             </div>
 
-            <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
+            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.blue }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>Test 2: GPU Tab</h4>
+                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>GPU Tab</h4>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native hardware GPU matmul via WebGPU compute shader. Live computation each time.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.gold }}>vGPU:</strong> Crystallized via one GPU pass, then retrieved from CPU memory. GPU is freed after crystallization.
-              </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-                <span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available on this device." : "WebGPU not available on this device."}</span>
+              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+                <strong style={{ color: P.text }}>Baseline:</strong> WebGPU compute shader.{" "}
+                <strong style={{ color: P.gold }}>vGPU:</strong> One GPU pass → CPU memory retrieval.
+                {" "}<span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available." : "WebGPU not available."}</span>
               </p>
             </div>
           </div>
 
-          {/* Hologram vGPU */}
-          <div className="rounded-xl p-3.5 space-y-2" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
-              <h4 className="text-[13px] font-bold" style={{ color: P.gold }}>How the Hologram vGPU Works</h4>
-            </div>
-            <p className="text-[13px] leading-relaxed" style={{ color: P.muted }}>
-              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during a crystallization phase, then stores the results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong>, not a re-computation. The cost is always the same regardless of matrix size. This is O(1) retrieval.
+          {/* How it works — one line */}
+          <div className="rounded-xl p-3.5" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
+            <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
+              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
             </p>
           </div>
 
-          {/* Fairness & Verification */}
-          <div className="rounded-xl p-3.5 space-y-2" style={{ background: `${P.green}06`, border: `1px solid ${P.green}12` }}>
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.green }}>Verification Controls</h4>
-            <ul className="space-y-1.5 text-[13px] leading-relaxed" style={{ color: P.muted }}>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical inputs.</strong> All methods receive the same matrices from a deterministic seed. Reproducible by anyone.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Identical outputs.</strong> Every result is verified byte for byte using SHA-256 cryptographic fingerprinting.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Sequential execution.</strong> Tests run one at a time. No concurrent resource contention.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Warmup phase.</strong> Adaptive warmup iterations eliminate JIT and pipeline compilation bias before measurement.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IconCheck size={14} className="shrink-0 mt-0.5" style={{ color: P.green }} />
-                <span><strong style={{ color: P.text }}>Live on your device.</strong> Nothing simulated. This runs in your browser right now.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Your Device */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: P.text }}>Your Device</h4>
-            <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-1 text-[13px]">
-              <span style={{ color: P.dim }}>System</span><span style={{ color: P.text }}>{hw.oscpu}, {hw.platform}</span>
-              <span style={{ color: P.dim }}>Processor</span><span style={{ color: P.text }}>{hw.cpuCores} cores, {hw.cpuArch}</span>
-              {hw.totalMemoryGB && <><span style={{ color: P.dim }}>Memory</span><span style={{ color: P.text }}>{hw.totalMemoryGB} GB</span></>}
-              <span style={{ color: P.dim }}>Browser</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion}</span>
-              {hw.glRenderer && <><span style={{ color: P.dim }}>Graphics</span><span style={{ color: P.text }}>{hw.glRenderer}</span></>}
-              <span style={{ color: P.dim }}>GPU Compute</span><span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Not available"}</span>
-            </div>
+          {/* Device info — compact */}
+          <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-0.5 text-[12px]">
+            <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
+            <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
+            {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
           </div>
         </div>
       )}
@@ -1525,29 +1438,21 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-2" style={{ fontFamily: P.font }}>
-      {/* Header + Tab Toggle */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <IconFlame size={16} style={{ color: P.gold }} />
-          <span className="text-sm font-semibold tracking-wide" style={{ color: P.text }}>
-            Hologram vGPU — Compute Benchmark
-          </span>
-        </div>
-
-        {/* CPU / GPU Tabs — styled like reference image */}
+    <div className="space-y-3" style={{ fontFamily: P.font }}>
+      {/* Tab Toggle — clean pill */}
+      <div className="flex items-center justify-end">
         <div className="inline-flex items-center rounded-full p-0.5 gap-0.5" style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}>
           {(["cpu", "gpu"] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-medium transition-all duration-300"
+              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
                 background: activeTab === tab ? "hsla(38, 40%, 65%, 0.15)" : "transparent",
                 color: activeTab === tab ? P.gold : P.muted,
               }}
             >
-              {tab === "cpu" ? <IconCpu size={12} /> : <IconCpu2 size={12} />}
+              {tab === "cpu" ? <IconCpu size={13} /> : <IconCpu2 size={13} />}
               {tab === "cpu" ? "CPU" : "GPU"}
             </button>
           ))}
