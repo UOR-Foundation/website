@@ -854,7 +854,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <div className="flex items-center gap-3">
               <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
               <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
-                <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
+                <div className="h-full rounded-full" style={{
+                  width: points.length > 0 ? "100%" : "0%",
+                  background: baseColor,
+                  transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
+                }} />
               </div>
               <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: baseColor }}>
                 {totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(1)}s` : `${totalBaseMs.toFixed(1)}ms`}
@@ -864,9 +868,10 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
               <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
               <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                 <div className="h-full rounded-full" style={{
-                  width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%`,
+                  width: points.length > 0 ? `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%` : "0%",
                   background: P.gold,
                   boxShadow: `0 0 16px hsla(170, 90%, 55%, 0.5)`,
+                  transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
                 }} />
               </div>
               <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: P.gold }}>
