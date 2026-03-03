@@ -819,43 +819,41 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </div>
 
           {/* Live Speedup Panel */}
-          <div className="rounded-xl p-4 flex flex-col items-center justify-center gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-6 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             {/* Single large speedup circle */}
             <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
             {/* Key message */}
-            <div className="text-center space-y-0.5">
-              <p className="text-sm font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "CPU only — no GPU required" : "GPU freed after crystallization"}
-              </p>
-            </div>
+            <p className="text-lg font-semibold text-center" style={{ color: P.text }}>
+              {isCpu ? "CPU only — no GPU required" : "GPU freed after precomputation"}
+            </p>
 
             {/* Runtime comparison bars */}
-            <div className="w-full space-y-2 px-2">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+            <div className="w-full space-y-3 px-3">
+              <div className="flex items-center gap-4">
+                <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
+                <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
+                <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(0, 0%, 100%, 0.3)" }} />
+              <div className="flex items-center gap-4">
+                <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%`, background: P.gold, boxShadow: "0 0 12px hsla(0, 0%, 100%, 0.3)" }} />
                 </div>
-                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
+                <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
             </div>
 
             {/* Verified badge */}
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full" style={{
-              background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
-              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.12)" : "hsla(152, 44%, 50%, 0.12)"}`,
+            <div className="flex items-center gap-2.5 px-5 py-2 rounded-full" style={{
+              background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.08)" : "hsla(152, 44%, 50%, 0.08)",
+              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.15)" : "hsla(152, 44%, 50%, 0.15)"}`,
             }}>
-              <IconCheck size={14} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
-                {anyIntegrityIssue ? "MISMATCH" : "SHA-256 VERIFIED"}
+              <IconCheck size={18} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+              <span className="text-sm font-bold uppercase tracking-[0.15em]" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                {anyIntegrityIssue ? "MISMATCH DETECTED" : "ALL VERIFIED"}
               </span>
             </div>
           </div>
