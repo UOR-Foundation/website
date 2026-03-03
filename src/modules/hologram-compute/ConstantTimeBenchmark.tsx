@@ -30,16 +30,16 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(25, 8%, 8%)",
-  card: "hsla(25, 8%, 12%, 0.6)",
-  cardBorder: "hsla(38, 12%, 70%, 0.08)",
-  text: "hsl(38, 10%, 88%)",
-  muted: "hsl(38, 8%, 55%)",
-  gold: "hsl(38, 40%, 65%)",
-  dim: "hsl(38, 8%, 35%)",
+  bg: "hsl(220, 30%, 8%)",
+  card: "hsla(220, 25%, 13%, 0.7)",
+  cardBorder: "hsla(220, 20%, 40%, 0.1)",
+  text: "hsl(220, 10%, 92%)",
+  muted: "hsl(220, 10%, 55%)",
+  gold: "hsl(220, 50%, 70%)",
+  dim: "hsl(220, 10%, 35%)",
   green: "hsl(152, 44%, 50%)",
-  red: "hsl(0, 55%, 55%)",
-  blue: "hsl(210, 50%, 60%)",
+  red: "hsl(0, 50%, 60%)",
+  blue: "hsl(220, 50%, 65%)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
