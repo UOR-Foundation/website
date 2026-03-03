@@ -474,17 +474,17 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
       {/* Axis titles */}
       <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em">Matrix Dimension N</text>
-      <text x={18} y={CH / 2} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 18, ${CH / 2})`}>Runtime (log scale)</text>
+      <text x={18} y={CH / 2} textAnchor="middle" fill={P.muted} fontSize={16} fontFamily={P.font} fontWeight="700" letterSpacing="0.08em" transform={`rotate(-90, 18, ${CH / 2})`}>Runtime (ms)</text>
 
       {/* Baseline area + line — thick, high contrast */}
-      <polygon points={`${xS(xVals[0])},${yS(minY)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#base-area)" />
+      <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
       <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-base)" />
       {xVals.map((x, i) => (
         <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={6} fill={baselineColor} stroke={P.bg} strokeWidth={2.5} />
       ))}
 
       {/* Hologram vGPU line — bright cyan, thick, glowing */}
-      <polygon points={`${xS(xVals[0])},${yS(minY)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(minY)}`} fill="url(#holo-area)" />
+      <polygon points={`${xS(xVals[0])},${yS(0)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#holo-area)" />
       <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
         <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={6.5} fill={P.gold} stroke={P.bg} strokeWidth={2.5} />
