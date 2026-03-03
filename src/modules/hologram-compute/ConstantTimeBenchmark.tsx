@@ -1149,56 +1149,72 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:opacity-90"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors hover:opacity-90"
         style={{ background: P.card }}
       >
         <div className="flex items-center gap-2.5">
-          <IconInfoCircle size={16} style={{ color: P.blue }} />
-          <span className="text-sm font-semibold" style={{ color: P.text }}>Methodology</span>
+          <IconInfoCircle size={18} style={{ color: P.blue }} />
+          <span className="text-base font-semibold" style={{ color: P.text }}>Methodology & Environment</span>
         </div>
-        <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-1 space-y-4" style={{ background: P.card, color: P.muted }}>
-          {/* Core explanation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>CPU Tab</h4>
+        <div className="px-5 pb-5 pt-2 space-y-4" style={{ background: P.card, color: P.muted }}>
+          {/* What is being measured */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.text }}>Measurement</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(0, 50%, 60%, 0.04)", border: "1px solid hsla(0, 50%, 60%, 0.1)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
+                  <span className="text-sm font-bold" style={{ color: P.red }}>CPU Baseline</span>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+                  Single-threaded JavaScript INT8 matmul. No SIMD, no WASM, no Web Workers.
+                </p>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native single-threaded CPU matmul.{" "}
-                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed lookup table (64KB). Both CPU only.
-              </p>
-            </div>
 
-            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.blue }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>GPU Tab</h4>
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold }} />
+                  <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+                  Pre-computed retrieval via content-addressed cache. O(1) lookup per result matrix.
+                </p>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> WebGPU compute shader.{" "}
-                <strong style={{ color: P.gold }}>vGPU:</strong> One GPU pass → CPU memory retrieval.
-                {" "}<span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available." : "WebGPU not available."}</span>
-              </p>
             </div>
           </div>
 
-          {/* How it works — one line */}
-          <div className="rounded-xl p-3.5" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
-            <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
+          {/* Verification */}
+          <div className="rounded-lg p-4" style={{ background: "hsla(152, 44%, 50%, 0.04)", border: "1px solid hsla(152, 44%, 50%, 0.1)" }}>
+            <h4 className="text-sm font-bold mb-1.5" style={{ color: P.green }}>Verification</h4>
+            <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+              Every result matrix is hashed with SHA-256. Baseline and vGPU hashes must be <strong style={{ color: P.text }}>identical</strong> — proving byte-level equivalence with probability 1 − 2⁻²⁵⁶. Mismatches are flagged immediately.
             </p>
           </div>
 
-          {/* Device info — compact */}
-          <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-0.5 text-[12px]">
-            <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
-            <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
-            {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
+          {/* Timing */}
+          <div className="rounded-lg p-4" style={{ background: "hsla(220, 20%, 40%, 0.04)", border: `1px solid ${P.cardBorder}` }}>
+            <h4 className="text-sm font-bold mb-1.5" style={{ color: P.text }}>Timing Protocol</h4>
+            <ul className="text-sm leading-relaxed space-y-1 list-disc list-inside" style={{ color: P.muted }}>
+              <li>Adaptive JIT warmup before each size</li>
+              <li>Work amplification for sub-millisecond timings</li>
+              <li>Timer overhead subtracted from all measurements</li>
+              <li>Median of multiple samples (robust to GC outliers)</li>
+            </ul>
+          </div>
+
+          {/* Device info */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.text }}>Environment</h4>
+            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
+              <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
+              <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
+              {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
+              <span style={{ color: P.dim }}>WebGPU</span><span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Not available"}</span>
+            </div>
           </div>
         </div>
       )}
