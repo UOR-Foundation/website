@@ -13,7 +13,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { useQShell } from "../hooks/useQShell";
+import { useQShell } from "../lib/useQShell";
 import { motion, AnimatePresence, X } from "../../platform/bridge";
 
 // ─── Zone & state color mapping ─────────────────────────────────

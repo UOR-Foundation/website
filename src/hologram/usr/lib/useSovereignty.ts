@@ -19,12 +19,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getBackend } from "../../platform";
-import { QSovereignty, type SovereignIdentity, type GenesisResult, type AuthUser } from "../init/q-sovereignty";
-import { QFs } from "../fs/q-fs";
-import { QMmu } from "../mm/q-mmu";
-import { QSecurity } from "../security/q-security";
-import { QEcc } from "../crypto/q-ecc";
-import type { ThreeWordName } from "../init/q-three-word";
+import { QSovereignty, type SovereignIdentity, type GenesisResult, type AuthUser } from "../kernel/init/q-sovereignty";
+import { QFs } from "../kernel/fs/q-fs";
+import { QMmu } from "../kernel/mm/q-mmu";
+import { QSecurity } from "../kernel/security/q-security";
+import { QEcc } from "../kernel/crypto/q-ecc";
+import type { ThreeWordName } from "../kernel/init/q-three-word";
 
 // ── Types ──────────────────────────────────────────────────────────
 
