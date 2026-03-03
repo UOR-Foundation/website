@@ -599,7 +599,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       publicIp: hw.publicIp,
       hostname: hw.hostname,
     },
-    precomputation: {
+    initialization: {
       method: precomputeMethod,
       timeMs: precomputeMs,
       lutTableSize: `${MUL_TABLE_BYTES.toLocaleString()} bytes (64KB)`,
