@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { QSched } from "../q-sched";
-import { QIpc } from "../q-ipc";
-import { QNet } from "../q-net";
-import { QAgent, QAgentMesh } from "../q-agent";
-import { QTrustMesh } from "../q-trust-mesh";
-import { QDisclosure } from "../q-disclosure";
+import { QSched } from "../compute/q-sched";
+import { QIpc } from "../network/q-ipc";
+import { QNet } from "../network/q-net";
+import { QAgent, QAgentMesh } from "../agents/q-agent";
+import { QTrustMesh } from "../network/q-trust-mesh";
+import { QDisclosure } from "../security/q-disclosure";
 
 describe("Crystallization Phase 3 — q-agent, q-trust-mesh, q-disclosure", () => {
   it("q-agent: think + respond are synchronous", () => {
