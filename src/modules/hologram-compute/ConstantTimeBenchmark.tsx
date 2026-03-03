@@ -870,14 +870,14 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <table className="w-full text-[13px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
                 <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
-                  <th className="text-left py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>INT8 Ops</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy ↓</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
-                  <th className="text-center py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
+                  <th className="text-left py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>INT8 Ops</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy ↓</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
+                  <th className="text-center py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
                 </tr>
               </thead>
               <tbody>
