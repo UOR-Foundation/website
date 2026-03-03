@@ -1,7 +1,7 @@
 /**
- * Benchmark Page — Investor-facing, TV-ready presentation.
- * Deep navy institutional aesthetic inspired by IQT.org.
- * Clean. Authoritative. Maximum impact.
+ * Benchmark Page — Investor-facing, TV-ready.
+ * Deep purple-navy palette aligned with IQT institutional style.
+ * Large type. Generous spacing. Maximum readability.
  */
 
 import { Link } from "react-router-dom";
@@ -13,8 +13,8 @@ export default function BenchmarkPage() {
     <div
       className="min-h-screen"
       style={{
-        background: "hsl(220, 30%, 8%)",
-        color: "hsl(220, 10%, 92%)",
+        background: "hsl(248, 40%, 12%)",
+        color: "hsl(0, 0%, 95%)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
@@ -22,73 +22,77 @@ export default function BenchmarkPage() {
       <header
         className="sticky top-0 z-30 backdrop-blur-md"
         style={{
-          background: "hsla(220, 30%, 8%, 0.92)",
-          borderBottom: "1px solid hsla(220, 20%, 40%, 0.08)",
+          background: "hsla(248, 40%, 12%, 0.94)",
+          borderBottom: "1px solid hsla(0, 0%, 100%, 0.06)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-8 sm:px-12 h-16 flex items-center justify-between">
           <Link
             to="/hologram-os"
-            className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"
-            style={{ color: "hsl(220, 10%, 50%)" }}
+            className="flex items-center gap-2 text-base transition-opacity hover:opacity-70"
+            style={{ color: "hsla(0, 0%, 100%, 0.5)" }}
           >
-            <IconArrowLeft size={14} />
+            <IconArrowLeft size={16} />
             <span className="hidden sm:inline">Back</span>
           </Link>
           <span
-            className="text-[11px] tracking-[0.2em] uppercase font-semibold"
-            style={{ color: "hsl(220, 10%, 40%)" }}
+            className="text-xs tracking-[0.25em] uppercase font-medium"
+            style={{ color: "hsla(0, 0%, 100%, 0.35)" }}
           >
             Live Benchmark
           </span>
         </div>
       </header>
 
-      {/* Hero section — factual, scientific, TV-readable */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-10 pt-14 pb-8 sm:pt-20 sm:pb-10">
+      {/* Hero — IQT-style: lowercase serif, generous spacing */}
+      <section className="max-w-6xl mx-auto px-8 sm:px-12 pt-16 pb-6 sm:pt-24 sm:pb-8">
         <p
-          className="text-sm sm:text-base tracking-[0.25em] uppercase font-semibold mb-4"
-          style={{ color: "hsl(220, 50%, 65%)" }}
+          className="text-base tracking-[0.2em] uppercase font-medium mb-6"
+          style={{ color: "hsla(0, 0%, 100%, 0.4)" }}
         >
-          Hologram vGPU · INT8 GEMM Benchmark
+          Hologram vGPU · INT8 GEMM
         </p>
         <h1
-          className="text-4xl sm:text-5xl lg:text-6xl font-light leading-[1.1] tracking-tight"
+          className="text-5xl sm:text-6xl lg:text-7xl font-extralight leading-[1.1] tracking-tight lowercase"
           style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            color: "hsl(0, 0%, 98%)",
+            color: "hsl(0, 0%, 100%)",
           }}
         >
-          O(1) Retrieval vs O(N³) Recomputation
+          O(1) retrieval vs O(N³) recomputation
         </h1>
+      </section>
+
+      {/* Thin rule — IQT style */}
+      <div
+        className="max-w-6xl mx-auto mx-8 sm:mx-12"
+        style={{ borderTop: "1px solid hsla(0, 0%, 100%, 0.12)" }}
+      />
+
+      {/* Subtitle below rule */}
+      <section className="max-w-6xl mx-auto px-8 sm:px-12 pt-8 pb-4">
         <p
-          className="mt-5 text-lg sm:text-xl max-w-3xl leading-relaxed"
-          style={{ color: "hsl(220, 10%, 55%)" }}
+          className="text-xl sm:text-2xl max-w-3xl leading-relaxed font-light"
+          style={{ color: "hsla(0, 0%, 100%, 0.6)" }}
         >
-          SHA-256 verified, byte-identical results. All measurements run live
-          on this device — no server, no simulation.
+          SHA-256 verified, byte-identical results. All measurements executed
+          live on this device. No server computation. No simulation.
         </p>
       </section>
 
-      {/* Divider */}
-      <div
-        className="max-w-7xl mx-auto px-6 sm:px-10"
-        style={{ borderTop: "1px solid hsla(220, 20%, 40%, 0.1)" }}
-      />
-
       {/* Benchmark component */}
-      <main className="max-w-7xl mx-auto px-6 sm:px-10 py-10">
+      <main className="max-w-6xl mx-auto px-8 sm:px-12 py-10">
         <ConstantTimeBenchmark />
       </main>
 
-      {/* Footer — institutional */}
+      {/* Footer */}
       <footer
-        className="max-w-7xl mx-auto px-6 sm:px-10 py-8"
-        style={{ borderTop: "1px solid hsla(220, 20%, 40%, 0.08)" }}
+        className="max-w-6xl mx-auto px-8 sm:px-12 py-10"
+        style={{ borderTop: "1px solid hsla(0, 0%, 100%, 0.06)" }}
       >
-        <div className="flex items-center justify-between text-xs" style={{ color: "hsl(220, 10%, 35%)" }}>
+        <div className="flex items-center justify-between text-sm" style={{ color: "hsla(0, 0%, 100%, 0.3)" }}>
           <span>© {new Date().getFullYear()} UOR Foundation</span>
-          <span>All benchmarks run locally in-browser · No server computation</span>
+          <span>All benchmarks run locally in-browser</span>
         </div>
       </footer>
     </div>
