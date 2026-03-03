@@ -1453,7 +1453,7 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-3" style={{ fontFamily: P.font }}>
+    <div className="h-full flex flex-col gap-2" style={{ fontFamily: P.font }}>
       {/* Compact tab toggle */}
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center rounded-full p-0.5 gap-0.5" style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}>
