@@ -1004,7 +1004,7 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
             </span>
           )}
         </div>
-        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(0, 0%, 100%, 0.05)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
