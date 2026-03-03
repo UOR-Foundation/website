@@ -449,7 +449,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
       {gridLines.map((g, i) => (
         <g key={i}>
           <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
-          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={9} fontFamily="'DM Sans', monospace">{g.label}</text>
+          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{g.label}</text>
         </g>
       ))}
       {xVals.map((x, i) => (
