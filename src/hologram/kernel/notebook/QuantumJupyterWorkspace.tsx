@@ -38,7 +38,7 @@ import {
   type NotebookCell,
   type CellOutput,
 } from "./notebook-engine";
-import { createState, simulateCircuit, realisticNoise, measure } from "../q-simulator";
+import { createState, simulateCircuit, realisticNoise, measure } from "../compute/q-simulator";
 import { useScreenTheme } from "../hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 import { CodeProjection } from "../components/CodeProjection";

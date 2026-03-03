@@ -10,8 +10,8 @@ import {
   searchPyPI,
   normalizeName,
   type InstalledPackage,
-} from "../q-package-projector";
-import { boot, type QKernelBoot } from "../q-boot";
+} from "../surface/q-package-projector";
+import { boot, type QKernelBoot } from "../boot/q-boot";
 import {
   createState,
   applyOp,
@@ -25,23 +25,23 @@ import {
   type SimulatorState,
   type SimOp,
   type NoiseModel,
-} from "../q-simulator";
+} from "../compute/q-simulator";
 import {
   zeroNoiseExtrapolation,
   buildCalibrationMatrix,
   applyMeasurementMitigation,
   randomizedCompiling,
   mitigateFull,
-} from "../q-error-mitigation";
-import { QMmu } from "../q-mmu";
-import { QSched, type QProcess, type SchedStats } from "../q-sched";
-import { QSyscall } from "../q-syscall";
-import { QFs, type QInode } from "../q-fs";
-import { QEcc } from "../q-ecc";
-import { QIsa } from "../q-isa";
-import { QNet, type FanoNode } from "../q-net";
-import { QIpc, type QChannel } from "../q-ipc";
-import { QAgentMesh, QAgent, type MeshStats } from "../q-agent";
+} from "../compute/q-error-mitigation";
+import { QMmu } from "../memory/q-mmu";
+import { QSched, type QProcess, type SchedStats } from "../compute/q-sched";
+import { QSyscall } from "../compute/q-syscall";
+import { QFs, type QInode } from "../memory/q-fs";
+import { QEcc } from "../compute/q-ecc";
+import { QIsa } from "../compute/q-isa";
+import { QNet, type FanoNode } from "../network/q-net";
+import { QIpc, type QChannel } from "../network/q-ipc";
+import { QAgentMesh, QAgent, type MeshStats } from "../agents/q-agent";
 
 export interface KernelState {
   stage: "off" | "booting" | "running" | "panic";
