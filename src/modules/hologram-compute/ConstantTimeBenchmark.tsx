@@ -811,14 +811,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
             {/* Key message */}
-            <div className="text-center space-y-1 max-w-[240px]">
+            <div className="text-center space-y-0.5">
               <p className="text-sm font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "No GPU required" : "GPU freed after one pass"}
-              </p>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                {isCpu
-                  ? "CPU only. Retrieval from pre-computed table."
-                  : "One GPU pass to crystallize. Then instant retrieval from CPU memory."}
+                {isCpu ? "CPU only — no GPU required" : "GPU freed after crystallization"}
               </p>
             </div>
 
