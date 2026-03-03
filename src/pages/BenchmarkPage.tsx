@@ -335,164 +335,212 @@ export default function BenchmarkPage() {
         )}
       </div>
 
-      {/* ── Results chart (horizontal bars) ──────────────────── */}
-      {rows.length > 0 && (
-        <div style={{ padding: "44px 56px 0" }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 28,
-            paddingBottom: 16,
-            borderBottom: `1px solid ${P.border}`,
-          }}>
-            <h2 style={{
-              fontSize: "clamp(18px, 2vw, 24px)",
-              fontWeight: 600,
-              margin: 0,
-              color: P.text,
+      {/* ── Line chart + speedup ring ────────────────────────── */}
+      {rows.length > 0 && (() => {
+        const maxMs = Math.max(...rows.map(r => r.baselineMs), 0.01);
+        const chartW = 680, chartH = 340;
+        const padL = 70, padR = 30, padT = 30, padB = 50;
+        const plotW = chartW - padL - padR;
+        const plotH = chartH - padT - padB;
+
+        const xScale = (i: number) => padL + (i / Math.max(rows.length - 1, 1)) * plotW;
+        const yScale = (ms: number) => padT + plotH - (ms / maxMs) * plotH;
+
+        const baselinePts = rows.map((r, i) => `${xScale(i)},${yScale(r.baselineMs)}`).join(" ");
+        const vgpuPts = rows.map((r, i) => `${xScale(i)},${yScale(r.vgpuCachedMs)}`).join(" ");
+
+        // Fill area under baseline
+        const baselineArea = `${padL},${padT + plotH} ${baselinePts} ${xScale(rows.length - 1)},${padT + plotH}`;
+
+        const lastRow = rows[rows.length - 1];
+        const bigSpeedup = lastRow.speedup;
+        const allVerified = rows.every(r => r.checksumMatch);
+
+        // Y-axis ticks
+        const yTicks = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+          ms: f * maxMs,
+          y: yScale(f * maxMs),
+        }));
+
+        return (
+          <div style={{ padding: "44px 56px 0", display: "flex", gap: 32, alignItems: "stretch", flexWrap: "wrap" }}>
+            {/* Chart card */}
+            <div style={{
+              flex: "1 1 640px",
+              background: P.bgCard,
+              border: `1px solid ${P.border}`,
+              borderRadius: 10,
+              padding: "28px 24px 20px",
             }}>
-              Results
-            </h2>
-            <div style={{ flex: 1 }} />
-            {/* Legend */}
-            <div style={{ display: "flex", gap: 20 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: P.textSub }}>
-                <span style={{ width: 12, height: 12, borderRadius: 2, background: P.negative, display: "inline-block" }} />
-                {tab === "cpu" ? "CPU" : "GPU"}
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: P.textSub }}>
-                <span style={{ width: 12, height: 12, borderRadius: 2, background: P.positive, display: "inline-block" }} />
-                vGPU
-              </span>
+              {/* Legend */}
+              <div style={{ display: "flex", gap: 28, marginBottom: 16, paddingLeft: padL }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(13px, 1.3vw, 15px)", color: P.negativeLt }}>
+                  <span style={{ width: 24, height: 3, background: P.negative, display: "inline-block", borderRadius: 2 }} />
+                  {tab === "cpu" ? "CPU — O(N³)" : "GPU — compute shader"}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "clamp(13px, 1.3vw, 15px)", color: P.positiveLt }}>
+                  <span style={{ width: 24, height: 3, background: P.positive, display: "inline-block", borderRadius: 2 }} />
+                  Hologram vGPU — O(1) retrieval
+                </span>
+              </div>
+
+              <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: "auto" }}>
+                {/* Grid lines */}
+                {yTicks.map((t, i) => (
+                  <g key={i}>
+                    <line x1={padL} y1={t.y} x2={chartW - padR} y2={t.y}
+                      stroke={P.border} strokeWidth={0.8} strokeDasharray={i === 0 ? "none" : "4,4"} />
+                    <text x={padL - 10} y={t.y + 4} textAnchor="end"
+                      fill={P.textDim} fontSize={11} fontFamily="monospace">
+                      {t.ms < 1 ? t.ms.toFixed(2) : t.ms.toFixed(1)}
+                    </text>
+                  </g>
+                ))}
+
+                {/* X axis labels */}
+                {rows.map((r, i) => (
+                  <text key={r.n} x={xScale(i)} y={chartH - 8} textAnchor="middle"
+                    fill={P.textDim} fontSize={13} fontFamily="monospace" fontWeight={600}>
+                    {r.n}
+                  </text>
+                ))}
+
+                {/* Y axis label */}
+                <text x={14} y={chartH / 2} textAnchor="middle" fill={P.textDim}
+                  fontSize={11} fontFamily="monospace" transform={`rotate(-90, 14, ${chartH / 2})`}>
+                  Runtime (ms)
+                </text>
+
+                {/* X axis label */}
+                <text x={padL + plotW / 2} y={chartH - 0} textAnchor="middle" fill={P.textDim}
+                  fontSize={12} fontFamily="'DM Sans', sans-serif">
+                  Matrix Dimension N
+                </text>
+
+                {/* Area fill under baseline */}
+                <polygon points={baselineArea} fill={P.negative} opacity={0.08} />
+
+                {/* Baseline line */}
+                <polyline points={baselinePts} fill="none" stroke={P.negative}
+                  strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+
+                {/* vGPU line */}
+                <polyline points={vgpuPts} fill="none" stroke={P.positive}
+                  strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+                  strokeDasharray="6,3" />
+
+                {/* Data points */}
+                {rows.map((r, i) => (
+                  <g key={r.n}>
+                    <circle cx={xScale(i)} cy={yScale(r.baselineMs)} r={5}
+                      fill={P.negative} stroke={P.bgCard} strokeWidth={2} />
+                    <circle cx={xScale(i)} cy={yScale(r.vgpuCachedMs)} r={5}
+                      fill={P.positive} stroke={P.bgCard} strokeWidth={2} />
+                  </g>
+                ))}
+              </svg>
             </div>
-          </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {rows.map(row => (
-              <div key={row.n}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
+            {/* Speedup ring card */}
+            <div style={{
+              flex: "0 0 320px",
+              background: P.bgCard,
+              border: `1px solid ${P.border}`,
+              borderRadius: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "36px 24px",
+              gap: 16,
+            }}>
+              {/* Ring */}
+              <svg width={180} height={180} viewBox="0 0 180 180">
+                <circle cx={90} cy={90} r={76} fill="none" stroke={P.border} strokeWidth={6} />
+                <circle cx={90} cy={90} r={76} fill="none" stroke={P.positive} strokeWidth={6}
+                  strokeDasharray={`${Math.min(bigSpeedup / (bigSpeedup + 10), 0.95) * 2 * Math.PI * 76} ${2 * Math.PI * 76}`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 90 90)"
+                  style={{ transition: "stroke-dasharray 0.8s ease-out" }} />
+                <text x={90} y={82} textAnchor="middle" fill={P.white} fontSize={38}
+                  fontFamily="monospace" fontWeight={800}>
+                  {bigSpeedup >= 1000 ? `${(bigSpeedup / 1000).toFixed(1)}K×` : `${bigSpeedup.toFixed(0)}×`}
+                </text>
+                <text x={90} y={108} textAnchor="middle" fill={P.textSub} fontSize={15}
+                  fontFamily="'DM Sans', sans-serif">
+                  faster
+                </text>
+              </svg>
+
+              <div style={{ textAlign: "center" }}>
+                <p style={{
+                  fontSize: "clamp(14px, 1.5vw, 17px)",
+                  fontWeight: 700,
+                  color: P.positiveLt,
+                  margin: "0 0 4px",
                 }}>
-                  <span style={{
-                    fontSize: "clamp(17px, 2vw, 24px)",
-                    fontWeight: 700,
-                    fontFamily: "monospace",
-                    color: P.text,
-                    letterSpacing: "-0.01em",
-                  }}>
-                    {row.n}×{row.n}
-                  </span>
-                  <span style={{
-                    fontSize: "clamp(20px, 2.5vw, 32px)",
-                    fontWeight: 800,
-                    fontFamily: "monospace",
-                    color: speedupColor(row.speedup),
-                    letterSpacing: "-0.02em",
-                  }}>
-                    {row.speedup >= 1000
-                      ? `${(row.speedup / 1000).toFixed(1)}K×`
-                      : `${row.speedup.toFixed(0)}×`}
-                    <span style={{ fontSize: "0.5em", fontWeight: 400, opacity: 0.6, marginLeft: 4 }}>faster</span>
-                  </span>
-                </div>
+                  {tab === "cpu" ? "No GPU required" : "GPU freed after crystallization"}
+                </p>
+                <p style={{
+                  fontSize: "clamp(12px, 1.2vw, 14px)",
+                  color: P.textDim,
+                  margin: 0,
+                  lineHeight: 1.5,
+                }}>
+                  {tab === "cpu" ? "CPU only. Retrieval from pre-computed table." : "One-shot crystallization, then O(1) CPU retrieval."}
+                </p>
+              </div>
 
-                {/* Baseline bar */}
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 5 }}>
-                  <span style={{
-                    width: 72,
-                    fontSize: "clamp(11px, 1.1vw, 13px)",
-                    color: P.textDim,
-                    textAlign: "right",
-                    flexShrink: 0,
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                  }}>
+              {/* Mini bar comparison */}
+              <div style={{ width: "100%", padding: "0 8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                  <span style={{ width: 36, fontSize: 12, color: P.negativeLt, textAlign: "right", fontWeight: 600 }}>
                     {tab === "cpu" ? "CPU" : "GPU"}
                   </span>
-                  <div style={{
-                    flex: 1,
-                    height: "clamp(20px, 2.2vw, 30px)",
-                    background: P.bgCard,
-                    borderRadius: 4,
-                    overflow: "hidden",
-                  }}>
-                    <div style={{
-                      width: `${Math.max(2, (row.baselineMs / maxBaseline) * 100)}%`,
-                      height: "100%",
-                      background: P.negative,
-                      borderRadius: 4,
-                      transition: "width 0.6s ease-out",
-                      display: "flex",
-                      alignItems: "center",
-                      paddingLeft: 10,
-                    }}>
-                      <span style={{
-                        fontSize: "clamp(10px, 1.1vw, 13px)",
-                        fontFamily: "monospace",
-                        color: P.white,
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}>
-                        {fmt(row.baselineMs)}
-                      </span>
-                    </div>
+                  <div style={{ flex: 1, height: 14, background: P.bgHover, borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ width: "100%", height: "100%", background: P.negative, borderRadius: 3 }} />
                   </div>
+                  <span style={{ fontSize: 12, fontFamily: "monospace", color: P.negativeLt, minWidth: 52, textAlign: "right" }}>
+                    {fmt(lastRow.baselineMs)}
+                  </span>
                 </div>
-
-                {/* vGPU bar */}
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <span style={{
-                    width: 72,
-                    fontSize: "clamp(11px, 1.1vw, 13px)",
-                    color: P.positiveLt,
-                    textAlign: "right",
-                    flexShrink: 0,
-                    fontWeight: 600,
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                  }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 36, fontSize: 12, color: P.positiveLt, textAlign: "right", fontWeight: 600 }}>
                     vGPU
                   </span>
-                  <div style={{
-                    flex: 1,
-                    height: "clamp(20px, 2.2vw, 30px)",
-                    background: P.bgCard,
-                    borderRadius: 4,
-                    overflow: "hidden",
-                  }}>
+                  <div style={{ flex: 1, height: 14, background: P.bgHover, borderRadius: 3, overflow: "hidden" }}>
                     <div style={{
-                      width: `${Math.max(0.5, (row.vgpuCachedMs / maxBaseline) * 100)}%`,
-                      minWidth: 64,
+                      width: `${Math.max(2, (lastRow.vgpuCachedMs / lastRow.baselineMs) * 100)}%`,
                       height: "100%",
                       background: P.positive,
-                      borderRadius: 4,
-                      transition: "width 0.6s ease-out",
-                      display: "flex",
-                      alignItems: "center",
-                      paddingLeft: 10,
-                    }}>
-                      <span style={{
-                        fontSize: "clamp(10px, 1.1vw, 13px)",
-                        fontFamily: "monospace",
-                        color: P.white,
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}>
-                        {fmt(row.vgpuCachedMs)}
-                      </span>
-                    </div>
+                      borderRadius: 3,
+                    }} />
                   </div>
+                  <span style={{ fontSize: 12, fontFamily: "monospace", color: P.positiveLt, minWidth: 52, textAlign: "right" }}>
+                    {fmt(lastRow.vgpuCachedMs)}
+                  </span>
                 </div>
               </div>
-            ))}
+
+              {/* Verified badge */}
+              <div style={{
+                marginTop: 8,
+                padding: "8px 20px",
+                borderRadius: 6,
+                border: `1px solid ${allVerified ? P.positive : P.negative}44`,
+                background: `${allVerified ? P.positive : P.negative}11`,
+                fontSize: "clamp(12px, 1.2vw, 14px)",
+                fontWeight: 700,
+                color: allVerified ? P.positiveLt : P.negativeLt,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}>
+                {allVerified ? "✓ ALL VERIFIED" : "⚠ MISMATCH"}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Results table ────────────────────────────────────── */}
       {rows.length > 0 && (
