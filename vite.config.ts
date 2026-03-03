@@ -121,6 +121,9 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  optimizeDeps: {
+    include: ["maath"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
