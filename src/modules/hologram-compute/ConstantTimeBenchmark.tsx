@@ -1188,7 +1188,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
           </div>
 
           {/* How it works — one line */}
-          <div className="rounded-xl p-3.5" style={{ background: "hsla(38, 40%, 65%, 0.04)", border: "1px solid hsla(38, 40%, 65%, 0.1)" }}>
+          <div className="rounded-xl p-3.5" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
             <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
               The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
             </p>
