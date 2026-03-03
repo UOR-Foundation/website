@@ -18,7 +18,7 @@
  * @module qkernel/q-ecc
  */
 
-import { MIRROR_PAIRS, ATLAS_VERTICES, type MirrorPair } from "@/hologram/genesis/axiom-mirror";
+import { MIRROR_PAIRS, ATLAS_VERTICES, type MirrorPair } from "../genesis/axiom-mirror";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types

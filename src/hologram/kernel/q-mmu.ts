@@ -25,9 +25,9 @@
  * @module qkernel/q-mmu
  */
 
-import { sha256 } from "@/hologram/genesis/axiom-hash";
-import { createCid } from "@/hologram/genesis/axiom-cid";
-import { toHex, encodeUtf8 } from "@/hologram/genesis/axiom-ring";
+import { sha256 } from "../genesis/axiom-hash";
+import { createCid } from "../genesis/axiom-cid";
+import { toHex, encodeUtf8 } from "../genesis/axiom-ring";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Storage Tiers
