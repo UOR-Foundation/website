@@ -927,15 +927,15 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           {/* Footer bar */}
           <div className="flex items-center justify-between flex-wrap gap-2 pt-1" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium" style={{
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium" style={{
                 background: allChecksOk ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
                 color: allChecksOk ? P.green : P.red,
                 border: `1px solid ${allChecksOk ? "hsla(152, 44%, 50%, 0.2)" : "hsla(0, 55%, 55%, 0.2)"}`,
               }}>
-                <IconCheck size={12} />
+                <IconCheck size={14} />
                 {allChecksOk ? "All outputs byte-identical" : "Mismatch detected — see details above"}
               </div>
-              <span className="text-[11px]" style={{ color: P.muted }}>
+              <span className="text-sm" style={{ color: P.muted }}>
                 {hw.glRenderer ? hw.glRenderer.split(/[,(]/)[0].trim() : hw.jsEngine} · {hw.cpuCores} cores
               </span>
             </div>
