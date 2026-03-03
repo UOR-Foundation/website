@@ -122,9 +122,10 @@ export default defineConfig(({ mode }) => ({
     }),
   ].filter(Boolean),
   optimizeDeps: {
-    include: ["maath"],
+    include: ["maath", "three", "@react-three/fiber", "@react-three/drei"],
   },
   resolve: {
+    dedupe: ["react", "react-dom", "react/jsx-runtime", "three", "@react-three/fiber", "@react-three/drei"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "maath": path.resolve(__dirname, "./node_modules/maath/dist/maath.esm.js"),
