@@ -778,11 +778,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   // Initializing
   if (state === "precomputing") {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-        <p className="text-lg font-medium" style={{ color: P.gold }}>Initializing…</p>
-        <p className="text-sm" style={{ color: P.dim }}>
-          Building lookup table for {ALL_SIZES.length} matrix sizes via {isCpu ? "CPU" : "GPU"}
+      <div className="flex flex-col items-center justify-center py-20 gap-5">
+        <div className="w-10 h-10 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
+        <p className="text-2xl font-medium" style={{ color: P.gold }}>Initializing…</p>
+        <p className="text-base" style={{ color: P.muted }}>
+          Building lookup table for {ALL_SIZES.length} matrix sizes
         </p>
       </div>
     );
