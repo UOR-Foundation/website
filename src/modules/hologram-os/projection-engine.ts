@@ -21,9 +21,9 @@
  * @module hologram-os/projection-engine
  */
 
-import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/boot/q-boot";
-import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/boot/q-boot";
-import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/compute/q-sched";
+import type { QKernelBoot, BootStage, GenesisProcess } from "@/hologram/kernel/init/q-boot";
+import { boot, post, loadHardware, hydrateFirmware, createGenesisProcess } from "@/hologram/kernel/init/q-boot";
+import { QSched, classifyZone, type QProcess, type CoherenceZone } from "@/hologram/kernel/kernel/q-sched";
 import { getPrescienceEngine, type PreloadHint } from "./prescience-engine";
 import { kernelLog } from "@/modules/hologram-os/components/KernelInspector";
 import {
