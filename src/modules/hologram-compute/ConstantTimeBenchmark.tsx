@@ -1094,40 +1094,40 @@ function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType:
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling</p>
-          <p className="text-lg font-mono font-light" style={{ color: baseColor }}>{baseFit.exponent.toFixed(3)}</p>
-          <p className="text-[10px]" style={{ color: baseExpOk ? P.dim : P.red }}>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-xs uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling Exponent</p>
+          <p className="text-2xl font-mono font-light mt-1" style={{ color: baseColor }}>{baseFit.exponent.toFixed(3)}</p>
+          <p className="text-sm mt-1" style={{ color: baseExpOk ? P.dim : P.red }}>
             {baseExpOk ? `Expected ~3.0 · R²=${baseFit.rSquared.toFixed(3)}` : `⚠ Unexpected — ${isCpu ? "JIT" : "GPU"} effects`}
           </p>
         </div>
-        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling</p>
-          <p className="text-lg font-mono font-light" style={{ color: P.gold }}>{holoFit.exponent.toFixed(3)}</p>
-          <p className="text-[10px]" style={{ color: holoExpOk ? P.dim : P.red }}>
+        <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-xs uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling Exponent</p>
+          <p className="text-2xl font-mono font-light mt-1" style={{ color: P.gold }}>{holoFit.exponent.toFixed(3)}</p>
+          <p className="text-sm mt-1" style={{ color: holoExpOk ? P.dim : P.red }}>
             {holoExpOk ? `Expected ~0 · R²=${holoFit.rSquared.toFixed(3)}` : "⚠ Unexpected — check retrieval"}
           </p>
         </div>
       </div>
       {/* Statistical stability summary */}
-      <div className="rounded-xl p-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold text-center mb-1" style={{ color: P.green }}>Statistical Validation</p>
-        <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+      <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <p className="text-xs uppercase tracking-widest font-bold text-center mb-2" style={{ color: P.green }}>Statistical Validation</p>
+        <div className="grid grid-cols-4 gap-3 text-center text-sm">
           <div>
-            <span className="font-mono font-bold" style={{ color: P.text }}>{points.length}</span>
+            <span className="font-mono font-bold text-base" style={{ color: P.text }}>{points.length}</span>
             <p style={{ color: P.dim }}>sizes tested</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: P.text }}>{points.reduce((s, p) => s + p.samples, 0)}</span>
+            <span className="font-mono font-bold text-base" style={{ color: P.text }}>{points.reduce((s, p) => s + p.samples, 0)}</span>
             <p style={{ color: P.dim }}>total samples</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: maxCvCpu < 15 ? P.green : P.red }}>{maxCvCpu.toFixed(1)}%</span>
+            <span className="font-mono font-bold text-base" style={{ color: maxCvCpu < 15 ? P.green : P.red }}>{maxCvCpu.toFixed(1)}%</span>
             <p style={{ color: P.dim }}>max CV (CPU)</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: maxCvHolo < 15 ? P.green : P.red }}>{maxCvHolo.toFixed(1)}%</span>
+            <span className="font-mono font-bold text-base" style={{ color: maxCvHolo < 15 ? P.green : P.red }}>{maxCvHolo.toFixed(1)}%</span>
             <p style={{ color: P.dim }}>max CV (vGPU)</p>
           </div>
         </div>
