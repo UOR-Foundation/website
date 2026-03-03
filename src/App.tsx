@@ -128,7 +128,6 @@ const ConsciousnessPage = lazy(() => import("@/modules/consciousness/pages/Consc
 const GodConjecturePage = lazy(() => import("@/modules/consciousness/pages/GodConjecturePage"));
 const TrustGraphPage = lazy(() => import("@/modules/trust-graph/pages/TrustGraphPage"));
 const HologramOsPage = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
-const HologramOsPageEager = lazy(() => import("@/modules/hologram-ui/pages/HologramOsPage"));
 const HologramConsolePage = lazy(() => import("@/modules/hologram-ui/pages/HologramConsolePage"));
 const CodeKgPage = lazy(() => import("@/modules/code-kg/pages/CodeKgPage"));
 const ConvergencePage = lazy(() => import("@/modules/hologram-ui/pages/ConvergencePage"));
