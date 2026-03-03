@@ -739,11 +739,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
         <p className="text-base" style={{ color: P.muted }}>
           {isCpu ? (
             <>
-              <strong style={{ color: P.text }}>CPU baseline</strong> — single-threaded INT8 matmul vs pre-computed retrieval.
+              <strong style={{ color: P.text }}>CPU vs vGPU (both CPU-only)</strong> — single-threaded INT8 matmul O(N³) vs pre-computed retrieval O(N²). Like-for-like: no GPU hardware used.
             </>
           ) : (
             <>
-              <strong style={{ color: P.text }}>GPU baseline</strong> — WebGPU compute shader vs pre-computed retrieval.
+              <strong style={{ color: P.text }}>Native GPU vs vGPU (both GPU-accelerated)</strong> — WebGPU compute shader O(N³) vs GPU-precomputed retrieval O(N²). Like-for-like: both use GPU hardware.
             </>
           )}
         </p>
@@ -769,12 +769,12 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid ${baseColor}15` }}>
             <p className="text-xs uppercase tracking-[0.2em] font-bold mb-3" style={{ color: baseColor }}>{baseLabel} Baseline</p>
             <p className="text-5xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
-            <p className="text-sm mt-3" style={{ color: P.muted }}>Standard recomputation</p>
+            <p className="text-sm mt-3" style={{ color: P.muted }}>{isCpu ? "Single-threaded CPU matmul" : "WebGPU compute shader"}</p>
           </div>
           <div className="rounded-xl p-6 text-center" style={{ background: P.card, border: `1px solid hsla(0, 0%, 100%, 0.08)` }}>
             <p className="text-xs uppercase tracking-[0.2em] font-bold mb-3" style={{ color: P.gold }}>Hologram vGPU</p>
-            <p className="text-5xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
-            <p className="text-sm mt-3" style={{ color: P.muted }}>Pre-computed retrieval</p>
+            <p className="text-5xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(N²)</p>
+            <p className="text-sm mt-3" style={{ color: P.muted }}>O(N²) fingerprint + O(1) lookup</p>
           </div>
         </div>
       )}
