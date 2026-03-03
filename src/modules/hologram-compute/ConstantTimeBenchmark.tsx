@@ -863,7 +863,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                 <div className="h-full rounded-full" style={{
                   width: points.length > 0 ? `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%` : "0%",
                   background: P.gold,
-                  boxShadow: `0 0 16px hsla(170, 90%, 55%, 0.5)`,
+                  boxShadow: `0 0 12px hsla(185, 45%, 55%, 0.3)`,
                   transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
                 }} />
               </div>
