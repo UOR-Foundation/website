@@ -15,7 +15,7 @@ import {
   toOpenQASM,
   entanglementMap,
   quickRun,
-} from "@/hologram/kernel/compute/q-simulator";
+} from "@/hologram/kernel/arch/q-simulator";
 
 describe("Q-Simulator: Statevector Engine", () => {
   it("initializes to |0...0⟩", () => {

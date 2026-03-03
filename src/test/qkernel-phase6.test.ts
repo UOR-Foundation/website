@@ -7,10 +7,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { bootSync as boot } from "@/hologram/kernel/boot/q-boot";
-import { QSched } from "@/hologram/kernel/compute/q-sched";
-import { QIpc } from "@/hologram/kernel/network/q-ipc";
-import { QNet } from "@/hologram/kernel/network/q-net";
+import { bootSync as boot } from "@/hologram/kernel/init/q-boot";
+import { QSched } from "@/hologram/kernel/kernel/q-sched";
+import { QIpc } from "@/hologram/kernel/ipc/q-ipc";
+import { QNet } from "@/hologram/kernel/net/q-net";
 import { QAgent, QAgentMesh, type ResourceEnvelope } from "@/hologram/kernel/agents/q-agent";
 
 // ── Helper: set up shared infrastructure ─────────────────────────

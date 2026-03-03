@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { QSched } from "@/hologram/kernel/compute/q-sched";
-import { QIpc } from "@/hologram/kernel/network/q-ipc";
-import { QNet } from "@/hologram/kernel/network/q-net";
-import { QEcc } from "@/hologram/kernel/compute/q-ecc";
+import { QSched } from "@/hologram/kernel/kernel/q-sched";
+import { QIpc } from "@/hologram/kernel/ipc/q-ipc";
+import { QNet } from "@/hologram/kernel/net/q-net";
+import { QEcc } from "@/hologram/kernel/crypto/q-ecc";
 import { QSecureMesh } from "@/hologram/kernel/security/q-secure-mesh";
 import type { QAgent } from "@/hologram/kernel/agents/q-agent";
 
