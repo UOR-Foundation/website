@@ -817,20 +817,20 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
 
             {/* Runtime comparison bars */}
-            <div className="w-full space-y-1.5 px-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: `${baseColor}14` }}>
+            <div className="w-full space-y-2 px-2">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
+                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono w-8 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(220, 50%, 70%, 0.08)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(220, 50%, 70%, 0.4)" }} />
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(0, 0%, 100%, 0.3)" }} />
                 </div>
-                <span className="text-[11px] font-mono w-16 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
+                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
             </div>
 
