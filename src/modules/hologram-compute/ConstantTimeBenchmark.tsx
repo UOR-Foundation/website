@@ -1486,27 +1486,35 @@ export default function ConstantTimeBenchmark() {
   );
 }
 
-// ── Animated counter ────────────────────────────────────────────────────────
+// ── Animated counter (smooth, monotonically increasing, never negative) ─────
 
 function useCountUp(target: number, duration = 800): number {
   const [current, setCurrent] = useState(0);
   const prevTarget = useRef(0);
+  const startValue = useRef(0);
+
+  // Clamp target to never go negative
+  const safeTarget = Math.max(0, target);
 
   useEffect(() => {
-    if (target === prevTarget.current) return;
-    prevTarget.current = target;
+    if (safeTarget === prevTarget.current) return;
+    // Always animate FROM the current displayed value TO the new target
+    startValue.current = prevTarget.current;
+    prevTarget.current = safeTarget;
+    const from = startValue.current;
+    const to = safeTarget;
     const start = performance.now();
     let raf: number;
     const tick = (now: number) => {
       const elapsed = now - start;
       const t = Math.min(elapsed / duration, 1);
       const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-      setCurrent(target * ease);
+      setCurrent(Math.max(0, from + (to - from) * ease));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+  }, [safeTarget, duration]);
 
-  return current;
+  return Math.max(0, current);
 }
