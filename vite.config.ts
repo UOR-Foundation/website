@@ -124,6 +124,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "maath": path.resolve(__dirname, "./node_modules/maath/dist/index.js"),
     },
   },
   css: {
