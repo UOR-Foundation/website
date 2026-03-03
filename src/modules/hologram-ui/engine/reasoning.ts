@@ -82,7 +82,7 @@ export {
   type CompositeFrame,
   type CompositeLayer,
   type CompositorProjection,
-} from "@/hologram/kernel/projection-compositor";
+} from "@/hologram/kernel/surface/projection-compositor";
 
 // ── Procedural Memory ─────────────────────────────────────────────
 export {
