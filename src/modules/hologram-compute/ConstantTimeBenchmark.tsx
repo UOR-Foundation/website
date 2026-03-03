@@ -1468,29 +1468,21 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-2" style={{ fontFamily: P.font }}>
-      {/* Header + Tab Toggle */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <IconFlame size={16} style={{ color: P.gold }} />
-          <span className="text-sm font-semibold tracking-wide" style={{ color: P.text }}>
-            Hologram vGPU — Compute Benchmark
-          </span>
-        </div>
-
-        {/* CPU / GPU Tabs — styled like reference image */}
+    <div className="space-y-3" style={{ fontFamily: P.font }}>
+      {/* Tab Toggle — clean pill */}
+      <div className="flex items-center justify-end">
         <div className="inline-flex items-center rounded-full p-0.5 gap-0.5" style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}>
           {(["cpu", "gpu"] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-medium transition-all duration-300"
+              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
                 background: activeTab === tab ? "hsla(38, 40%, 65%, 0.15)" : "transparent",
                 color: activeTab === tab ? P.gold : P.muted,
               }}
             >
-              {tab === "cpu" ? <IconCpu size={12} /> : <IconCpu2 size={12} />}
+              {tab === "cpu" ? <IconCpu size={13} /> : <IconCpu2 size={13} />}
               {tab === "cpu" ? "CPU" : "GPU"}
             </button>
           ))}
