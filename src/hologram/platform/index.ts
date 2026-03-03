@@ -200,9 +200,14 @@ export interface CompressibleTriple {
 }
 
 export interface CompressionStats {
-  original: number;
-  compressed: number;
+  tripleCount: number;
+  rawBytes: number;
+  compressedBytes: number;
   ratio: number;
+  subjectDictSize: number;
+  unknownPredicates: number;
+  objectDictSize: number;
+  objectDictHits: number;
 }
 
 export interface CompressionAdapter {
