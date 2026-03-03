@@ -198,7 +198,6 @@ export default function BenchmarkPage() {
           is eliminated — only O(N²) input fingerprinting remains. All measurements
           executed live on this device. No server. No simulation.
         </p>
-        </p>
       </section>
 
       {/* Inject keyframes */}
