@@ -517,7 +517,7 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(220, 50%, 70%, 0.5))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(0, 0%, 100%, 0.4))` : "none",
             }}
           />
         </svg>
