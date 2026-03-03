@@ -1193,7 +1193,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                   <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-                  Pre-computed retrieval via content-addressed cache. O(1) lookup per result matrix.
+                  Cached retrieval via content-addressed store. O(1) lookup per result matrix.
                 </p>
               </div>
             </div>
