@@ -44,30 +44,29 @@ export default function BenchmarkPage() {
         </div>
       </header>
 
-      {/* Hero section — TV-readable from across the room */}
+      {/* Hero section — factual, scientific, TV-readable */}
       <section className="max-w-7xl mx-auto px-6 sm:px-10 pt-14 pb-8 sm:pt-20 sm:pb-10">
         <p
           className="text-sm sm:text-base tracking-[0.25em] uppercase font-semibold mb-4"
           style={{ color: "hsl(220, 50%, 65%)" }}
         >
-          Hologram vGPU
+          Hologram vGPU · INT8 GEMM Benchmark
         </p>
         <h1
-          className="text-5xl sm:text-6xl lg:text-7xl font-light leading-[1.05] tracking-tight lowercase"
+          className="text-4xl sm:text-5xl lg:text-6xl font-light leading-[1.1] tracking-tight"
           style={{
             fontFamily: "'Playfair Display', Georgia, serif",
             color: "hsl(0, 0%, 98%)",
           }}
         >
-          compute once.{" "}
-          <span style={{ color: "hsl(220, 50%, 70%)" }}>retrieve forever.</span>
+          O(1) Retrieval vs O(N³) Recomputation
         </h1>
         <p
-          className="mt-5 text-lg sm:text-xl max-w-2xl leading-relaxed"
+          className="mt-5 text-lg sm:text-xl max-w-3xl leading-relaxed"
           style={{ color: "hsl(220, 10%, 55%)" }}
         >
-          O(1) retrieval vs O(N³) recomputation. SHA-256 verified, byte-identical.
-          Running live on your device.
+          SHA-256 verified, byte-identical results. All measurements run live
+          on this device — no server, no simulation.
         </p>
       </section>
 

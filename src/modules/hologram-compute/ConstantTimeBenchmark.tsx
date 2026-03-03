@@ -734,32 +734,30 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   return (
     <div className="space-y-2">
       {/* ── Run Button ── */}
-      <div className="flex items-center justify-between gap-4 p-3 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
-        <p className="text-[12px]" style={{ color: P.muted }}>
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl" style={{ background: `${baseColor}06`, border: `1px solid ${baseColor}12` }}>
+        <p className="text-sm" style={{ color: P.muted }}>
           {isCpu ? (
             <>
-              <strong style={{ color: P.text }}>CPU only.</strong>{" "}
-              Single-threaded matmul vs pre-computed retrieval. SHA-256 verified.
+              <strong style={{ color: P.text }}>CPU baseline</strong> — single-threaded INT8 matmul vs pre-computed retrieval.
             </>
           ) : (
             <>
-              <strong style={{ color: P.text }}>GPU.</strong>{" "}
-              WebGPU compute shader vs pre-computed retrieval. SHA-256 verified.
+              <strong style={{ color: P.text }}>GPU baseline</strong> — WebGPU compute shader vs pre-computed retrieval.
             </>
           )}
         </p>
         <button
           onClick={onRun}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 disabled:opacity-50 shrink-0 uppercase"
           style={{ background: baseColor, color: "white" }}
         >
           {state === "precomputing" ? (
-            <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />Crystallizing…</>
+            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Precomputing…</>
           ) : state === "running" ? (
-            <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
+            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />{currentSize}</>
           ) : (
-            <><IconPlayerPlay size={13} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
+            <><IconPlayerPlay size={14} />{state === "done" ? "Re-run" : `Run ${baseLabel}`}</>
           )}
         </button>
       </div>
@@ -782,11 +780,11 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Precomputing ── */}
       {state === "precomputing" && (
-        <div className="p-5 text-center space-y-2 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <div className="w-6 h-6 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-          <p className="text-sm font-medium" style={{ color: P.gold }}>Crystallizing answers…</p>
-          <p className="text-[12px]" style={{ color: P.muted }}>
-            Computing all {ALL_SIZES.length} matrix sizes once via {isCpu ? "CPU lookup table" : "hardware GPU"}. Results stored for O(1) retrieval.
+        <div className="p-6 text-center space-y-3 rounded-xl" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="w-7 h-7 mx-auto border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
+          <p className="text-base font-medium" style={{ color: P.gold }}>Precomputing all matrix sizes…</p>
+          <p className="text-sm" style={{ color: P.muted }}>
+            Computing {ALL_SIZES.length} sizes once via {isCpu ? "CPU lookup table" : "hardware GPU"}. Results stored for O(1) retrieval.
           </p>
         </div>
       )}
@@ -836,13 +834,13 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
             </div>
 
             {/* Verified badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full" style={{
               background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
               border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.12)" : "hsla(152, 44%, 50%, 0.12)"}`,
             }}>
-              <IconCheck size={12} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
-                {anyIntegrityIssue ? "MISMATCH" : "ALL VERIFIED"}
+              <IconCheck size={14} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                {anyIntegrityIssue ? "MISMATCH" : "SHA-256 VERIFIED"}
               </span>
             </div>
           </div>
@@ -853,33 +851,33 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {state === "done" && points.length > 0 && (
         <>
           {/* Results header + export */}
-          <div className="rounded-xl p-3 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            <span className="text-xs uppercase tracking-[0.1em] font-bold" style={{ color: P.text }}>
-              Results · INT8 GEMM · {points.length} sizes
+          <div className="rounded-xl p-4 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <span className="text-sm uppercase tracking-[0.12em] font-bold" style={{ color: P.text }}>
+              Results · INT8 GEMM · {points.length} matrix sizes
             </span>
             <button
               onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
-              style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all hover:opacity-80 shrink-0"
+              style={{ background: "hsla(220, 50%, 65%, 0.08)", color: P.blue, border: "1px solid hsla(220, 50%, 65%, 0.15)" }}
             >
-              <IconDownload size={13} />
-              Export Report
+              <IconDownload size={14} />
+              Export JSON Report
             </button>
           </div>
 
           {/* Data table */}
-          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "240px", overflowY: "auto" }}>
-            <table className="w-full text-[11px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
+          <div className="rounded-xl overflow-hidden overflow-x-auto" style={{ border: `1px solid ${P.cardBorder}`, maxHeight: "320px", overflowY: "auto" }}>
+            <table className="w-full text-[13px] font-mono" style={{ fontFamily: "'DM Sans', monospace" }}>
               <thead>
                 <tr style={{ background: P.card, position: "sticky", top: 0, zIndex: 1 }}>
-                  <th className="text-left py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>INT8 Ops</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy ↓</th>
-                  <th className="text-right py-1 px-2 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
-                  <th className="text-center py-1 px-2 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
+                  <th className="text-left py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>N</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>INT8 Ops</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: baseColor, borderBottom: `1px solid ${P.cardBorder}` }}>{baseLabel} ms</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.gold, borderBottom: `1px solid ${P.cardBorder}` }}>vGPU ms</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.text, borderBottom: `1px solid ${P.cardBorder}` }}>Speedup</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>Energy ↓</th>
+                  <th className="text-right py-2 px-3 font-semibold" style={{ color: P.muted, borderBottom: `1px solid ${P.cardBorder}` }}>Infer/s</th>
+                  <th className="text-center py-2 px-3 font-semibold" style={{ color: P.green, borderBottom: `1px solid ${P.cardBorder}` }}>SHA</th>
                 </tr>
               </thead>
               <tbody>
@@ -892,25 +890,25 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
                   return (
                     <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
-                      <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                      <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: baseColor }}>
+                      <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                      <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: baseColor }}>
                         {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs >= 1000 ? `${(baseMs / 1000).toFixed(2)}s` : baseMs >= 10 ? baseMs.toFixed(1) : baseMs >= 1 ? baseMs.toFixed(2) : baseMs.toFixed(3)}
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                      <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                      <td className="py-1.5 px-3 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
                         {!isCpu && !p.gpuAvailable
                           ? <span style={{ color: P.dim }}>—</span>
                           : speedup >= 1000 ? `${(speedup / 1000).toFixed(1)}K×` : `${speedup.toFixed(0)}×`
                         }
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.green }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.green }}>
                         {p.energySavedPercent.toFixed(1)}%
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.blue }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.blue }}>
                         {formatNum(p.holoTokSec)}
                       </td>
-                      <td className="py-1 px-2 text-center text-sm" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
+                      <td className="py-1.5 px-3 text-center text-base" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
                         {shaMatch === null ? "—" : shaMatch ? "✓" : "✗"}
                       </td>
                     </tr>
@@ -929,15 +927,15 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           {/* Footer bar */}
           <div className="flex items-center justify-between flex-wrap gap-2 pt-1" style={{ borderTop: `1px solid ${P.cardBorder}` }}>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium" style={{
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium" style={{
                 background: allChecksOk ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
                 color: allChecksOk ? P.green : P.red,
                 border: `1px solid ${allChecksOk ? "hsla(152, 44%, 50%, 0.2)" : "hsla(0, 55%, 55%, 0.2)"}`,
               }}>
-                <IconCheck size={12} />
+                <IconCheck size={14} />
                 {allChecksOk ? "All outputs byte-identical" : "Mismatch detected — see details above"}
               </div>
-              <span className="text-[11px]" style={{ color: P.muted }}>
+              <span className="text-sm" style={{ color: P.muted }}>
                 {hw.glRenderer ? hw.glRenderer.split(/[,(]/)[0].trim() : hw.jsEngine} · {hw.cpuCores} cores
               </span>
             </div>
@@ -987,25 +985,25 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${allMatch ? "hsla(152, 44%, 50%, 0.15)" : "hsla(0, 55%, 55%, 0.15)"}` }}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-2.5 text-left transition-colors hover:opacity-90"
+        className="w-full flex items-center justify-between p-3.5 text-left transition-colors hover:opacity-90"
         style={{ background: P.card }}
       >
-        <div className="flex items-center gap-2">
-          <IconCheck size={13} style={{ color: allMatch ? P.green : P.red }} />
-          <span className="text-[12px] font-semibold" style={{ color: P.text }}>SHA-256 Byte Identity Proof</span>
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full" style={{
+        <div className="flex items-center gap-2.5">
+          <IconCheck size={16} style={{ color: allMatch ? P.green : P.red }} />
+          <span className="text-sm font-semibold" style={{ color: P.text }}>SHA-256 Byte Identity Proof</span>
+          <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{
             background: allMatch ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
             color: allMatch ? P.green : P.red,
           }}>
             {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
           {hasGpu && gpuVerifiedCount < points.length && (
-            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
               GPU: {gpuVerifiedCount}/{points.length} verified
             </span>
           )}
         </div>
-        <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
@@ -1096,40 +1094,40 @@ function ScalingExponent({ points, demoType }: { points: BenchPoint[]; demoType:
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling</p>
-          <p className="text-lg font-mono font-light" style={{ color: baseColor }}>{baseFit.exponent.toFixed(3)}</p>
-          <p className="text-[10px]" style={{ color: baseExpOk ? P.dim : P.red }}>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-xs uppercase tracking-widest font-bold" style={{ color: baseColor }}>{baseLabel} Scaling Exponent</p>
+          <p className="text-2xl font-mono font-light mt-1" style={{ color: baseColor }}>{baseFit.exponent.toFixed(3)}</p>
+          <p className="text-sm mt-1" style={{ color: baseExpOk ? P.dim : P.red }}>
             {baseExpOk ? `Expected ~3.0 · R²=${baseFit.rSquared.toFixed(3)}` : `⚠ Unexpected — ${isCpu ? "JIT" : "GPU"} effects`}
           </p>
         </div>
-        <div className="rounded-xl p-2 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-          <p className="text-[9px] uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling</p>
-          <p className="text-lg font-mono font-light" style={{ color: P.gold }}>{holoFit.exponent.toFixed(3)}</p>
-          <p className="text-[10px]" style={{ color: holoExpOk ? P.dim : P.red }}>
+        <div className="rounded-xl p-3 text-center" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <p className="text-xs uppercase tracking-widest font-bold" style={{ color: P.gold }}>vGPU Scaling Exponent</p>
+          <p className="text-2xl font-mono font-light mt-1" style={{ color: P.gold }}>{holoFit.exponent.toFixed(3)}</p>
+          <p className="text-sm mt-1" style={{ color: holoExpOk ? P.dim : P.red }}>
             {holoExpOk ? `Expected ~0 · R²=${holoFit.rSquared.toFixed(3)}` : "⚠ Unexpected — check retrieval"}
           </p>
         </div>
       </div>
       {/* Statistical stability summary */}
-      <div className="rounded-xl p-2" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-        <p className="text-[9px] uppercase tracking-widest font-bold text-center mb-1" style={{ color: P.green }}>Statistical Validation</p>
-        <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+      <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <p className="text-xs uppercase tracking-widest font-bold text-center mb-2" style={{ color: P.green }}>Statistical Validation</p>
+        <div className="grid grid-cols-4 gap-3 text-center text-sm">
           <div>
-            <span className="font-mono font-bold" style={{ color: P.text }}>{points.length}</span>
+            <span className="font-mono font-bold text-base" style={{ color: P.text }}>{points.length}</span>
             <p style={{ color: P.dim }}>sizes tested</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: P.text }}>{points.reduce((s, p) => s + p.samples, 0)}</span>
+            <span className="font-mono font-bold text-base" style={{ color: P.text }}>{points.reduce((s, p) => s + p.samples, 0)}</span>
             <p style={{ color: P.dim }}>total samples</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: maxCvCpu < 15 ? P.green : P.red }}>{maxCvCpu.toFixed(1)}%</span>
+            <span className="font-mono font-bold text-base" style={{ color: maxCvCpu < 15 ? P.green : P.red }}>{maxCvCpu.toFixed(1)}%</span>
             <p style={{ color: P.dim }}>max CV (CPU)</p>
           </div>
           <div>
-            <span className="font-mono font-bold" style={{ color: maxCvHolo < 15 ? P.green : P.red }}>{maxCvHolo.toFixed(1)}%</span>
+            <span className="font-mono font-bold text-base" style={{ color: maxCvHolo < 15 ? P.green : P.red }}>{maxCvHolo.toFixed(1)}%</span>
             <p style={{ color: P.dim }}>max CV (vGPU)</p>
           </div>
         </div>
@@ -1149,56 +1147,72 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${P.cardBorder}` }}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:opacity-90"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors hover:opacity-90"
         style={{ background: P.card }}
       >
         <div className="flex items-center gap-2.5">
-          <IconInfoCircle size={16} style={{ color: P.blue }} />
-          <span className="text-sm font-semibold" style={{ color: P.text }}>Methodology</span>
+          <IconInfoCircle size={18} style={{ color: P.blue }} />
+          <span className="text-base font-semibold" style={{ color: P.text }}>Methodology & Environment</span>
         </div>
-        <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-1 space-y-4" style={{ background: P.card, color: P.muted }}>
-          {/* Core explanation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(0, 55%, 55%, 0.04)", border: "1px solid hsla(0, 55%, 55%, 0.1)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.red }}>CPU Tab</h4>
+        <div className="px-5 pb-5 pt-2 space-y-4" style={{ background: P.card, color: P.muted }}>
+          {/* What is being measured */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.text }}>Measurement</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(0, 50%, 60%, 0.04)", border: "1px solid hsla(0, 50%, 60%, 0.1)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.red }} />
+                  <span className="text-sm font-bold" style={{ color: P.red }}>CPU Baseline</span>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+                  Single-threaded JavaScript INT8 matmul. No SIMD, no WASM, no Web Workers.
+                </p>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> Native single-threaded CPU matmul.{" "}
-                <strong style={{ color: P.gold }}>vGPU:</strong> Pre-computed lookup table (64KB). Both CPU only.
-              </p>
-            </div>
 
-            <div className="rounded-xl p-3.5 space-y-1.5" style={{ background: "hsla(210, 50%, 60%, 0.04)", border: "1px solid hsla(210, 50%, 60%, 0.1)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.blue }} />
-                <h4 className="text-[13px] font-bold" style={{ color: P.blue }}>GPU Tab</h4>
+              <div className="rounded-lg p-4 space-y-2" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold }} />
+                  <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+                  Pre-computed retrieval via content-addressed cache. O(1) lookup per result matrix.
+                </p>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-                <strong style={{ color: P.text }}>Baseline:</strong> WebGPU compute shader.{" "}
-                <strong style={{ color: P.gold }}>vGPU:</strong> One GPU pass → CPU memory retrieval.
-                {" "}<span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "WebGPU available." : "WebGPU not available."}</span>
-              </p>
             </div>
           </div>
 
-          {/* How it works — one line */}
-          <div className="rounded-xl p-3.5" style={{ background: "hsla(220, 50%, 65%, 0.04)", border: "1px solid hsla(220, 50%, 65%, 0.1)" }}>
-            <p className="text-[12px] leading-relaxed" style={{ color: P.muted }}>
-              The vGPU computes every answer <strong style={{ color: P.text }}>once</strong> during crystallization, then stores results. Every subsequent request is a <strong style={{ color: P.text }}>memory lookup</strong> — O(1) regardless of matrix size. All outputs verified byte-identical via SHA-256.
+          {/* Verification */}
+          <div className="rounded-lg p-4" style={{ background: "hsla(152, 44%, 50%, 0.04)", border: "1px solid hsla(152, 44%, 50%, 0.1)" }}>
+            <h4 className="text-sm font-bold mb-1.5" style={{ color: P.green }}>Verification</h4>
+            <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
+              Every result matrix is hashed with SHA-256. Baseline and vGPU hashes must be <strong style={{ color: P.text }}>identical</strong> — proving byte-level equivalence with probability 1 − 2⁻²⁵⁶. Mismatches are flagged immediately.
             </p>
           </div>
 
-          {/* Device info — compact */}
-          <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-0.5 text-[12px]">
-            <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
-            <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
-            {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
+          {/* Timing */}
+          <div className="rounded-lg p-4" style={{ background: "hsla(220, 20%, 40%, 0.04)", border: `1px solid ${P.cardBorder}` }}>
+            <h4 className="text-sm font-bold mb-1.5" style={{ color: P.text }}>Timing Protocol</h4>
+            <ul className="text-sm leading-relaxed space-y-1 list-disc list-inside" style={{ color: P.muted }}>
+              <li>Adaptive JIT warmup before each size</li>
+              <li>Work amplification for sub-millisecond timings</li>
+              <li>Timer overhead subtracted from all measurements</li>
+              <li>Median of multiple samples (robust to GC outliers)</li>
+            </ul>
+          </div>
+
+          {/* Device info */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold uppercase tracking-widest" style={{ color: P.text }}>Environment</h4>
+            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
+              <span style={{ color: P.dim }}>Device</span><span style={{ color: P.text }}>{hw.oscpu} · {hw.cpuCores} cores · {hw.cpuArch}</span>
+              <span style={{ color: P.dim }}>Engine</span><span style={{ color: P.text }}>{hw.browser} {hw.browserVersion} / {hw.jsEngine}</span>
+              {hw.glRenderer && <><span style={{ color: P.dim }}>GPU</span><span style={{ color: P.text }}>{hw.glRenderer.split(/[,(]/)[0].trim()}</span></>}
+              <span style={{ color: P.dim }}>WebGPU</span><span style={{ color: hw.webgpuAvailable ? P.green : P.red }}>{hw.webgpuAvailable ? "Available" : "Not available"}</span>
+            </div>
           </div>
         </div>
       )}
@@ -1446,13 +1460,13 @@ export default function ConstantTimeBenchmark() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold transition-all duration-300 tracking-wide uppercase"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 tracking-wide uppercase"
               style={{
                 background: activeTab === tab ? "hsla(220, 50%, 70%, 0.15)" : "transparent",
                 color: activeTab === tab ? P.gold : P.muted,
               }}
             >
-              {tab === "cpu" ? <IconCpu size={13} /> : <IconCpu2 size={13} />}
+              {tab === "cpu" ? <IconCpu size={15} /> : <IconCpu2 size={15} />}
               {tab === "cpu" ? "CPU" : "GPU"}
             </button>
           ))}
