@@ -457,8 +457,8 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
           <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{x}</text>
         ) : null
       ))}
-      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
-      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={9} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
+      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
+      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
       {/* Baseline */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
       <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
