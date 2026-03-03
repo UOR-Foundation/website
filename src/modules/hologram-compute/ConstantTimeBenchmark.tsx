@@ -30,17 +30,17 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(248, 40%, 12%)",
-  card: "hsla(248, 35%, 16%, 0.7)",
+  bg: "hsl(240, 55%, 12%)",           // deep IQT navy
+  card: "hsla(240, 50%, 16%, 0.8)",
   cardBorder: "hsla(0, 0%, 100%, 0.08)",
-  text: "hsl(0, 0%, 95%)",
-  muted: "hsla(0, 0%, 100%, 0.55)",
-  gold: "hsl(170, 85%, 55%)",      // bright cyan-green — maximum contrast vs red/blue baselines
+  text: "hsl(0, 0%, 100%)",           // pure white — maximum contrast
+  muted: "hsla(0, 0%, 100%, 0.6)",
+  gold: "hsl(170, 90%, 55%)",         // bright cyan for vGPU — maximum separation from red
   dim: "hsla(0, 0%, 100%, 0.3)",
-  green: "hsl(152, 50%, 55%)",
-  red: "hsl(0, 65%, 62%)",          // slightly brighter red for chart visibility
-  blue: "hsl(220, 70%, 68%)",       // slightly brighter blue for chart visibility
-  accent: "hsla(0, 0%, 100%, 0.8)",
+  green: "hsl(152, 55%, 58%)",
+  red: "hsl(4, 78%, 62%)",            // IQT coral-red for baseline
+  blue: "hsl(220, 75%, 68%)",
+  accent: "hsla(0, 0%, 100%, 0.9)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
