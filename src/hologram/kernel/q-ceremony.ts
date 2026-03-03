@@ -178,7 +178,7 @@ export async function executeFoundingCeremony(
   const collapseNonce = generateCollapseNonce();
   const { collapseHash, entanglementBit } = computeCollapseHash(
     collapseNonce,
-    identity["u:canonicalId"],
+    canonicalId["u:canonicalId"],
     timestamp
   );
 
@@ -186,10 +186,10 @@ export async function executeFoundingCeremony(
   const ceremony: FoundingCeremony = {
     "@type": "uor:FoundingCeremony",
     "uor:subject": {
-      canonicalId: identity["u:canonicalId"],
-      cid: identity["u:cid"],
-      ipv6: identity["u:ipv6"],
-      glyph: identity["u:glyph"],
+      canonicalId: canonicalId["u:canonicalId"],
+      cid: canonicalId["u:cid"],
+      ipv6: canonicalId["u:ipv6"],
+      glyph: canonicalId["u:glyph"],
     },
     "uor:threeWord": {
       display: threeWordName.display,
@@ -211,14 +211,14 @@ export async function executeFoundingCeremony(
   };
 
   // ── Step 7: Sign with Dilithium-3 ─────────────────────────────
-  const signedCeremony = await signRecord(ceremony, keypair);
+  const signedCeremony = await identity.signRecord(ceremony, keypair as any);
 
   // ── Step 8: Content-address the signed ceremony ───────────────
-  const ceremonyIdentity = await singleProofHash(signedCeremony);
+  const ceremonyIdentity = await identity.singleProofHash(signedCeremony);
   const ceremonyCid = ceremonyIdentity["u:cid"];
 
   return {
-    identity,
+    identity: canonicalId,
     keypair,
     threeWordName,
     signedCeremony,

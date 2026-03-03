@@ -89,7 +89,8 @@ export function useSovereignty(): SovereigntyState {
 
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const backend = getBackend();
+        const { data: { session } } = await backend.auth.getSession();
         if (!session?.user || !mounted.current) {
           setIsLoading(false);
           return;
@@ -103,7 +104,7 @@ export function useSovereignty(): SovereigntyState {
         setAuthUser(user);
 
         // Check if sovereign identity already exists in profile
-        const { data: profile } = await supabase
+        const { data: profile } = await backend
           .from("profiles")
           .select("uor_canonical_id, uor_cid, uor_glyph, uor_ipv6")
           .eq("user_id", session.user.id)
