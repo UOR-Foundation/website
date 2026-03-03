@@ -29,7 +29,7 @@
  * @module qkernel/q-three-word
  */
 
-import { getWordlist } from "@/lib/uor-triword";
+import { getWordlist } from "@/hologram/platform/triword";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Canonical Wordlists — sourced from uor-triword genesis vocabulary

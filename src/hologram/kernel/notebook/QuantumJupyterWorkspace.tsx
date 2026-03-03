@@ -39,7 +39,7 @@ import {
   type CellOutput,
 } from "@/hologram/kernel/notebook/notebook-engine";
 import { createState, simulateCircuit, realisticNoise, measure } from "@/hologram/kernel/q-simulator";
-import { useScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
+import { useScreenTheme } from "@/hologram/kernel/hooks/useScreenTheme";
 import { nbColors, NbThemeCtx, useNbTheme, type NbColors } from "./notebook-theme";
 import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
 import { NotebookDiffView } from "./NotebookDiffView";
