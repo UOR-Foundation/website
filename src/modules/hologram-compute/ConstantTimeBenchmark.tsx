@@ -403,9 +403,9 @@ function formatNum(n: number): string {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const PHI = 1.618;
-const CW = 680;
-const CH = Math.round(CW / PHI); // ≈ 420 — golden ratio aspect
-const PAD = { top: 48, right: 32, bottom: 60, left: 76 };
+const CW = 720;
+const CH = Math.round(CW / PHI); // ≈ 445 — golden ratio aspect
+const PAD = { top: 56, right: 36, bottom: 68, left: 88 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
 
