@@ -14,8 +14,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQShell } from "../hooks/useQShell";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { motion, AnimatePresence, X } from "../../platform/bridge";
 
 // ─── Zone & state color mapping ─────────────────────────────────
 const ZONE_COLOR: Record<string, string> = {
