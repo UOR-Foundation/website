@@ -89,7 +89,6 @@ export function CircuitWidget() {
               }`}
               title={`${type}: ${c.done}/${c.total}`}
             >
-            >
               {GATE_ICONS[type as GateType] ?? "?"}
             </span>
             );
