@@ -178,7 +178,7 @@ async function detectHardware(): Promise<HardwareInfo> {
 //
 // CLAIM:
 //   "vGPU delivers N×–N× speedup over single-threaded JS CPU for INT8 GEMM
-//    via pre-computed retrieval. Results are byte-identical (SHA-256 verified)."
+//    via cached retrieval. Results are byte-identical (SHA-256 verified)."
 //
 // ══════════════════════════════════════════════════════════════════════════════
 
