@@ -766,33 +766,17 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Idle state ── */}
       {state === "idle" && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid ${baseColor}1A` }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full" style={{ background: baseColor }} />
-              <h3 className="text-sm font-medium" style={{ color: P.text }}>{baseLabel} Baseline</h3>
-            </div>
-            <p className="text-2xl font-light font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
-             <p className="text-[11px]" style={{ color: P.muted }}>
-               {isCpu
-                 ? `Single ${hw.jsEngine} thread on ${hw.cpuArch} (${hw.cpuCores} cores). No GPU used.`
-                 : `WebGPU compute shader on hardware GPU. Live computation each time.`
-               }
-             </p>
-           </div>
-           <div className="rounded-xl p-4 space-y-2" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
-             <div className="flex items-center gap-2">
-               <div className="w-2.5 h-2.5 rounded-full" style={{ background: P.gold, boxShadow: "0 0 8px hsla(38, 40%, 65%, 0.4)" }} />
-               <h3 className="text-sm font-medium" style={{ color: P.text }}>Hologram vGPU</h3>
-             </div>
-             <p className="text-2xl font-light font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
-             <p className="text-[11px]" style={{ color: P.muted }}>
-               {isCpu
-                 ? "Crystallized via CPU lookup table (64KB). Retrieval is a CPU memory read."
-                 : "Crystallized via hardware GPU (one pass). Retrieval is a CPU memory read. GPU freed after crystallization."
-               }
-             </p>
-           </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid ${baseColor}15` }}>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: baseColor }}>{baseLabel} Baseline</p>
+            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: baseColor }}>O(N³)</p>
+            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Standard recomputation</p>
+          </div>
+          <div className="rounded-xl p-5 text-center" style={{ background: P.card, border: `1px solid hsla(38, 40%, 65%, 0.12)` }}>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold mb-2" style={{ color: P.gold }}>Hologram vGPU</p>
+            <p className="text-4xl font-extralight font-mono leading-none" style={{ color: P.gold }}>O(1)</p>
+            <p className="text-[11px] mt-2" style={{ color: P.muted }}>Pre-computed retrieval</p>
+          </div>
         </div>
       )}
 
