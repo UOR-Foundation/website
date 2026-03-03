@@ -1,22 +1,43 @@
 /**
- * Platform Bridge — Current App Wiring
- * ═════════════════════════════════════
+ * Platform Bridge — THE Single Gateway
+ * ══════════════════════════════════════
  *
- * Wires the hologram platform interfaces to this application's
- * infrastructure (Supabase, UNS identity, GPU, etc.).
+ * ┌─────────────────────────────────────────────────────┐
+ * │  THIS IS THE ONLY FILE IN HOLOGRAM THAT IMPORTS     │
+ * │  FROM OUTSIDE src/hologram/.                        │
+ * │                                                     │
+ * │  Every external dependency — infrastructure, hooks,  │
+ * │  identity, GPU — enters through HERE and nowhere    │
+ * │  else. To migrate Hologram to a standalone repo,    │
+ * │  rewrite THIS FILE ONLY.                            │
+ * └─────────────────────────────────────────────────────┘
  *
  * Call initHologramPlatform() once at app startup.
  *
  * @module hologram/platform/bridge
  */
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// EXTERNAL IMPORTS — Every outside dependency is listed
+// here. Grep for '@/' in this file to audit ALL of them.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 import { supabase } from "@/integrations/supabase/client";
 import { singleProofHash } from "@/modules/uns/core/identity";
 import { generateKeypair, signRecord } from "@/modules/uns/core/keypair";
+
+// React hooks re-exported for kernel UI components
+export { useScreenTheme, type ScreenTheme } from "@/modules/hologram-ui/hooks/useScreenTheme";
+export { useDataBank, type DataBankHandle } from "@/modules/data-bank";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INTERNAL IMPORTS — These stay within hologram/
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 import type { HologramPlatform } from "./index";
 import { setPlatform } from "./index";
 
-// ── Backend Adapter (Supabase) ────────────────────────────────────────
+// ── Backend Adapter (Database / Auth / Functions) ─────
 
 const backendAdapter = {
   from: (table: string) => (supabase as any).from(table),
@@ -33,7 +54,7 @@ const backendAdapter = {
   },
 };
 
-// ── Identity Adapter (UNS) ────────────────────────────────────────────
+// ── Identity Adapter (Canonical Hashing / PQC Signing) ─
 
 const identityAdapter = {
   singleProofHash: async (obj: unknown) => {
@@ -49,7 +70,7 @@ const identityAdapter = {
   },
 };
 
-// ── GPU Adapter (lazy import) ─────────────────────────────────────────
+// ── GPU Adapter (WebGPU / LUT Engine) ─────────────────
 
 let _gpuModule: any = null;
 async function getGpuModule() {
@@ -62,18 +83,15 @@ async function getGpuModule() {
 const gpuAdapter = {
   init: async () => {
     const m = await getGpuModule();
-    const gpu = m.getHologramGpu();
-    return gpu.init();
+    return m.getHologramGpu().init();
   },
   benchmark: async (size?: number) => {
     const m = await getGpuModule();
-    const gpu = m.getHologramGpu();
-    return gpu.benchmark(size);
+    return m.getHologramGpu().benchmark(size);
   },
   matmul: async (a: Float32Array, b: Float32Array, M: number, N: number, K: number) => {
     const m = await getGpuModule();
-    const gpu = m.getHologramGpu();
-    return gpu.matmul(a, b, M, N, K);
+    return m.getHologramGpu().matmul(a, b, M, N, K);
   },
   destroy: () => {},
 };
@@ -81,17 +99,15 @@ const gpuAdapter = {
 const lutAdapter = {
   apply: async (table: string, input: Uint8Array) => {
     const m = await getGpuModule();
-    const engine = m.getLutEngine();
-    return engine.apply(table, input);
+    return m.getLutEngine().apply(table, input);
   },
   info: async () => {
     const m = await getGpuModule();
-    const engine = m.getLutEngine();
-    return engine.info();
+    return m.getLutEngine().info();
   },
 };
 
-// ── Storage Adapter (Data Bank) ───────────────────────────────────────
+// ── Storage Adapter (Encrypted Key-Value) ─────────────
 
 const storageAdapter = {
   writeSlot: async (key: string, value: string) => {
@@ -116,7 +132,7 @@ const storageAdapter = {
   },
 };
 
-// ── Compression Adapter ───────────────────────────────────────────────
+// ── Compression Adapter (Triple Codec) ────────────────
 
 const compressionAdapter = {
   compress: async (triples: any[]) => {
@@ -139,7 +155,7 @@ const compressionAdapter = {
   },
 };
 
-// ── Assemble & Export ─────────────────────────────────────────────────
+// ── Assemble & Initialize ─────────────────────────────
 
 const platform: HologramPlatform = {
   backend: backendAdapter,
@@ -155,5 +171,5 @@ export function initHologramPlatform(): void {
   setPlatform(platform);
 }
 
-// Auto-initialize on import (for backward compatibility)
+// Auto-initialize on import
 initHologramPlatform();

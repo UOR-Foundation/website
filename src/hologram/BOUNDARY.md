@@ -1,43 +1,47 @@
 # Hologram — External Dependency Boundary
 
-> **Rule**: Every file in `src/hologram/` uses only relative imports.
-> External dependencies exist in exactly **2 boundary files**.
-> To migrate to a standalone repo, rewrite only these 2 files.
+> **Rule**: Every file in `src/hologram/` uses only relative imports.  
+> External dependencies enter through exactly **ONE** file: `platform/bridge.ts`.  
+> To migrate to a standalone repo, **rewrite that single file**.
 
 ---
 
-## Boundary Files
+## The Single Gateway: `platform/bridge.ts`
 
-### 1. `platform/bridge.ts` — Infrastructure Adapter
+All traffic between Hologram and the outside world passes through this one file.  
+No other file in `src/hologram/` may import from `@/` or any external module.
 
-The **primary** boundary. Wires `HologramPlatform` interfaces to the host app.
+```
+┌──────────────────────────────────────────────────────────┐
+│                    HOST APPLICATION                       │
+│  (Supabase, UNS, Data Bank, GPU, Hologram UI hooks)      │
+└───────────────────────┬──────────────────────────────────┘
+                        │
+                   bridge.ts  ← THE ONLY GATEWAY
+                        │
+┌───────────────────────┴──────────────────────────────────┐
+│                   HOLOGRAM KERNEL                         │
+│  genesis/ → kernel/ → platform interfaces                 │
+│  (100% self-contained, zero external imports)             │
+└──────────────────────────────────────────────────────────┘
+```
 
-| External Import | Purpose | Platform Interface |
-|---|---|---|
-| `@/integrations/supabase/client` | Database, auth, edge functions | `BackendAdapter` |
-| `@/modules/uns/core/identity` | `singleProofHash` (URDNA2015 → CID) | `IdentityAdapter` |
-| `@/modules/uns/core/keypair` | `generateKeypair`, `signRecord` (Dilithium-3) | `IdentityAdapter` |
-| `@/modules/uns/core/hologram/gpu` | WebGPU matmul, LUT engine | `GpuAdapter`, `LutEngineAdapter` |
-| `@/modules/data-bank/lib/sync` | Encrypted localStorage + cloud sync | `StorageAdapter` |
-| `@/modules/data-bank/lib/graph-compression` | Triple compression codec | `CompressionAdapter` |
+### External Imports in bridge.ts
 
-**Migration**: Implement `HologramPlatform` and call `setPlatform()`.
-
-### 2. `platform/adapters/index.ts` — React Hook Proxies
-
-Optional UI hooks used by kernel notebook components.
-
-| External Import | Purpose |
-|---|---|
-| `@/modules/hologram-ui/hooks/useScreenTheme` | Light/dark theme cascade |
-| `@/modules/data-bank` | `useDataBank()` — encrypted key-value persistence |
-
-**Migration**: Replace `useScreenTheme` with a `localStorage` preference.
-Replace `useDataBank` with a hook over `StorageAdapter`.
+| Import | Purpose | Platform Interface | Migration |
+|---|---|---|---|
+| `@/integrations/supabase/client` | Database, auth, edge functions | `BackendAdapter` | Any REST/SQL client |
+| `@/modules/uns/core/identity` | `singleProofHash` (URDNA2015 → CID) | `IdentityAdapter` | Any SHA-256 hasher |
+| `@/modules/uns/core/keypair` | `generateKeypair`, `signRecord` (Dilithium-3) | `IdentityAdapter` | Any PQC library |
+| `@/modules/uns/core/hologram/gpu` | WebGPU matmul, LUT engine | `GpuAdapter` | WebGPU / CPU fallback |
+| `@/modules/data-bank/lib/sync` | Encrypted key-value persistence | `StorageAdapter` | localStorage / IndexedDB |
+| `@/modules/data-bank/lib/graph-compression` | Triple compression codec | `CompressionAdapter` | fflate / custom |
+| `@/modules/hologram-ui/hooks/useScreenTheme` | Light/dark theme cascade | React hook (re-export) | localStorage pref |
+| `@/modules/data-bank` (useDataBank) | Encrypted notebook persistence | React hook (re-export) | Hook over StorageAdapter |
 
 ---
 
-## NPM Dependencies
+## NPM Dependencies (used within hologram/)
 
 | Package | Where Used | Required |
 |---|---|---|
@@ -48,24 +52,19 @@ Replace `useDataBank` with a hook over `StorageAdapter`.
 
 ---
 
-## Internal-Only Modules (Zero External Deps)
+## Self-Contained Modules (Zero External Deps)
 
 Everything below has **no imports outside `src/hologram/`**:
 
 - `genesis/` — Axiom layer (hash, ring, codec, CID, mirror, signal, constitution)
-- `kernel/` — Q-Boot, Q-MMU, Q-Sched, Q-FS, Q-ECC, Q-ISA, Q-Net, Q-IPC, Q-Agent, Q-Security, Q-Vault, Q-Ceremony, Q-Sovereignty, Q-Disclosure, Q-Trust-Mesh, TEE Bridge, Stabilizer Engine, Holographic Surface, Circuit Compiler, Procedural Memory, Mirror Protocol, Kernel Supervisor, Notebook, QShell
-- `platform/geometric-coherence.ts` — δ₀ constants, H-score, spectral health
-- `platform/reward-circuit.ts` — Reward signals, EMA accumulator
-- `platform/foundation-types.ts` — UOR algebraic substrate types
-- `platform/identity-types.ts` — Canonical identity shapes
-- `platform/triword.ts` — 768-word canonical vocabulary (internalized)
-- `platform/utils.ts` — `sha256hex`, `isMobileViewport`, `kernelLog`
+- `kernel/` — All Q-subsystems, agents, TEE, stabilizer, surface, notebook, shell
+- `platform/*.ts` — Types, geometric coherence, reward circuit, triword vocabulary, utils
 
 ---
 
 ## Verification
 
 ```bash
-# Should return ONLY bridge.ts and adapters/index.ts
+# Must return ONLY platform/bridge.ts
 grep -rn 'from "@/' src/hologram/ --include='*.ts' --include='*.tsx'
 ```
