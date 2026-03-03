@@ -152,4 +152,4 @@ export { clamp, lerp, mod, emaUpdate, entropy, hammingDistance } from "./lib/mat
 // Subsystem modules re-export their own types; include/ provides
 // the Linux-equivalent header interface for external consumers.
 export type { ProcessDescriptor } from "./include/process";
-export type { IncludeMmuStats } from "./include/memory";
+export type { MmuStats as IncludeMmuStats } from "./include/memory";
