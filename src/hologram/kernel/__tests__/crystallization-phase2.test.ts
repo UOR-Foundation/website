@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { QMmu } from "../q-mmu";
-import { QSched } from "../q-sched";
-import { QFs } from "../q-fs";
-import { QSyscall } from "../q-syscall";
-import { QNet } from "../q-net";
-import { QIpc } from "../q-ipc";
-import { QEcc } from "../q-ecc";
-import { QSecurity } from "../q-security";
-import { bootSync as boot } from "../q-boot";
+import { QMmu } from "../memory/q-mmu";
+import { QSched } from "../compute/q-sched";
+import { QFs } from "../memory/q-fs";
+import { QSyscall } from "../compute/q-syscall";
+import { QNet } from "../network/q-net";
+import { QIpc } from "../network/q-ipc";
+import { QEcc } from "../compute/q-ecc";
+import { QSecurity } from "../security/q-security";
+import { bootSync as boot } from "../boot/q-boot";
 
 describe("Crystallization Phase 2 — q-syscall, q-net, q-ipc, q-boot, q-driver, q-security", () => {
   const mmu = new QMmu();

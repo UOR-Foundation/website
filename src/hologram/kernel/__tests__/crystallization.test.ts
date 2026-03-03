@@ -5,9 +5,9 @@
  * using ONLY genesis/ axioms — zero external dependencies.
  */
 import { describe, it, expect } from "vitest";
-import { QMmu } from "../q-mmu";
-import { QSched } from "../q-sched";
-import { QFs } from "../q-fs";
+import { QMmu } from "../memory/q-mmu";
+import { QSched } from "../compute/q-sched";
+import { QFs } from "../memory/q-fs";
 import { encodeUtf8 } from "../../genesis/axiom-ring";
 
 describe("Q-MMU (crystallized)", () => {
