@@ -165,7 +165,7 @@ export async function executeFoundingCeremony(
   const canonicalId = await identity.singleProofHash(keypair.publicKeyObject);
 
   // ── Step 3: Extract hash bytes for three-word derivation ───────
-  const hexStr = identity["u:canonicalId"].split(":").pop() ?? "";
+  const hexStr = canonicalId["u:canonicalId"].split(":").pop() ?? "";
   const hashBytes = new Uint8Array(
     (hexStr.match(/.{2}/g) ?? []).map(h => parseInt(h, 16))
   );
