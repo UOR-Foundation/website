@@ -397,12 +397,14 @@ function formatNum(n: number): string {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SVG Comparison Chart
+// SVG Comparison Chart — Golden Ratio Proportions
+// φ = 1.618 — Chart width:height ≈ φ, padding ratios follow φ cascade
 // ══════════════════════════════════════════════════════════════════════════════
 
-const CW = 520;
-const CH = 200;
-const PAD = { top: 24, right: 20, bottom: 36, left: 48 };
+const PHI = 1.618;
+const CW = 640;
+const CH = Math.round(CW / PHI); // ≈ 396 — golden ratio aspect
+const PAD = { top: 36, right: 28, bottom: 52, left: 64 };
 const IW = CW - PAD.left - PAD.right;
 const IH = CH - PAD.top - PAD.bottom;
 
@@ -434,62 +436,73 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
     <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full h-full">
       <defs>
         <linearGradient id="base-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.01" />
+          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.02" />
         </linearGradient>
         <linearGradient id="holo-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={P.gold} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={P.gold} stopOpacity="0.01" />
+          <stop offset="0%" stopColor={P.gold} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={P.gold} stopOpacity="0.02" />
         </linearGradient>
         <filter id="glow-gold">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
+
+      {/* Grid lines */}
       {gridLines.map((g, i) => (
         <g key={i}>
-          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.2} />
-          <text x={PAD.left - 8} y={g.y + 3} textAnchor="end" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{g.label}</text>
+          <line x1={PAD.left} y1={g.y} x2={CW - PAD.right} y2={g.y} stroke={P.dim} strokeWidth={0.5} strokeDasharray="6,4" opacity={0.18} />
+          <text x={PAD.left - 12} y={g.y + 5} textAnchor="end" fill={P.muted} fontSize={14} fontFamily="'DM Sans', monospace" fontWeight="500">{g.label}</text>
         </g>
       ))}
+
+      {/* X-axis labels */}
       {xVals.map((x, i) => (
         i % 2 === 0 || i === xVals.length - 1 ? (
-          <text key={i} x={xS(x)} y={CH - PAD.bottom + 14} textAnchor="middle" fill={P.muted} fontSize={10} fontFamily="'DM Sans', monospace">{x}</text>
+          <text key={i} x={xS(x)} y={CH - PAD.bottom + 22} textAnchor="middle" fill={P.muted} fontSize={14} fontFamily="'DM Sans', monospace" fontWeight="500">{x}</text>
         ) : null
       ))}
-      <text x={CW / 2} y={CH - 4} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500">Matrix Dimension N</text>
-      <text x={12} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={10} fontFamily={P.font} fontWeight="500" transform={`rotate(-90, 12, ${CH / 2})`}>Runtime (ms)</text>
-      {/* Baseline */}
+
+      {/* Axis titles */}
+      <text x={CW / 2} y={CH - 6} textAnchor="middle" fill={P.dim} fontSize={14} fontFamily={P.font} fontWeight="600" letterSpacing="0.05em">Matrix Dimension N</text>
+      <text x={16} y={CH / 2} textAnchor="middle" fill={P.dim} fontSize={14} fontFamily={P.font} fontWeight="600" letterSpacing="0.05em" transform={`rotate(-90, 16, ${CH / 2})`}>Runtime (ms)</text>
+
+      {/* Baseline area + line */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${basePath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#base-area)" />
-      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={basePath} fill="none" stroke={baselineColor} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
       {xVals.map((x, i) => (
-        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={2.5} fill={baselineColor} stroke={P.bg} strokeWidth={1} />
+        <circle key={`b${i}`} cx={xS(x)} cy={yS(baselineMs[i])} r={4} fill={baselineColor} stroke={P.bg} strokeWidth={1.5} />
       ))}
-      {/* Hologram */}
+
+      {/* Hologram area + line */}
       <polygon points={`${xS(xVals[0])},${yS(0)} ${holoPath} ${xS(xVals[xVals.length - 1])},${yS(0)}`} fill="url(#holo-area)" />
-      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
+      <polyline points={holoPath} fill="none" stroke={P.gold} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" filter="url(#glow-gold)" />
       {xVals.map((x, i) => (
-        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={3} fill={P.gold} stroke={P.bg} strokeWidth={1} />
+        <circle key={`h${i}`} cx={xS(x)} cy={yS(holoMs[i])} r={4.5} fill={P.gold} stroke={P.bg} strokeWidth={1.5} />
       ))}
-      {/* Legend */}
-      <g transform={`translate(${PAD.left + 8}, ${PAD.top + 4})`}>
-        <rect x={0} y={0} width={12} height={2.5} rx={1} fill={baselineColor} />
-        <text x={18} y={5} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">{baselineLabel}</text>
-        <rect x={0} y={13} width={12} height={2.5} rx={1} fill={P.gold} />
-        <text x={18} y={18} fill={P.text} fontSize={10} fontFamily={P.font} fontWeight="500">Hologram vGPU — O(N²)</text>
+
+      {/* Legend — top left, large text */}
+      <g transform={`translate(${PAD.left + 12}, ${PAD.top + 8})`}>
+        <line x1={0} y1={0} x2={20} y2={0} stroke={baselineColor} strokeWidth={3} strokeLinecap="round" />
+        <circle cx={10} cy={0} r={3.5} fill={baselineColor} />
+        <text x={28} y={5} fill={P.text} fontSize={14} fontFamily={P.font} fontWeight="600">{baselineLabel}</text>
+        <line x1={0} y1={22} x2={20} y2={22} stroke={P.gold} strokeWidth={3} strokeLinecap="round" />
+        <circle cx={10} cy={22} r={3.5} fill={P.gold} />
+        <text x={28} y={27} fill={P.text} fontSize={14} fontFamily={P.font} fontWeight="600">Hologram vGPU — O(N²) retrieval</text>
       </g>
     </svg>
   );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Live Speedup Circle — single large real-time multiplier
+// Live Speedup Circle — golden ratio sizing
 // ══════════════════════════════════════════════════════════════════════════════
 
 function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: number }) {
   const animValue = useCountUp(value, 800);
-  const sz = 200;
-  const strokeW = 6;
+  const sz = 240; // enlarged for TV readability
+  const strokeW = 7;
   const r = (sz - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(value / Math.max(maxValue, 1), 1);
@@ -517,15 +530,15 @@ function LiveSpeedupCircle({ value, maxValue }: { value: number; maxValue: numbe
             strokeDasharray={circ} strokeDashoffset={dashOffset}
             style={{
               transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              filter: pct > 0.3 ? `drop-shadow(0 0 16px hsla(0, 0%, 100%, 0.4))` : "none",
+              filter: pct > 0.3 ? `drop-shadow(0 0 20px hsla(0, 0%, 100%, 0.4))` : "none",
             }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 52 }}>
+          <span className="font-mono font-extralight tabular-nums leading-none" style={{ color: P.gold, fontSize: 64 }}>
             {value > 0 ? `${displayVal}×` : "—"}
           </span>
-          <span className="text-sm font-semibold mt-2 tracking-widest uppercase" style={{ color: P.muted }}>faster</span>
+          <span className="text-lg font-bold mt-3 tracking-[0.2em] uppercase" style={{ color: P.muted }}>faster</span>
         </div>
       </div>
     </div>
@@ -793,9 +806,9 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
       {/* ── Chart + Live Speedup (equal width, side by side) ── */}
       {points.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Chart */}
-          <div className="rounded-xl p-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Chart — golden ratio aspect */}
+          <div className="rounded-xl p-5" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             <ComparisonChart
               points={points}
               baselineMs={points.map(p => isCpu ? p.stdMs : p.gpuMs)}
@@ -806,43 +819,41 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
           </div>
 
           {/* Live Speedup Panel */}
-          <div className="rounded-xl p-4 flex flex-col items-center justify-center gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+          <div className="rounded-xl p-6 flex flex-col items-center justify-center gap-4" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
             {/* Single large speedup circle */}
             <LiveSpeedupCircle value={peakSpeedup} maxValue={isCpu ? sizes[sizes.length - 1] * 2 : sizes[sizes.length - 1]} />
 
             {/* Key message */}
-            <div className="text-center space-y-0.5">
-              <p className="text-sm font-semibold" style={{ color: P.gold }}>
-                {isCpu ? "CPU only — no GPU required" : "GPU freed after crystallization"}
-              </p>
-            </div>
+            <p className="text-lg font-semibold text-center" style={{ color: P.text }}>
+              {isCpu ? "CPU only — no GPU required" : "GPU freed after precomputation"}
+            </p>
 
             {/* Runtime comparison bars */}
-            <div className="w-full space-y-2 px-2">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: baseColor }}>{baseLabel}</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+            <div className="w-full space-y-3 px-3">
+              <div className="flex items-center gap-4">
+                <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: baseColor }}>{baseLabel}</span>
+                <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
                   <div className="h-full rounded-full" style={{ width: "100%", background: baseColor }} />
                 </div>
-                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
+                <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: baseColor }}>{totalBaseMs >= 1000 ? `${(totalBaseMs/1000).toFixed(2)}s` : totalBaseMs >= 10 ? `${totalBaseMs.toFixed(1)}ms` : `${totalBaseMs.toFixed(2)}ms`}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-mono w-10 shrink-0 text-right font-medium" style={{ color: P.gold }}>vGPU</span>
-                <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1)}%`, background: P.gold, boxShadow: "0 0 8px hsla(0, 0%, 100%, 0.3)" }} />
+              <div className="flex items-center gap-4">
+                <span className="text-base font-mono w-12 shrink-0 text-right font-bold" style={{ color: P.gold }}>vGPU</span>
+                <div className="flex-1 h-3.5 rounded-full overflow-hidden" style={{ background: "hsla(0, 0%, 100%, 0.06)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%`, background: P.gold, boxShadow: "0 0 12px hsla(0, 0%, 100%, 0.3)" }} />
                 </div>
-                <span className="text-sm font-mono w-20 text-right tabular-nums" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
+                <span className="text-base font-mono w-24 text-right tabular-nums font-semibold" style={{ color: P.gold }}>{totalHoloMs >= 10 ? `${totalHoloMs.toFixed(1)}ms` : `${totalHoloMs.toFixed(2)}ms`}</span>
               </div>
             </div>
 
             {/* Verified badge */}
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full" style={{
-              background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.06)" : "hsla(152, 44%, 50%, 0.06)",
-              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.12)" : "hsla(152, 44%, 50%, 0.12)"}`,
+            <div className="flex items-center gap-2.5 px-5 py-2 rounded-full" style={{
+              background: anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.08)" : "hsla(152, 44%, 50%, 0.08)",
+              border: `1px solid ${anyIntegrityIssue ? "hsla(0, 55%, 55%, 0.15)" : "hsla(152, 44%, 50%, 0.15)"}`,
             }}>
-              <IconCheck size={14} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
-                {anyIntegrityIssue ? "MISMATCH" : "SHA-256 VERIFIED"}
+              <IconCheck size={18} style={{ color: anyIntegrityIssue ? P.red : P.green }} />
+              <span className="text-sm font-bold uppercase tracking-[0.15em]" style={{ color: anyIntegrityIssue ? P.red : P.green }}>
+                {anyIntegrityIssue ? "MISMATCH DETECTED" : "ALL VERIFIED"}
               </span>
             </div>
           </div>
