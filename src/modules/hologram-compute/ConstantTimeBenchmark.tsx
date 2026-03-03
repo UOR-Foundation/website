@@ -851,17 +851,17 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
       {state === "done" && points.length > 0 && (
         <>
           {/* Results header + export */}
-          <div className="rounded-xl p-3 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
-            <span className="text-xs uppercase tracking-[0.1em] font-bold" style={{ color: P.text }}>
-              Results · INT8 GEMM · {points.length} sizes
+          <div className="rounded-xl p-4 flex items-center justify-between gap-3" style={{ background: P.card, border: `1px solid ${P.cardBorder}` }}>
+            <span className="text-sm uppercase tracking-[0.12em] font-bold" style={{ color: P.text }}>
+              Results · INT8 GEMM · {points.length} matrix sizes
             </span>
             <button
               onClick={() => exportReport(points, precomputeMs, precomputeMethod, hw)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all hover:opacity-80 shrink-0"
-              style={{ background: "hsla(210, 50%, 60%, 0.08)", color: P.blue, border: "1px solid hsla(210, 50%, 60%, 0.15)" }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all hover:opacity-80 shrink-0"
+              style={{ background: "hsla(220, 50%, 65%, 0.08)", color: P.blue, border: "1px solid hsla(220, 50%, 65%, 0.15)" }}
             >
-              <IconDownload size={13} />
-              Export Report
+              <IconDownload size={14} />
+              Export JSON Report
             </button>
           </div>
 
