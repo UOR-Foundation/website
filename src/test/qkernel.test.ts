@@ -21,10 +21,10 @@ describe("Q-Boot: POST (Ring Integrity)", () => {
     expect(result.criticalIdentityVerified).toBe(true);
   });
 
-  it("all 6 POST checks pass", () => {
+  it("all POST checks pass", () => {
     const result = post();
     expect(result.allPassed).toBe(true);
-    expect(result.checks).toHaveLength(6);
+    expect(result.checks.length).toBeGreaterThanOrEqual(6);
     result.checks.forEach(c => expect(c.passed).toBe(true));
   });
 

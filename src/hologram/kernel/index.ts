@@ -153,3 +153,7 @@ export { clamp, lerp, mod, emaUpdate, entropy, hammingDistance } from "./lib/mat
 // the Linux-equivalent header interface for external consumers.
 export type { ProcessDescriptor } from "./include/process";
 export type { MmuStats as IncludeMmuStats } from "./include/memory";
+
+// ── Kconfig — Kernel Configuration (Linux: Kconfig) ──────────────────
+export { KCONFIG } from "./Kconfig";
+export type { KconfigKey } from "./Kconfig";
