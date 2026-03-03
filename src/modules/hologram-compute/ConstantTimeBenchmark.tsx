@@ -985,25 +985,25 @@ function ForensicPanel({ points, demoType }: { points: BenchPoint[]; demoType: "
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${allMatch ? "hsla(152, 44%, 50%, 0.15)" : "hsla(0, 55%, 55%, 0.15)"}` }}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-2.5 text-left transition-colors hover:opacity-90"
+        className="w-full flex items-center justify-between p-3.5 text-left transition-colors hover:opacity-90"
         style={{ background: P.card }}
       >
-        <div className="flex items-center gap-2">
-          <IconCheck size={13} style={{ color: allMatch ? P.green : P.red }} />
-          <span className="text-[12px] font-semibold" style={{ color: P.text }}>SHA-256 Byte Identity Proof</span>
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full" style={{
+        <div className="flex items-center gap-2.5">
+          <IconCheck size={16} style={{ color: allMatch ? P.green : P.red }} />
+          <span className="text-sm font-semibold" style={{ color: P.text }}>SHA-256 Byte Identity Proof</span>
+          <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{
             background: allMatch ? "hsla(152, 44%, 50%, 0.1)" : "hsla(0, 55%, 55%, 0.1)",
             color: allMatch ? P.green : P.red,
           }}>
             {allMatch ? "ALL MATCH" : "MISMATCH DETECTED"}
           </span>
           {hasGpu && gpuVerifiedCount < points.length && (
-            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full" style={{ background: "hsla(220, 50%, 50%, 0.1)", color: P.gold }}>
               GPU: {gpuVerifiedCount}/{points.length} verified
             </span>
           )}
         </div>
-        <span className="text-xs font-mono" style={{ color: P.dim }}>{expanded ? "▼" : "▶"}</span>
+        <span className="text-sm font-mono px-2 py-0.5 rounded" style={{ color: P.dim, background: "hsla(220, 20%, 40%, 0.08)" }}>{expanded ? "collapse" : "expand"}</span>
       </button>
 
       {expanded && (
