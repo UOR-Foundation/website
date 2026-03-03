@@ -219,7 +219,7 @@ export function useSovereignty(): SovereigntyState {
     );
 
     try {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await getBackend()
         .from("profiles")
         .update({
           uor_canonical_id: result.sovereign.identity["u:canonicalId"],
