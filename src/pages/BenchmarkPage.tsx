@@ -150,24 +150,62 @@ export default function BenchmarkPage() {
         </div>
       </header>
 
-      {/* Hero — IQT-style: lowercase serif, generous spacing */}
-      <section className="max-w-6xl mx-auto px-8 sm:px-12 pt-16 pb-6 sm:pt-24 sm:pb-8">
-        <p
-          className="text-base tracking-[0.2em] uppercase font-medium mb-6"
-          style={{ color: "hsla(0, 0%, 100%, 0.4)" }}
-        >
-          Hologram vGPU · INT8 GEMM
-        </p>
-        <h1
-          className="text-5xl sm:text-6xl lg:text-7xl font-extralight leading-[1.1] tracking-tight lowercase"
+      {/* Hero — IQT-style with subtle particle overlay */}
+      <section className="relative overflow-hidden">
+        {/* Animated radial gradient backdrop */}
+        <div
+          className="absolute inset-0 pointer-events-none"
           style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            color: "hsl(0, 0%, 100%)",
+            background:
+              "radial-gradient(ellipse 80% 60% at 20% 40%, hsla(260, 50%, 25%, 0.4) 0%, transparent 70%), " +
+              "radial-gradient(ellipse 60% 50% at 80% 60%, hsla(220, 50%, 20%, 0.3) 0%, transparent 70%)",
+            animation: "heroGradientShift 12s ease-in-out infinite alternate",
           }}
-        >
-          O(1) retrieval vs O(N³) recomputation
-        </h1>
+        />
+        <HeroParticles />
+        <div className="relative max-w-6xl mx-auto px-8 sm:px-12 pt-16 pb-6 sm:pt-24 sm:pb-8">
+          <p
+            className="text-base tracking-[0.2em] uppercase font-medium mb-6"
+            style={{ color: "hsla(0, 0%, 100%, 0.4)" }}
+          >
+            Hologram vGPU · INT8 GEMM
+          </p>
+          <h1
+            className="text-5xl sm:text-6xl lg:text-7xl font-extralight leading-[1.1] tracking-tight lowercase"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              color: "hsl(0, 0%, 100%)",
+            }}
+          >
+            O(1) retrieval vs O(N³) recomputation
+          </h1>
+        </div>
       </section>
+
+      {/* Thin rule — IQT style */}
+      <div
+        className="max-w-6xl mx-auto mx-8 sm:mx-12"
+        style={{ borderTop: "1px solid hsla(0, 0%, 100%, 0.12)" }}
+      />
+
+      {/* Subtitle below rule */}
+      <section className="max-w-6xl mx-auto px-8 sm:px-12 pt-8 pb-4">
+        <p
+          className="text-xl sm:text-2xl max-w-3xl leading-relaxed font-light"
+          style={{ color: "hsla(0, 0%, 100%, 0.6)" }}
+        >
+          SHA-256 verified, byte-identical results. All measurements executed
+          live on this device. No server computation. No simulation.
+        </p>
+      </section>
+
+      {/* Inject keyframes */}
+      <style>{`
+        @keyframes heroGradientShift {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(3%, -2%) scale(1.05); }
+        }
+      `}</style>
 
       {/* Thin rule — IQT style */}
       <div
