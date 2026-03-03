@@ -11,7 +11,7 @@
  * Uses SHA-256 → base32-lower multibase prefix 'b'.
  */
 export async function cidFromBytes(data: Uint8Array): Promise<string> {
-  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hash = await crypto.subtle.digest("SHA-256", data as ArrayBuffer);
   const bytes = new Uint8Array(hash);
   return "b" + base32Lower(bytes);
 }
