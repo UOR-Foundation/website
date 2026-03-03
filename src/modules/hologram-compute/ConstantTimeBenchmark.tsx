@@ -30,17 +30,17 @@ import {
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const P = {
-  bg: "hsl(240, 55%, 12%)",           // deep IQT navy
-  card: "hsla(240, 50%, 16%, 0.8)",
-  cardBorder: "hsla(0, 0%, 100%, 0.08)",
-  text: "hsl(0, 0%, 100%)",           // pure white — maximum contrast
-  muted: "hsla(0, 0%, 100%, 0.6)",
-  gold: "hsl(170, 90%, 55%)",         // bright cyan for vGPU — maximum separation from red
-  dim: "hsla(0, 0%, 100%, 0.3)",
-  green: "hsl(152, 55%, 58%)",
-  red: "hsl(4, 78%, 62%)",            // IQT coral-red for baseline
-  blue: "hsl(220, 75%, 68%)",
-  accent: "hsla(0, 0%, 100%, 0.9)",
+  bg: "hsl(220, 20%, 6%)",              // near-black
+  card: "hsl(220, 18%, 10%)",
+  cardBorder: "hsla(0, 0%, 100%, 0.07)",
+  text: "hsl(0, 0%, 100%)",             // pure white
+  muted: "hsla(0, 0%, 100%, 0.55)",
+  gold: "hsl(185, 45%, 55%)",           // muted teal for vGPU — disciplined, not neon
+  dim: "hsla(0, 0%, 100%, 0.25)",
+  green: "hsl(152, 40%, 52%)",
+  red: "hsl(8, 55%, 58%)",              // warm terracotta — reserved, not screaming
+  blue: "hsl(215, 50%, 58%)",
+  accent: "hsla(0, 0%, 100%, 0.85)",
   font: "'DM Sans', system-ui, sans-serif",
 };
 
@@ -440,19 +440,19 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
     <svg viewBox={`0 0 ${CW} ${CH}`} className="w-full h-full">
       <defs>
         <linearGradient id="base-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={baselineColor} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={baselineColor} stopOpacity="0.01" />
         </linearGradient>
         <linearGradient id="holo-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={P.gold} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={P.gold} stopOpacity="0.02" />
+          <stop offset="0%" stopColor={P.gold} stopOpacity="0.08" />
+          <stop offset="100%" stopColor={P.gold} stopOpacity="0.01" />
         </linearGradient>
         <filter id="glow-gold">
-          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
         <filter id="glow-base">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feGaussianBlur stdDeviation="2" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
@@ -492,7 +492,7 @@ function ComparisonChart({ points, baselineMs, holoMs, baselineColor, baselineLa
 
       {/* Legend — top-right, large, high contrast */}
       <g transform={`translate(${CW - PAD.right - 320}, ${PAD.top + 4})`}>
-        <rect x={-10} y={-14} width={320} height={70} rx={10} fill="hsla(240, 55%, 12%, 0.92)" stroke={P.cardBorder} strokeWidth={1} />
+        <rect x={-10} y={-14} width={320} height={70} rx={10} fill="hsla(220, 20%, 6%, 0.94)" stroke={P.cardBorder} strokeWidth={1} />
         <line x1={4} y1={6} x2={36} y2={6} stroke={baselineColor} strokeWidth={4.5} strokeLinecap="round" />
         <circle cx={20} cy={6} r={5} fill={baselineColor} />
         <text x={46} y={12} fill={baselineColor} fontSize={18} fontFamily={P.font} fontWeight="800">{baselineLabel}</text>
@@ -863,7 +863,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
                 <div className="h-full rounded-full" style={{
                   width: points.length > 0 ? `${Math.max((totalHoloMs / Math.max(totalBaseMs, 0.01)) * 100, 1.5)}%` : "0%",
                   background: P.gold,
-                  boxShadow: `0 0 16px hsla(170, 90%, 55%, 0.5)`,
+                  boxShadow: `0 0 12px hsla(185, 45%, 55%, 0.3)`,
                   transition: "width 1.2s cubic-bezier(0.22, 1, 0.36, 1)",
                 }} />
               </div>

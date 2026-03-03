@@ -28,7 +28,7 @@ export default function BenchmarkPage() {
     <div
       className="min-h-screen flex flex-col"
       style={{
-        background: "hsl(240, 55%, 12%)",
+        background: "hsl(220, 20%, 6%)",
         color: "hsl(0, 0%, 100%)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
