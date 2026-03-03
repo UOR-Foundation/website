@@ -63,7 +63,7 @@ export {
   type GateState,
   type Wire,
   type GateResult,
-} from "@/hologram/kernel/arch/circuit-compiler";
+} from "@/hologram/kernel/circuit-compiler";
 
 // ── Multi-Kernel Compositor ───────────────────────────────────────────
 export {
@@ -74,7 +74,7 @@ export {
   type ChildKernelState,
   type KernelRole,
   type SupervisorProjection,
-} from "@/hologram/kernel/surface/kernel-supervisor";
+} from "@/hologram/kernel/kernel-supervisor";
 
 export {
   getProjectionCompositor,
@@ -82,7 +82,7 @@ export {
   type CompositeFrame,
   type CompositeLayer,
   type CompositorProjection,
-} from "@/hologram/kernel/surface/projection-compositor";
+} from "@/hologram/kernel/projection-compositor";
 
 // ── Procedural Memory ─────────────────────────────────────────────
 export {
@@ -93,7 +93,7 @@ export {
   type ActionPattern,
   type ProceduralProjection,
   type HabitRingEntry,
-} from "@/hologram/kernel/agents/procedural-memory";
+} from "@/hologram/kernel/procedural-memory";
 
 // ── Mirror Coherence Protocol ─────────────────────────────────────
 export {
@@ -104,7 +104,7 @@ export {
   type SharedHabit,
   type MirrorProjection,
   type MirrorBondEntry,
-} from "@/hologram/kernel/agents/mirror-protocol";
+} from "@/hologram/kernel/mirror-protocol";
 
 // ── QSVG Spectral Verification ────────────────────────────────────────
 export {

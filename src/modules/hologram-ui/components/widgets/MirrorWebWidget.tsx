@@ -8,7 +8,7 @@
 
 import { useMemo } from "react";
 import { useCoherence } from "@/modules/hologram-os/hooks/useCoherence";
-import type { MirrorBondEntry } from "@/hologram/kernel/agents/mirror-protocol";
+import type { MirrorBondEntry } from "@/hologram/kernel/mirror-protocol";
 
 export default function MirrorWebWidget() {
   const { mirror } = useCoherence();

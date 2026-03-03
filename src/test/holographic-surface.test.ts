@@ -7,7 +7,7 @@ import {
   resetHolographicSurface,
   type ProjectionReceipt,
   type SurfaceGradient,
-} from "@/hologram/kernel/surface/holographic-surface";
+} from "@/hologram/kernel/holographic-surface";
 
 describe("HolographicSurface", () => {
   let surface: HolographicSurface;

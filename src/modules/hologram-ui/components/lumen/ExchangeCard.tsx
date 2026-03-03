@@ -25,8 +25,8 @@ import {
 } from "@/modules/hologram-ui/engine/attention-compression";
 import HabitRing from "./HabitRing";
 import MirrorWeb from "./MirrorWeb";
-import { getProceduralMemory, type ProceduralProjection } from "@/hologram/kernel/agents/procedural-memory";
-import { getMirrorProtocol, type MirrorProjection } from "@/hologram/kernel/agents/mirror-protocol";
+import { getProceduralMemory, type ProceduralProjection } from "@/hologram/kernel/procedural-memory";
+import { getMirrorProtocol, type MirrorProjection } from "@/hologram/kernel/mirror-protocol";
 
 // ── Bloom Toggle (persisted, default ON) ─────────────────────────────
 const BLOOM_KEY = "lumen:bloom-enabled";

@@ -14,8 +14,8 @@
 
 import { useEffect, useState } from "react";
 import { X, Wifi } from "lucide-react";
-import { bootSync as boot, type QKernelBoot } from "@/hologram/kernel/init/q-boot";
-import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/security/tee-bridge";
+import { bootSync as boot, type QKernelBoot } from "@/hologram/kernel/q-boot";
+import { TEEBridge, type TEECapabilities } from "@/hologram/kernel/tee-bridge";
 
 interface GenesisPopoverProps {
   open: boolean;

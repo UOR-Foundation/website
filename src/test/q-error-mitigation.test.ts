@@ -9,8 +9,8 @@ import {
   applyMeasurementMitigation,
   randomizedCompiling,
   mitigateFull,
-} from "@/hologram/kernel/arch/q-error-mitigation";
-import { realisticNoise, measure, createState, type SimOp } from "@/hologram/kernel/arch/q-simulator";
+} from "@/hologram/kernel/q-error-mitigation";
+import { realisticNoise, measure, createState, type SimOp } from "@/hologram/kernel/q-simulator";
 
 const bellOps: SimOp[] = [
   { gate: "h", qubits: [0] },

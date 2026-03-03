@@ -58,8 +58,8 @@ import {
   verifyProofOfThought,
   type ProofOfThoughtReceipt,
 } from "@/modules/hologram-ui/engine/reasoning";
-import { getConfidentialPipeline, type ConfidentialInferenceResult } from "@/hologram/kernel/security/tee-inference";
-import { getTEEBridge } from "@/hologram/kernel/security/tee-bridge";
+import { getConfidentialPipeline, type ConfidentialInferenceResult } from "@/hologram/kernel/tee-inference";
+import { getTEEBridge } from "@/hologram/kernel/tee-bridge";
 import { observeExchange, compileResonanceDirective, loadResonanceProfile, loadProfileFromCloud } from "@/modules/hologram-ui/engine/resonanceObserver";
 import { loadGraphContext, type GraphContext } from "@/modules/hologram-ui/engine/contextGraphBridge";
 import ResonancePanel from "./ResonancePanel";

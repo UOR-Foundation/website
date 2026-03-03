@@ -5,7 +5,7 @@
 import { lazy, Suspense } from "react";
 import ProjectionShell from "../shell/ProjectionShell";
 
-const QShellEmbed = lazy(() => import("@/hologram/usr/bin/QShellEmbed"));
+const QShellEmbed = lazy(() => import("@/hologram/kernel/pages/QShellEmbed"));
 
 interface TerminalProjectionProps {
   open: boolean;

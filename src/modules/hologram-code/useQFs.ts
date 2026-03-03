@@ -22,8 +22,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { QFs, type InodeType } from "@/hologram/kernel/fs/q-fs";
-import { QMmu } from "@/hologram/kernel/mm/q-mmu";
+import { QFs, type InodeType } from "@/hologram/kernel/q-fs";
+import { QMmu } from "@/hologram/kernel/q-mmu";
 import { encodeUtf8 } from "@/hologram/genesis/axiom-ring";
 import { supabase } from "@/integrations/supabase/client";
 import { writeSlot, readSlot, readSlotFromCloud } from "@/modules/data-bank/lib/sync";

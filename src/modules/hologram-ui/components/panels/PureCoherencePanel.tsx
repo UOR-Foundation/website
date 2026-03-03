@@ -104,9 +104,6 @@ export default function PureCoherencePanel({ P }: Props) {
   const meanH = tokens.length > 0 ? tokens.reduce((s, t) => s + t.hScore, 0) / tokens.length : 0;
   const meanFano = tokens.length > 0 ? tokens.reduce((s, t) => s + t.fanoChannelsActive, 0) / tokens.length : 0;
   const totalSyndromes = tokens.reduce((s, t) => s + t.syndromeCount, 0);
-  const totalStabRejected = tokens.reduce((s, t) => s + t.rejectedByStabilizer, 0);
-  const parityCleanRate = tokens.length > 0 ? tokens.filter(t => t.parityClean).length / tokens.length : 0;
-  const meanPhaseAlign = tokens.length > 0 ? tokens.reduce((s, t) => s + t.phaseAlignment, 0) / tokens.length : 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: P.bg }}>
@@ -344,14 +341,6 @@ export default function PureCoherencePanel({ P }: Props) {
                 <StatRow P={P} label="Total Syndromes" value={totalSyndromes.toString()} highlight={totalSyndromes === 0} />
                 <StatRow P={P} label="Active Vertices" value={latest?.activeVertices?.toString() ?? "—"} />
 
-                <Divider P={P} />
-                <SectionLabel P={P}>Emitter (Phase 3)</SectionLabel>
-                <StatRow P={P} label="Strategy" value={latest?.samplingStrategy ?? "—"} highlight />
-                <StatRow P={P} label="Parity Clean" value={`${(parityCleanRate * 100).toFixed(0)}%`} highlight={parityCleanRate > 0.8} />
-                <StatRow P={P} label="Stab. Rejected" value={totalStabRejected.toString()} highlight={totalStabRejected > 0} />
-                <StatRow P={P} label="Phase Align φ̄" value={meanPhaseAlign.toFixed(2)} highlight={meanPhaseAlign > 0.6} />
-                <StatRow P={P} label="H-contrib" value={latest?.hScoreContrib?.toFixed(3) ?? "—"} />
-
                 {result && (
                   <>
                     <Divider P={P} />
@@ -367,10 +356,11 @@ export default function PureCoherencePanel({ P }: Props) {
                 <Divider P={P} />
                 <SectionLabel P={P}>How It Works</SectionLabel>
                 <p style={{ fontSize: "9px", color: P.textMuted, lineHeight: 1.7 }}>
-                  Phase 3 enhanced emitter: tokens pass through a stabilizer filter
-                  (τ-mirror parity check), coherence bias (H-score maximizing power law),
-                  and phase modulation (cos² envelope scanning sign classes via φ).
-                  Three strategies compose: filter → score → sample.
+                  Each token is emitted by navigating the 96-vertex Atlas manifold
+                  via three scales: Fano-plane routing (macro), edge diffusion (meso),
+                  and vertex sharpening (micro). The τ-mirror stabilizer code corrects
+                  parity violations. Prescience modulation (∂H/∂t) dynamically balances
+                  exploration vs exploitation. No weight tensors are loaded.
                 </p>
               </div>
             </motion.div>
@@ -683,7 +673,7 @@ function CoherenceStreamToken({ token, P }: { token: GenerationToken; P: PagePal
       initial={{ opacity: 0 }}
       animate={{ opacity }}
       transition={{ duration: 0.03 }}
-      title={`H=${token.hScore.toFixed(3)} · zone=${token.zone} · ∂H/∂t=${token.dHdt.toFixed(4)} · v=${token.activeVertices} · fano=${token.fanoChannelsActive} · syn=${token.syndromeCount} · p=${token.probability.toFixed(3)} · φ-align=${token.phaseAlignment.toFixed(2)} · parity=${token.parityClean ? "✓" : "✗"} · stab-rej=${token.rejectedByStabilizer} · ${token.samplingStrategy} · ${token.timeMs.toFixed(1)}ms`}
+      title={`H=${token.hScore.toFixed(3)} · zone=${token.zone} · ∂H/∂t=${token.dHdt.toFixed(4)} · v=${token.activeVertices} · fano=${token.fanoChannelsActive} · syn=${token.syndromeCount} · p=${token.probability.toFixed(3)} · ${token.timeMs.toFixed(1)}ms`}
       style={{
         color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
         display: "inline",

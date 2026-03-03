@@ -5,7 +5,7 @@
 import { lazy, Suspense } from "react";
 import ProjectionShell from "../shell/ProjectionShell";
 
-const QuantumJupyterWorkspace = lazy(() => import("@/hologram/usr/bin/notebook/QuantumJupyterWorkspace"));
+const QuantumJupyterWorkspace = lazy(() => import("@/hologram/kernel/notebook/QuantumJupyterWorkspace"));
 
 interface JupyterProjectionProps {
   open: boolean;

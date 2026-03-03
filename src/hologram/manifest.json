@@ -4,45 +4,9 @@
   "@id": "urn:uor:hologram:manifest:1.0.0",
   "name": "hologram",
   "version": "1.0.0",
-  "description": "Hologram OS — browser-native operating system structured as a 1:1 mirror of the Linux kernel. Projects and executes digital systems via content-addressed algebraic identity, lens morphisms, and coherence-priority scheduling.",
+  "description": "Hologram OS — browser-native universal emulator. Projects and executes digital systems via content-addressed algebraic identity, lens morphisms, and coherence-priority scheduling.",
   "uor:specification": "1.0.0",
   "uor:canonicalHash": "sha256:pending-genesis",
-
-  "layers": {
-    "firmware": {
-      "path": "genesis/",
-      "description": "Mathematical axioms (≡ BIOS/UEFI ROM). 8 axioms fused to kernel identity: ring, hash, CID, codec, mirror, signal, POST, constitution.",
-      "status": "maintained"
-    },
-    "kernel": {
-      "path": "kernel/",
-      "description": "Q-Kernel source tree (≡ /usr/src/linux/). 20 subsystems mirroring Linux kernel directories.",
-      "subsystems": [
-        "init", "kernel", "mm", "fs", "block", "drivers",
-        "net", "ipc", "crypto", "arch", "security",
-        "lib", "include", "certs", "samples", "scripts",
-        "tools", "Documentation", "agents", "surface"
-      ],
-      "entrypoint": "kernel/index.ts",
-      "status": "maintained"
-    },
-    "platform": {
-      "path": "platform/",
-      "description": "Hardware Abstraction Layer (≡ HAL/BSP). Single bridge.ts file handles ALL external I/O.",
-      "gateway": "platform/bridge.ts",
-      "status": "maintained"
-    },
-    "userspace": {
-      "path": "usr/",
-      "description": "User space (≡ /usr/). Shell, notebook, ceremony UI, hooks, shared components.",
-      "directories": {
-        "bin": "User programs (shell, notebook, ceremony)",
-        "lib": "Shared libraries (hooks, UI components)"
-      },
-      "status": "maintained"
-    }
-  },
-
   "uor:namespaces": [
     "u:", "schema:", "op:", "proof:", "partition:", "cert:",
     "derivation:", "morphism:", "store:", "state:", "trace:",
@@ -50,6 +14,74 @@
     "kernel:", "hologram:", "lens:", "projection:", "compute:",
     "tee:"
   ],
+
+  "subsystems": {
+    "kernel": {
+      "root": "kernel/",
+      "description": "Q-Kernel — Z/(2^n)Z algebraic OS core: boot, MMU, scheduler, syscall, FS, ECC, ISA, networking, IPC, agents, drivers, security.",
+      "exports": [
+        "boot", "post", "loadHardware", "hydrateFirmware", "createGenesisProcess",
+        "QMmu", "QSched", "classifyZone",
+        "QSyscall", "STANDARD_MODALITIES",
+        "QFs", "QEcc", "CODE_N", "CODE_K", "CODE_D",
+        "QIsa", "QNet", "QIpc",
+        "QAgent", "QAgentMesh",
+        "QDriver", "BlockDevice", "MemoryBackend", "IndexedDBBackend", "SupabaseBackend", "IpfsBackend",
+        "QSecurity", "RING_NAMES", "QSecureMesh",
+        "createState", "applyOp", "simMeasure", "simulateCircuit",
+        "formatStatevector", "drawCircuitASCII", "toOpenQASM", "entanglementMap",
+        "quickRun", "noNoise", "realisticNoise",
+        "zeroNoiseExtrapolation", "buildCalibrationMatrix", "applyMeasurementMitigation",
+        "randomizedCompiling", "mitigateFull",
+        "QSovereignty", "executeFoundingCeremony", "verifyCollapseIntegrity",
+        "deriveThreeWordName", "reverseThreeWordName", "parseThreeWordDisplay", "verifyThreeWordBijection",
+        "QVault", "QTrustMesh", "QDisclosure"
+      ],
+      "entrypoint": "kernel/index.ts"
+    },
+    "shell": {
+      "root": "shell/",
+      "description": "Hologram Shell — desktop surface, widget registry, drag/snap, GlassPanel, sidebar, and HUD compositing.",
+      "exports": [],
+      "entrypoint": "shell/index.ts",
+      "status": "pending-migration"
+    },
+    "projection": {
+      "root": "projection/",
+      "description": "Projection Engine — surface adapter, kernel palette, runtime compositor, and protocol projection registry.",
+      "exports": [],
+      "entrypoint": "projection/index.ts",
+      "status": "pending-migration"
+    },
+    "compute": {
+      "root": "compute/",
+      "description": "Hologram Compute — vGPU abstraction, WebGPU matmul, benchmarks, and tensor pipeline.",
+      "exports": [],
+      "entrypoint": "compute/index.ts",
+      "status": "pending-migration"
+    },
+    "quantum": {
+      "root": "quantum/",
+      "description": "Quantum subsystem — statevector simulation, error mitigation, circuit visualization.",
+      "exports": [],
+      "entrypoint": "quantum/index.ts",
+      "status": "pending-migration"
+    },
+    "ai": {
+      "root": "ai/",
+      "description": "AI runtime — agent execution, memory consolidation, observer outputs.",
+      "exports": [],
+      "entrypoint": "ai/index.ts",
+      "status": "pending-migration"
+    },
+    "lens": {
+      "root": "lens/",
+      "description": "Holographic Lens — dehydration/rehydration morphisms, blueprint persistence, modality refraction.",
+      "exports": [],
+      "entrypoint": "lens/index.ts",
+      "status": "pending-migration"
+    }
+  },
 
   "routes": [
     "/hologram",
@@ -87,6 +119,8 @@
     "framer-motion": "^12.34.3"
   },
 
+  "api_endpoints": [],
+
   "storage": {
     "tables": [
       "hologram_sessions",
@@ -104,17 +138,26 @@
     "format": "dag-json",
     "includes": [
       "manifest.json",
-      "genesis/**",
       "kernel/**",
-      "platform/**",
-      "usr/**"
+      "shell/**",
+      "projection/**",
+      "compute/**",
+      "quantum/**",
+      "ai/**",
+      "lens/**"
     ],
     "excludes": [
       "**/*.test.ts",
       "**/*.spec.ts",
       "node_modules/**"
     ],
-    "checksumAlgorithm": "sha-256"
+    "checksumAlgorithm": "sha-256",
+    "envelope": {
+      "@type": "cert:SystemCertificate",
+      "certifies": "urn:uor:hologram:manifest:1.0.0",
+      "derivation": "pending-genesis",
+      "coherenceVerified": false
+    }
   },
 
   "assets": []

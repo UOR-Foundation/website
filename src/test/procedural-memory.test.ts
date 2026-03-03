@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   ProceduralMemoryEngine,
   type RewardTraceEntry,
-} from "@/hologram/kernel/agents/procedural-memory";
+} from "@/hologram/kernel/procedural-memory";
 
 function makeEntry(
   actionType: string,

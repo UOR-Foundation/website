@@ -19,10 +19,9 @@
  */
 
 import { ATLAS_VERTEX_COUNT } from "../atlas/atlas";
-import { VocabularyPartitioner, type EnhancedSampleResult } from "./vocabulary-partitioner";
+import { VocabularyPartitioner } from "./vocabulary-partitioner";
 import { loadTokenizerVocabulary, simpleEncode, simpleDecode, type TokenizerInfo } from "./tokenizer-bridge";
 import { CoherenceNavigator, type NavigatorState, type NavigationDiagnostics } from "./coherence-navigator";
-import { SemanticFeedbackLoop, type TokenFeedback, type FeedbackLoopSnapshot } from "./semantic-feedback-loop";
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -84,16 +83,6 @@ export interface GenerationToken {
   dHdt: number;
   /** Time for this token (ms) */
   timeMs: number;
-  /** Phase 3: H-score contribution of this token */
-  hScoreContrib: number;
-  /** Phase 3: Phase alignment with current φ [0, 1] */
-  phaseAlignment: number;
-  /** Phase 3: Whether stabilizer parity passed cleanly */
-  parityClean: boolean;
-  /** Phase 3: Candidates rejected by stabilizer filter */
-  rejectedByStabilizer: number;
-  /** Phase 3: Which sampling strategies were active */
-  samplingStrategy: string;
 }
 
 export interface GenerationResult {
@@ -130,7 +119,6 @@ export class CoherenceTokenDecoder {
   private config: DecoderConfig;
   private partitioner: VocabularyPartitioner;
   private navigator: CoherenceNavigator;
-  private semanticLoop: SemanticFeedbackLoop;
   private tokenizerInfo: TokenizerInfo | null = null;
   private status: DecoderStatus = { stage: "idle", progress: 0, message: "Not initialized" };
   private onStatusChange?: (status: DecoderStatus) => void;
@@ -144,7 +132,6 @@ export class CoherenceTokenDecoder {
       momentum: config.momentum ?? DEFAULT_DECODER_CONFIG.momentum,
       convergenceThreshold: config.convergenceThreshold ?? DEFAULT_DECODER_CONFIG.convergenceThreshold,
     });
-    this.semanticLoop = new SemanticFeedbackLoop();
   }
 
   /**
@@ -215,9 +202,8 @@ export class CoherenceTokenDecoder {
     this.updateStatus({ stage: "generating", message: "Generating..." });
     const t0 = performance.now();
 
-    // Reset navigator and semantic context
+    // Reset navigator state
     this.navigator.reset();
-    this.semanticLoop.setPromptContext(prompt);
 
     // Encode prompt
     const promptTokens = simpleEncode(prompt, this.tokenizerInfo.vocabulary);
@@ -249,27 +235,14 @@ export class CoherenceTokenDecoder {
       // Copy navigated activations back
       activations.set(state.activations);
 
-      // ── Semantic grounding: blend semantic mask into activations ──
-      const semanticMask = this.semanticLoop.getCombinedMask(activations);
-      for (let i = 0; i < ATLAS_VERTEX_COUNT; i++) {
-        activations[i] = activations[i] * 0.7 + semanticMask[i] * 0.3;
-      }
-
       // Count Fano channels with significant activation
       let fanoChannelsActive = 0;
       for (let li = 0; li < 7; li++) {
         if (state.fanoActivations[li] > 0.1) fanoChannelsActive++;
       }
 
-      // ── Enhanced three-strategy sampling with semantic grounding ──
-      const sampled = this.partitioner.enhancedSample(
-        activations,
-        this.config.temperature,
-        state.hScore,
-        state.phi,
-        0.15,
-        40,
-      );
+      // Sample token from navigated activations
+      const sampled = this.partitioner.sampleFromActivations(activations, this.config.temperature);
 
       const genToken: GenerationToken = {
         text: sampled.tokenString,
@@ -282,11 +255,6 @@ export class CoherenceTokenDecoder {
         syndromeCount: state.syndromeCount,
         dHdt: state.dHdt,
         timeMs: performance.now() - tokenT0,
-        hScoreContrib: sampled.hScoreContrib,
-        phaseAlignment: sampled.phaseAlignment,
-        parityClean: sampled.parityClean,
-        rejectedByStabilizer: sampled.rejectedByStabilizer,
-        samplingStrategy: sampled.samplingStrategy,
       };
 
       generatedTokens.push(genToken);
@@ -297,9 +265,6 @@ export class CoherenceTokenDecoder {
       fullText += decodedChar;
 
       onToken?.(genToken, fullText);
-
-      // ── Semantic feedback: teach the system from its own output ──
-      this.semanticLoop.onTokenGenerated(decodedChar.trim(), activations, state.hScore);
 
       // Inject generated token back via topology-aware feedback
       const tokenV = this.partitioner.getTokenVertex(sampled.tokenId);
@@ -356,10 +321,5 @@ export class CoherenceTokenDecoder {
   /** Get tokenizer info. */
   getTokenizerInfo(): TokenizerInfo | null {
     return this.tokenizerInfo;
-  }
-
-  /** Get the semantic feedback loop (for diagnostics & reasoning). */
-  getSemanticLoop(): SemanticFeedbackLoop {
-    return this.semanticLoop;
   }
 }

@@ -16,7 +16,7 @@
 
 import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { MirrorProjection, MirrorBondEntry } from "@/hologram/kernel/agents/mirror-protocol";
+import type { MirrorProjection, MirrorBondEntry } from "@/hologram/kernel/mirror-protocol";
 
 // ── Constants ────────────────────────────────────────────────────────────
 

@@ -33,16 +33,16 @@ import { KP } from "@/modules/hologram-os/kernel-palette";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── Kernel imports ──
-import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/init/q-sovereignty";
-import { QFs } from "@/hologram/kernel/fs/q-fs";
-import { QMmu } from "@/hologram/kernel/mm/q-mmu";
-import { QSecurity } from "@/hologram/kernel/security/q-security";
-import { QEcc } from "@/hologram/kernel/crypto/q-ecc";
-import { QDisclosure, type DisclosureRule } from "@/hologram/kernel/security/q-disclosure";
-import { QTrustMesh } from "@/hologram/kernel/net/q-trust-mesh";
-import { QNet } from "@/hologram/kernel/net/q-net";
-import { executeInVault, type VaultSeal } from "@/hologram/kernel/init/q-ceremony-vault";
-import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologram/kernel/security/tee-bridge";
+import { QSovereignty, type GenesisResult, type AuthUser } from "@/hologram/kernel/q-sovereignty";
+import { QFs } from "@/hologram/kernel/q-fs";
+import { QMmu } from "@/hologram/kernel/q-mmu";
+import { QSecurity } from "@/hologram/kernel/q-security";
+import { QEcc } from "@/hologram/kernel/q-ecc";
+import { QDisclosure, type DisclosureRule } from "@/hologram/kernel/q-disclosure";
+import { QTrustMesh } from "@/hologram/kernel/q-trust-mesh";
+import { QNet } from "@/hologram/kernel/q-net";
+import { executeInVault, type VaultSeal } from "@/hologram/kernel/q-ceremony-vault";
+import { TEEBridge, type TEEAttestationQuote, type TEEAssertion } from "@/hologram/kernel/tee-bridge";
 
 // ── Extracted sub-components ──
 import MySpaceDashboard from "../myspace/MySpaceDashboard";
@@ -199,16 +199,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
       const assertion = await bridge.assert("hologram:login:verify");
 
       if (assertion.userVerified || assertion.userPresent) {
-        // Try getting current session first
-        let { data: { session: existingSession } } = await supabase.auth.getSession();
-
-        // If no session, attempt a token refresh — the JWT may have expired
-        // but the refresh token (stored in localStorage) may still be valid
-        if (!existingSession) {
-          const { data: refreshData } = await supabase.auth.refreshSession();
-          existingSession = refreshData?.session ?? null;
-        }
-
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
         if (existingSession) {
           // Check if profile has completed ceremony
           const { data: profileData } = await supabase
@@ -231,7 +222,7 @@ export default function MySpacePanel({ onClose }: MySpacePanelProps) {
           setPhase("naming");
           return;
         }
-        // Session truly expired (refresh token also invalid) — need email/OAuth recovery
+        // Session expired — need email/OAuth recovery
         setTeeStatus("idle");
         toast.info("Session expired. Please sign in with email or Google to reconnect.");
         setAuthMode("email");

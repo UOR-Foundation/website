@@ -12,8 +12,8 @@
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, type DragEvent } from "react";
-import { CodeProjection } from "@/hologram/usr/lib/components/CodeProjection";
-import type { NbColors } from "@/hologram/usr/bin/notebook/notebook-theme";
+import { CodeProjection } from "@/hologram/kernel/components/CodeProjection";
+import type { NbColors } from "@/hologram/kernel/notebook/notebook-theme";
 import {
   X, Sun, Moon, Undo2, Redo2, Search, SlidersHorizontal, BarChart3,
   Save, Download, Settings, ChevronDown, Trash2, Plus, Minus,
@@ -28,7 +28,7 @@ import {
   getStateProbabilities,
   type SimOp,
   type Complex,
-} from "@/hologram/kernel/arch/q-simulator";
+} from "@/hologram/kernel/q-simulator";
 import {
   sha256hex,
   createCid,

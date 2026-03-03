@@ -20,7 +20,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getKernelProjector, type ProjectionFrame, type ProcessProjection } from "@/modules/hologram-os/projection-engine";
 import { getBrowserAdapter } from "@/modules/hologram-os/surface-adapter";
 import { KP } from "@/modules/hologram-os/kernel-palette";
-import { getInstalledPackages, getPackage, type InstalledPackage } from "@/hologram/kernel/surface/q-package-projector";
+import { getInstalledPackages, getPackage, type InstalledPackage } from "@/hologram/kernel/q-package-projector";
 import {
   IconX, IconBug, IconTerminal2, IconFileCode, IconDatabase,
   IconDownload, IconCopy, IconChevronRight, IconChevronDown,

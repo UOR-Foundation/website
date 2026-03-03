@@ -77,22 +77,19 @@ export function CircuitWidget() {
       {/* Gate icons row */}
       {circuit.active && (
         <div className="flex gap-0.5 flex-wrap">
-          {Object.entries(circuit.gateCounts).map(([type, counts]) => {
-            const c = counts as { done: number; total: number };
-            return (
+          {Object.entries(circuit.gateCounts).map(([type, counts]) => (
             <span
               key={type}
               className={`text-[10px] font-mono ${
-                c.done === c.total
+                counts.done === counts.total
                   ? GATE_COLORS[type as GateType]
                   : "text-muted-foreground/40"
               }`}
-              title={`${type}: ${c.done}/${c.total}`}
+              title={`${type}: ${counts.done}/${counts.total}`}
             >
               {GATE_ICONS[type as GateType] ?? "?"}
             </span>
-            );
-          })}
+          ))}
         </div>
       )}
 

@@ -29,7 +29,7 @@ import {
   type DisplayCapabilities,
 } from "../projection-engine";
 import { getBrowserAdapter } from "../surface-adapter";
-import type { QKernelBoot, BootStage } from "@/hologram/kernel/init/q-boot";
+import type { QKernelBoot, BootStage } from "@/hologram/kernel/q-boot";
 import type { PreloadHint } from "../prescience-engine";
 
 export interface UseKernelResult {

@@ -7,9 +7,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { post, loadHardware, hydrateFirmware, createGenesisProcess, bootSync as boot } from "@/hologram/kernel/init/q-boot";
-import { QMmu } from "@/hologram/kernel/mm/q-mmu";
-import { QSched, classifyZone } from "@/hologram/kernel/kernel/q-sched";
+import { post, loadHardware, hydrateFirmware, createGenesisProcess, bootSync as boot } from "@/hologram/kernel/q-boot";
+import { QMmu } from "@/hologram/kernel/q-mmu";
+import { QSched, classifyZone } from "@/hologram/kernel/q-sched";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 0: Q-Boot
@@ -21,10 +21,10 @@ describe("Q-Boot: POST (Ring Integrity)", () => {
     expect(result.criticalIdentityVerified).toBe(true);
   });
 
-  it("all POST checks pass", () => {
+  it("all 6 POST checks pass", () => {
     const result = post();
     expect(result.allPassed).toBe(true);
-    expect(result.checks.length).toBeGreaterThanOrEqual(6);
+    expect(result.checks).toHaveLength(6);
     result.checks.forEach(c => expect(c.passed).toBe(true));
   });
 
