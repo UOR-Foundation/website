@@ -1446,30 +1446,25 @@ export default function ConstantTimeBenchmark() {
   const isAnyRunning = cpuState === "running" || cpuState === "precomputing" || gpuState === "running" || gpuState === "precomputing";
 
   return (
-    <div className="space-y-2" style={{ fontFamily: P.font }}>
-      {/* Compact header: tab toggle left, hardware info right */}
+    <div className="space-y-3" style={{ fontFamily: P.font }}>
+      {/* Compact tab toggle */}
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center rounded-full p-0.5 gap-0.5" style={{ border: `1px solid ${P.cardBorder}`, background: P.card }}>
           {(["cpu", "gpu"] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 tracking-wide uppercase"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-base font-bold transition-all duration-200 tracking-wide uppercase"
               style={{
-                background: activeTab === tab ? "hsla(0, 0%, 100%, 0.1)" : "transparent",
-                color: activeTab === tab ? P.text : P.muted,
+                background: activeTab === tab ? "hsla(0, 0%, 100%, 0.12)" : "transparent",
+                color: activeTab === tab ? P.text : P.dim,
               }}
             >
-              {tab === "cpu" ? <IconCpu size={14} /> : <IconCpu2 size={14} />}
+              {tab === "cpu" ? <IconCpu size={16} /> : <IconCpu2 size={16} />}
               {tab}
             </button>
           ))}
         </div>
-        {hw && (
-          <span className="text-xs font-mono" style={{ color: P.dim }}>
-            {hw.glRenderer ? hw.glRenderer.split(/[,(]/)[0].trim().slice(0, 30) : hw.cpuArch} · {hw.cpuCores} cores
-          </span>
-        )}
       </div>
 
       {/* Active Tab Content */}

@@ -1,5 +1,5 @@
 /**
- * Benchmark Page — Minimal, chart-first. Everything fits above the fold.
+ * Benchmark Page — Chart-first. Two charts are the entire show.
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -28,12 +28,12 @@ export default function BenchmarkPage() {
     <div
       className="min-h-screen flex flex-col"
       style={{
-        background: "hsl(248, 40%, 12%)",
-        color: "hsl(0, 0%, 95%)",
+        background: "hsl(240, 55%, 12%)",
+        color: "hsl(0, 0%, 100%)",
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      {/* Compact nav */}
+      {/* Minimal nav */}
       <header
         className="shrink-0 z-30"
         style={{ borderBottom: "1px solid hsla(0, 0%, 100%, 0.06)" }}
@@ -41,14 +41,14 @@ export default function BenchmarkPage() {
         <div className="max-w-[1400px] mx-auto px-6 h-12 flex items-center justify-between">
           <Link
             to="/hologram-os"
-            className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+            className="flex items-center gap-1.5 transition-opacity hover:opacity-70"
             style={{ color: "hsla(0, 0%, 100%, 0.4)" }}
           >
-            <IconArrowLeft size={14} />
+            <IconArrowLeft size={16} />
           </Link>
 
           <span
-            className="text-[11px] tracking-[0.3em] uppercase font-medium"
+            className="text-xs tracking-[0.3em] uppercase font-bold"
             style={{ color: "hsla(0, 0%, 100%, 0.25)" }}
           >
             Hologram vGPU · Live Benchmark
