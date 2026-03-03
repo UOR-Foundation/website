@@ -196,7 +196,7 @@ export function verifyGeometricClosure(hScore: number, phi: number): GeometricCl
   const pc = (phase === 3 && zone === "COHERENCE") || (phase === 6 && zone === "DRIFT") || (phase === 9);
   if (pc) passed++;
   return {
-    closed: passed === total, checksPasssed: passed, totalChecks: total,
+    closed: passed === total, checksPassed: passed, totalChecks: total,
     residualDefects: defects, correctedFidelity: PROJECTION_FIDELITY * hScore * (1 - ANOMALOUS_DIMENSION * (1 - phi)),
     phase: triadicPhase(zone, passed === total),
   };
