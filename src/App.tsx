@@ -48,6 +48,7 @@ const ProjectPrism = lazy(() => import("@/modules/projects/pages/ProjectPrism"))
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
 const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
+const BenchmarkPage = lazy(() => import("@/pages/BenchmarkPage"));
 const ApiPage = lazy(() => import("@/modules/api-explorer/pages/ApiPage"));
 const RingExplorerPage = lazy(() => import("@/modules/ring-core/pages/RingExplorerPage"));
 const DerivationLabPage = lazy(() => import("@/modules/derivation/pages/DerivationLabPage"));
@@ -311,6 +312,7 @@ const App = () => {
             <Route path="/q-shell" element={<DevGate><QShellPage /></DevGate>} />
             <Route path="/projection-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
             <Route path="/ai-lab" element={<DevGate><AtlasProjectionLab /></DevGate>} />
+            <Route path="/benchmark" element={<BenchmarkPage />} />
             {/* Debug routes removed — private */}
             <Route path="*" element={<Navigate to="/hologram-os" replace />} />
           </Routes>
