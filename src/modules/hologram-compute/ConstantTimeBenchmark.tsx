@@ -890,25 +890,25 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
 
                   return (
                     <tr key={p.n} style={{ background: i % 2 === 0 ? "transparent" : "hsla(220, 20%, 14%, 0.4)" }}>
-                      <td className="py-1 px-2 font-semibold" style={{ color: P.text }}>{p.n}</td>
-                      <td className="py-1 px-2 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: baseColor }}>
+                      <td className="py-1.5 px-3 font-semibold" style={{ color: P.text }}>{p.n}</td>
+                      <td className="py-1.5 px-3 text-right" style={{ color: P.muted }}>{formatOps(p.ops)}</td>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: baseColor }}>
                         {!isCpu && !p.gpuAvailable ? <span style={{ color: P.dim }}>NOT RUN</span> : baseMs >= 1000 ? `${(baseMs / 1000).toFixed(2)}s` : baseMs >= 10 ? baseMs.toFixed(1) : baseMs >= 1 ? baseMs.toFixed(2) : baseMs.toFixed(3)}
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
-                      <td className="py-1 px-2 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.gold }}>{p.holoMs.toFixed(3)}</td>
+                      <td className="py-1.5 px-3 text-right font-bold tabular-nums" style={{ color: speedup > 10 ? P.gold : P.text }}>
                         {!isCpu && !p.gpuAvailable
                           ? <span style={{ color: P.dim }}>—</span>
                           : speedup >= 1000 ? `${(speedup / 1000).toFixed(1)}K×` : `${speedup.toFixed(0)}×`
                         }
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums" style={{ color: P.green }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.green }}>
                         {p.energySavedPercent.toFixed(1)}%
                       </td>
-                      <td className="py-1 px-2 text-right tabular-nums text-[11px]" style={{ color: P.blue }}>
+                      <td className="py-1.5 px-3 text-right tabular-nums" style={{ color: P.blue }}>
                         {formatNum(p.holoTokSec)}
                       </td>
-                      <td className="py-1 px-2 text-center text-sm" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
+                      <td className="py-1.5 px-3 text-center text-base" style={{ color: shaMatch === null ? P.dim : shaMatch ? P.green : P.red }}>
                         {shaMatch === null ? "—" : shaMatch ? "✓" : "✗"}
                       </td>
                     </tr>
