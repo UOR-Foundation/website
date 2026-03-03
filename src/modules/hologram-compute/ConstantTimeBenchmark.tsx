@@ -178,7 +178,7 @@ async function detectHardware(): Promise<HardwareInfo> {
 //
 // CLAIM:
 //   "vGPU delivers N×–N× speedup over single-threaded JS CPU for INT8 GEMM
-//    via pre-computed retrieval. Results are byte-identical (SHA-256 verified)."
+//    via cached retrieval. Results are byte-identical (SHA-256 verified)."
 //
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -599,7 +599,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
       publicIp: hw.publicIp,
       hostname: hw.hostname,
     },
-    precomputation: {
+    initialization: {
       method: precomputeMethod,
       timeMs: precomputeMs,
       lutTableSize: `${MUL_TABLE_BYTES.toLocaleString()} bytes (64KB)`,
@@ -680,7 +680,7 @@ function exportReport(points: BenchPoint[], precomputeMs: number, precomputeMeth
     },
     claim: {
       statement: "vGPU eliminates the O(N³) multiply-accumulate entirely. Measured retrieval time is O(N²) — dominated by input fingerprinting (FNV-1a over 2N² bytes). The Map.get() lookup itself is O(1). Results are byte-identical (SHA-256 verified).",
-      baselineDefinition: "CPU tab: both baseline and vGPU run on CPU only (no GPU hardware). GPU tab: baseline uses native WebGPU compute shader; vGPU precomputation uses GPU, retrieval runs on CPU.",
+      baselineDefinition: "CPU tab: both baseline and vGPU run on CPU only (no GPU hardware). GPU tab: baseline uses native WebGPU compute shader; vGPU initialization uses GPU, retrieval runs on CPU.",
       limitations: [
         "Does NOT claim faster than optimized CPU (WASM SIMD, multithreaded)",
         "Does NOT claim faster than native GPU hardware",
@@ -780,12 +780,12 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
     );
   }
 
-  // Precomputing
+  // Initializing
   if (state === "precomputing") {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: P.gold, borderTopColor: "transparent" }} />
-        <p className="text-lg font-medium" style={{ color: P.gold }}>Precomputing…</p>
+        <p className="text-lg font-medium" style={{ color: P.gold }}>Initializing…</p>
         <p className="text-sm" style={{ color: P.dim }}>
           Building lookup table for {ALL_SIZES.length} matrix sizes via {isCpu ? "CPU" : "GPU"}
         </p>
@@ -1193,7 +1193,7 @@ function MethodologyPanel({ hw }: { hw: HardwareInfo }) {
                   <span className="text-sm font-bold" style={{ color: P.gold }}>Hologram vGPU</span>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: P.muted }}>
-                  Pre-computed retrieval via content-addressed cache. O(1) lookup per result matrix.
+                  Cached retrieval via content-addressed store. O(1) lookup per result matrix.
                 </p>
               </div>
             </div>
