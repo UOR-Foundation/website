@@ -731,7 +731,7 @@ function TabContent({ points, state, demoType, currentSize, precomputeMs, precom
   const sizes = isCpu ? CPU_SIZES : GPU_SIZES;
 
   const peakSpeedup = points.length > 0
-    ? Math.max(...points.map((p) => isCpu ? p.speedupVsCpu : p.speedupVsGpu))
+    ? Math.max(0, ...points.map((p) => isCpu ? p.speedupVsCpu : p.speedupVsGpu))
     : 0;
 
   const totalBaseMs = points.reduce((s, p) => s + (isCpu ? p.stdMs : p.gpuMs), 0);
