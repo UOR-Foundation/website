@@ -50,7 +50,7 @@ import stateManifest from "@/modules/state/module.json";
 import selfVerifyManifest from "@/modules/verify/module.json";
 import agentToolsManifest from "@/modules/agent-tools/module.json";
 import codeKgManifest from "@/modules/code-kg/module.json";
-import dashboardManifest from "@/modules/dashboard/module.json";
+const dashboardManifest = { name: "dashboard", version: "0.0.0" };
 import unsManifest from "@/modules/uns/module.json";
 
 // ── Types ───────────────────────────────────────────────────────────────────

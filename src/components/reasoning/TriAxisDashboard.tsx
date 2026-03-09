@@ -13,7 +13,7 @@
 
 import type { ReasoningSession } from "@/modules/ring-core/reason-command";
 import { getTriAxisPanels } from "@/modules/ring-core/reason-command";
-type Panel = { id: string; title: string; axis: string; content: string };
+type Panel = { id: string; title: string; axis: string; content: string; label?: string; value?: number };
 
 interface TriAxisDashboardProps {
   session: ReasoningSession;
