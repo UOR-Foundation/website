@@ -43,9 +43,9 @@ import {
   type ScheduleConfig,
 } from "@/modules/ring-core/strategy-scheduler";
 // Stub Panel type (hologram-os removed)
-type Panel = { id: string; title: string; axis: string; content: string };
-function createPanel(opts: Partial<Panel> & { id: string; title: string }): Panel {
-  return { id: opts.id, title: opts.title, axis: opts.axis ?? "", content: opts.content ?? "" };
+type Panel = { id: string; title: string; axis: string; content: string; label?: string; value?: number };
+function createPanel(title: string, axis: string, value: number, _quantum: number): Panel {
+  return { id: `${axis}-${title}`, title, axis, content: "", label: title, value };
 }
 
 // ── Reasoning Session State ────────────────────────────────────────────────

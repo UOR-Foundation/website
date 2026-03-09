@@ -7,7 +7,10 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { PageShell } from "@/modules/hologram-ui/components/PageShell";
+// PageShell removed with hologram-ui — inline simple shell
+const PageShell = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={className}>{children}</div>
+);
 import { GitBranch, Save, Database, Eye, Search, Sparkles } from "lucide-react";
 import { RepoInput } from "../components/RepoInput";
 import { IngestionResults } from "../components/IngestionResults";
