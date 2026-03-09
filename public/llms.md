@@ -1,5 +1,5 @@
 ---
-title: UOR Framework — Agent Entry Point
+title: UOR Framework - Agent Entry Point
 version: 2.0.0
 type: agent-discovery
 license: Apache-2.0
@@ -12,7 +12,7 @@ website: https://uor.foundation
 
 # Universal Object Reference (UOR)
 
-A mathematical framework that gives every digital object a single, permanent, content-derived address. Identical content always resolves to the same identifier — across systems, formats, and time.
+A mathematical framework that gives every digital object a single, permanent, content-derived address. Identical content always resolves to the same identifier -- across systems, formats, and time.
 
 Open-source. Apache-2.0. No vendor lock-in.
 
@@ -32,7 +32,7 @@ These are not edge cases. They are fundamental limitations of how digital identi
 
 UOR replaces location-based identity with content-based identity, grounded in a formally verified algebraic structure over Z/256Z (the ring of integers modulo 256).
 
-Every object — a document, a message, an agent's output — is mapped to a canonical 256-bit hash. This hash is the object's permanent address. It is deterministic, collision-resistant, and independently verifiable by any party.
+Every object -- a document, a message, an agent's output -- is mapped to a canonical 256-bit hash. This hash is the object's permanent address. It is deterministic, collision-resistant, and independently verifiable by any party.
 
 The framework provides six composable layers:
 
@@ -52,20 +52,20 @@ The framework provides six composable layers:
 The entire framework rests on one provable identity:
 
 ```
-neg(bnot(x)) = succ(x)   ∀ x ∈ Z/256Z
+neg(bnot(x)) = succ(x)   for all x in Z/256Z
 
-Example — x = 42:
+Example -- x = 42:
   bnot(42)  = 42 XOR 255 = 213
   neg(213)  = (-213) mod 256 = 43
   succ(42)  = 43
-  ✓ Verified
+  [PASS] Verified
 ```
 
 Confirm programmatically:
 
 ```
 GET https://api.uor.foundation/v1/kernel/op/verify?x=42
-→ { "holds": true, "proof:neg_bnot_x": 43, "proof:succ_x": 43 }
+-> { "holds": true, "proof:neg_bnot_x": 43, "proof:succ_x": 43 }
 ```
 
 ### Explore the API (5 minutes)
@@ -73,7 +73,7 @@ GET https://api.uor.foundation/v1/kernel/op/verify?x=42
 The REST API requires no authentication for read operations. Every response is valid JSON-LD.
 
 ```
-# Discovery — list all endpoints
+# Discovery -- list all endpoints
 GET https://api.uor.foundation/v1/navigate
 
 # Compute ring operations
@@ -83,13 +83,13 @@ GET https://api.uor.foundation/v1/kernel/op/compute?x=42&y=10
 POST https://api.uor.foundation/v1/kernel/address/encode
 Body: { "input": "hello", "encoding": "utf8" }
 
-# Analyse content quality (density > 0.25 = signal; ≤ 0.25 = noise)
+# Analyse content quality (density > 0.25 = signal; <= 0.25 = noise)
 POST https://api.uor.foundation/v1/bridge/partition
 Body: { "input": "your content here", "encoding": "utf8" }
 
 # Trace operations for injection detection
 GET https://api.uor.foundation/v1/bridge/trace?x=42&ops=neg,bnot
-→ totalHammingDrift = 0 means canonical; non-zero = modified in transit
+-> totalHammingDrift = 0 means canonical; non-zero = modified in transit
 
 # Store to IPFS with verification
 POST https://api.uor.foundation/v1/store/write
@@ -126,7 +126,7 @@ Given a CID, call `GET /v1/store/verify/{cid}`. A `true` result confirms the con
 Trace the declared operation sequence and the executed sequence separately via `/v1/bridge/trace`. If `totalHammingDrift` differs between them, the sequence was modified in transit. This is structural detection, not heuristic.
 
 **Score content quality:**
-Send any text to `POST /v1/bridge/partition`. The `partition:density` score indicates information density — above 0.25 is genuine signal, below is noise.
+Send any text to `POST /v1/bridge/partition`. The `partition:density` score indicates information density -- above 0.25 is genuine signal, below is noise.
 
 ---
 
@@ -144,4 +144,4 @@ Send any text to `POST /v1/bridge/partition`. The `partition:density` score indi
 
 ---
 
-*UOR Foundation · Apache-2.0 · https://uor.foundation*
+UOR Foundation - Apache-2.0 - https://uor.foundation
