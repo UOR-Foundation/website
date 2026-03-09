@@ -1,5 +1,4 @@
 import { lazy, Suspense } from "react";
-import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
@@ -32,54 +31,60 @@ const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage")
 const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={null}>
-              <Routes>
-                {/* Core pages */}
-                <Route path="/" element={<IndexPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/standard" element={<StandardPage />} />
-                <Route path="/semantic-web" element={<SemanticWebPage />} />
-                <Route path="/research" element={<ResearchPage />} />
-                <Route path="/projects" element={<ProjectsPage />} />
-                <Route path="/donate" element={<DonatePage />} />
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={null}>
+            <Routes>
+              {/* Core pages */}
+              <Route path="/" element={<IndexPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/standard" element={<StandardPage />} />
+              <Route path="/semantic-web" element={<SemanticWebPage />} />
+              <Route path="/research" element={<ResearchPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/donate" element={<DonatePage />} />
 
-                {/* Blog & Research */}
-                <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
-                <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
-                <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
-                <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
+              {/* Blog & Research */}
+              <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
+              <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
+              <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
+              <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
 
-                {/* Project detail pages */}
-                <Route path="/projects/hologram" element={<ProjectHologram />} />
-                <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
-                <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
-                <Route path="/projects/prism" element={<ProjectPrism />} />
-                <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
-                <Route path="/projects/uns" element={<ProjectUns />} />
-                <Route path="/projects/qr-cartridge" element={<ProjectQrCartridge />} />
-                <Route path="/projects/hologram-sdk" element={<ProjectHologramSdk />} />
-                <Route path="/projects/uor-identity" element={<ProjectUorIdentity />} />
-                <Route path="/projects/uor-privacy" element={<ProjectUorPrivacy />} />
-                <Route path="/projects/uor-certificate" element={<ProjectCertificate />} />
+              {/* Project detail pages */}
+              <Route path="/projects/hologram" element={<ProjectHologram />} />
+              <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
+              <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
+              <Route path="/projects/prism" element={<ProjectPrism />} />
+              <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
+              <Route path="/projects/uns" element={<ProjectUns />} />
+              <Route path="/projects/qr-cartridge" element={<ProjectQrCartridge />} />
+              <Route path="/projects/hologram-sdk" element={<ProjectHologramSdk />} />
+              <Route path="/projects/uor-identity" element={<ProjectUorIdentity />} />
+              <Route path="/projects/uor-privacy" element={<ProjectUorPrivacy />} />
+              <Route path="/projects/uor-certificate" element={<ProjectCertificate />} />
 
-                {/* Catch-all */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </AuthProvider>
+              {/* Catch-all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import uorIcon from "@/assets/uor-icon-new.png";
-import UorVerification from "@/modules/core/components/UorVerification";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_GOVERNANCE_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 
 const Footer = () => {
@@ -46,7 +45,6 @@ const Footer = () => {
           <p className="text-section-dark-foreground/30 text-base font-body">
             © {new Date().getFullYear()} UOR Foundation. All rights reserved.
           </p>
-          <UorVerification />
         </div>
       </div>
     </footer>
