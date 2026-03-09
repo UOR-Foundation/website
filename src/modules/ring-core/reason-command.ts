@@ -42,8 +42,11 @@ import {
   type ScheduleResult,
   type ScheduleConfig,
 } from "@/modules/ring-core/strategy-scheduler";
-import type { Panel } from "@/modules/hologram-os/runtime";
-import { createPanel } from "@/modules/hologram-os/runtime";
+// Stub Panel type (hologram-os removed)
+type Panel = { id: string; title: string; axis: string; content: string };
+function createPanel(opts: Partial<Panel> & { id: string; title: string }): Panel {
+  return { id: opts.id, title: opts.title, axis: opts.axis ?? "", content: opts.content ?? "" };
+}
 
 // ── Reasoning Session State ────────────────────────────────────────────────
 
