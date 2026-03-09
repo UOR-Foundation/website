@@ -311,7 +311,11 @@
     background: linear-gradient(180deg, hsl(208 32% 93%) 0%, hsl(var(--background)) 100%);
   }
 
-  /* Consistent mobile container breathing room */
+  /* ── Golden Ratio Mobile System ──────────────────────────────────
+   * φ = 1.618. All mobile spacing and type follows φ-scaled steps.
+   * Base body: 15px. Scale: 15 × φ^n gives 15, 24.3, 39.3, 63.5…
+   * Touch targets: minimum 44px (Apple HIG) → 48px for comfortable tapping.
+   * ─────────────────────────────────────────────────────────────── */
   @media (max-width: 640px) {
     .container {
       padding-left: 1.25rem;
@@ -321,8 +325,11 @@
     /* Full-width buttons on mobile for easy tapping */
     .btn-primary,
     .btn-outline {
-      @apply w-full justify-center text-center py-3.5 text-base;
+      @apply w-full justify-center text-center;
       min-height: 48px;
+      padding-top: 0.875rem;
+      padding-bottom: 0.875rem;
+      font-size: 0.9375rem;
     }
   }
 

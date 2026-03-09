@@ -22,24 +22,11 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
-        // Exclude large WASM files (ONNX runtime ~22 MB) from precache
-        globIgnores: ["**/ort-wasm-*.wasm", "**/*.wasm"],
-        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // 50 MB — safety net; WASM excluded via globIgnores
-        // Never cache OAuth redirects
+        globIgnores: ["**/*.wasm"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/~oauth/],
-        // Cache strategies for a crisp, fast experience
         runtimeCaching: [
           {
-            // Cache Google Fonts
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-          {
-            // Cache images
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
             handler: "CacheFirst",
             options: {
@@ -48,7 +35,6 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            // Cache JS/CSS bundles
             urlPattern: /\.(?:js|css)$/i,
             handler: "StaleWhileRevalidate",
             options: {
@@ -57,7 +43,6 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            // Cache API calls with network-first for freshness
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/i,
             handler: "NetworkFirst",
             options: {
@@ -69,37 +54,17 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "Hologram OS",
-        short_name: "Hologram",
-        description: "Your universal operating system — content-addressed, sovereign, and private.",
+        name: "The UOR Foundation",
+        short_name: "UOR",
+        description: "Your universal coordinate system for information. Open data standard for the semantic web, open science, and frontier technologies.",
         theme_color: "#0b1420",
-        background_color: "#0b1420",
+        background_color: "#f0f2f6",
         display: "standalone",
-        display_override: ["window-controls-overlay", "standalone"],
         orientation: "any",
         scope: "/",
-        start_url: "/hologram-os",
-        id: "/hologram-os",
-        categories: ["productivity", "utilities", "developer tools"],
-        launch_handler: {
-          client_mode: "focus-existing",
-        },
-        shortcuts: [
-          {
-            name: "Open Lumen",
-            short_name: "Lumen",
-            description: "Talk to your intelligent companion",
-            url: "/hologram-os?open=lumen",
-            icons: [{ src: "/pwa-icon-192.png", sizes: "192x192" }],
-          },
-          {
-            name: "Convergence Dashboard",
-            short_name: "Convergence",
-            description: "View the Quantum-AI phase dashboard",
-            url: "/hologram-os?open=convergence",
-            icons: [{ src: "/pwa-icon-192.png", sizes: "192x192" }],
-          },
-        ],
+        start_url: "/",
+        id: "/",
+        categories: ["education", "science", "technology"],
         icons: [
           {
             src: "/pwa-icon-192.png",

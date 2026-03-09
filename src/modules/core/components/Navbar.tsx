@@ -35,14 +35,15 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           : "bg-transparent"
       }`}
     >
-      <div className="container flex items-center justify-between h-20 md:h-24">
-        <Link to="/" className="flex items-center gap-2.5 group">
+      {/* Golden ratio: 72px mobile (48 × φ ≈ 77, rounded to 72 for grid), 96px desktop */}
+      <div className="container flex items-center justify-between h-[4.5rem] md:h-24">
+        <Link to="/" className="flex items-center gap-2 group">
           <img 
             src={uorIcon} 
             alt="UOR Foundation" 
-            className={`w-8 h-8 object-contain transition-all duration-300 ${isDark ? "invert brightness-[100]" : ""}`} 
+            className={`w-7 h-7 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark ? "invert brightness-[100]" : ""}`} 
           />
-          <span className={`font-display text-base font-semibold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+          <span className={`font-display text-[0.875rem] md:text-base font-semibold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
@@ -83,22 +84,23 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile menu — full-screen overlay for crisp touch targets */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
           mobileOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="bg-background/95 backdrop-blur-xl border-b border-border px-5 py-4 space-y-2">
-          <nav className="flex flex-col gap-1">
+        <div className="bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 space-y-1">
+          <nav className="flex flex-col gap-0.5">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-3 px-4 rounded-xl text-base font-medium font-body text-center transition-colors ${
+                className={`py-3 px-4 rounded-xl text-[0.9375rem] font-medium font-body text-center transition-colors ${
                   location.pathname === item.href
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground active:bg-muted"
@@ -108,15 +110,15 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               </Link>
             ))}
           </nav>
-          <div className="pt-2 pb-1 flex flex-col gap-2">
+          <div className="pt-1 pb-1 flex flex-col gap-2">
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="py-3 px-4 rounded-xl text-base font-medium font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
+              className="py-3 px-4 rounded-xl text-[0.9375rem] font-medium font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Heart size={16} fill="currentColor" strokeWidth={0} />
+              <Heart size={15} fill="currentColor" strokeWidth={0} />
               Donate
             </button>
-            <div className="flex items-center justify-center gap-4 py-2">
+            <div className="flex items-center justify-center gap-5 py-2">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
                 <DiscordIcon size={20} />
               </a>
