@@ -39,12 +39,15 @@ import {
   resume,
   grindExecutableBlueprint,
 } from "./executable-blueprint";
-import {
-  resolveUIProjection,
-  resolveAllUIProjections,
-  type UIComponentType,
-  type UIProjectionResult,
-} from "@/modules/hologram-ui/projection-registry";
+// UI projection types (hologram-ui removed — stubs for type compat)
+type UIComponentType = string;
+type UIProjectionResult = { type: string; props: Record<string, unknown> };
+function resolveUIProjection(_id: unknown, type: UIComponentType, _o?: Record<string, unknown>): UIProjectionResult {
+  return { type, props: {} };
+}
+function resolveAllUIProjections(_id: unknown): ReadonlyMap<UIComponentType, UIProjectionResult> {
+  return new Map();
+}
 
 // ── Engine Types ───────────────────────────────────────────────────────────
 
