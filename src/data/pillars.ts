@@ -7,24 +7,24 @@ export const pillars = [
     iconKey: "Globe",
     title: "Framework",
     description:
-      "Open data standards and protocols for content-based addressing. Build interoperable applications on a shared, well-documented foundation.",
+      "A formal specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a shared, well-documented standard.",
     href: "/standard",
-    cta: "Learn",
+    cta: "Read the Spec",
   },
   {
     iconKey: "Users",
     title: "Community",
     description:
-      "A shared space for researchers, engineers, and builders to collaborate, share results, and advance the standard together.",
+      "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through RFC-style proposals and peer review.",
     href: "/research",
-    cta: "Connect",
+    cta: "Join the Discussion",
   },
   {
     iconKey: "Rocket",
     title: "Project Launchpad",
     description:
-      "A clear path from idea to production. Submit your project, get visibility, and grow through structured incubation and community support.",
+      "A structured incubation path from idea to production. Submit your project, gain visibility, and grow through community support and open governance.",
     href: "/projects",
-    cta: "Build",
+    cta: "Submit a Project",
   },
 ];

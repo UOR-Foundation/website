@@ -30,6 +30,14 @@ const IntroSection = () => {
           </a>
         </div>
         <div className="h-px w-full bg-section-dark-foreground/10" />
+
+        {/* Ecosystem anchoring */}
+        <p
+          className="mt-6 md:mt-8 text-section-dark-foreground/40 font-body text-xs md:text-sm tracking-wide uppercase animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.5s" }}
+        >
+          Open source · 501(c)(3) nonprofit · All specifications on GitHub
+        </p>
       </div>
     </section>
   );
