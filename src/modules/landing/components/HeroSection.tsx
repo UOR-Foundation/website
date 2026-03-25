@@ -30,7 +30,7 @@ const HeroSection = () => {
             className="mt-5 md:mt-10 text-[0.9375rem] md:text-xl text-muted-foreground leading-[1.68] max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
-            The UOR Foundation develops a universal data standard for the semantic web, open science, and frontier technologies.
+            The UOR Foundation develops a universal data standard for science, software, and the next generation of intelligent systems.
           </p>
           <div
             className="mt-8 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"

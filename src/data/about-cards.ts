@@ -7,7 +7,7 @@ export const whatWeDoCards = [
   {
     iconKey: "Users",
     title: "Community",
-    desc: "A shared space for discussion, collaboration, and joint research across disciplines.",
+    desc: "A shared space for discussion, collaboration, and joint research.",
   },
   {
     iconKey: "Rocket",
