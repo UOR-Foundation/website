@@ -5,25 +5,25 @@
 export const pillars = [
   {
     iconKey: "Globe",
-    title: "UOR Framework",
+    title: "Framework",
     description:
-      "The open specification behind content-based addressing. Six layers, from identity to transformation, fully documented and ready to build on.",
+      "Open data standards and protocols for content-based addressing. Build interoperable applications on a shared, well-documented foundation.",
     href: "/standard",
     cta: "Learn",
   },
   {
     iconKey: "Users",
-    title: "Our Community",
+    title: "Community",
     description:
-      "Researchers, engineers, and builders validating ideas across disciplines. Share results, get feedback, and accelerate your work.",
+      "A shared space for researchers, engineers, and builders to collaborate, share results, and advance the standard together.",
     href: "/research",
     cta: "Connect",
   },
   {
     iconKey: "Rocket",
-    title: "Your Projects",
+    title: "Project Launchpad",
     description:
-      "A structured path from idea to production. The foundation provides tooling, review, and visibility to help open source projects ship.",
+      "A clear path from idea to production. Submit your project, get visibility, and grow through structured incubation and community support.",
     href: "/projects",
     cta: "Build",
   },

@@ -53,18 +53,18 @@ const maturityBgColors: Record<MaturityLevel, string> = {
 const submissionSteps = [
   {
     icon: FolderGit2,
-    title: "1. Prepare Your Repository",
-    description: "Ensure your project is open-source (Apache 2.0 or MIT), hosted on GitHub, and has a clear README with purpose, installation, and usage.",
+    title: "1. Prepare",
+    description: "Open-source repo on GitHub with a clear README.",
   },
   {
     icon: SearchCheck,
-    title: "2. Submit for Review",
-    description: "Complete the form below with your project details and problem statement. Our technical committee reviews all submissions within 3 weeks.",
+    title: "2. Submit",
+    description: "Fill in the short form below. We review within 3 weeks.",
   },
   {
     icon: BadgeCheck,
-    title: "3. Enter Sandbox",
-    description: "Accepted projects join the Sandbox tier, gain visibility in the UOR ecosystem, and receive community support to grow toward Incubation.",
+    title: "3. Launch",
+    description: "Accepted projects enter Sandbox and start growing.",
   },
 ];
 
@@ -106,7 +106,7 @@ const Projects = () => {
     repoUrl: "",
     contactEmail: "",
     description: "",
-    problemStatement: "",
+    problemStatement: "N/A",
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -379,7 +379,7 @@ const Projects = () => {
                   <ExternalLink size={14} />
                 </a>
                 <button
-                  onClick={() => { setSubmitted(false); setFormData({ projectName: "", repoUrl: "", contactEmail: "", description: "", problemStatement: "" }); }}
+                  onClick={() => { setSubmitted(false); setFormData({ projectName: "", repoUrl: "", contactEmail: "", description: "", problemStatement: "N/A" }); }}
                   className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/60 font-medium hover:border-section-dark-foreground/30 transition-colors font-body text-base"
                 >
                   Submit Another
@@ -445,19 +445,6 @@ const Projects = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-base font-medium text-section-dark-foreground font-body">
-                  Problem Statement *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={formData.problemStatement}
-                  onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
-                  placeholder="What problem does your project solve? How does it relate to the UOR standard?"
-                  className="w-full px-4 py-3 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
-                />
-              </div>
 
               {submitError && (
                 <p className="text-sm text-destructive font-body">{submitError}</p>

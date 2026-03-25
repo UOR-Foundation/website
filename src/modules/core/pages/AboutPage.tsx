@@ -1,8 +1,9 @@
-import { Linkedin, BookOpen, Users, Rocket } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards } from "@/data/about-cards";
+import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
@@ -92,6 +93,32 @@ const About = () => {
                     </p>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rule" />
+
+          {/* Useful Links */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.45s" }}>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Useful Links</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: "Governance Charter", href: GITHUB_GOVERNANCE_URL },
+                { label: "Code of Conduct", href: `${GITHUB_DOTGITHUB_URL}/blob/main/CODE_OF_CONDUCT.md` },
+                { label: "Contributing Guide", href: `${GITHUB_DOTGITHUB_URL}/blob/main/CONTRIBUTING.md` },
+                { label: "Organization on GitHub", href: GITHUB_DOTGITHUB_URL },
+              ].map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-5 py-4 rounded-xl border border-border/60 bg-card/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 group"
+                >
+                  <span className="text-base font-medium text-foreground font-body">{link.label}</span>
+                  <ExternalLink size={15} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                </a>
               ))}
             </div>
           </div>
