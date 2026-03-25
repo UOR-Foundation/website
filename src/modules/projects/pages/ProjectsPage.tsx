@@ -10,6 +10,9 @@ import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
 import projectUnsImg from "@/assets/project-uns.jpg";
 import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
 import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
+import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
+import projectUorPrivacyImg from "@/assets/project-uor-privacy.jpg";
+import projectUorCertificateImg from "@/assets/project-uor-certificate.jpg";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 import { DISCORD_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +26,9 @@ const imageMap: Record<string, string> = {
   uns: projectUnsImg,
   qrCartridge: projectQrCartridgeImg,
   hologramSdk: projectHologramSdkImg,
+  uorIdentity: projectUorIdentityImg,
+  uorPrivacy: projectUorPrivacyImg,
+  uorCertificate: projectUorCertificateImg,
 };
 
 type Project = ProjectData & { image?: string };
@@ -100,6 +106,72 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
   );
 };
 
+const INITIAL_VISIBLE = 6;
+
+const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: MaturityLevel; levelProjects: Project[]; hasProjects: boolean }) => {
+  const [showAll, setShowAll] = useState(levelProjects.length <= INITIAL_VISIBLE);
+  const visibleProjects = showAll ? levelProjects : levelProjects.slice(0, INITIAL_VISIBLE);
+  const remaining = levelProjects.length - INITIAL_VISIBLE;
+
+  return (
+    <CollapsibleCategory level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+        {visibleProjects.map((project, index) => (
+          <Link
+            key={project.name}
+            to={`/projects/${project.slug}`}
+            className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
+            style={{ animationDelay: `${index * 0.08}s` }}
+          >
+            {project.image && (
+              <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
+                <img
+                  src={project.image}
+                  alt={project.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+            )}
+            <div className="p-7 md:p-9 flex flex-col flex-1">
+              <div className="flex items-center justify-between gap-2 mb-5">
+                <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
+                  {project.category}
+                </span>
+                <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
+                  {project.maturity}
+                </span>
+              </div>
+              <h3 className="font-display text-xl font-semibold text-foreground mb-4">
+                {project.name}
+              </h3>
+              <p className="text-muted-foreground font-body text-base leading-relaxed">
+                {project.description}
+              </p>
+              <div className="mt-auto pt-6">
+                <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
+                  Learn more <ChevronRight size={16} />
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+      {!showAll && remaining > 0 && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={() => setShowAll(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-muted-foreground font-medium font-body text-sm hover:border-primary/30 hover:text-foreground transition-all duration-200"
+          >
+            Show {remaining} more {remaining === 1 ? 'project' : 'projects'}
+            <ChevronDown size={16} />
+          </button>
+        </div>
+      )}
+    </CollapsibleCategory>
+  );
+};
+
+
 const Projects = () => {
   const [formData, setFormData] = useState({
     projectName: "",
@@ -172,49 +244,7 @@ const Projects = () => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
             return (
-              <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                  {levelProjects.map((project, index) => (
-                    <Link
-                      key={project.name}
-                      to={`/projects/${project.slug}`}
-                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
-                      style={{ animationDelay: `${index * 0.08}s` }}
-                    >
-                      {project.image && (
-                        <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
-                          <img
-                            src={project.image}
-                            alt={project.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      )}
-                      <div className="p-7 md:p-9 flex flex-col flex-1">
-                        <div className="flex items-center justify-between gap-2 mb-5">
-                          <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
-                            {project.category}
-                          </span>
-                          <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
-                            {project.maturity}
-                          </span>
-                        </div>
-                        <h3 className="font-display text-xl font-semibold text-foreground mb-4">
-                          {project.name}
-                        </h3>
-                        <p className="text-muted-foreground font-body text-base leading-relaxed">
-                          {project.description}
-                        </p>
-                        <div className="mt-auto pt-6">
-                          <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
-                            Learn more <ChevronRight size={16} />
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CollapsibleCategory>
+              <ProjectCategorySection key={level} level={level} levelProjects={levelProjects} hasProjects={hasProjects} />
             );
           })}
         </div>
