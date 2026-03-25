@@ -62,10 +62,14 @@ const About = () => {
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
             <h3 className="font-display text-2xl font-semibold text-foreground mb-10">Board of Directors</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-8 gap-y-12">
-              {governanceBoard.map((member) => (
-                <div key={member.name} className="flex flex-col">
-                  <div className="aspect-[4/5] overflow-hidden rounded-xl mb-5">
+            <div className="space-y-6">
+              {governanceBoard.map((member, idx) => (
+                <div
+                  key={member.name}
+                  className="flex flex-col sm:flex-row gap-6 sm:gap-8 p-6 md:p-8 rounded-2xl border border-border/60 bg-card/50 animate-fade-in-up"
+                  style={{ animationDelay: `${0.35 + idx * 0.08}s` }}
+                >
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl">
                     <img
                       src={member.image}
                       alt={member.name}
@@ -73,28 +77,30 @@ const About = () => {
                       loading="lazy"
                     />
                   </div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <p className="font-display text-lg font-semibold text-foreground leading-tight">
-                      {member.name}
+                  <div className="flex flex-col justify-center min-w-0">
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <h4 className="font-display text-lg font-semibold text-foreground leading-tight">
+                        {member.name}
+                      </h4>
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground/40 hover:text-primary transition-colors shrink-0"
+                        aria-label={`${member.name} on LinkedIn`}
+                      >
+                        <Linkedin size={14} />
+                      </a>
+                    </div>
+                    <p className="text-sm font-medium text-primary font-body mb-3">
+                      {member.role}
                     </p>
-                    <a
-                      href={member.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground/40 hover:text-primary transition-colors shrink-0"
-                      aria-label={`${member.name} on LinkedIn`}
-                    >
-                      <Linkedin size={14} />
-                    </a>
+                    {member.bio && (
+                      <p className="text-sm text-muted-foreground font-body leading-[1.7]">
+                        {member.bio}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-base font-medium text-primary font-body leading-snug">
-                    {member.role}
-                  </p>
-                  {member.bio && (
-                    <p className="text-base text-muted-foreground font-body mt-3 leading-[1.65]">
-                      {member.bio}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
