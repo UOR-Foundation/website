@@ -16,10 +16,10 @@ const IntroSection = () => {
             </span>
           </p>
           <p className="mt-5 md:mt-6 text-section-dark-foreground/75 font-body text-base md:text-lg leading-[1.75] md:leading-[1.9]">
-            Data can be found, verified, and reused across any system — no broken links, no glue code, no gatekeepers.
+            Data can be found, verified, and reused across any system. No broken links, no glue code, no gatekeepers.
           </p>
           <p className="mt-6 md:mt-8 text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.75] md:leading-[1.9] font-medium">
-            The UOR Foundation builds this open standard to make reliable, verifiable data the default — from scientific research to production infrastructure.
+            The UOR Foundation builds this open standard to make reliable, verifiable data the default, from scientific research to production infrastructure.
           </p>
           <a
             href="/about"

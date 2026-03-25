@@ -82,8 +82,7 @@ const SandboxPage = () => {
             className="mt-8 text-lg md:text-xl text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
-            From frontier computing to open science — each project is an independent team 
-            building on one shared, verifiable foundation. Pick any card to go deeper.
+            Each project is an independent team building on one shared, verifiable foundation. Pick any card to go deeper.
           </p>
           <div
             className="mt-10 flex flex-wrap gap-4 animate-fade-in-up opacity-0"
