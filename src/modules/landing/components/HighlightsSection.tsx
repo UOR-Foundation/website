@@ -18,7 +18,7 @@ const imageMap: Record<string, string> = {
 const HighlightsSection = () => {
   return (
     <section className="pt-4 md:pt-10 pb-8 md:pb-16 bg-background">
-      <div className="container max-w-5xl">
+      <div className="container max-w-6xl">
         <p className="text-[0.6875rem] md:text-base font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/60 mb-6 md:mb-8">
           Community Highlights
         </p>
