@@ -69,7 +69,7 @@ const submissionSteps = [
 ];
 
 const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { level: string; count: number; dotColor: string; children: React.ReactNode; disabled?: boolean }) => {
-  const [open, setOpen] = useState(!disabled);
+  const [open, setOpen] = useState(true);
   const canToggle = !disabled;
   return (
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
@@ -145,27 +145,82 @@ const Projects = () => {
       <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            Project Maturity Framework
+            UOR Projects
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            An open, transparent path for community projects built on the UOR standard. Every project enters as a <strong className="text-foreground">Sandbox</strong> experiment, grows through <strong className="text-foreground">Incubation</strong> with real-world adoption, and earns <strong className="text-foreground">Graduated</strong> status through proven governance and stability.
+            Open-source projects built on the UOR standard, organized by maturity level.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
-            <a href="#projects-list" className="btn-primary">
-              Explore UOR Projects
-            </a>
-            <a href="#submit" className="btn-outline">
+            <a href="#submit" className="btn-primary">
               Submit Your Project
+            </a>
+            <a href="#maturity" className="btn-outline">
+              How Maturity Works
             </a>
           </div>
         </div>
       </section>
 
+      {/* Projects by maturity */}
+      <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
+        <div className="container max-w-5xl space-y-8">
+          {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
+            const levelProjects = projects.filter((p) => p.maturity === level);
+            const hasProjects = levelProjects.length > 0;
+            return (
+              <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                  {levelProjects.map((project, index) => (
+                    <Link
+                      key={project.name}
+                      to={`/projects/${project.slug}`}
+                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
+                      style={{ animationDelay: `${index * 0.08}s` }}
+                    >
+                      {project.image && (
+                        <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
+                          <img
+                            src={project.image}
+                            alt={project.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      )}
+                      <div className="p-7 md:p-9 flex flex-col flex-1">
+                        <div className="flex items-center justify-between gap-2 mb-5">
+                          <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
+                            {project.category}
+                          </span>
+                          <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
+                            {project.maturity}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-xl font-semibold text-foreground mb-4">
+                          {project.name}
+                        </h3>
+                        <p className="text-muted-foreground font-body text-base leading-relaxed">
+                          {project.description}
+                        </p>
+                        <div className="mt-auto pt-6">
+                          <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
+                            Learn more <ChevronRight size={16} />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </CollapsibleCategory>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Visual Progression Flow */}
-      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border">
+      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-16 text-center">
             Project Maturity Levels
@@ -231,74 +286,6 @@ const Projects = () => {
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Projects by maturity */}
-      <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
-        <div className="container max-w-5xl space-y-8">
-          {(["Graduated", "Incubating", "Sandbox"] as MaturityLevel[]).map((level) => {
-            const levelProjects = projects.filter((p) => p.maturity === level);
-            const hasProjects = levelProjects.length > 0;
-            const previewLimit = 4;
-            const displayProjects = levelProjects.slice(0, previewLimit);
-            const hasMore = levelProjects.length > previewLimit;
-            return (
-              <CollapsibleCategory key={level} level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                  {displayProjects.map((project, index) => (
-                    <Link
-                      key={project.name}
-                      to={`/projects/${project.slug}`}
-                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
-                      style={{ animationDelay: `${index * 0.08}s` }}
-                    >
-                      {project.image && (
-                        <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
-                          <img
-                            src={project.image}
-                            alt={project.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      )}
-                      <div className="p-7 md:p-9 flex flex-col flex-1">
-                        <div className="flex items-center justify-between gap-2 mb-5">
-                          <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
-                            {project.category}
-                          </span>
-                          <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
-                            {project.maturity}
-                          </span>
-                        </div>
-                        <h3 className="font-display text-xl font-semibold text-foreground mb-4">
-                          {project.name}
-                        </h3>
-                        <p className="text-muted-foreground font-body text-base leading-relaxed">
-                          {project.description}
-                        </p>
-                        <div className="mt-auto pt-6">
-                          <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
-                            Learn more <ChevronRight size={16} />
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                {hasMore && (
-                  <div className="mt-8 text-center">
-                    <Link
-                      to="/sandbox"
-                      className="inline-flex items-center gap-2 text-primary text-base font-medium font-body hover:underline transition-colors"
-                    >
-                      View all {levelProjects.length} projects <ChevronRight size={16} />
-                    </Link>
-                  </div>
-                )}
-              </CollapsibleCategory>
-            );
-          })}
         </div>
       </section>
 

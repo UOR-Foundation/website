@@ -5,20 +5,20 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
   {
+    name: "Hologram",
+    category: "Frontier Technology",
+    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
+    maturity: "Sandbox" as MaturityLevel,
+    license: "MIT",
+    url: "https://gethologram.ai/",
+  },
+  {
     name: "Atlas Embeddings",
     category: "Open Science",
     description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
-  },
-  {
-    name: "Atomic Language Model",
-    category: "Frontier Technology",
-    description: "A language model where every output follows defined rules and is fully traceable — no black boxes.",
-    maturity: "Sandbox" as MaturityLevel,
-    license: "MIT",
-    url: "https://github.com/dkypuros/atomic-lang-model",
   },
   {
     name: "UOR MCP",
