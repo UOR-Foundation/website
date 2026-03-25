@@ -57,7 +57,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-4">
-              The UOR Foundation is a Colorado 501(c)(3) nonprofit governed by a five-member Board of Directors. Each director serves a three-year term. Decisions require a majority quorum. No proxies. All governance rules are published openly on{" "}
+              501(c)(3) nonprofit. Five-member board. Three-year terms. Open governance on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
             <h3 className="font-display text-lg font-semibold text-foreground mt-8 mb-5">Board of Directors</h3>
