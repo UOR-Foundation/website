@@ -1,10 +1,10 @@
-import { Linkedin, BookOpen, Microscope, Rocket } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards } from "@/data/about-cards";
 
-const cardIconMap: Record<string, LucideIcon> = { BookOpen, Microscope, Rocket };
+const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
 const About = () => {
   return (
