@@ -101,7 +101,7 @@ const SandboxPage = () => {
 
       {/* Stats strip */}
       <section className="border-b border-border bg-card">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
             {[
               { label: "Total Projects", value: allProjects.length },
