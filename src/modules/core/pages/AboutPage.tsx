@@ -91,6 +91,11 @@ const About = () => {
                     <p className="text-xs text-muted-foreground font-body mt-0.5">
                       {member.role}
                     </p>
+                    {member.bio && (
+                      <p className="text-xs text-muted-foreground/70 font-body mt-1.5 leading-relaxed">
+                        {member.bio}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
