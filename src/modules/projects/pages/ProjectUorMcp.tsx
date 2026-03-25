@@ -7,13 +7,13 @@ const ProjectUorMcp = () => (
     name="UOR MCP"
     slug="uor-mcp"
     category="Developer Tools"
-    tagline="Ground every AI response in truth. Surface knowledge gaps honestly. Generate informed follow-up questions. UOR MCP turns any LLM into a transparent, verifiable reasoning partner."
+    tagline="A server that connects AI models to the UOR verification engine. Every response is graded, traceable, and independently verifiable."
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation/uor-mcp"
     agentInstructions={[
-      { action: "Understand the value", detail: "UOR MCP exposes eight tools (derive, verify, resolve, certify, trace, query, correlate, partition) via the Model Context Protocol. Any LLM client can ground its responses in content-addressed, cryptographically verifiable data." },
+      { action: "Understand the value", detail: "UOR MCP exposes eight verification tools via the Model Context Protocol. Any AI client can ground its responses in content-addressed, verifiable data." },
       { action: "Connect your client", detail: "Add the MCP server URL to Claude Desktop, Cursor, Windsurf, or VS Code. The tools appear automatically." },
-      { action: "Evaluate for your use case", detail: "If your workflow involves AI-assisted development, research, or data processing, UOR MCP ensures every output carries a derivation ID, certificate, and content-addressed IRI." },
+      { action: "Evaluate for your use case", detail: "If your workflow involves AI-assisted development, research, or data processing, UOR MCP ensures every output carries a derivation ID and certificate." },
       { action: "Access the project", detail: "Visit the GitHub repository for documentation, tool schemas, and integration examples." },
     ]}
     sections={[
@@ -31,77 +31,28 @@ const ProjectUorMcp = () => (
         ),
       },
       {
-        heading: "What UOR MCP does",
+        heading: "What it does",
         content: (
           <>
             <p>
-              UOR MCP connects your AI assistant to a verification engine. It adds eight tools that your assistant can call during any conversation. When your AI uses them, every answer comes back with a trust score, a proof hash, and a clear label telling you exactly how that answer was produced.
+              UOR MCP connects your AI assistant to a verification engine. It adds eight tools that your assistant can call during any conversation. When used, every answer comes back with a trust grade, a proof hash, and a clear label telling you exactly how that answer was produced.
             </p>
-            <p className="font-medium text-foreground">
-              The scorecard at the bottom of each response tells you:
-            </p>
-            <ul className="space-y-3">
+            <ul className="space-y-3 mt-3">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">The trust grade.</strong> Grade A means the result was mathematically computed and verified. Grade D means the AI answered from memory with no verification.</span>
+                <span><strong className="text-foreground">Trust grade.</strong> Grade A means mathematically computed and verified. Grade D means answered from memory with no verification.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">The confidence level.</strong> A visual indicator of how much you should rely on this particular answer.</span>
+                <span><strong className="text-foreground">Proof hash.</strong> A unique fingerprint of the computation. Anyone can use this to independently re-verify the result.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">The proof.</strong> A unique fingerprint (hash) of the computation. Anyone can use this to independently re-verify the result.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">The sources.</strong> Named, linked references showing exactly where the information came from.</span>
-              </li>
-            <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Knowledge gaps.</strong> When the AI doesn't know something or made an assumption, it tells you explicitly. No hidden uncertainty.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Follow-up questions.</strong> Every response ends with 2–3 precise, informed questions that help you verify, challenge, or go deeper on the topic.</span>
+                <span><strong className="text-foreground">Knowledge gaps.</strong> When the AI doesn't know something or made an assumption, it tells you explicitly.</span>
               </li>
             </ul>
           </>
         ),
-      },
-      {
-        heading: "Why it matters",
-        content: (
-          <>
-            <p>
-              AI is increasingly used to make decisions: in code, research, finance, and operations. But without a way to verify outputs, every answer carries hidden risk. Was the data real? Was the logic correct? Would you get the same answer tomorrow?
-            </p>
-            <p>
-              UOR MCP addresses this with three commitments:
-            </p>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Truth grounding.</strong> If the AI computed something, you get a mathematical proof. If it pulled from a knowledge base, you get a link. If it guessed from training data, you know that too.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Honest uncertainty.</strong> Knowledge gaps are surfaced explicitly: what the AI assumed, what it doesn't know, and what would change the answer. No hidden confidence.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Guided exploration.</strong> Every response generates precise follow-up questions that help you verify claims, test edge cases, or deepen your understanding. The AI becomes a research partner, not just an answer machine.</span>
-              </li>
-            </ul>
-            <p>
-              The result: you can tell the difference between an answer you should act on and one you should investigate further.
-            </p>
-          </>
-        ),
-      },
-      {
-        heading: "How to connect",
-        content: <SetupGuide />,
       },
       {
         heading: "How it works",
@@ -113,14 +64,14 @@ const ProjectUorMcp = () => (
             <p>
               When you ask a question, the AI decides whether to use these tools. If it does, the input is processed through the UOR pipeline: a derivation trace is created, a certificate is issued, and the result is assigned a permanent, content-based address. The AI then formats a trust scorecard showing exactly what happened.
             </p>
-            <p>
-              If the AI answers without using the tools (for example, a general knowledge question), the scorecard still appears, clearly labeled as Grade D: unverified, from training data. You always know what you're getting.
-            </p>
+            <div className="mt-6">
+              <SetupGuide />
+            </div>
           </>
         ),
       },
       {
-        heading: "Who this is for",
+        heading: "Where it applies",
         content: (
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
@@ -133,7 +84,7 @@ const ProjectUorMcp = () => (
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">Teams that need accountability.</strong> When an AI produces a result that drives a decision, the proof trail shows exactly how that result was derived.</span>
+              <span><strong className="text-foreground">Teams needing accountability.</strong> When an AI produces a result that drives a decision, the proof trail shows exactly how that result was derived.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
