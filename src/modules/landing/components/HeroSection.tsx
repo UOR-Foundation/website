@@ -1,6 +1,6 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import { ArrowRight } from "lucide-react";
-import lobsterIcon from "@/assets/lobster-icon.png";
+
 
 const HeroSection = () => {
   return (
