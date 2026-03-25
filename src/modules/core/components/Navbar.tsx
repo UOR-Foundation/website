@@ -31,7 +31,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         isDark ? "dark" : ""
       } ${
         scrolled
-          ? "bg-background/25 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10"
+          ? "bg-background/90 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10 shadow-sm"
           : "bg-transparent"
       }`}
     >
