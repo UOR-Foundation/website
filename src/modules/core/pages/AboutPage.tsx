@@ -61,20 +61,20 @@ const About = () => {
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
               Five board members oversee the foundation's direction, ensuring transparency and accountability.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
               {governanceBoard.map((member) => (
                 <a
                   key={member.name}
                   href={member.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex flex-col items-center text-center gap-3"
+                  className="group flex flex-col gap-3"
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border/60 group-hover:border-primary/50 transition-colors">
+                  <div className="aspect-square overflow-hidden rounded-lg border border-border/60 group-hover:border-primary/50 transition-colors">
                     <img
                       src={member.image}
                       alt={member.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                       loading="lazy"
                     />
                   </div>
