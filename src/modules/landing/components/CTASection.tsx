@@ -47,9 +47,8 @@ const CTASection = () => {
         <div className="mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
           {paths.map((path, index) => {
             const Icon = path.icon;
-            const Tag = path.external ? "a" : "a";
             const linkProps = path.external
-              ? { href: path.href, target: "_blank", rel: "noopener noreferrer" }
+              ? { href: path.href, target: "_blank" as const, rel: "noopener noreferrer" }
               : { href: path.href };
 
             return (

@@ -23,7 +23,7 @@ const Footer = () => {
             <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Foundation</h4>
             <nav className="flex flex-col gap-3">
               <Link to="/about" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">About</Link>
-              <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Standard</Link>
+              <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Framework</Link>
               <Link to="/projects" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Projects</Link>
               <a href={GITHUB_GOVERNANCE_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Governance</a>
             </nav>
