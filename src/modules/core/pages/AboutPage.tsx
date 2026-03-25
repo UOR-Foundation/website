@@ -56,14 +56,14 @@ const About = () => {
           {/* Our Governance */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-4">
-              501(c)(3) nonprofit. Five-member board. Three-year terms. Open governance on{" "}
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-10">
+              The UOR Foundation is a registered 501(c)(3) nonprofit governed by a five-member board serving three-year terms. All governance rules are published on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
-            <h3 className="font-display text-lg font-semibold text-foreground mt-8 mb-5">Board of Directors</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-6">Board of Directors</h3>
+            <div className="grid grid-cols-5 gap-8">
               {governanceBoard.map((member) => (
-                <div key={member.name} className="group flex flex-col gap-3">
+                <div key={member.name} className="flex flex-col gap-3">
                   <div className="aspect-square overflow-hidden rounded-lg border border-border/60">
                     <img
                       src={member.image}
@@ -72,24 +72,24 @@ const About = () => {
                       loading="lazy"
                     />
                   </div>
-                  <div className="flex items-start justify-between gap-1.5">
-                    <div>
-                      <p className="font-display text-base font-semibold text-foreground">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-display text-sm font-semibold text-foreground whitespace-nowrap">
                         {member.name}
                       </p>
-                      <p className="text-sm text-muted-foreground font-body mt-0.5 leading-snug">
-                        {member.role}
-                      </p>
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+                        aria-label={`${member.name} on LinkedIn`}
+                      >
+                        <Linkedin size={14} />
+                      </a>
                     </div>
-                    <a
-                      href={member.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary transition-colors mt-0.5 shrink-0"
-                      aria-label={`${member.name} on LinkedIn`}
-                    >
-                      <Linkedin size={16} />
-                    </a>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                      {member.role}
+                    </p>
                   </div>
                 </div>
               ))}
