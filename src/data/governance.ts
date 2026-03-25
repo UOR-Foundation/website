@@ -27,7 +27,7 @@ export const governanceBoard = [
   {
     name: "Ilya Paveliev",
     role: "Treasurer",
-    bio: "Co-founder of Hologram. Founding partner at Arete Capital, focused on AI and frontier infrastructure.",
+    bio: "Investment banking and venture capital background. Founded a VC fund focused on AI and frontier infrastructure, with deep experience in Web3.",
     image: "/images/profiles/ilya-paveliev.jpg",
     link: "https://www.linkedin.com/in/trinityinvestor/",
   },

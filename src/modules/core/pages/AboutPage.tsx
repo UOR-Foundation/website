@@ -61,11 +61,11 @@ const About = () => {
               The UOR Foundation is a registered 501(c)(3) nonprofit governed by a five-member board serving three-year terms. All governance rules are published on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
-            <h3 className="font-display text-lg font-semibold text-foreground mb-8">Board of Directors</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-10">
+            <h3 className="font-display text-2xl font-semibold text-foreground mb-10">Board of Directors</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-8 gap-y-12">
               {governanceBoard.map((member) => (
                 <div key={member.name} className="flex flex-col">
-                  <div className="aspect-[4/5] overflow-hidden rounded-xl mb-4">
+                  <div className="aspect-[4/5] overflow-hidden rounded-xl mb-5">
                     <img
                       src={member.image}
                       alt={member.name}
@@ -73,25 +73,25 @@ const About = () => {
                       loading="lazy"
                     />
                   </div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <p className="font-display text-base font-semibold text-foreground leading-tight">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <p className="font-display text-lg font-semibold text-foreground leading-tight">
                       {member.name}
                     </p>
                     <a
                       href={member.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground/50 hover:text-primary transition-colors shrink-0"
+                      className="text-muted-foreground/40 hover:text-primary transition-colors shrink-0"
                       aria-label={`${member.name} on LinkedIn`}
                     >
-                      <Linkedin size={13} />
+                      <Linkedin size={14} />
                     </a>
                   </div>
-                  <p className="text-sm font-medium text-primary font-body leading-snug">
+                  <p className="text-base font-medium text-primary font-body leading-snug">
                     {member.role}
                   </p>
                   {member.bio && (
-                    <p className="text-sm text-muted-foreground font-body mt-2.5 leading-[1.6]">
+                    <p className="text-base text-muted-foreground font-body mt-3 leading-[1.65]">
                       {member.bio}
                     </p>
                   )}
