@@ -6,38 +6,38 @@ const ProjectCertificate = () => (
     name="UOR Certificate"
     slug="uor-certificate"
     category="Core Infrastructure"
-    tagline="A self-verifying receipt for any digital object. No certificate authority, no external service, no trust required. Just mathematics."
+    tagline="A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required."
     heroImage={heroImg}
     repoUrl="https://github.com/UOR-Foundation"
     agentInstructions={[
-      { action: "Understand the concept", detail: "A UOR Certificate is a mathematical proof that content is authentic. It works like a receipt: it records what the content IS, not where it came from. Anyone can re-check it independently." },
-      { action: "Generate a certificate", detail: "Import generateCertificate from the module, pass any object, and receive a complete self-verifying certificate with a human-readable triword identity." },
-      { action: "Verify authenticity", detail: "Import verifyCertificate, pass any certificate, and the module re-hashes the content to confirm the fingerprint matches. No network, no authority, no trust needed." },
-      { action: "Decode for display", detail: "Import decodeCertificate to extract the triword, coordinates, fingerprint, and all human-readable fields from a raw certificate." },
+      { action: "Understand the concept", detail: "A UOR Certificate is a mathematical proof that content is authentic. It works like a receipt: it records what the content IS, not where it came from." },
+      { action: "Generate a certificate", detail: "Import generateCertificate from the module, pass any object, and receive a complete self-verifying certificate." },
+      { action: "Verify authenticity", detail: "Import verifyCertificate, pass any certificate, and the module re-hashes the content to confirm the fingerprint matches." },
+      { action: "Decode for display", detail: "Import decodeCertificate to extract the triword, coordinates, fingerprint, and all human-readable fields." },
     ]}
     sections={[
       {
-        heading: "What it is",
+        heading: "The problem",
         content: (
           <>
             <p>
-              A UOR Certificate is a digital receipt that proves a piece of content is authentic. Unlike traditional certificates issued by authorities, a UOR Certificate is derived directly from the content itself, making it self-verifying and impossible to forge.
+              Proving that digital content is authentic requires trusting someone else: a certificate authority, a platform, a database, or a signature service. If that authority is compromised, unavailable, or goes out of business, verification breaks.
             </p>
             <p>
-              Every certificate includes a three-word identity (like "Meadow · Steep · Keep") that makes the mathematical fingerprint memorable and human-friendly, plus the full canonical payload needed to independently re-verify the certificate at any time.
+              Documents can be backdated, images can be swapped, and metadata can be altered, with no way for a recipient to independently confirm what they received is what was originally created.
             </p>
           </>
         ),
       },
       {
-        heading: "The problem it solves",
+        heading: "What it does",
         content: (
           <>
             <p>
-              Today, proving that digital content is authentic requires trusting someone else: a certificate authority, a platform, a database, or a signature service. If that authority is compromised, unavailable, or simply goes out of business, verification breaks.
+              A UOR Certificate is a digital receipt that proves content is authentic. Unlike traditional certificates issued by authorities, a UOR Certificate is derived directly from the content itself, making it self-verifying and impossible to forge.
             </p>
             <p>
-              This creates a fragile trust chain where authenticity depends on institutions rather than evidence. Documents can be backdated, images can be swapped, and metadata can be altered, with no way for a recipient to independently confirm what they received is what was originally created.
+              Every certificate includes a three-word identity (like "Meadow · Steep · Keep") that makes the mathematical fingerprint memorable and human-friendly, plus the full payload needed to independently re-verify the certificate at any time.
             </p>
           </>
         ),
@@ -49,24 +49,24 @@ const ProjectCertificate = () => (
             <p>
               The certificate module follows a four-step pipeline that anyone can reproduce independently:
             </p>
-            <ul className="space-y-3 mt-4">
+            <ol className="space-y-4 mt-4 list-none">
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Canonicalize.</strong> The content is serialized into a standard form (URDNA2015 N-Quads) so that identical content always produces identical bytes, regardless of key ordering or formatting differences.</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">1</span>
+                <span><strong className="text-foreground">Canonicalize.</strong> The content is serialized into a standard form so that identical content always produces identical bytes.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Hash.</strong> The canonical bytes are hashed with SHA-256, producing a unique 256-bit fingerprint. Any change to the content, even a single character, produces a completely different fingerprint.</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">2</span>
+                <span><strong className="text-foreground">Hash.</strong> The canonical bytes are hashed with SHA-256, producing a unique 256-bit fingerprint. Any change produces a completely different fingerprint.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Derive.</strong> From the single hash, four identity forms are computed: a CID (content identifier), a derivation ID, a Braille visual address, and a routable IPv6 address. Plus a three-word human-readable label.</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">3</span>
+                <span><strong className="text-foreground">Derive.</strong> From the hash, four identity forms are computed: a content identifier, a derivation ID, a visual address, and a routable IPv6 address.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><strong className="text-foreground">Verify.</strong> To check authenticity, re-hash the stored payload and compare. If the fingerprints match, the content is untampered. No authority needed. Pure mathematics.</span>
+                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">4</span>
+                <span><strong className="text-foreground">Verify.</strong> To check authenticity, re-hash the stored payload and compare. If the fingerprints match, the content is untampered.</span>
               </li>
-            </ul>
+            </ol>
           </>
         ),
       },
@@ -84,41 +84,13 @@ const ProjectCertificate = () => (
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">Document authenticity.</strong> Issue tamper-evident certificates for contracts, research papers, medical records, or any document where integrity matters.</span>
+              <span><strong className="text-foreground">Document authenticity.</strong> Issue tamper-evident certificates for contracts, research papers, or any document where integrity matters.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-              <span><strong className="text-foreground">Data exchange.</strong> When sharing data between organizations, each record carries its own proof of authenticity. No shared database or API trust required.</span>
+              <span><strong className="text-foreground">Data exchange.</strong> When sharing data between organizations, each record carries its own proof of authenticity.</span>
             </li>
           </ul>
-        ),
-      },
-      {
-        heading: "Module architecture",
-        content: (
-          <>
-            <p>
-              The certificate module is fully self-contained with a clean, minimal API:
-            </p>
-            <ul className="space-y-3 mt-4">
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">generateCertificate(subject, data)</code> Create a certificate for any object</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">verifyCertificate(cert)</code> Re-hash and confirm authenticity</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">decodeCertificate(cert)</code> Extract human-readable fields</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">certificateToTriword(cert)</code> Get the three-word identity</span>
-              </li>
-            </ul>
-          </>
         ),
       },
     ]}
