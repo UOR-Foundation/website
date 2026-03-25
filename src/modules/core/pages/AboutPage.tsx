@@ -1,8 +1,8 @@
+import { Linkedin, BookOpen, Microscope, Rocket } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards } from "@/data/about-cards";
-import { BookOpen, Microscope, Rocket } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Microscope, Rocket };
 
@@ -63,30 +63,35 @@ const About = () => {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
               {governanceBoard.map((member) => (
-                <a
-                  key={member.name}
-                  href={member.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col gap-3"
-                >
-                  <div className="aspect-square overflow-hidden rounded-lg border border-border/60 group-hover:border-primary/50 transition-colors">
+                <div key={member.name} className="group flex flex-col gap-3">
+                  <div className="aspect-square overflow-hidden rounded-lg border border-border/60">
                     <img
                       src={member.image}
                       alt={member.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
                   </div>
-                  <div>
-                    <p className="font-display text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {member.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-body mt-0.5 leading-snug">
-                      {member.role}
-                    </p>
+                  <div className="flex items-start justify-between gap-1.5">
+                    <div>
+                      <p className="font-display text-base font-semibold text-foreground">
+                        {member.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground font-body mt-0.5 leading-snug">
+                        {member.role}
+                      </p>
+                    </div>
+                    <a
+                      href={member.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors mt-0.5 shrink-0"
+                      aria-label={`${member.name} on LinkedIn`}
+                    >
+                      <Linkedin size={16} />
+                    </a>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           </div>
