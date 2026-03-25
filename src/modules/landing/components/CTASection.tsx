@@ -1,17 +1,87 @@
+import { Code2, Building2, FlaskConical } from "lucide-react";
 import { teamMembers } from "@/data/team-members";
-import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
+import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
+
+const paths = [
+  {
+    icon: Code2,
+    title: "Contributors",
+    description:
+      "Submit patches, write specs, or build reference implementations. Everything ships through GitHub.",
+    cta: "Start Contributing",
+    href: GITHUB_ORG_URL,
+    external: true,
+  },
+  {
+    icon: Building2,
+    title: "Adopters",
+    description:
+      "Evaluate the standard for your stack. Integrate content-based addressing into existing infrastructure.",
+    cta: "Explore Projects",
+    href: "/projects",
+    external: false,
+  },
+  {
+    icon: FlaskConical,
+    title: "Researchers",
+    description:
+      "Join working groups, publish findings, and help advance the formal specification.",
+    cta: "View Research",
+    href: GITHUB_RESEARCH_URL,
+    external: true,
+  },
+];
 
 const CTASection = () => {
   return (
     <section className="py-10 md:py-16 bg-background">
       <div className="container max-w-5xl text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
-          Join Your Community
+          Get Involved
         </h2>
         <p className="mt-4 md:mt-5 text-[0.9375rem] md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
-          Connect with researchers, developers, and advocates building the future of reliable, open data.
+          Whether you write code, run infrastructure, or publish research — there's a clear path for you.
         </p>
-        <div className="mt-6 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+
+        {/* Three-path audience routing */}
+        <div className="mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
+          {paths.map((path, index) => {
+            const Icon = path.icon;
+            const Tag = path.external ? "a" : "a";
+            const linkProps = path.external
+              ? { href: path.href, target: "_blank", rel: "noopener noreferrer" }
+              : { href: path.href };
+
+            return (
+              <div
+                key={path.title}
+                className="group rounded-xl border border-border bg-card p-6 md:p-8 flex flex-col animate-fade-in-up opacity-0 hover:border-primary/30 transition-colors duration-300"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <Icon
+                  className="w-5 h-5 text-primary mb-4"
+                  strokeWidth={1.5}
+                />
+                <h3 className="font-display text-lg font-semibold text-foreground mb-2">
+                  {path.title}
+                </h3>
+                <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                  {path.description}
+                </p>
+                <a
+                  {...linkProps}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body mt-5 group-hover:gap-2.5 transition-all duration-300"
+                >
+                  {path.cta}
+                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+                </a>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Community quick links */}
+        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
             href={DISCORD_URL}
             target="_blank"
@@ -26,11 +96,11 @@ const CTASection = () => {
             rel="noopener noreferrer"
             className="btn-outline"
           >
-            Contribute on GitHub
+            GitHub Organization
           </a>
         </div>
 
-        {/* Members Grid — golden ratio spacing */}
+        {/* Members Grid */}
         <div className="mt-10 md:mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-6 md:gap-y-12">
           {teamMembers.map((member, index) => (
             <a
