@@ -42,12 +42,6 @@ const HeroSection = () => {
               Explore Projects
               <ArrowRight size={16} />
             </a>
-            <a
-              href="/standard"
-              className="btn-outline inline-flex items-center gap-2"
-            >
-              Read the Framework
-            </a>
           </div>
         </div>
       </div>
