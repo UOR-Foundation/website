@@ -172,7 +172,7 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
 };
 
 
-  const [formData, setFormData] = useState({
+  const Projects = () => {
     projectName: "",
     repoUrl: "",
     contactEmail: "",
