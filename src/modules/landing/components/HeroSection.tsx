@@ -27,7 +27,7 @@ const HeroSection = () => {
             <span className="block">Piece of Content.</span>
           </h1>
           <p
-            className="mt-5 md:mt-10 text-[0.9375rem] md:text-xl text-muted-foreground leading-[1.68] max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
+            className="mt-5 md:mt-10 text-base md:text-xl text-muted-foreground leading-[1.68] max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
             The UOR Foundation develops a universal data standard for science, software, and the next generation of intelligent systems.

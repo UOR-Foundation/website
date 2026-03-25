@@ -100,7 +100,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-3 px-4 rounded-xl text-[0.9375rem] font-medium font-body text-center transition-colors ${
+                className={`py-3 px-4 rounded-xl text-base font-medium font-body text-center transition-colors ${
                   location.pathname === item.href
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground active:bg-muted"
@@ -113,7 +113,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="pt-1 pb-1 flex flex-col gap-2">
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="py-3 px-4 rounded-xl text-[0.9375rem] font-medium font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
+              className="py-3 px-4 rounded-xl text-base font-medium font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
             >
               <Heart size={15} fill="currentColor" strokeWidth={0} />
               Donate

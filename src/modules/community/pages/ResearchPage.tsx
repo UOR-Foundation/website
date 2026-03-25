@@ -64,7 +64,7 @@ const Research = () => {
 
       {/* Research */}
       <section id="research" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Open Research
           </p>
@@ -175,7 +175,7 @@ const Research = () => {
 
       {/* Blog */}
       <section id="blog" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Blog
           </p>
@@ -220,7 +220,7 @@ const Research = () => {
 
       {/* Events */}
       <section id="events" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Events
           </p>
@@ -285,7 +285,7 @@ const Research = () => {
 
       {/* Join CTA */}
       <section id="join" className="section-dark py-14 md:py-20 scroll-mt-28">
-        <div className="container max-w-3xl text-center">
+        <div className="container max-w-4xl text-center">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>

@@ -35,11 +35,11 @@ const paths = [
 const CTASection = () => {
   return (
     <section className="py-10 md:py-16 bg-background">
-      <div className="container max-w-5xl text-center">
+      <div className="container max-w-6xl text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
           Ready to Build?
         </h2>
-        <p className="mt-4 md:mt-5 text-[0.9375rem] md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
+        <p className="mt-4 md:mt-5 text-base md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
           Engineers, researchers, and builders working on the open data standard.
         </p>
 

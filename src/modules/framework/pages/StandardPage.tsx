@@ -172,7 +172,7 @@ const Standard = () => {
 
       {/* The Problem */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             The Problem
           </p>
@@ -192,7 +192,7 @@ const Standard = () => {
 
       {/* Visual Diagram */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-12">
             How It Works
           </p>
@@ -202,7 +202,7 @@ const Standard = () => {
 
       {/* Anatomy of an Address */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Anatomy of an Address
           </p>
@@ -252,7 +252,7 @@ const Standard = () => {
 
       {/* Applications */}
       <section className="py-12 md:py-20 bg-background border-b border-border">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Where It Applies
           </p>
@@ -279,7 +279,7 @@ const Standard = () => {
 
       {/* Framework Architecture */}
       <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Architecture
           </p>

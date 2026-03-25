@@ -101,7 +101,7 @@ const SandboxPage = () => {
 
       {/* Stats strip */}
       <section className="border-b border-border bg-card">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
             {[
               { label: "Total Projects", value: allProjects.length },
@@ -205,7 +205,7 @@ const SandboxPage = () => {
 
       {/* CTA */}
       <section className="section-dark py-20 md:py-28">
-        <div className="container max-w-3xl text-center">
+        <div className="container max-w-4xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
             Build on the universal standard
           </h2>
