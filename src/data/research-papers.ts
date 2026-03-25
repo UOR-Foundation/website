@@ -18,7 +18,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Derives all fundamental constants from a single geometric angular defect δ₀ = 6.8° in tetrahedral spacetime. Predicts α⁻¹ = 137.036 from the Hopf fibration of the [3,3,5] Coxeter group — the same geometry underlying the Atlas substrate.",
+        "Derives all fundamental constants from a single geometric angular defect δ₀ = 6.8° in tetrahedral spacetime. Predicts α⁻¹ = 137.036 from the Hopf fibration of the [3,3,5] Coxeter group, the same geometry underlying the Atlas substrate.",
       href: "/research/qsvg-physical-theory",
     },
     {
