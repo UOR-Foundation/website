@@ -17,7 +17,7 @@ const HeroSection = () => {
             className="text-[0.6875rem] md:text-base font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/60 mb-3 md:mb-5 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.2s" }}
           >
-            open data standard.
+            open data framework.
           </p>
           <h1
             className="font-display text-[1.625rem] sm:text-[1.75rem] md:text-[3rem] lg:text-[3.75rem] font-bold leading-[1.12] tracking-tight text-foreground animate-fade-in-up opacity-0"
@@ -30,7 +30,7 @@ const HeroSection = () => {
             className="mt-5 md:mt-10 text-base md:text-xl text-muted-foreground leading-[1.68] max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
-            The UOR Foundation develops a universal data standard for science, software, and the next generation of intelligent systems.
+            The UOR Foundation develops a universal data framework for science, software, and the next generation of intelligent systems.
           </p>
           <div
             className="mt-8 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
@@ -44,7 +44,7 @@ const HeroSection = () => {
               href="/standard"
               className="btn-outline inline-flex items-center gap-2"
             >
-              Read the Standard
+              Read the Framework
             </a>
           </div>
         </div>

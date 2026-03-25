@@ -115,7 +115,7 @@ export const maturityInfo: { level: MaturityLevel; tagline: string; description:
   {
     level: "Sandbox",
     tagline: "Early stage & experimental",
-    description: "New projects with high potential. Open to anyone with an idea that aligns with the UOR standard.",
+    description: "New projects with high potential. Open to anyone with an idea that aligns with the UOR framework.",
     criteria: [
       "Aligns with the UOR Foundation mission",
       "Has a clear problem statement",
