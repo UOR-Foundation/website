@@ -115,7 +115,7 @@ const ProjectCertificate = () => (
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">certificateToTriword(cert)</code> — Get the three-word identity</span>
+                <span><code className="text-sm font-mono bg-muted px-1.5 py-0.5 rounded">certificateToTriword(cert)</code> Get the three-word identity</span>
               </li>
             </ul>
           </>
