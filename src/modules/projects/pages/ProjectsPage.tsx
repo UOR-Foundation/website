@@ -145,6 +145,7 @@ const Projects = () => {
       <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          
             UOR Projects
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
@@ -166,7 +167,7 @@ const Projects = () => {
 
       {/* Projects by maturity */}
       <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
-        <div className="container max-w-5xl space-y-8">
+        <div className="container max-w-6xl space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
@@ -226,7 +227,7 @@ const Projects = () => {
             Project Maturity Levels
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto items-stretch">
             {maturityInfo.map((stage, idx) => {
               const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
               return (
@@ -291,7 +292,7 @@ const Projects = () => {
 
       {/* Submission Process */}
       <section className="py-16 md:py-28 bg-background border-b border-border">
-        <div className="container max-w-5xl">
+        <div className="container max-w-6xl">
           <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
