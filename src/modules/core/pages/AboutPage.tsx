@@ -1,8 +1,8 @@
-import { Linkedin } from "lucide-react";
+import { Linkedin, BookOpen, Microscope, Rocket } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
-import { BookOpen, Microscope, Rocket } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { whatWeDoCards } from "@/data/about-cards";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Microscope, Rocket };
 
