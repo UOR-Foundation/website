@@ -61,12 +61,12 @@ const About = () => {
               The UOR Foundation is a registered 501(c)(3) nonprofit governed by a five-member board serving three-year terms. All governance rules are published on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
-            <h3 className="font-display text-2xl font-semibold text-foreground mb-10">Board of Directors</h3>
-            <div className="space-y-6">
+            <h3 className="font-display text-2xl font-semibold text-foreground mb-8">Board of Directors</h3>
+            <div className="space-y-3">
               {governanceBoard.map((member, idx) => (
                 <div
                   key={member.name}
-                  className="flex flex-col sm:flex-row gap-6 sm:gap-8 p-6 md:p-8 rounded-2xl border border-border/60 bg-card/50 animate-fade-in-up"
+                  className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 md:p-5 rounded-xl border border-border/60 bg-card/50 animate-fade-in-up"
                   style={{ animationDelay: `${0.35 + idx * 0.08}s` }}
                 >
                   <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl">
