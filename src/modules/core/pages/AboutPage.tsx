@@ -69,7 +69,7 @@ const About = () => {
                   className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 md:p-5 rounded-xl border border-border/60 bg-card/50 animate-fade-in-up"
                   style={{ animationDelay: `${0.35 + idx * 0.08}s` }}
                 >
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden rounded-lg">
                     <img
                       src={member.image}
                       alt={member.name}
