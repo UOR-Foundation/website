@@ -1,17 +1,17 @@
 export const whatWeDoCards = [
   {
     iconKey: "BookOpen",
-    title: "The Framework",
-    desc: "The open specification for content-based addressing. Six layers from identity to transformation, fully documented.",
+    title: "Framework",
+    desc: "We research and publish open data standards and protocols that anyone can build on.",
   },
   {
-    iconKey: "Microscope",
-    title: "Open Research",
-    desc: "Community-driven research across disciplines with full transparency and reproducibility.",
+    iconKey: "Users",
+    title: "Community",
+    desc: "A shared space for discussion, collaboration, and joint research across disciplines.",
   },
   {
     iconKey: "Rocket",
-    title: "Project Incubation",
+    title: "Project Launchpad",
     desc: "A structured path for open-source projects to grow from early ideas to production-ready tools.",
   },
 ];
