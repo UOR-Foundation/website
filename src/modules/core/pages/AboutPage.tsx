@@ -25,9 +25,7 @@ const About = () => {
           <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Mission</h2>
             <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed">
-              Give every piece of information one permanent address, based on what it{" "}
-              <em className="not-italic text-foreground/70">is</em>, not where it{" "}
-              <em className="not-italic text-foreground/70">lives</em>. Make that address verifiable by anyone, composable across systems, and open forever.
+              We develop an open standard that gives every piece of digital content a single, permanent address based on what it contains — making data findable, verifiable, and reusable across any system.
             </p>
           </div>
 
