@@ -17,7 +17,7 @@ const HeroSection = () => {
             className="text-[0.6875rem] md:text-base font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/60 mb-3 md:mb-5 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.2s" }}
           >
-            open data framework.
+            Universal Data Layer.
           </p>
           <h1
             className="font-display text-[1.625rem] sm:text-[1.75rem] md:text-[3rem] lg:text-[3.75rem] font-bold leading-[1.12] tracking-tight text-foreground animate-fade-in-up opacity-0"
