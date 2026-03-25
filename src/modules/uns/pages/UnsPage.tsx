@@ -16,7 +16,7 @@ const UnsPage = () => {
           <div className="mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              Module v0.1.0 — Scaffold
+              Module v0.1.0
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               UoR Name Service
@@ -34,7 +34,7 @@ const UnsPage = () => {
               {
                 title: "Forward Resolution",
                 description:
-                  "Resolve human-readable names to UOR identities — IPv6 ULA, CIDv1, Braille address, and full derivation ID.",
+                  "Resolve human-readable names to UOR identities: IPv6 ULA, CIDv1, Braille address, and full derivation ID.",
                 endpoint: "/uns/resolve",
               },
               {
@@ -82,7 +82,7 @@ const UnsPage = () => {
               {[
                 { type: "UAAA", analog: "A/AAAA", desc: "Name → IPv6 ULA address" },
                 { type: "UCID", analog: "CNAME", desc: "Name → CIDv1 content identifier" },
-                { type: "UGLP", analog: "—", desc: "Name → UOR Braille glyph address" },
+                { type: "UGLP", analog: "n/a", desc: "Name → UOR Braille glyph address" },
                 { type: "UPTR", analog: "PTR", desc: "IPv6 ULA → Name (reverse)" },
                 { type: "UTXT", analog: "TXT", desc: "Arbitrary metadata" },
                 { type: "UCRT", analog: "TLSA", desc: "Name → verification certificate" },

@@ -132,7 +132,7 @@ function CertificatePanel({ name, symbol, address }: { name: string; symbol: str
       <div className="flex items-center justify-between mb-2">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold font-body text-primary">
           <ShieldCheck size={14} />
-          UOR Certificate — {name}
+          UOR Certificate: {name}
         </span>
         <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground p-0.5">
           <X size={12} />

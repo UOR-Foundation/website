@@ -130,7 +130,7 @@ function McpClientCards() {
       {/* Tools summary */}
       <p className="text-sm font-body text-muted-foreground leading-relaxed">
         <span className="text-foreground font-medium">Five tools:</span>{" "}
-        derive · verify · query · correlate · partition — every output carries a derivation ID and content-addressed IRI.
+        derive · verify · query · correlate · partition. Every output carries a derivation ID and content-addressed IRI.
       </p>
     </div>
   );
