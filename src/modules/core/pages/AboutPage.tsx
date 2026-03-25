@@ -12,7 +12,7 @@ const About = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-28">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             About the UOR Foundation
           </h1>
@@ -20,7 +20,7 @@ const About = () => {
       </section>
 
       <section className="py-12 md:py-28 bg-background">
-        <div className="container max-w-3xl space-y-14">
+        <div className="container max-w-4xl space-y-14">
 
           {/* Our Mission */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
