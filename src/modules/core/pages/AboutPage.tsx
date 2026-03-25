@@ -61,11 +61,11 @@ const About = () => {
               The UOR Foundation is a registered 501(c)(3) nonprofit governed by a five-member board serving three-year terms. All governance rules are published on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
-            <h3 className="font-display text-lg font-semibold text-foreground mb-6">Board of Directors</h3>
-            <div className="grid grid-cols-5 gap-8">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-8">Board of Directors</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-10">
               {governanceBoard.map((member) => (
-                <div key={member.name} className="flex flex-col gap-3">
-                  <div className="aspect-square overflow-hidden rounded-lg border border-border/60">
+                <div key={member.name} className="flex flex-col">
+                  <div className="aspect-[4/5] overflow-hidden rounded-xl mb-4">
                     <img
                       src={member.image}
                       alt={member.name}
@@ -73,30 +73,28 @@ const About = () => {
                       loading="lazy"
                     />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-display text-sm font-semibold text-foreground whitespace-nowrap">
-                        {member.name}
-                      </p>
-                      <a
-                        href={member.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        aria-label={`${member.name} on LinkedIn`}
-                      >
-                        <Linkedin size={14} />
-                      </a>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-body mt-0.5">
-                      {member.role}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <p className="font-display text-base font-semibold text-foreground leading-tight">
+                      {member.name}
                     </p>
-                    {member.bio && (
-                      <p className="text-xs text-muted-foreground/70 font-body mt-1.5 leading-relaxed">
-                        {member.bio}
-                      </p>
-                    )}
+                    <a
+                      href={member.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground/50 hover:text-primary transition-colors shrink-0"
+                      aria-label={`${member.name} on LinkedIn`}
+                    >
+                      <Linkedin size={13} />
+                    </a>
                   </div>
+                  <p className="text-sm font-medium text-primary font-body leading-snug">
+                    {member.role}
+                  </p>
+                  {member.bio && (
+                    <p className="text-sm text-muted-foreground font-body mt-2.5 leading-[1.6]">
+                      {member.bio}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
