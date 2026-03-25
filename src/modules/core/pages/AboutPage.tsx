@@ -58,9 +58,11 @@ const About = () => {
           {/* Our Governance */}
           <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-5">Our Governance</h2>
-            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-8">
-              Five board members oversee the foundation's direction, ensuring transparency and accountability.
+            <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed mb-4">
+              The UOR Foundation is a Colorado 501(c)(3) nonprofit governed by a five-member Board of Directors. Each director serves a three-year term. Decisions require a majority quorum. No proxies. All governance rules are published openly on{" "}
+              <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
+            <h3 className="font-display text-lg font-semibold text-foreground mt-8 mb-5">Board of Directors</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
               {governanceBoard.map((member) => (
                 <div key={member.name} className="group flex flex-col gap-3">
