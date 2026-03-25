@@ -13,6 +13,9 @@ import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
 import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
 import projectUorPrivacyImg from "@/assets/project-uor-privacy.jpg";
 import projectUorCertificateImg from "@/assets/project-uor-certificate.jpg";
+import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
+import { DISCORD_URL } from "@/data/external-links";
+import { supabase } from "@/integrations/supabase/client";
 
 const imageMap: Record<string, string> = {
   hologram: projectHologramImg,
