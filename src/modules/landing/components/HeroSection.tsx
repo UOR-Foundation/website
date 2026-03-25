@@ -30,9 +30,9 @@ const HeroSection = () => {
             className="mt-5 md:mt-10 text-base md:text-xl text-muted-foreground leading-[1.68] max-w-2xl mx-auto font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.45s" }}
           >
-            The UOR Foundation develops a universal content addressed framework.
+            The UOR Foundation builds a universal content addressed framework.
             <br className="hidden md:block" />
-            It assigns every piece of data a stable identifier based on what it is, not where it is stored.
+            Data is assigned a stable identifier from its content, not its location.
           </p>
           <div
             className="mt-8 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
