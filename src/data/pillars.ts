@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "UOR Framework",
     description:
-      "The open specification for content-based addressing, with a reference implementation anyone can run. Build protocols and applications on a documented, vendor-neutral foundation.",
+      "Every piece of digital content deserves a permanent, verifiable address. The open specification and reference implementation let anyone build on a documented, vendor-neutral foundation.",
     href: "/standard",
     cta: "Read the Spec",
   },
@@ -15,7 +15,7 @@ export const pillars = [
     iconKey: "Users",
     title: "Research Community",
     description:
-      "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the framework through open proposals and peer review.",
+      "Good standards come from open collaboration. Engineers and scientists advance the framework together through working groups, shared research, open proposals, and rigorous peer review.",
     href: "/research",
     cta: "Join the Discussion",
   },
@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Project Launchpad",
     description:
-      "A structured path from idea to production. Submit your project, gain visibility, and grow with community support.",
+      "Real adoption starts with real projects. A structured path takes ideas from proposal to production, with community review, shared visibility, and ongoing technical support.",
     href: "/projects",
     cta: "Submit a Project",
   },
