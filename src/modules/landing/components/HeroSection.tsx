@@ -47,27 +47,6 @@ const HeroSection = () => {
               Read the Standard
             </a>
           </div>
-          <div
-            className="flex items-center justify-center gap-4 mt-5 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.75s" }}
-          >
-            <a
-              href="/about"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors font-body"
-            >
-              New here? Start with the basics →
-            </a>
-            <span className="text-muted-foreground/20">·</span>
-            <a
-              href="/llms.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors font-body"
-            >
-              <img src={lobsterIcon} alt="lobster" className="w-4 h-4 object-contain opacity-50" />
-              For AI agents
-            </a>
-          </div>
         </div>
       </div>
     </section>
