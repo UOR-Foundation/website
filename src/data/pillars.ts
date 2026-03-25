@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "Framework",
     description:
-      "A formal specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a shared, well-documented standard.",
+      "The upstream specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a vendor-neutral, well-documented standard.",
     href: "/standard",
     cta: "Read the Spec",
   },

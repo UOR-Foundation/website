@@ -9,7 +9,7 @@ const paths = [
     description:
       "Submit patches, write specs, or build reference implementations. Everything ships through GitHub.",
     cta: "Start Contributing",
-    href: GITHUB_ORG_URL,
+    href: GITHUB_ORG_URL + "/.github/blob/main/CONTRIBUTING.md",
     external: true,
   },
   {
@@ -37,10 +37,10 @@ const CTASection = () => {
     <section className="py-10 md:py-16 bg-background">
       <div className="container max-w-5xl text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
-          Get Involved
+          Ready to Build?
         </h2>
         <p className="mt-4 md:mt-5 text-[0.9375rem] md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
-          Whether you write code, run infrastructure, or publish research — there's a clear path for you.
+          Join a growing community of engineers, researchers, and builders advancing the open data standard.
         </p>
 
         {/* Three-path audience routing */}

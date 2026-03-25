@@ -9,6 +9,7 @@ export const featuredProjects = [
     category: "Open Science",
     description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
     maturity: "Sandbox" as MaturityLevel,
+    license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
   },
   {
@@ -16,6 +17,7 @@ export const featuredProjects = [
     category: "Frontier Technology",
     description: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations.",
     maturity: "Sandbox" as MaturityLevel,
+    license: "MIT",
     url: "https://github.com/dkypuros/atomic-lang-model",
   },
   {
@@ -23,6 +25,7 @@ export const featuredProjects = [
     category: "Developer Tools",
     description: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable.",
     maturity: "Sandbox" as MaturityLevel,
+    license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/uor-mcp",
   },
 ];

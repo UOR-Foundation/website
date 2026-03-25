@@ -53,9 +53,16 @@ const ProjectsShowcase = () => {
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-xs font-medium text-section-dark-foreground/30 font-body uppercase tracking-wider">
-                  {project.category}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-section-dark-foreground/30 font-body uppercase tracking-wider">
+                    {project.category}
+                  </span>
+                  {project.license && (
+                    <span className="text-[0.625rem] font-mono text-section-dark-foreground/35 border border-section-dark-foreground/10 rounded px-1.5 py-0.5">
+                      {project.license}
+                    </span>
+                  )}
+                </div>
                 {project.url && (
                   <a
                     href={project.url}
