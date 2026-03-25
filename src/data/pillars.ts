@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "Framework",
     description:
-      "The upstream specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a vendor-neutral, well-documented standard.",
+      "The open specification for content-based addressing, with a reference implementation anyone can run. Build protocols and applications on a documented, vendor-neutral standard.",
     href: "/standard",
     cta: "Read the Spec",
   },
@@ -15,7 +15,7 @@ export const pillars = [
     iconKey: "Users",
     title: "Community",
     description:
-      "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through RFC-style proposals and peer review.",
+      "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through open proposals and peer review.",
     href: "/research",
     cta: "Join the Discussion",
   },
@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Project Launchpad",
     description:
-      "A structured incubation path from idea to production. Submit your project, gain visibility, and grow through community support and open governance.",
+      "A structured path from idea to production. Submit your project, gain visibility, and grow with community support.",
     href: "/projects",
     cta: "Submit a Project",
   },

@@ -15,7 +15,7 @@ export const featuredProjects = [
   {
     name: "Atomic Language Model",
     category: "Frontier Technology",
-    description: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations.",
+    description: "A language model where every output follows defined rules and is fully traceable — no black boxes.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/dkypuros/atomic-lang-model",
@@ -23,7 +23,7 @@ export const featuredProjects = [
   {
     name: "UOR MCP",
     category: "Developer Tools",
-    description: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable.",
+    description: "A server that connects AI models to the UOR kernel. Every response is verified and auditable.",
     maturity: "Sandbox" as MaturityLevel,
     license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/uor-mcp",

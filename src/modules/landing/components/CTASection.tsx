@@ -16,7 +16,7 @@ const paths = [
     icon: Building2,
     title: "Adopters",
     description:
-      "Evaluate the standard for your stack. Integrate content-based addressing into existing infrastructure.",
+      "Evaluate the standard for your systems. Integrate content addressing into existing infrastructure.",
     cta: "Explore Projects",
     href: "/projects",
     external: false,
@@ -25,7 +25,7 @@ const paths = [
     icon: FlaskConical,
     title: "Researchers",
     description:
-      "Join working groups, publish findings, and help advance the formal specification.",
+      "Join working groups, publish findings, and help advance the standard.",
     cta: "View Research",
     href: GITHUB_RESEARCH_URL,
     external: true,
@@ -40,7 +40,7 @@ const CTASection = () => {
           Ready to Build?
         </h2>
         <p className="mt-4 md:mt-5 text-[0.9375rem] md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
-          Join a growing community of engineers, researchers, and builders advancing the open data standard.
+          Engineers, researchers, and builders working on the open data standard.
         </p>
 
         {/* Three-path audience routing */}
