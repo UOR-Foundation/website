@@ -1,72 +1,93 @@
 
 
-# CNCF + Red Hat/Linux Community Alignment: Deep Analysis and Recommendations
+# Copy Audit: Remove Jargon and Redundancy
 
-## Core Cultural Patterns
+After reading every content-bearing file, here is a line-by-line audit of language that is too technical, redundant, or vague. Each change tightens the copy without losing meaning.
 
-After analyzing the CNCF homepage structure, Red Hat's "upstream first" participation model, and the Linux kernel community conventions, here are the patterns that matter most for making UOR feel instantly familiar to this audience.
+---
 
-### Pattern 1: "Upstream First" Framing (THE Red Hat tribal signal)
+## Issues Found and Fixes
 
-Red Hat's entire philosophy is "upstream first": fix the open source project first, then bring it into the product. Every Red Hat engineer thinks in terms of "upstream" (the standard/spec) and "downstream" (the implementation/product). UOR's three pillars map perfectly:
+### 1. Hero subtitle (HeroSection.tsx, line 33)
+**Current**: "...for the semantic web, open science, and frontier technologies."
+**Problem**: "Semantic web" is academic jargon. "Frontier technologies" is vague and hand-wavy — triggers skepticism.
+**Fix**: "...for science, software, and the next generation of intelligent systems."
 
-- Framework = **upstream** (the spec itself)
-- Projects = **downstream** (implementations built on the spec)
+### 2. Intro paragraph 1 (IntroSection.tsx, line 15)
+**Current**: "...a single, permanent address based on what it contains, not where it is stored."
+**Verdict**: Clear and good. Keep as-is.
 
-Currently the site never uses this language. Simply weaving "upstream" into the Framework pillar description would make any Red Hat engineer immediately understand the relationship.
+### 3. Intro paragraph 2 (IntroSection.tsx, line 19)
+**Current**: "...without broken links, translation layers, or manual integration. The same content always resolves to the same address, no matter who holds it."
+**Problem**: "Translation layers" is developer jargon. "Resolves to" is DNS/networking jargon. Second sentence partly repeats paragraph 1.
+**Fix**: "Data can be found, verified, and reused across any system — no broken links, no glue code, no gatekeepers."
 
-**Change in `pillars.ts`**: Framework description becomes something like: "The upstream specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a vendor-neutral, well-documented standard."
+### 4. Intro paragraph 3 (IntroSection.tsx, line 22)
+**Current**: "...to make reliable, verifiable data the default for science, software, and emerging technologies."
+**Problem**: "Emerging technologies" is vague filler (same issue as "frontier technologies").
+**Fix**: "...to make reliable, verifiable data the default — from scientific research to production infrastructure."
 
-### Pattern 2: Vendor-Neutral Positioning
+### 5. Pillars — Framework (pillars.ts, line 10)
+**Current**: "The upstream specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a vendor-neutral, well-documented standard."
+**Problem**: Five jargon terms in two sentences: "upstream specification," "reference implementation," "content-based addressing," "interoperable protocols," "vendor-neutral." Piles up.
+**Fix**: "The open specification for content-based addressing, with a reference implementation anyone can run. Build protocols and applications on a documented, vendor-neutral standard."
 
-Both CNCF and Linux Foundation hammer "vendor-neutral" constantly. It's the #1 trust signal for this community. UOR's ecosystem anchoring line currently reads: "Open source. 501(c)(3) nonprofit. All specifications on GitHub."
+### 6. Pillars — Community (pillars.ts, line 18)
+**Current**: "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through RFC-style proposals and peer review."
+**Problem**: "RFC-style proposals" is insider language.
+**Fix**: "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through open proposals and peer review."
 
-**Change in `IntroSection.tsx`**: Add "vendor-neutral" to the anchoring line: "Open source. Vendor-neutral. 501(c)(3) nonprofit. All specifications on GitHub."
+### 7. Pillars — Project Launchpad (pillars.ts, line 26)
+**Current**: "A structured incubation path from idea to production. Submit your project, gain visibility, and grow through community support and open governance."
+**Problem**: "open governance" repeats from Community pillar.
+**Fix**: "A structured path from idea to production. Submit your project, gain visibility, and grow with community support."
 
-One word. Massive signal.
+### 8. CTA — Adopters card (CTASection.tsx, line 19)
+**Current**: "Evaluate the standard for your stack. Integrate content-based addressing into existing infrastructure."
+**Problem**: "Content-based addressing" is the third time this phrase appears. "Your stack" is casual jargon.
+**Fix**: "Evaluate the standard for your systems. Integrate content addressing into existing infrastructure."
 
-### Pattern 3: License Visibility
+### 9. CTA — Researchers card (CTASection.tsx, line 28)
+**Current**: "Join working groups, publish findings, and help advance the formal specification."
+**Problem**: "Formal specification" is heavy.
+**Fix**: "Join working groups, publish findings, and help advance the standard."
 
-Linux/Red Hat engineers check the license before anything else. CNCF shows license info on every project card. UOR's project cards don't mention licensing at all.
+### 10. CTA subtitle (CTASection.tsx, line 43)
+**Current**: "Join a growing community of engineers, researchers, and builders advancing the open data standard."
+**Problem**: "advancing the open data standard" — slightly redundant with context.
+**Fix**: "Engineers, researchers, and builders working on the open data standard."
 
-**Change in `featured-projects.ts` and `ProjectsShowcase.tsx`**: Add a license field (e.g., "MIT", "Apache-2.0") to each project and display it subtly on project cards. Even just a small text like "MIT" in the corner signals trustworthiness.
+### 11. Featured Projects — UOR MCP (featured-projects.ts, line 26)
+**Current**: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable."
+**Problem**: "Model Context Protocol," "LLM," "content-addressed" — three jargon terms in two sentences.
+**Fix**: "A server that connects AI models to the UOR kernel. Every response is verified and auditable."
 
-### Pattern 4: "Ready to build?" CTA Reframe
+### 12. Featured Projects — Atomic Language Model (featured-projects.ts, line 19)
+**Current**: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations."
+**Problem**: "Formal grammar rules" and "statistical prediction" are academic.
+**Fix**: "A language model where every output follows defined rules and is fully traceable — no black boxes."
 
-CNCF's bottom CTA section says "Ready to go cloud native? Join our foundation of doers." The UOR equivalent currently says "Get Involved" with a subtitle about writing code, running infrastructure, or publishing research. The CNCF version is more direct and action-oriented.
+### 13. About — What We Do cards (about-cards.ts)
+**Current Framework**: "We research and publish open data standards and protocols that anyone can build on."
+**Verdict**: Clean. Keep.
+**Current Community**: "A shared space for discussion, collaboration, and joint research across disciplines."
+**Problem**: "Across disciplines" is filler.
+**Fix**: "A shared space for discussion, collaboration, and joint research."
+**Current Launchpad**: "A structured path for open-source projects to grow from early ideas to production-ready tools."
+**Verdict**: Clean. Keep.
 
-**Change in `CTASection.tsx`**: Change "Get Involved" to something like "Ready to Build?" and the subtitle to "Join a growing community of engineers, researchers, and builders advancing the open data standard."
+---
 
-### Pattern 5: "New to UOR?" Gentle Onramp
+## Files to modify
 
-CNCF has a small, friendly "New to CNCF?" card with their mascot. It's a subtle but powerful pattern: it tells newcomers "we know you're here and we've thought about you." UOR has no equivalent.
+| File | Changes |
+|------|---------|
+| `HeroSection.tsx` | Fix subtitle (line 33) |
+| `IntroSection.tsx` | Fix paragraphs 2 and 3 (lines 19, 22) |
+| `pillars.ts` | Tighten all three descriptions |
+| `CTASection.tsx` | Fix Adopters, Researchers, subtitle |
+| `featured-projects.ts` | Fix UOR MCP and Atomic LM descriptions |
+| `about-cards.ts` | Trim Community card |
 
-**Change**: Add a small, unobtrusive "New to UOR?" link in the hero area (near the existing "For AI agents" link) that points to `/about`. No new section needed, just a small text link that says "New here? Start with the basics →"
-
-### Pattern 6: Contribution-First Language
-
-CNCF says "From coders to creatives." Red Hat says "meritocracy of ideas." The Linux kernel README literally starts with "HOWTO do Linux kernel development." The common thread: they tell you HOW to contribute in the first 30 seconds.
-
-Currently, UOR's "Start Contributing" CTA in the three-path section links to the GitHub org root. CNCF has a dedicated contribute.cncf.io with clear first steps.
-
-**Change in `CTASection.tsx`**: Change the Contributors card CTA from linking to the GitHub org root to linking to a CONTRIBUTING.md or the Getting Started docs. The destination matters: don't drop someone at the org root and expect them to figure it out.
-
-### Pattern 7: Community Events Surfacing
-
-CNCF always shows the next upcoming event. Even when UOR is small, showing community calls or working group meetings signals "this community is alive and active." You already have events data in `src/data/events.ts`.
-
-**Change in `CTASection.tsx` or `HighlightsSection.tsx`**: If there's an upcoming event, show it as a small card or line item near the CTA section. Even "Next community call: Monthly" creates presence.
-
-## Summary of Proposed Changes
-
-| File | Change | Impact |
-|------|--------|--------|
-| `src/data/pillars.ts` | Add "upstream," "vendor-neutral" language | Tribal recognition |
-| `src/modules/landing/components/IntroSection.tsx` | Add "Vendor-neutral" to anchoring line | Trust signal |
-| `src/data/featured-projects.ts` | Add license field to each project | Credibility |
-| `src/modules/landing/components/ProjectsShowcase.tsx` | Display license on project cards | Transparency |
-| `src/modules/landing/components/CTASection.tsx` | Reframe heading, improve contributor link | Clarity |
-| `src/modules/landing/components/HeroSection.tsx` | Add "New here?" small link | Onramp |
-
-All changes are copy and small data tweaks. No new sections, no new pages, no structural changes. Just the right words in the right places to make this community feel at home.
+No structural changes. No new files. Pure copy edits.
 
