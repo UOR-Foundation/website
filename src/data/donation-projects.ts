@@ -14,11 +14,11 @@ export interface DonationProject {
 
 export const donationProjects: DonationProject[] = [
   {
-    title: "UOR Standard Development",
+    title: "UOR Framework Development",
     raised: 42000,
     target: 200000,
     description:
-      "Fund the core development and formalization of the Universal Object Reference standard, the foundational specification that gives every piece of data one permanent, verifiable address.",
+      "Fund the core development and formalization of the Universal Object Reference framework, the foundational specification that gives every piece of data one permanent, verifiable address.",
     highlights: [
       "Formal specification and mathematical proofs",
       "Reference implementations in multiple languages",
@@ -44,7 +44,7 @@ export const donationProjects: DonationProject[] = [
     raised: 7200,
     target: 50000,
     description:
-      "Grow the UOR community through workshops, hackathons, documentation, and educational resources. Help developers and researchers adopt the standard and contribute back.",
+      "Grow the UOR community through workshops, hackathons, documentation, and educational resources. Help developers and researchers adopt the framework and contribute back.",
     highlights: [
       "Developer workshops and hackathons",
       "Comprehensive documentation and tutorials",

@@ -19,7 +19,7 @@ const IntroSection = () => {
             Data can be found, verified, and reused across any system. No broken links, no glue code, no gatekeepers.
           </p>
           <p className="mt-6 md:mt-8 text-section-dark-foreground/90 font-body text-base md:text-lg leading-[1.75] md:leading-[1.9] font-medium">
-            The UOR Foundation builds this open standard to make reliable, verifiable data the default, from scientific research to production infrastructure.
+            The UOR Foundation builds this open framework to make reliable, verifiable data the default, from scientific research to production infrastructure.
           </p>
           <a
             href="/about"

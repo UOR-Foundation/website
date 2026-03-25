@@ -3,7 +3,7 @@
  */
 export const navItems = [
   { label: "About", href: "/about" },
-  { label: "Standard", href: "/standard" },
+  { label: "Framework", href: "/standard" },
   { label: "Community", href: "/research" },
   { label: "Projects", href: "/projects" },
 ];

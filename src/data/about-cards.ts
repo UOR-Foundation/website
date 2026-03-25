@@ -2,7 +2,7 @@ export const whatWeDoCards = [
   {
     iconKey: "BookOpen",
     title: "Framework",
-    desc: "We research and publish open data standards and protocols that anyone can build on.",
+    desc: "We research and publish open data frameworks and protocols that anyone can build on.",
   },
   {
     iconKey: "Users",
