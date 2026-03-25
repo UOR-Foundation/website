@@ -31,12 +31,12 @@ const PillarsSection = () => {
                     {pillar.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground font-body text-[0.9375rem] md:text-base leading-[1.68] flex-1">
+                <p className="text-muted-foreground font-body text-base md:text-lg leading-[1.68] flex-1">
                   {pillar.description}
                 </p>
                 <Link
                   to={pillar.href}
-                  className="inline-flex items-center gap-1.5 text-[0.9375rem] md:text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-5 md:mt-6"
+                  className="inline-flex items-center gap-1.5 text-base md:text-lg font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-5 md:mt-6"
                 >
                   {pillar.cta}
                   <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
