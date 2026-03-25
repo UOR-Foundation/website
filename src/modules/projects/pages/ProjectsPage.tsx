@@ -145,20 +145,20 @@ const Projects = () => {
       <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-22">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-            Project Maturity Framework
+            UOR Projects
           </h1>
           <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            An open, transparent path for community projects built on the UOR standard. Every project enters as a <strong className="text-foreground">Sandbox</strong> experiment, grows through <strong className="text-foreground">Incubation</strong> with real-world adoption, and earns <strong className="text-foreground">Graduated</strong> status through proven governance and stability.
+            Open-source projects built on the UOR standard, organized by maturity level.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
-            <a href="#projects-list" className="btn-primary">
-              Explore UOR Projects
-            </a>
-            <a href="#submit" className="btn-outline">
+            <a href="#submit" className="btn-primary">
               Submit Your Project
+            </a>
+            <a href="#maturity" className="btn-outline">
+              How Maturity Works
             </a>
           </div>
         </div>
