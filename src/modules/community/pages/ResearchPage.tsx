@@ -285,7 +285,7 @@ const Research = () => {
 
       {/* Join CTA */}
       <section id="join" className="section-dark py-14 md:py-20 scroll-mt-28">
-        <div className="container max-w-3xl text-center">
+        <div className="container max-w-4xl text-center">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>

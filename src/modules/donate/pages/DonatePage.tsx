@@ -84,7 +84,7 @@ const Donate = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-24">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           <h1
             className="font-display text-4xl md:text-5xl lg:text-[3.5rem] font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
@@ -124,7 +124,7 @@ const Donate = () => {
 
       {/* Projects to support */}
       <section className="py-16 md:py-28 bg-background">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           <h2
             className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-10 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
@@ -141,7 +141,7 @@ const Donate = () => {
 
       {/* Ways to donate */}
       <section className="py-16 md:py-28 section-dark">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">
             Ways to donate
           </h2>

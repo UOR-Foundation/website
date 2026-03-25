@@ -8,7 +8,7 @@ const BlogPost3 = () => {
   return (
     <Layout>
       <article className="pt-40 md:pt-48 pb-20 md:pb-28">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           {/* Back link */}
           <Link
             to="/research#blog"
