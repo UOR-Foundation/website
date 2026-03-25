@@ -16,6 +16,23 @@ export interface ProjectData {
 
 export const projects: ProjectData[] = [
   {
+    name: "Hologram",
+    slug: "hologram",
+    category: "Frontier Technology",
+    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
+    maturity: "Sandbox",
+    url: "https://gethologram.ai/",
+    imageKey: "hologram",
+  },
+  {
+    name: "Hologram SDK",
+    slug: "hologram-sdk",
+    category: "Developer Tools",
+    description: "The developer toolkit for building applications on Hologram's constant-time compute layer.",
+    maturity: "Sandbox",
+    imageKey: "hologramSdk",
+  },
+  {
     name: "Atlas Embeddings",
     slug: "atlas-embeddings",
     category: "Open Science",

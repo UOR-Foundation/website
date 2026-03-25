@@ -69,7 +69,7 @@ const submissionSteps = [
 ];
 
 const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { level: string; count: number; dotColor: string; children: React.ReactNode; disabled?: boolean }) => {
-  const [open, setOpen] = useState(!disabled);
+  const [open, setOpen] = useState(true);
   const canToggle = !disabled;
   return (
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
