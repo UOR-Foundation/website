@@ -41,10 +41,42 @@ function canonicalStringify(obj: unknown): string {
   return JSON.stringify(obj, Object.keys(obj as Record<string, unknown>).sort());
 }
 
+/** Authenticate the request and return user ID, or null */
+async function authenticateRequest(req: Request): Promise<{ userId: string | null; error: Response | null }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return {
+      userId: null,
+      error: new Response(JSON.stringify({ error: "Unauthorized: missing or invalid Authorization header" }), { status: 401, headers: JSON_HEADERS }),
+    };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) {
+    return {
+      userId: null,
+      error: new Response(JSON.stringify({ error: "Unauthorized: invalid token" }), { status: 401, headers: JSON_HEADERS }),
+    };
+  }
+
+  return { userId: data.claims.sub as string, error: null };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: CORS_HEADERS });
   }
+
+  // Authenticate
+  const { userId, error: authError } = await authenticateRequest(req);
+  if (authError) return authError;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -60,6 +92,14 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "agent_id required" }),
           { status: 400, headers: JSON_HEADERS }
+        );
+      }
+
+      // Ensure the caller can only access their own agent data
+      if (agentId !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: agent_id does not match authenticated user" }),
+          { status: 403, headers: JSON_HEADERS }
         );
       }
 
@@ -120,6 +160,14 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "agent_id and state_snapshot required" }),
           { status: 400, headers: JSON_HEADERS }
+        );
+      }
+
+      // Ensure the caller can only write to their own agent data
+      if (agent_id !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: agent_id does not match authenticated user" }),
+          { status: 403, headers: JSON_HEADERS }
         );
       }
 

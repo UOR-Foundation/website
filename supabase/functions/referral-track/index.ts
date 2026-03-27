@@ -14,9 +14,31 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+/** Rate limiting: track IPs to prevent abuse */
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 10; // max 10 requests per minute per IP
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  // Rate limit by IP
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(clientIp)) {
+    return json({ error: "Too many requests" }, 429);
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -31,10 +53,34 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid referral code" }, 422);
   }
 
+  if (!action || (action !== "click" && action !== "signup")) {
+    return json({ error: 'Invalid action. Use "click" or "signup".' }, 422);
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // For signup actions, require authentication
+  if (action === "signup") {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized: signup tracking requires authentication" }, 401);
+    }
+
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error } = await supabaseAuth.auth.getClaims(token);
+    if (error || !data?.claims) {
+      return json({ error: "Unauthorized: invalid token" }, 401);
+    }
+  }
 
   // Verify the code exists
   const { data: link, error: lookupErr } = await supabase

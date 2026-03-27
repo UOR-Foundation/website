@@ -11,7 +11,7 @@
  *   GET /serve-app?app=<name>&v=<ver>     → serve by app name + version
  *   GET /serve-app?proxy=<url>            → live proxy (bypass X-Frame-Options)
  *   GET /serve-app?proxy=<url>&cid=<cid>  → live proxy with canonical tagging
- *   POST /serve-app                       → ingest assets
+ *   POST /serve-app                       → ingest assets (authenticated)
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -21,6 +21,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const JSON_CT = { ...corsHeaders, "Content-Type": "application/json" };
 
 const UOR_SHIM_CDN = "https://cdn.uor.foundation/app-sdk.min.js";
 
@@ -81,6 +83,34 @@ function getBaseUrl(sourceUrl: string): string {
   }
 }
 
+/** Authenticate the request and return user ID, or an error response */
+async function authenticateRequest(req: Request): Promise<{ userId: string | null; error: Response | null }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return {
+      userId: null,
+      error: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: JSON_CT }),
+    };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) {
+    return {
+      userId: null,
+      error: new Response(JSON.stringify({ error: "Unauthorized: invalid token" }), { status: 401, headers: JSON_CT }),
+    };
+  }
+
+  return { userId: data.claims.sub as string, error: null };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -92,15 +122,18 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ── POST: Ingest assets ──
+    // ── POST: Ingest assets (requires authentication) ──
     if (req.method === "POST") {
+      const { userId, error: authError } = await authenticateRequest(req);
+      if (authError) return authError;
+
       const body = await req.json();
       const { sourceUrl, appName, version, imageCanonicalId, snapshotId, ingestedBy } = body;
 
       if (!sourceUrl || !appName || !version || !imageCanonicalId) {
         return new Response(
           JSON.stringify({ error: "Missing required fields: sourceUrl, appName, version, imageCanonicalId" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 400, headers: JSON_CT },
         );
       }
 
@@ -120,7 +153,7 @@ Deno.serve(async (req) => {
             sizeBytes: existing.size_bytes,
             deduplicated: true,
           }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 200, headers: JSON_CT },
         );
       }
 
@@ -148,7 +181,7 @@ Deno.serve(async (req) => {
       if (uploadError) {
         return new Response(
           JSON.stringify({ error: `Storage upload failed: ${uploadError.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 500, headers: JSON_CT },
         );
       }
 
@@ -163,13 +196,13 @@ Deno.serve(async (req) => {
           size_bytes: contentBytes.length,
           source_url: sourceUrl,
           snapshot_id: snapshotId ?? null,
-          ingested_by: ingestedBy ?? null,
+          ingested_by: ingestedBy ?? userId,
         }, { onConflict: "canonical_id" });
 
       if (registryError) {
         return new Response(
           JSON.stringify({ error: `Registry insert failed: ${registryError.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 500, headers: JSON_CT },
         );
       }
 
@@ -181,7 +214,7 @@ Deno.serve(async (req) => {
           sizeBytes: contentBytes.length,
           deduplicated: false,
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 200, headers: JSON_CT },
       );
     }
 
@@ -226,7 +259,6 @@ Deno.serve(async (req) => {
               "Cache-Control": "public, max-age=300",
               "X-UOR-Proxy-Source": proxyUrl,
               "X-UOR-Canonical-Id": cid,
-              // Explicitly NO X-Frame-Options header — we want embedding
             },
           });
         }
@@ -267,7 +299,7 @@ Deno.serve(async (req) => {
             ingest: "POST with {sourceUrl, appName, version, imageCanonicalId}",
           },
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 400, headers: JSON_CT },
       );
     }
 
@@ -291,7 +323,7 @@ Deno.serve(async (req) => {
       if (error || !data) {
         return new Response(
           JSON.stringify({ error: `App not found: ${appName}@${version}` }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          { status: 404, headers: JSON_CT },
         );
       }
 
@@ -307,12 +339,11 @@ Deno.serve(async (req) => {
     if (assetError || !asset) {
       return new Response(
         JSON.stringify({ error: `Asset not found for canonical ID: ${resolvedCanonicalId}` }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 404, headers: JSON_CT },
       );
     }
 
     // If the asset has a source_url, use proxy mode to serve live content
-    // This ensures the app always loads with all its original resources
     if (asset.source_url && asset.source_url.startsWith("http")) {
       try {
         const proxyResp = await fetch(asset.source_url, {
@@ -357,7 +388,7 @@ Deno.serve(async (req) => {
     if (downloadError || !fileData) {
       return new Response(
         JSON.stringify({ error: `Failed to retrieve asset: ${downloadError?.message}` }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 500, headers: JSON_CT },
       );
     }
 
@@ -386,7 +417,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     return new Response(
       JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: JSON_CT },
     );
   }
 });
