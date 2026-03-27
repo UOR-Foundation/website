@@ -11,7 +11,7 @@ const About = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-[21px] md:pt-52 pb-16 md:pb-28">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             About the UOR Foundation
