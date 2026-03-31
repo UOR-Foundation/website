@@ -251,7 +251,7 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
