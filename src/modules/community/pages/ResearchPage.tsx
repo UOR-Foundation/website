@@ -71,7 +71,7 @@ const Research = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
             Community
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
             Find your discipline, validate ideas, and collaborate on{" "}
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
