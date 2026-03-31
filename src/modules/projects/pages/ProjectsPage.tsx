@@ -214,7 +214,7 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
+      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
@@ -237,7 +237,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
+      <section id="projects-list" className="py-12 md:py-20 bg-background scroll-mt-28">
         <div className="container max-w-6xl space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
@@ -250,9 +250,9 @@ const Projects = () => {
       </section>
 
       {/* Maturity Levels */}
-      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="maturity" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-16 text-center">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-10 text-center">
             Project Maturity Levels
           </h2>
 
@@ -320,9 +320,9 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
             </span>
@@ -334,7 +334,7 @@ const Projects = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             {submissionSteps.map((step, idx) => (
               <div key={step.title} className="rounded-2xl border border-border bg-card p-7 md:p-10 animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
                 <div className="flex items-center gap-3 mb-5">
@@ -351,9 +351,9 @@ const Projects = () => {
       </section>
 
       {/* Submit Form */}
-      <section id="submit" className="section-dark py-20 md:py-28">
+      <section id="submit" className="section-dark py-14 md:py-20">
         <div className="container max-w-4xl">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
               <Send size={14} /> Open to everyone
             </span>

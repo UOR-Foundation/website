@@ -10,9 +10,9 @@ const maturityDotColors: Record<MaturityLevel, string> = {
 
 const ProjectsShowcase = () => {
   return (
-    <section className="section-dark py-16 md:py-28">
+    <section className="section-dark py-12 md:py-20">
       <div className="container max-w-6xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4">
           <div>
             <p className="text-sm font-medium tracking-widest uppercase text-section-dark-foreground/40 mb-3 font-body">
               UOR Ecosystem

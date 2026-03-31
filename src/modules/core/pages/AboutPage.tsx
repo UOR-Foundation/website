@@ -11,13 +11,13 @@ const About = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-48 pb-20 md:pb-32">
+      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
         <div className="container max-w-6xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground animate-fade-in-up">
             About
           </h1>
           <p
-            className="mt-6 md:mt-8 text-muted-foreground font-body text-base leading-[1.7] max-w-2xl animate-fade-in-up opacity-0"
+            className="mt-5 text-muted-foreground font-body text-base leading-[1.7] max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             The UOR Foundation is a 501(c)(3) nonprofit that develops an open standard giving every piece of digital content a single, permanent address based on what it contains, making data findable, verifiable, and reusable across any system.
@@ -25,14 +25,14 @@ const About = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-28 bg-background">
-        <div className="container max-w-6xl space-y-16 md:space-y-24">
+      <section className="py-12 md:py-20 bg-background">
+        <div className="container max-w-6xl space-y-10 md:space-y-16">
 
           {/* What We Do */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-10 md:mb-14" />
+            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-8 md:mb-10 animate-fade-in-up opacity-0"
+              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               What We Do
@@ -43,7 +43,7 @@ const About = () => {
                 return (
                   <div
                     key={item.title}
-                    className="rounded-xl border border-border/30 bg-card p-6 md:p-7 flex flex-col gap-3 animate-fade-in-up opacity-0"
+                    className="rounded-xl border border-border/30 bg-card p-5 md:p-6 flex flex-col gap-3 animate-fade-in-up opacity-0"
                     style={{ animationDelay: `${0.25 + idx * 0.08}s` }}
                   >
                     {Icon && <Icon size={20} className="text-primary" strokeWidth={1.5} />}
@@ -57,15 +57,15 @@ const About = () => {
 
           {/* Board of Directors */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-10 md:mb-14" />
+            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-4 animate-fade-in-up opacity-0"
+              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               Board of Directors
             </h2>
             <p
-              className="text-muted-foreground font-body text-base leading-relaxed mb-10 md:mb-14 max-w-3xl animate-fade-in-up opacity-0"
+              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-3xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
@@ -117,9 +117,9 @@ const About = () => {
 
           {/* Resources */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-10 md:mb-14" />
+            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-8 md:mb-10 animate-fade-in-up opacity-0"
+              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               Resources

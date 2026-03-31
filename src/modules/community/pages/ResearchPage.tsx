@@ -40,7 +40,7 @@ const Research = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
+      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
@@ -63,7 +63,7 @@ const Research = () => {
       </section>
 
       {/* Research */}
-      <section id="research" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="research" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Open Research
@@ -71,7 +71,7 @@ const Research = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
             Community
           </h2>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             Find your discipline, validate ideas, and collaborate on{" "}
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
@@ -174,12 +174,12 @@ const Research = () => {
       </section>
 
       {/* Blog */}
-      <section id="blog" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="blog" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Blog
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
             Highlights
           </h2>
 
@@ -219,12 +219,12 @@ const Research = () => {
       </section>
 
       {/* Events */}
-      <section id="events" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="events" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Events
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
             Upcoming Events
           </h2>
 
@@ -284,7 +284,7 @@ const Research = () => {
       </section>
 
       {/* Join CTA */}
-      <section id="join" className="section-dark py-16 md:py-28 scroll-mt-28">
+      <section id="join" className="section-dark py-12 md:py-20 scroll-mt-28">
         <div className="container max-w-4xl text-center">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved

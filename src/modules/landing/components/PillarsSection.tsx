@@ -7,7 +7,7 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="pt-16 md:pt-28 pb-10 md:pb-20 bg-background">
+    <section id="pillars" className="pt-12 md:pt-20 pb-8 md:pb-16 bg-background">
       <div className="container max-w-6xl">
         <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-5 md:mb-6">
           What We Do

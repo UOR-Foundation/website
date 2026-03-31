@@ -34,7 +34,7 @@ const paths = [
 
 const CTASection = () => {
   return (
-    <section className="py-16 md:py-28 bg-background">
+    <section className="py-12 md:py-20 bg-background">
       <div className="container max-w-6xl text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
           Ready to Build?
@@ -44,7 +44,7 @@ const CTASection = () => {
         </p>
 
         {/* Three-path audience routing */}
-        <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
+        <div className="mt-8 md:mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
           {paths.map((path, index) => {
             const Icon = path.icon;
             const linkProps = path.external
@@ -80,7 +80,7 @@ const CTASection = () => {
         </div>
 
         {/* Community quick links */}
-        <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
             href={DISCORD_URL}
             target="_blank"
@@ -100,8 +100,8 @@ const CTASection = () => {
         </div>
 
         {/* Members Grid */}
-        <div className="h-px w-full bg-border/40 mt-16 md:mt-24" />
-        <div className="mt-12 md:mt-20 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-14">
+        <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
+        <div className="mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-10">
           {teamMembers.map((member, index) => (
             <a
               key={member.name}

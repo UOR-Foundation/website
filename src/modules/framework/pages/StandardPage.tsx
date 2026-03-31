@@ -140,7 +140,7 @@ const Standard = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
+      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
@@ -171,7 +171,7 @@ const Standard = () => {
       </section>
 
       {/* The Problem */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             The Problem
@@ -191,9 +191,9 @@ const Standard = () => {
       </section>
 
       {/* Visual Diagram */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-12">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-8">
             How It Works
           </p>
           <UORDiagram />
@@ -201,12 +201,12 @@ const Standard = () => {
       </section>
 
       {/* Anatomy of an Address */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-10">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -251,12 +251,12 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
           </p>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,7 +278,7 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
@@ -286,7 +286,7 @@ const Standard = () => {
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
             Framework Architecture
           </h2>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-14 md:mb-16">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-10 md:mb-12">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
@@ -295,7 +295,7 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-16 md:py-28">
+      <section className="section-dark py-12 md:py-20">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
