@@ -41,7 +41,7 @@ const HeroSection = () => {
           className="mt-[clamp(0.4rem,1vh,1rem)] text-[clamp(0.875rem,1.1vw,1.25rem)] text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.45s" }}
         >
-          The UOR Foundation builds an open framework where every piece of data gets a single, permanent address based on what it contains, not where it lives.
+          The UOR Foundation is the neutral custodian of the universal open standard for information addressing. We exist to support the projects building on it.
         </p>
         <div
           className="mt-[clamp(0.5rem,1.2vh,1.5rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
