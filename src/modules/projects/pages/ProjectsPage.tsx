@@ -220,7 +220,7 @@ const Projects = () => {
             UOR Projects
           </h1>
           <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            Open-source projects built on the UOR standard, organized by maturity level.
+            Open-source projects built on the UOR specification, organized by maturity level.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
