@@ -1,78 +1,47 @@
 
 
-## Homepage Storyline Assessment
+## Mobile Hero & Navigation Refinement
 
-### Current Flow (8 sections)
-1. **Hero** — "Your Universal Coordinate System for Information" + 2 CTAs
-2. **Mission** (dark) — "We maintain the open spec for content-addressed data identity"
-3. **How It Works** — Deterministic addressing explained in two paragraphs
-4. **Where It Applies** — 6 application domain cards
-5. **Featured Projects** (dark) — 3 ecosystem projects
-6. **UOR Community** — Member avatar grid
-7. **Get Involved** — 3 pillar cards (Framework, Research, Launchpad)
-8. **Ready to Build?** — 3 action buttons
+### Problems Identified
 
-### Diagnosis
+1. **Navbar logo too small on mobile** (28px / w-7). Feels cramped against the text. Should be 36px minimum for visual authority.
+2. **Navbar height too short on mobile** (4.5rem = 72px). With a small logo + small text, it feels thin and unfinished.
+3. **Mobile menu is a dropdown, not a full-screen overlay.** It uses `max-h` animation and sits below the navbar with a translucent background. This feels like an afterthought, not an intentional experience. Best-in-class mobile menus (Linear, Stripe, Vercel) take over the entire screen with large, generous touch targets and clear visual hierarchy.
+4. **Galaxy animation container on mobile** (`min(32svh, 70vw)`) creates excessive whitespace above and below on tall phones (the screenshot shows a big gap between navbar and galaxy, and between galaxy and headline). The vertical spacing is not balanced.
+5. **CTA buttons on mobile** are full-width (good), but the gap between headline and buttons feels too large on some devices, while bottom padding is inconsistent.
 
-The structure is solid after the reorder. But there are specific copy and structural issues that dilute the story:
+### Plan
 
-**1. Mission and How It Works overlap.** Mission says "content-addressed data identity." How It Works says "a permanent address derived from its content." These are the same idea stated twice, violating the narrative advancement rule. The reader stalls.
+#### 1. Navbar — Larger Logo & Bolder Presence (Navbar.tsx)
+- Increase mobile logo from `w-7 h-7` to `w-9 h-9` (36px)
+- Increase mobile logo text from `text-[0.875rem]` to `text-[0.9375rem]` (15px)
+- Increase hamburger icon from 22px to 24px
+- Keep navbar height at 4.5rem (72px) — the larger logo fills it better
 
-**Fix:** Merge Mission into How It Works as a single, tighter section. Open with the mission as the lead sentence, then explain the mechanism. One section, no repetition. This also removes an entire dark-light-dark visual break that currently chops the page rhythm.
+#### 2. Full-Screen Mobile Menu (Navbar.tsx)
+- Replace the dropdown `max-h` approach with a true full-screen overlay (`fixed inset-0`)
+- Menu covers entire viewport below the navbar
+- Nav links get larger text (`text-lg`), generous padding (`py-4`), and left-aligned layout
+- Active link gets a subtle left border accent instead of background color
+- Social icons and Donate button anchored at the bottom with proper spacing
+- Smooth fade-in/slide-down animation using opacity + translateY
+- Body scroll locked when menu is open (add overflow-hidden to body)
 
-**2. "Where It Applies" has 6 cards but no clear hierarchy.** A developer scanning this section sees a wall of equal-weight tiles. Some domains (Agentic AI, Proof-Based Computation) are immediately compelling to your target audience. Others (Cross-Domain Unification, Frontier Technologies) are vague and abstract.
+#### 3. Hero Section — Tighter Mobile Spacing (HeroSection.tsx)
+- Reduce mobile galaxy vertical padding from `clamp(1.5rem, 4vh, 4rem)` to `clamp(0.5rem, 2vh, 2rem)` 
+- Increase galaxy size on mobile from `min(32svh, 70vw)` to `min(38svh, 75vw)` — fills the space better
+- Reduce gap between headline and CTAs from `clamp(2rem, 4.5vh, 4rem)` to `clamp(1.25rem, 3vh, 3rem)` on mobile
+- Adjust bottom padding to `clamp(2rem, 5vh, 4rem)` — golden ratio proportion relative to top
 
-**Fix:** Cut to 4 cards. Drop "Cross-Domain Unification" (it restates what UOR already does) and "Frontier Technologies" (too vague, no concrete hook). Four cards in a 2x2 grid reads faster and hits harder.
+#### 4. Golden Ratio Proportions
+The three rows of the hero grid on mobile should approximate:
+- Row 1 (navbar spacer): 72px
+- Row 2 (galaxy): ~38% of remaining height
+- Row 3 (copy + CTA): ~62% of remaining height (φ ratio: 62/38 ≈ 1.618)
 
-**3. The "How It Works" section has a dangling "About The Foundation" link and a footer tagline ("Open source, Vendor-neutral...").** Both break the forward momentum. The tagline belongs in the footer or hero, not mid-page. The "About" link is a side-quest that pulls the reader off the narrative track.
+This is achieved naturally by the `1fr` middle row shrinking while the copy section gets more comfortable bottom padding.
 
-**Fix:** Remove the "About The Foundation" link. Move the "Open source / Vendor-neutral / 501(c)(3)" tagline into the Mission lead sentence or remove it entirely (it's already implied by the hero and footer). Keep this section laser-focused on mechanism.
-
-**4. The Pillars section descriptions are internally focused.** They describe the Foundation's org chart, not the developer's journey. "A three-stage maturity pipeline" is bureaucratic language. "Working groups in mathematics, AI, cryptography" reads like a committee roster.
-
-**Fix:** Rewrite pillar descriptions from the developer's perspective. What can *they* do? "Read the spec and start building" / "Propose research, get peer review, publish results" / "Ship a project, get community review, graduate to production."
-
-**5. No HighlightsSection on the page.** There's a fully built `HighlightsSection` component (community blog posts / news) that's not in the IndexPage. This is a missed opportunity for social proof and freshness. It shows the community is active.
-
-**Fix:** Add HighlightsSection between Community and Pillars. It bridges "here are the people" with "here's how to join" by showing "here's what they're doing right now."
-
-### Proposed New Flow
-
-```text
-1. Hero                    — Hook: what is this?
-2. How It Works            — Mechanism + mission (merged, single section)
-3. Where It Applies        — 4 cards (trimmed from 6)
-4. Featured Projects       — Proof: it works (dark)
-5. UOR Community           — Proof: who's behind it
-6. Community Highlights    — Proof: it's alive right now
-7. Get Involved            — Your path in (rewritten descriptions)
-8. Ready to Build?         — Single closing CTA
-```
-
-### Technical Changes
-
-**Delete:** `src/modules/landing/components/MissionSection.tsx` — content merged into IntroSection
-
-**Edit:** `src/modules/landing/components/IntroSection.tsx`
-- Open with mission statement as a bold lead: "The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it."
-- Follow with the mechanism explanation (current How It Works copy)
-- Remove the "About The Foundation" link
-- Remove the "Open source / Vendor-neutral..." tagline line
-- Use dark section styling (inherits MissionSection's visual weight as the first section after hero)
-
-**Edit:** `src/modules/landing/components/ApplicationsSection.tsx`
-- Remove "Cross-Domain Unification" and "Frontier Technologies" cards
-- Keep: Semantic Web, Proof-Based Computation, Agentic AI, Open Science
-- Change grid to `lg:grid-cols-2` for a cleaner 2x2 layout on desktop
-
-**Edit:** `src/data/pillars.ts`
-- Rewrite descriptions from the developer's point of view:
-  - UOR Framework: "Read the full specification. Six layers covering addressing, resolution, verification, and transformation. Everything you need to start building."
-  - Research Community: "Propose ideas, get peer review, publish results. Active working groups across mathematics, AI, cryptography, and systems engineering."
-  - Project Launchpad: "Ship your project through three stages: Sandbox, Incubation, Graduated. Community review, shared infrastructure, clear criteria."
-
-**Edit:** `src/modules/landing/pages/IndexPage.tsx`
-- Remove MissionSection import
-- Add HighlightsSection import
-- New order: Hero, IntroSection, ApplicationsSection, ProjectsShowcase, CommunitySection, HighlightsSection, PillarsSection, CTASection
+### Files Modified
+- `src/modules/core/components/Navbar.tsx` — larger logo, full-screen mobile menu
+- `src/modules/landing/components/HeroSection.tsx` — tighter mobile spacing, larger galaxy
 
