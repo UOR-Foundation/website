@@ -132,7 +132,7 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
                 />
               </div>
             )}
-            <div className="p-7 md:p-9 flex flex-col flex-1">
+            <div className="p-5 md:p-9 flex flex-col flex-1">
               <div className="flex items-center justify-between gap-2 mb-5">
                 <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                   {project.category}
