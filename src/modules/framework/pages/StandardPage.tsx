@@ -201,12 +201,12 @@ const Standard = () => {
       </section>
 
       {/* Anatomy of an Address */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-10">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
