@@ -48,41 +48,41 @@ const CTASection = () => {
           </p>
 
           {/* Member grid — each with photo, name, role */}
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-x-3 gap-y-6 md:gap-x-4 md:gap-y-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
             {teamMembers.map((member, idx) => (
               <a
                 key={member.name}
                 href={member.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center gap-2 animate-fade-in-up opacity-0"
+                className="group flex flex-col items-center gap-2.5 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.25 + idx * 0.04}s` }}
               >
                 <div className="relative">
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-full object-cover object-top border-2 border-border/20 grayscale group-hover:grayscale-0 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
+                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top border-2 border-border/20 grayscale group-hover:grayscale-0 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
                     loading="lazy"
                   />
                 </div>
                 <div className="text-center min-w-0 w-full">
-                  <p className="text-xs font-display font-semibold text-foreground leading-tight truncate">
+                  <p className="text-sm font-display font-semibold text-foreground leading-tight truncate">
                     {member.name.split(" ")[0]}
                   </p>
-                  <p className="text-[10px] md:text-[11px] font-body text-primary/70 leading-tight mt-0.5 truncate">
-                    {member.role.split("@")[0].trim()}
+                  <p className="text-xs font-body text-primary/70 leading-tight mt-0.5 truncate">
+                    {member.role}
                   </p>
                 </div>
               </a>
             ))}
 
             {/* +N community pill */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
-                <span className="text-sm md:text-base font-semibold text-muted-foreground">+150</span>
+            <div className="flex flex-col items-center gap-2.5">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
+                <span className="text-base md:text-lg font-semibold text-muted-foreground">+150</span>
               </div>
-              <p className="text-[10px] md:text-[11px] font-body text-muted-foreground/50 leading-tight">
+              <p className="text-xs font-body text-muted-foreground/50 leading-tight">
                 & growing
               </p>
             </div>
