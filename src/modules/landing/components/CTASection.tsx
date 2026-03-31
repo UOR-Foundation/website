@@ -34,17 +34,17 @@ const paths = [
 
 const CTASection = () => {
   return (
-    <section className="py-10 md:py-16 bg-background">
-      <div className="container max-w-6xl text-center">
+    <section className="py-16 md:py-28 bg-background">
+      <div className="container max-w-6xl">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
           Ready to Build?
         </h2>
-        <p className="mt-4 md:mt-5 text-base md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
+        <p className="mt-4 md:mt-5 text-base md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl">
           Engineers, researchers, and builders working on the open data framework.
         </p>
 
         {/* Three-path audience routing */}
-        <div className="mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
+        <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {paths.map((path, index) => {
             const Icon = path.icon;
             const linkProps = path.external
@@ -54,7 +54,7 @@ const CTASection = () => {
             return (
               <div
                 key={path.title}
-                className="group rounded-xl border border-border bg-card p-6 md:p-8 flex flex-col animate-fade-in-up opacity-0 hover:border-primary/30 transition-colors duration-300"
+                className="group rounded-xl border border-border/30 bg-card p-6 md:p-8 flex flex-col animate-fade-in-up opacity-0 hover:border-border/50 transition-colors duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <Icon
@@ -80,7 +80,7 @@ const CTASection = () => {
         </div>
 
         {/* Community quick links */}
-        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+        <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap gap-3">
           <a
             href={DISCORD_URL}
             target="_blank"
@@ -99,8 +99,9 @@ const CTASection = () => {
           </a>
         </div>
 
-        {/* Members Grid */}
-        <div className="mt-10 md:mt-16 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-6 md:gap-y-12">
+        {/* Members Grid — separated with breathing room */}
+        <div className="h-px w-full bg-border/40 mt-16 md:mt-24" />
+        <div className="mt-12 md:mt-20 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-14">
           {teamMembers.map((member, index) => (
             <a
               key={member.name}
@@ -112,8 +113,8 @@ const CTASection = () => {
             >
               <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-2 md:mb-3 transition-all duration-300"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(192,132,252,0.15), rgba(139,92,246,0.25))',
-                  boxShadow: '0 0 16px 2px rgba(168,85,247,0.12), 0 0 32px 4px rgba(139,92,246,0.06)',
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(192,132,252,0.1), rgba(139,92,246,0.2))',
+                  boxShadow: '0 0 12px 1px rgba(168,85,247,0.08), 0 0 24px 3px rgba(139,92,246,0.04)',
                 }}
               >
                 <div className="w-full h-full rounded-full overflow-hidden bg-background">

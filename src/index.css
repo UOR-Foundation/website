@@ -308,7 +308,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(180deg, hsl(208 32% 93%) 0%, hsl(var(--background)) 100%);
+    background: linear-gradient(180deg, hsl(210 30% 94%) 0%, hsl(var(--background)) 100%);
   }
 
   /* ── Golden Ratio Mobile System ──────────────────────────────────

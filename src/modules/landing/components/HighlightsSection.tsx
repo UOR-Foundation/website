@@ -4,11 +4,6 @@ import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import highlightSemanticWeb from "@/assets/highlight-semantic-web.jpg";
 import { highlights, type TagType } from "@/data/highlights";
 
-const tagStyles: Record<TagType, string> = {
-  Research: "bg-primary/10 text-primary",
-  Announcement: "bg-accent/10 text-accent",
-};
-
 const imageMap: Record<string, string> = {
   knowledgeGraph: highlightKnowledgeGraph,
   frameworkLaunch: highlightFrameworkLaunch,
@@ -17,9 +12,9 @@ const imageMap: Record<string, string> = {
 
 const HighlightsSection = () => {
   return (
-    <section className="pt-4 md:pt-10 pb-8 md:pb-16 bg-background">
+    <section className="pt-8 md:pt-16 pb-12 md:pb-24 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-[0.6875rem] md:text-base font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/60 mb-6 md:mb-8">
+        <p className="text-[0.6875rem] md:text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
           Community Highlights
         </p>
 
@@ -28,7 +23,7 @@ const HighlightsSection = () => {
             <a
               key={item.title}
               href={item.href}
-              className="group flex flex-col bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-border/60 transition-all duration-300 animate-fade-in-up opacity-0"
+              className="group flex flex-col bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-border/50 transition-all duration-300 animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
               <div className="relative aspect-[5/3] overflow-hidden">
@@ -40,15 +35,13 @@ const HighlightsSection = () => {
                 />
               </div>
               <div className="flex flex-col flex-1 p-5 md:p-6">
-                <span
-                  className={`self-start px-3 py-1 rounded-full text-[0.8125rem] md:text-sm font-medium font-body mb-3 md:mb-4 ${tagStyles[item.tag]}`}
-                >
+                <span className="self-start text-xs font-medium font-body text-muted-foreground/60 uppercase tracking-wider mb-3 md:mb-4">
                   {item.tag}
                 </span>
                 <h3 className="font-display text-base md:text-xl font-semibold text-foreground leading-snug flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-3 md:mt-4 text-base md:text-base text-muted-foreground font-body">
+                <p className="mt-3 md:mt-4 text-base text-muted-foreground font-body">
                   {item.date}
                 </p>
                 <span className="inline-flex items-center gap-1.5 mt-3 md:mt-4 text-[0.8125rem] md:text-sm font-medium text-primary font-body group-hover:gap-2.5 transition-all duration-200">
