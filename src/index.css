@@ -86,10 +86,10 @@
     --still-chrome-scale: 1;
     --still-noise-opacity: 0.04;
     /* ── Existing shadcn/ui tokens ───────────────────────────────── */
-    --background: 210 30% 96%;
+    --background: 210 28% 97%;
     --foreground: 220 20% 12%;
 
-    --card: 210 20% 96%;
+    --card: 210 24% 97%;
     --card-foreground: 220 25% 10%;
 
     --popover: 0 0% 100%;
@@ -110,8 +110,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 16% 88%;
-    --input: 210 16% 88%;
+    --border: 210 18% 90%;
+    --input: 210 18% 90%;
     --ring: 220 60% 38%;
 
     --radius: 0.5rem;
