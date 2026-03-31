@@ -293,7 +293,7 @@ const ProjectDetailLayout = ({
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-32 md:pt-44 pb-12 md:pb-16">
-        <div className="container max-w-4xl">
+        <div className="container max-w-6xl">
           <Link
             to="/projects"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
