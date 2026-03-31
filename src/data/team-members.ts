@@ -44,7 +44,7 @@ export const teamMembers = [
   {
     name: "Emmanuel Bello",
     role: "Founder @ Kinetic Keys",
-    description: "Full-stack development and system architecture.",
+    description: "Full-stack engineering and developer tooling.",
     image: "/images/profiles/emmanuel-bello.jpg",
     link: "https://www.linkedin.com/in/emmanuxl/",
   },
