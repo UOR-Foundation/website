@@ -48,7 +48,7 @@ const CTASection = () => {
           </p>
 
           {/* Member grid — each with photo, name, role */}
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-x-3 gap-y-6 md:gap-x-4 md:gap-y-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
             {teamMembers.map((member, idx) => (
               <a
                 key={member.name}
