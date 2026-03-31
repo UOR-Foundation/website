@@ -31,12 +31,6 @@ const HeroSection = () => {
           <span className="block">Your Universal Coordinate</span>
           <span className="block">System for Information.</span>
         </h1>
-        <p
-          className="mt-[clamp(0.75rem,1.8vh,1.5rem)] text-base text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.45s" }}
-        >
-          The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
-        </p>
         <div
           className="mt-[clamp(1rem,2vh,2rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.6s" }}
