@@ -4,7 +4,7 @@ import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_GOVERNANCE_URL, GITHUB_RESEARCH_URL
 
 const Footer = () => {
   return (
-    <footer className="section-dark py-14 md:py-20">
+    <footer className="section-dark py-8 md:py-14">
       <div className="container">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="sm:col-span-2 md:col-span-1">
