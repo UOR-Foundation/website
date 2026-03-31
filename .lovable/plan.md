@@ -1,38 +1,70 @@
 
 
-# Align Page Layout Across All Pages
+# Mobile Optimization Plan
 
 ## Problem
-Hero sections use `container max-w-4xl` (56rem / 896px) while body content sections use `container max-w-6xl` (72rem / 1152px). This means the page heading and subtitle sit in a narrower container than the content below, creating a visible left-edge misalignment. Some pages (Interoperability) skip `container` entirely and use raw `max-w-6xl mx-auto px-4`.
+The site needs a comprehensive mobile polish pass. Key issues:
+- Hero section galaxy sizing may be too large on small screens, pushing copy below fold
+- Hero heading `text-[clamp(1.75rem,3.6vw,3.75rem)]` uses `vw` which is tiny on mobile (3.6vw on 375px = 13.5px)
+- `pt-24` on hero sections (96px) may cause overlap with the 72px navbar on some pages
+- CTASection team grid `grid-cols-2` with 14px avatar images gets cramped
+- Research page category pills overflow horizontally without scroll affordance
+- ProjectsPage project cards with `p-7 md:p-9` padding may be heavy on mobile
+- Footer grid collapses to single column but spacing could be tighter
+- Various sections have inconsistent mobile vertical padding
+- Donate page inner sections still use `max-w-4xl` instead of `max-w-6xl`
 
-## Solution
-Standardize every page to use `container max-w-6xl` for both the hero and body sections. Headings and subtitles will naturally left-align with all content below. The subtitle paragraph keeps its existing `max-w-2xl` constraint for readable line length, but within the wider container.
+## Changes
 
-## Files to Modify
+### 1. HeroSection.tsx — Mobile-optimized hero
+- Fix heading clamp: `text-[clamp(1.75rem,7vw,3.75rem)]` (7vw on 375px = 26.25px, good mobile size)
+- Reduce galaxy container on mobile: `w-[min(32svh,70vw)] h-[min(32svh,70vw)] md:w-[min(40svh,58vw)] md:h-[min(40svh,58vw)]` — smaller galaxy, more room for copy
+- Increase bottom padding on mobile for breathing room
 
-**Hero `max-w-4xl` → `max-w-6xl`** (the core fix, ~10 files):
+### 2. index.css — Global mobile refinements
+- Adjust container mobile padding from `1.25rem` to `1.5rem` (24px) for more breathing room on edges
+- Ensure buttons on mobile have proper spacing
 
-1. `src/modules/core/pages/AboutPage.tsx` — hero div
-2. `src/modules/framework/pages/StandardPage.tsx` — hero div
-3. `src/modules/projects/pages/ProjectsPage.tsx` — hero div + submit section
-4. `src/modules/community/pages/ResearchPage.tsx` — hero div
-5. `src/modules/donate/pages/DonatePage.tsx` — hero div
-6. `src/modules/projects/components/ProjectDetailLayout.tsx` — hero, cover image, sections, agent instructions, CTA (all `max-w-4xl` → `max-w-6xl`)
-7. `src/modules/projects/pages/SandboxPage.tsx` — hero + CTA
-8. `src/modules/community/pages/BlogPost1.tsx` — article container
-9. `src/modules/community/pages/BlogPost2.tsx` — article container (likely same pattern)
-10. `src/modules/interoperability/pages/InteroperabilityPage.tsx` — already `max-w-6xl`, just ensure hero uses `container` class for consistent padding
+### 3. AboutPage.tsx — Mobile spacing
+- Hero `pt-28` on mobile (prevent navbar overlap), keep `md:pt-36`
+- Board member cards: reduce image size on mobile, ensure text doesn't overflow
 
-**Other pages using `max-w-4xl`** (normalize to `max-w-6xl`):
-11. `src/modules/agent-tools/pages/ToolRegistryPage.tsx`
-12. `src/modules/bitcoin/pages/CoherenceGatePage.tsx`
-13. `src/modules/derivation/pages/DerivationLabPage.tsx`
+### 4. StandardPage.tsx — Mobile spacing
+- Hero `pt-28` on mobile
+- MCP client tabs: ensure horizontal scroll on mobile with `overflow-x-auto`
 
-**Blog posts** are long-form reading and may benefit from staying narrower (`max-w-4xl`). I'll keep those at `max-w-4xl` since they are article layouts where narrower columns improve readability.
+### 5. ProjectsPage.tsx — Mobile polish
+- Hero `pt-28` on mobile
+- Project card padding: `p-5 md:p-9` (reduce mobile padding)
+- Collapsible category padding: `px-4 py-4 md:px-8 md:py-6`
 
-## What Changes
-- Every page hero heading left-aligns perfectly with the body content grid below it
-- Consistent `container max-w-6xl` wrapper on all pages
-- Subtitle paragraphs remain constrained to `max-w-2xl` or `max-w-3xl` for line length
-- Blog posts stay at `max-w-4xl` (reading-optimized)
+### 6. ResearchPage.tsx — Mobile polish  
+- Hero `pt-28` on mobile
+- Category pills: wrap with `overflow-x-auto` and scrollable container
+- Event cards: stack date below content on mobile
+
+### 7. DonatePage.tsx — Mobile polish
+- Hero `pt-28` on mobile
+- Fix inner sections `max-w-4xl` → `max-w-6xl` for alignment consistency
+
+### 8. CTASection.tsx — Mobile team grid
+- Team member avatars: slightly larger on mobile (`w-16 h-16` vs current `w-14 h-14`)
+- Reduce description text overflow risk
+
+### 9. InteroperabilityPage.tsx — Mobile hero
+- Hero `pt-28` on mobile (already has `pt-28`, keep it)
+
+### 10. Footer.tsx — Mobile tightening
+- Reduce divider margin on mobile
+- Tighten grid gap on mobile
+
+### 11. Navbar.tsx — Mobile menu polish
+- Ensure mobile menu backdrop is opaque enough for readability
+- Ensure proper safe area for notched devices
+
+## Technical Approach
+- All changes use responsive Tailwind utilities (mobile-first)
+- Golden ratio spacing: base 16px → 26px (×φ) → 42px (×φ) → 68px (×φ)
+- Consistent `pt-28 md:pt-36` hero padding across all pages
+- Consistent `container max-w-6xl` on all sections
 
