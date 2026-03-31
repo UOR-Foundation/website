@@ -10,7 +10,7 @@ const PillarsSection = () => {
     <section id="pillars" className="pt-12 md:pt-20 pb-8 md:pb-16 bg-background">
       <div className="container max-w-6xl">
         <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-5 md:mb-6">
-          What We Do
+          Three Pillars
         </p>
         <div className="h-px w-full bg-border/60" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border/40 divide-y divide-border/40 md:divide-y-0">

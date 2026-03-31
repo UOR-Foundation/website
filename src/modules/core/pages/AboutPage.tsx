@@ -20,7 +20,7 @@ const About = () => {
             className="mt-5 text-muted-foreground font-body text-base leading-[1.7] max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            The UOR Foundation is a 501(c)(3) nonprofit that develops an open standard giving every piece of digital content a single, permanent address based on what it contains, making data findable, verifiable, and reusable across any system.
+            A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
           </p>
         </div>
       </section>

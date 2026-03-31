@@ -40,7 +40,7 @@ const CTASection = () => {
           Ready to Build?
         </h2>
         <p className="mt-4 md:mt-5 text-base text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
-          Engineers, researchers, and builders working on the open data framework.
+          Pick a path and get started.
         </p>
 
         {/* Three-path audience routing */}
