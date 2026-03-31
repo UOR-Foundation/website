@@ -18,7 +18,7 @@
   .hero-galaxy-container { min-height: 145px; }
 }
 .galaxy-wrapper {
-  transform: translate(0px, 0px) scale(0.78);
+  transform: translate(0px, 0px) scale(0.88);
 }
 
 .galaxy:nth-child(1) {
