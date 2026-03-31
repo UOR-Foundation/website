@@ -3,8 +3,6 @@ import {
   ShieldCheck,
   Bot,
   Microscope,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -39,18 +37,6 @@ const applications: Application[] = [
     description:
       "Make research data findable, reproducible, and composable across institutions and fields.",
   },
-  {
-    icon: Layers,
-    title: "Cross-Domain Unification",
-    description:
-      "Let different fields share data and ideas without losing meaning in translation. One shared system, many disciplines.",
-  },
-  {
-    icon: Sparkles,
-    title: "Frontier Technologies",
-    description:
-      "Provide a foundation for emerging fields like quantum computing and next-generation AI, where reliable data identity is essential.",
-  },
 ];
 
 const ApplicationsSection = () => {
@@ -68,7 +54,7 @@ const ApplicationsSection = () => {
           When every system shares one way to address data, new capabilities emerge.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
           {applications.map((app, idx) => {
             const Icon = app.icon;
             return (

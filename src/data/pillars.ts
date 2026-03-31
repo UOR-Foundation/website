@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "UOR Framework",
     description:
-      "The formal specification: addressing, resolution, verification, and transformation. Six layers, fully documented, ready for implementation.",
+      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation. Everything you need to start building.",
     href: "/standard",
     cta: "Read the Spec",
   },
@@ -15,7 +15,7 @@ export const pillars = [
     iconKey: "Users",
     title: "Research Community",
     description:
-      "Working groups in mathematics, AI, cryptography, and systems engineering. Open proposals, peer-reviewed results, published on GitHub.",
+      "Propose ideas, get peer review, publish results. Active working groups across mathematics, AI, cryptography, and systems engineering.",
     href: "/research",
     cta: "Join the Discussion",
   },
@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Project Launchpad",
     description:
-      "A three-stage maturity pipeline: Sandbox, Incubation, Graduated. Community review, shared infrastructure, and clear promotion criteria.",
+      "Ship your project through three stages: Sandbox, Incubation, Graduated. Community review, shared infrastructure, clear criteria.",
     href: "/projects",
     cta: "Submit a Project",
   },
