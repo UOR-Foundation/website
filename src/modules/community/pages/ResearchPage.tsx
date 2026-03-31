@@ -224,7 +224,7 @@ const Research = () => {
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Events
           </p>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
             Upcoming Events
           </h2>
 
