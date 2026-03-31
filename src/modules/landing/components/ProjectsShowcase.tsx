@@ -14,7 +14,7 @@ const ProjectsShowcase = () => {
       <div className="container max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-4">
           <div>
-            <p className="text-xs md:text-sm font-medium tracking-widest uppercase text-section-dark-foreground/40 mb-3 font-body">
+            <p className="text-sm font-medium tracking-widest uppercase text-section-dark-foreground/40 mb-3 font-body">
               UOR Ecosystem
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-bold">
@@ -42,23 +42,23 @@ const ProjectsShowcase = () => {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-2 h-2 rounded-full ${maturityDotColors[project.maturity]}`} />
-                <span className="text-xs font-medium text-section-dark-foreground/35 font-body uppercase tracking-wider">
+                <span className="text-sm font-medium text-section-dark-foreground/35 font-body uppercase tracking-wider">
                   {project.maturity}
                 </span>
               </div>
               <h3 className="font-display text-lg font-semibold text-section-dark-foreground">
                 {project.name}
               </h3>
-              <p className="text-section-dark-foreground/50 font-body text-sm leading-relaxed flex-1">
+              <p className="text-section-dark-foreground/50 font-body text-base leading-relaxed flex-1">
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-section-dark-foreground/25 font-body uppercase tracking-wider">
+                  <span className="text-sm font-medium text-section-dark-foreground/25 font-body uppercase tracking-wider">
                     {project.category}
                   </span>
                   {project.license && (
-                    <span className="text-[0.625rem] font-mono text-section-dark-foreground/30 border border-section-dark-foreground/8 rounded px-1.5 py-0.5">
+                    <span className="text-sm font-mono text-section-dark-foreground/30 border border-section-dark-foreground/8 rounded px-1.5 py-0.5">
                       {project.license}
                     </span>
                   )}

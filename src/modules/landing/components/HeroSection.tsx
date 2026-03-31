@@ -24,7 +24,7 @@ const HeroSection = () => {
       {/* Copy block — centered */}
       <div className="flex-[1] flex flex-col items-center justify-center min-h-0 px-4 pb-[clamp(1rem,3vh,2.5rem)]">
         <p
-          className="text-[0.6875rem] md:text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-[clamp(0.375rem,1vh,1.25rem)] animate-fade-in-up opacity-0"
+          className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-[clamp(0.375rem,1vh,1.25rem)] animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.2s" }}
         >
           Universal Data Layer.
@@ -40,9 +40,7 @@ const HeroSection = () => {
           className="mt-[clamp(0.75rem,1.5vh,2.5rem)] text-[clamp(0.875rem,1.1vw,1.25rem)] text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.45s" }}
         >
-          The UOR Foundation stewards a universal content addressed framework.
-          <br className="hidden md:block" />
-          Data is assigned a stable identifier from its content, not its location.
+          The UOR Foundation builds an open framework where every piece of data gets a single, permanent address based on what it contains, not where it lives.
         </p>
         <div
           className="mt-[clamp(0.75rem,2vh,3.5rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
