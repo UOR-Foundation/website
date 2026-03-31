@@ -115,7 +115,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         */}
         <div className="h-full flex flex-col">
           {/* Navbar spacer */}
-          <div className="h-[4.5rem] shrink-0" />
+          <div className="h-[5rem] shrink-0" />
 
           {/* Nav links — centered in the upper golden section */}
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
