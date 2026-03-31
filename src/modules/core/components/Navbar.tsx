@@ -36,116 +36,134 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   }, [mobileOpen]);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
-        isDark ? "dark" : ""
-      } ${
-        scrolled
-          ? "bg-background/90 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10 shadow-sm"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="container flex items-center justify-between h-[4.5rem] md:h-24">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <img 
-            src={uorIcon} 
-            alt="UOR Foundation" 
-            className={`w-9 h-9 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark ? "invert brightness-[100]" : ""}`} 
-          />
-          <span className={`font-display text-[0.9375rem] md:text-base font-semibold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={`nav-pill ${location.pathname === item.href ? "nav-pill-active" : ""}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden md:flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
-              <DiscordIcon size={20} />
-            </a>
-            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
-              <Github size={20} />
-            </a>
-            <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
-              <Linkedin size={20} />
-            </a>
-          </div>
-          <button
-            onClick={() => setDonateOpen(true)}
-            className="btn-primary !py-2 !px-5 !text-sm inline-flex items-center cursor-pointer"
-          >
-            <Heart size={14} fill="currentColor" strokeWidth={0} className="mr-1.5" />
-            Donate
-          </button>
-        </div>
-
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90 relative z-[60]"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Full-screen mobile menu overlay */}
-      <div
-        className={`md:hidden fixed inset-0 top-[4.5rem] z-50 transition-all duration-300 ease-out ${
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+          isDark ? "dark" : ""
+        } ${
           mobileOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
+            ? "bg-background"
+            : scrolled
+              ? "bg-background/90 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10 shadow-sm"
+              : "bg-transparent"
         }`}
       >
-        <div className="absolute inset-0 bg-background/98 backdrop-blur-xl" />
-        <div
-          className={`relative h-full flex flex-col px-6 pt-6 pb-[env(safe-area-inset-bottom,1.5rem)] transition-transform duration-300 ease-out ${
-            mobileOpen ? "translate-y-0" : "-translate-y-4"
-          }`}
-        >
-          {/* Nav links */}
-          <nav className="flex flex-col gap-1 flex-1">
+        <div className="container flex items-center justify-between h-[4.5rem] md:h-24">
+          <Link to="/" className="flex items-center gap-2.5 group relative z-[60]">
+            <img
+              src={uorIcon}
+              alt="UOR Foundation"
+              className={`w-9 h-9 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark && !mobileOpen ? "invert brightness-[100]" : ""}`}
+            />
+            <span className={`font-display text-[0.9375rem] md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-4 px-4 rounded-xl text-lg font-medium font-body transition-colors ${
-                  location.pathname === item.href
-                    ? "text-primary border-l-2 border-primary bg-primary/5"
-                    : "text-foreground/80 active:bg-muted"
-                }`}
+                className={`nav-pill ${location.pathname === item.href ? "nav-pill-active" : ""}`}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          {/* Bottom section — anchored */}
-          <div className="mt-auto pt-6 flex flex-col gap-4 border-t border-border/30">
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+                <DiscordIcon size={20} />
+              </a>
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+                <Github size={20} />
+              </a>
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+                <Linkedin size={20} />
+              </a>
+            </div>
+            <button
+              onClick={() => setDonateOpen(true)}
+              className="btn-primary !py-2 !px-5 !text-sm inline-flex items-center cursor-pointer"
+            >
+              <Heart size={14} fill="currentColor" strokeWidth={0} className="mr-1.5" />
+              Donate
+            </button>
+          </div>
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90 relative z-[60]"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Full-screen mobile menu — covers entire viewport */}
+      <div
+        className={`md:hidden fixed inset-0 z-40 bg-background transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* 
+          Golden ratio layout: navbar (4.5rem) + nav links (≈61.8%) + bottom actions (≈38.2%)
+          Using flex with justified spacing for natural golden distribution
+        */}
+        <div className="h-full flex flex-col">
+          {/* Navbar spacer */}
+          <div className="h-[4.5rem] shrink-0" />
+
+          {/* Nav links — centered in the upper golden section */}
+          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
+            {navItems.map((item, idx) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`py-3.5 px-6 rounded-2xl text-xl font-medium font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  mobileOpen
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-3"
+                } ${
+                  location.pathname === item.href
+                    ? "text-primary bg-primary/8 font-semibold"
+                    : "text-foreground/70 active:bg-muted/60"
+                }`}
+                style={{ transitionDelay: mobileOpen ? `${80 + idx * 50}ms` : "0ms" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Bottom actions — lower golden section */}
+          <div
+            className={`flex-1 flex flex-col items-center justify-end px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] gap-5 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              mobileOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-4"
+            }`}
+            style={{ transitionDelay: mobileOpen ? "280ms" : "0ms" }}
+          >
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="py-3.5 px-4 rounded-xl text-base font-semibold font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full max-w-xs py-4 rounded-2xl text-base font-semibold font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-transform"
             >
               <Heart size={16} fill="currentColor" strokeWidth={0} />
               Donate
             </button>
-            <div className="flex items-center justify-center gap-6 py-3">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={22} />
+            <div className="flex items-center justify-center gap-8 py-2">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+                <DiscordIcon size={24} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={22} />
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+                <Github size={24} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={22} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+                <Linkedin size={24} />
               </a>
             </div>
           </div>
@@ -153,7 +171,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
       </div>
 
       <DonatePopup open={donateOpen} onOpenChange={setDonateOpen} />
-    </header>
+    </>
   );
 };
 
