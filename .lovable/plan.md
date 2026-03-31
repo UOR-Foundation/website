@@ -1,47 +1,25 @@
 
 
-# Fix Hero Section: No-Scroll, No-Overlap Layout
+# De-clutter Hero Text Block
 
-## Problem
-The galaxy animation overflows into the text and navbar because the CSS-scaled galaxy has no bounded container. The `flex-[1.618]` wrapper gives it unbounded height, so the galaxy's absolute-positioned dots extend beyond their container. The CTA button is pushed off-screen.
+## Observation
 
-## Root Cause
-1. `.galaxy-viewport` is `width:100%; height:100%` but has no explicit size constraint, so scaled dots overflow visually
-2. The galaxy wrapper uses `transform: scale()` which doesn't affect layout flow, meaning the visual size exceeds the box model size
-3. No `overflow: hidden` on the galaxy's flex container to clip the animation
+The current text block beneath the galaxy has all four elements (subtitle, heading, description, CTA) compressed with minimal vertical gaps. The `clamp()` values for margins between them are too tight (e.g., `0.25rem` min for subtitle margin, `0.4rem` for description, `0.5rem` for CTA). This creates a visually dense, cluttered feel.
 
-## Solution
+## Changes
 
-### 1. HeroSection.tsx — CSS Grid with bounded rows
+### `src/modules/landing/components/HeroSection.tsx`
 
-Replace the flex layout with a CSS grid that guarantees three rows fit within `100svh`:
+Increase the vertical breathing room between each text element in Row 3:
 
-```
-grid-rows-[auto_minmax(0,1fr)_auto]
-```
+| Element | Current spacing | New spacing | Rationale |
+|---------|----------------|-------------|-----------|
+| "Universal Data Layer" bottom margin | `mb-[clamp(0.25rem,0.6vh,0.5rem)]` | `mb-[clamp(0.5rem,1.2vh,1rem)]` | More separation from heading |
+| Heading `<h1>` line-height | `leading-[1.12]` | `leading-[1.18]` | Slightly more open heading lines |
+| Description top margin | `mt-[clamp(0.4rem,1vh,1rem)]` | `mt-[clamp(0.75rem,1.8vh,1.5rem)]` | Clear gap between heading and body |
+| Description font size | `text-[clamp(0.875rem,1.1vw,1.25rem)]` | `text-base` | Consistent with design system; less visual weight |
+| CTA top margin | `mt-[clamp(0.5rem,1.2vh,1.5rem)]` | `mt-[clamp(1rem,2vh,2rem)]` | Generous space before the button |
+| Row 3 bottom padding | `pb-[clamp(1.5rem,4vh,3rem)]` | `pb-[clamp(2rem,5vh,4rem)]` | More floor space so CTA doesn't feel cramped at the edge |
 
-- **Row 1 (auto):** Navbar spacer
-- **Row 2 (minmax(0,1fr)):** Galaxy, constrained to available space with `overflow: hidden`
-- **Row 3 (auto):** Copy + CTA, naturally sized
-
-The galaxy container gets explicit max dimensions:
-- `max-h-[50svh]` to never exceed half the viewport
-- `aspect-square` to stay circular
-- `overflow-hidden` to clip any overflow from the CSS transform scaling
-
-The copy block uses fluid `clamp()` for all spacing. The CTA gets a bottom padding of `pb-[clamp(1.5rem,4vh,3rem)]`.
-
-### 2. galaxy.css — Tighten the scale ceiling
-
-Reduce the max scale from `1` to `0.85` so the animation fits comfortably within its bounded container:
-```css
-transform: scale(clamp(0.32, var(--auto-scale), 0.85));
-```
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/modules/landing/components/HeroSection.tsx` | Replace flex layout with grid; add bounded galaxy container with overflow-hidden |
-| `src/modules/landing/components/galaxy.css` | Reduce max scale; adjust vh-scale divisor for tighter fit |
+The galaxy size stays as-is since it looks good. These are purely spacing refinements to the copy block to let each element breathe.
 
