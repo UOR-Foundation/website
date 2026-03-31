@@ -47,7 +47,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="h-px w-full bg-section-dark-foreground/10 mt-14 mb-6" />
+        <div className="h-px w-full bg-section-dark-foreground/10 mt-10 md:mt-14 mb-5 md:mb-6" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-section-dark-foreground/30 text-base font-body">
