@@ -41,42 +41,42 @@ const CTASection = () => {
           </a>
         </div>
 
-        {/* Members Grid */}
+        {/* Members Grid — Foresight-style cards */}
         <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
-        <div className="mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-10">
+        <div className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 text-left">
           {teamMembers.map((member, index) => (
             <a
               key={member.name}
               href={member.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
-              style={{ animationDelay: `${index * 0.05}s` }}
+              className="group relative rounded-2xl border border-border bg-card overflow-hidden flex flex-row items-stretch min-h-[10rem] transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
+              style={{ animationDelay: `${index * 0.04}s` }}
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-2 md:mb-3 transition-all duration-300"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(192,132,252,0.1), rgba(139,92,246,0.2))',
-                  boxShadow: '0 0 12px 1px rgba(168,85,247,0.08), 0 0 24px 3px rgba(139,92,246,0.04)',
-                }}
-              >
-                <div className="w-full h-full rounded-full overflow-hidden bg-background">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    loading="lazy"
-                  />
+              {/* Text content */}
+              <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
+                <div>
+                  <h4 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
+                    {member.name}
+                  </h4>
+                  <div className="h-px w-10 bg-border/60 my-2.5" />
+                  <p className="text-sm font-medium text-primary font-body leading-snug">
+                    {member.role}
+                  </p>
+                  <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
+                    {member.description}
+                  </p>
                 </div>
               </div>
-              <h4 className="font-display text-sm md:text-base font-semibold text-foreground leading-tight">
-                {member.name}
-              </h4>
-              <p className="text-sm font-medium text-primary font-body mt-0.5 leading-tight min-h-[1.75rem] md:min-h-[2rem] flex items-center justify-center">
-                {member.role}
-              </p>
-              <p className="text-sm text-muted-foreground font-body mt-0.5 md:mt-1 leading-snug min-h-[2rem] md:min-h-[2.5rem] flex items-center justify-center">
-                {member.description}
-              </p>
+              {/* Photo — right-aligned, cropped */}
+              <div className="w-28 md:w-32 shrink-0 relative overflow-hidden">
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  className="absolute inset-0 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
+                  loading="lazy"
+                />
+              </div>
             </a>
           ))}
         </div>
