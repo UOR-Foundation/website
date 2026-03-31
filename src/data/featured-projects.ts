@@ -6,7 +6,7 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 export const featuredProjects = [
   {
     name: "Hologram",
-    category: "Frontier Technology",
+    category: "Systems",
     description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",

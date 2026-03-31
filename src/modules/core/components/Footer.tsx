@@ -34,7 +34,7 @@ const Footer = () => {
             <nav className="flex flex-col gap-3">
               <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Getting Started</a>
               <a href={GITHUB_RESEARCH_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Research Papers</a>
-              <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Specification</Link>
+              <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Framework</Link>
             </nav>
           </div>
 

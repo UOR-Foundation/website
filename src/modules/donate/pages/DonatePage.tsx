@@ -89,7 +89,7 @@ const Donate = () => {
             className="font-display text-4xl md:text-5xl font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
           >
-            Fund the future of open data
+            Fund open infrastructure
           </h1>
           <p
             className="mt-8 text-base text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"

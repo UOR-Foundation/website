@@ -1,36 +1,5 @@
-import { Code2, Building2, FlaskConical } from "lucide-react";
 import { teamMembers } from "@/data/team-members";
-import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
-
-const paths = [
-  {
-    icon: Code2,
-    title: "Contributors",
-    description:
-      "Submit improvements, write documentation, or build tools. Everything ships through GitHub.",
-    cta: "Start Contributing",
-    href: GITHUB_ORG_URL + "/.github/blob/main/CONTRIBUTING.md",
-    external: true,
-  },
-  {
-    icon: Building2,
-    title: "Adopters",
-    description:
-      "Try the framework in your systems. Bring permanent, verifiable data addressing to your existing tools.",
-    cta: "Explore Projects",
-    href: "/projects",
-    external: false,
-  },
-  {
-    icon: FlaskConical,
-    title: "Researchers",
-    description:
-      "Join working groups, publish findings, and help advance the framework.",
-    cta: "View Research",
-    href: GITHUB_RESEARCH_URL,
-    external: true,
-  },
-];
+import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 
 const CTASection = () => {
   return (

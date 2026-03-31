@@ -181,10 +181,10 @@ const Standard = () => {
             style={{ animationDelay: "0.15s" }}
           >
             <p className="text-foreground font-body text-base leading-[1.85] md:leading-[1.9] font-medium">
-              Today's data lives in silos. Different formats, systems, and tools that cannot natively understand each other.
+              Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export.
             </p>
             <p className="mt-6 text-muted-foreground font-body text-base leading-[1.85] md:leading-[1.9]">
-              UOR replaces location-based identity with <span className="text-foreground font-medium">identity based on content</span>. The data itself becomes the address, so verification is built in from the start.
+              Every integration layer adds translation code. UOR eliminates this by <span className="text-foreground font-medium">deriving identity from content structure</span> — the address is the data, so there is nothing to translate.
             </p>
           </div>
         </div>
