@@ -81,7 +81,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
       <button
         onClick={() => canToggle && setOpen(!open)}
-        className={`w-full flex items-center gap-3 px-6 py-5 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
+        className={`w-full flex items-center gap-3 px-4 py-4 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
       >
         <span className={`w-3 h-3 rounded-full ${dotColor}`} />
         <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
@@ -98,7 +98,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
         />
       </button>
       {open && (
-        <div className="px-6 pb-6 md:px-8 md:pb-8">
+        <div className="px-4 pb-4 md:px-8 md:pb-8">
           {children}
         </div>
       )}
@@ -132,7 +132,7 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
                 />
               </div>
             )}
-            <div className="p-7 md:p-9 flex flex-col flex-1">
+            <div className="p-5 md:p-9 flex flex-col flex-1">
               <div className="flex items-center justify-between gap-2 mb-5">
                 <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                   {project.category}
@@ -214,7 +214,7 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
+      <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-6xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects

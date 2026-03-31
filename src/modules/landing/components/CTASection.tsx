@@ -53,7 +53,7 @@ const CTASection = () => {
               className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-2 md:mb-3 transition-all duration-300"
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-[2px] mb-2 md:mb-3 transition-all duration-300"
                 style={{
                   background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(192,132,252,0.1), rgba(139,92,246,0.2))',
                   boxShadow: '0 0 12px 1px rgba(168,85,247,0.08), 0 0 24px 3px rgba(139,92,246,0.04)',

@@ -79,7 +79,7 @@ function McpClientCards() {
   return (
     <div>
       {/* Client tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 mb-6 pb-1 sm:pb-0 scrollbar-hide">
         {clients.map((cl, i) => (
           <button
             key={cl.name}
@@ -140,7 +140,7 @@ const Standard = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
+      <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-6xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
