@@ -404,7 +404,7 @@ const ProjectDetailLayout = ({
 
       {/* CTA */}
       <section className="section-dark py-16 md:py-24">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-6xl text-center">
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
             Get involved
           </h2>
