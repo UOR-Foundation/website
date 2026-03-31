@@ -43,42 +43,6 @@ const CTASection = () => {
           Pick a path and get started.
         </p>
 
-        {/* Three-path audience routing */}
-        <div className="mt-8 md:mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
-          {paths.map((path, index) => {
-            const Icon = path.icon;
-            const linkProps = path.external
-              ? { href: path.href, target: "_blank" as const, rel: "noopener noreferrer" }
-              : { href: path.href };
-
-            return (
-              <div
-                key={path.title}
-                className="group rounded-xl border border-border/30 bg-card p-6 md:p-8 flex flex-col animate-fade-in-up opacity-0 hover:border-border/50 transition-colors duration-300"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <Icon
-                  className="w-5 h-5 text-primary mb-4"
-                  strokeWidth={1.5}
-                />
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-                  {path.title}
-                </h3>
-                <p className="text-base text-muted-foreground font-body leading-relaxed flex-1">
-                  {path.description}
-                </p>
-                <a
-                  {...linkProps}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary font-body mt-5 group-hover:gap-2.5 transition-all duration-300"
-                >
-                  {path.cta}
-                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
-                </a>
-              </div>
-            );
-          })}
-        </div>
-
         {/* Community quick links */}
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
