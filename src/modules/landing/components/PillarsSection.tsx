@@ -13,16 +13,17 @@ const PillarsSection = () => {
           Get Involved
         </p>
         <div className="h-px w-full bg-border/60" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:divide-x md:divide-border/40 divide-y divide-border/40 md:divide-y-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mt-8 md:mt-10">
           {pillars.map((pillar, index) => {
             const Icon = iconMap[pillar.iconKey];
             return (
-              <div
+              <Link
                 key={pillar.title}
-                className="group flex flex-col animate-fade-in-up opacity-0 py-10 md:py-16 md:px-10 first:md:pl-0 last:md:pr-0"
+                to={pillar.href}
+                className="group flex flex-col rounded-2xl border border-border bg-card p-6 md:p-8 transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.15 + index * 0.12}s` }}
               >
-                <div className="flex items-center gap-3 mb-3 md:mb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <Icon
                     className="w-5 h-5 text-primary transition-transform duration-300 group-hover:scale-110"
                     strokeWidth={1.5}
@@ -34,18 +35,17 @@ const PillarsSection = () => {
                 <p className="text-muted-foreground font-body text-base leading-[1.68] flex-1">
                   {pillar.description}
                 </p>
-                <Link
-                  to={pillar.href}
-                  className="inline-flex items-center gap-1.5 text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6 md:mt-8"
-                >
-                  {pillar.cta}
-                  <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />
-                </Link>
-              </div>
+                <div className="h-px w-full bg-border/40 mt-6 md:mt-8" />
+                <div className="flex justify-end mt-4">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground font-body px-4 py-2 rounded-full border border-border group-hover:border-primary/30 transition-all duration-300">
+                    {pillar.cta}
+                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                  </span>
+                </div>
+              </Link>
             );
           })}
         </div>
-        <div className="h-px w-full bg-border/60" />
       </div>
     </section>
   );
