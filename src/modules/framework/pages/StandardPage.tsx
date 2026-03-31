@@ -295,13 +295,13 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-14 md:py-20">
+      <section className="section-dark py-16 md:py-28">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
           </h2>
-          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces · 82 classes · 124 properties · 14 named individuals. Open source and fully documented.
+          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
+            14 namespaces, 82 classes, 124 properties, and 14 named individuals. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a
