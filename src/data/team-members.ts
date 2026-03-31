@@ -92,7 +92,7 @@ export const teamMembers = [
   },
   {
     name: "Jimmy Danella",
-    role: "Alternative Medicine",
+    role: "Founder @ WellnessWorx",
     description: "Healthcare technology and applied research.",
     image: "/images/profiles/jimmy-danella.jpg",
     link: "https://www.linkedin.com/in/wellnessworxio/",
