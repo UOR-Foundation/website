@@ -48,14 +48,14 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               : "bg-transparent"
         }`}
       >
-        <div className="container flex items-center justify-between h-[4.5rem] md:h-24">
-          <Link to="/" className="flex items-center gap-2.5 group relative z-[60]">
+        <div className="container flex items-center justify-between h-[5rem] md:h-24">
+          <Link to="/" className="flex items-center gap-3 group relative z-[60]">
             <img
               src={uorIcon}
               alt="UOR Foundation"
-              className={`w-9 h-9 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark && !mobileOpen ? "invert brightness-[100]" : ""}`}
+              className={`w-10 h-10 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark && !mobileOpen ? "invert brightness-[100]" : ""}`}
             />
-            <span className={`font-display text-[0.9375rem] md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+            <span className={`font-display text-base md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
@@ -115,7 +115,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         */}
         <div className="h-full flex flex-col">
           {/* Navbar spacer */}
-          <div className="h-[4.5rem] shrink-0" />
+          <div className="h-[5rem] shrink-0" />
 
           {/* Nav links — centered in the upper golden section */}
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
