@@ -25,8 +25,8 @@ const About = () => {
         </div>
       </section>
 
-      <section className="py-12 md:py-20 bg-background">
-        <div className="container max-w-6xl space-y-10 md:space-y-16">
+      <section className="py-8 md:py-14 bg-background">
+        <div className="container max-w-6xl space-y-8 md:space-y-12">
 
           {/* What We Do */}
           <div>

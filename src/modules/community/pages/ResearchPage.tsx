@@ -40,7 +40,7 @@ const Research = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
+      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
