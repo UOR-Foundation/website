@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Linkedin, BookOpen, Users, Rocket, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
