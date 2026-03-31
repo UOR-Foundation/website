@@ -80,7 +80,7 @@ const CTASection = () => {
         </div>
 
         {/* Community quick links */}
-        <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap gap-3">
+        <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
             href={DISCORD_URL}
             target="_blank"
