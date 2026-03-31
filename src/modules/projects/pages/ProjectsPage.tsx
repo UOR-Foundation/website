@@ -323,7 +323,7 @@ const Projects = () => {
       <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
             </span>
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
