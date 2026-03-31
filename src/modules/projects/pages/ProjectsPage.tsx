@@ -249,8 +249,8 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* Visual Progression Flow */}
-      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
+      {/* Maturity Levels */}
+      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-16 text-center">
             Project Maturity Levels
