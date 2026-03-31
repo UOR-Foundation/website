@@ -1,5 +1,5 @@
 import { teamMembers } from "@/data/team-members";
-import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
+import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
 const CTASection = () => {
   return (

@@ -330,7 +330,7 @@ const Projects = () => {
               How to Submit a Project
             </h2>
             <p className="text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed">
-              Open source projects that align with the UOR standard. Reviewed by our technical committee against published criteria.
+              Open source projects that align with the UOR specification. Reviewed by our technical committee against published criteria.
             </p>
           </div>
 

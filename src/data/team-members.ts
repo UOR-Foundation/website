@@ -99,7 +99,7 @@ export const teamMembers = [
   },
   {
     name: "Ari Lerner",
-    role: "Hacking Software/Hardware",
+    role: "Engineer",
     description: "AI, robotics, and embedded systems.",
     image: "/images/profiles/ari-lerner.jpg",
     link: "https://www.linkedin.com/in/arilerner/",
