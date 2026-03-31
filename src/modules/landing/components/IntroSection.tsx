@@ -3,7 +3,7 @@ const IntroSection = () => {
     <section id="intro" className="section-dark py-8 md:py-14 scroll-mt-16">
       <div className="container max-w-6xl">
         <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-section-dark-foreground/50 mb-4">
-          Introducing UOR
+          How It Works
         </p>
         <div className="h-px w-full bg-section-dark-foreground/8" />
         <div
@@ -12,12 +12,12 @@ const IntroSection = () => {
         >
           <p className="text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
             <span className="text-section-dark-foreground font-medium">
-              Content goes in. A deterministic address comes out.
+              UOR gives every piece of data a permanent address derived from its content.
             </span>{" "}
-            The same content always produces the same address, regardless of which node computes it. Verification requires nothing beyond the data itself.
+            The same input always produces the same address, on any machine, in any system. You can verify data without trusting the source, because the address itself is the proof.
           </p>
           <p className="mt-4 text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
-            This gives you tamper-evident references that survive migration, replication, and federation. No coordination protocol, no certificate authority, no single point of failure.
+            This means references that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure. The projects you see below are built on this foundation.
           </p>
           <a
             href="/about"
