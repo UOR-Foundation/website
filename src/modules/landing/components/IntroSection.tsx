@@ -1,6 +1,6 @@
 const IntroSection = () => {
   return (
-    <section id="intro" className="section-dark py-16 md:py-28 scroll-mt-16">
+    <section id="intro" className="section-dark py-12 md:py-20 scroll-mt-16">
       <div className="container max-w-6xl">
         <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-section-dark-foreground/50 mb-5 md:mb-6">
           Introducing UOR
