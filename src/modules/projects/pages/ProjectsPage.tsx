@@ -214,13 +214,12 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-22">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-          
             UOR Projects
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR standard, organized by maturity level.
           </p>
           <div
