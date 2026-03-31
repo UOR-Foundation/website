@@ -84,6 +84,16 @@
 
 
 
+@keyframes breathe {
+  0%, 100% { transform: translate(0px, 0px) scale(0.97); }
+  50% { transform: translate(0px, 0px) scale(1.03); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 @keyframes galaxy {
   100% {
     transform: rotate(360deg);
