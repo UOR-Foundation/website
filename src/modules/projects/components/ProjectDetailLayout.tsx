@@ -324,7 +324,7 @@ const ProjectDetailLayout = ({
 
       {/* Cover image */}
       <section className="border-b border-border">
-        <div className="container max-w-4xl py-8">
+        <div className="container max-w-6xl py-8">
           <div className="rounded-2xl overflow-hidden border border-border project-card-glow">
             <img
               src={heroImage}
