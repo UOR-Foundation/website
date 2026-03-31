@@ -24,12 +24,6 @@ const HeroSection = () => {
 
       {/* Row 3: Copy + CTA */}
       <div className="flex flex-col items-center px-4 pb-[clamp(2rem,5vh,4rem)]">
-        <p
-          className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-[clamp(0.5rem,1.2vh,1rem)] animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.2s" }}
-        >
-          Universal Data Layer.
-        </p>
         <h1
           className="font-display text-[clamp(1.75rem,3.6vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.25s" }}
