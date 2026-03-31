@@ -46,19 +46,19 @@
 
 
 @media screen and (max-width: 1200px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.65); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.72); }
 }
 @media screen and (max-width: 1024px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.58); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.64); }
 }
 @media screen and (max-width: 768px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.50); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.54); }
 }
 @media screen and (max-width: 430px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.42); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.46); }
 }
 @media screen and (max-width: 356px) {
-  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.34); }
+  .galaxy-wrapper { transform: translate(0px, 0px) scale(0.38); }
 }
 
 
