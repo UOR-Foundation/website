@@ -80,7 +80,7 @@ const CTASection = () => {
             {/* +N community pill */}
             <div className="flex flex-col items-center gap-2">
               <div className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
-                <span className="text-sm md:text-base font-semibold text-muted-foreground">+30</span>
+                <span className="text-sm md:text-base font-semibold text-muted-foreground">+150</span>
               </div>
               <p className="text-[10px] md:text-[11px] font-body text-muted-foreground/50 leading-tight">
                 & growing
