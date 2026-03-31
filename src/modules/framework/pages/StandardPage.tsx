@@ -278,15 +278,15 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+      <section id="architecture" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
           </p>
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            UOR Framework Architecture
+            Framework Architecture
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14 md:mb-16">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-14 md:mb-16">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
