@@ -5,7 +5,7 @@ const CommunitySection = () => {
     <section className="py-8 md:py-14 bg-background">
       <div className="container max-w-6xl">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
-          <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
+          <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
             UOR Community
           </p>
 

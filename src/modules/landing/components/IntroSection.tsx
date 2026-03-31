@@ -2,7 +2,7 @@ const IntroSection = () => {
   return (
     <section id="intro" className="section-dark py-8 md:py-14 scroll-mt-16">
       <div className="container max-w-6xl">
-        <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-section-dark-foreground/60 mb-4">
+        <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-section-dark-foreground/60 mb-4">
           How It Works
         </p>
         <div className="h-px w-full bg-section-dark-foreground/8" />
