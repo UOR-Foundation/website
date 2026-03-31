@@ -8,6 +8,102 @@ import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-lin
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
+/** Compact governance strip — overlapping avatars with click-to-reveal detail */
+const GovernanceBoardStrip = () => {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const active = activeIdx !== null ? governanceBoard[activeIdx] : null;
+
+  return (
+    <div>
+      <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
+      <div className="mb-5 md:mb-6">
+        <h2
+          className="font-display text-2xl md:text-3xl font-semibold text-foreground animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.2s" }}
+        >
+          Governance Board
+        </h2>
+        <p
+          className="text-muted-foreground font-body text-sm mt-1 animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.25s" }}
+        >
+          Five-member board · three-year terms ·{" "}
+          <a
+            href="https://github.com/UOR-Foundation/.github"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            charter on GitHub
+          </a>
+        </p>
+      </div>
+
+      {/* Avatar row + inline detail */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 animate-fade-in-up opacity-0" style={{ animationDelay: "0.3s" }}>
+        <div className="flex items-center">
+          {governanceBoard.map((member, idx) => (
+            <button
+              key={member.name}
+              onClick={() => setActiveIdx(activeIdx === idx ? null : idx)}
+              className={`relative rounded-full border-[3px] transition-all duration-300 focus:outline-none
+                ${idx > 0 ? "-ml-3 md:-ml-4" : ""}
+                ${activeIdx === idx
+                  ? "border-primary z-20 scale-110 shadow-lg shadow-primary/20"
+                  : "border-background z-10 hover:z-20 hover:scale-105 hover:border-primary/40"
+                }`}
+              style={{ zIndex: activeIdx === idx ? 20 : 10 - idx }}
+              aria-label={member.name}
+            >
+              <img
+                src={member.image}
+                alt={member.name}
+                className={`w-14 h-14 md:w-[4.5rem] md:h-[4.5rem] rounded-full object-cover object-top transition-all duration-500
+                  ${activeIdx === idx ? "grayscale-0" : "grayscale hover:grayscale-0"}`}
+                loading="lazy"
+              />
+            </button>
+          ))}
+
+          {/* Community count pill */}
+          <div className="-ml-3 md:-ml-4 z-0 w-14 h-14 md:w-[4.5rem] md:h-[4.5rem] rounded-full border-[3px] border-background bg-muted flex items-center justify-center">
+            <span className="text-xs md:text-sm font-semibold text-muted-foreground">+42</span>
+          </div>
+        </div>
+
+        {/* Inline detail card */}
+        <div
+          className={`transition-all duration-300 overflow-hidden ${
+            active ? "max-h-40 opacity-100" : "max-h-0 sm:max-h-40 opacity-0 pointer-events-none"
+          }`}
+        >
+          {active && (
+            <a
+              href={active.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card hover:border-primary/20 transition-colors group"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display text-base font-semibold text-foreground">{active.name}</span>
+                  <Linkedin size={12} className="text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                </div>
+                <span className="text-sm font-medium text-primary">{active.role}</span>
+                {active.bio && (
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 max-w-[20rem]">
+                    {active.bio}
+                  </p>
+                )}
+              </div>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const About = () => {
   return (
     <Layout>
