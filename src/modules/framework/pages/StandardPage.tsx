@@ -295,7 +295,7 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-16 md:py-28">
+      <section className="section-dark py-12 md:py-20">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
