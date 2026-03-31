@@ -56,13 +56,6 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/adamdedelva/",
   },
   {
-    name: "Mateusz Tobola",
-    role: "Product Manager @ Stealth AI Startup",
-    description: "Knowledge graphs and AI product design.",
-    image: "/images/profiles/mateusz-tobola.jpg",
-    link: "https://www.linkedin.com/in/mateusz-tobola-ai/",
-  },
-  {
     name: "Ryan Westerberg",
     role: "Engineer @ Peoplevine",
     description: "Full-stack development and system architecture.",
