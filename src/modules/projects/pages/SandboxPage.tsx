@@ -204,7 +204,7 @@ const SandboxPage = () => {
 
       {/* CTA */}
       <section className="section-dark py-20 md:py-28">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-6xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
             Build on the universal standard
           </h2>
