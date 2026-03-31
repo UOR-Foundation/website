@@ -1,93 +1,83 @@
 
 
-# Copy Audit: Remove Jargon and Redundancy
+# Foresight Institute Design Analysis and UOR Alignment Plan
 
-After reading every content-bearing file, here is a line-by-line audit of language that is too technical, redundant, or vague. Each change tightens the copy without losing meaning.
+## What Makes Foresight Feel Crisp, Clear, and Futuristic
 
----
+After analyzing foresight.org across multiple pages, here are the defining design patterns:
 
-## Issues Found and Fixes
+### 1. Extreme Whitespace and Breathing Room
+Foresight uses generous padding (120px+ vertical sections), wide margins, and lets content float in space. The background is a soft ice-blue (#EDF2F7-ish), not stark white. Sections feel unhurried.
 
-### 1. Hero subtitle (HeroSection.tsx, line 33)
-**Current**: "...for the semantic web, open science, and frontier technologies."
-**Problem**: "Semantic web" is academic jargon. "Frontier technologies" is vague and hand-wavy — triggers skepticism.
-**Fix**: "...for science, software, and the next generation of intelligent systems."
+### 2. Left-Aligned, Editorial Typography
+Headlines are large serif type, left-aligned (not centered), creating a magazine/editorial feel. Body text sits at roughly 60% of the page width (left column), leaving the right side open. This asymmetry feels sophisticated and intentional.
 
-### 2. Intro paragraph 1 (IntroSection.tsx, line 15)
-**Current**: "...a single, permanent address based on what it contains, not where it is stored."
-**Verdict**: Clear and good. Keep as-is.
+### 3. Minimal Borders, Soft Cards
+Cards use very subtle borders (nearly invisible) with soft rounded corners and slight background tints. No heavy shadows. The overall effect is "objects floating on glass."
 
-### 3. Intro paragraph 2 (IntroSection.tsx, line 19)
-**Current**: "...without broken links, translation layers, or manual integration. The same content always resolves to the same address, no matter who holds it."
-**Problem**: "Translation layers" is developer jargon. "Resolves to" is DNS/networking jargon. Second sentence partly repeats paragraph 1.
-**Fix**: "Data can be found, verified, and reused across any system — no broken links, no glue code, no gatekeepers."
+### 4. Full-Width Horizontal Rules as Section Dividers
+Clean 1px lines span the full container width to separate content zones. No ornate dividers.
 
-### 4. Intro paragraph 3 (IntroSection.tsx, line 22)
-**Current**: "...to make reliable, verifiable data the default for science, software, and emerging technologies."
-**Problem**: "Emerging technologies" is vague filler (same issue as "frontier technologies").
-**Fix**: "...to make reliable, verifiable data the default — from scientific research to production infrastructure."
+### 5. Pill Navigation
+Their navbar uses rounded pill buttons with thin borders, exactly like UOR already has. This is already aligned.
 
-### 5. Pillars — Framework (pillars.ts, line 10)
-**Current**: "The upstream specification and reference implementation for content-based addressing. Build interoperable protocols and applications on a vendor-neutral, well-documented standard."
-**Problem**: Five jargon terms in two sentences: "upstream specification," "reference implementation," "content-based addressing," "interoperable protocols," "vendor-neutral." Piles up.
-**Fix**: "The open specification for content-based addressing, with a reference implementation anyone can run. Build protocols and applications on a documented, vendor-neutral standard."
+### 6. Muted Color Palette with One Accent
+Mostly grayscale + ice blue background. Green is the single accent color (Donate button, status dots). Very restrained.
 
-### 6. Pillars — Community (pillars.ts, line 18)
-**Current**: "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through RFC-style proposals and peer review."
-**Problem**: "RFC-style proposals" is insider language.
-**Fix**: "Working groups, open governance, and shared research. Collaborate with engineers and scientists advancing the standard through open proposals and peer review."
-
-### 7. Pillars — Project Launchpad (pillars.ts, line 26)
-**Current**: "A structured incubation path from idea to production. Submit your project, gain visibility, and grow through community support and open governance."
-**Problem**: "open governance" repeats from Community pillar.
-**Fix**: "A structured path from idea to production. Submit your project, gain visibility, and grow with community support."
-
-### 8. CTA — Adopters card (CTASection.tsx, line 19)
-**Current**: "Evaluate the standard for your stack. Integrate content-based addressing into existing infrastructure."
-**Problem**: "Content-based addressing" is the third time this phrase appears. "Your stack" is casual jargon.
-**Fix**: "Evaluate the standard for your systems. Integrate content addressing into existing infrastructure."
-
-### 9. CTA — Researchers card (CTASection.tsx, line 28)
-**Current**: "Join working groups, publish findings, and help advance the formal specification."
-**Problem**: "Formal specification" is heavy.
-**Fix**: "Join working groups, publish findings, and help advance the standard."
-
-### 10. CTA subtitle (CTASection.tsx, line 43)
-**Current**: "Join a growing community of engineers, researchers, and builders advancing the open data standard."
-**Problem**: "advancing the open data standard" — slightly redundant with context.
-**Fix**: "Engineers, researchers, and builders working on the open data standard."
-
-### 11. Featured Projects — UOR MCP (featured-projects.ts, line 26)
-**Current**: "A Model Context Protocol server that gives any LLM access to the UOR kernel. Every response becomes content-addressed, verified, and auditable."
-**Problem**: "Model Context Protocol," "LLM," "content-addressed" — three jargon terms in two sentences.
-**Fix**: "A server that connects AI models to the UOR kernel. Every response is verified and auditable."
-
-### 12. Featured Projects — Atomic Language Model (featured-projects.ts, line 19)
-**Current**: "A language model built on formal grammar rules rather than statistical prediction. Every output is traceable to precise, well-defined operations."
-**Problem**: "Formal grammar rules" and "statistical prediction" are academic.
-**Fix**: "A language model where every output follows defined rules and is fully traceable — no black boxes."
-
-### 13. About — What We Do cards (about-cards.ts)
-**Current Framework**: "We research and publish open data standards and protocols that anyone can build on."
-**Verdict**: Clean. Keep.
-**Current Community**: "A shared space for discussion, collaboration, and joint research across disciplines."
-**Problem**: "Across disciplines" is filler.
-**Fix**: "A shared space for discussion, collaboration, and joint research."
-**Current Launchpad**: "A structured path for open-source projects to grow from early ideas to production-ready tools."
-**Verdict**: Clean. Keep.
+### 7. Large Hero with Single Focal Point
+One big headline + one large visual. No subtitle clutter, no multiple CTAs competing.
 
 ---
 
-## Files to modify
+## What UOR Already Does Well (Keep)
+- Pill navigation (matches Foresight exactly)
+- Galaxy animation as hero focal point
+- DM Sans + Playfair Display font pairing (similar editorial quality)
+- Dark section alternation for rhythm
+- Golden ratio proportional system
+
+## What to Change
+
+### Step 1: Shift Hero Copy to Left-Aligned Editorial Style
+Currently UOR hero text is centered. Foresight uses left-aligned headlines with body text at ~60% width. Change the hero copy block to left-aligned within the container, letting the galaxy remain centered above.
+
+### Step 2: Increase Section Vertical Spacing
+Foresight sections breathe with 100-140px vertical padding. UOR currently uses `py-10 md:py-20` (40-80px). Increase to `py-16 md:py-28` across IntroSection, PillarsSection, HighlightsSection, and CTASection.
+
+### Step 3: Soften Card Styling
+Foresight cards are nearly borderless with very subtle background fills. Update card borders from `border-border/60` to `border-border/30` and reduce background opacity. Remove heavy hover shadows in favor of subtle border-color transitions.
+
+### Step 4: Left-Align Section Headers Consistently
+Foresight's page headers are always left-aligned with body text at 60-70% width. Ensure IntroSection, PillarsSection, and other section headers follow this pattern rather than centering.
+
+### Step 5: Refine the Background Gradient
+Foresight uses a consistent ice-blue tint (#e8eff5 range). UOR's `hero-gradient` already trends this way. Ensure the base `--background` value produces a similar cool, soft blue-gray rather than a flat gray.
+
+### Step 6: Simplify the CTA Section
+Foresight's CTAs are understated. The current "Ready to Build?" section has cards + buttons + member grid all in one section. Split the member grid into its own section and reduce visual density of the CTA area.
+
+### Step 7: Highlights Cards -- Cleaner, Less Decorated
+Remove tag pills from highlight cards or make them much subtler. Foresight shows category info as small muted text, not colored badges.
+
+### Step 8: About Page -- Horizontal Team Cards
+Foresight's team cards are horizontal (photo left, name/role right) in a 3-column grid with minimal borders. UOR's About page already uses a similar layout for the board. Ensure consistency.
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `HeroSection.tsx` | Fix subtitle (line 33) |
-| `IntroSection.tsx` | Fix paragraphs 2 and 3 (lines 19, 22) |
-| `pillars.ts` | Tighten all three descriptions |
-| `CTASection.tsx` | Fix Adopters, Researchers, subtitle |
-| `featured-projects.ts` | Fix UOR MCP and Atomic LM descriptions |
-| `about-cards.ts` | Trim Community card |
+| `src/index.css` | Adjust `--background` to slightly cooler/lighter ice-blue; soften `--border` opacity; increase default section padding |
+| `src/modules/landing/components/HeroSection.tsx` | Left-align copy block; simplify to single headline + single paragraph + single CTA |
+| `src/modules/landing/components/IntroSection.tsx` | Increase vertical padding; ensure left-aligned editorial layout |
+| `src/modules/landing/components/PillarsSection.tsx` | Increase padding; soften card/divider borders |
+| `src/modules/landing/components/HighlightsSection.tsx` | Soften tag styling; increase section spacing; subtler card borders |
+| `src/modules/landing/components/CTASection.tsx` | Increase breathing room; soften card borders; separate team grid spacing |
+| `src/modules/landing/components/ProjectsShowcase.tsx` | Soften card borders and hover states |
+| `src/modules/core/pages/AboutPage.tsx` | Increase section padding for more breathing room |
 
-No structural changes. No new files. Pure copy edits.
+## Summary
+
+The core philosophy: **more air, less decoration, left-aligned editorial confidence, one accent color, whisper-quiet borders.** UOR's existing typography and structure are strong. The changes are primarily about dialing up whitespace, dialing down visual noise, and shifting from centered layouts to left-aligned editorial positioning where appropriate.
 
