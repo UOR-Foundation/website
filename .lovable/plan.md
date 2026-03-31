@@ -1,25 +1,39 @@
 
 
-# De-clutter Hero Text Block
+# Rewrite Intro Section Copy
 
-## Observation
+## Analysis
 
-The current text block beneath the galaxy has all four elements (subtitle, heading, description, CTA) compressed with minimal vertical gaps. The `clamp()` values for margins between them are too tight (e.g., `0.25rem` min for subtitle margin, `0.4rem` for description, `0.5rem` for CTA). This creates a visually dense, cluttered feel.
+Studied CNCF, Rust, Signal, and Apache Foundation messaging. The pattern that earns developer trust:
 
-## Changes
+- **CNCF**: One declarative sentence defining what they do, then proof (project counts, governance facts).
+- **Rust**: Three concrete properties (Performance, Reliability, Productivity) — each one sentence of mechanism, one of outcome.
+- **Signal**: "No ads. No trackers. No kidding." — blunt, factual, zero fluff.
 
-### `src/modules/landing/components/HeroSection.tsx`
+The current UOR intro uses vague benefit language ("everything changes", "no middlemen, no gatekeepers") that sounds like marketing rather than specification. A skeptical developer wants to know *what it is*, *how it works*, and *why it matters* — in that order, stated as facts.
 
-Increase the vertical breathing room between each text element in Row 3:
+## Proposed Copy
 
-| Element | Current spacing | New spacing | Rationale |
-|---------|----------------|-------------|-----------|
-| "Universal Data Layer" bottom margin | `mb-[clamp(0.25rem,0.6vh,0.5rem)]` | `mb-[clamp(0.5rem,1.2vh,1rem)]` | More separation from heading |
-| Heading `<h1>` line-height | `leading-[1.12]` | `leading-[1.18]` | Slightly more open heading lines |
-| Description top margin | `mt-[clamp(0.4rem,1vh,1rem)]` | `mt-[clamp(0.75rem,1.8vh,1.5rem)]` | Clear gap between heading and body |
-| Description font size | `text-[clamp(0.875rem,1.1vw,1.25rem)]` | `text-base` | Consistent with design system; less visual weight |
-| CTA top margin | `mt-[clamp(0.5rem,1.2vh,1.5rem)]` | `mt-[clamp(1rem,2vh,2rem)]` | Generous space before the button |
-| Row 3 bottom padding | `pb-[clamp(1.5rem,4vh,3rem)]` | `pb-[clamp(2rem,5vh,4rem)]` | More floor space so CTA doesn't feel cramped at the edge |
+**Label**: `INTRODUCING UOR` (unchanged)
 
-The galaxy size stays as-is since it looks good. These are purely spacing refinements to the copy block to let each element breathe.
+**Paragraph 1** (What + How — the bold lead states the mechanism):
+
+> **Every piece of data gets a permanent address derived from its content, not its location.** Identical content always resolves to the same identifier. References don't break when data moves. Any node can verify what it received independently — no round-trip, no central authority.
+
+**Paragraph 2** (Why — the consequence, stated as fact):
+
+> The result is infrastructure where integrity is structural, not bolted on. Scientists, developers, and institutions can build on a shared addressing layer that is open, auditable, and mathematically grounded.
+
+**CTA**: `About The Foundation →` (unchanged)
+
+**Footer line**: `Open source · Vendor-neutral · 501(c)(3) nonprofit · All specifications on GitHub` (unchanged)
+
+## Technical Changes
+
+**File**: `src/modules/landing/components/IntroSection.tsx`
+
+- Replace lines 13–21 (the two `<p>` elements) with the new copy above.
+- Keep all surrounding structure, classes, animations, dividers, CTA link, and ecosystem footer exactly as-is.
+
+No other files change.
 
