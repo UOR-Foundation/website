@@ -8,7 +8,7 @@ const HeroSection = () => {
       <div className="h-[5rem] md:h-[5rem]" />
 
       {/* Row 2: Galaxy — bounded, clipped, centered (φ upper section) */}
-      <div className="flex items-center justify-center overflow-hidden min-h-0 py-[clamp(0.25rem,1vh,1rem)] md:py-[clamp(1.5rem,4vh,4rem)]">
+      <div className="flex items-center justify-center overflow-hidden min-h-0 py-0 md:py-[clamp(1.5rem,4vh,4rem)]">
         <div
           className="w-[min(34svh,68vw)] h-[min(34svh,68vw)] md:w-[min(40svh,58vw)] md:h-[min(40svh,58vw)] relative rounded-full overflow-hidden animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
