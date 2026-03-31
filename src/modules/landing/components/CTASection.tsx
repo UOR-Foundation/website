@@ -100,8 +100,8 @@ const CTASection = () => {
         </div>
 
         {/* Members Grid */}
-        <div className="h-px w-full bg-border/40 mt-16 md:mt-24" />
-        <div className="mt-12 md:mt-20 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-14">
+        <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
+        <div className="mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-10">
           {teamMembers.map((member, index) => (
             <a
               key={member.name}

@@ -7,7 +7,7 @@ const IntroSection = () => {
         </p>
         <div className="h-px w-full bg-section-dark-foreground/8" />
         <div
-          className="py-10 md:py-20 max-w-3xl animate-fade-in-up opacity-0"
+          className="py-8 md:py-14 max-w-3xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.15s" }}
         >
           <p className="text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.9]">
