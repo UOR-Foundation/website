@@ -56,65 +56,8 @@ const About = () => {
             </div>
           </div>
 
-          {/* Governance Board */}
-          <div>
-            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
-            <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
-              Governance Board
-            </h2>
-            <p
-              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-3xl animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.25s" }}
-            >
-              A five-member board serving three-year terms. All governance rules are published on{" "}
-              <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-              {governanceBoard.map((member, idx) => (
-                <a
-                  key={member.name}
-                  href={member.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative rounded-2xl border border-border bg-card overflow-hidden flex flex-row items-stretch min-h-[11rem] transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${0.3 + idx * 0.06}s` }}
-                >
-                  {/* Text content */}
-                  <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
-                          {member.name}
-                        </h4>
-                        <Linkedin size={13} className="text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
-                      </div>
-                      <div className="h-px w-10 bg-border/60 my-2.5" />
-                      <p className="text-sm font-medium text-primary font-body leading-snug">
-                        {member.role}
-                      </p>
-                      {member.bio && (
-                        <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
-                          {member.bio}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {/* Photo */}
-                  <div className="w-28 md:w-32 shrink-0 relative overflow-hidden">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="absolute inset-0 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
-                      loading="lazy"
-                    />
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
+          {/* Governance Board — compact community strip */}
+          <GovernanceBoardStrip />
 
           {/* Resources */}
           <div>
