@@ -280,7 +280,7 @@ const Projects = () => {
                       }`}>
                         <StageIcon size={20} />
                       </div>
-                      <span className="text-xs font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
+                      <span className="text-sm font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
                         Stage {idx + 1}
                       </span>
                     </div>
