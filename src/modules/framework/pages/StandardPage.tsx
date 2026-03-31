@@ -278,7 +278,7 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
