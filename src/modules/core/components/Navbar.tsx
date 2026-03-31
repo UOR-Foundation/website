@@ -25,6 +25,16 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
@@ -35,15 +45,14 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           : "bg-transparent"
       }`}
     >
-      {/* Golden ratio: 72px mobile (48 × φ ≈ 77, rounded to 72 for grid), 96px desktop */}
       <div className="container flex items-center justify-between h-[4.5rem] md:h-24">
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2.5 group">
           <img 
             src={uorIcon} 
             alt="UOR Foundation" 
-            className={`w-7 h-7 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark ? "invert brightness-[100]" : ""}`} 
+            className={`w-9 h-9 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark ? "invert brightness-[100]" : ""}`} 
           />
-          <span className={`font-display text-[0.875rem] md:text-base font-semibold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+          <span className={`font-display text-[0.9375rem] md:text-base font-semibold tracking-tight ${isDark ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
@@ -81,57 +90,68 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90"
+          className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90 relative z-[60]"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu — full-screen overlay for crisp touch targets */}
+      {/* Full-screen mobile menu overlay */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
-          mobileOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden fixed inset-0 top-[4.5rem] z-50 transition-all duration-300 ease-out ${
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="bg-background/98 backdrop-blur-xl border-b border-border px-5 py-3 space-y-1 pb-[env(safe-area-inset-bottom,0.75rem)]">
-          <nav className="flex flex-col gap-0.5">
+        <div className="absolute inset-0 bg-background/98 backdrop-blur-xl" />
+        <div
+          className={`relative h-full flex flex-col px-6 pt-6 pb-[env(safe-area-inset-bottom,1.5rem)] transition-transform duration-300 ease-out ${
+            mobileOpen ? "translate-y-0" : "-translate-y-4"
+          }`}
+        >
+          {/* Nav links */}
+          <nav className="flex flex-col gap-1 flex-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-3 px-4 rounded-xl text-base font-medium font-body text-center transition-colors ${
+                className={`py-4 px-4 rounded-xl text-lg font-medium font-body transition-colors ${
                   location.pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground active:bg-muted"
+                    ? "text-primary border-l-2 border-primary bg-primary/5"
+                    : "text-foreground/80 active:bg-muted"
                 }`}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-          <div className="pt-1 pb-1 flex flex-col gap-2">
+
+          {/* Bottom section — anchored */}
+          <div className="mt-auto pt-6 flex flex-col gap-4 border-t border-border/30">
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="py-3 px-4 rounded-xl text-base font-medium font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
+              className="py-3.5 px-4 rounded-xl text-base font-semibold font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Heart size={15} fill="currentColor" strokeWidth={0} />
+              <Heart size={16} fill="currentColor" strokeWidth={0} />
               Donate
             </button>
-            <div className="flex items-center justify-center gap-5 py-2">
+            <div className="flex items-center justify-center gap-6 py-3">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={20} />
+                <DiscordIcon size={22} />
               </a>
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={20} />
+                <Github size={22} />
               </a>
               <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={20} />
+                <Linkedin size={22} />
               </a>
             </div>
           </div>
         </div>
       </div>
+
       <DonatePopup open={donateOpen} onOpenChange={setDonateOpen} />
     </header>
   );
