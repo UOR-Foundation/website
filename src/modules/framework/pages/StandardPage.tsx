@@ -206,7 +206,7 @@ const Standard = () => {
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-10">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
