@@ -55,14 +55,14 @@ const About = () => {
             </div>
           </div>
 
-          {/* Board of Directors */}
+          {/* Governance Board */}
           <div>
             <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
               className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
-              Board of Directors
+              Governance Board
             </h2>
             <p
               className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-3xl animate-fade-in-up opacity-0"
@@ -71,46 +71,46 @@ const About = () => {
               A five-member board serving three-year terms. All governance rules are published on{" "}
               <a href="https://github.com/UOR-Foundation/.github" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">GitHub</a>.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {governanceBoard.map((member, idx) => (
-                <div
+                <a
                   key={member.name}
-                  className="flex items-center gap-5 p-4 md:p-5 rounded-xl border border-border/30 bg-card animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${0.3 + idx * 0.08}s` }}
+                  href={member.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative rounded-2xl border border-border bg-card overflow-hidden flex flex-row items-stretch min-h-[11rem] transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${0.3 + idx * 0.06}s` }}
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden rounded-lg">
+                  {/* Text content */}
+                  <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
+                          {member.name}
+                        </h4>
+                        <Linkedin size={13} className="text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                      </div>
+                      <div className="h-px w-10 bg-border/60 my-2.5" />
+                      <p className="text-sm font-medium text-primary font-body leading-snug">
+                        {member.role}
+                      </p>
+                      {member.bio && (
+                        <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
+                          {member.bio}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Photo */}
+                  <div className="w-28 md:w-32 shrink-0 relative overflow-hidden">
                     <img
                       src={member.image}
                       alt={member.name}
-                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                      className="absolute inset-0 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
                       loading="lazy"
                     />
                   </div>
-                  <div className="flex flex-col justify-center min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h4 className="font-display text-base md:text-lg font-semibold text-foreground leading-tight">
-                        {member.name}
-                      </h4>
-                      <a
-                        href={member.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground/30 hover:text-primary transition-colors shrink-0"
-                        aria-label={`${member.name} on LinkedIn`}
-                      >
-                        <Linkedin size={13} />
-                      </a>
-                    </div>
-                    <p className="text-sm font-medium text-primary/80 font-body">
-                      {member.role}
-                    </p>
-                    {member.bio && (
-                      <p className="text-base text-muted-foreground/70 font-body leading-[1.6] mt-2">
-                        {member.bio}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                </a>
               ))}
             </div>
           </div>
