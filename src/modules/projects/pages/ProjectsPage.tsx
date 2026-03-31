@@ -351,7 +351,7 @@ const Projects = () => {
       </section>
 
       {/* Submit Form */}
-      <section id="submit" className="section-dark py-20 md:py-28">
+      <section id="submit" className="section-dark py-14 md:py-20">
         <div className="container max-w-4xl">
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
