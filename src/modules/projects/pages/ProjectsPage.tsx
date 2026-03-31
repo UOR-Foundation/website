@@ -237,7 +237,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section id="projects-list" className="py-16 md:py-28 bg-background scroll-mt-28">
+      <section id="projects-list" className="py-12 md:py-20 bg-background scroll-mt-28">
         <div className="container max-w-6xl space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
