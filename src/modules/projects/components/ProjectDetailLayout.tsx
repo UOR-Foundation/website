@@ -342,7 +342,7 @@ const ProjectDetailLayout = ({
           key={section.heading}
           className={`py-8 md:py-14 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
         >
-          <div className="container max-w-4xl">
+          <div className="container max-w-6xl">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
               {section.heading}
             </h2>
