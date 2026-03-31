@@ -98,7 +98,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
         />
       </button>
       {open && (
-        <div className="px-6 pb-6 md:px-8 md:pb-8">
+        <div className="px-4 pb-4 md:px-8 md:pb-8">
           {children}
         </div>
       )}

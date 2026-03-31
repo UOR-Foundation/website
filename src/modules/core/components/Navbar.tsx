@@ -94,7 +94,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           mobileOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 space-y-1">
+        <div className="bg-background/98 backdrop-blur-xl border-b border-border px-5 py-3 space-y-1 pb-[env(safe-area-inset-bottom,0.75rem)]">
           <nav className="flex flex-col gap-0.5">
             {navItems.map((item) => (
               <Link

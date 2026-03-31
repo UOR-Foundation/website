@@ -76,7 +76,7 @@ const Research = () => {
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
+          <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2.5 sm:gap-3 mb-10 pb-2 sm:pb-0 -mx-1.5 px-1.5 sm:mx-0 sm:px-0 justify-start sm:justify-center scrollbar-hide">
             {researchCategories.map((cat, index) => {
               const isSelected = cat.slug === selectedCategory;
               const isDisabled = !cat.active;

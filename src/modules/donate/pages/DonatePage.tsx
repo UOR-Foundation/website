@@ -141,7 +141,7 @@ const Donate = () => {
 
       {/* Ways to donate */}
       <section className="py-8 md:py-14 section-dark">
-        <div className="container max-w-4xl">
+        <div className="container max-w-6xl">
           <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">
             Ways to donate
           </h2>

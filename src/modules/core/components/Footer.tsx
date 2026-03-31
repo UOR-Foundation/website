@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="section-dark py-8 md:py-14">
       <div className="container">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           <div className="sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="relative w-7 h-7 flex items-center justify-center footer-icon-glow">
