@@ -81,7 +81,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
     <div className="border border-border rounded-2xl bg-card overflow-hidden">
       <button
         onClick={() => canToggle && setOpen(!open)}
-        className={`w-full flex items-center gap-3 px-6 py-5 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
+        className={`w-full flex items-center gap-3 px-4 py-4 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
       >
         <span className={`w-3 h-3 rounded-full ${dotColor}`} />
         <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
