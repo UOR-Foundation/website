@@ -1,83 +1,82 @@
 
 
-# Foresight Institute Design Analysis and UOR Alignment Plan
+# Remove Redundancy and Sharpen Copy Across the Website
 
-## What Makes Foresight Feel Crisp, Clear, and Futuristic
+## Problem Summary
 
-After analyzing foresight.org across multiple pages, here are the defining design patterns:
+After a full audit, the same core message — "every piece of data gets a permanent address based on what it contains" — appears in nearly identical wording in **six different places** (Hero, IntroSection, About hero, Donate hero, Framework "The Problem," and pillar descriptions). Several section headers repeat ("What We Do" appears on both the landing page and About page), and some paragraphs add words without adding meaning.
 
-### 1. Extreme Whitespace and Breathing Room
-Foresight uses generous padding (120px+ vertical sections), wide margins, and lets content float in space. The background is a soft ice-blue (#EDF2F7-ish), not stark white. Sections feel unhurried.
+## Changes
 
-### 2. Left-Aligned, Editorial Typography
-Headlines are large serif type, left-aligned (not centered), creating a magazine/editorial feel. Body text sits at roughly 60% of the page width (left column), leaving the right side open. This asymmetry feels sophisticated and intentional.
+### 1. Landing Page — Eliminate the Echo Between Hero and IntroSection
 
-### 3. Minimal Borders, Soft Cards
-Cards use very subtle borders (nearly invisible) with soft rounded corners and slight background tints. No heavy shadows. The overall effect is "objects floating on glass."
+**HeroSection.tsx**: The subtitle already nails the mission. Keep as-is.
 
-### 4. Full-Width Horizontal Rules as Section Dividers
-Clean 1px lines span the full container width to separate content zones. No ornate dividers.
+**IntroSection.tsx**: The bold opening sentence is a near-verbatim copy of the hero subtitle. Rewrite the intro to advance the narrative instead of restating it:
+- Bold line → Explain *why* this matters (the consequence, not the mechanism)
+- Second paragraph → Keep, it's additive ("No broken links, no middlemen, no gatekeepers")
+- Third paragraph → Currently restates the hero again. Cut or replace with a forward-looking line about who benefits.
 
-### 5. Pill Navigation
-Their navbar uses rounded pill buttons with thin borders, exactly like UOR already has. This is already aligned.
+### 2. Landing Page — PillarsSection Label
 
-### 6. Muted Color Palette with One Accent
-Mostly grayscale + ice blue background. Green is the single accent color (Donate button, status dots). Very restrained.
+**PillarsSection.tsx**: The eyebrow says "What We Do" — same label as the About page section. Change to "How We Work" or "Three Pillars" to differentiate.
 
-### 7. Large Hero with Single Focal Point
-One big headline + one large visual. No subtitle clutter, no multiple CTAs competing.
+**pillars.ts**: Tighten descriptions:
+- "UOR Framework" → Remove "Every piece of digital content deserves a permanent, verifiable address" (said in hero). Start with what the spec actually delivers.
+- "Research Community" → Remove "Good standards come from open collaboration" (generic). Lead with the specific activity.
+- "Project Launchpad" → Remove "Real adoption starts with real projects" (truism). Lead with what the launchpad provides.
 
----
+### 3. Landing Page — CTASection
 
-## What UOR Already Does Well (Keep)
-- Pill navigation (matches Foresight exactly)
-- Galaxy animation as hero focal point
-- DM Sans + Playfair Display font pairing (similar editorial quality)
-- Dark section alternation for rhythm
-- Golden ratio proportional system
+**CTASection.tsx**: The subtitle "Engineers, researchers, and builders working on the open data framework" is vague. Replace with a clear call: "Pick a path and get started."
 
-## What to Change
+### 4. About Page Hero
 
-### Step 1: Shift Hero Copy to Left-Aligned Editorial Style
-Currently UOR hero text is centered. Foresight uses left-aligned headlines with body text at ~60% width. Change the hero copy block to left-aligned within the container, letting the galaxy remain centered above.
+**AboutPage.tsx**: The hero paragraph repeats the mission statement verbatim. Replace with a short, distinct sentence about the organization (when founded, what kind of org, where it operates) rather than re-explaining UOR.
 
-### Step 2: Increase Section Vertical Spacing
-Foresight sections breathe with 100-140px vertical padding. UOR currently uses `py-10 md:py-20` (40-80px). Increase to `py-16 md:py-28` across IntroSection, PillarsSection, HighlightsSection, and CTASection.
+### 5. About Page — "What We Do" Cards
 
-### Step 3: Soften Card Styling
-Foresight cards are nearly borderless with very subtle background fills. Update card borders from `border-border/60` to `border-border/30` and reduce background opacity. Remove heavy hover shadows in favor of subtle border-color transitions.
+**about-cards.ts**: These three cards (Framework, Community, Project Launchpad) duplicate the pillars on the landing page. Rewrite the descriptions to focus on *organizational activities* rather than *what UOR is* — e.g., "We maintain the specification and publish updates" rather than "We research and publish open data frameworks and protocols that anyone can build on."
 
-### Step 4: Left-Align Section Headers Consistently
-Foresight's page headers are always left-aligned with body text at 60-70% width. Ensure IntroSection, PillarsSection, and other section headers follow this pattern rather than centering.
+### 6. Framework Page — "The Problem" Section
 
-### Step 5: Refine the Background Gradient
-Foresight uses a consistent ice-blue tint (#e8eff5 range). UOR's `hero-gradient` already trends this way. Ensure the base `--background` value produces a similar cool, soft blue-gray rather than a flat gray.
+**StandardPage.tsx**: The second paragraph restates the hero. Cut "Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system." — the hero already said this. Keep only the contrast ("Today's data lives in silos") and the solution concept ("identity based on content").
 
-### Step 6: Simplify the CTA Section
-Foresight's CTAs are understated. The current "Ready to Build?" section has cards + buttons + member grid all in one section. Split the member grid into its own section and reduce visual density of the CTA area.
+### 7. Donate Page Hero
 
-### Step 7: Highlights Cards -- Cleaner, Less Decorated
-Remove tag pills from highlight cards or make them much subtler. Foresight shows category info as small muted text, not colored badges.
+**DonatePage.tsx**: "Your donation funds an open standard that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers." — Remove the first sentence (said everywhere). Lead with impact: what donations actually fund (development, infrastructure, community).
 
-### Step 8: About Page -- Horizontal Team Cards
-Foresight's team cards are horizontal (photo left, name/role right) in a 3-column grid with minimal borders. UOR's About page already uses a similar layout for the board. Ensure consistency.
+### 8. Research Page — Redundant Headers
 
----
+**ResearchPage.tsx**:
+- The page title is "Our Community," and the first section heading inside is also "Community." Remove the redundant inner h2 or change it to something specific like "Research Areas."
+- The Join CTA section ("Whether you are a researcher, developer, or supporter...") repeats the same audience segmentation as the landing page CTA. Shorten to one direct sentence.
+
+### 9. Projects Page — Double Explanation of Review Timeline
+
+**ProjectsPage.tsx**: Both the "How to Submit" cards and the "Submit for Sandbox Review" form intro mention the 3-week review window. Remove it from one place (keep it in the form intro since that's where users act).
+
+### 10. Data Files — Tighten Descriptions
+
+**featured-projects.ts**: Atlas Embeddings description is wordy. Tighten: "Research showing five complex mathematical structures share a single origin, revealing deeper order."
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/index.css` | Adjust `--background` to slightly cooler/lighter ice-blue; soften `--border` opacity; increase default section padding |
-| `src/modules/landing/components/HeroSection.tsx` | Left-align copy block; simplify to single headline + single paragraph + single CTA |
-| `src/modules/landing/components/IntroSection.tsx` | Increase vertical padding; ensure left-aligned editorial layout |
-| `src/modules/landing/components/PillarsSection.tsx` | Increase padding; soften card/divider borders |
-| `src/modules/landing/components/HighlightsSection.tsx` | Soften tag styling; increase section spacing; subtler card borders |
-| `src/modules/landing/components/CTASection.tsx` | Increase breathing room; soften card borders; separate team grid spacing |
-| `src/modules/landing/components/ProjectsShowcase.tsx` | Soften card borders and hover states |
-| `src/modules/core/pages/AboutPage.tsx` | Increase section padding for more breathing room |
+| File | Change |
+|------|--------|
+| `src/modules/landing/components/IntroSection.tsx` | Rewrite opening to advance narrative, not restate hero |
+| `src/modules/landing/components/PillarsSection.tsx` | Change "What We Do" eyebrow |
+| `src/modules/landing/components/CTASection.tsx` | Sharpen subtitle |
+| `src/data/pillars.ts` | Tighten descriptions, remove repeated phrases |
+| `src/data/about-cards.ts` | Rewrite to focus on org activities |
+| `src/data/featured-projects.ts` | Tighten Atlas description |
+| `src/modules/core/pages/AboutPage.tsx` | Replace hero paragraph |
+| `src/modules/framework/pages/StandardPage.tsx` | Trim redundant sentence in "The Problem" |
+| `src/modules/donate/pages/DonatePage.tsx` | Rewrite hero paragraph for impact |
+| `src/modules/community/pages/ResearchPage.tsx` | Fix redundant headers, trim Join CTA |
+| `src/modules/projects/pages/ProjectsPage.tsx` | Remove duplicate 3-week mention |
 
-## Summary
+## Guiding Principle
 
-The core philosophy: **more air, less decoration, left-aligned editorial confidence, one accent color, whisper-quiet borders.** UOR's existing typography and structure are strong. The changes are primarily about dialing up whitespace, dialing down visual noise, and shifting from centered layouts to left-aligned editorial positioning where appropriate.
+Every section should move the reader forward. If a sentence says the same thing as another page (or another section on the same page), it gets rewritten or removed. The mission statement appears once in the hero. Everything else builds on it.
 
