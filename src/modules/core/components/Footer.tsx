@@ -1,59 +1,79 @@
 import { Link } from "react-router-dom";
+import { Github, Linkedin } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
-import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_GOVERNANCE_URL, GITHUB_RESEARCH_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
+import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
+import { navItems } from "@/data/nav-items";
+import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
 
 const Footer = () => {
   return (
-    <footer className="section-dark py-8 md:py-14">
-      <div className="container">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-          <div className="sm:col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="relative w-7 h-7 flex items-center justify-center footer-icon-glow">
-                <img src={uorIcon} alt="UOR Foundation" className="w-7 h-7 object-contain invert relative z-10" />
-              </div>
-              <span className="font-display text-base font-semibold">The UOR Foundation</span>
+    <footer className="section-dark py-10 md:py-14">
+      <div className="container max-w-6xl">
+        {/* Main row: logo left, nav + socials right */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5">
+            <img
+              src={uorIcon}
+              alt="UOR Foundation"
+              className="w-7 h-7 object-contain invert relative z-10"
+            />
+            <span className="font-display text-xl md:text-2xl font-bold tracking-tight text-section-dark-foreground">
+              The UOR Foundation
+            </span>
+          </Link>
+
+          {/* Nav links + social icons */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
+            <nav className="flex items-center gap-5 md:gap-6">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="text-section-dark-foreground/55 hover:text-section-dark-foreground transition-colors duration-300 font-body text-sm"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-3">
+              <a
+                href={GITHUB_ORG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                aria-label="GitHub"
+              >
+                <Github size={16} />
+              </a>
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                aria-label="Discord"
+              >
+                <DiscordIcon className="w-4 h-4" />
+              </a>
+              <a
+                href={LINKEDIN_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={16} />
+              </a>
             </div>
-            <p className="text-section-dark-foreground/55 font-body max-w-sm leading-relaxed text-base">
-              Content-addressed infrastructure for the open web.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Foundation</h4>
-            <nav className="flex flex-col gap-3">
-              <Link to="/about" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">About</Link>
-              <Link to="/standard" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Framework</Link>
-              <Link to="/projects" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Projects</Link>
-              <a href={GITHUB_GOVERNANCE_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Governance</a>
-            </nav>
-          </div>
-
-          <div>
-            <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Resources</h4>
-            <nav className="flex flex-col gap-3">
-              <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Getting Started</a>
-              <a href={GITHUB_RESEARCH_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Research Papers</a>
-            </nav>
-          </div>
-
-          <div>
-            <h4 className="font-body text-sm font-semibold mb-5 tracking-widest uppercase text-section-dark-foreground/40">Community</h4>
-            <nav className="flex flex-col gap-3">
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">GitHub</a>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Discord</a>
-              <Link to="/research" className="text-section-dark-foreground/60 hover:text-section-dark-foreground transition-colors duration-300 font-body text-base">Community</Link>
-            </nav>
           </div>
         </div>
 
-        <div className="h-px w-full bg-section-dark-foreground/10 mt-10 md:mt-14 mb-5 md:mb-6" />
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-section-dark-foreground/30 text-base font-body">
-            © {new Date().getFullYear()} UOR Foundation. All rights reserved.
-          </p>
-        </div>
+        {/* Divider + copyright */}
+        <div className="h-px w-full bg-section-dark-foreground/8 mt-8 md:mt-10 mb-4 md:mb-5" />
+        <p className="text-section-dark-foreground/25 text-sm font-body text-right">
+          © {new Date().getFullYear()} The UOR Foundation
+        </p>
       </div>
     </footer>
   );
