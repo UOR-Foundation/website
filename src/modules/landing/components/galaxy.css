@@ -36,13 +36,18 @@
 }
 
 .circle {
-  animation: 18s galaxy cubic-bezier(0.4, 0, 0.2, 1) infinite reverse;
+  animation: 24s galaxy cubic-bezier(0.4, 0, 0.2, 1) infinite reverse;
+}
+
+.stars:nth-child(even) .circle {
+  animation-duration: 30s;
 }
 
 .dot {
   width: 20px;
   height: 20px;
   border: 5px dotted #fff;
+  animation: glow 6s ease-in-out infinite;
 }
 
 
