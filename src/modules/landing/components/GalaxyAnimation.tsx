@@ -1,8 +1,7 @@
 import "@/modules/landing/components/galaxy.css";
 
 /**
- * Galaxy animation — optimized for fewer DOM nodes.
- * 2 galaxies × 8 stars × 15 dots = 240 nodes.
+ * Galaxy animation — 2 galaxies × 20 stars × 35 dots = 1400 nodes.
  */
 const GalaxyAnimation = () => {
   return (
@@ -10,10 +9,10 @@ const GalaxyAnimation = () => {
       <div className="galaxy-wrapper">
         <div>
           <div className="galaxy">
-            {Array.from({ length: 8 }, (_, j) => (
+            {Array.from({ length: 20 }, (_, j) => (
               <div className="stars" key={j}>
                 <div className="circle">
-                  {Array.from({ length: 15 }, (_, k) => (
+                  {Array.from({ length: 35 }, (_, k) => (
                     <div className="dot" key={k} />
                   ))}
                 </div>
@@ -21,10 +20,10 @@ const GalaxyAnimation = () => {
             ))}
           </div>
           <div className="galaxy">
-            {Array.from({ length: 8 }, (_, j) => (
+            {Array.from({ length: 20 }, (_, j) => (
               <div className="stars" key={j}>
                 <div className="circle">
-                  {Array.from({ length: 15 }, (_, k) => (
+                  {Array.from({ length: 35 }, (_, k) => (
                     <div className="dot" key={k} />
                   ))}
                 </div>
