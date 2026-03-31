@@ -44,7 +44,7 @@ const CTASection = () => {
         </p>
 
         {/* Three-path audience routing */}
-        <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
+        <div className="mt-8 md:mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
           {paths.map((path, index) => {
             const Icon = path.icon;
             const linkProps = path.external
