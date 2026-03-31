@@ -2,7 +2,7 @@ const MissionSection = () => {
   return (
     <section className="section-dark py-8 md:py-14">
       <div className="container max-w-6xl">
-        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-section-dark-foreground/50 mb-4">
+        <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-section-dark-foreground/60 mb-4">
           Our Mission
         </p>
         <div className="h-px w-full bg-section-dark-foreground/8" />

@@ -14,7 +14,7 @@ const HighlightsSection = () => {
   return (
     <section className="py-8 md:py-14 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
+        <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
           Community Highlights
         </p>
 
