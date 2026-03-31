@@ -32,7 +32,7 @@ const HeroSection = () => {
           <span className="block">System for Information.</span>
         </h1>
         <div
-          className="mt-[clamp(1.5rem,3.5vh,3rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
+          className="mt-[clamp(2rem,4.5vh,4rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.6s" }}
         >
           <a href="/standard" className="btn-primary inline-flex items-center gap-2">
