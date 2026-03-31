@@ -8,11 +8,17 @@
   border-radius: 50%;
 }
 .hero-galaxy-container {
-  min-height: 350px;
+  min-height: 200px;
   display: grid;
 }
+@media screen and (max-width: 768px) {
+  .hero-galaxy-container { min-height: 175px; }
+}
+@media screen and (max-width: 430px) {
+  .hero-galaxy-container { min-height: 145px; }
+}
 .galaxy-wrapper {
-  transform: translate(0px, 0px);
+  transform: translate(0px, 0px) scale(0.55);
 }
 
 .galaxy:nth-child(1) {
