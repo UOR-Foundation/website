@@ -7,7 +7,7 @@ export const whatWeDoCards = [
   {
     iconKey: "Users",
     title: "Community",
-    desc: "We coordinate working groups in mathematics, AI, and systems engineering — all proposals and results published on GitHub.",
+    desc: "We coordinate working groups in mathematics, AI, and systems engineering. All proposals and results published on GitHub.",
   },
   {
     iconKey: "Rocket",
