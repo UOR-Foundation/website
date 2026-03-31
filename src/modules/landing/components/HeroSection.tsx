@@ -15,7 +15,7 @@ const HeroSection = () => {
       {/* Row 2: Galaxy — bounded, clipped, centered */}
       <div className="flex items-center justify-center overflow-hidden min-h-0 py-[clamp(1.5rem,5vh,4rem)]">
         <div
-          className="w-[min(46svh,65vw)] h-[min(46svh,65vw)] relative rounded-full overflow-hidden animate-fade-in-up opacity-0"
+          className="w-[min(40svh,58vw)] h-[min(40svh,58vw)] relative rounded-full overflow-hidden animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
         >
           <GalaxyAnimation />
