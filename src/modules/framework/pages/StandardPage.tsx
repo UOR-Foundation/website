@@ -251,12 +251,12 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
           </p>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
