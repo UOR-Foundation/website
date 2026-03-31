@@ -31,7 +31,7 @@ const IntroSection = () => {
 
         {/* Ecosystem anchoring */}
         <p
-          className="mt-4 md:mt-5 text-muted-foreground/35 font-body text-sm tracking-wide uppercase animate-fade-in-up opacity-0"
+          className="mt-4 md:mt-5 text-muted-foreground/50 font-body text-sm tracking-wide uppercase animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.5s" }}
         >
           Open source · Vendor-neutral · 501(c)(3) nonprofit · All specifications on GitHub

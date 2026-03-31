@@ -9,7 +9,7 @@ const PillarsSection = () => {
   return (
     <section id="pillars" className="pt-8 md:pt-14 pb-6 md:pb-10 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-5 md:mb-6">
+        <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-5 md:mb-6">
           Get Involved
         </p>
         <div className="h-px w-full bg-border/60" />
