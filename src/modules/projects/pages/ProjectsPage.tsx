@@ -320,7 +320,7 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-16 md:py-28 bg-background border-b border-border/40">
+      <section className="py-12 md:py-20 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-primary font-body mb-4">
