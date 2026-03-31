@@ -1,18 +1,18 @@
 export const whatWeDoCards = [
   {
     iconKey: "BookOpen",
-    title: "Framework",
-    desc: "We maintain the open specification, publish updates, and provide reference implementations.",
+    title: "Specification",
+    desc: "We maintain the formal specification, publish updates, and ship reference implementations that anyone can audit.",
   },
   {
     iconKey: "Users",
     title: "Community",
-    desc: "We host working groups, coordinate research, and run events for contributors worldwide.",
+    desc: "We coordinate working groups in mathematics, AI, and systems engineering — all proposals and results published on GitHub.",
   },
   {
     iconKey: "Rocket",
     title: "Project Launchpad",
-    desc: "We review, mentor, and promote open-source projects from early ideas to production-ready tools.",
+    desc: "We run a three-stage maturity pipeline (Sandbox → Incubation → Graduated) with community review and clear promotion criteria.",
   },
 ];
 

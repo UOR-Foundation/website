@@ -12,12 +12,12 @@ const IntroSection = () => {
         >
           <p className="text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
             <span className="text-section-dark-foreground font-medium">
-              Every piece of data gets a permanent address derived from its content, not its location.
+              Content goes in. A deterministic address comes out.
             </span>{" "}
-            Identical content always resolves to the same identifier. References don't break when data moves. Any node can verify what it received independently — no round-trip, no central authority.
+            The same content always produces the same address, regardless of which node computes it. Verification requires nothing beyond the data itself.
           </p>
           <p className="mt-4 text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
-            The result is infrastructure where integrity is structural, not bolted on. Scientists, developers, and institutions can build on a shared addressing layer that is open, auditable, and mathematically grounded.
+            This gives you tamper-evident references that survive migration, replication, and federation. No coordination protocol, no certificate authority, no single point of failure.
           </p>
           <a
             href="/about"

@@ -18,7 +18,7 @@ export const projects: ProjectData[] = [
   {
     name: "Hologram",
     slug: "hologram",
-    category: "Frontier Technology",
+    category: "Systems",
     description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
@@ -44,7 +44,7 @@ export const projects: ProjectData[] = [
   {
     name: "Atomic Language Model",
     slug: "atomic-language-model",
-    category: "Frontier Technology",
+    category: "Systems",
     description: "A language model where every output follows defined rules and is fully traceable. No black boxes. Fits in under 50 kilobytes.",
     maturity: "Sandbox",
     url: "https://github.com/dkypuros/atomic-lang-model",
