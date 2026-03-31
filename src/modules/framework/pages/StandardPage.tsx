@@ -224,7 +224,7 @@ const Standard = () => {
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Weight</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 How many "active" bits are in the value. This is a measure of complexity: a weight of 0 means empty, a weight of 8 means fully packed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
