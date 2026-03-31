@@ -184,7 +184,7 @@ const Standard = () => {
               Today's data lives in silos. Different formats, systems, and tools that cannot natively understand each other.
             </p>
             <p className="mt-6 text-muted-foreground font-body text-base leading-[1.85] md:leading-[1.9]">
-              UOR replaces location-based identity with <span className="text-foreground font-medium">identity based on content</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system.
+              UOR replaces location-based identity with <span className="text-foreground font-medium">identity based on content</span>. The data itself becomes the address, so verification is built in from the start.
             </p>
           </div>
         </div>

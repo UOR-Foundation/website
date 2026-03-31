@@ -12,14 +12,12 @@ const IntroSection = () => {
         >
           <p className="text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.9]">
             <span className="text-section-dark-foreground font-medium">
-              Every piece of digital content gets a single, permanent address based on what it contains, not where it is stored.
-            </span>
+              When data proves its own identity, everything changes.
+            </span>{" "}
+            Links never break. Copies stay in sync. Any system can verify what it received without calling home.
           </p>
           <p className="mt-5 md:mt-6 text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.9]">
-            Data can be found, verified, and reused across any system. No broken links, no middlemen, no gatekeepers.
-          </p>
-          <p className="mt-6 md:mt-8 text-section-dark-foreground/90 font-body text-base leading-[1.75] md:leading-[1.9] font-medium">
-            The UOR Foundation builds this open framework to make reliable, verifiable data the default, from scientific research to production systems.
+            No middlemen, no gatekeepers. Scientists, developers, and institutions get infrastructure they can trust by default.
           </p>
           <a
             href="/about"

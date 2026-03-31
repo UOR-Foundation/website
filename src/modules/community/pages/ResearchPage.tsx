@@ -69,7 +69,7 @@ const Research = () => {
             Open Research
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Community
+            Research Areas
           </h2>
           <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             Find your discipline, validate ideas, and collaborate on{" "}
@@ -293,7 +293,7 @@ const Research = () => {
             Join the Community
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
-            Whether you are a researcher, developer, or supporter of open data, there is a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+            Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a

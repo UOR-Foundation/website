@@ -65,7 +65,7 @@ const submissionSteps = [
   {
     icon: SearchCheck,
     title: "2. Submit",
-    description: "Fill in the short form below. We review within 3 weeks.",
+    description: "Fill in the short form below with your project details.",
   },
   {
     icon: BadgeCheck,

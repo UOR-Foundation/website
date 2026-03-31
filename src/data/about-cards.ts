@@ -2,17 +2,17 @@ export const whatWeDoCards = [
   {
     iconKey: "BookOpen",
     title: "Framework",
-    desc: "We research and publish open data frameworks and protocols that anyone can build on.",
+    desc: "We maintain the open specification, publish updates, and provide reference implementations.",
   },
   {
     iconKey: "Users",
     title: "Community",
-    desc: "A shared space for discussion, collaboration, and joint research.",
+    desc: "We host working groups, coordinate research, and run events for contributors worldwide.",
   },
   {
     iconKey: "Rocket",
     title: "Project Launchpad",
-    desc: "A structured path for open-source projects to grow from early ideas to production-ready tools.",
+    desc: "We review, mentor, and promote open-source projects from early ideas to production-ready tools.",
   },
 ];
 
