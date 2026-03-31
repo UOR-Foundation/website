@@ -11,7 +11,7 @@ const About = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
+      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-6xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground animate-fade-in-up">
             About
@@ -25,8 +25,8 @@ const About = () => {
         </div>
       </section>
 
-      <section className="py-12 md:py-20 bg-background">
-        <div className="container max-w-6xl space-y-10 md:space-y-16">
+      <section className="py-8 md:py-14 bg-background">
+        <div className="container max-w-6xl space-y-8 md:space-y-12">
 
           {/* What We Do */}
           <div>

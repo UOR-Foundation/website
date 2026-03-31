@@ -40,7 +40,7 @@ const Research = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
+      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
@@ -63,7 +63,7 @@ const Research = () => {
       </section>
 
       {/* Research */}
-      <section id="research" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="research" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Open Research
@@ -174,7 +174,7 @@ const Research = () => {
       </section>
 
       {/* Blog */}
-      <section id="blog" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="blog" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Blog
@@ -219,7 +219,7 @@ const Research = () => {
       </section>
 
       {/* Events */}
-      <section id="events" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="events" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Events
@@ -284,7 +284,7 @@ const Research = () => {
       </section>
 
       {/* Join CTA */}
-      <section id="join" className="section-dark py-12 md:py-20 scroll-mt-28">
+      <section id="join" className="section-dark py-8 md:py-14 scroll-mt-28">
         <div className="container max-w-4xl text-center">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved

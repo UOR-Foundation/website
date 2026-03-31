@@ -83,7 +83,7 @@ const Donate = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-44 pb-12 md:pb-20">
+      <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-4xl">
           <h1
             className="font-display text-4xl md:text-5xl font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
@@ -123,7 +123,7 @@ const Donate = () => {
       </section>
 
       {/* Projects to support */}
-      <section className="py-12 md:py-20 bg-background">
+      <section className="py-8 md:py-14 bg-background">
         <div className="container max-w-4xl">
           <h2
             className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-10 animate-fade-in-up opacity-0"
@@ -140,7 +140,7 @@ const Donate = () => {
       </section>
 
       {/* Ways to donate */}
-      <section className="py-12 md:py-20 section-dark">
+      <section className="py-8 md:py-14 section-dark">
         <div className="container max-w-4xl">
           <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">
             Ways to donate

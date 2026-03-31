@@ -10,7 +10,7 @@ const maturityDotColors: Record<MaturityLevel, string> = {
 
 const ProjectsShowcase = () => {
   return (
-    <section className="section-dark py-12 md:py-20">
+    <section className="section-dark py-8 md:py-14">
       <div className="container max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-10 gap-4">
           <div>
