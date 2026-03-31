@@ -35,7 +35,7 @@ const HeroSection = () => {
           className="mt-[clamp(0.75rem,1.8vh,1.5rem)] text-base text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.45s" }}
         >
-          The UOR Foundation is the neutral custodian of the universal open standard for information addressing. We exist to support the projects building on it.
+          The UOR Foundation is the neutral steward of the open standard for universal information addressing. We exist to support the open-source projects building on it.
         </p>
         <div
           className="mt-[clamp(1rem,2vh,2rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
