@@ -1,6 +1,6 @@
 const IntroSection = () => {
   return (
-    <section id="intro" className="section-dark py-8 md:py-14 scroll-mt-16">
+    <section id="intro" className="py-8 md:py-14 bg-background scroll-mt-16">
       <div className="container max-w-6xl">
         <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-section-dark-foreground/50 mb-4">
           How It Works
