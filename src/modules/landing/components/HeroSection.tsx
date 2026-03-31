@@ -34,7 +34,8 @@ const HeroSection = () => {
           className="font-display text-[clamp(1.75rem,3.6vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.25s" }}
         >
-          Your universal coordinate system for information.
+          <span className="block">Your Universal Coordinate</span>
+          <span className="block">System for Information.</span>
         </h1>
         <p
           className="mt-[clamp(0.75rem,1.8vh,1.5rem)] text-base text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
