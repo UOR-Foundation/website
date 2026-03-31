@@ -1,82 +1,47 @@
 
 
-# Remove Redundancy and Sharpen Copy Across the Website
+# Fix Hero Section: No-Scroll, No-Overlap Layout
 
-## Problem Summary
+## Problem
+The galaxy animation overflows into the text and navbar because the CSS-scaled galaxy has no bounded container. The `flex-[1.618]` wrapper gives it unbounded height, so the galaxy's absolute-positioned dots extend beyond their container. The CTA button is pushed off-screen.
 
-After a full audit, the same core message — "every piece of data gets a permanent address based on what it contains" — appears in nearly identical wording in **six different places** (Hero, IntroSection, About hero, Donate hero, Framework "The Problem," and pillar descriptions). Several section headers repeat ("What We Do" appears on both the landing page and About page), and some paragraphs add words without adding meaning.
+## Root Cause
+1. `.galaxy-viewport` is `width:100%; height:100%` but has no explicit size constraint, so scaled dots overflow visually
+2. The galaxy wrapper uses `transform: scale()` which doesn't affect layout flow, meaning the visual size exceeds the box model size
+3. No `overflow: hidden` on the galaxy's flex container to clip the animation
 
-## Changes
+## Solution
 
-### 1. Landing Page — Eliminate the Echo Between Hero and IntroSection
+### 1. HeroSection.tsx — CSS Grid with bounded rows
 
-**HeroSection.tsx**: The subtitle already nails the mission. Keep as-is.
+Replace the flex layout with a CSS grid that guarantees three rows fit within `100svh`:
 
-**IntroSection.tsx**: The bold opening sentence is a near-verbatim copy of the hero subtitle. Rewrite the intro to advance the narrative instead of restating it:
-- Bold line → Explain *why* this matters (the consequence, not the mechanism)
-- Second paragraph → Keep, it's additive ("No broken links, no middlemen, no gatekeepers")
-- Third paragraph → Currently restates the hero again. Cut or replace with a forward-looking line about who benefits.
+```
+grid-rows-[auto_minmax(0,1fr)_auto]
+```
 
-### 2. Landing Page — PillarsSection Label
+- **Row 1 (auto):** Navbar spacer
+- **Row 2 (minmax(0,1fr)):** Galaxy, constrained to available space with `overflow: hidden`
+- **Row 3 (auto):** Copy + CTA, naturally sized
 
-**PillarsSection.tsx**: The eyebrow says "What We Do" — same label as the About page section. Change to "How We Work" or "Three Pillars" to differentiate.
+The galaxy container gets explicit max dimensions:
+- `max-h-[50svh]` to never exceed half the viewport
+- `aspect-square` to stay circular
+- `overflow-hidden` to clip any overflow from the CSS transform scaling
 
-**pillars.ts**: Tighten descriptions:
-- "UOR Framework" → Remove "Every piece of digital content deserves a permanent, verifiable address" (said in hero). Start with what the spec actually delivers.
-- "Research Community" → Remove "Good standards come from open collaboration" (generic). Lead with the specific activity.
-- "Project Launchpad" → Remove "Real adoption starts with real projects" (truism). Lead with what the launchpad provides.
+The copy block uses fluid `clamp()` for all spacing. The CTA gets a bottom padding of `pb-[clamp(1.5rem,4vh,3rem)]`.
 
-### 3. Landing Page — CTASection
+### 2. galaxy.css — Tighten the scale ceiling
 
-**CTASection.tsx**: The subtitle "Engineers, researchers, and builders working on the open data framework" is vague. Replace with a clear call: "Pick a path and get started."
-
-### 4. About Page Hero
-
-**AboutPage.tsx**: The hero paragraph repeats the mission statement verbatim. Replace with a short, distinct sentence about the organization (when founded, what kind of org, where it operates) rather than re-explaining UOR.
-
-### 5. About Page — "What We Do" Cards
-
-**about-cards.ts**: These three cards (Framework, Community, Project Launchpad) duplicate the pillars on the landing page. Rewrite the descriptions to focus on *organizational activities* rather than *what UOR is* — e.g., "We maintain the specification and publish updates" rather than "We research and publish open data frameworks and protocols that anyone can build on."
-
-### 6. Framework Page — "The Problem" Section
-
-**StandardPage.tsx**: The second paragraph restates the hero. Cut "Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system." — the hero already said this. Keep only the contrast ("Today's data lives in silos") and the solution concept ("identity based on content").
-
-### 7. Donate Page Hero
-
-**DonatePage.tsx**: "Your donation funds an open standard that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers." — Remove the first sentence (said everywhere). Lead with impact: what donations actually fund (development, infrastructure, community).
-
-### 8. Research Page — Redundant Headers
-
-**ResearchPage.tsx**:
-- The page title is "Our Community," and the first section heading inside is also "Community." Remove the redundant inner h2 or change it to something specific like "Research Areas."
-- The Join CTA section ("Whether you are a researcher, developer, or supporter...") repeats the same audience segmentation as the landing page CTA. Shorten to one direct sentence.
-
-### 9. Projects Page — Double Explanation of Review Timeline
-
-**ProjectsPage.tsx**: Both the "How to Submit" cards and the "Submit for Sandbox Review" form intro mention the 3-week review window. Remove it from one place (keep it in the form intro since that's where users act).
-
-### 10. Data Files — Tighten Descriptions
-
-**featured-projects.ts**: Atlas Embeddings description is wordy. Tighten: "Research showing five complex mathematical structures share a single origin, revealing deeper order."
+Reduce the max scale from `1` to `0.85` so the animation fits comfortably within its bounded container:
+```css
+transform: scale(clamp(0.32, var(--auto-scale), 0.85));
+```
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/modules/landing/components/IntroSection.tsx` | Rewrite opening to advance narrative, not restate hero |
-| `src/modules/landing/components/PillarsSection.tsx` | Change "What We Do" eyebrow |
-| `src/modules/landing/components/CTASection.tsx` | Sharpen subtitle |
-| `src/data/pillars.ts` | Tighten descriptions, remove repeated phrases |
-| `src/data/about-cards.ts` | Rewrite to focus on org activities |
-| `src/data/featured-projects.ts` | Tighten Atlas description |
-| `src/modules/core/pages/AboutPage.tsx` | Replace hero paragraph |
-| `src/modules/framework/pages/StandardPage.tsx` | Trim redundant sentence in "The Problem" |
-| `src/modules/donate/pages/DonatePage.tsx` | Rewrite hero paragraph for impact |
-| `src/modules/community/pages/ResearchPage.tsx` | Fix redundant headers, trim Join CTA |
-| `src/modules/projects/pages/ProjectsPage.tsx` | Remove duplicate 3-week mention |
-
-## Guiding Principle
-
-Every section should move the reader forward. If a sentence says the same thing as another page (or another section on the same page), it gets rewritten or removed. The mission statement appears once in the hero. Everything else builds on it.
+| `src/modules/landing/components/HeroSection.tsx` | Replace flex layout with grid; add bounded galaxy container with overflow-hidden |
+| `src/modules/landing/components/galaxy.css` | Reduce max scale; adjust vh-scale divisor for tighter fit |
 
