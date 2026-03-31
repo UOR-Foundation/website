@@ -88,7 +88,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
           {level}
         </h2>
         {count > 0 && (
-          <span className="text-sm text-muted-foreground font-body">
+          <span className="text-base text-muted-foreground font-body">
             {count} {count === 1 ? "project" : "projects"}
           </span>
         )}
