@@ -83,16 +83,16 @@ const Donate = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-24">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1
-            className="font-display text-4xl md:text-5xl lg:text-[3.5rem] font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
+            className="font-display text-4xl md:text-5xl font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
           >
-            Fund the future of open data infrastructure
+            Fund the future of open data
           </h1>
           <p
-            className="mt-8 text-lg md:text-xl text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
+            className="mt-8 text-base text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
             Your donation funds an open standard that gives every piece of data one permanent, verifiable address. No lock-in, no gatekeepers. A nonprofit building infrastructure for science, software, and emerging technologies.
