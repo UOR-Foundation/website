@@ -43,7 +43,7 @@ const CTASection = () => {
         {/* UOR Community */}
         <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
         <div className="mt-8 md:mt-10 animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
-          <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
+          <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
             UOR Community
           </p>
 
