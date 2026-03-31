@@ -63,7 +63,7 @@ export default function InteroperabilityPage() {
         </section>
 
         {/* Content */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <section className="container max-w-6xl py-8 sm:py-12">
           {view === "graph" ? <KnowledgeGraph /> : <InteroperabilityMap />}
         </section>
       </div>
