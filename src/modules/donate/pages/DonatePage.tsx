@@ -124,7 +124,7 @@ const Donate = () => {
 
       {/* Projects to support */}
       <section className="py-8 md:py-14 bg-background">
-        <div className="container max-w-4xl">
+        <div className="container max-w-6xl">
           <h2
             className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-10 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.1s" }}
