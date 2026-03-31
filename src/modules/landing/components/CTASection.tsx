@@ -1,6 +1,6 @@
+import { Linkedin } from "lucide-react";
 import { teamMembers } from "@/data/team-members";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
-
 
 const CTASection = () => {
   return (
@@ -41,44 +41,59 @@ const CTASection = () => {
           </a>
         </div>
 
-        {/* Members Grid — Foresight-style cards */}
+        {/* Community strip */}
         <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
-        <div className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 text-left">
-          {teamMembers.map((member, index) => (
-            <a
-              key={member.name}
-              href={member.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative rounded-2xl border border-border bg-card overflow-hidden flex flex-row items-stretch min-h-[10rem] transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
-              style={{ animationDelay: `${index * 0.04}s` }}
-            >
-              {/* Text content */}
-              <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
-                <div>
-                  <h4 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
+        <div className="mt-8 md:mt-10 animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
+          <p className="text-sm font-body font-medium tracking-[0.15em] uppercase text-muted-foreground/50 mb-5">
+            Active Community
+          </p>
+
+          {/* Overlapping avatar row */}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center">
+              {teamMembers.map((member, idx) => (
+                <a
+                  key={member.name}
+                  href={member.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`relative rounded-full border-[3px] border-background transition-all duration-300 hover:z-30 hover:scale-110 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 focus:outline-none group ${
+                    idx > 0 ? "-ml-2.5 md:-ml-3" : ""
+                  }`}
+                  style={{ zIndex: 15 - idx }}
+                  aria-label={member.name}
+                >
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
+                    loading="lazy"
+                  />
+                  {/* Tooltip */}
+                  <span className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-md bg-foreground text-background text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-40">
                     {member.name}
-                  </h4>
-                  <div className="h-px w-10 bg-border/60 my-2.5" />
-                  <p className="text-sm font-medium text-primary font-body leading-snug">
-                    {member.role}
-                  </p>
-                  <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
-                    {member.description}
-                  </p>
-                </div>
+                  </span>
+                </a>
+              ))}
+
+              {/* +N pill */}
+              <div className="-ml-2.5 md:-ml-3 z-0 w-11 h-11 md:w-14 md:h-14 rounded-full border-[3px] border-background bg-muted flex items-center justify-center">
+                <span className="text-[10px] md:text-xs font-semibold text-muted-foreground">+30</span>
               </div>
-              {/* Photo — right-aligned, cropped */}
-              <div className="w-28 md:w-32 shrink-0 relative overflow-hidden">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="absolute inset-0 w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
-                  loading="lazy"
-                />
-              </div>
-            </a>
-          ))}
+            </div>
+          </div>
+
+          {/* Role tags */}
+          <div className="mt-4 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+            {["AI Research", "Protocol Design", "Cloud Infra", "Developer Tools", "Web3", "Healthcare Tech", "Enterprise AI"].map((tag) => (
+              <span
+                key={tag}
+                className="text-xs font-body text-muted-foreground/60 px-2.5 py-1 rounded-full border border-border/30"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>
