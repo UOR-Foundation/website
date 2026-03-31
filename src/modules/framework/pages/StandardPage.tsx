@@ -213,7 +213,7 @@ const Standard = () => {
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Value</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
