@@ -1,4 +1,3 @@
-import { Linkedin } from "lucide-react";
 import { teamMembers } from "@/data/team-members";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
@@ -41,58 +40,52 @@ const CTASection = () => {
           </a>
         </div>
 
-        {/* Community strip */}
+        {/* UOR Community */}
         <div className="h-px w-full bg-border/40 mt-12 md:mt-16" />
         <div className="mt-8 md:mt-10 animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
-          <p className="text-sm font-body font-medium tracking-[0.15em] uppercase text-muted-foreground/50 mb-5">
-            Active Community
+          <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
+            UOR Community
           </p>
 
-          {/* Overlapping avatar row */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center">
-              {teamMembers.map((member, idx) => (
-                <a
-                  key={member.name}
-                  href={member.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`relative rounded-full border-[3px] border-background transition-all duration-300 hover:z-30 hover:scale-110 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 focus:outline-none group ${
-                    idx > 0 ? "-ml-2.5 md:-ml-3" : ""
-                  }`}
-                  style={{ zIndex: 15 - idx }}
-                  aria-label={member.name}
-                >
+          {/* Member grid — each with photo, name, role */}
+          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-x-3 gap-y-6 md:gap-x-4 md:gap-y-8 max-w-4xl mx-auto">
+            {teamMembers.map((member, idx) => (
+              <a
+                key={member.name}
+                href={member.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center gap-2 animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${0.25 + idx * 0.04}s` }}
+              >
+                <div className="relative">
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
+                    className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-full object-cover object-top border-2 border-border/20 grayscale group-hover:grayscale-0 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
                     loading="lazy"
                   />
-                  {/* Tooltip */}
-                  <span className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-md bg-foreground text-background text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-40">
-                    {member.name}
-                  </span>
-                </a>
-              ))}
-
-              {/* +N pill */}
-              <div className="-ml-2.5 md:-ml-3 z-0 w-11 h-11 md:w-14 md:h-14 rounded-full border-[3px] border-background bg-muted flex items-center justify-center">
-                <span className="text-[10px] md:text-xs font-semibold text-muted-foreground">+30</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Role tags */}
-          <div className="mt-4 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-            {["AI Research", "Protocol Design", "Cloud Infra", "Developer Tools", "Web3", "Healthcare Tech", "Enterprise AI"].map((tag) => (
-              <span
-                key={tag}
-                className="text-xs font-body text-muted-foreground/60 px-2.5 py-1 rounded-full border border-border/30"
-              >
-                {tag}
-              </span>
+                </div>
+                <div className="text-center min-w-0 w-full">
+                  <p className="text-xs font-display font-semibold text-foreground leading-tight truncate">
+                    {member.name.split(" ")[0]}
+                  </p>
+                  <p className="text-[10px] md:text-[11px] font-body text-primary/70 leading-tight mt-0.5 truncate">
+                    {member.role.split("@")[0].trim()}
+                  </p>
+                </div>
+              </a>
             ))}
+
+            {/* +N community pill */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
+                <span className="text-sm md:text-base font-semibold text-muted-foreground">+30</span>
+              </div>
+              <p className="text-[10px] md:text-[11px] font-body text-muted-foreground/50 leading-tight">
+                & growing
+              </p>
+            </div>
           </div>
         </div>
       </div>
