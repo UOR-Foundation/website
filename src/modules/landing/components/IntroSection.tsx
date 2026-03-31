@@ -2,7 +2,7 @@ const IntroSection = () => {
   return (
     <section id="intro" className="py-8 md:py-14 bg-background scroll-mt-16">
       <div className="container max-w-6xl">
-        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-4">
+        <p className="text-sm font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-4">
           How It Works
         </p>
         <div className="h-px w-full bg-border/40" />
