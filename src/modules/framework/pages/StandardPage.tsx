@@ -149,7 +149,7 @@ const Standard = () => {
             className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
-            One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives.
+            A formal specification for content-addressed object spaces. Defines addressing, resolution, verification, and transformation across six layers.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
