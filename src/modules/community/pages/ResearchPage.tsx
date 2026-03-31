@@ -69,7 +69,7 @@ const Research = () => {
             Open Research
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Community
+            Research Areas
           </h2>
           <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-8">
             Find your discipline, validate ideas, and collaborate on{" "}
