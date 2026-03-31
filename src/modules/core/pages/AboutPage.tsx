@@ -12,7 +12,7 @@ const About = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-24 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-4xl">
+        <div className="container max-w-6xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground animate-fade-in-up">
             About
           </h1>

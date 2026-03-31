@@ -63,7 +63,7 @@ const SandboxPage = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-52 pb-20 md:pb-28">
-        <div className="container max-w-4xl">
+        <div className="container max-w-6xl">
           <div className="flex items-center gap-3 mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.05s" }}>
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Globe size={20} className="text-primary" />
@@ -204,7 +204,7 @@ const SandboxPage = () => {
 
       {/* CTA */}
       <section className="section-dark py-20 md:py-28">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-6xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
             Build on the universal standard
           </h2>
