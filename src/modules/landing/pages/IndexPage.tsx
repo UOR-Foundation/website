@@ -1,8 +1,8 @@
 import Layout from "@/modules/core/components/Layout";
 import HeroSection from "@/modules/landing/components/HeroSection";
 import IntroSection from "@/modules/landing/components/IntroSection";
+import CodeExampleSection from "@/modules/landing/components/CodeExampleSection";
 import PillarsSection from "@/modules/landing/components/PillarsSection";
-import HighlightsSection from "@/modules/landing/components/HighlightsSection";
 import ProjectsShowcase from "@/modules/landing/components/ProjectsShowcase";
 import CTASection from "@/modules/landing/components/CTASection";
 
@@ -11,9 +11,9 @@ const Index = () => {
     <Layout>
       <HeroSection />
       <IntroSection />
+      <CodeExampleSection />
       <PillarsSection />
       <ProjectsShowcase />
-      <HighlightsSection />
       <CTASection />
     </Layout>
   );

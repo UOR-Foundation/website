@@ -28,8 +28,8 @@ const HeroSection = () => {
           className="font-display text-[clamp(1.75rem,3.6vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.25s" }}
         >
-          <span className="block">Your Universal Coordinate</span>
-          <span className="block">System for Information.</span>
+          <span className="block">One Address Per Object.</span>
+          <span className="block">Derived From Content.</span>
         </h1>
         <p
           className="mt-[clamp(0.75rem,1.8vh,1.5rem)] text-base text-muted-foreground leading-[1.68] max-w-2xl text-center font-body animate-fade-in-up opacity-0"
@@ -41,9 +41,12 @@ const HeroSection = () => {
           className="mt-[clamp(1rem,2vh,2rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.6s" }}
         >
-          <a href="/projects" className="btn-primary inline-flex items-center gap-2">
-            Explore Projects
+          <a href="/standard" className="btn-primary inline-flex items-center gap-2">
+            Read the Spec
             <ArrowRight size={16} />
+          </a>
+          <a href="/projects" className="btn-outline inline-flex items-center gap-2">
+            Explore Projects
           </a>
         </div>
       </div>

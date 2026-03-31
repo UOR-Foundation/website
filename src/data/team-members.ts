@@ -44,7 +44,7 @@ export const teamMembers = [
   {
     name: "Emmanuel Bello",
     role: "Founder @ Kinetic Keys",
-    description: "Full-stack development and system architecture.",
+    description: "Full-stack engineering and developer tooling.",
     image: "/images/profiles/emmanuel-bello.jpg",
     link: "https://www.linkedin.com/in/emmanuxl/",
   },
@@ -92,14 +92,14 @@ export const teamMembers = [
   },
   {
     name: "Jimmy Danella",
-    role: "Alternative Medicine",
+    role: "Founder @ WellnessWorx",
     description: "Healthcare technology and applied research.",
     image: "/images/profiles/jimmy-danella.jpg",
     link: "https://www.linkedin.com/in/wellnessworxio/",
   },
   {
     name: "Ari Lerner",
-    role: "Hacking Software/Hardware",
+    role: "Engineer",
     description: "AI, robotics, and embedded systems.",
     image: "/images/profiles/ari-lerner.jpg",
     link: "https://www.linkedin.com/in/arilerner/",

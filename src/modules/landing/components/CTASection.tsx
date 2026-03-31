@@ -1,5 +1,5 @@
 import { teamMembers } from "@/data/team-members";
-import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
+import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
 const CTASection = () => {
   return (
@@ -9,18 +9,26 @@ const CTASection = () => {
           Ready to Build?
         </h2>
         <p className="mt-4 md:mt-5 text-base text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
-          Pick a path and get started.
+          Verify your first address in five minutes, then join the community.
         </p>
 
         {/* Community quick links */}
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
           <a
-            href={DISCORD_URL}
+            href={GITHUB_FRAMEWORK_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"
           >
-            Join Discord Community
+            Getting Started Guide
+          </a>
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline"
+          >
+            Join Discord
           </a>
           <a
             href={GITHUB_ORG_URL}
