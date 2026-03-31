@@ -25,7 +25,7 @@ const HeroSection = () => {
       {/* Row 3: Copy + CTA */}
       <div className="flex flex-col items-center px-5 pt-[clamp(1.5rem,4vh,3.5rem)] pb-[clamp(3rem,7vh,5rem)]">
         <h1
-          className="font-display text-[clamp(1.75rem,7vw,3.75rem)] font-bold leading-[1.18] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
+          className="font-display text-[clamp(1.5rem,5.5vw,3.25rem)] font-bold leading-[1.18] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.25s" }}
         >
           <span className="block">Your Universal Coordinate</span>
