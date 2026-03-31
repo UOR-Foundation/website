@@ -292,8 +292,8 @@ const Research = () => {
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
             Join the Community
           </h2>
-          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            Whether you're a researcher, developer, or advocate for open data, there's a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
+            Whether you are a researcher, developer, or supporter of open data, there is a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
