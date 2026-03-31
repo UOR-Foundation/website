@@ -134,10 +134,10 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
             )}
             <div className="p-7 md:p-9 flex flex-col flex-1">
               <div className="flex items-center justify-between gap-2 mb-5">
-                <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
+                <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                   {project.category}
                 </span>
-                <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
+                <span className={`text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
                   {project.maturity}
                 </span>
               </div>
