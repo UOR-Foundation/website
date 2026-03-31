@@ -55,7 +55,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               alt="UOR Foundation"
               className={`w-10 h-10 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark && !mobileOpen ? "invert brightness-[100]" : ""}`}
             />
-            <span className={`font-display text-base md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+            <span className={`font-display text-lg md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
