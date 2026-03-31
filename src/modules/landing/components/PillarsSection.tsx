@@ -9,7 +9,7 @@ const PillarsSection = () => {
   return (
     <section id="pillars" className="pt-16 md:pt-28 pb-10 md:pb-20 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-[0.6875rem] md:text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-5 md:mb-6">
+        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-5 md:mb-6">
           What We Do
         </p>
         <div className="h-px w-full bg-border/60" />
@@ -24,19 +24,19 @@ const PillarsSection = () => {
               >
                 <div className="flex items-center gap-3 mb-3 md:mb-4">
                   <Icon
-                    className="w-[1.125rem] h-[1.125rem] md:w-5 md:h-5 text-primary transition-transform duration-300 group-hover:scale-110"
+                    className="w-5 h-5 text-primary transition-transform duration-300 group-hover:scale-110"
                     strokeWidth={1.5}
                   />
                   <h3 className="font-display text-lg md:text-2xl font-semibold text-foreground">
                     {pillar.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground font-body text-base md:text-lg leading-[1.68] flex-1">
+                <p className="text-muted-foreground font-body text-base leading-[1.68] flex-1">
                   {pillar.description}
                 </p>
                 <Link
                   to={pillar.href}
-                  className="inline-flex items-center gap-1.5 text-base md:text-lg font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6 md:mt-8"
+                  className="inline-flex items-center gap-1.5 text-base font-medium text-primary font-body transition-all duration-300 group-hover:gap-2.5 mt-6 md:mt-8"
                 >
                   {pillar.cta}
                   <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-0.5" />

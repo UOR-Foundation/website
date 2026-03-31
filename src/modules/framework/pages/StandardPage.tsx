@@ -140,13 +140,13 @@ const Standard = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-22">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
           </h1>
           <p
-            className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
+            className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl"
             style={{ animationDelay: "0.15s" }}
           >
             One address per object, derived from its content, verifiable across every system. Data referenced by what it is, not where it lives.
@@ -171,29 +171,29 @@ const Standard = () => {
       </section>
 
       {/* The Problem */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             The Problem
           </p>
           <div
             className="pt-8 md:pt-10 max-w-3xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            <p className="text-foreground font-body text-base md:text-lg leading-[1.85] md:leading-[1.9] font-medium">
-              Today's data lives in silos. Different formats, protocols, and systems that can't natively understand each other.
+            <p className="text-foreground font-body text-base leading-[1.85] md:leading-[1.9] font-medium">
+              Today's data lives in silos. Different formats, systems, and tools that cannot natively understand each other.
             </p>
-            <p className="mt-6 text-muted-foreground font-body text-base md:text-lg leading-[1.85] md:leading-[1.9]">
-              UOR replaces location based identity with <span className="text-foreground font-medium">identity based on content</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system, forever.
+            <p className="mt-6 text-muted-foreground font-body text-base leading-[1.85] md:leading-[1.9]">
+              UOR replaces location-based identity with <span className="text-foreground font-medium">identity based on content</span>. Every object gets a single, permanent address derived from what it contains. Same content, same address, across every system.
             </p>
           </div>
         </div>
       </section>
 
       {/* Visual Diagram */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-12">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-12">
             How It Works
           </p>
           <UORDiagram />
@@ -201,19 +201,19 @@ const Standard = () => {
       </section>
 
       {/* Anatomy of an Address */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-10">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-10">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Value</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
@@ -224,7 +224,7 @@ const Standard = () => {
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Weight</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 How many "active" bits are in the value. This is a measure of complexity: a weight of 0 means empty, a weight of 8 means fully packed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
@@ -235,7 +235,7 @@ const Standard = () => {
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Components</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 Which specific building blocks make up the value. This lets you reconstruct the original from its parts, with nothing lost.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
@@ -251,12 +251,12 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
           </p>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -269,7 +269,7 @@ const Standard = () => {
                 >
                   {Icon && <Icon size={20} className="text-primary mb-4" />}
                   <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
+                  <p className="text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
                 </div>
               );
             })}
@@ -278,15 +278,15 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+      <section id="architecture" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
           </p>
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
-            UOR Framework Architecture
+            Framework Architecture
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-14 md:mb-16">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-14 md:mb-16">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
@@ -295,13 +295,13 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-14 md:py-20">
+      <section className="section-dark py-16 md:py-28">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification
           </h2>
-          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces · 82 classes · 124 properties · 14 named individuals. Open source and fully documented.
+          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
+            14 namespaces, 82 classes, 124 properties, and 14 named individuals. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a

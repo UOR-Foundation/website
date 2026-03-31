@@ -88,7 +88,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
           {level}
         </h2>
         {count > 0 && (
-          <span className="text-sm text-muted-foreground font-body">
+          <span className="text-base text-muted-foreground font-body">
             {count} {count === 1 ? "project" : "projects"}
           </span>
         )}
@@ -134,10 +134,10 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
             )}
             <div className="p-7 md:p-9 flex flex-col flex-1">
               <div className="flex items-center justify-between gap-2 mb-5">
-                <span className="text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
+                <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                   {project.category}
                 </span>
-                <span className={`text-xs sm:text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
+                <span className={`text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
                   {project.maturity}
                 </span>
               </div>
@@ -214,13 +214,12 @@ const Projects = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-22">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
-          
             UOR Projects
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR standard, organized by maturity level.
           </p>
           <div
@@ -250,8 +249,8 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* Visual Progression Flow */}
-      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border scroll-mt-28">
+      {/* Maturity Levels */}
+      <section id="maturity" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-16 text-center">
             Project Maturity Levels
@@ -281,7 +280,7 @@ const Projects = () => {
                       }`}>
                         <StageIcon size={20} />
                       </div>
-                      <span className="text-xs font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
+                      <span className="text-sm font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
                         Stage {idx + 1}
                       </span>
                     </div>
@@ -321,10 +320,10 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-16 md:py-28 bg-background border-b border-border">
+      <section className="py-16 md:py-28 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
             </span>
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">

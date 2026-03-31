@@ -7,7 +7,7 @@ const paths = [
     icon: Code2,
     title: "Contributors",
     description:
-      "Submit patches, write specs, or build reference implementations. Everything ships through GitHub.",
+      "Submit improvements, write documentation, or build tools. Everything ships through GitHub.",
     cta: "Start Contributing",
     href: GITHUB_ORG_URL + "/.github/blob/main/CONTRIBUTING.md",
     external: true,
@@ -16,7 +16,7 @@ const paths = [
     icon: Building2,
     title: "Adopters",
     description:
-      "Evaluate the framework for your systems. Integrate content addressing into existing infrastructure.",
+      "Try the framework in your systems. Bring permanent, verifiable data addressing to your existing tools.",
     cta: "Explore Projects",
     href: "/projects",
     external: false,
@@ -39,12 +39,12 @@ const CTASection = () => {
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
           Ready to Build?
         </h2>
-        <p className="mt-4 md:mt-5 text-base md:text-lg text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
+        <p className="mt-4 md:mt-5 text-base text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
           Engineers, researchers, and builders working on the open data framework.
         </p>
 
         {/* Three-path audience routing */}
-        <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-left">
           {paths.map((path, index) => {
             const Icon = path.icon;
             const linkProps = path.external
@@ -64,7 +64,7 @@ const CTASection = () => {
                 <h3 className="font-display text-lg font-semibold text-foreground mb-2">
                   {path.title}
                 </h3>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                <p className="text-base text-muted-foreground font-body leading-relaxed flex-1">
                   {path.description}
                 </p>
                 <a
@@ -99,7 +99,7 @@ const CTASection = () => {
           </a>
         </div>
 
-        {/* Members Grid — separated with breathing room */}
+        {/* Members Grid */}
         <div className="h-px w-full bg-border/40 mt-16 md:mt-24" />
         <div className="mt-12 md:mt-20 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 md:gap-y-14">
           {teamMembers.map((member, index) => (
@@ -126,13 +126,13 @@ const CTASection = () => {
                   />
                 </div>
               </div>
-              <h4 className="font-display text-[0.875rem] md:text-base font-semibold text-foreground leading-tight">
+              <h4 className="font-display text-sm md:text-base font-semibold text-foreground leading-tight">
                 {member.name}
               </h4>
-              <p className="text-[0.75rem] md:text-sm font-medium text-primary font-body mt-0.5 leading-tight min-h-[1.75rem] md:min-h-[2rem] flex items-center justify-center">
+              <p className="text-sm font-medium text-primary font-body mt-0.5 leading-tight min-h-[1.75rem] md:min-h-[2rem] flex items-center justify-center">
                 {member.role}
               </p>
-              <p className="text-[0.75rem] md:text-sm text-muted-foreground font-body mt-0.5 md:mt-1 leading-snug min-h-[2rem] md:min-h-[2.5rem] flex items-center justify-center">
+              <p className="text-sm text-muted-foreground font-body mt-0.5 md:mt-1 leading-snug min-h-[2rem] md:min-h-[2.5rem] flex items-center justify-center">
                 {member.description}
               </p>
             </a>

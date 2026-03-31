@@ -14,7 +14,7 @@ const HighlightsSection = () => {
   return (
     <section className="pt-8 md:pt-16 pb-12 md:pb-24 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-[0.6875rem] md:text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
+        <p className="text-sm font-body font-medium tracking-[0.2em] uppercase text-muted-foreground/50 mb-8 md:mb-10">
           Community Highlights
         </p>
 
@@ -35,7 +35,7 @@ const HighlightsSection = () => {
                 />
               </div>
               <div className="flex flex-col flex-1 p-5 md:p-6">
-                <span className="self-start text-xs font-medium font-body text-muted-foreground/60 uppercase tracking-wider mb-3 md:mb-4">
+                <span className="self-start text-sm font-medium font-body text-muted-foreground/60 uppercase tracking-wider mb-3 md:mb-4">
                   {item.tag}
                 </span>
                 <h3 className="font-display text-base md:text-xl font-semibold text-foreground leading-snug flex-1">
@@ -44,7 +44,7 @@ const HighlightsSection = () => {
                 <p className="mt-3 md:mt-4 text-base text-muted-foreground font-body">
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-3 md:mt-4 text-[0.8125rem] md:text-sm font-medium text-primary font-body group-hover:gap-2.5 transition-all duration-200">
+                <span className="inline-flex items-center gap-1.5 mt-3 md:mt-4 text-sm font-medium text-primary font-body group-hover:gap-2.5 transition-all duration-200">
                   Learn more <ArrowRight size={14} />
                 </span>
               </div>

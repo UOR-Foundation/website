@@ -40,12 +40,12 @@ const Research = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-22">
+      <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-28">
         <div className="container max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             Researchers and builders working across disciplines to test ideas, validate results, and publish openly. Progress is faster when it is shared.
           </p>
           <div
@@ -63,15 +63,15 @@ const Research = () => {
       </section>
 
       {/* Research */}
-      <section id="research" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+      <section id="research" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Open Research
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
             Community
           </h2>
-          <p className="text-muted-foreground font-body text-base md:text-lg leading-relaxed max-w-2xl mb-12">
+          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-2xl mb-12">
             Find your discipline, validate ideas, and collaborate on{" "}
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
@@ -174,9 +174,9 @@ const Research = () => {
       </section>
 
       {/* Blog */}
-      <section id="blog" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+      <section id="blog" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Blog
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
@@ -219,9 +219,9 @@ const Research = () => {
       </section>
 
       {/* Events */}
-      <section id="events" className="py-12 md:py-20 bg-background border-b border-border scroll-mt-28">
+      <section id="events" className="py-16 md:py-28 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Events
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-14">
@@ -284,16 +284,16 @@ const Research = () => {
       </section>
 
       {/* Join CTA */}
-      <section id="join" className="section-dark py-14 md:py-20 scroll-mt-28">
+      <section id="join" className="section-dark py-16 md:py-28 scroll-mt-28">
         <div className="container max-w-4xl text-center">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
             Join the Community
           </h2>
-          <p className="text-section-dark-foreground/60 font-body text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-            Whether you're a researcher, developer, or advocate for open data, there's a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
+            Whether you are a researcher, developer, or supporter of open data, there is a place for you. Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
