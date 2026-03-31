@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <section className="hero-gradient relative overflow-hidden h-[100svh] min-h-[520px] grid grid-rows-[auto_minmax(0,1fr)_auto]">
       {/* Row 1: Navbar spacer */}
-      <div className="h-[5rem] md:h-[5rem]" />
+      <div className="h-[3.5rem] md:h-[5rem]" />
 
       {/* Row 2: Galaxy — bounded, clipped, centered (φ upper section) */}
       <div className="flex items-center justify-center overflow-hidden min-h-0 py-0 md:py-[clamp(1.5rem,4vh,4rem)]">
