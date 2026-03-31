@@ -1,29 +1,70 @@
 
 
-## Hero Section Golden-Ratio Spacing Refinement
+## Homepage Narrative Flow Analysis
 
-### Problem
-The hero section elements (galaxy, heading, CTA buttons) feel visually cluttered. Spacing between the three rows needs to follow golden-ratio proportions for a balanced, airy layout that works across all screen sizes.
+### Current Order
+1. **Hero** — "Your Universal Coordinate System for Information"
+2. **Mission** (dark) — "We maintain the open spec for content-addressed data identity"
+3. **How It Works** — Explains deterministic addressing, no central registry
+4. **Where It Applies** — 6 application domain cards
+5. **Get Involved** — 3 pillars (Framework, Research, Launchpad)
+6. **Featured Projects** (dark) — 3 project cards from the ecosystem
+7. **Ready to Build?** — CTA buttons + UOR Community member grid
 
-### Golden-Ratio Spacing System
-The golden ratio (φ = 1.618) will govern vertical rhythm. Base unit derived from viewport height:
-- Galaxy padding: `clamp(1rem, 2vh, 2.5rem)` (tighter, letting the galaxy breathe via its own size)
-- Gap between galaxy and heading: `clamp(1.5rem, 4vh, 3.5rem)` (≈ φ × base)
-- Gap between heading and CTAs: `clamp(2rem, 4.5vh, 4rem)` (≈ φ² × base)
-- Bottom padding: `clamp(3rem, 7vh, 5rem)` (≈ φ³ × base)
+### Assessment
 
-### Changes to `HeroSection.tsx`
+The flow is **mostly strong** but has two structural issues that break the narrative momentum:
 
-1. **Row 2 (Galaxy)**: Reduce vertical padding to `py-[clamp(0.75rem,2vh,2rem)]` so the galaxy container itself defines its visual space without extra padding eating into the gap.
+**Issue 1: "Get Involved" (Pillars) appears before proof of traction.**
+You're asking the reader to commit before showing them that others already have. The Featured Projects and Community grid are the social proof. They should come *before* the ask.
 
-2. **Row 3 (Copy + CTA)**: Restructure spacing to create clear visual hierarchy:
-   - Add top padding `pt-[clamp(1.5rem,4vh,3.5rem)]` to create generous breathing room between galaxy and heading
-   - Increase CTA margin to `mt-[clamp(2rem,4.5vh,4rem)]` for clear separation between heading and buttons
-   - Increase bottom padding to `pb-[clamp(3rem,7vh,5rem)]` to ground the section with ample whitespace below the CTAs
-   - Add `gap-4` between buttons (up from `gap-3`) for a more spacious feel
+**Issue 2: "Featured Projects" and "UOR Community" are separated.**
+Projects and people are both proof that the ecosystem is real. Grouping them together creates a stronger "this is alive" signal before the final CTA.
 
-3. **Button gap on mobile**: Increase from `gap-3` to `gap-3 sm:gap-4` for better tap targets and visual separation.
+### Recommended Order
 
-### File
-- `src/modules/landing/components/HeroSection.tsx` — single file edit adjusting clamp values on the three grid rows.
+```text
+Current                          Proposed
+─────────────────────────────    ─────────────────────────────
+1. Hero                          1. Hero              (same)
+2. Mission (dark)                2. Mission (dark)    (same)
+3. How It Works                  3. How It Works      (same)
+4. Where It Applies              4. Where It Applies  (same)
+5. Get Involved (Pillars)    →   5. Featured Projects (dark) ↑
+6. Featured Projects (dark)  →   6. UOR Community     (moved up from CTA)
+7. Ready to Build + Community →  7. Get Involved (Pillars)   ↓
+                                 8. Ready to Build (CTA only, no community)
+```
+
+### Why This Works
+
+The story becomes a clean funnel:
+
+1. **Hook** — What is this? (Hero)
+2. **Why it exists** — Mission
+3. **How it works** — Mechanism
+4. **Where it applies** — Inspiration / use cases
+5. **Who's building on it** — Projects (proof it works)
+6. **Who's behind it** — Community (proof it's credible)
+7. **How to participate** — Pillars (now earned, not premature)
+8. **Start now** — Clean CTA with action buttons only
+
+This follows the classic persuasion arc: **Intrigue → Educate → Prove → Ask.**
+
+### Technical Changes
+
+**File: `src/modules/landing/pages/IndexPage.tsx`**
+- Reorder components: move `ProjectsShowcase` and a new `CommunitySection` above `PillarsSection`
+- `CTASection` becomes a lean CTA block (buttons only)
+
+**File: `src/modules/landing/components/CommunitySection.tsx`** (new)
+- Extract the UOR Community member grid from `CTASection` into its own standalone section
+- Light background, same grid layout and styling
+
+**File: `src/modules/landing/components/CTASection.tsx`**
+- Remove the community member grid
+- Keep only the "Ready to Build?" heading, subtitle, and three action buttons
+- Clean, focused closing section
+
+No content or copy changes needed. No new data files. Just structural reorganization.
 
