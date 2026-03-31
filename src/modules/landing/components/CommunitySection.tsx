@@ -9,14 +9,14 @@ const CommunitySection = () => {
             UOR Community
           </p>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
             {teamMembers.map((member, idx) => (
               <a
                 key={member.name}
                 href={member.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center gap-2.5 animate-fade-in-up opacity-0"
+                className="group flex flex-col items-center gap-2.5 animate-fade-in-up opacity-0 w-[calc(33.333%-1rem)] sm:w-[calc(25%-1rem)] lg:w-[calc(12.5%-1.1rem)]"
                 style={{ animationDelay: `${0.25 + idx * 0.04}s` }}
               >
                 <div className="relative">
@@ -38,7 +38,7 @@ const CommunitySection = () => {
               </a>
             ))}
 
-            <div className="flex flex-col items-center gap-2.5">
+            <div className="flex flex-col items-center gap-2.5 w-[calc(33.333%-1rem)] sm:w-[calc(25%-1rem)] lg:w-[calc(12.5%-1.1rem)]">
               <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
                 <span className="text-base md:text-lg font-semibold text-muted-foreground">+150</span>
               </div>
