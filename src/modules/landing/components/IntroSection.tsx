@@ -12,12 +12,12 @@ const IntroSection = () => {
         >
           <p className="text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
             <span className="text-section-dark-foreground font-medium">
-              When data proves its own identity, everything changes.
+              Every piece of data gets a permanent address derived from its content, not its location.
             </span>{" "}
-            Links never break. Copies stay in sync. Any system can verify what it received without calling home.
+            Identical content always resolves to the same identifier. References don't break when data moves. Any node can verify what it received independently — no round-trip, no central authority.
           </p>
           <p className="mt-4 text-section-dark-foreground/75 font-body text-base leading-[1.75] md:leading-[1.85]">
-            No middlemen, no gatekeepers. Scientists, developers, and institutions get infrastructure they can trust by default.
+            The result is infrastructure where integrity is structural, not bolted on. Scientists, developers, and institutions can build on a shared addressing layer that is open, auditable, and mathematically grounded.
           </p>
           <a
             href="/about"
