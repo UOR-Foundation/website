@@ -269,7 +269,7 @@ const Standard = () => {
                 >
                   {Icon && <Icon size={20} className="text-primary mb-4" />}
                   <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
+                  <p className="text-base font-body text-muted-foreground leading-relaxed">{item.text}</p>
                 </div>
               );
             })}
