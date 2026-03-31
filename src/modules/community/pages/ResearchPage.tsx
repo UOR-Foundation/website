@@ -284,9 +284,9 @@ const Research = () => {
       </section>
 
       {/* Join CTA */}
-      <section id="join" className="section-dark py-14 md:py-20 scroll-mt-28">
+      <section id="join" className="section-dark py-16 md:py-28 scroll-mt-28">
         <div className="container max-w-4xl text-center">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
