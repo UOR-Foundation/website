@@ -311,7 +311,7 @@ const SemanticWebPage = () => {
       </section>
 
       {/* Definition */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-8 md:py-14 bg-background border-b border-border">
         <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-6">
             Definition
@@ -343,7 +343,7 @@ const SemanticWebPage = () => {
       </section>
 
       {/* Tower */}
-      <section id="tower" className="py-12 md:py-20 bg-background border-b border-border">
+      <section id="tower" className="py-8 md:py-14 bg-background border-b border-border">
         <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Architecture
@@ -370,7 +370,7 @@ const SemanticWebPage = () => {
       </section>
 
       {/* Layer Details */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-8 md:py-14 bg-background border-b border-border">
         <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Layer by Layer
@@ -388,7 +388,7 @@ const SemanticWebPage = () => {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-12 md:py-20 bg-background border-b border-border">
+      <section className="py-8 md:py-14 bg-background border-b border-border">
         <div className="container max-w-6xl">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Comparison

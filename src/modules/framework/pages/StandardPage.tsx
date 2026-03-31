@@ -171,7 +171,7 @@ const Standard = () => {
       </section>
 
       {/* The Problem */}
-      <section className="py-12 md:py-20 bg-background border-b border-border/40">
+      <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             The Problem
@@ -191,7 +191,7 @@ const Standard = () => {
       </section>
 
       {/* Visual Diagram */}
-      <section className="py-12 md:py-20 bg-background border-b border-border/40">
+      <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-8">
             How It Works
@@ -201,7 +201,7 @@ const Standard = () => {
       </section>
 
       {/* Anatomy of an Address */}
-      <section className="py-12 md:py-20 bg-background border-b border-border/40">
+      <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
@@ -251,7 +251,7 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-12 md:py-20 bg-background border-b border-border/40">
+      <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
@@ -278,7 +278,7 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-12 md:py-20 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="architecture" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-6xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
@@ -295,7 +295,7 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-12 md:py-20">
+      <section className="section-dark py-8 md:py-14">
         <div className="container max-w-3xl text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
             Explore the Full Specification

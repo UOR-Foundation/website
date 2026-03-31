@@ -123,7 +123,7 @@ const Donate = () => {
       </section>
 
       {/* Projects to support */}
-      <section className="py-12 md:py-20 bg-background">
+      <section className="py-8 md:py-14 bg-background">
         <div className="container max-w-4xl">
           <h2
             className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-10 animate-fade-in-up opacity-0"
@@ -140,7 +140,7 @@ const Donate = () => {
       </section>
 
       {/* Ways to donate */}
-      <section className="py-12 md:py-20 section-dark">
+      <section className="py-8 md:py-14 section-dark">
         <div className="container max-w-4xl">
           <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">
             Ways to donate
