@@ -34,7 +34,7 @@ const paths = [
 
 const CTASection = () => {
   return (
-    <section className="py-16 md:py-28 bg-background">
+    <section className="py-12 md:py-20 bg-background">
       <div className="container max-w-6xl text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
           Ready to Build?
