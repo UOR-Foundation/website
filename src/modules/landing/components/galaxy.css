@@ -17,8 +17,7 @@
 }
 
 .galaxy-wrapper {
-  /* Scale relative to the smaller of width/height so it always fits */
-  --galaxy-size: min(38vh, 38vw, 340px);
+  --galaxy-size: min(32vh, 32vw, 300px);
   width: var(--galaxy-size);
   height: var(--galaxy-size);
   position: relative;
