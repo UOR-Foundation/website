@@ -23,8 +23,11 @@ const HeroSection = () => {
           className="font-display text-[clamp(2rem,8vw,3.5rem)] md:text-[clamp(1.5rem,5.5vw,3.25rem)] font-bold leading-[1.12] tracking-tight text-foreground text-center animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.25s" }}
         >
-          <span className="block">Your Universal Coordinate</span>
-          <span className="block">System for Information.</span>
+          <span className="block sm:hidden">Your Universal</span>
+          <span className="block sm:hidden">Coordinate System</span>
+          <span className="block sm:hidden">for Information.</span>
+          <span className="hidden sm:block">Your Universal Coordinate</span>
+          <span className="hidden sm:block">System for Information.</span>
         </h1>
         <div
           className="mt-[clamp(1.5rem,4vh,3rem)] md:mt-[clamp(2rem,4.5vh,4rem)] flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 animate-fade-in-up opacity-0"
