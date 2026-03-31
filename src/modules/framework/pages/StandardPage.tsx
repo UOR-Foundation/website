@@ -235,7 +235,7 @@ const Standard = () => {
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
               <h3 className="font-display text-lg font-bold text-foreground mb-2">The Components</h3>
-              <p className="text-sm md:text-base font-body text-muted-foreground leading-relaxed mb-4">
+              <p className="text-base font-body text-muted-foreground leading-relaxed mb-4">
                 Which specific building blocks make up the value. This lets you reconstruct the original from its parts, with nothing lost.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
