@@ -79,7 +79,7 @@ function McpClientCards() {
   return (
     <div>
       {/* Client tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 mb-6 pb-1 sm:pb-0 scrollbar-hide">
         {clients.map((cl, i) => (
           <button
             key={cl.name}
