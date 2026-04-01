@@ -13,23 +13,23 @@ const HeroSection = () => {
 
       {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center justify-center px-6 pointer-events-none">
-        {/* Top spacer — golden ratio: 38.2% above content */}
-        <div className="basis-[20%] shrink-0" />
+        {/* Top spacer — push content to lower-center */}
+        <div className="basis-[14%] shrink-0" />
 
-        {/* Galaxy orb — circular, no clipping box */}
+        {/* Galaxy orb — circular, larger */}
         <div
-          className="w-[min(52vw,220px)] h-[min(52vw,220px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
+          className="w-[min(62vw,270px)] h-[min(62vw,270px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
         >
           <GalaxyAnimation />
         </div>
 
         {/* Spacer */}
-        <div className="h-[clamp(2rem,5vw,3rem)] shrink-0" />
+        <div className="h-[clamp(2.5rem,6vw,3.5rem)] shrink-0" />
 
         {/* Headline — centered, clean */}
         <h1
-          className="font-display text-[clamp(2rem,8.5vw,3.25rem)] font-bold leading-[1.1] tracking-[0.04em] uppercase text-foreground text-center animate-fade-in-up opacity-0"
+          className="font-display text-[clamp(1.75rem,7.5vw,2.75rem)] font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
           style={{ animationDelay: "0.29s" }}
         >
           Your Universal<br />
@@ -39,7 +39,7 @@ const HeroSection = () => {
 
         {/* CTA */}
         <div
-          className="mt-[clamp(1.5rem,4vw,2.5rem)] animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.75rem,5vw,3rem)] animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
@@ -51,8 +51,8 @@ const HeroSection = () => {
           </a>
         </div>
 
-        {/* Bottom spacer — fills remaining space */}
-        <div className="flex-1" />
+        {/* Bottom spacer */}
+        <div className="flex-[1.618]" />
       </div>
 
       {/* Desktop: original layout with galaxy right-aligned */}
