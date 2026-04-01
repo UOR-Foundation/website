@@ -34,6 +34,19 @@
     --text-label:            clamp(12px, 0.8vw, 14px);
     --text-caption:          clamp(11px, 0.7vw, 13px);
 
+    /* ── Golden Ratio Spacing System ─────────────────────────────────
+     * φ = 1.618. All section and content spacing follows φ-scaled steps.
+     * Provides harmonious, proportional rhythm across the entire site.
+     */
+    --phi: 1.618;
+    --section-py-sm:   clamp(3rem, 5vw, 4.854rem);
+    --section-py-md:   clamp(5rem, 8vw, 7.854rem);
+    --section-py-lg:   clamp(6rem, 10vw, 10rem);
+    --content-gap-sm:  1rem;
+    --content-gap-md:  1.618rem;
+    --content-gap-lg:  2.618rem;
+    --content-gap-xl:  4.236rem;
+
     /* ── Hologram Adaptive Scale ─────────────────────────────────────
      * The system attends to the human's screen — not the reverse.
      * --holo-scale:      viewport-proportional (auto)

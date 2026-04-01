@@ -2,10 +2,10 @@ import { teamMembers } from "@/data/team-members";
 
 const CommunitySection = () => {
   return (
-    <section className="py-24 md:py-32 bg-section-dark section-depth">
-      <div className="container max-w-7xl">
+    <section className="py-section-md bg-section-dark section-depth">
+      <div className="container max-w-[1400px]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
-          <div className="flex items-center gap-3 mb-10 md:mb-14">
+          <div className="flex items-center gap-3 mb-golden-lg">
             <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§7</span>
             <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
               UOR Community
