@@ -107,64 +107,84 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         </div>
       </header>
 
-      {/* Full-screen mobile menu */}
+      {/* Full-screen mobile menu — Foundation-themed with prime stagger */}
       <div
-        className={`md:hidden fixed inset-0 z-40 bg-background transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`md:hidden fixed inset-0 z-40 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           mobileOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="h-full flex flex-col">
+        {/* Backdrop with subtle depth */}
+        <div className="absolute inset-0 bg-background" />
+        {/* Faint radial glow — Foundation ambience */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
+          style={{
+            background: "radial-gradient(ellipse at 50% 38.2%, hsl(38 65% 55% / 0.03) 0%, transparent 60%)",
+          }}
+        />
+
+        <div className="relative h-full flex flex-col">
           <div className="h-[5rem] shrink-0" />
 
-          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-1 px-8">
-            {navItems.map((item, idx) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`py-3 px-6 text-[15px] font-semibold uppercase tracking-[0.18em] font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  mobileOpen
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-3"
-                } ${
-                  location.pathname === item.href
-                    ? "text-foreground"
-                    : "text-foreground/60 active:text-foreground"
-                }`}
-                style={{ transitionDelay: mobileOpen ? `${80 + idx * 50}ms` : "0ms" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
+            {navItems.map((item, idx) => {
+              // φ-based stagger: 100, 162, 262, 424ms
+              const phiDelay = Math.round(100 * Math.pow(1.618, idx));
+              const sectionNum = idx + 1;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`py-4 px-6 text-[17px] font-semibold uppercase tracking-[0.18em] font-body text-center transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-3 ${
+                    mobileOpen
+                      ? "opacity-100 translate-y-0 scale-100"
+                      : "opacity-0 translate-y-4 scale-[0.98]"
+                  } ${
+                    location.pathname === item.href
+                      ? "text-foreground"
+                      : "text-foreground/60 active:text-foreground"
+                  }`}
+                  style={{ transitionDelay: mobileOpen ? `${phiDelay}ms` : "0ms" }}
+                >
+                  <span className="font-mono text-[10px] text-primary/30 tracking-[0.05em]">§{sectionNum}</span>
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div
-            className={`flex-1 flex flex-col items-center justify-end px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] gap-5 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`flex-1 flex flex-col items-center justify-end px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] gap-6 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
               mobileOpen
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-4"
             }`}
-            style={{ transitionDelay: mobileOpen ? "280ms" : "0ms" }}
+            style={{ transitionDelay: mobileOpen ? "450ms" : "0ms" }}
           >
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="w-full max-w-xs py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-foreground/20 text-foreground/80 flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-all"
+              className="w-full max-w-xs py-4 text-[13px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-foreground/20 text-foreground/80 flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.97] transition-all"
             >
               <Heart size={12} fill="currentColor" strokeWidth={0} className="opacity-60" />
               Donate
             </button>
-            <div className="flex items-center justify-center gap-8 py-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={22} />
+            <div className="flex items-center justify-center gap-10 py-3">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="Discord">
+                <DiscordIcon size={24} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={22} />
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="GitHub">
+                <Github size={24} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={22} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="LinkedIn">
+                <Linkedin size={24} />
               </a>
             </div>
+            {/* Prime coordinate whisper */}
+            <span className="font-mono text-[9px] text-foreground/[0.06] tracking-[0.25em] uppercase select-none pb-2">
+              §0 · Navigate
+            </span>
           </div>
         </div>
       </div>
