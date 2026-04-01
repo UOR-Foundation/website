@@ -27,7 +27,7 @@ const Footer = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-foreground/50 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em] text-fluid-label"
+                  className="text-foreground/50 hover:text-foreground active:text-foreground/70 transition-colors duration-150 ease-out font-body uppercase tracking-[0.12em] text-fluid-label"
                 >
                   {item.label}
                 </Link>
