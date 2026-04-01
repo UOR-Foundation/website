@@ -80,7 +80,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <DiscordIcon size={17} />
               </a>
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
-                <Github size={15} />
+                <Github size={17} />
               </a>
               <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
                 <Linkedin size={15} />
