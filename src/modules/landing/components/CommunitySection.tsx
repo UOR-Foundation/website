@@ -12,7 +12,7 @@ const CommunitySection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap justify-center gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-12 lg:gap-x-10 lg:gap-y-14">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 justify-items-center gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-12 lg:gap-x-10 lg:gap-y-14">
             {teamMembers.map((member, idx) => (
               <a
                 key={member.name}
