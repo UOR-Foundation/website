@@ -273,11 +273,11 @@
 
 @layer components {
   .nav-pill {
-    @apply px-5 py-2 rounded-full border border-pill text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/25 transition-all duration-300 ease-out;
+    @apply px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-foreground/60 hover:text-foreground transition-all duration-300 ease-out;
   }
 
   .nav-pill-active {
-    @apply text-foreground border-foreground/30;
+    @apply text-foreground;
   }
 
   .section-dark {
@@ -285,7 +285,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(180deg, hsl(210 30% 94%) 0%, hsl(var(--background)) 100%);
+    background: transparent;
   }
 
   /* ── Golden Ratio Mobile System ──────────────────────────────────
