@@ -44,16 +44,16 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         }`}
       >
         {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
-        <div className="flex items-center justify-between h-[5rem] md:h-[4.5rem] pt-3 md:pt-4 px-6 md:px-10 lg:px-14">
+        <div className="flex items-center justify-between h-[5rem] md:h-[5.5rem] pt-4 md:pt-6 px-6 md:px-10 lg:px-14">
           {/* Left group: Logo + Nav links (SpaceX-style) */}
           <div className="flex items-center gap-8 lg:gap-12 relative z-[60]">
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
-                className="w-10 h-10 md:w-8 md:h-8 object-contain invert brightness-[100] transition-all duration-300"
+                className="w-10 h-10 md:w-9 md:h-9 object-contain invert brightness-[200] contrast-[1.2] transition-all duration-300"
               />
-              <span className="font-display text-[16px] md:text-[clamp(13px,1vw,15px)] font-semibold tracking-[0.18em] uppercase text-foreground">
+              <span className="font-display text-[16px] md:text-[clamp(14px,1.1vw,16px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 UOR Foundation
               </span>
             </Link>
@@ -63,7 +63,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`px-3 lg:px-5 py-2 text-[clamp(13px,1vw,16px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-150 ease-out ${
+                  className={`px-3 lg:px-5 py-2 text-[clamp(13px,1.1vw,16px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-150 ease-out ${
                     location.pathname === item.href
                       ? "text-foreground"
                       : "text-foreground/60 hover:text-foreground active:text-foreground/80"
