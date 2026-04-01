@@ -92,7 +92,7 @@ const DerivationLabPage = () => {
   return (
     <Layout>
       <section className="py-20 md:py-28">
-        <div className="container mx-auto px-6">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-6">
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">

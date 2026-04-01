@@ -11,7 +11,7 @@ const UnsPage = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-background pt-28 md:pt-52 pb-16">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4 max-w-4xl">
           {/* Header */}
           <div className="mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">

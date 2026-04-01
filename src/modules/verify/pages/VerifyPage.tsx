@@ -366,7 +366,7 @@ const VerifyPage = () => {
     <Layout>
       {/* Header */}
       <section className="bg-[hsl(var(--primary))] py-12 md:py-16">
-        <div className="container max-w-4xl">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <h1 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
             UOR Critical Identity Verifier
           </h1>
@@ -393,7 +393,7 @@ const VerifyPage = () => {
 
       {/* Content */}
       <section className="py-10 md:py-14 bg-background">
-        <div className="container max-w-4xl space-y-6">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl space-y-6">
           <CriticalIdentityVerifier />
           <UniversalCoherence />
           <TriadExplorer />

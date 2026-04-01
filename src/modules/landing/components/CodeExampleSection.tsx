@@ -13,7 +13,7 @@ console.log(address.value === 5 * 17); // true`;
 const CodeExampleSection = () => {
   return (
     <section className="py-8 md:py-14 bg-background">
-      <div className="container">
+      <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <p className="font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-5 md:mb-6" style={{ fontSize: 'clamp(14px, 1vw, 18px)' }}>
           See It Work
         </p>

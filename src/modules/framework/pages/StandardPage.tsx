@@ -141,7 +141,7 @@ const Standard = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
           </h1>
@@ -172,7 +172,7 @@ const Standard = () => {
 
       {/* The Problem */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             The Problem
           </p>
@@ -192,7 +192,7 @@ const Standard = () => {
 
       {/* Visual Diagram */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
             How It Works
           </p>
@@ -202,7 +202,7 @@ const Standard = () => {
 
       {/* Anatomy of an Address */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Anatomy of an Address
           </p>
@@ -252,7 +252,7 @@ const Standard = () => {
 
       {/* Applications */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Where It Applies
           </p>
@@ -279,7 +279,7 @@ const Standard = () => {
 
       {/* Framework Architecture */}
       <section id="architecture" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Architecture
           </p>
@@ -296,7 +296,7 @@ const Standard = () => {
 
       {/* CTA */}
       <section className="section-dark py-section-sm">
-        <div className="container max-w-6xl text-center">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl text-center">
           <h2 className="font-display text-fluid-heading font-bold mb-4">
             Explore the Full Specification
           </h2>

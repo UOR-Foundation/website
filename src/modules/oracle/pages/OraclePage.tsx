@@ -141,7 +141,7 @@ export default function OraclePage() {
         </section>
 
         {/* What is this? Explainer */}
-        <section className="container mx-auto px-6 -mt-8 relative z-10">
+        <section className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-6 -mt-8 relative z-10">
           <div className="rounded-xl border border-border bg-card p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <ExplainerCard
@@ -164,7 +164,7 @@ export default function OraclePage() {
         </section>
 
         {/* Stats */}
-        <section className="container mx-auto px-6">
+        <section className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             <StatCard icon={<Database className="w-5 h-5" />} label="Total Records" value={stats?.["oracle:totalEncodings"] ?? 0} />
             <StatCard icon={<Activity className="w-5 h-5" />} label="Object Types" value={Object.keys(stats?.["oracle:byObjectType"] ?? {}).length} />
@@ -179,7 +179,7 @@ export default function OraclePage() {
         </section>
 
         {/* Controls */}
-        <section className="container mx-auto px-6">
+        <section className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-6">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="inline-flex rounded-lg border border-border bg-card overflow-hidden">
               {(["all", "encoding", "decoding"] as ViewMode[]).map((mode) => (

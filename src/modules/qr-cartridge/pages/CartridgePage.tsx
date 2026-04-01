@@ -144,7 +144,7 @@ const CartridgePage = () => {
         {/* ── Hero ──────────────────────────────────────────────────────── */}
         <section className="relative pt-40 pb-16 md:pt-52 md:pb-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4 relative z-10">
             <div className="max-w-2xl mx-auto text-center space-y-5">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary">
                 <QrCode className="w-4 h-4" />
@@ -163,7 +163,7 @@ const CartridgePage = () => {
 
         {/* ── Generator ────────────────────────────────────────────────── */}
         <section className="pb-16">
-          <div className="container mx-auto px-4">
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
             <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
               {/* Left: Input */}
@@ -317,7 +317,7 @@ const CartridgePage = () => {
 
         {/* ── Key Features ─────────────────────────────────────────────── */}
         <section className="py-16 border-t border-border">
-          <div className="container mx-auto px-4">
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground text-center mb-3">Why QR Cartridges?</h2>
               <p className="text-center text-muted-foreground mb-10 max-w-lg mx-auto">
@@ -340,7 +340,7 @@ const CartridgePage = () => {
 
         {/* ── How It Works ─────────────────────────────────────────────── */}
         <section className="py-16 border-t border-border">
-          <div className="container mx-auto px-4">
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground text-center mb-10">How It Works</h2>
               <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
