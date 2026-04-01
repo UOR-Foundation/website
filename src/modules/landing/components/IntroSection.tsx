@@ -138,43 +138,6 @@ const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="h-px w-full bg-[hsl(var(--section-dark-foreground)/0.12)] my-9" />
-
-              {/* Agentic AI section */}
-              <div className="flex flex-col gap-5">
-                <p className="text-xs md:text-sm font-body font-medium tracking-widest uppercase text-[hsl(var(--section-dark-foreground)/0.4)]">
-                  Example Use Case
-                </p>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[hsl(var(--section-dark-foreground)/0.1)] flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.8)]" />
-                  </div>
-                  <p className="text-sm md:text-base text-[hsl(var(--section-dark-foreground)/0.85)] font-body leading-relaxed flex-1">
-                    When all data shares one address system, AI can find, verify, and use information across every source <span className="text-[hsl(var(--section-dark-foreground))] font-medium">without custom connectors or translations</span>.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {capabilities.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setActive(c)}
-                      className={`px-4 py-2 rounded-full text-sm font-body font-semibold border transition-all duration-200 cursor-pointer ${
-                        active === c
-                          ? "border-[hsl(var(--section-dark-foreground)/0.4)] text-[hsl(var(--section-dark-foreground))] bg-[hsl(var(--section-dark-foreground)/0.12)] shadow-sm"
-                          : "border-[hsl(var(--section-dark-foreground)/0.15)] text-[hsl(var(--section-dark-foreground)/0.6)] bg-transparent hover:border-[hsl(var(--section-dark-foreground)/0.3)] hover:text-[hsl(var(--section-dark-foreground)/0.85)]"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-                <div className="rounded-xl bg-[hsl(var(--section-dark-foreground)/0.06)] border border-[hsl(var(--section-dark-foreground)/0.1)] px-5 py-4">
-                  <p className="text-sm md:text-base font-body text-[hsl(var(--section-dark-foreground)/0.85)] leading-relaxed">
-                    {capabilityDetails[active]}
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
