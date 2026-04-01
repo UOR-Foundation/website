@@ -18,7 +18,7 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen flex flex-col font-body">
       <ScrollProgress />
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 relative z-[1]">{children}</main>
       <Footer />
     </div>
   );

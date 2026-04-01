@@ -7,10 +7,12 @@ import CommunitySection from "@/modules/landing/components/CommunitySection";
 import HighlightsSection from "@/modules/landing/components/HighlightsSection";
 import PillarsSection from "@/modules/landing/components/PillarsSection";
 import CTASection from "@/modules/landing/components/CTASection";
+import PrimeConstellationBg from "@/modules/landing/components/PrimeConstellationBg";
 
 const Index = () => {
   return (
     <Layout>
+      <PrimeConstellationBg />
       <HeroSection />
       <IntroSection />
       <ApplicationsSection />
