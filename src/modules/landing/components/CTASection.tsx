@@ -26,11 +26,11 @@ const CTASection = () => {
          </div>
 
          <h2 className="font-display font-bold text-foreground text-fluid-heading">
-          Join the UOR Mission
-        </h2>
-        <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-6xl mx-auto text-fluid-body">
-          Learn the spec. Contribute to the codebase. Build the future of data identity with us.
-        </p>
+          Join Us
+         </h2>
+         <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-5xl mx-auto text-fluid-body">
+           Read the spec. Open a PR. Ship something real.
+         </p>
 
         <div className="mt-golden-lg flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
           <a
