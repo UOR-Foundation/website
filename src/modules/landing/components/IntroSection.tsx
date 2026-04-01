@@ -3,7 +3,7 @@ const IntroSection = () => {
     <section id="intro" className="py-section-md bg-background scroll-mt-16">
       <div className="container max-w-[1400px]">
         <div className="flex items-center gap-3 mb-golden-md">
-          <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§2</span>
+          <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§2</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             What is UOR
           </p>
