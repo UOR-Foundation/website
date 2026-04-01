@@ -1,16 +1,6 @@
 import { ArrowRight, ArrowDown } from "lucide-react";
 
-const capabilityDetails: Record<string, string> = {
-  Reason: "AI systems can find and connect information across different sources without needing custom adapters for each one.",
-  Verify: "Any system can independently confirm that data has not been altered and trace where it came from, without relying on a central authority.",
-  Compose: "Smaller pieces of data can be combined into larger ones, and broken apart again, without losing any information along the way.",
-  Navigate: "Any system can locate any piece of data by describing what it is, rather than knowing which server or database holds it.",
-};
-
-const capabilities = Object.keys(capabilityDetails);
-
-const IntroSection = () => {
-  const [active, setActive] = useState<string>("Reason");
+const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
   return (
     <section id="intro" className="py-section-md bg-background scroll-mt-16">
