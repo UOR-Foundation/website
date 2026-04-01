@@ -39,7 +39,7 @@ const applications: Application[] = [
     icon: Microscope,
     title: "Open Science",
     description:
-      "Make research data findable, reproducible, and composable across institutions and fields.",
+      "Make research data findable, reproducible, and composable across institutions, disciplines, and borders without special tooling.",
     systemId: "sys.open-science.v1",
   },
 ];
