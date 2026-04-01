@@ -1,93 +1,87 @@
 
 
-# The Living Prime Field — Two Dimensions of Revelation
+# Golden Ratio Hero & Navigation — SpaceX-Grade Balance
 
-## Concept
+## Analysis
 
-The prime number grid becomes a living instrument with two axes of interaction, both subtle and non-overwhelming:
+Comparing the SpaceX reference to current implementation:
 
-**Dimension 1 — Mouse (Spatial Lens):** A soft radial glow follows the cursor. Numbers near the mouse become slightly more visible and primes within the radius reveal their prime factorization (e.g., `12` becomes `2²·3`). Primes themselves glow gold and stand alone. The effect fades smoothly at the edges — like holding a magnifying glass over a mathematical manuscript.
+1. **Navbar text too small**: Currently 11px — SpaceX uses ~13px with generous spacing. On large screens (1920px+) the nav feels tiny.
+2. **Hero headline too small**: Clamped at max 3.5rem (56px) — SpaceX headline is ~48-60px and feels commanding. On large screens the text doesn't scale up enough.
+3. **Text positioned too low**: `pb-[18vh]` pushes text to the bottom. SpaceX positions text at roughly the vertical center-left (~40-45% from top).
+4. **Galaxy not dramatic enough on large screens**: Currently 62% width — SpaceX's Mars takes ~55-60% of viewport and is positioned to bleed off the right edge.
+5. **No golden ratio in layout**: Spacing between elements should follow φ (1.618) relationships.
 
-**Dimension 2 — Scroll (Temporal Depth):** As the user scrolls from top to bottom, the grid progressively transforms. At the top (hero), you see plain numbers. By mid-page, prime numbers begin showing their ordinal position in the prime sequence (e.g., prime `7` shows `π₄` — the 4th prime). By the bottom of the page, the field reveals the full factorization of every visible number. The scroll acts as a "depth dial" — scrolling deeper into the page literally reveals deeper mathematical structure.
+## Plan
 
-Both effects are extremely subtle — opacity changes from ~3% to ~12% at most. The grid never competes with content.
+### 1. Navbar — Larger, More Confident Typography
 
-## Changes
+**File:** `src/modules/core/components/Navbar.tsx`
 
-### 1. PrimeGrid.tsx — Complete Rewrite with Dual Interaction
+- Increase nav link font size: `11px` → `clamp(11px, 0.85vw, 14px)` — scales fluidly from small to large screens
+- Increase link padding: `px-5 lg:px-6` → `px-4 lg:px-7` for wider breathing room on large screens
+- Logo wordmark: `11px` → `clamp(11px, 0.85vw, 13px)` 
+- Donate button text: `10px` → `clamp(10px, 0.7vw, 12px)`
+- Social icons: `15px` → `17px`
+- Navbar height: keep `4.5rem` on desktop (matches SpaceX's slim bar)
 
-- **Base state:** Numbers at very low opacity (primes 5%, composites 2%) — a whisper
-- **Mouse lens:** Track mouse position via `mousemove` on the canvas. Within a ~200px radius, increase opacity with smooth distance falloff. Composites within the lens show their prime factorization using pretext's `prepareWithSegments()` to measure variable-width strings (e.g., `2²·3·5`) for perfect cell centering. Primes glow gold. Cache all pretext measurements in a Map for performance.
-- **Scroll dimension:** Read `window.scrollY / maxScroll` as a 0→1 `depth` value. As depth increases:
-  - 0.0–0.3: plain numbers only
-  - 0.3–0.6: primes begin showing their ordinal `πₙ` notation
-  - 0.6–1.0: all numbers show factorization, base opacity increases slightly
-- **Mobile:** No mouse lens (touch devices get scroll-only reveal). Use `window.matchMedia` to detect.
-- **Performance:** Only ~60-80 cells fall within the lens radius. Factorization strings are cached. Pretext `prepareWithSegments()` results cached per unique string. `requestAnimationFrame` drives rendering only when mouse moves or scroll changes — idle when static.
+### 2. HeroSection — Golden Ratio Positioning & Bigger Type
 
-### 2. PrimeSequenceCanvas.tsx — Pretext-Powered Layout
+**File:** `src/modules/landing/components/HeroSection.tsx`
 
-- Replace raw `ctx.measureText` with pretext's `prepareWithSegments()` + `layoutWithLines()` for accurate text measurement of the drifting prime sequence
-- Reduce opacity to 4% and drift speed to 0.2px/frame for a more meditative, non-overwhelming feel
+**Text positioning** — use golden ratio vertical placement:
+- Instead of `justify-end` with `pb-[18vh]`, use `justify-center` with a slight upward offset
+- Text block sits at ~38.2% from top (1 - 1/φ ≈ 0.382) — the golden section point
+- Implement as: `items-start` + `pt-[38.2vh]` equivalent, or a flex layout with golden ratio spacers
 
-### 3. Layout.tsx — Scope Grid to Landing
+**Headline sizing** — much larger, fluid:
+- Mobile: `clamp(2.2rem, 8vw, 3rem)` 
+- Desktop: `clamp(2.5rem, 4vw, 4.5rem)` — allows up to 72px on ultrawide
+- This matches SpaceX's bold, commanding presence
 
-- Remove `PrimeGrid` import and rendering from the global Layout component
+**Subtext**: `14px` → `clamp(14px, 1vw, 17px)` for proportional scaling
 
-### 4. IndexPage.tsx — Mount Grid Here
+**CTA button**: `10px` → `clamp(10px, 0.7vw, 12px)` with slightly larger padding
 
-- Import and render `PrimeGrid` inside the landing page specifically, so other pages are not affected
+**Galaxy positioning** — more dramatic:
+- Desktop: `w-[62%]` → `w-[58%]` with `mr-[-4%]` to bleed slightly off-edge like Mars in SpaceX
+- Large screens (lg+): scale up to `w-[55%] h-[95%]` for maximum drama
+- The galaxy should feel like it's emerging from the right edge
 
-## Technical Details
+### 3. Responsive Scaling Table
 
-**Factorization function:**
 ```text
-factorize(12) → "2²·3"
-factorize(30) → "2·3·5"
-factorize(7)  → "7" (prime — rendered brighter)
-factorize(1)  → "1"
+Viewport    Nav Links    Headline        Subtext    Galaxy Width
+─────────   ─────────    ────────        ───────    ────────────
+375px       11px         2.2rem (35px)   14px       85%
+768px       12px         2.5rem (40px)   15px       62%
+1280px      13px         3.5rem (56px)   16px       58%
+1920px      14px         4.2rem (67px)   17px       55%
+2560px      14px         4.5rem (72px)   17px       55%
 ```
 
-Uses superscript unicode characters (², ³, etc.) and middle-dot (·) as separator.
+### 4. Golden Ratio Spacing Relationships
 
-**Pretext integration in PrimeGrid:**
-- `prepareWithSegments(factString, font)` called once per unique factorization, cached in a `Map<number, { text: string, width: number }>`
-- Width from pretext used to center each factorization string in its cell
-- This is the key pretext value-add: variable-width strings like `2²·3·7` vs `2⁵` are perfectly centered without DOM reflow
-
-**Scroll-driven depth calculation:**
 ```text
-depth = scrollY / (documentHeight - windowHeight)
-// Clamped to [0, 1]
-// Used to interpolate between rendering modes
-```
-
-**Rendering modes by depth:**
-```text
-depth < 0.3  → plain numbers
-depth 0.3–0.6 → primes show πₙ (e.g., π₄ for 7)
-depth > 0.6  → composites show factorization
-```
-
-Transitions between modes use opacity interpolation so the change is gradual, not abrupt.
-
-**Mouse lens rendering:**
-```text
-For each cell:
-  dist = distance(cellCenter, mousePos)
-  if dist > LENS_RADIUS: render at base opacity
-  else:
-    t = 1 - (dist / LENS_RADIUS)²  // quadratic falloff
-    opacity = lerp(baseOpacity, peakOpacity, t)
-    if showFactorization: render factString centered via pretext width
-    else: render plain number
+Hero vertical layout (top to bottom):
+┌─────────────────────────────┐
+│   38.2% (1/φ)               │  ← empty space / navbar
+│─────────────────────────────│
+│   HEADLINE                  │
+│   gap: 1.618rem             │
+│   Subtext                   │
+│   gap: 2.618rem (φ²)        │
+│   [CTA Button]              │
+│                             │
+│   remaining 61.8% fills     │
+│   below text naturally      │
+└─────────────────────────────┘
 ```
 
 ## Files Modified
+
 | File | Change |
 |------|--------|
-| `PrimeGrid.tsx` | Full rewrite: mouse lens + scroll depth + pretext factorization |
-| `PrimeSequenceCanvas.tsx` | Pretext-powered layout, reduced opacity/speed |
-| `Layout.tsx` | Remove PrimeGrid |
-| `IndexPage.tsx` | Mount PrimeGrid here |
+| `Navbar.tsx` | Fluid font sizes with clamp(), larger icons, proportional spacing |
+| `HeroSection.tsx` | Golden ratio vertical positioning, larger fluid headline, dramatic galaxy sizing |
 
