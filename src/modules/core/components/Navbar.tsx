@@ -55,12 +55,16 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2 lg:gap-3">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`nav-pill ${location.pathname === item.href ? "nav-pill-active" : ""}`}
+                className={`px-3 lg:px-4 py-2 text-[13px] lg:text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
+                  location.pathname === item.href
+                    ? "text-foreground"
+                    : "text-foreground/50 hover:text-foreground"
+                }`}
               >
                 {item.label}
               </Link>
