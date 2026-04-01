@@ -10,13 +10,13 @@ const Footer = () => {
     <footer className="py-section-sm bg-section-dark">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-3.5">
             <img
               src={uorIcon}
               alt="UOR Foundation"
-              className="w-7 h-7 object-contain invert relative z-10"
+              className="w-10 h-10 md:w-12 md:h-12 object-contain invert relative z-10"
             />
-            <span className="font-body font-semibold tracking-[0.12em] uppercase text-foreground/80 text-fluid-label">
+            <span className="font-display font-semibold tracking-[0.18em] uppercase text-foreground text-lg md:text-xl lg:text-2xl">
               The UOR Foundation
             </span>
           </Link>
