@@ -32,7 +32,7 @@ const applications: Application[] = [
     icon: Bot,
     title: "Agentic AI",
     description:
-      "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own.",
+      "Give AI systems a single, reliable map of all available data so they can find, verify, and use information without human guidance.",
     systemId: "sys.agentic-ai.v1",
   },
   {
