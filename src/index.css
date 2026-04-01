@@ -440,7 +440,8 @@
 
   /* SpaceX-style rectangular buttons — crisp tactile feedback */
   .btn-primary {
-    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em];
+    @apply px-8 py-3.5 font-semibold uppercase tracking-[0.18em];
+    font-size: clamp(13px, 0.95vw, 17px);
     border: 1px solid hsl(0 0% 100%);
     color: hsl(0 0% 100%);
     background: transparent;
@@ -459,7 +460,8 @@
   }
 
   .btn-outline {
-    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em];
+    @apply px-8 py-3.5 font-semibold uppercase tracking-[0.18em];
+    font-size: clamp(13px, 0.95vw, 17px);
     border: 1px solid hsl(0 0% 100% / 0.3);
     color: hsl(0 0% 100% / 0.7);
     background: transparent;
