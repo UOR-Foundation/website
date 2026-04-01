@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { prepareWithSegments, layoutWithLines } from "@chenglou/pretext";
 
 /** Generate prime numbers up to n */
 function primesUpTo(n: number): number[] {
@@ -14,10 +15,24 @@ function primesUpTo(n: number): number[] {
 
 const PRIMES = primesUpTo(2000);
 const PRIME_TEXT = PRIMES.join("  ");
-const DRIFT_SPEED = 0.3; // px per frame
+const DRIFT_SPEED = 0.2; // px per frame — meditative
 const LINE_HEIGHT = 28;
 const FONT = '10px ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace';
-const TEXT_COLOR = "hsla(38, 65%, 55%, 0.06)";
+const TEXT_COLOR = "hsla(38, 65%, 55%, 0.04)";
+
+// Pretext-measured width (computed once)
+let cachedFullWidth: number | null = null;
+function getFullWidth(): number {
+  if (cachedFullWidth !== null) return cachedFullWidth;
+  try {
+    const prepared = prepareWithSegments(PRIME_TEXT + "  ", FONT);
+    const result = layoutWithLines(prepared, 999999, LINE_HEIGHT);
+    cachedFullWidth = result.lines.length > 0 ? result.lines[0].width : 0;
+  } catch {
+    cachedFullWidth = 0;
+  }
+  return cachedFullWidth;
+}
 
 const PrimeSequenceCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,23 +58,22 @@ const PrimeSequenceCanvas = () => {
     ctx.fillStyle = TEXT_COLOR;
     ctx.textBaseline = "top";
 
-    // Measure one full repetition width
-    const fullWidth = ctx.measureText(PRIME_TEXT + "  ").width;
+    // Use pretext-measured width, fallback to ctx.measureText
+    let fullWidth = getFullWidth();
+    if (!fullWidth || fullWidth <= 0) {
+      fullWidth = ctx.measureText(PRIME_TEXT + "  ").width;
+    }
 
-    // Advance offset
     offsetRef.current = (offsetRef.current + DRIFT_SPEED) % fullWidth;
 
     const rows = Math.ceil(h / LINE_HEIGHT) + 1;
-    const startY = h * 0.07; // Start at ~7% from top like original
+    const startY = h * 0.07;
 
     for (let row = 0; row < rows; row++) {
       const y = startY + row * LINE_HEIGHT;
       if (y > h) break;
 
-      // Stagger each row slightly for visual interest
-      const rowOffset = offsetRef.current + row * 47; // prime-offset stagger
-
-      // Draw enough repetitions to fill width
+      const rowOffset = offsetRef.current + row * 47;
       let x = -(rowOffset % fullWidth);
       while (x < w) {
         ctx.fillText(PRIME_TEXT, x, y);

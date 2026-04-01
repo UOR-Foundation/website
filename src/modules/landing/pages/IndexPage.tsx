@@ -12,6 +12,7 @@ import CTASection from "@/modules/landing/components/CTASection";
 const Index = () => {
   return (
     <Layout>
+      <PrimeGrid />
       <HeroSection />
       <IntroSection />
       <ApplicationsSection />
