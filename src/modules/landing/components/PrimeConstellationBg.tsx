@@ -35,14 +35,14 @@ const MAX_N = 28000;
 const ROTATION_SPEED = 0.00006;
 const GOLD = "38, 65%, 55%";
 
-// Scroll thresholds — starts revealing at 8%, peaks at 50%
-const SCROLL_START = 0.08;
-const SCROLL_FULL = 0.50;
+// Scroll thresholds — subtle reveal, only truly visible near the bottom
+const SCROLL_START = 0.45;
+const SCROLL_FULL = 0.92;
 
 // Dot sizing
-const BASE_DOT_R = 1.0;
-const PEAK_DOT_R = 2.2;
-const PEAK_ALPHA = 0.28; // Much more visible as an overlay
+const BASE_DOT_R = 0.8;
+const PEAK_DOT_R = 1.6;
+const PEAK_ALPHA = 0.12; // Subtle, not overpowering
 
 // Constellation lines
 const LINE_ALPHA_MULT = 0.25;

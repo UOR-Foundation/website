@@ -14,18 +14,25 @@ function sievePrimes(max: number): Set<number> {
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const MAX_N = 6000;
+const MAX_N = 4000;
 const GOLDEN_ANGLE = 2.3999632297286533; // π * (3 - √5)
 const SPOTLIGHT_RADIUS = 320;
 
-const BASE_ALPHA = 0.018;
-const BASE_ALPHA_MOBILE = 0.045;
-const PEAK_ALPHA = 0.55;
-const BASE_DOT_R = 1.2;
-const PEAK_DOT_R = 3;
-const ROTATION_SPEED = 0.00015; // rad per frame — slow, meditative
+// All dots are plotted; primes are darker/larger
+const COMPOSITE_ALPHA = 0.025;
+const COMPOSITE_ALPHA_MOBILE = 0.05;
+const PRIME_ALPHA = 0.12;
+const PRIME_ALPHA_MOBILE = 0.18;
+const PEAK_ALPHA = 0.6;
+
+const COMPOSITE_DOT_R = 0.8;
+const PRIME_DOT_R = 1.6;
+const PEAK_DOT_R = 3.2;
+
+const ROTATION_SPEED = 0.00012; // rad per frame — slow, meditative
 
 const GOLD = "38, 65%, 55%";
+const NEUTRAL = "0, 0%, 70%";
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 function lerp(a: number, b: number, t: number) {
@@ -42,12 +49,6 @@ const PrimeGrid = () => {
 
   const primes = useMemo(() => sievePrimes(MAX_N), []);
 
-  const primeIndices = useMemo(() => {
-    const arr: number[] = [];
-    for (let n = 2; n <= MAX_N; n++) if (primes.has(n)) arr.push(n);
-    return arr;
-  }, [primes]);
-
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -62,21 +63,21 @@ const PrimeGrid = () => {
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    // Center the spiral exactly in the middle of the hero
+    // Center the spiral
     const cx = w * 0.5;
     const cy = h * 0.5;
 
-    // Scale so the outermost prime dot reaches the corners
-    const diagonal = Math.sqrt(w * w + h * h) * 0.52;
+    // Scale so the spiral fills the viewport
+    const diagonal = Math.sqrt(w * w + h * h) * 0.48;
     const spacing = diagonal / Math.sqrt(MAX_N);
 
     const mouse = mouseRef.current;
     const globalAngle = angleRef.current;
-    const baseAlpha = isMobile ? BASE_ALPHA_MOBILE : BASE_ALPHA;
+    const compositeBase = isMobile ? COMPOSITE_ALPHA_MOBILE : COMPOSITE_ALPHA;
+    const primeBase = isMobile ? PRIME_ALPHA_MOBILE : PRIME_ALPHA;
 
-    for (let i = 0; i < primeIndices.length; i++) {
-      const n = primeIndices[i];
-      // Vogel spiral: angle = n * golden_angle, radius = spacing * √n
+    // Plot ALL integers on the Vogel spiral — primes stand out
+    for (let n = 1; n <= MAX_N; n++) {
       const angle = n * GOLDEN_ANGLE + globalAngle;
       const r = spacing * Math.sqrt(n);
       const x = cx + r * Math.cos(angle);
@@ -85,27 +86,29 @@ const PrimeGrid = () => {
       // Cull off-screen dots
       if (x < -5 || x > w + 5 || y < -5 || y > h + 5) continue;
 
-      let alpha = baseAlpha;
-      let dotR = BASE_DOT_R;
+      const isPrime = primes.has(n);
+      let alpha = isPrime ? primeBase : compositeBase;
+      let dotR = isPrime ? PRIME_DOT_R : COMPOSITE_DOT_R;
+      const color = isPrime ? GOLD : NEUTRAL;
 
       if (mouse) {
         const dist = Math.hypot(x - mouse.x, y - mouse.y);
         if (dist < SPOTLIGHT_RADIUS) {
           const norm = dist / SPOTLIGHT_RADIUS;
           const t = 1 - norm * norm * norm; // cubic falloff
-          alpha = lerp(baseAlpha, PEAK_ALPHA, t);
-          dotR = lerp(BASE_DOT_R, PEAK_DOT_R, t);
+          alpha = lerp(alpha, isPrime ? PEAK_ALPHA : PEAK_ALPHA * 0.35, t);
+          dotR = lerp(dotR, isPrime ? PEAK_DOT_R : PEAK_DOT_R * 0.5, t);
         }
       }
 
       ctx.beginPath();
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${GOLD}, ${alpha})`;
+      ctx.fillStyle = `hsla(${color}, ${alpha})`;
       ctx.fill();
     }
 
     ctx.restore();
-  }, [primeIndices, isMobile]);
+  }, [primes, isMobile]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -154,7 +157,6 @@ const PrimeGrid = () => {
     const parent = canvas.parentElement;
     if (parent) observer.observe(parent);
 
-    // Listen on the canvas itself (it now has pointer-events)
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mouseleave", onMouseLeave);
     canvas.addEventListener("touchmove", onTouchMove, { passive: true });
