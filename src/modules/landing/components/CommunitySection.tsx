@@ -23,7 +23,7 @@ const CommunitySection = () => {
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
+                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top transition-all duration-500"
                     loading="lazy"
                   />
                 </div>
