@@ -14,16 +14,16 @@ function sievePrimes(max: number): Set<number> {
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const MAX_N = 4000;
+const MAX_N = 6000;
 const GOLDEN_ANGLE = 2.3999632297286533; // π * (3 - √5)
-const SPOTLIGHT_RADIUS = 280;
+const SPOTLIGHT_RADIUS = 320;
 
-const BASE_ALPHA = 0.03;
-const BASE_ALPHA_MOBILE = 0.06;
-const PEAK_ALPHA = 0.45;
-const BASE_DOT_R = 1.5;
-const PEAK_DOT_R = 2.5;
-const ROTATION_SPEED = 0.0003; // rad per frame
+const BASE_ALPHA = 0.018;
+const BASE_ALPHA_MOBILE = 0.045;
+const PEAK_ALPHA = 0.55;
+const BASE_DOT_R = 1.2;
+const PEAK_DOT_R = 3;
+const ROTATION_SPEED = 0.00015; // rad per frame — slow, meditative
 
 const GOLD = "38, 65%, 55%";
 
@@ -42,7 +42,6 @@ const PrimeGrid = () => {
 
   const primes = useMemo(() => sievePrimes(MAX_N), []);
 
-  // Pre-compute which indices are prime for fast iteration
   const primeIndices = useMemo(() => {
     const arr: number[] = [];
     for (let n = 2; n <= MAX_N; n++) if (primes.has(n)) arr.push(n);
@@ -63,13 +62,13 @@ const PrimeGrid = () => {
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    // Center spiral slightly right to complement left-aligned text
-    const cx = w * 0.55;
-    const cy = h * 0.48;
+    // Center the spiral exactly in the middle of the hero
+    const cx = w * 0.5;
+    const cy = h * 0.5;
 
-    // Spacing: fit the outermost dot within the viewport
-    const maxRadius = Math.min(w, h) * 0.45;
-    const spacing = maxRadius / Math.sqrt(MAX_N);
+    // Scale so the outermost prime dot reaches the corners
+    const diagonal = Math.sqrt(w * w + h * h) * 0.52;
+    const spacing = diagonal / Math.sqrt(MAX_N);
 
     const mouse = mouseRef.current;
     const globalAngle = angleRef.current;
@@ -77,18 +76,19 @@ const PrimeGrid = () => {
 
     for (let i = 0; i < primeIndices.length; i++) {
       const n = primeIndices[i];
+      // Vogel spiral: angle = n * golden_angle, radius = spacing * √n
       const angle = n * GOLDEN_ANGLE + globalAngle;
       const r = spacing * Math.sqrt(n);
       const x = cx + r * Math.cos(angle);
       const y = cy + r * Math.sin(angle);
 
-      // Skip dots outside canvas
+      // Cull off-screen dots
       if (x < -5 || x > w + 5 || y < -5 || y > h + 5) continue;
 
       let alpha = baseAlpha;
       let dotR = BASE_DOT_R;
 
-      if (mouse && !isMobile) {
+      if (mouse) {
         const dist = Math.hypot(x - mouse.x, y - mouse.y);
         if (dist < SPOTLIGHT_RADIUS) {
           const norm = dist / SPOTLIGHT_RADIUS;
@@ -123,13 +123,22 @@ const PrimeGrid = () => {
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      const rect = parent.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
 
     const onMouseLeave = () => {
+      mouseRef.current = null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    };
+
+    const onTouchEnd = () => {
       mouseRef.current = null;
     };
 
@@ -143,20 +152,22 @@ const PrimeGrid = () => {
 
     const observer = new ResizeObserver(resize);
     const parent = canvas.parentElement;
-    if (parent) {
-      observer.observe(parent);
-      parent.addEventListener("mousemove", onMouseMove);
-      parent.addEventListener("mouseleave", onMouseLeave);
-    }
+    if (parent) observer.observe(parent);
+
+    // Listen on the canvas itself (it now has pointer-events)
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("mouseleave", onMouseLeave);
+    canvas.addEventListener("touchmove", onTouchMove, { passive: true });
+    canvas.addEventListener("touchend", onTouchEnd);
 
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
       observer.disconnect();
-      if (parent) {
-        parent.removeEventListener("mousemove", onMouseMove);
-        parent.removeEventListener("mouseleave", onMouseLeave);
-      }
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseleave", onMouseLeave);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", onTouchEnd);
       cancelAnimationFrame(rafRef.current);
     };
   }, [draw]);
@@ -164,7 +175,7 @@ const PrimeGrid = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-[1] pointer-events-none"
+      className="absolute inset-0 z-[1]"
       aria-hidden="true"
     />
   );
