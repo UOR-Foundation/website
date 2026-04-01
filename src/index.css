@@ -129,32 +129,8 @@
   [data-text-size="compact"] { --holo-user-scale: 0.9; }
   [data-text-size="large"]   { --holo-user-scale: 1.15; }
 
-  .dark {
-    --background: 220 18% 7%;
-    --foreground: 210 15% 90%;
-    --card: 220 16% 11%;
-    --card-foreground: 210 15% 90%;
-    --popover: 220 16% 11%;
-    --popover-foreground: 210 15% 90%;
-    --primary: 152 44% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 16%;
-    --secondary-foreground: 210 15% 90%;
-    --muted: 220 14% 16%;
-    --muted-foreground: 210 10% 55%;
-    --accent: 200 28% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 152 34% 40%;
-    --section-dark: 220 20% 5%;
-    --section-dark-foreground: 210 15% 85%;
-    --code-bg: 220 20% 5%;
-    --pill-border: 220 12% 30%;
-    --rule: 220 14% 18%;
-  }
+  /* Dark class is a no-op — site is permanently dark */
+  .dark {}
 }
 
 @layer base {
