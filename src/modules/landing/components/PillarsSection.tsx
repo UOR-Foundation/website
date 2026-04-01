@@ -15,7 +15,7 @@ const PillarsSection = () => {
             Get Involved
           </p>
         </div>
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mt-0">
           {pillars.map((pillar, index) => {
             const Icon = iconMap[pillar.iconKey];
