@@ -25,12 +25,9 @@ const CTASection = () => {
            <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/30">§17</span>
          </div>
 
-         <h2 className="font-display font-bold text-foreground text-fluid-heading">
-          Join Us
-         </h2>
-         <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-5xl mx-auto text-fluid-body">
-           Read the spec. Open a PR. Ship something real.
-         </p>
+          <h2 className="font-display font-bold text-foreground text-fluid-heading">
+           Join the UOR Mission
+          </h2>
 
         <div className="mt-golden-lg flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
           <a
