@@ -8,7 +8,7 @@ const CommunitySection = () => {
           <div className="flex items-center gap-3 mb-10 md:mb-14">
             <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§7</span>
             <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
-              Community
+              UOR Community
             </p>
           </div>
 
@@ -22,11 +22,11 @@ const CommunitySection = () => {
                 className="group flex flex-col items-center text-center w-[120px] md:w-[140px] animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.23 + idx * 0.04}s` }}
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm overflow-hidden mb-3 border border-foreground/10 group-hover:border-primary/30 transition-all duration-300">
+                <div className="w-20 h-20 md:w-24 md:h-24 mb-3 group-hover:scale-105 transition-transform duration-300" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover object-top"
                     loading="lazy"
                   />
                 </div>
@@ -41,11 +41,11 @@ const CommunitySection = () => {
 
             {/* Community count */}
             <div className="flex flex-col items-center text-center w-[120px] md:w-[140px] justify-center">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border border-foreground/10 flex items-center justify-center mb-3">
+              <div className="w-20 h-20 md:w-24 md:h-24 border border-foreground/10 flex items-center justify-center mb-3" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                 <span className="font-mono text-foreground/50 text-lg">+</span>
               </div>
               <p className="font-mono text-foreground/50 text-fluid-body-sm">
-                150 nodes
+                150 contributors
               </p>
             </div>
           </div>
