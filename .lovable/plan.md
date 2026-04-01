@@ -1,49 +1,56 @@
 
 
-# Prime Constellation Easter Egg — Scroll-Revealed Background
+# Mobile Experience Refinement — Crisp, Golden, Magical
 
-## Concept
+## Issues Found
 
-A full-page fixed canvas sits behind all content on the index page. It renders a slowly evolving **Ulam spiral** of prime numbers — dots placed on a spiral grid where only primes are visible, forming the mysterious diagonal patterns that mathematicians have marveled at since 1963. The visualization starts completely invisible and awakens as the user scrolls, creating the feeling of an ancient mathematical consciousness emerging beneath the page.
+From the mobile screenshots (390×844):
 
-The Asimov Foundation resonance: like psychohistory revealing hidden patterns in apparent chaos, the primes reveal their secret structure only to those who look (scroll) deep enough.
+1. **Hero section**: The galaxy animation overlaps heavily with headline text — readability is compromised. The text runs to 6 lines ("YOUR / UNIVERSAL / COORDINATE / SYSTEM / FOR / INFORMATION") when it should be 3. The `max-w-[55%]` constraint forces the text too narrow on mobile. The "Explore Projects" CTA is barely visible, cut off at the bottom.
 
-## How It Works
+2. **Hero vertical balance**: Too much empty space above the galaxy (the `basis-[38%]` spacer). The galaxy and text compete for the same left-aligned area.
 
-1. **New component: `PrimeConstellationBg.tsx`** — a fixed-position canvas (`position: fixed; inset: 0; z-index: 0`) that renders behind all page content.
+3. **Mobile menu**: Functional but lacks the "magical" quality — no prime/Foundation theming. The nav links are small (15px) and feel sparse. Could use a subtle prime constellation or golden ratio breathing animation.
 
-2. **Ulam spiral visualization**: Numbers 1 to ~40,000 are placed on a rectangular spiral outward from center. Only primes are drawn as dots. This naturally produces the famous diagonal line patterns — no artificial arrangement needed. The spiral slowly rotates (matching the existing `ROTATION_SPEED` aesthetic).
+4. **Footer**: The nav links overflow horizontally ("ABOUT" is cut off). Social icons are cramped.
 
-3. **Scroll-driven revelation**:
-   - At scroll 0%: canvas is fully transparent (invisible).
-   - As the user scrolls, global alpha increases smoothly from 0 to a subtle peak (~0.06–0.08 opacity) using `window.scrollY / document.scrollHeight`.
-   - Simultaneously, the dot radius grows slightly and a faint gold glow (`hsla(38, 65%, 55%)`) intensifies — the constellation "wakes up."
-   - By ~60% scroll depth, the full pattern is visible. The final 40% holds steady.
+5. **Section spacing**: The golden ratio spacing system exists but some sections feel tight on mobile — particularly the community grid (people overflow in pairs).
 
-4. **Layering**: The canvas sits at `z-index: 0`. All existing sections already have backgrounds or relative positioning that will naturally layer on top, letting the prime constellation peek through in the gaps and margins between sections.
+6. **Container padding**: Currently `2rem` from Tailwind config but the hero uses `px-6` (1.5rem). Some inconsistency.
 
-5. **Connection to existing hero**: The hero's `PrimeGrid` (Vogel spiral) is the "seed." As you scroll past it, the Ulam spiral beneath takes over — a different mathematical face of the same primes, as if the page itself is built on a foundation of prime numbers.
+## Plan
 
-## Technical Details
+### 1. Hero Section Mobile Overhaul (`HeroSection.tsx`)
+- On mobile: center the galaxy above the text instead of right-aligned overlap
+- Use a stacked vertical layout: navbar → galaxy (centered, constrained) → headline → subtitle → CTA
+- Headline: `text-[clamp(2.2rem,8vw,3rem)]` stays but remove `max-w-[55%]` on mobile (use full width)
+- Move galaxy to a contained size on mobile: `w-[min(65vw,280px)]` centered
+- Reduce the `basis-[38%]` spacer to something smaller on mobile
+- Ensure CTA button is fully visible above the fold
 
-### New file: `src/modules/landing/components/PrimeConstellationBg.tsx`
-- Full-viewport fixed canvas, pointer-events-none
-- Ulam spiral coordinate generator (simple arithmetic spiral mapping)
-- Prime sieve reused from existing pattern (up to ~40,000)
-- Scroll listener (passive) drives opacity/scale uniforms
-- Single `requestAnimationFrame` loop with slow rotation
-- Dot color: gold (`hsla(38, 65%, 55%)`) matching existing prime palette
-- Optional: faint connecting lines between adjacent primes on the spiral for the "constellation" effect, also scroll-gated
+### 2. Mobile Menu Enhancement (`Navbar.tsx`)
+- Add a subtle, slow-rotating PrimeGrid canvas as background behind the mobile menu (very low opacity, gold dots)
+- Increase nav link sizes on mobile: `text-[17px]` with more generous `py-4` padding
+- Add a golden-ratio breathing animation to the menu transition — links stagger in with φ-based delays (current 50ms gaps → 80ms with φ scaling)
+- Add a faint section number before each nav item (§2, §3, etc.) to echo the Foundation theme
+- Improve the transition: add a subtle scale-up from 0.98 to 1.0 on the entire menu
 
-### Modified file: `src/modules/landing/pages/IndexPage.tsx`
-- Import and render `PrimeConstellationBg` as the first child inside `<Layout>`, before `<HeroSection>`
+### 3. Footer Mobile Fix (`Footer.tsx`)
+- Wrap footer nav items to prevent horizontal overflow — use `flex-wrap` or stack vertically on mobile
+- Increase social icon tap targets
 
-### Modified file: `src/modules/core/components/Layout.tsx`
-- Ensure `<main>` has `position: relative; z-index: 1` so content layers above the fixed canvas
+### 4. Community Section Mobile (`CommunitySection.tsx`)
+- Use `grid grid-cols-2` instead of `flex-wrap` on mobile for even 2-column layout
+- Increase hexagon size slightly on mobile for better photo visibility
 
-### Performance
-- Canvas renders only prime dots (~4,200 out of 40,000) — lightweight
-- Culls off-screen dots
-- Uses `devicePixelRatio` for retina sharpness
-- Single RAF loop, pauses when tab is hidden via `document.hidden`
+### 5. Global Mobile Polish (`index.css` + components)
+- Ensure consistent `px-6` (24px) container padding on mobile across all sections
+- Add a CSS media query to reduce `--section-py-md` slightly on small screens so content doesn't feel over-spaced
+
+## Files Modified
+- `src/modules/landing/components/HeroSection.tsx` — mobile-first hero layout
+- `src/modules/core/components/Navbar.tsx` — enhanced mobile menu with prime theming
+- `src/modules/core/components/Footer.tsx` — fix mobile overflow
+- `src/modules/landing/components/CommunitySection.tsx` — mobile grid improvement
+- `src/index.css` — mobile spacing tuning
 
