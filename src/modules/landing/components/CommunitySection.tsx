@@ -7,7 +7,7 @@ const CommunitySection = () => {
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
           <div className="flex items-center gap-3 mb-10 md:mb-14">
             <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§7</span>
-            <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+            <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
               Community
             </p>
           </div>
@@ -30,10 +30,10 @@ const CommunitySection = () => {
                     loading="lazy"
                   />
                 </div>
-                <p className="font-body font-semibold text-foreground leading-tight" style={{ fontSize: 'clamp(14px, 1vw, 17px)' }}>
+                <p className="font-body font-semibold text-foreground leading-tight text-fluid-body-sm">
                   {member.name.split(" ")[0]}
                 </p>
-                <p className="font-body text-foreground/55 leading-snug mt-1" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <p className="font-body text-foreground/55 leading-snug mt-1 text-fluid-label">
                   {member.role}
                 </p>
               </a>
@@ -44,7 +44,7 @@ const CommunitySection = () => {
               <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border border-foreground/10 flex items-center justify-center mb-3">
                 <span className="font-mono text-foreground/50 text-lg">+</span>
               </div>
-              <p className="font-mono text-foreground/50" style={{ fontSize: 'clamp(13px, 0.9vw, 15px)' }}>
+              <p className="font-mono text-foreground/50 text-fluid-body-sm">
                 150 nodes
               </p>
             </div>

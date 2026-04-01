@@ -16,7 +16,7 @@ const HighlightsSection = () => {
       <div className="container max-w-7xl">
         <div className="flex items-center gap-3 mb-10 md:mb-14">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§11</span>
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             Community Highlights
           </p>
         </div>
@@ -38,16 +38,16 @@ const HighlightsSection = () => {
                 />
               </div>
               <div className="flex flex-col flex-1 py-6 md:py-8 pr-4">
-                <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3 text-fluid-label">
                   {item.tag}
                 </span>
-                <h3 className="font-display font-semibold text-foreground leading-snug flex-1" style={{ fontSize: 'clamp(1rem, 1.1vw, 1.375rem)' }}>
+                <h3 className="font-display font-semibold text-foreground leading-snug flex-1 text-fluid-card-title">
                   {item.title}
                 </h3>
-                <p className="mt-3 text-foreground/50 font-body" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
+                <p className="mt-3 text-foreground/50 font-body text-fluid-label">
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300 text-fluid-label">
                   Learn more <ArrowRight size={12} />
                 </span>
               </div>

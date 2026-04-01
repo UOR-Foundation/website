@@ -16,17 +16,17 @@ const ProjectsShowcase = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§5</span>
-              <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+              <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-label">
                 UOR Ecosystem
               </p>
             </div>
-            <h2 className="font-display font-bold text-foreground" style={{ fontSize: 'clamp(1.875rem, 2.5vw, 3rem)' }}>
+            <h2 className="font-display font-bold text-foreground text-fluid-heading">
               Featured Projects
             </h2>
           </div>
           <Link
             to="/projects"
-            className="group flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
+            className="group flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body text-fluid-label"
           >
             View all projects
             <ArrowRight
@@ -51,19 +51,19 @@ const ProjectsShowcase = () => {
 
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />
-                <span className="font-semibold text-foreground/50 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="font-semibold text-foreground/50 font-body uppercase tracking-[0.15em] text-fluid-label">
                   {project.maturity}
                 </span>
               </div>
-              <h3 className="font-display font-semibold text-foreground" style={{ fontSize: 'clamp(1.125rem, 1.2vw, 1.5rem)' }}>
+              <h3 className="font-display font-semibold text-foreground text-fluid-card-title">
                 {project.name}
               </h3>
-              <p className="text-foreground/65 font-body leading-relaxed flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
+              <p className="text-foreground/65 font-body leading-relaxed flex-1 text-fluid-body-sm">
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-foreground/45 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                  <span className="font-semibold text-foreground/45 font-body uppercase tracking-[0.15em] text-fluid-label">
                     {project.category}
                   </span>
                   {project.license && (

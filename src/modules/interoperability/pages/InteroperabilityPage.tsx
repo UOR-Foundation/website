@@ -24,13 +24,13 @@ export default function InteroperabilityPage() {
           <div className="relative container max-w-7xl pt-28 md:pt-52 pb-14 sm:pb-18">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div className="max-w-2xl">
-                <span className="inline-block px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-mono font-medium mb-4">
+                <span className="inline-block px-2.5 py-1 rounded-full bg-primary/10 text-primary text-fluid-caption font-mono font-medium mb-4">
                   One Hash · Every Standard
                 </span>
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                <h1 className="text-fluid-page-title font-bold tracking-tight text-foreground">
                   Universal Interoperability Map
                 </h1>
-                <p className="mt-3 text-base text-foreground/70 leading-relaxed">
+                <p className="mt-3 text-fluid-body text-foreground/70 leading-relaxed">
                   Every external standard is a deterministic projection of a single UOR identity.
                   Explore how they compose into cross-protocol synergy chains.
                 </p>
@@ -39,7 +39,7 @@ export default function InteroperabilityPage() {
               <div className="flex items-center gap-1 bg-secondary rounded-lg p-1 shrink-0 self-start sm:self-auto">
                 <button
                   onClick={() => setView("list")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-fluid-caption font-medium transition-colors ${
                     view === "list"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -49,7 +49,7 @@ export default function InteroperabilityPage() {
                 </button>
                 <button
                   onClick={() => setView("graph")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-fluid-caption font-medium transition-colors ${
                     view === "graph"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"

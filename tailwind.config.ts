@@ -88,6 +88,15 @@ export default {
         "holo-xl": "var(--holo-text-xl)",
         "holo-2xl": "var(--holo-text-2xl)",
         "holo-display": "var(--holo-text-display)",
+        /* Unified fluid typography scale */
+        "fluid-page-title": "var(--text-page-title)",
+        "fluid-heading": "var(--text-section-heading)",
+        "fluid-card-title": "var(--text-card-title)",
+        "fluid-lead": "var(--text-lead)",
+        "fluid-body": "var(--text-body)",
+        "fluid-body-sm": "var(--text-body-sm)",
+        "fluid-label": "var(--text-label)",
+        "fluid-caption": "var(--text-caption)",
       },
       /* Hologram proportional spacing */
       spacing: {
