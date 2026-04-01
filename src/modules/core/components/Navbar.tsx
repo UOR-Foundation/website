@@ -77,7 +77,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="Discord">
-                <DiscordIcon size={15} />
+                <DiscordIcon size={17} />
               </a>
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
                 <Github size={15} />
