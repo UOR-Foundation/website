@@ -17,16 +17,18 @@ const HeroSection = () => {
         className="absolute inset-0 flex items-center justify-end animate-fade-in opacity-0"
         style={{ animationDelay: "0.13s" }}
       >
-        <div className="relative w-[85%] h-[85%] md:w-[62%] md:h-[90%] mr-[-8%] md:mr-[-2%]">
+        <div className="relative w-[85%] h-[85%] md:w-[58%] md:h-[90%] lg:w-[55%] lg:h-[95%] mr-[-8%] md:mr-[-4%]">
           <GalaxyAnimation />
         </div>
       </div>
 
       {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
-      <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-10 lg:px-14">
-        <div className="pb-[18vh] md:pb-[16vh]">
+      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-14">
+        {/* Golden ratio spacer — 38.2% from top */}
+        <div className="basis-[38.2%] shrink-0" />
+        <div>
           <h1
-            className="font-display text-[clamp(2rem,7.5vw,3rem)] md:text-[clamp(2.2rem,3.2vw,3.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[560px]"
+            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[680px]"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
@@ -34,25 +36,27 @@ const HeroSection = () => {
             for Information
           </h1>
           <p
-            className="mt-5 md:mt-6 text-[13px] md:text-[14px] text-foreground/40 max-w-[440px] leading-[1.75] font-body animate-fade-in-up opacity-0"
+            className="mt-[1.618rem] text-[clamp(13px,1vw,17px)] text-foreground/40 max-w-[500px] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
             Deterministic identity. Content-addressed structure.
             Indexed by prime decomposition.
           </p>
           <div
-            className="mt-8 md:mt-10 animate-fade-in-up opacity-0"
+            className="mt-[2.618rem] animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
               href="/projects"
-              className="inline-flex items-center gap-3 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
+              className="inline-flex items-center gap-3 px-7 py-3.5 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
             >
               Explore
-              <ArrowRight size={12} />
+              <ArrowRight size={13} />
             </a>
           </div>
         </div>
+        {/* Remaining 61.8% fills naturally */}
+        <div className="flex-1" />
       </div>
 
       {/* Origin coordinate marker */}

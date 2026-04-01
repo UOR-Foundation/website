@@ -51,7 +51,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               alt="UOR Foundation"
               className="w-9 h-9 md:w-7 md:h-7 object-contain invert brightness-[100] transition-all duration-300"
             />
-            <span className="font-display text-[15px] md:text-[11px] font-semibold tracking-[0.18em] uppercase text-foreground">
+            <span className="font-display text-[15px] md:text-[clamp(11px,0.85vw,13px)] font-semibold tracking-[0.18em] uppercase text-foreground">
               UOR Foundation
             </span>
           </Link>
@@ -62,7 +62,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`px-5 lg:px-6 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+                className={`px-4 lg:px-7 py-2 text-[clamp(11px,0.85vw,14px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
                   location.pathname === item.href
                     ? "text-foreground"
                     : "text-foreground/50 hover:text-foreground"
@@ -77,18 +77,18 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="Discord">
-                <DiscordIcon size={15} />
+                <DiscordIcon size={17} />
               </a>
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
-                <Github size={15} />
+                <Github size={17} />
               </a>
               <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
-                <Linkedin size={15} />
+                <Linkedin size={17} />
               </a>
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-5 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
+              className="px-5 py-2 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
               <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
