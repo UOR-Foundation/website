@@ -1,3 +1,5 @@
+import { ArrowRight } from "lucide-react";
+
 const IntroSection = () => {
   return (
     <section id="intro" className="py-section-md bg-background scroll-mt-16">
@@ -14,14 +16,20 @@ const IntroSection = () => {
           style={{ animationDelay: "0.11s" }}
         >
           <p className="text-foreground/90 font-medium font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-            The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
-          </p>
-          <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-body">
             UOR gives every piece of data a permanent address derived from its content. The same input always produces the same address, on any machine, in any system. You can verify data without trusting the source, because the address itself is the proof.
           </p>
-          <p className="mt-golden-sm text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-body">
+          <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-body">
             This means references that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure.
           </p>
+          <div className="mt-golden-lg">
+            <a
+              href="/framework"
+              className="inline-flex items-center gap-3 text-fluid-body font-semibold uppercase tracking-[0.18em] text-primary/80 hover:text-primary transition-colors duration-150 ease-out"
+            >
+              Read the Framework
+              <ArrowRight size={15} />
+            </a>
+          </div>
         </div>
         <div className="rule-prime" />
       </div>
