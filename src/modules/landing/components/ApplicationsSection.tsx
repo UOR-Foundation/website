@@ -49,7 +49,7 @@ const ApplicationsSection = () => {
             Where It Applies
           </p>
         </div>
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
         <p
           className="py-8 md:py-10 text-foreground/60 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s" }}
