@@ -77,14 +77,14 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
 
           {/* Right group: social icons + donate CTA */}
           <div className="hidden md:flex items-center gap-5">
-            <div className="flex items-center gap-1">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="Discord">
+            <div className="flex items-center gap-1.5">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
                 <DiscordIcon size={17} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
                 <Github size={17} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
                 <Linkedin size={17} />
               </a>
             </div>
