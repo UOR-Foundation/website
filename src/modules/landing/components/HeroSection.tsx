@@ -21,11 +21,11 @@ const HeroSection = () => {
 
       {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
       <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-[5%] xl:px-[6%] pointer-events-none">
-        {/* Golden ratio spacer — 42% from top for more breathing room */}
-        <div className="basis-[42%] shrink-0" />
-        <div>
+        {/* Golden ratio spacer */}
+        <div className="basis-[40%] shrink-0" />
+        <div className="max-w-[55%]">
           <h1
-            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[800px]"
+            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(3rem,4.5vw,5rem)] font-bold leading-[1.1] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[900px]"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
