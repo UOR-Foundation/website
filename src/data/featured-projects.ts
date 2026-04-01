@@ -7,7 +7,7 @@ export const featuredProjects = [
   {
     name: "Hologram",
     category: "Systems",
-    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
+    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required, no special infrastructure needed.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://gethologram.ai/",
@@ -15,7 +15,7 @@ export const featuredProjects = [
   {
     name: "Atlas Embeddings",
     category: "Open Science",
-    description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
+    description: "Research showing that five of the most complex structures in mathematics share a single origin, revealing a deeper order beneath the surface.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
@@ -23,7 +23,7 @@ export const featuredProjects = [
   {
     name: "UOR MCP",
     category: "Developer Tools",
-    description: "A server that connects AI models to the UOR kernel. Every response is verified and auditable.",
+    description: "A server that connects AI models to the UOR kernel. Every response is cryptographically verified, auditable, and fully reproducible.",
     maturity: "Sandbox" as MaturityLevel,
     license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/uor-mcp",

@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "UOR Framework",
     description:
-      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation. Everything you need to start building.",
+      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation for content-addressed data.",
     href: "/standard",
     cta: "Read the Spec",
   },
@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Project Launchpad",
     description:
-      "Ship your project through three stages: Sandbox, Incubation, Graduated. Community review, shared infrastructure, clear criteria.",
+      "Ship your project through three stages: Sandbox, Incubation, Graduated. Community review, shared infrastructure, and clear criteria.",
     href: "/projects",
     cta: "Submit a Project",
   },

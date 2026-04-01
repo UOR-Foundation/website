@@ -18,28 +18,28 @@ const applications: Application[] = [
     icon: Globe,
     title: "Semantic Web",
     description:
-      "Make data understandable by both people and machines, so systems can work together without custom translations.",
+      "Make data understandable by both people and machines, so systems can work together without custom translations or middleware.",
     systemId: "sys.semantic-web.v1",
   },
   {
     icon: ShieldCheck,
     title: "Proof-Based Computation",
     description:
-      "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it.",
+      "Run a computation once and produce a receipt anyone can check. No need to re-run it, no need to trust the person who ran it.",
     systemId: "sys.proof-compute.v1",
   },
   {
     icon: Bot,
     title: "Agentic AI",
     description:
-      "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own.",
+      "Give AI systems a single, reliable map of all available data so they can find, verify, and use information without human guidance.",
     systemId: "sys.agentic-ai.v1",
   },
   {
     icon: Microscope,
     title: "Open Science",
     description:
-      "Make research data findable, reproducible, and composable across institutions and fields.",
+      "Make research data findable, reproducible, and composable across institutions, disciplines, and borders without special tooling.",
     systemId: "sys.open-science.v1",
   },
 ];
