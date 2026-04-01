@@ -8,24 +8,23 @@ const HeroSection = () => {
       {/* Living prime number field — contained to hero */}
       <PrimeGrid />
 
-
-      {/* Galaxy — full-bleed background, SpaceX-style dramatic positioning */}
+      {/* Galaxy — viewport-scaled, vertically centered to align with text */}
       <div
         className="absolute inset-0 flex items-center justify-end animate-fade-in opacity-0"
         style={{ animationDelay: "0.13s" }}
       >
-        <div className="relative w-[85%] h-[85%] md:w-[52%] md:h-[90%] lg:w-[48%] lg:h-[95%] mr-[-5%] md:mr-[2%]">
+        <div className="relative w-[85%] h-[85%] md:w-[min(55vw,55vh*1.1)] md:h-[min(90vh,55vw*1.1)] lg:w-[min(50vw,52vh*1.1)] lg:h-[min(95vh,50vw*1.1)] md:mr-[3%] lg:mr-[5%]">
           <GalaxyAnimation />
         </div>
       </div>
 
-      {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
-      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-[5%] xl:px-[6%] pointer-events-none">
-        {/* Golden ratio spacer */}
-        <div className="basis-[40%] shrink-0" />
+      {/* Text — viewport-scaled typography for proportional confidence at any size */}
+      <div className="relative z-10 h-full flex flex-col px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] pointer-events-none">
+        {/* Vertically center the content block */}
+        <div className="basis-[38%] shrink-0" />
         <div className="max-w-[55%]">
           <h1
-            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(3rem,4.5vw,5rem)] font-bold leading-[1.1] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[900px]"
+            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
@@ -33,25 +32,24 @@ const HeroSection = () => {
             for Information
           </h1>
           <p
-            className="mt-golden-md text-fluid-body text-foreground/60 max-w-[620px] leading-[1.75] font-body animate-fade-in-up opacity-0"
+            className="mt-[clamp(1.25rem,2vw,2.5rem)] text-[clamp(0.95rem,1.1vw,1.35rem)] text-foreground/60 max-w-[min(620px,85%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
             The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
           </p>
           <div
-            className="mt-golden-lg animate-fade-in-up opacity-0"
+            className="mt-[clamp(1.5rem,2.5vw,3rem)] animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
               href="/projects"
-              className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3.5 text-fluid-caption font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
+              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.8vw,2.5rem)] py-[clamp(0.75rem,1vw,1.25rem)] text-[clamp(0.7rem,0.8vw,0.95rem)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
             >
               Explore Projects
-              <ArrowRight size={13} />
+              <ArrowRight size={15} />
             </a>
           </div>
         </div>
-        {/* Remaining 61.8% fills naturally */}
         <div className="flex-1" />
       </div>
 
