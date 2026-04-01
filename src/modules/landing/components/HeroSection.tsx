@@ -1,5 +1,4 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
-import PrimeSequenceCanvas from "@/modules/landing/components/PrimeSequenceCanvas";
 import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import { ArrowRight } from "lucide-react";
 
@@ -9,8 +8,6 @@ const HeroSection = () => {
       {/* Living prime number field — contained to hero */}
       <PrimeGrid />
 
-      {/* Prime sequence — canvas-rendered drifting stream */}
-      <PrimeSequenceCanvas />
 
       {/* Galaxy — full-bleed background, SpaceX-style dramatic positioning */}
       <div
