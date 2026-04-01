@@ -1,53 +1,68 @@
 import { teamMembers } from "@/data/team-members";
 
+/** Extract initials from a full name */
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+/** Derive a deterministic system-style ID from a name */
+const getNodeId = (name: string, idx: number) =>
+  `node.${name.split(" ")[0].toLowerCase()}.${String(idx + 1).padStart(2, "0")}`;
+
 const CommunitySection = () => {
   return (
-    <section className="py-24 md:py-32 bg-section-dark">
+    <section className="py-24 md:py-32 bg-section-dark section-depth">
       <div className="container max-w-6xl">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
           <div className="flex items-center gap-3 mb-10 md:mb-14">
             <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§7</span>
             <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70">
-              UOR Community
+              Network Registry
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-px bg-foreground/[0.06]">
             {teamMembers.map((member, idx) => (
               <a
                 key={member.name}
                 href={member.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center gap-2.5 animate-fade-in-up opacity-0 w-[calc(33.333%-1rem)] sm:w-[calc(25%-1rem)] lg:w-[calc(12.5%-1.1rem)]"
+                className="group relative bg-background p-4 flex flex-col gap-2 panel-active animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.23 + idx * 0.03}s` }}
               >
-                <div className="relative">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top transition-all duration-500"
-                    loading="lazy"
-                  />
+                {/* Initials glyph */}
+                <div className="w-10 h-10 border border-primary/20 flex items-center justify-center group-hover:border-primary/40 transition-colors duration-300">
+                  <span className="font-mono text-sm text-primary/60 group-hover:text-primary/90 transition-colors duration-300">
+                    {getInitials(member.name)}
+                  </span>
                 </div>
-                <div className="text-center min-w-0 w-full">
-                  <p className="text-sm font-body font-semibold text-foreground/80 leading-tight truncate">
+                {/* Name + role */}
+                <div className="min-w-0">
+                  <p className="text-sm font-body font-semibold text-foreground/70 leading-tight truncate">
                     {member.name.split(" ")[0]}
                   </p>
-                  <p className="text-xs font-body text-foreground/30 leading-tight mt-0.5 truncate">
+                  <p className="text-[0.6875rem] font-body text-foreground/30 leading-tight mt-0.5 truncate">
                     {member.role}
                   </p>
                 </div>
+                {/* Hover-reveal system ID */}
+                <span className="font-mono text-[0.5625rem] text-primary/0 group-hover:text-primary/30 transition-colors duration-500 truncate">
+                  {getNodeId(member.name, idx)}
+                </span>
               </a>
             ))}
 
-            <div className="flex flex-col items-center gap-2.5 w-[calc(33.333%-1rem)] sm:w-[calc(25%-1rem)] lg:w-[calc(12.5%-1.1rem)]">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border border-foreground/10 flex items-center justify-center">
-                <span className="text-base md:text-lg font-semibold text-foreground/30">+150</span>
+            {/* System counter node */}
+            <div className="bg-background p-4 flex flex-col gap-2 items-start justify-center">
+              <div className="w-10 h-10 border border-foreground/10 flex items-center justify-center">
+                <span className="font-mono text-xs text-foreground/30">+</span>
               </div>
-              <p className="text-xs font-body text-foreground/20 leading-tight">
-                & growing
-              </p>
+              <p className="font-mono text-xs text-foreground/20">150 nodes</p>
             </div>
           </div>
         </div>

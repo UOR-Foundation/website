@@ -10,6 +10,7 @@ interface Application {
   icon: LucideIcon;
   title: string;
   description: string;
+  systemId: string;
 }
 
 const applications: Application[] = [
@@ -18,24 +19,28 @@ const applications: Application[] = [
     title: "Semantic Web",
     description:
       "Make data understandable by both people and machines, so systems can work together without custom translations.",
+    systemId: "sys.semantic-web.v1",
   },
   {
     icon: ShieldCheck,
     title: "Proof-Based Computation",
     description:
       "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it.",
+    systemId: "sys.proof-compute.v1",
   },
   {
     icon: Bot,
     title: "Agentic AI",
     description:
       "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own.",
+    systemId: "sys.agentic-ai.v1",
   },
   {
     icon: Microscope,
     title: "Open Science",
     description:
       "Make research data findable, reproducible, and composable across institutions and fields.",
+    systemId: "sys.open-science.v1",
   },
 ];
 
@@ -63,7 +68,7 @@ const ApplicationsSection = () => {
             return (
               <div
                 key={app.title}
-                className="group p-8 md:p-10 border-t border-foreground/8 flex flex-col gap-4 animate-fade-in-up opacity-0"
+                className="group p-8 md:p-10 border-t border-foreground/8 flex flex-col gap-4 panel-active animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.17 + idx * 0.07}s` }}
               >
                 <Icon
@@ -77,6 +82,10 @@ const ApplicationsSection = () => {
                 <p className="text-foreground/45 font-body text-[0.938rem] leading-[1.7]">
                   {app.description}
                 </p>
+                {/* Layered reality — hover-reveal system ID */}
+                <span className="font-mono text-[0.625rem] text-primary/0 group-hover:text-primary/25 transition-colors duration-500 tracking-wider">
+                  {app.systemId}
+                </span>
               </div>
             );
           })}
