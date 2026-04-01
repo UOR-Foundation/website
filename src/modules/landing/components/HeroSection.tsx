@@ -8,8 +8,6 @@ const HeroSection = () => {
       {/* Living prime number field — contained to hero */}
       <PrimeGrid />
 
-      {/* Prime sequence — canvas-rendered drifting stream */}
-      <PrimeSequenceCanvas />
 
       {/* Galaxy — full-bleed background, SpaceX-style dramatic positioning */}
       <div
