@@ -141,6 +141,61 @@
   .dark {}
 }
 
+@layer components {
+  /* ── Prime Rule Divider ─────────────────────────────────────────
+   * A thin horizontal line with gold tick marks at prime-% positions.
+   * Replaces flat bg-foreground/8 dividers for Foundation feel.
+   */
+  .rule-prime {
+    position: relative;
+    height: 1px;
+    width: 100%;
+    background: hsl(var(--foreground) / 0.08);
+  }
+  .rule-prime::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle 1px at 2%, 50%, hsl(var(--primary) / 0.25) 0%, transparent 100%),
+      radial-gradient(circle 1px at 3%, 50%, hsl(var(--primary) / 0.22) 0%, transparent 100%),
+      radial-gradient(circle 1px at 5%, 50%, hsl(var(--primary) / 0.20) 0%, transparent 100%),
+      radial-gradient(circle 1px at 7%, 50%, hsl(var(--primary) / 0.18) 0%, transparent 100%),
+      radial-gradient(circle 1px at 11%, 50%, hsl(var(--primary) / 0.16) 0%, transparent 100%),
+      radial-gradient(circle 1px at 13%, 50%, hsl(var(--primary) / 0.14) 0%, transparent 100%),
+      radial-gradient(circle 1px at 17%, 50%, hsl(var(--primary) / 0.13) 0%, transparent 100%),
+      radial-gradient(circle 1px at 19%, 50%, hsl(var(--primary) / 0.12) 0%, transparent 100%),
+      radial-gradient(circle 1px at 23%, 50%, hsl(var(--primary) / 0.11) 0%, transparent 100%),
+      radial-gradient(circle 1px at 29%, 50%, hsl(var(--primary) / 0.10) 0%, transparent 100%);
+  }
+
+  /* ── Section Depth — radial gradient overlay for space-like depth ── */
+  .section-depth {
+    position: relative;
+  }
+  .section-depth::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, hsl(225 35% 8% / 0.6), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .section-depth > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Panel Active — gold-tinted border on hover ── */
+  .panel-active {
+    border-color: hsl(var(--foreground) / 0.08);
+    transition: border-color 0.3s ease;
+  }
+  .panel-active:hover {
+    border-color: hsl(var(--primary) / 0.15);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

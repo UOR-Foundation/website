@@ -62,6 +62,14 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Origin coordinate marker */}
+      <span
+        className="absolute bottom-6 left-6 font-mono text-[10px] text-foreground/[0.04] tracking-[0.2em] select-none pointer-events-none"
+        aria-hidden="true"
+      >
+        [ 0, 0 ]
+      </span>
     </section>
   );
 };

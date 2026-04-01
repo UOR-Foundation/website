@@ -23,7 +23,7 @@ const IntroSection = () => {
             This means references that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure.
           </p>
         </div>
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
       </div>
     </section>
   );
