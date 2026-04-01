@@ -44,7 +44,6 @@ const CTASection = () => {
           </a>
          </div>
        </div>
-       </div>
      </section>
   );
 };
