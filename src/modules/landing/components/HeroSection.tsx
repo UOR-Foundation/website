@@ -1,10 +1,14 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import PrimeSequenceCanvas from "@/modules/landing/components/PrimeSequenceCanvas";
+import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
+      {/* Living prime number field — contained to hero */}
+      <PrimeGrid />
+
       {/* Prime sequence — canvas-rendered drifting stream */}
       <PrimeSequenceCanvas />
 

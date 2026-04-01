@@ -1,5 +1,4 @@
 import Layout from "@/modules/core/components/Layout";
-import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import HeroSection from "@/modules/landing/components/HeroSection";
 import IntroSection from "@/modules/landing/components/IntroSection";
 import ApplicationsSection from "@/modules/landing/components/ApplicationsSection";
@@ -12,7 +11,6 @@ import CTASection from "@/modules/landing/components/CTASection";
 const Index = () => {
   return (
     <Layout>
-      <PrimeGrid />
       <HeroSection />
       <IntroSection />
       <ApplicationsSection />
