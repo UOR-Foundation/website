@@ -123,9 +123,10 @@
         {
           "@type": "Organization",
           "@id": "https://uor.foundation/#org",
-          "name": "UOR Foundation",
+          "name": "The UOR Foundation",
           "url": "https://uor.foundation",
-          "description": "The UOR Foundation develops the Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces based on Z/(2^n)Z.",
+          "logo": "https://uor.foundation/favicon.png",
+          "description": "The UOR Foundation develops the Universal Object Reference — an open data standard where every piece of information has one deterministic, content-derived address.",
           "sameAs": [
             "https://github.com/UOR-Foundation",
             "https://discord.gg/ZwuZaNyuve"
@@ -134,10 +135,46 @@
         {
           "@type": "WebSite",
           "@id": "https://uor.foundation/#website",
-          "name": "UOR Foundation",
+          "name": "The UOR Foundation",
           "url": "https://uor.foundation",
           "publisher": { "@id": "https://uor.foundation/#org" },
-          "description": "Universal Object Reference — a formal ontology for content-addressed, algebraically-structured object spaces."
+          "description": "Universal Object Reference — an open data standard for content-addressed, algebraically-structured object spaces.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://uor.foundation/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "@id": "https://uor.foundation/#navigation",
+          "name": "Main Navigation",
+          "hasPart": [
+            {
+              "@type": "SiteNavigationElement",
+              "name": "Framework",
+              "description": "The UOR standard — a mathematically grounded, open data framework for universal addressing and semantic interoperability.",
+              "url": "https://uor.foundation/standard"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "name": "Projects",
+              "description": "Open-source projects built on the UOR Framework — from AI agents to identity systems, semantic tools, and developer SDKs.",
+              "url": "https://uor.foundation/projects"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "name": "Community",
+              "description": "Join the UOR community — research papers, blog posts, Discord discussions, and open collaboration on frontier data infrastructure.",
+              "url": "https://uor.foundation/research"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "name": "About",
+              "description": "The mission, principles, and people behind The UOR Foundation — building the universal coordinate system for information.",
+              "url": "https://uor.foundation/about"
+            }
+          ]
         },
         {
           "@type": "SoftwareSourceCode",
