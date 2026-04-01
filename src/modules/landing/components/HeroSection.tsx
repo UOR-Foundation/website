@@ -44,7 +44,7 @@ const HeroSection = () => {
         >
           <a
             href="/projects"
-            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[13px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
+            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[13px] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
           >
             Explore Projects
             <ArrowRight size={15} />
@@ -88,7 +88,7 @@ const HeroSection = () => {
           >
             <a
               href="/projects"
-              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.8vw,2.5rem)] py-[clamp(0.75rem,1vw,1.25rem)] text-[clamp(0.7rem,0.8vw,0.95rem)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
+              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.8vw,2.5rem)] py-[clamp(0.75rem,1vw,1.25rem)] text-[clamp(0.7rem,0.8vw,0.95rem)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
             >
               Explore Projects
               <ArrowRight size={15} />
