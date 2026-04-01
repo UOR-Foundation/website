@@ -53,7 +53,7 @@ const SparqlEditorPage = () => {
   return (
     <Layout>
       <section className="py-20 md:py-28">
-        <div className="container max-w-5xl mx-auto px-6">
+        <div className="container max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">

@@ -28,7 +28,7 @@ const CTASection = () => {
          <h2 className="font-display font-bold text-foreground text-fluid-heading">
           Join the UOR Mission
         </h2>
-        <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-5xl mx-auto text-fluid-body">
+        <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-6xl mx-auto text-fluid-body">
           Learn the spec. Contribute to the codebase. Build the future of data identity with us.
         </p>
 

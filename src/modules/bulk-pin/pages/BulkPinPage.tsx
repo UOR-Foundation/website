@@ -563,7 +563,7 @@ export default function BulkPinPage() {
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Schema.org → IPFS Bulk Inscription</h1>
-            <p className="mt-2 text-sm text-muted-foreground max-w-3xl">
+            <p className="mt-2 text-sm text-muted-foreground max-w-4xl">
               Browse the complete Schema.org vocabulary, select types individually or by group, then canonically encode and inscribe each to IPFS with UOR verification certificates.
             </p>
           </div>

@@ -146,7 +146,7 @@ const Standard = () => {
             The UOR Framework
           </h1>
           <p
-            className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl"
+            className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
             style={{ animationDelay: "0.15s" }}
           >
             A formal specification for content-addressed object spaces. Defines addressing, resolution, verification, and transformation across six layers.
@@ -177,7 +177,7 @@ const Standard = () => {
             The Problem
           </p>
           <div
-            className="pt-8 md:pt-10 max-w-5xl animate-fade-in-up opacity-0"
+            className="pt-8 md:pt-10 max-w-6xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             <p className="text-foreground font-body text-fluid-body leading-[1.85] md:leading-[1.9] font-medium">
@@ -206,7 +206,7 @@ const Standard = () => {
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -244,7 +244,7 @@ const Standard = () => {
               </div>
             </div>
           </div>
-          <p className="text-fluid-label text-foreground/60 font-body leading-relaxed mt-6 max-w-3xl">
+          <p className="text-fluid-label text-foreground/60 font-body leading-relaxed mt-6 max-w-4xl">
             These three pieces together form a complete fingerprint. Given any two of them, you can derive the third. This is what makes UOR addresses self-verifying: the data proves its own identity.
           </p>
         </div>
@@ -256,7 +256,7 @@ const Standard = () => {
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Where It Applies
           </p>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -286,7 +286,7 @@ const Standard = () => {
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
             Framework Architecture
           </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-lg">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-golden-lg">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
@@ -296,7 +296,7 @@ const Standard = () => {
 
       {/* CTA */}
       <section className="section-dark py-section-sm">
-        <div className="container max-w-5xl text-center">
+        <div className="container max-w-6xl text-center">
           <h2 className="font-display text-fluid-heading font-bold mb-4">
             Explore the Full Specification
           </h2>

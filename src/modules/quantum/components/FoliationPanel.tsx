@@ -187,7 +187,7 @@ export default function FoliationPanel() {
   const ok = (v: boolean) => v ? "hsl(140,60%,55%)" : "hsl(0,60%,55%)";
 
   return (
-    <div className="p-6 space-y-4 max-w-5xl mx-auto">
+    <div className="p-6 space-y-4 max-w-6xl mx-auto">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-[15px] font-mono font-semibold text-foreground tracking-wide">

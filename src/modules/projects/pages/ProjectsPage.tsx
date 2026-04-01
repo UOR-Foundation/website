@@ -219,7 +219,7 @@ const Projects = () => {
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
-          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR specification, organized by maturity level.
           </p>
           <div
@@ -329,7 +329,7 @@ const Projects = () => {
             <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
               How to Submit a Project
             </h2>
-            <p className="text-foreground/70 font-body max-w-3xl mx-auto leading-relaxed">
+            <p className="text-foreground/70 font-body max-w-4xl mx-auto leading-relaxed">
               Open source projects that align with the UOR specification. Reviewed by our technical committee against published criteria.
             </p>
           </div>

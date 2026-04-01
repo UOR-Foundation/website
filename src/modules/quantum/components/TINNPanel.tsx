@@ -274,7 +274,7 @@ export default function TINNPanel() {
     v ? "hsl(140,60%,55%)" : "hsl(0,60%,55%)";
 
   return (
-    <div className="p-6 space-y-4 max-w-5xl mx-auto">
+    <div className="p-6 space-y-4 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

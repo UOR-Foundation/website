@@ -424,7 +424,7 @@ export default function TrustGraphPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -436,13 +436,13 @@ export default function TrustGraphPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Hero */}
         <section className="space-y-3">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Networks That Grow at the Speed of Trust
           </h2>
-          <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+          <p className="text-sm text-muted-foreground max-w-4xl leading-relaxed">
             TrustGraph adds the <strong>social dimension</strong> to UOR's observer model.
             While H-score and Φ measure <em>individual</em> coherence, attestations measure
             how peers perceive your behavior over time. Trust is computed as a composite of

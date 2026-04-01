@@ -180,7 +180,7 @@ export default function MultiScalePage() {
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Zoom from Byte to Network
         </h2>
-        <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+        <p className="text-sm text-muted-foreground max-w-4xl leading-relaxed">
           The observer is <strong>holographic</strong>: the same coherence instrument
           (H-score → Zone → Φ → Remediation) applies at every scale. Click any level
           to navigate, zoom into entities to see their children, or zoom out to see the

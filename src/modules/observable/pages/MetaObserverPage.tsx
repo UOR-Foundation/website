@@ -229,7 +229,7 @@ export default function MetaObserverPage() {
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
           The Observer Spans Everything
         </h2>
-        <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+        <p className="text-sm text-muted-foreground max-w-4xl leading-relaxed">
           The Hologram projects <strong>identity</strong> into protocol spaces. The MetaObserver projects{" "}
           <strong>coherence</strong> across the entire UOR stack. Together they form a dual system:{" "}
           <em>what something IS</em> (hologram) and <em>how aligned it IS</em> (observer).

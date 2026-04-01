@@ -10,7 +10,7 @@ const IntroSection = () => {
         </div>
         <div className="rule-prime" />
         <div
-          className="py-golden-lg max-w-5xl animate-fade-in-up opacity-0"
+          className="py-golden-lg max-w-6xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s" }}
         >
           <p className="text-foreground/90 font-medium font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
