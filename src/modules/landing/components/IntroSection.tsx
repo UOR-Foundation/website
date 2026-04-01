@@ -1,7 +1,4 @@
-import { ArrowRight, ArrowDown, Bot } from "lucide-react";
-import { useState } from "react";
-
-const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
+import { ArrowRight, ArrowDown } from "lucide-react";
 
 const capabilityDetails: Record<string, string> = {
   Reason: "AI systems can find and connect information across different sources without needing custom adapters for each one.",
