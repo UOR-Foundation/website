@@ -88,7 +88,7 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
           {level}
         </h2>
         {count > 0 && (
-          <span className="text-base text-muted-foreground font-body">
+          <span className="text-base text-foreground/70 font-body">
             {count} {count === 1 ? "project" : "projects"}
           </span>
         )}
@@ -144,7 +144,7 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
               <h3 className="font-display text-xl font-semibold text-foreground mb-4">
                 {project.name}
               </h3>
-              <p className="text-muted-foreground font-body text-base leading-relaxed">
+              <p className="text-foreground/70 font-body text-base leading-relaxed">
                 {project.description}
               </p>
               <div className="mt-auto pt-6">
@@ -219,7 +219,7 @@ const Projects = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
-          <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-base text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR specification, organized by maturity level.
           </p>
           <div
@@ -295,7 +295,7 @@ const Projects = () => {
                     <p className="text-base font-medium text-foreground/70 font-body mb-4 italic md:min-h-[3rem]">
                       {stage.tagline}
                     </p>
-                    <p className="text-base text-muted-foreground font-body leading-relaxed mb-7 md:min-h-[5.5rem]">
+                    <p className="text-base text-foreground/70 font-body leading-relaxed mb-7 md:min-h-[5.5rem]">
                       {stage.description}
                     </p>
                     <div className="space-y-3 mt-auto">
@@ -304,7 +304,7 @@ const Projects = () => {
                       </p>
                       <ul className="space-y-2.5">
                         {stage.criteria.map((c) => (
-                          <li key={c} className="text-base text-muted-foreground font-body flex items-start gap-2">
+                          <li key={c} className="text-base text-foreground/70 font-body flex items-start gap-2">
                             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                             {c}
                           </li>
@@ -329,7 +329,7 @@ const Projects = () => {
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
               How to Submit a Project
             </h2>
-            <p className="text-muted-foreground font-body max-w-3xl mx-auto leading-relaxed">
+            <p className="text-foreground/70 font-body max-w-3xl mx-auto leading-relaxed">
               Open source projects that align with the UOR specification. Reviewed by our technical committee against published criteria.
             </p>
           </div>
@@ -343,7 +343,7 @@ const Projects = () => {
                   </div>
                   <h3 className="font-display text-lg font-bold text-foreground">{step.title}</h3>
                 </div>
-                <p className="text-base text-muted-foreground font-body leading-relaxed">{step.description}</p>
+                <p className="text-base text-foreground/70 font-body leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>

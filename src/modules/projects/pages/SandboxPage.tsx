@@ -68,7 +68,7 @@ const SandboxPage = () => {
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Globe size={20} className="text-primary" />
             </div>
-            <span className="text-sm font-medium tracking-widest uppercase text-muted-foreground font-body">
+            <span className="text-sm font-medium tracking-widest uppercase text-foreground/70 font-body">
               UOR Ecosystem
             </span>
           </div>
@@ -79,7 +79,7 @@ const SandboxPage = () => {
             Explore every project building on the universal standard
           </h1>
           <p
-            className="mt-8 text-lg md:text-xl text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
+            className="mt-8 text-lg md:text-xl text-foreground/70 font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
           >
             Each project is an independent team building on one shared, verifiable foundation. Pick any card to go deeper.
@@ -110,7 +110,7 @@ const SandboxPage = () => {
             ].map((stat) => (
               <div key={stat.label} className="py-8 md:py-10 px-6 text-center">
                 <p className="text-2xl md:text-3xl font-display font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground font-body mt-1">{stat.label}</p>
+                <p className="text-sm text-foreground/70 font-body mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -136,7 +136,7 @@ const SandboxPage = () => {
                   <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
                     {category}
                   </h2>
-                  <span className="text-sm text-muted-foreground font-body ml-2">
+                  <span className="text-sm text-foreground/70 font-body ml-2">
                     {categoryProjects.length} {categoryProjects.length === 1 ? "project" : "projects"}
                   </span>
                 </div>
@@ -172,7 +172,7 @@ const SandboxPage = () => {
                         <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors duration-200">
                           {project.name}
                         </h3>
-                        <p className="text-muted-foreground font-body text-base leading-relaxed flex-1">
+                        <p className="text-foreground/70 font-body text-base leading-relaxed flex-1">
                           {project.description}
                         </p>
                         <div className="mt-6 flex items-center justify-between">
