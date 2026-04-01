@@ -2,10 +2,10 @@ import { teamMembers } from "@/data/team-members";
 
 const CommunitySection = () => {
   return (
-    <section className="py-8 md:py-14 bg-background">
+    <section className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
-          <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
+          <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-10 md:mb-14">
             UOR Community
           </p>
 
@@ -23,15 +23,15 @@ const CommunitySection = () => {
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top border-2 border-border/20 grayscale group-hover:grayscale-0 group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-500"
+                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500"
                     loading="lazy"
                   />
                 </div>
                 <div className="text-center min-w-0 w-full">
-                  <p className="text-sm font-display font-semibold text-foreground leading-tight truncate">
+                  <p className="text-sm font-body font-semibold text-foreground/80 leading-tight truncate">
                     {member.name.split(" ")[0]}
                   </p>
-                  <p className="text-xs font-body text-primary/70 leading-tight mt-0.5 truncate">
+                  <p className="text-xs font-body text-foreground/30 leading-tight mt-0.5 truncate">
                     {member.role}
                   </p>
                 </div>
@@ -39,10 +39,10 @@ const CommunitySection = () => {
             ))}
 
             <div className="flex flex-col items-center gap-2.5 w-[calc(33.333%-1rem)] sm:w-[calc(25%-1rem)] lg:w-[calc(12.5%-1.1rem)]">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-border/20 bg-muted flex items-center justify-center">
-                <span className="text-base md:text-lg font-semibold text-muted-foreground">+150</span>
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border border-foreground/10 flex items-center justify-center">
+                <span className="text-base md:text-lg font-semibold text-foreground/30">+150</span>
               </div>
-              <p className="text-xs font-body text-muted-foreground/50 leading-tight">
+              <p className="text-xs font-body text-foreground/20 leading-tight">
                 & growing
               </p>
             </div>

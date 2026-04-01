@@ -85,42 +85,42 @@
     --still-border-opacity: 1;
     --still-chrome-scale: 1;
     --still-noise-opacity: 0.04;
-    /* ── Existing shadcn/ui tokens ───────────────────────────────── */
-    --background: 210 28% 97%;
-    --foreground: 220 20% 12%;
+    /* ── Design tokens — SpaceX-inspired dark-first ─────────────── */
+    --background: 220 20% 4%;
+    --foreground: 0 0% 96%;
 
-    --card: 210 24% 97%;
-    --card-foreground: 220 25% 10%;
+    --card: 220 18% 7%;
+    --card-foreground: 0 0% 93%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover: 220 18% 7%;
+    --popover-foreground: 0 0% 93%;
 
-    --primary: 220 60% 38%;
+    --primary: 210 100% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 14% 92%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 220 14% 12%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 210 12% 93%;
-    --muted-foreground: 220 10% 44%;
+    --muted: 220 14% 12%;
+    --muted-foreground: 220 8% 55%;
 
-    --accent: 200 30% 40%;
+    --accent: 210 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 18% 90%;
-    --input: 210 18% 90%;
-    --ring: 220 60% 38%;
+    --border: 220 14% 14%;
+    --input: 220 14% 14%;
+    --ring: 210 100% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     /* Structural tokens */
-    --section-dark: 220 18% 10%;
-    --section-dark-foreground: 210 15% 88%;
-    --pill-border: 210 14% 80%;
-    --rule: 210 16% 86%;
+    --section-dark: 220 22% 3%;
+    --section-dark-foreground: 0 0% 88%;
+    --pill-border: 220 12% 20%;
+    --rule: 220 14% 14%;
 
     font-family: 'DM Sans', system-ui, sans-serif;
   }
@@ -129,32 +129,8 @@
   [data-text-size="compact"] { --holo-user-scale: 0.9; }
   [data-text-size="large"]   { --holo-user-scale: 1.15; }
 
-  .dark {
-    --background: 220 18% 7%;
-    --foreground: 210 15% 90%;
-    --card: 220 16% 11%;
-    --card-foreground: 210 15% 90%;
-    --popover: 220 16% 11%;
-    --popover-foreground: 210 15% 90%;
-    --primary: 152 44% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 16%;
-    --secondary-foreground: 210 15% 90%;
-    --muted: 220 14% 16%;
-    --muted-foreground: 210 10% 55%;
-    --accent: 200 28% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 152 34% 40%;
-    --section-dark: 220 20% 5%;
-    --section-dark-foreground: 210 15% 85%;
-    --code-bg: 220 20% 5%;
-    --pill-border: 220 12% 30%;
-    --rule: 220 14% 18%;
-  }
+  /* Dark class is a no-op — site is permanently dark */
+  .dark {}
 }
 
 @layer base {
@@ -177,8 +153,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.02em;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     font-optical-sizing: auto;
   }
 
@@ -296,11 +273,11 @@
 
 @layer components {
   .nav-pill {
-    @apply px-5 py-2 rounded-full border border-pill text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/25 transition-all duration-300 ease-out;
+    @apply px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-foreground/60 hover:text-foreground transition-all duration-300 ease-out;
   }
 
   .nav-pill-active {
-    @apply text-foreground border-foreground/30;
+    @apply text-foreground;
   }
 
   .section-dark {
@@ -308,7 +285,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(180deg, hsl(210 30% 94%) 0%, hsl(var(--background)) 100%);
+    background: transparent;
   }
 
   /* ── Golden Ratio Mobile System ──────────────────────────────────
@@ -342,38 +319,36 @@
     background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
   }
 
-  /* Polished button base */
+  /* SpaceX-style rectangular buttons */
   .btn-primary {
-    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
-    background-color: hsl(220 20% 12%);
+    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em] transition-all duration-300 ease-out;
+    border: 1px solid hsl(0 0% 100%);
     color: hsl(0 0% 100%);
+    background: transparent;
   }
   .btn-primary:hover {
-    @apply shadow-lg;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px -8px hsl(220 20% 12% / 0.4);
+    background: hsl(0 0% 100%);
+    color: hsl(220 20% 4%);
   }
   .btn-primary:active {
-    transform: translateY(0);
+    opacity: 0.8;
   }
 
   .btn-outline {
-    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
-    border: 1px solid hsl(220 20% 12%);
-    color: hsl(220 20% 12%);
+    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em] transition-all duration-300 ease-out;
+    border: 1px solid hsl(0 0% 100% / 0.3);
+    color: hsl(0 0% 100% / 0.7);
+    background: transparent;
   }
   .btn-outline:hover {
-    background-color: hsl(220 20% 12%);
+    border-color: hsl(0 0% 100%);
     color: hsl(0 0% 100%);
-    transform: translateY(-1px);
   }
   .btn-outline:active {
-    transform: translateY(0);
-    background-color: transparent;
-    color: hsl(220 20% 12%);
+    opacity: 0.8;
   }
   .btn-outline:visited {
-    color: hsl(220 20% 12%);
+    color: hsl(0 0% 100% / 0.7);
   }
 }
 

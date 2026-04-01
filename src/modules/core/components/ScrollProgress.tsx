@@ -41,11 +41,11 @@ const ScrollProgress = () => {
               width: isActive ? 7 : isNear ? 5 : 4,
               height: isActive ? 7 : isNear ? 5 : 4,
               backgroundColor: isActive
-                ? "hsl(var(--primary))"
+                ? "hsl(0 0% 100%)"
                 : isPast
-                  ? "hsl(var(--primary) / 0.4)"
-                  : "hsl(var(--foreground) / 0.12)",
-              boxShadow: isActive ? "0 0 8px hsl(var(--primary) / 0.35)" : "none",
+                  ? "hsl(0 0% 100% / 0.35)"
+                  : "hsl(0 0% 100% / 0.1)",
+              boxShadow: isActive ? "0 0 8px hsl(0 0% 100% / 0.3)" : "none",
             }}
           />
         );

@@ -1,30 +1,32 @@
+import { ArrowRight } from "lucide-react";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
 const CTASection = () => {
   return (
-    <section className="py-8 md:py-14 bg-background">
+    <section className="py-32 md:py-40 bg-background">
       <div className="container max-w-6xl text-center">
-        <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
+        <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
           Ready to Build?
         </h2>
-        <p className="mt-4 md:mt-5 text-base text-muted-foreground font-body leading-[1.68] max-w-2xl mx-auto">
+        <p className="mt-6 md:mt-8 text-base text-foreground/40 font-body leading-[1.68] max-w-2xl mx-auto" style={{ textTransform: 'none' }}>
           Verify your first address in five minutes, then join the community.
         </p>
 
-        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+        <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
           <a
             href={GITHUB_FRAMEWORK_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary"
+            className="btn-primary inline-flex items-center gap-2"
           >
             Getting Started Guide
+            <ArrowRight size={14} />
           </a>
           <a
             href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline"
+            className="btn-outline inline-flex items-center gap-2"
           >
             Join Discord
           </a>
@@ -32,7 +34,7 @@ const CTASection = () => {
             href={GITHUB_ORG_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline"
+            className="btn-outline inline-flex items-center gap-2"
           >
             GitHub Organization
           </a>

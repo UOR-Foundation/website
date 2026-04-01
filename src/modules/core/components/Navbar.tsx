@@ -13,8 +13,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   const [scrolled, setScrolled] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
 
-  const isDark = propIsDark || location.pathname.startsWith('/developers');
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -25,7 +23,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -39,12 +36,10 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
-          isDark ? "dark" : ""
-        } ${
           mobileOpen
             ? "bg-background"
             : scrolled
-              ? "bg-background/90 backdrop-blur-2xl backdrop-saturate-150 border-b border-border/10 shadow-sm"
+              ? "bg-background/80 backdrop-blur-2xl backdrop-saturate-150"
               : "bg-transparent"
         }`}
       >
@@ -53,12 +48,14 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             <img
               src={uorIcon}
               alt="UOR Foundation"
-              className={`w-10 h-10 md:w-8 md:h-8 object-contain transition-all duration-300 ${isDark && !mobileOpen ? "invert brightness-[100]" : ""}`}
+              className="w-10 h-10 md:w-8 md:h-8 object-contain invert brightness-[100] transition-all duration-300"
             />
-            <span className={`font-display text-lg md:text-base font-semibold tracking-tight ${isDark && !mobileOpen ? "text-white" : "text-foreground"}`}>The UOR Foundation</span>
+            <span className="font-display text-lg md:text-sm font-semibold tracking-[0.12em] uppercase text-foreground">
+              The UOR Foundation
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -70,23 +67,23 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={20} />
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="Discord">
+                <DiscordIcon size={18} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={20} />
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="GitHub">
+                <Github size={18} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={20} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="LinkedIn">
+                <Linkedin size={18} />
               </a>
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="btn-primary !py-2 !px-5 !text-sm inline-flex items-center cursor-pointer"
+              className="px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] border border-foreground/30 text-foreground/80 hover:border-foreground hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
-              <Heart size={14} fill="currentColor" strokeWidth={0} className="mr-1.5" />
+              <Heart size={12} fill="currentColor" strokeWidth={0} className="mr-2" />
               Donate
             </button>
           </div>
@@ -101,7 +98,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         </div>
       </header>
 
-      {/* Full-screen mobile menu — covers entire viewport */}
+      {/* Full-screen mobile menu */}
       <div
         className={`md:hidden fixed inset-0 z-40 bg-background transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           mobileOpen
@@ -109,28 +106,22 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* 
-          Golden ratio layout: navbar (4.5rem) + nav links (≈61.8%) + bottom actions (≈38.2%)
-          Using flex with justified spacing for natural golden distribution
-        */}
         <div className="h-full flex flex-col">
-          {/* Navbar spacer */}
           <div className="h-[5rem] shrink-0" />
 
-          {/* Nav links — centered in the upper golden section */}
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
             {navItems.map((item, idx) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-3.5 px-6 rounded-2xl text-xl font-medium font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                className={`py-3.5 px-6 text-lg font-semibold uppercase tracking-[0.12em] font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
                   mobileOpen
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-3"
                 } ${
                   location.pathname === item.href
-                    ? "text-primary bg-primary/8 font-semibold"
-                    : "text-foreground/70 active:bg-muted/60"
+                    ? "text-foreground"
+                    : "text-foreground/50 active:text-foreground"
                 }`}
                 style={{ transitionDelay: mobileOpen ? `${80 + idx * 50}ms` : "0ms" }}
               >
@@ -139,7 +130,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             ))}
           </nav>
 
-          {/* Bottom actions — lower golden section */}
           <div
             className={`flex-1 flex flex-col items-center justify-end px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] gap-5 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
               mobileOpen
@@ -150,19 +140,19 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           >
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="w-full max-w-xs py-4 rounded-2xl text-base font-semibold font-body text-center bg-primary text-primary-foreground flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-transform"
+              className="w-full max-w-xs py-4 text-sm font-semibold uppercase tracking-[0.15em] font-body text-center border border-foreground/30 text-foreground flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-all"
             >
-              <Heart size={16} fill="currentColor" strokeWidth={0} />
+              <Heart size={14} fill="currentColor" strokeWidth={0} />
               Donate
             </button>
             <div className="flex items-center justify-center gap-8 py-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="Discord">
                 <DiscordIcon size={24} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="GitHub">
                 <Github size={24} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="LinkedIn">
                 <Linkedin size={24} />
               </a>
             </div>
