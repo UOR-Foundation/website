@@ -173,7 +173,7 @@ const Standard = () => {
       {/* The Problem */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             The Problem
           </p>
           <div
@@ -193,7 +193,7 @@ const Standard = () => {
       {/* Visual Diagram */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-8">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
             How It Works
           </p>
           <UORDiagram />
@@ -203,7 +203,7 @@ const Standard = () => {
       {/* Anatomy of an Address */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Anatomy of an Address
           </p>
           <p className="text-muted-foreground font-body text-base leading-relaxed max-w-3xl mb-8">
@@ -244,7 +244,7 @@ const Standard = () => {
               </div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground/70 font-body leading-relaxed mt-6 max-w-3xl">
+          <p className="text-sm text-foreground/60 font-body leading-relaxed mt-6 max-w-3xl">
             These three pieces together form a complete fingerprint. Given any two of them, you can derive the third. This is what makes UOR addresses self-verifying: the data proves its own identity.
           </p>
         </div>
@@ -253,7 +253,7 @@ const Standard = () => {
       {/* Applications */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Where It Applies
           </p>
           <p className="text-muted-foreground font-body text-base leading-relaxed max-w-3xl mb-8">
@@ -280,7 +280,7 @@ const Standard = () => {
       {/* Framework Architecture */}
       <section id="architecture" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Architecture
           </p>
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
