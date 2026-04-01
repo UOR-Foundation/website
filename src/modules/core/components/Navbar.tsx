@@ -51,7 +51,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
-                className="w-10 h-10 md:w-8 md:h-8 object-contain invert brightness-[100] transition-all duration-300"
+                className="w-10 h-10 md:w-9 md:h-9 object-contain invert brightness-[200] contrast-[1.2] transition-all duration-300"
               />
               <span className="font-display text-[16px] md:text-[clamp(13px,1vw,15px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 UOR Foundation
