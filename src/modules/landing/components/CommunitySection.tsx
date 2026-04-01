@@ -16,7 +16,7 @@ const getNodeId = (name: string, idx: number) =>
 const CommunitySection = () => {
   return (
     <section className="py-24 md:py-32 bg-section-dark section-depth">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
           <div className="flex items-center gap-3 mb-10 md:mb-14">
             <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§7</span>

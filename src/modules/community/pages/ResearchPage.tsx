@@ -41,7 +41,7 @@ const Research = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
           </h1>
@@ -64,7 +64,7 @@ const Research = () => {
 
       {/* Research */}
       <section id="research" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Open Research
           </p>
@@ -175,7 +175,7 @@ const Research = () => {
 
       {/* Blog */}
       <section id="blog" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Blog
           </p>
@@ -220,7 +220,7 @@ const Research = () => {
 
       {/* Events */}
       <section id="events" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Events
           </p>

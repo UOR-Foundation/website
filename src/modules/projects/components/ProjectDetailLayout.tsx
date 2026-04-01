@@ -293,7 +293,7 @@ const ProjectDetailLayout = ({
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-32 md:pt-44 pb-12 md:pb-16">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <Link
             to="/projects"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
@@ -324,7 +324,7 @@ const ProjectDetailLayout = ({
 
       {/* Cover image */}
       <section className="border-b border-border">
-        <div className="container max-w-6xl py-8">
+        <div className="container max-w-7xl py-8">
           <div className="rounded-2xl overflow-hidden border border-border project-card-glow">
             <img
               src={heroImage}
@@ -342,7 +342,7 @@ const ProjectDetailLayout = ({
           key={section.heading}
           className={`py-8 md:py-14 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
         >
-          <div className="container max-w-6xl">
+          <div className="container max-w-7xl">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
               {section.heading}
             </h2>
@@ -355,7 +355,7 @@ const ProjectDetailLayout = ({
 
       {/* Agent Instructions */}
       <section className="py-8 md:py-14 bg-muted/30 border-b border-border">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <div className="flex items-center gap-3 mb-6">
             <Bot size={20} className="text-primary" />
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
@@ -404,7 +404,7 @@ const ProjectDetailLayout = ({
 
       {/* CTA */}
       <section className="section-dark py-16 md:py-24">
-        <div className="container max-w-6xl text-center">
+        <div className="container max-w-7xl text-center">
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
             Get involved
           </h2>

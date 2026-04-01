@@ -1,7 +1,7 @@
 const IntroSection = () => {
   return (
     <section id="intro" className="py-24 md:py-32 bg-background scroll-mt-16">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <div className="flex items-center gap-3 mb-6">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§2</span>
           <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70">

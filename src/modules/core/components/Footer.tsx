@@ -8,7 +8,7 @@ import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links
 const Footer = () => {
   return (
     <footer className="py-10 md:py-14 bg-section-dark">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           <Link to="/" className="flex items-center gap-2.5">
             <img

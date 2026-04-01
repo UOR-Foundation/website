@@ -141,7 +141,7 @@ const Standard = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
           </h1>
@@ -172,7 +172,7 @@ const Standard = () => {
 
       {/* The Problem */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             The Problem
           </p>
@@ -192,7 +192,7 @@ const Standard = () => {
 
       {/* Visual Diagram */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-8">
             How It Works
           </p>
@@ -202,7 +202,7 @@ const Standard = () => {
 
       {/* Anatomy of an Address */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Anatomy of an Address
           </p>
@@ -252,7 +252,7 @@ const Standard = () => {
 
       {/* Applications */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Where It Applies
           </p>
@@ -279,7 +279,7 @@ const Standard = () => {
 
       {/* Framework Architecture */}
       <section id="architecture" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-6xl">
+        <div className="container max-w-7xl">
           <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
             Architecture
           </p>

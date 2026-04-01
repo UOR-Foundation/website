@@ -13,7 +13,7 @@ console.log(address.value === 5 * 17); // true`;
 const CodeExampleSection = () => {
   return (
     <section className="py-8 md:py-14 bg-background">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-5 md:mb-6">
           See It Work
         </p>

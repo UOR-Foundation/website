@@ -485,7 +485,7 @@ export default function ToolRegistryPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-bold text-foreground mb-3">
             Agent Tool Registry
           </h1>

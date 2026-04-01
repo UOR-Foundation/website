@@ -55,7 +55,7 @@ export default function CompressionPanel() {
   const totalComplement = report.profiles.reduce((s, p) => s + (p.patternDistribution.complement || 0), 0);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-[15px] font-mono tracking-wide text-[hsl(38,50%,65%)]">

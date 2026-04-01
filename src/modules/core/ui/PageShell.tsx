@@ -31,7 +31,7 @@ export function PageShell({
           filter: "blur(var(--focus-blur-chrome, 0px))",
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <Link
             to={backTo}
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -59,7 +59,7 @@ export function PageShell({
 
       {/* Content — scales and boosts contrast with focus */}
       <main
-        className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8 transition-all duration-700 origin-top"
+        className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8 transition-all duration-700 origin-top"
         style={{
           transform: "scale(var(--focus-content-scale, 1))",
           filter: `contrast(var(--focus-contrast, 1)) saturate(var(--focus-saturation, 1))`,

@@ -257,7 +257,7 @@ export default function CircuitComposerPanel() {
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="p-6 max-w-6xl mx-auto space-y-6 h-full flex flex-col">
+      <div className="p-6 max-w-7xl mx-auto space-y-6 h-full flex flex-col">
         
         {/* Header */}
         <div className="flex items-center justify-between">
