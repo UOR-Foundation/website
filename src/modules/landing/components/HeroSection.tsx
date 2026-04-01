@@ -44,7 +44,7 @@ const HeroSection = () => {
         >
           <a
             href="/projects"
-            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[13px] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground active:scale-[0.97] transition-all duration-150 ease-out"
+            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[13px] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
           >
             Explore Projects
             <ArrowRight size={15} />
