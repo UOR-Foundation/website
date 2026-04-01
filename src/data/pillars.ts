@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "UOR Framework",
     description:
-      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation. Everything you need to start building.",
+      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation for content-addressed data.",
     href: "/standard",
     cta: "Read the Spec",
   },
