@@ -88,7 +88,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-5 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
+              className="px-5 py-2 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
               <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
