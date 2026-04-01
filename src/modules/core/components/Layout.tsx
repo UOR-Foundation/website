@@ -3,8 +3,6 @@ import { useLocation } from "react-router-dom";
 import Navbar from "@/modules/core/components/Navbar";
 import Footer from "@/modules/core/components/Footer";
 import ScrollProgress from "@/modules/core/components/ScrollProgress";
-import PrimeGrid from "@/modules/landing/components/PrimeGrid";
-
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -18,7 +16,6 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col font-body">
-      <PrimeGrid />
       <ScrollProgress />
       <Navbar />
       <main className="flex-1">{children}</main>
