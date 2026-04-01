@@ -7,15 +7,8 @@ const PRIME_SEQUENCE = "2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 
 const HeroSection = () => {
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
-      {/* Prime sequence background texture */}
-      <div
-        className="absolute inset-0 pointer-events-none select-none overflow-hidden"
-        aria-hidden="true"
-      >
-        <p className="absolute top-[7%] left-[3%] right-[3%] font-mono text-[clamp(0.6rem,1.1vw,0.8rem)] leading-[2.3] text-foreground/[0.03] whitespace-pre-wrap break-all tracking-[0.3em]">
-          {Array(5).fill(PRIME_SEQUENCE).join("  ")}
-        </p>
-      </div>
+      {/* Prime sequence — canvas-rendered drifting stream */}
+      <PrimeSequenceCanvas />
 
       {/* Galaxy — full-bleed background */}
       <div
