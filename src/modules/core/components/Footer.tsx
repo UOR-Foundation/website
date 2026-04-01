@@ -66,7 +66,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="h-px w-full bg-foreground/8 mt-8 md:mt-10 mb-4 md:mb-5" />
+        <div className="rule-glow mt-8 md:mt-10 mb-4 md:mb-5" />
         <p className="text-foreground/20 text-xs font-body text-right uppercase tracking-[0.1em]">
           © {new Date().getFullYear()} The UOR Foundation
         </p>

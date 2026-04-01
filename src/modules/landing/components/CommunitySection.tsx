@@ -5,9 +5,9 @@ const CommunitySection = () => {
     <section className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.2s" }}>
-          <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-10 md:mb-14">
-            UOR Community
-          </p>
+           <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-10 md:mb-14">
+             UOR Community
+           </p>
 
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-7 md:gap-x-5 md:gap-y-9 max-w-5xl mx-auto">
             {teamMembers.map((member, idx) => (

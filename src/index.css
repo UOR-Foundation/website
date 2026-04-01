@@ -332,8 +332,9 @@
     background: transparent;
   }
   .btn-primary:hover {
-    background: hsl(0 0% 100%);
-    color: hsl(220 20% 4%);
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+    color: hsl(0 0% 100%);
   }
   .btn-primary:active {
     opacity: 0.8;

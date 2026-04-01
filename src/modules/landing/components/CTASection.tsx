@@ -42,9 +42,10 @@ const CTASection = () => {
           >
             GitHub Organization
           </a>
-        </div>
-      </div>
-    </section>
+         </div>
+       </div>
+       </div>
+     </section>
   );
 };
 

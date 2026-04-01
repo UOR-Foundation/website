@@ -25,7 +25,7 @@ const PillarsSection = () => {
               >
                 <div className="flex items-center gap-3 mb-5">
                   <Icon
-                    className="w-5 h-5 text-foreground/40 transition-colors duration-300 group-hover:text-foreground"
+                    className="w-5 h-5 text-primary/60 transition-colors duration-300 group-hover:text-primary"
                     strokeWidth={1.5}
                   />
                   <h3 className="font-display text-lg md:text-xl font-semibold text-foreground">

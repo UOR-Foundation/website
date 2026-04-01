@@ -65,7 +65,7 @@ const ApplicationsSection = () => {
               >
                 <Icon
                   size={24}
-                  className="text-foreground/40 shrink-0 transition-colors duration-300 group-hover:text-foreground"
+                  className="text-primary/60 shrink-0 transition-colors duration-300 group-hover:text-primary"
                   strokeWidth={1.5}
                 />
                 <h3 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
