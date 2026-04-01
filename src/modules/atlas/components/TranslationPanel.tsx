@@ -71,7 +71,7 @@ export default function TranslationPanel() {
   const passedInvariants = report.invariants.filter(i => i.holds).length;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-[15px] font-mono tracking-wide text-[hsl(38,50%,65%)]">

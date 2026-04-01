@@ -13,10 +13,10 @@ const imageMap: Record<string, string> = {
 const HighlightsSection = () => {
   return (
     <section className="py-24 md:py-32 bg-background">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <div className="flex items-center gap-3 mb-10 md:mb-14">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§11</span>
-          <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
             Community Highlights
           </p>
         </div>
@@ -38,16 +38,16 @@ const HighlightsSection = () => {
                 />
               </div>
               <div className="flex flex-col flex-1 py-6 md:py-8 pr-4">
-                <span className="self-start text-xs font-semibold font-body text-foreground/30 uppercase tracking-[0.15em] mb-3">
+                <span className="self-start font-semibold font-body text-foreground/30 uppercase tracking-[0.15em] mb-3" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   {item.tag}
                 </span>
-                <h3 className="font-display text-base md:text-lg font-semibold text-foreground leading-snug flex-1">
+                <h3 className="font-display font-semibold text-foreground leading-snug flex-1" style={{ fontSize: 'clamp(1rem, 1.1vw, 1.375rem)' }}>
                   {item.title}
                 </h3>
-                <p className="mt-3 text-sm text-foreground/30 font-body">
+                <p className="mt-3 text-foreground/30 font-body" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300">
+                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   Learn more <ArrowRight size={12} />
                 </span>
               </div>

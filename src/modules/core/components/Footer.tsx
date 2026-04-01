@@ -8,7 +8,7 @@ import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links
 const Footer = () => {
   return (
     <footer className="py-10 md:py-14 bg-section-dark">
-      <div className="container max-w-6xl">
+      <div className="container max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           <Link to="/" className="flex items-center gap-2.5">
             <img
@@ -16,7 +16,7 @@ const Footer = () => {
               alt="UOR Foundation"
               className="w-7 h-7 object-contain invert relative z-10"
             />
-            <span className="font-body text-sm font-semibold tracking-[0.12em] uppercase text-foreground/80">
+            <span className="font-body font-semibold tracking-[0.12em] uppercase text-foreground/80" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
               The UOR Foundation
             </span>
           </Link>
@@ -27,7 +27,8 @@ const Footer = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-foreground/35 hover:text-foreground transition-colors duration-300 font-body text-xs uppercase tracking-[0.12em]"
+                  className="text-foreground/35 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em]"
+                  style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
                 >
                   {item.label}
                 </Link>
@@ -35,31 +36,13 @@ const Footer = () => {
             </nav>
 
             <div className="flex items-center gap-4">
-              <a
-                href={GITHUB_ORG_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
-                aria-label="GitHub"
-              >
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="GitHub">
                 <Github size={16} />
               </a>
-              <a
-                href={DISCORD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
-                aria-label="Discord"
-              >
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="Discord">
                 <DiscordIcon className="w-4 h-4" />
               </a>
-              <a
-                href={LINKEDIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
-                aria-label="LinkedIn"
-              >
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="LinkedIn">
                 <Linkedin size={16} />
               </a>
             </div>
