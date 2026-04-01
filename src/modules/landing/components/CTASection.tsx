@@ -15,7 +15,7 @@ const CTASection = () => {
           </div>
 
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-           Join the UOR Mission
+           Join the Mission
           </h2>
 
         <div className="mt-golden-lg flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
