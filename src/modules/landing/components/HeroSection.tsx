@@ -14,7 +14,7 @@ const HeroSection = () => {
         style={{ animationDelay: "0.13s" }}
       >
         {/* Mobile: constrained centered orb · Desktop: large right-aligned galaxy */}
-        <div className="relative w-[min(55vw,240px)] h-[min(55vw,240px)] md:w-[min(62vw,65vh*1.1)] md:h-[min(95vh,62vw*1.1)] lg:w-[min(58vw,62vh*1.1)] lg:h-[min(100vh,58vw*1.1)] md:mr-[1%] lg:mr-[3%] mt-[14svh] md:mt-0">
+        <div className="relative w-[min(65vw,280px)] h-[min(65vw,280px)] md:w-[min(66vw,70vh*1.1)] md:h-[min(100vh,66vw*1.1)] lg:w-[min(62vw,68vh*1.1)] lg:h-[min(105vh,62vw*1.1)] md:mr-[1%] lg:mr-[3%] mt-[14svh] md:mt-0">
           <GalaxyAnimation />
         </div>
       </div>
