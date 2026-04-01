@@ -125,7 +125,7 @@ const About = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
               {[
                 { label: "Foundation Bylaws", href: "https://github.com/UOR-Foundation/.github/blob/main/governance/The_UOR_Foundation_Bylaws.pdf" },
-                { label: "Code of Conduct", href: `${GITHUB_DOTGITHUB_URL}/blob/main/CODE_OF_CONDUCT.md` },
+                { label: "Code of Conduct", href: "https://github.com/UOR-Foundation/.github/blob/main/CODE_OF_CONDUCT.md" },
                 { label: "Contributing Guide", href: `${GITHUB_DOTGITHUB_URL}/blob/main/CONTRIBUTING.md` },
                 { label: "Organization on GitHub", href: GITHUB_DOTGITHUB_URL },
               ].map((link, idx) => (
