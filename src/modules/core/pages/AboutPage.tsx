@@ -13,11 +13,11 @@ const About = () => {
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-7xl">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground animate-fade-in-up">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
             About
           </h1>
           <p
-            className="mt-5 text-foreground/70 font-body text-base leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
+            className="mt-5 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
@@ -32,7 +32,7 @@ const About = () => {
           <div>
             <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
+              className="font-display text-fluid-heading font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               What We Do
@@ -47,8 +47,8 @@ const About = () => {
                     style={{ animationDelay: `${0.25 + idx * 0.08}s` }}
                   >
                     {Icon && <Icon size={20} className="text-primary" strokeWidth={1.5} />}
-                    <h3 className="font-display text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="text-base text-foreground/70 font-body leading-relaxed">{item.desc}</p>
+                    <h3 className="font-display text-fluid-card-title font-semibold text-foreground">{item.title}</h3>
+                    <p className="text-fluid-body text-foreground/70 font-body leading-relaxed">{item.desc}</p>
                   </div>
                 );
               })}
@@ -59,13 +59,13 @@ const About = () => {
           <div>
             <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
+              className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               Governance Board
             </h2>
             <p
-              className="text-foreground/70 font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
+              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
@@ -84,17 +84,17 @@ const About = () => {
                   <div className="flex-1 p-5 md:p-6 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
+                        <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
                           {member.name}
                         </h4>
                         <Linkedin size={13} className="text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
                       </div>
                       <div className="h-px w-10 bg-border/60 my-2.5" />
-                      <p className="text-sm font-medium text-primary font-body leading-snug">
+                      <p className="text-fluid-label font-medium text-primary font-body leading-snug">
                         {member.role}
                       </p>
                       {member.bio && (
-                        <p className="text-sm text-foreground/65 font-body mt-1 leading-snug">
+                        <p className="text-fluid-label text-foreground/65 font-body mt-1 leading-snug">
                           {member.bio}
                         </p>
                       )}
@@ -117,7 +117,7 @@ const About = () => {
           <div>
             <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
             <h2
-              className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
+              className="font-display text-fluid-heading font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               Resources
@@ -137,7 +137,7 @@ const About = () => {
                   className="flex items-center justify-between px-5 py-4 rounded-xl border border-border/30 bg-card hover:border-primary/20 hover:bg-primary/[0.02] transition-all duration-200 group animate-fade-in-up opacity-0"
                   style={{ animationDelay: `${0.25 + idx * 0.06}s` }}
                 >
-                  <span className="text-base font-medium text-foreground font-body">{link.label}</span>
+                  <span className="text-fluid-body font-medium text-foreground font-body">{link.label}</span>
                   <ExternalLink size={15} className="text-foreground/40 group-hover:text-primary transition-colors" />
                 </a>
               ))}

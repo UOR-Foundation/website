@@ -16,7 +16,7 @@ const Footer = () => {
               alt="UOR Foundation"
               className="w-7 h-7 object-contain invert relative z-10"
             />
-            <span className="font-body font-semibold tracking-[0.12em] uppercase text-foreground/80" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
+            <span className="font-body font-semibold tracking-[0.12em] uppercase text-foreground/80 text-fluid-label">
               The UOR Foundation
             </span>
           </Link>
@@ -27,8 +27,7 @@ const Footer = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-foreground/50 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em]"
-                  style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
+                  className="text-foreground/50 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em] text-fluid-label"
                 >
                   {item.label}
                 </Link>
@@ -50,7 +49,7 @@ const Footer = () => {
         </div>
 
         <div className="rule-glow mt-8 md:mt-10 mb-4 md:mb-5" />
-        <p className="text-foreground/40 text-xs font-body text-right uppercase tracking-[0.1em]">
+        <p className="text-foreground/40 text-fluid-caption font-body text-right uppercase tracking-[0.1em]">
           © {new Date().getFullYear()} The UOR Foundation
         </p>
       </div>

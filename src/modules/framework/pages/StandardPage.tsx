@@ -67,7 +67,7 @@ function CopyBtn({ text, label }: { text: string; label?: string }) {
     setTimeout(() => setCopied(false), 1500);
   }, [text]);
   return (
-    <button onClick={handle} className="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-sm font-body font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" aria-label="Copy">
+    <button onClick={handle} className="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-fluid-label font-body font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" aria-label="Copy">
       {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> {label || "Copy"}</>}
     </button>
   );
@@ -84,7 +84,7 @@ function McpClientCards() {
           <button
             key={cl.name}
             onClick={() => setActive(i)}
-            className={`px-4 py-2 rounded-full text-sm font-body font-medium transition-colors border ${
+            className={`px-4 py-2 rounded-full text-fluid-label font-body font-medium transition-colors border ${
               i === active
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-muted/40 text-foreground/70 border-border hover:border-primary/40"
@@ -103,14 +103,14 @@ function McpClientCards() {
               <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
                 {i + 1}
               </span>
-              <p className="text-sm md:text-base font-body text-foreground leading-relaxed">{step}</p>
+              <p className="text-fluid-body font-body text-foreground leading-relaxed">{step}</p>
             </li>
           ))}
         </ol>
 
         {/* Config block */}
         <div className="bg-muted/50 rounded-xl p-4 overflow-x-auto mb-4">
-          <pre className="text-sm font-mono text-foreground leading-relaxed">{MCP_CONFIG}</pre>
+          <pre className="text-fluid-label font-mono text-foreground leading-relaxed">{MCP_CONFIG}</pre>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -120,7 +120,7 @@ function McpClientCards() {
             href={c.docsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-fluid-label font-body text-primary hover:underline"
           >
             Full guide <ExternalLink size={13} />
           </a>
@@ -128,7 +128,7 @@ function McpClientCards() {
       </div>
 
       {/* Tools summary */}
-      <p className="text-sm font-body text-foreground/70 leading-relaxed">
+      <p className="text-fluid-label font-body text-foreground/70 leading-relaxed">
         <span className="text-foreground font-medium">Five tools:</span>{" "}
         derive · verify · query · correlate · partition. Every output carries a derivation ID and content-addressed IRI.
       </p>
@@ -142,11 +142,11 @@ const Standard = () => {
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-7xl">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
           </h1>
           <p
-            className="mt-6 text-base text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl"
+            className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl"
             style={{ animationDelay: "0.15s" }}
           >
             A formal specification for content-addressed object spaces. Defines addressing, resolution, verification, and transformation across six layers.
@@ -173,17 +173,17 @@ const Standard = () => {
       {/* The Problem */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             The Problem
           </p>
           <div
             className="pt-8 md:pt-10 max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            <p className="text-foreground font-body text-base leading-[1.85] md:leading-[1.9] font-medium">
+            <p className="text-foreground font-body text-fluid-body leading-[1.85] md:leading-[1.9] font-medium">
               Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export.
             </p>
-            <p className="mt-6 text-foreground/70 font-body text-base leading-[1.85] md:leading-[1.9]">
+            <p className="mt-6 text-foreground/70 font-body text-fluid-body leading-[1.85] md:leading-[1.9]">
               Every integration layer adds translation code. UOR eliminates this by <span className="text-foreground font-medium">deriving identity from content structure</span>. The address is the data, so there is nothing to translate.
             </p>
           </div>
@@ -193,7 +193,7 @@ const Standard = () => {
       {/* Visual Diagram */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
             How It Works
           </p>
           <UORDiagram />
@@ -203,48 +203,48 @@ const Standard = () => {
       {/* Anatomy of an Address */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Anatomy of an Address
           </p>
-          <p className="text-foreground/70 font-body text-base leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-8">
             Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
-              <h3 className="font-display text-lg font-bold text-foreground mb-2">The Value</h3>
-              <p className="text-base font-body text-foreground/70 leading-relaxed mb-4">
+              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
+              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
+              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
                 The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-xs text-foreground/70 mb-1">Example: the number 85</p>
-                <p className="font-mono text-sm text-foreground font-semibold">01010101</p>
+                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>
+                <p className="font-mono text-fluid-label text-foreground font-semibold">01010101</p>
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
-              <h3 className="font-display text-lg font-bold text-foreground mb-2">The Weight</h3>
-              <p className="text-base font-body text-foreground/70 leading-relaxed mb-4">
+              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
+              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Weight</h3>
+              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
                 How many "active" bits are in the value. This is a measure of complexity: a weight of 0 means empty, a weight of 8 means fully packed.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-xs text-foreground/70 mb-1">85 has four 1-bits</p>
-                <p className="font-mono text-sm text-foreground font-semibold">Weight: 4</p>
+                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">85 has four 1-bits</p>
+                <p className="font-mono text-fluid-label text-foreground font-semibold">Weight: 4</p>
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
-              <h3 className="font-display text-lg font-bold text-foreground mb-2">The Components</h3>
-              <p className="text-base font-body text-foreground/70 leading-relaxed mb-4">
+              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
+              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
+              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
                 Which specific building blocks make up the value. This lets you reconstruct the original from its parts, with nothing lost.
               </p>
               <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-xs text-foreground/70 mb-1">Active positions</p>
-                <p className="font-mono text-sm text-foreground font-semibold">Positions: 0, 2, 4, 6</p>
+                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Active positions</p>
+                <p className="font-mono text-fluid-label text-foreground font-semibold">Positions: 0, 2, 4, 6</p>
               </div>
             </div>
           </div>
-          <p className="text-sm text-foreground/60 font-body leading-relaxed mt-6 max-w-3xl">
+          <p className="text-fluid-label text-foreground/60 font-body leading-relaxed mt-6 max-w-3xl">
             These three pieces together form a complete fingerprint. Given any two of them, you can derive the third. This is what makes UOR addresses self-verifying: the data proves its own identity.
           </p>
         </div>
@@ -253,10 +253,10 @@ const Standard = () => {
       {/* Applications */}
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Where It Applies
           </p>
-          <p className="text-foreground/70 font-body text-base leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-8">
             When every system shares one way to address data, new capabilities emerge.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -268,8 +268,8 @@ const Standard = () => {
                   className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
                 >
                   {Icon && <Icon size={20} className="text-primary mb-4" />}
-                  <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-base font-body text-foreground/70 leading-relaxed">{item.text}</p>
+                  <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">{item.text}</p>
                 </div>
               );
             })}
@@ -280,13 +280,13 @@ const Standard = () => {
       {/* Framework Architecture */}
       <section id="architecture" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Architecture
           </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
             Framework Architecture
           </h2>
-          <p className="text-foreground/70 font-body text-base leading-relaxed max-w-3xl mb-10 md:mb-12">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-10 md:mb-12">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
@@ -297,10 +297,10 @@ const Standard = () => {
       {/* CTA */}
       <section className="section-dark py-8 md:py-14">
         <div className="container max-w-4xl text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="font-display text-fluid-heading font-bold mb-4">
             Explore the Full Specification
           </h2>
-          <p className="text-section-dark-foreground/60 font-body text-base leading-relaxed max-w-xl mx-auto mb-10">
+          <p className="text-section-dark-foreground/60 font-body text-fluid-body leading-relaxed max-w-xl mx-auto mb-10">
             14 namespaces, 82 classes, 124 properties, and 14 named individuals. Open source and fully documented.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
@@ -308,7 +308,7 @@ const Standard = () => {
               href={GITHUB_FRAMEWORK_DOCS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
+              className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
               Browse the Ontology
               <ExternalLink size={15} />
@@ -317,7 +317,7 @@ const Standard = () => {
               href={GITHUB_PRISM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
+              className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
             >
               Try Prism
               <ExternalLink size={15} />
@@ -326,7 +326,7 @@ const Standard = () => {
               href={GITHUB_FRAMEWORK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
+              className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
             >
               View on GitHub
             </a>
