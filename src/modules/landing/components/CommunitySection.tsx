@@ -19,10 +19,10 @@ const CommunitySection = () => {
                 href={member.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center text-center md:w-[140px] animate-fade-in-up opacity-0"
+                className="group flex flex-col items-center text-center md:w-[160px] animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.23 + idx * 0.04}s` }}
               >
-                <div className="w-[4.5rem] h-[4.5rem] md:w-24 md:h-24 mb-3 group-hover:scale-105 transition-transform duration-300" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
+                <div className="w-[5.5rem] h-[5.5rem] md:w-32 md:h-32 mb-4 group-hover:scale-105 transition-transform duration-300" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                   <img
                     src={member.image}
                     alt={member.name}
@@ -40,8 +40,8 @@ const CommunitySection = () => {
             ))}
 
             {/* Community count */}
-            <div className="flex flex-col items-center text-center md:w-[140px] justify-center">
-              <div className="w-[4.5rem] h-[4.5rem] md:w-24 md:h-24 border border-foreground/10 flex items-center justify-center mb-3" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
+            <div className="flex flex-col items-center text-center md:w-[160px] justify-center">
+              <div className="w-[5.5rem] h-[5.5rem] md:w-32 md:h-32 border border-foreground/10 flex items-center justify-center mb-4" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                 <span className="font-mono text-foreground/50 text-lg">+</span>
               </div>
               <p className="font-mono text-foreground/50 text-fluid-body">
