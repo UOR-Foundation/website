@@ -14,9 +14,12 @@ const HighlightsSection = () => {
   return (
     <section className="py-24 md:py-32 bg-background">
       <div className="container max-w-6xl">
-         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-10 md:mb-14">
-           Community Highlights
-         </p>
+        <div className="flex items-center gap-3 mb-10 md:mb-14">
+          <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§11</span>
+          <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70">
+            Community Highlights
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
           {highlights.map((item, index) => (
@@ -24,7 +27,7 @@ const HighlightsSection = () => {
               key={item.title}
               href={item.href}
               className="group flex flex-col overflow-hidden border-t border-foreground/8 transition-all duration-300 animate-fade-in-up opacity-0"
-              style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+              style={{ animationDelay: `${0.11 + index * 0.11}s` }}
             >
               <div className="relative aspect-[5/3] overflow-hidden">
                 <img

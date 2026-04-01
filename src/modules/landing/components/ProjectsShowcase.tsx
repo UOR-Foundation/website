@@ -14,9 +14,12 @@ const ProjectsShowcase = () => {
       <div className="container max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
           <div>
-             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-primary/70 mb-4 font-body">
-               UOR Ecosystem
-             </p>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§5</span>
+              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-primary/70 font-body">
+                UOR Ecosystem
+              </p>
+            </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
               Featured Projects
             </h2>
@@ -40,7 +43,7 @@ const ProjectsShowcase = () => {
             <div
               key={project.name}
               className="group p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 animate-fade-in-up opacity-0"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              style={{ animationDelay: `${index * 0.11}s` }}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />

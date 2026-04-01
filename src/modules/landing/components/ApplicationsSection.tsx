@@ -43,13 +43,16 @@ const ApplicationsSection = () => {
   return (
     <section className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
-         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-6">
-           Where It Applies
-         </p>
+        <div className="flex items-center gap-3 mb-6">
+          <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§3</span>
+          <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70">
+            Where It Applies
+          </p>
+        </div>
         <div className="h-px w-full bg-foreground/8" />
         <p
           className="py-8 md:py-10 text-foreground/60 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.1s" }}
+          style={{ animationDelay: "0.11s" }}
         >
           When every system shares one way to address data, new capabilities emerge.
         </p>
@@ -61,7 +64,7 @@ const ApplicationsSection = () => {
               <div
                 key={app.title}
                 className="group p-8 md:p-10 border-t border-foreground/8 flex flex-col gap-4 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${0.15 + idx * 0.07}s` }}
+                style={{ animationDelay: `${0.17 + idx * 0.07}s` }}
               >
                 <Icon
                   size={24}
