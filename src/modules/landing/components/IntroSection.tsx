@@ -15,8 +15,9 @@ const IntroSection = () => {
           className="py-golden-lg max-w-6xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s" }}
         >
-          <p className="text-foreground/90 font-medium font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-            UOR gives every piece of data a permanent address derived from its content. The same input always produces the same address, on any machine, in any system. You can verify data without trusting the source, because the address itself is the proof.
+          <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
+            <span className="text-foreground/90 font-medium">Universal Object Reference (UOR) gives every piece of data a permanent address derived from its content.</span>{" "}
+            <span className="text-foreground/70 font-normal">The same input always produces the same address, on any machine, in any system. You can verify data without trusting the source, because the address itself is the proof.</span>
           </p>
           <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-body">
             This means references that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure.
