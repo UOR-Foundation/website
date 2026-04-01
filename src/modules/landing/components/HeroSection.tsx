@@ -14,7 +14,7 @@ const HeroSection = () => {
       {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center justify-center px-6 pointer-events-none">
         {/* Top spacer — push content to lower-center */}
-        <div className="basis-[14%] shrink-0" />
+        <div className="basis-[22%] shrink-0" />
 
         {/* Galaxy orb — circular, larger */}
         <div
@@ -25,7 +25,7 @@ const HeroSection = () => {
         </div>
 
         {/* Spacer */}
-        <div className="h-[clamp(2.5rem,6vw,3.5rem)] shrink-0" />
+        <div className="h-[clamp(3rem,8vw,4.5rem)] shrink-0" />
 
         {/* Headline — centered, clean */}
         <h1
@@ -33,8 +33,8 @@ const HeroSection = () => {
           style={{ animationDelay: "0.29s" }}
         >
           Your Universal<br />
-          Coordinate System<br />
-          for Information
+          Coordinate<br />
+          System for Information
         </h1>
 
         {/* CTA */}
