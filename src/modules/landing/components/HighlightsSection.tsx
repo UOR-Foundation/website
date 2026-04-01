@@ -15,8 +15,8 @@ const HighlightsSection = () => {
     <section className="py-section-md bg-background">
       <div className="container max-w-[1600px]">
         <div className="flex items-center gap-3 mb-golden-lg">
-          <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/30">§11</span>
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
+          <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§11</span>
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-body">
             Community Highlights
           </p>
         </div>
