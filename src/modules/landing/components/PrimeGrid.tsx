@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useRef, useMemo, useCallback } from "react";
 
 /** Sieve of Eratosthenes — returns a Set of primes up to `max`. */
 function sievePrimes(max: number): Set<number> {
@@ -16,77 +16,89 @@ const COLS = 48;
 const ROWS = 29;
 const TOTAL = COLS * ROWS;
 const AXIS_INTERVAL = 7;
+const PADDING = 32;
+
+// Colors derived from design system tokens (gold primary, muted foreground)
+const PRIME_COLOR = "hsla(38, 65%, 55%, 0.10)";
+const COMPOSITE_COLOR = "hsla(0, 0%, 90%, 0.025)";
+const AXIS_COLOR = "hsla(0, 0%, 90%, 0.04)";
 
 const PrimeGrid = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const primes = useMemo(() => sievePrimes(TOTAL + 1), []);
 
-  const dots = useMemo(() => {
-    const result: boolean[] = new Array(TOTAL);
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const cellW = (w - PADDING * 2) / COLS;
+    const cellH = (h - PADDING * 2) / ROWS;
+    const fontSize = Math.max(7, Math.min(10, cellW * 0.42));
+
+    ctx.font = `${fontSize}px ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
     for (let i = 0; i < TOTAL; i++) {
-      result[i] = primes.has(i + 1);
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      const num = i + 1;
+      const isPrime = primes.has(num);
+
+      const x = PADDING + col * cellW + cellW / 2;
+      const y = PADDING + row * cellH + cellH / 2;
+
+      ctx.fillStyle = isPrime ? PRIME_COLOR : COMPOSITE_COLOR;
+      ctx.fillText(String(num), x, y);
     }
-    return result;
+
+    // Axis labels
+    ctx.font = `${Math.max(6, fontSize * 0.75)}px ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace`;
+    ctx.fillStyle = AXIS_COLOR;
+
+    // Column labels (top)
+    for (let c = AXIS_INTERVAL - 1; c < COLS; c += AXIS_INTERVAL) {
+      const x = PADDING + c * cellW + cellW / 2;
+      ctx.fillText(String(c + 1).padStart(2, "0"), x, PADDING - 10);
+    }
+
+    // Row labels (left)
+    ctx.textAlign = "right";
+    for (let r = AXIS_INTERVAL - 1; r < ROWS; r += AXIS_INTERVAL) {
+      const y = PADDING + r * cellH + cellH / 2;
+      ctx.fillText(String(r + 1).padStart(2, "0"), PADDING - 8, y);
+    }
   }, [primes]);
 
-  /* Column axis labels (top edge, every 7th column) */
-  const colLabels = useMemo(() => {
-    const labels: { col: number; label: string }[] = [];
-    for (let c = AXIS_INTERVAL - 1; c < COLS; c += AXIS_INTERVAL) {
-      labels.push({ col: c, label: String(c + 1).padStart(2, "0") });
-    }
-    return labels;
-  }, []);
+  useEffect(() => {
+    draw();
 
-  /* Row axis labels (left edge, every 7th row) */
-  const rowLabels = useMemo(() => {
-    const labels: { row: number; label: string }[] = [];
-    for (let r = AXIS_INTERVAL - 1; r < ROWS; r += AXIS_INTERVAL) {
-      labels.push({ row: r, label: String(r + 1).padStart(2, "0") });
-    }
-    return labels;
-  }, []);
+    const observer = new ResizeObserver(draw);
+    observer.observe(document.documentElement);
+    return () => observer.disconnect();
+  }, [draw]);
 
   return (
-    <div
-      className="fixed inset-0 z-0 pointer-events-none select-none"
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-0 pointer-events-none"
       aria-hidden="true"
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-        gridTemplateRows: `repeat(${ROWS}, 1fr)`,
-        padding: "2rem",
-        gap: 0,
-      }}
-    >
-      {dots.map((isPrime, i) => {
-        const col = i % COLS;
-        const row = Math.floor(i / COLS);
-        const isColLabel = row === 0 && (col + 1) % AXIS_INTERVAL === 0;
-        const isRowLabel = col === 0 && (row + 1) % AXIS_INTERVAL === 0;
-
-        return (
-          <div key={i} className="relative flex items-center justify-center">
-            <div
-              className={
-                isPrime
-                  ? "w-[2px] h-[2px] rounded-full bg-primary/[0.08]"
-                  : "w-[1.5px] h-[1.5px] rounded-full bg-foreground/[0.025]"
-              }
-            />
-            {isColLabel && (
-              <span className="absolute -top-3 font-mono text-[0.5rem] text-foreground/[0.04] select-none">
-                {String(col + 1).padStart(2, "0")}
-              </span>
-            )}
-            {isRowLabel && (
-              <span className="absolute -left-4 font-mono text-[0.5rem] text-foreground/[0.04] select-none">
-                {String(row + 1).padStart(2, "0")}
-              </span>
-            )}
-          </div>
-        );
-      })}
-    </div>
+    />
   );
 };
 
