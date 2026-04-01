@@ -15,8 +15,8 @@ const ProjectsShowcase = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
             <div className="flex items-center gap-3 mb-golden-sm">
-              <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/30">§5</span>
-              <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-body">
+              <span className="font-mono text-fluid-body tracking-[0.12em] text-foreground/25">§5</span>
+              <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead">
                 UOR Ecosystem
               </p>
             </div>
