@@ -178,6 +178,16 @@
   }
 }
 
+/* ── Prime Number Utility Classes ───────────────────────────────── */
+.prime-gold { color: hsl(var(--primary)); }
+.non-prime-neutral { color: hsl(var(--muted-foreground)); }
+.prime-index {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  color: hsl(var(--foreground) / 0.12);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    §3  Native P3 Color Gamut — wider-gamut for richer earth-tone palette
    On Display P3 screens, golds and greens are significantly richer.

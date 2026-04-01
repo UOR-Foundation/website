@@ -98,6 +98,13 @@ export default {
         "holo-5": "var(--holo-space-5)",
         "holo-6": "var(--holo-space-6)",
         "holo-8": "var(--holo-space-8)",
+        "holo-11": "var(--holo-space-11)",
+        "holo-13": "var(--holo-space-13)",
+        "holo-17": "var(--holo-space-17)",
+        "holo-19": "var(--holo-space-19)",
+        "holo-23": "var(--holo-space-23)",
+        "holo-29": "var(--holo-space-29)",
+        "holo-31": "var(--holo-space-31)",
       },
       borderRadius: {
         lg: "var(--radius)",
