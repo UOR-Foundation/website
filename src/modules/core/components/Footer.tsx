@@ -27,7 +27,7 @@ const Footer = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-foreground/50 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em] text-fluid-label"
+                  className="text-foreground/50 hover:text-foreground active:text-foreground/70 transition-colors duration-150 ease-out font-body uppercase tracking-[0.12em] text-fluid-label"
                 >
                   {item.label}
                 </Link>
@@ -35,13 +35,13 @@ const Footer = () => {
             </nav>
 
             <div className="flex items-center gap-4">
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
                 <Github size={16} />
               </a>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="Discord">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
                 <DiscordIcon className="w-4 h-4" />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
                 <Linkedin size={16} />
               </a>
             </div>
