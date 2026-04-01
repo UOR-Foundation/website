@@ -14,18 +14,18 @@ const HeroSection = () => {
         className="absolute inset-0 flex items-center justify-end animate-fade-in opacity-0"
         style={{ animationDelay: "0.13s" }}
       >
-        <div className="relative w-[85%] h-[85%] md:w-[58%] md:h-[90%] lg:w-[55%] lg:h-[95%] mr-[-8%] md:mr-[-4%]">
+        <div className="relative w-[85%] h-[85%] md:w-[58%] md:h-[90%] lg:w-[55%] lg:h-[95%] mr-[-8%] md:mr-[-2%]">
           <GalaxyAnimation />
         </div>
       </div>
 
       {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
-      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-14">
+      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-[5%] xl:px-[6%]">
         {/* Golden ratio spacer — 38.2% from top */}
         <div className="basis-[38.2%] shrink-0" />
         <div>
           <h1
-            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[680px]"
+            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[800px]"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
