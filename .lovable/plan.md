@@ -1,60 +1,49 @@
 
 
-# Wider Content + Golden Ratio Spacing
+# Prime Constellation Easter Egg — Scroll-Revealed Background
 
-## What changes
+## Concept
 
-### 1. Widen the content area site-wide
+A full-page fixed canvas sits behind all content on the index page. It renders a slowly evolving **Ulam spiral** of prime numbers — dots placed on a spiral grid where only primes are visible, forming the mysterious diagonal patterns that mathematicians have marveled at since 1963. The visualization starts completely invisible and awakens as the user scrolls, creating the feeling of an ancient mathematical consciousness emerging beneath the page.
 
-Currently all sections use `max-w-7xl` (80rem / 1280px). Upgrade to `max-w-[1400px]` to use more screen real estate while keeping comfortable margins. This applies to:
+The Asimov Foundation resonance: like psychohistory revealing hidden patterns in apparent chaos, the primes reveal their secret structure only to those who look (scroll) deep enough.
 
-- **Landing sections** (8 files): IntroSection, ApplicationsSection, ProjectsShowcase, PillarsSection, HighlightsSection, CommunitySection, CTASection, HeroSection
-- **Sub-pages** (5 files): AboutPage, StandardPage, ProjectsPage, ResearchPage, InteroperabilityPage
-- **Layout components**: PageShell (header + main), Navbar, Footer
-- **Other pages**: SemanticWebPage, UnsPage, SparqlEditorPage, etc.
+## How It Works
 
-Inner text blocks currently capped at `max-w-4xl` (896px) will move to `max-w-5xl` (1024px) for better use of the wider container.
+1. **New component: `PrimeConstellationBg.tsx`** — a fixed-position canvas (`position: fixed; inset: 0; z-index: 0`) that renders behind all page content.
 
-### 2. Golden ratio spacing system
+2. **Ulam spiral visualization**: Numbers 1 to ~40,000 are placed on a rectangular spiral outward from center. Only primes are drawn as dots. This naturally produces the famous diagonal line patterns — no artificial arrangement needed. The spiral slowly rotates (matching the existing `ROTATION_SPEED` aesthetic).
 
-Define CSS custom properties for section spacing based on φ (1.618):
+3. **Scroll-driven revelation**:
+   - At scroll 0%: canvas is fully transparent (invisible).
+   - As the user scrolls, global alpha increases smoothly from 0 to a subtle peak (~0.06–0.08 opacity) using `window.scrollY / document.scrollHeight`.
+   - Simultaneously, the dot radius grows slightly and a faint gold glow (`hsla(38, 65%, 55%)`) intensifies — the constellation "wakes up."
+   - By ~60% scroll depth, the full pattern is visible. The final 40% holds steady.
 
-```text
-Variable                    Value
-──────────────────────────────────────
---section-gap-sm            clamp(3rem, 5vw, 4.854rem)     ← 3rem × φ
---section-gap-md            clamp(5rem, 8vw, 7.854rem)     ← ~5rem × φ  
---section-gap-lg            clamp(6rem, 10vw, 10rem)       ← hero/CTA
---content-gap-sm            1rem                            ← ~0.618rem × φ
---content-gap-md            1.618rem
---content-gap-lg            2.618rem                        ← φ²
-```
+4. **Layering**: The canvas sits at `z-index: 0`. All existing sections already have backgrounds or relative positioning that will naturally layer on top, letting the prime constellation peek through in the gaps and margins between sections.
 
-Apply these to all section `py-*` values and internal spacing (`mb-*`, `mt-*`, `gap-*`) so vertical rhythm follows golden ratio proportions consistently.
+5. **Connection to existing hero**: The hero's `PrimeGrid` (Vogel spiral) is the "seed." As you scroll past it, the Ulam spiral beneath takes over — a different mathematical face of the same primes, as if the page itself is built on a foundation of prime numbers.
 
-### 3. Files to update (~20 files)
+## Technical Details
 
-**CSS**: `src/index.css` — add golden ratio spacing variables
+### New file: `src/modules/landing/components/PrimeConstellationBg.tsx`
+- Full-viewport fixed canvas, pointer-events-none
+- Ulam spiral coordinate generator (simple arithmetic spiral mapping)
+- Prime sieve reused from existing pattern (up to ~40,000)
+- Scroll listener (passive) drives opacity/scale uniforms
+- Single `requestAnimationFrame` loop with slow rotation
+- Dot color: gold (`hsla(38, 65%, 55%)`) matching existing prime palette
+- Optional: faint connecting lines between adjacent primes on the spiral for the "constellation" effect, also scroll-gated
 
-**Tailwind config**: `tailwind.config.ts` — map variables to utilities like `py-section`, `gap-golden`
+### Modified file: `src/modules/landing/pages/IndexPage.tsx`
+- Import and render `PrimeConstellationBg` as the first child inside `<Layout>`, before `<HeroSection>`
 
-**Landing sections** (8 files): Replace `py-24 md:py-32` with golden-ratio section padding; replace internal margins with golden-ratio gaps
+### Modified file: `src/modules/core/components/Layout.tsx`
+- Ensure `<main>` has `position: relative; z-index: 1` so content layers above the fixed canvas
 
-**Sub-pages** (5+ files): Same treatment for AboutPage, StandardPage, ProjectsPage, ResearchPage, InteroperabilityPage
-
-**Shared components**: PageShell, Navbar, Footer — widen containers
-
-**Module pages**: UnsPage, SemanticWebPage, SparqlEditorPage, and any others using `max-w-7xl` or narrower
-
-### Technical detail
-
-Golden ratio values:
-- φ = 1.618
-- Section vertical padding: `py-[clamp(5rem,8vw,7.854rem)]` (≈ base × φ)
-- Gap between heading and body: `1.618rem`
-- Gap between body paragraphs: `1rem` (φ × 0.618)
-- Gap between section label and rule: `0.618rem`
-- CTA section gets largest padding: `py-[clamp(6rem,10vw,10rem)]`
-
-Container change: `max-w-7xl` → `max-w-[1400px]` everywhere, inner text `max-w-4xl` → `max-w-5xl`.
+### Performance
+- Canvas renders only prime dots (~4,200 out of 40,000) — lightweight
+- Culls off-screen dots
+- Uses `devicePixelRatio` for retina sharpness
+- Single RAF loop, pauses when tab is hidden via `document.hidden`
 
