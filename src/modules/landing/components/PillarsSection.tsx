@@ -7,39 +7,38 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="pt-8 md:pt-14 pb-6 md:pb-10 bg-background">
+    <section id="pillars" className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
-        <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-5 md:mb-6">
+        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-6">
           Get Involved
         </p>
-        <div className="h-px w-full bg-border/60" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mt-8 md:mt-10">
+        <div className="h-px w-full bg-foreground/8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mt-0">
           {pillars.map((pillar, index) => {
             const Icon = iconMap[pillar.iconKey];
             return (
               <Link
                 key={pillar.title}
                 to={pillar.href}
-                className="group flex flex-col rounded-2xl border border-border bg-card p-6 md:p-8 transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
+                className="group flex flex-col p-8 md:p-10 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 transition-all duration-300 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.15 + index * 0.12}s` }}
               >
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-5">
                   <Icon
-                    className="w-5 h-5 text-primary transition-transform duration-300 group-hover:scale-110"
+                    className="w-5 h-5 text-foreground/40 transition-colors duration-300 group-hover:text-foreground"
                     strokeWidth={1.5}
                   />
-                  <h3 className="font-display text-lg md:text-2xl font-semibold text-foreground">
+                  <h3 className="font-display text-lg md:text-xl font-semibold text-foreground">
                     {pillar.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground font-body text-base leading-[1.68] flex-1">
+                <p className="text-foreground/40 font-body text-base leading-[1.68] flex-1">
                   {pillar.description}
                 </p>
-                <div className="h-px w-full bg-border/40 mt-6 md:mt-8" />
-                <div className="flex justify-end mt-4">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground font-body px-4 py-2 rounded-full border border-border group-hover:border-primary/30 transition-all duration-300">
+                <div className="flex justify-start mt-8">
+                  <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground transition-all duration-300">
                     {pillar.cta}
-                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                    <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
                 </div>
               </Link>

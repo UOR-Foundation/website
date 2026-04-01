@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import highlightSemanticWeb from "@/assets/highlight-semantic-web.jpg";
-import { highlights, type TagType } from "@/data/highlights";
+import { highlights } from "@/data/highlights";
 
 const imageMap: Record<string, string> = {
   knowledgeGraph: highlightKnowledgeGraph,
@@ -12,46 +12,45 @@ const imageMap: Record<string, string> = {
 
 const HighlightsSection = () => {
   return (
-    <section className="py-8 md:py-14 bg-background">
+    <section className="py-24 md:py-32 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-8 md:mb-10">
+        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-10 md:mb-14">
           Community Highlights
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
           {highlights.map((item, index) => (
             <a
               key={item.title}
               href={item.href}
-              className="group flex flex-col bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-border/50 transition-all duration-300 animate-fade-in-up opacity-0"
+              className="group flex flex-col overflow-hidden border-t border-foreground/8 transition-all duration-300 animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
               <div className="relative aspect-[5/3] overflow-hidden">
                 <img
                   src={imageMap[item.imageKey]}
                   alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0"
                   loading="lazy"
                 />
               </div>
-              <div className="flex flex-col flex-1 p-5 md:p-6">
-                <span className="self-start text-sm font-medium font-body text-muted-foreground/60 uppercase tracking-wider mb-3 md:mb-4">
+              <div className="flex flex-col flex-1 py-6 md:py-8 pr-4">
+                <span className="self-start text-xs font-semibold font-body text-foreground/30 uppercase tracking-[0.15em] mb-3">
                   {item.tag}
                 </span>
-                <h3 className="font-display text-base md:text-xl font-semibold text-foreground leading-snug flex-1">
+                <h3 className="font-display text-base md:text-lg font-semibold text-foreground leading-snug flex-1">
                   {item.title}
                 </h3>
-                <p className="mt-3 md:mt-4 text-base text-muted-foreground font-body">
+                <p className="mt-3 text-sm text-foreground/30 font-body">
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-3 md:mt-4 text-sm font-medium text-primary font-body group-hover:gap-2.5 transition-all duration-200">
-                  Learn more <ArrowRight size={14} />
+                <span className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300">
+                  Learn more <ArrowRight size={12} />
                 </span>
               </div>
             </a>
           ))}
         </div>
-
       </div>
     </section>
   );

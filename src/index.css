@@ -319,38 +319,36 @@
     background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
   }
 
-  /* Polished button base */
+  /* SpaceX-style rectangular buttons */
   .btn-primary {
-    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
-    background-color: hsl(220 20% 12%);
+    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em] transition-all duration-300 ease-out;
+    border: 1px solid hsl(0 0% 100%);
     color: hsl(0 0% 100%);
+    background: transparent;
   }
   .btn-primary:hover {
-    @apply shadow-lg;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px -8px hsl(220 20% 12% / 0.4);
+    background: hsl(0 0% 100%);
+    color: hsl(220 20% 4%);
   }
   .btn-primary:active {
-    transform: translateY(0);
+    opacity: 0.8;
   }
 
   .btn-outline {
-    @apply px-7 py-3 rounded-full font-medium text-sm transition-all duration-300 ease-out;
-    border: 1px solid hsl(220 20% 12%);
-    color: hsl(220 20% 12%);
+    @apply px-8 py-3.5 font-semibold text-xs uppercase tracking-[0.15em] transition-all duration-300 ease-out;
+    border: 1px solid hsl(0 0% 100% / 0.3);
+    color: hsl(0 0% 100% / 0.7);
+    background: transparent;
   }
   .btn-outline:hover {
-    background-color: hsl(220 20% 12%);
+    border-color: hsl(0 0% 100%);
     color: hsl(0 0% 100%);
-    transform: translateY(-1px);
   }
   .btn-outline:active {
-    transform: translateY(0);
-    background-color: transparent;
-    color: hsl(220 20% 12%);
+    opacity: 0.8;
   }
   .btn-outline:visited {
-    color: hsl(220 20% 12%);
+    color: hsl(0 0% 100% / 0.7);
   }
 }
 

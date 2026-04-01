@@ -7,42 +7,39 @@ import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links
 
 const Footer = () => {
   return (
-    <footer className="section-dark py-10 md:py-14">
+    <footer className="py-10 md:py-14 bg-section-dark">
       <div className="container max-w-6xl">
-        {/* Main row: logo left, nav + socials right */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
             <img
               src={uorIcon}
               alt="UOR Foundation"
               className="w-7 h-7 object-contain invert relative z-10"
             />
-            <span className="font-display text-xl md:text-2xl font-bold tracking-tight text-section-dark-foreground">
+            <span className="font-body text-sm font-semibold tracking-[0.12em] uppercase text-foreground/80">
               The UOR Foundation
             </span>
           </Link>
 
-          {/* Nav links + social icons */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
             <nav className="flex items-center gap-5 md:gap-6">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-section-dark-foreground/55 hover:text-section-dark-foreground transition-colors duration-300 font-body text-sm"
+                  className="text-foreground/35 hover:text-foreground transition-colors duration-300 font-body text-xs uppercase tracking-[0.12em]"
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <a
                 href={GITHUB_ORG_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
                 aria-label="GitHub"
               >
                 <Github size={16} />
@@ -51,7 +48,7 @@ const Footer = () => {
                 href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
                 aria-label="Discord"
               >
                 <DiscordIcon className="w-4 h-4" />
@@ -60,7 +57,7 @@ const Footer = () => {
                 href={LINKEDIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-section-dark-foreground/15 flex items-center justify-center text-section-dark-foreground/40 hover:text-section-dark-foreground hover:border-section-dark-foreground/30 transition-all duration-300"
+                className="text-foreground/30 hover:text-foreground transition-colors duration-300"
                 aria-label="LinkedIn"
               >
                 <Linkedin size={16} />
@@ -69,9 +66,8 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Divider + copyright */}
-        <div className="h-px w-full bg-section-dark-foreground/8 mt-8 md:mt-10 mb-4 md:mb-5" />
-        <p className="text-section-dark-foreground/25 text-sm font-body text-right">
+        <div className="h-px w-full bg-foreground/8 mt-8 md:mt-10 mb-4 md:mb-5" />
+        <p className="text-foreground/20 text-xs font-body text-right uppercase tracking-[0.1em]">
           © {new Date().getFullYear()} The UOR Foundation
         </p>
       </div>

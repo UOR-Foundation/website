@@ -41,37 +41,37 @@ const applications: Application[] = [
 
 const ApplicationsSection = () => {
   return (
-    <section className="py-8 md:py-14 bg-background">
+    <section className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
-        <p className="text-base font-body font-semibold tracking-[0.2em] uppercase text-foreground/70 mb-4">
+        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-6">
           Where It Applies
         </p>
-        <div className="h-px w-full bg-border/40" />
+        <div className="h-px w-full bg-foreground/8" />
         <p
-          className="py-6 md:py-8 text-foreground/75 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
+          className="py-8 md:py-10 text-foreground/60 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.1s" }}
         >
           When every system shares one way to address data, new capabilities emerge.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
           {applications.map((app, idx) => {
             const Icon = app.icon;
             return (
               <div
                 key={app.title}
-                className="group rounded-2xl border border-border bg-card p-6 md:p-7 flex flex-col gap-4 transition-all duration-300 hover:border-primary/20 hover:shadow-lg animate-fade-in-up opacity-0"
+                className="group p-8 md:p-10 border-t border-foreground/8 flex flex-col gap-4 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.15 + idx * 0.07}s` }}
               >
                 <Icon
-                  size={22}
-                  className="text-primary shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  size={24}
+                  className="text-foreground/40 shrink-0 transition-colors duration-300 group-hover:text-foreground"
                   strokeWidth={1.5}
                 />
                 <h3 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">
                   {app.title}
                 </h3>
-                <p className="text-muted-foreground font-body text-[0.938rem] leading-[1.7]">
+                <p className="text-foreground/45 font-body text-[0.938rem] leading-[1.7]">
                   {app.description}
                 </p>
               </div>
