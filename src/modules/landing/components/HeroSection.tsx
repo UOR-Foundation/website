@@ -2,15 +2,13 @@ import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import PrimeSequenceCanvas from "@/modules/landing/components/PrimeSequenceCanvas";
 import { ArrowRight } from "lucide-react";
 
-
-
 const HeroSection = () => {
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
       {/* Prime sequence — canvas-rendered drifting stream */}
       <PrimeSequenceCanvas />
 
-      {/* Galaxy — full-bleed background */}
+      {/* Galaxy — full-bleed background, SpaceX-style dramatic positioning */}
       <div
         className="absolute inset-0 flex items-center justify-end animate-fade-in opacity-0"
         style={{ animationDelay: "0.13s" }}
@@ -20,11 +18,11 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Text — positioned at golden ratio vertical */}
-      <div className="relative z-10 h-full flex flex-col justify-end pb-[23.6vh] md:pb-0 md:justify-center px-6 md:px-16 lg:px-24 xl:px-32">
-        <div className="md:mt-[10vh]">
+      {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
+      <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-10 lg:px-14">
+        <div className="pb-[18vh] md:pb-[16vh]">
           <h1
-            className="font-display text-[clamp(2.25rem,8vw,3.5rem)] md:text-[clamp(2.5rem,3.8vw,4.25rem)] font-bold leading-[1.08] tracking-[0.03em] text-foreground animate-fade-in-up opacity-0 max-w-[520px]"
+            className="font-display text-[clamp(2rem,7.5vw,3rem)] md:text-[clamp(2.2rem,3.2vw,3.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[560px]"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
@@ -32,26 +30,22 @@ const HeroSection = () => {
             for Information
           </h1>
           <p
-            className="mt-5 md:mt-7 text-[15px] md:text-base text-foreground/40 max-w-[480px] leading-[1.7] animate-fade-in-up opacity-0"
+            className="mt-5 md:mt-6 text-[13px] md:text-[14px] text-foreground/40 max-w-[440px] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            Deterministic identity. Content-addressed structure. Indexed by prime decomposition.
+            Deterministic identity. Content-addressed structure.
+            Indexed by prime decomposition.
           </p>
-          {/* Gold accent rule — console readout aesthetic */}
-          <div
-            className="mt-5 w-[61px] h-px bg-primary/20 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.53s" }}
-          />
           <div
             className="mt-8 md:mt-10 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
               href="/projects"
-              className="inline-flex items-center gap-3 px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] border border-foreground/30 text-foreground/80 hover:border-foreground hover:text-foreground transition-all duration-300"
+              className="inline-flex items-center gap-3 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
             >
               Explore
-              <ArrowRight size={14} />
+              <ArrowRight size={12} />
             </a>
           </div>
         </div>
@@ -59,10 +53,10 @@ const HeroSection = () => {
 
       {/* Origin coordinate marker */}
       <span
-        className="absolute bottom-6 left-6 font-mono text-[10px] text-foreground/[0.04] tracking-[0.2em] select-none pointer-events-none"
+        className="absolute bottom-6 right-10 font-mono text-[9px] text-foreground/[0.06] tracking-[0.25em] uppercase select-none pointer-events-none"
         aria-hidden="true"
       >
-        [ 0, 0 ]
+        §0 · Origin
       </span>
     </section>
   );

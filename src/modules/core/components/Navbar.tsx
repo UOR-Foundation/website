@@ -39,28 +39,30 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           mobileOpen
             ? "bg-background"
             : scrolled
-              ? "bg-background/80 backdrop-blur-2xl backdrop-saturate-150"
+              ? "bg-background/60 backdrop-blur-2xl backdrop-saturate-150"
               : "bg-transparent"
         }`}
       >
-        <div className="container flex items-center justify-between h-[5rem] md:h-24">
-          <Link to="/" className="flex items-center gap-3 group relative z-[60]">
+        {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
+        <div className="flex items-center justify-between h-[5rem] md:h-[4.5rem] px-6 md:px-10 lg:px-14">
+          <Link to="/" className="flex items-center gap-2.5 group relative z-[60]">
             <img
               src={uorIcon}
               alt="UOR Foundation"
-              className="w-10 h-10 md:w-8 md:h-8 object-contain invert brightness-[100] transition-all duration-300"
+              className="w-9 h-9 md:w-7 md:h-7 object-contain invert brightness-[100] transition-all duration-300"
             />
-            <span className="font-display text-lg md:text-sm font-semibold tracking-[0.12em] uppercase text-foreground">
-              The UOR Foundation
+            <span className="font-display text-[15px] md:text-[11px] font-semibold tracking-[0.18em] uppercase text-foreground">
+              UOR Foundation
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-2 lg:gap-3">
+          {/* Desktop nav — SpaceX: centered uppercase links, small font, wide tracking */}
+          <nav className="hidden md:flex items-center gap-0">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`px-3 lg:px-4 py-2 text-[13px] lg:text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
+                className={`px-5 lg:px-6 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
                   location.pathname === item.href
                     ? "text-foreground"
                     : "text-foreground/50 hover:text-foreground"
@@ -71,23 +73,24 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={18} />
+          {/* Right cluster — social icons + donate CTA */}
+          <div className="hidden md:flex items-center gap-5">
+            <div className="flex items-center gap-1">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="Discord">
+                <DiscordIcon size={15} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={18} />
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
+                <Github size={15} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={18} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
+                <Linkedin size={15} />
               </a>
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] border border-foreground/30 text-foreground/80 hover:border-foreground hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
+              className="px-5 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
-              <Heart size={12} fill="currentColor" strokeWidth={0} className="mr-2" />
+              <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
             </button>
           </div>
@@ -97,7 +100,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90 relative z-[60]"
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </header>
@@ -113,12 +116,12 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         <div className="h-full flex flex-col">
           <div className="h-[5rem] shrink-0" />
 
-          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
+          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-1 px-8">
             {navItems.map((item, idx) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`py-3.5 px-6 text-lg font-semibold uppercase tracking-[0.12em] font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                className={`py-3 px-6 text-[15px] font-semibold uppercase tracking-[0.18em] font-body text-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
                   mobileOpen
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-3"
@@ -144,20 +147,20 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           >
             <button
               onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="w-full max-w-xs py-4 text-sm font-semibold uppercase tracking-[0.15em] font-body text-center border border-foreground/30 text-foreground flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-all"
+              className="w-full max-w-xs py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-foreground/20 text-foreground/80 flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.98] transition-all"
             >
-              <Heart size={14} fill="currentColor" strokeWidth={0} />
+              <Heart size={12} fill="currentColor" strokeWidth={0} className="opacity-60" />
               Donate
             </button>
             <div className="flex items-center justify-center gap-8 py-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={24} />
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="Discord">
+                <DiscordIcon size={22} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={24} />
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="GitHub">
+                <Github size={22} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/40 hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={24} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="LinkedIn">
+                <Linkedin size={22} />
               </a>
             </div>
           </div>
