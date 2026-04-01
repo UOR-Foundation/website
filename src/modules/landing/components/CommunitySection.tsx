@@ -40,8 +40,8 @@ const CommunitySection = () => {
             ))}
 
             {/* Community count */}
-            <div className="flex flex-col items-center text-center md:w-[140px] justify-center">
-              <div className="w-[4.5rem] h-[4.5rem] md:w-24 md:h-24 border border-foreground/10 flex items-center justify-center mb-3" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
+            <div className="flex flex-col items-center text-center md:w-[160px] justify-center">
+              <div className="w-[5.5rem] h-[5.5rem] md:w-32 md:h-32 border border-foreground/10 flex items-center justify-center mb-4" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                 <span className="font-mono text-foreground/50 text-lg">+</span>
               </div>
               <p className="font-mono text-foreground/50 text-fluid-body">
