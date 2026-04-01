@@ -35,11 +35,11 @@ const PillarsSection = () => {
                     {pillar.title}
                   </h3>
                 </div>
-                <p className="text-foreground/40 font-body leading-[1.68] flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
+                <p className="text-foreground/65 font-body leading-[1.68] flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
                   {pillar.description}
                 </p>
                 <div className="flex justify-start mt-8">
-                  <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                  <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                     {pillar.cta}
                     <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </span>

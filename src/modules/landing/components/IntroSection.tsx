@@ -16,10 +16,10 @@ const IntroSection = () => {
           <p className="text-foreground/90 font-medium font-body leading-[1.75] md:leading-[1.85]" style={{ fontSize: 'clamp(18px, 1.3vw, 24px)' }}>
             The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
           </p>
-          <p className="mt-6 text-foreground/50 font-body leading-[1.75] md:leading-[1.85]" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)' }}>
+          <p className="mt-6 text-foreground/70 font-body leading-[1.75] md:leading-[1.85]" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)' }}>
             UOR gives every piece of data a permanent address derived from its content. The same input always produces the same address, on any machine, in any system. You can verify data without trusting the source, because the address itself is the proof.
           </p>
-          <p className="mt-4 text-foreground/50 font-body leading-[1.75] md:leading-[1.85]" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)' }}>
+          <p className="mt-4 text-foreground/70 font-body leading-[1.75] md:leading-[1.85]" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)' }}>
             This means references that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure.
           </p>
         </div>

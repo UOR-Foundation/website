@@ -56,7 +56,7 @@ const ApplicationsSection = () => {
         </div>
         <div className="rule-prime" />
         <p
-          className="py-8 md:py-10 text-foreground/60 font-body leading-[1.75] max-w-4xl animate-fade-in-up opacity-0"
+          className="py-8 md:py-10 text-foreground/70 font-body leading-[1.75] max-w-4xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s", fontSize: 'clamp(16px, 1.1vw, 20px)' }}
         >
           When every system shares one way to address data, new capabilities emerge.
@@ -79,7 +79,7 @@ const ApplicationsSection = () => {
                 <h3 className="font-display font-semibold text-foreground leading-tight" style={{ fontSize: 'clamp(1.125rem, 1.2vw, 1.5rem)' }}>
                   {app.title}
                 </h3>
-                <p className="text-foreground/45 font-body leading-[1.7]" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
+                <p className="text-foreground/65 font-body leading-[1.7]" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
                   {app.description}
                 </p>
                 <span className="font-mono text-[0.625rem] text-primary/0 group-hover:text-primary/25 transition-colors duration-500 tracking-wider">

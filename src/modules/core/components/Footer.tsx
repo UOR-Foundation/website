@@ -27,7 +27,7 @@ const Footer = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-foreground/35 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em]"
+                  className="text-foreground/50 hover:text-foreground transition-colors duration-300 font-body uppercase tracking-[0.12em]"
                   style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
                 >
                   {item.label}
@@ -36,13 +36,13 @@ const Footer = () => {
             </nav>
 
             <div className="flex items-center gap-4">
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="GitHub">
                 <Github size={16} />
               </a>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="Discord">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="Discord">
                 <DiscordIcon className="w-4 h-4" />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/30 hover:text-foreground transition-colors duration-300" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors duration-300" aria-label="LinkedIn">
                 <Linkedin size={16} />
               </a>
             </div>
@@ -50,7 +50,7 @@ const Footer = () => {
         </div>
 
         <div className="rule-glow mt-8 md:mt-10 mb-4 md:mb-5" />
-        <p className="text-foreground/20 text-xs font-body text-right uppercase tracking-[0.1em]">
+        <p className="text-foreground/40 text-xs font-body text-right uppercase tracking-[0.1em]">
           © {new Date().getFullYear()} The UOR Foundation
         </p>
       </div>

@@ -17,7 +17,7 @@ const About = () => {
             About
           </h1>
           <p
-            className="mt-5 text-muted-foreground font-body text-base leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
+            className="mt-5 text-foreground/70 font-body text-base leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
@@ -48,7 +48,7 @@ const About = () => {
                   >
                     {Icon && <Icon size={20} className="text-primary" strokeWidth={1.5} />}
                     <h3 className="font-display text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="text-base text-muted-foreground font-body leading-relaxed">{item.desc}</p>
+                    <p className="text-base text-foreground/70 font-body leading-relaxed">{item.desc}</p>
                   </div>
                 );
               })}
@@ -65,7 +65,7 @@ const About = () => {
               Governance Board
             </h2>
             <p
-              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
+              className="text-foreground/70 font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
@@ -94,7 +94,7 @@ const About = () => {
                         {member.role}
                       </p>
                       {member.bio && (
-                        <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
+                        <p className="text-sm text-foreground/65 font-body mt-1 leading-snug">
                           {member.bio}
                         </p>
                       )}
@@ -138,7 +138,7 @@ const About = () => {
                   style={{ animationDelay: `${0.25 + idx * 0.06}s` }}
                 >
                   <span className="text-base font-medium text-foreground font-body">{link.label}</span>
-                  <ExternalLink size={15} className="text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                  <ExternalLink size={15} className="text-foreground/40 group-hover:text-primary transition-colors" />
                 </a>
               ))}
             </div>

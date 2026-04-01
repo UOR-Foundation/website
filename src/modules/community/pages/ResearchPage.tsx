@@ -45,7 +45,7 @@ const Research = () => {
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
           </h1>
-          <p className="mt-6 text-base text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-base text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
             Researchers and builders working across disciplines to test ideas, validate results, and publish openly. Progress is faster when it is shared.
           </p>
           <div
@@ -65,13 +65,13 @@ const Research = () => {
       {/* Research */}
       <section id="research" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Open Research
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
             Research Areas
           </h2>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-base leading-relaxed max-w-3xl mb-8">
             Find your discipline, validate ideas, and collaborate on{" "}
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
@@ -89,12 +89,12 @@ const Research = () => {
                     isSelected
                       ? "border-primary bg-primary/10 text-primary shadow-sm"
                       : isDisabled
-                      ? "border-border/30 bg-card/40 text-muted-foreground/50 cursor-default"
+                      ? "border-border/30 bg-card/40 text-foreground/45 cursor-default"
                       : "border-border bg-card hover:border-primary/25 hover:shadow-sm cursor-pointer text-foreground"
                   }`}
                   style={{ animationDelay: `${index * 0.04}s` }}
                 >
-                  {(() => { const Icon = iconMap[cat.iconKey]; return Icon ? <Icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-muted-foreground/40" : "text-primary"} /> : null; })()}
+                  {(() => { const Icon = iconMap[cat.iconKey]; return Icon ? <Icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-foreground/40" : "text-primary"} /> : null; })()}
                   <span>{cat.label}</span>
                 </button>
               );
@@ -127,11 +127,11 @@ const Research = () => {
                     <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground/60 font-body mb-3">{item.authors}</p>
-                    <p className="text-sm text-muted-foreground font-body leading-relaxed flex-1">
+                    <p className="text-xs text-foreground/55 font-body mb-3">{item.authors}</p>
+                    <p className="text-sm text-foreground/70 font-body leading-relaxed flex-1">
                       {item.description}
                     </p>
-                    <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                    <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
                       View research <ArrowRight size={13} />
                     </span>
                   </CardWrapper>
@@ -152,7 +152,7 @@ const Research = () => {
                 <h3 className="font-display text-base font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
                   Submit Your Research
                 </h3>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed max-w-[240px]">
+                <p className="text-sm text-foreground/70 font-body leading-relaxed max-w-[240px]">
                   Share your work with the community for validation and collaboration.
                 </p>
                 <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary/60 group-hover:text-primary transition-colors duration-200 font-body">
@@ -176,7 +176,7 @@ const Research = () => {
       {/* Blog */}
       <section id="blog" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Blog
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
@@ -203,12 +203,12 @@ const Research = () => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${tagStyles[post.tag]}`}>
                       {post.tag}
                     </span>
-                    <span className="text-xs text-muted-foreground font-body">{post.date}</span>
+                    <span className="text-xs text-foreground/70 font-body">{post.date}</span>
                   </div>
                   <h3 className="font-display text-lg font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
                     {post.title}
                   </h3>
-                  <span className="inline-flex items-center gap-1.5 mt-auto pt-4 text-sm font-medium text-muted-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+                  <span className="inline-flex items-center gap-1.5 mt-auto pt-4 text-sm font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
                     Read more <ArrowRight size={13} />
                   </span>
                 </div>
@@ -221,7 +221,7 @@ const Research = () => {
       {/* Events */}
       <section id="events" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-7xl">
-          <p className="text-sm font-body font-medium tracking-widest uppercase text-muted-foreground/50 mb-3">
+          <p className="text-sm font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Events
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8">
@@ -246,7 +246,7 @@ const Research = () => {
                     <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
                       {event.title}
                     </h3>
-                    <p className="text-muted-foreground font-body text-base leading-relaxed">
+                    <p className="text-foreground/70 font-body text-base leading-relaxed">
                       {event.location}
                       {event.link && (
                         <>
@@ -259,7 +259,7 @@ const Research = () => {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2 md:mt-1">
-                    <span className="text-sm font-medium text-muted-foreground/60 font-body flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground/55 font-body flex items-center gap-2">
                       <Calendar size={14} />
                       {event.date}
                     </span>

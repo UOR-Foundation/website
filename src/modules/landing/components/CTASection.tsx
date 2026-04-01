@@ -28,7 +28,7 @@ const CTASection = () => {
          <h2 className="font-display font-bold text-foreground" style={{ fontSize: 'clamp(1.875rem, 2.5vw, 3rem)' }}>
           Begin Verification
         </h2>
-        <p className="mt-6 md:mt-8 text-foreground/40 font-body leading-[1.68] max-w-3xl mx-auto" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)', textTransform: 'none' }}>
+        <p className="mt-6 md:mt-8 text-foreground/65 font-body leading-[1.68] max-w-3xl mx-auto" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)', textTransform: 'none' }}>
           Derive your first address. Verify its structure. Five minutes.
         </p>
 

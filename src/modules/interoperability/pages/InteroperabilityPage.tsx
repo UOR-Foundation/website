@@ -30,7 +30,7 @@ export default function InteroperabilityPage() {
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                   Universal Interoperability Map
                 </h1>
-                <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+                <p className="mt-3 text-base text-foreground/70 leading-relaxed">
                   Every external standard is a deterministic projection of a single UOR identity.
                   Explore how they compose into cross-protocol synergy chains.
                 </p>

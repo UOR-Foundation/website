@@ -37,7 +37,7 @@ const CommunitySection = () => {
                   <p className="font-body font-semibold text-foreground/70 leading-tight truncate" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
                     {member.name.split(" ")[0]}
                   </p>
-                  <p className="text-[0.6875rem] font-body text-foreground/30 leading-tight mt-0.5 truncate">
+                  <p className="text-[0.6875rem] font-body text-foreground/50 leading-tight mt-0.5 truncate">
                     {member.role}
                   </p>
                 </div>
@@ -49,9 +49,9 @@ const CommunitySection = () => {
 
             <div className="bg-background p-4 lg:p-5 flex flex-col gap-2 items-start justify-center">
               <div className="w-10 h-10 border border-foreground/10 flex items-center justify-center">
-                <span className="font-mono text-xs text-foreground/30">+</span>
+                <span className="font-mono text-xs text-foreground/50">+</span>
               </div>
-              <p className="font-mono text-xs text-foreground/20">150 nodes</p>
+              <p className="font-mono text-xs text-foreground/45">150 nodes</p>
             </div>
           </div>
         </div>
