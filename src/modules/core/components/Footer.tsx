@@ -22,7 +22,7 @@ const Footer = () => {
           </Link>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
-            <nav className="flex items-center gap-5 md:gap-6">
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 md:gap-6">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -34,15 +34,15 @@ const Footer = () => {
               ))}
             </nav>
 
-            <div className="flex items-center gap-4">
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
-                <Github size={16} />
+            <div className="flex items-center gap-5">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
+                <Github size={18} />
               </a>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
-                <DiscordIcon className="w-4 h-4" />
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
+                <DiscordIcon className="w-[18px] h-[18px]" />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
-                <Linkedin size={16} />
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
+                <Linkedin size={18} />
               </a>
             </div>
           </div>
