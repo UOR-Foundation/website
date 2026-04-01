@@ -212,13 +212,14 @@
     z-index: 1;
   }
 
-  /* ── Panel Active — gold-tinted border on hover ── */
+  /* ── Panel Active — gold-tinted border on hover with tactile lift ── */
   .panel-active {
     border-color: hsl(var(--foreground) / 0.08);
-    transition: border-color 0.3s ease;
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out, transform 200ms ease-out;
   }
   .panel-active:hover {
     border-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 2px 16px hsl(var(--primary) / 0.06);
   }
 }
 
