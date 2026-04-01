@@ -25,7 +25,7 @@ const applications: Application[] = [
     icon: ShieldCheck,
     title: "Proof-Based Computation",
     description:
-      "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it.",
+      "Run a computation once and produce a receipt anyone can check. No need to re-run it, no need to trust the person who ran it.",
     systemId: "sys.proof-compute.v1",
   },
   {
