@@ -26,10 +26,10 @@ const CTASection = () => {
          </div>
 
          <h2 className="font-display font-bold text-foreground text-fluid-heading">
-          Begin Verification
+          Join the UOR Mission
         </h2>
         <p className="mt-golden-md text-foreground/65 font-body leading-[1.68] max-w-5xl mx-auto text-fluid-body">
-          Derive your first address. Verify its structure. Five minutes.
+          Learn the spec. Contribute to the codebase. Build the future of data identity with us.
         </p>
 
         <div className="mt-golden-lg flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
