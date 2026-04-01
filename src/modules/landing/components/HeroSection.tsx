@@ -20,7 +20,7 @@ const HeroSection = () => {
       </div>
 
       {/* Text — SpaceX-style: lower-left, generous padding, full-width utilization */}
-      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-[5%] xl:px-[6%]">
+      <div className="relative z-10 h-full flex flex-col px-6 md:px-10 lg:px-[5%] xl:px-[6%] pointer-events-none">
         {/* Golden ratio spacer — 38.2% from top */}
         <div className="basis-[38.2%] shrink-0" />
         <div>
@@ -44,7 +44,7 @@ const HeroSection = () => {
           >
             <a
               href="/projects"
-              className="inline-flex items-center gap-3 px-7 py-3.5 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
+              className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3.5 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300"
             >
               Explore Projects
               <ArrowRight size={13} />
