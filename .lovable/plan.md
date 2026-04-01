@@ -1,32 +1,90 @@
 
 
-# Hero Section Redesign — SpaceX Split Layout
+# Add Color Depth and Visual Richness to the Dark Theme
 
-## Current State
-The hero has the galaxy animation centered as a backdrop with text overlaid at the bottom-left. The text and image compete for the same space.
+## Problem
+The site is currently almost entirely monochrome: white text on flat black. While this is clean, it feels bleak compared to sites like Super Protocol that use strategic color accents, subtle background gradients, and glowing elements to create depth and energy against dark backgrounds.
 
-## SpaceX Pattern
-SpaceX uses a **split layout**: text on the left (vertically centered), dramatic imagery on the right, both filling the full viewport width. The text includes a bold uppercase headline, a short description paragraph, and a single CTA button.
+## What Super Protocol Does Well
+- **Teal/cyan accent color** on CTAs, glowing horizon lines, and interactive elements
+- **Subtle background variation** between sections (not the same flat black everywhere)
+- **Colored gradients and glows** that add warmth and depth
+- **Accent-colored section dividers** instead of plain gray lines
 
 ## Changes
 
-### HeroSection.tsx — Split two-column layout
+### 1. Introduce an Accent Color System
+**File:** `src/index.css`
 
-**Desktop (md+):**
-- Switch from stacked/overlay layout to a **side-by-side grid**: `grid grid-cols-2` filling 100svh
-- **Left column**: vertically centered, left-aligned text with generous left padding. Contains the uppercase headline, a short subtitle/description paragraph (e.g. "A universal mathematical framework for representing and transforming information across all domains"), and CTA buttons
-- **Right column**: galaxy animation positioned to the right, allowed to extend/bleed toward the edge — sized larger to fill the right half dramatically (like SpaceX's Mars image)
+- Define a teal/cyan accent (`--primary: ~180 70% 50%`) as the accent color, replacing the current blue which is barely visible anywhere
+- Add a secondary warm accent (the galaxy's existing purple/magenta) for variety
+- Use these colors on: section labels, divider lines, icon colors, CTA buttons, maturity dots
 
-**Mobile:**
-- Stack vertically: galaxy on top (smaller), text below — similar to current but tighter
+### 2. Color the Section Icons and Labels
+**File:** `src/modules/landing/components/ApplicationsSection.tsx`
 
-### Specific layout details
-- Remove `absolute inset-0` centering of galaxy — place it in the right grid cell
-- Galaxy container: `w-full h-full` within right column, centered vertically, allow it to be large and dramatic
-- Left column: `flex flex-col justify-center px-8 md:px-16 lg:px-24`
-- Add a 1-2 line description paragraph below the headline (SpaceX has one), styled as `text-white/60 text-base max-w-md`
-- Keep both CTA buttons but style them SpaceX-like (already done)
+- Change icons from `text-foreground/40` to use the accent color (teal/cyan), making them pop
+- Give section labels (`"Where It Applies"`) the accent color instead of `text-foreground/40`
 
-### Files modified
-- `src/modules/landing/components/HeroSection.tsx` — restructure to grid layout
+**File:** `src/modules/landing/components/PillarsSection.tsx`
+
+- Same treatment: colored icons and section label
+
+**File:** `src/modules/landing/components/IntroSection.tsx`, `ProjectsShowcase.tsx`, `HighlightsSection.tsx`, `CommunitySection.tsx`
+
+- Section labels get accent color treatment
+
+### 3. Accent Divider Lines
+**File:** `src/index.css`
+
+- Update `rule-accent` gradient to use the new teal/cyan
+- Replace flat `bg-foreground/8` dividers with subtle gradient dividers in key sections (intro, applications) for visual interest
+
+### 4. Subtle Background Variation
+**File:** `src/index.css`
+
+- Keep `--background` as the base near-black
+- Make `--section-dark` slightly different (a touch of blue/purple tint rather than pure darker black) to create subtle depth between alternating sections
+- Add a very subtle radial gradient glow on the CTA section background (like Super Protocol's horizon glow)
+
+### 5. CTA Section Glow
+**File:** `src/modules/landing/components/CTASection.tsx`
+
+- Add a subtle radial gradient behind the heading (teal/cyan glow fading to transparent) for a focal point effect similar to Super Protocol's earth horizon
+
+### 6. Primary Button Accent Color
+**File:** `src/index.css`
+
+- Update `.btn-primary` hover state to use the accent teal instead of inverting to pure white, giving it the "Try now for free" teal button feel from Super Protocol
+- Keep `.btn-outline` as the white border variant
+
+### 7. Maturity Dots and Status Colors
+**File:** `src/modules/landing/components/ProjectsShowcase.tsx`
+
+- The `Graduated` dot already uses `bg-primary`; this will automatically pick up the new accent color
+- Ensure the colored dots are visible and vibrant
+
+### 8. Footer Accent Touch
+**File:** `src/modules/core/components/Footer.tsx`
+
+- Change the copyright divider to use the accent gradient line
+
+## Files Modified
+| File | Change |
+|------|--------|
+| `src/index.css` | Accent color tokens, btn-primary hover, rule-accent update, CTA glow utility |
+| `ApplicationsSection.tsx` | Colored icons and section label |
+| `PillarsSection.tsx` | Colored icons and section label |
+| `IntroSection.tsx` | Accent section label |
+| `ProjectsShowcase.tsx` | Accent section label |
+| `HighlightsSection.tsx` | Accent section label |
+| `CommunitySection.tsx` | Accent section label |
+| `CTASection.tsx` | Radial glow background behind heading |
+| `Footer.tsx` | Gradient divider line |
+
+## What Stays the Same
+- Galaxy animation colors (already vibrant purple/blue/magenta)
+- Overall dark-first identity and SpaceX layout
+- Typography system
+- All content/copy
 
