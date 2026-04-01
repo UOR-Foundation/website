@@ -21,6 +21,19 @@
 
 @layer base {
   :root {
+    /* ── Unified Fluid Typography Scale ──────────────────────────────
+     * Single source of truth for all text sizes across the site.
+     * clamp(min, preferred, max) ensures legibility at every viewport.
+     */
+    --text-page-title:       clamp(2.25rem, 4vw, 3.5rem);
+    --text-section-heading:  clamp(1.875rem, 2.5vw, 3rem);
+    --text-card-title:       clamp(1.125rem, 1.2vw, 1.5rem);
+    --text-lead:             clamp(18px, 1.3vw, 24px);
+    --text-body:             clamp(16px, 1.1vw, 20px);
+    --text-body-sm:          clamp(15px, 1vw, 18px);
+    --text-label:            clamp(12px, 0.8vw, 14px);
+    --text-caption:          clamp(11px, 0.7vw, 13px);
+
     /* ── Hologram Adaptive Scale ─────────────────────────────────────
      * The system attends to the human's screen — not the reverse.
      * --holo-scale:      viewport-proportional (auto)
