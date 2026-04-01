@@ -14,9 +14,9 @@ const ProjectsShowcase = () => {
       <div className="container max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-4 font-body">
-              UOR Ecosystem
-            </p>
+             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-primary/70 mb-4 font-body">
+               UOR Ecosystem
+             </p>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
               Featured Projects
             </h2>

@@ -9,9 +9,9 @@ const PillarsSection = () => {
   return (
     <section id="pillars" className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
-        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-6">
-          Get Involved
-        </p>
+         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-6">
+           Get Involved
+         </p>
         <div className="h-px w-full bg-foreground/8" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mt-0">
           {pillars.map((pillar, index) => {
@@ -25,7 +25,7 @@ const PillarsSection = () => {
               >
                 <div className="flex items-center gap-3 mb-5">
                   <Icon
-                    className="w-5 h-5 text-foreground/40 transition-colors duration-300 group-hover:text-foreground"
+                    className="w-5 h-5 text-primary/60 transition-colors duration-300 group-hover:text-primary"
                     strokeWidth={1.5}
                   />
                   <h3 className="font-display text-lg md:text-xl font-semibold text-foreground">

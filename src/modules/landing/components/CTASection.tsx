@@ -3,9 +3,13 @@ import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/e
 
 const CTASection = () => {
   return (
-    <section className="py-32 md:py-40 bg-background">
-      <div className="container max-w-6xl text-center">
-        <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
+     <section className="relative py-32 md:py-40 bg-background overflow-hidden">
+       {/* Radial glow */}
+       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] md:w-[900px] md:h-[500px] rounded-full bg-primary/[0.06] blur-[120px]" />
+       </div>
+       <div className="relative container max-w-6xl text-center">
+         <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
           Ready to Build?
         </h2>
         <p className="mt-6 md:mt-8 text-base text-foreground/40 font-body leading-[1.68] max-w-2xl mx-auto" style={{ textTransform: 'none' }}>
@@ -38,9 +42,9 @@ const CTASection = () => {
           >
             GitHub Organization
           </a>
-        </div>
-      </div>
-    </section>
+         </div>
+       </div>
+     </section>
   );
 };
 

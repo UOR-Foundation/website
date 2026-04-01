@@ -43,9 +43,9 @@ const ApplicationsSection = () => {
   return (
     <section className="py-24 md:py-32 bg-section-dark">
       <div className="container max-w-6xl">
-        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-6">
-          Where It Applies
-        </p>
+         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-6">
+           Where It Applies
+         </p>
         <div className="h-px w-full bg-foreground/8" />
         <p
           className="py-8 md:py-10 text-foreground/60 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
@@ -65,7 +65,7 @@ const ApplicationsSection = () => {
               >
                 <Icon
                   size={24}
-                  className="text-foreground/40 shrink-0 transition-colors duration-300 group-hover:text-foreground"
+                  className="text-primary/60 shrink-0 transition-colors duration-300 group-hover:text-primary"
                   strokeWidth={1.5}
                 />
                 <h3 className="font-display text-lg md:text-xl font-semibold text-foreground leading-tight">

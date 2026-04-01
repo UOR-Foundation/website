@@ -2,9 +2,9 @@ const IntroSection = () => {
   return (
     <section id="intro" className="py-24 md:py-32 bg-background scroll-mt-16">
       <div className="container max-w-6xl">
-        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-6">
-          What is UOR
-        </p>
+         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-6">
+           What is UOR
+         </p>
         <div className="h-px w-full bg-foreground/8" />
         <div
           className="py-10 md:py-14 max-w-3xl animate-fade-in-up opacity-0"

@@ -14,9 +14,9 @@ const HighlightsSection = () => {
   return (
     <section className="py-24 md:py-32 bg-background">
       <div className="container max-w-6xl">
-        <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-foreground/40 mb-10 md:mb-14">
-          Community Highlights
-        </p>
+         <p className="text-xs font-body font-semibold tracking-[0.2em] uppercase text-primary/70 mb-10 md:mb-14">
+           Community Highlights
+         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
           {highlights.map((item, index) => (

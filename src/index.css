@@ -95,7 +95,7 @@
     --popover: 220 18% 7%;
     --popover-foreground: 0 0% 93%;
 
-    --primary: 210 100% 56%;
+    --primary: 174 72% 46%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 12%;
@@ -104,7 +104,7 @@
     --muted: 220 14% 12%;
     --muted-foreground: 220 8% 55%;
 
-    --accent: 210 60% 50%;
+    --accent: 270 50% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -117,7 +117,7 @@
     --radius: 0.25rem;
 
     /* Structural tokens */
-    --section-dark: 220 22% 3%;
+    --section-dark: 225 25% 5%;
     --section-dark-foreground: 0 0% 88%;
     --pill-border: 220 12% 20%;
     --rule: 220 14% 14%;
@@ -316,7 +316,12 @@
 
   .rule-accent {
     @apply h-px w-full;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.45), transparent);
+  }
+
+  .rule-glow {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent 5%, hsl(var(--primary) / 0.25) 30%, hsl(var(--primary) / 0.5) 50%, hsl(var(--primary) / 0.25) 70%, transparent 95%);
   }
 
   /* SpaceX-style rectangular buttons */
@@ -327,8 +332,9 @@
     background: transparent;
   }
   .btn-primary:hover {
-    background: hsl(0 0% 100%);
-    color: hsl(220 20% 4%);
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+    color: hsl(0 0% 100%);
   }
   .btn-primary:active {
     opacity: 0.8;
