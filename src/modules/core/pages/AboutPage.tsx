@@ -48,7 +48,7 @@ const About = () => {
                   >
                     {Icon && <Icon size={20} className="text-primary" strokeWidth={1.5} />}
                     <h3 className="font-display text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="text-base text-muted-foreground font-body leading-relaxed">{item.desc}</p>
+                    <p className="text-base text-foreground/70 font-body leading-relaxed">{item.desc}</p>
                   </div>
                 );
               })}
