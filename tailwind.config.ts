@@ -138,8 +138,8 @@ export default {
           to: { height: "0" },
         },
         "fade-in-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+          from: { opacity: "0", transform: "translate3d(0, 16px, 0)" },
+          to: { opacity: "1", transform: "translate3d(0, 0, 0)" },
         },
         "fade-in": {
           from: { opacity: "0" },
