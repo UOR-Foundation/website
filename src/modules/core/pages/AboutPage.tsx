@@ -65,7 +65,7 @@ const About = () => {
               Governance Board
             </h2>
             <p
-              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
+              className="text-foreground/70 font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
