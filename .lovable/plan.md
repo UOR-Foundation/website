@@ -1,131 +1,79 @@
 
 
-# Foundation × Prime Numbers — Unified Design Integration
+# Deepen Foundation Aesthetic with Prime Grid System
 
-## Vision
-Infuse the website with the mathematical determinism of Asimov's Foundation and the structural purity of prime numbers. The galaxy animation already evokes the "living mural" from the Foundation title sequence. This plan embeds primes as the hidden structural backbone of spacing, timing, and layout, while deepening the Foundation aesthetic through gold-on-midnight-navy styling and psychohistorical visual language.
+## What changes
 
-## Changes
+### 1. Prime Dot Grid Background Component
+**New file:** `src/modules/landing/components/PrimeGrid.tsx`
 
-### 1. Prime-Based Spacing System
+A full-page fixed background layer rendering a subtle dot grid where dots at prime-indexed positions (row × col) glow gold, while non-prime positions are neutral gray at very low opacity. This creates a field of structured irregularity -- the mathematical signature of primes made visible.
+
+- Grid: dots spaced every ~40px, covering the viewport
+- Prime-indexed dots (positions 2, 3, 5, 7, 11, 13...): rendered in gold (`primary`) at ~8% opacity
+- Non-prime dots: rendered in foreground at ~3% opacity
+- Fixed position behind all content, `z-0`, `pointer-events-none`
+- Subtle parallax-like effect via CSS: the grid stays fixed while content scrolls over it
+
+This is the single most impactful addition -- it transforms the entire background from flat dark into a living mathematical field, exactly like a psychohistorical console readout.
+
+### 2. Section Background Depth Variation
 **File:** `src/index.css`
 
-Replace the current holo spacing scale (4, 8, 12, 16, 20, 24, 32) with a prime-based scale:
+Add subtle radial gradient overlays to `--section-dark` sections to create depth pools rather than flat color blocks. Each alternating section gets a barely-visible radial gradient (navy-to-transparent) that creates the feeling of looking into different depths of space, like the Foundation's layered cinematography.
 
-| Token | Current | New (prime) |
-|-------|---------|-------------|
-| `--holo-space-1` | 4px | 2px |
-| `--holo-space-2` | 8px | 3px |
-| `--holo-space-3` | 12px | 5px |
-| `--holo-space-4` | 16px | 7px |
-| `--holo-space-5` | 20px | 11px |
-| `--holo-space-6` | 24px | 13px |
-| `--holo-space-8` | 32px | 17px |
-
-Add new tokens: `--holo-space-11: 19px`, `--holo-space-13: 23px`, `--holo-space-17: 29px`, `--holo-space-19: 31px`, `--holo-space-23: 37px`, `--holo-space-29: 41px`, `--holo-space-31: 43px`
-
-These are still multiplied by `--holo-scale` for responsiveness.
-
-### 2. Prime Animation Timing
-**File:** `tailwind.config.ts`
-
-Update animation durations to prime-based milliseconds:
-- `fade-in-up`: 0.8s → **0.7s** (700ms)
-- `fade-in`: 0.6s → **0.5s** (500ms)
-- Add new keyframes: `fade-in-slow` at **1.1s** (1100ms, prime)
-
-All staggered animation delays across components will use prime intervals: 0.07s, 0.11s, 0.13s instead of 0.1s, 0.12s.
-
-### 3. Prime Grid Columns
-**File:** `src/modules/landing/components/ApplicationsSection.tsx`
-
-Currently uses `sm:grid-cols-2`. Keep as-is (2 is prime). No change needed.
-
-**File:** `src/modules/landing/components/PillarsSection.tsx`
-
-Currently uses `md:grid-cols-3`. Keep as-is (3 is prime). No change needed.
-
-**File:** `src/modules/landing/components/HighlightsSection.tsx`
-
-Currently uses `md:grid-cols-3`. Keep as-is (3 is prime). No change needed.
-
-**File:** `src/modules/landing/components/ProjectsShowcase.tsx`
-
-Currently uses `md:grid-cols-3`. Keep as-is (3 is prime). No change needed.
-
-### 4. Faint Prime Sequence Background Layer
-**File:** `src/modules/landing/components/HeroSection.tsx`
-
-Add a faint decorative layer behind the hero text showing the prime sequence `2 3 5 7 11 13 17 19 23 29 31 37 41 43...` rendered in ultra-low-opacity (`text-foreground/[0.03]`) monospaced font, creating a "psychohistorical console" texture. This is purely decorative and adds the "mathematical instrument" feel without being gimmicky.
-
-### 5. Prime-Indexed Section Numbering
-**Files:** `IntroSection.tsx`, `ApplicationsSection.tsx`, `ProjectsShowcase.tsx`, `CommunitySection.tsx`, `HighlightsSection.tsx`, `PillarsSection.tsx`, `CTASection.tsx`
-
-Add a subtle prime-based section index displayed as a faint monospaced label alongside each section label. Sections are numbered using primes:
-
-| Section | Index |
-|---------|-------|
-| What is UOR | `§2` |
-| Where It Applies | `§3` |
-| Featured Projects | `§5` |
-| UOR Community | `§7` |
-| Highlights | `§11` |
-| Get Involved | `§13` |
-| Ready to Build | `§17` |
-
-These appear as `text-foreground/[0.12] font-mono text-xs` next to the section label, reinforcing the "system console" aesthetic.
-
-### 6. Gold-Only for Prime Accents
-**File:** `src/index.css`
-
-Already using Foundation gold (`--primary: 38 65% 55%`). Add a new utility class:
 ```css
-.prime-gold { color: hsl(var(--primary)); }
-.non-prime-neutral { color: hsl(var(--muted-foreground)); }
+.section-depth {
+  background: radial-gradient(ellipse at 30% 50%, hsl(225 35% 8% / 0.6), transparent 70%);
+}
 ```
 
-This is for any future data display where prime vs non-prime distinction is needed (e.g., the UNS page record numbering).
+### 3. Gold Accent Line System
+**File:** `src/index.css`
 
-### 7. Animation Delay Stagger — Prime Intervals
-**Files:** All landing section components
+Replace the current flat `bg-foreground/8` dividers in sections with a new `.rule-prime` class: a thin line where small gold tick marks appear at prime-spaced intervals (similar to CTA's timeline but subtler). This replaces the plain gray `<div className="h-px w-full bg-foreground/8" />` dividers across Intro, Applications, and Pillars sections.
 
-Update all `animationDelay` values to use prime-based increments:
-- `0.1s` intervals → `0.07s` or `0.11s` or `0.13s`
-- `0.12s` intervals → `0.11s` or `0.13s`
-- Starting delays: use `0.17s`, `0.19s`, `0.23s` instead of round numbers
-
-### 8. CTA Section — "Timeline of Inevitability" Divider
-**File:** `src/modules/landing/components/CTASection.tsx`
-
-Add a subtle horizontal "timeline" element above the CTA heading: a thin line with gold dots placed at prime-spaced positions (at 2%, 3%, 5%, 7%, 11%, 13% of width), suggesting the "events at prime intervals" concept from the prompt. Very minimal, purely decorative.
-
-### 9. Copy Tone Refinement
+### 4. Hero Section Refinement
 **File:** `src/modules/landing/components/HeroSection.tsx`
 
-Update the subtitle from the current description to a more Foundation-declarative tone:
-- Current: "A universal mathematical framework for representing and transforming information across all domains."
-- New: "Deterministic identity. Content-addressed structure. Indexed by prime decomposition."
+- Add a subtle gold horizontal rule below the subtitle, reinforcing the "console readout" aesthetic
+- Add a faint coordinate marker in the bottom-left corner: `[ 0, 0 ]` in monospace at 4% opacity -- suggesting the viewer is at the origin of a coordinate system
 
-This matches the `"Deterministic inference. Indexed by structure."` tone from the prompt.
+### 5. Card Border Enhancement
+**File:** `src/index.css`
 
-## Files Modified Summary
+Update card/panel borders from flat `border-foreground/8` to a slightly warmer tone with a 1px gold-tinted border on hover, making interactive panels feel like they're "activating" in the psychohistorical console when engaged.
+
+```css
+.panel-active:hover {
+  border-color: hsl(var(--primary) / 0.15);
+}
+```
+
+### 6. Layout Integration
+**File:** `src/modules/core/components/Layout.tsx`
+
+Mount the `PrimeGrid` component as a fixed background layer in the Layout, so it persists across all pages.
+
+## Technical details
+
+**PrimeGrid component logic:**
+- Pre-compute a Set of primes up to ~2000 using a sieve
+- Render a CSS grid of ~50×30 dots (1500 total, lightweight)
+- Each dot is a 2px circle; prime-indexed ones get `bg-primary/[0.08]`, others get `bg-foreground/[0.025]`
+- `position: fixed; inset: 0; z-index: 0` with `pointer-events-none`
+- All content sections already have `relative` positioning so they layer above
+
+**Files modified:**
 | File | Change |
 |------|--------|
-| `src/index.css` | Prime spacing tokens, utility classes |
-| `tailwind.config.ts` | Prime animation durations |
-| `HeroSection.tsx` | Prime sequence background layer, copy update |
-| `IntroSection.tsx` | Prime section index `§2`, prime animation delays |
-| `ApplicationsSection.tsx` | Prime section index `§3`, prime animation delays |
-| `ProjectsShowcase.tsx` | Prime section index `§5`, prime animation delays |
-| `CommunitySection.tsx` | Prime section index `§7`, prime animation delays |
-| `HighlightsSection.tsx` | Prime section index `§11`, prime animation delays |
-| `PillarsSection.tsx` | Prime section index `§13`, prime animation delays |
-| `CTASection.tsx` | Prime section index `§17`, prime timeline divider, prime animation delays |
+| `src/modules/landing/components/PrimeGrid.tsx` | New component |
+| `src/modules/core/components/Layout.tsx` | Mount PrimeGrid |
+| `src/index.css` | `.rule-prime`, `.section-depth`, card hover borders |
+| `src/modules/landing/components/HeroSection.tsx` | Coordinate marker, gold rule accent |
+| `src/modules/landing/components/IntroSection.tsx` | Replace flat dividers with `.rule-prime` |
+| `src/modules/landing/components/ApplicationsSection.tsx` | Replace flat dividers with `.rule-prime` |
+| `src/modules/landing/components/PillarsSection.tsx` | Replace flat dividers with `.rule-prime` |
 
-## What Stays the Same
-- SpaceX font (DM Sans) and uppercase tracking
-- Foundation gold/midnight navy color palette (already implemented)
-- Galaxy animation colors (already gold-to-purple)
-- Hero layout and golden ratio positioning
-- All structural component architecture
+**What stays the same:** Galaxy animation, typography, gold/navy palette, SpaceX layout, all content/copy, prime section indexes (§2, §3, etc.), animation timing.
 
