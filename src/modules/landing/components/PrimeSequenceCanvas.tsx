@@ -17,7 +17,7 @@ const PRIME_TEXT = PRIMES.join("  ");
 const DRIFT_SPEED = 0.3; // px per frame
 const LINE_HEIGHT = 28;
 const FONT = '10px ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace';
-const TEXT_COLOR = "hsla(38, 65%, 55%, 0.035)";
+const TEXT_COLOR = "hsla(38, 65%, 55%, 0.06)";
 
 const PrimeSequenceCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -19,9 +19,9 @@ const AXIS_INTERVAL = 7;
 const PADDING = 32;
 
 // Colors derived from design system tokens (gold primary, muted foreground)
-const PRIME_COLOR = "hsla(38, 65%, 55%, 0.10)";
-const COMPOSITE_COLOR = "hsla(0, 0%, 90%, 0.025)";
-const AXIS_COLOR = "hsla(0, 0%, 90%, 0.04)";
+const PRIME_COLOR = "hsla(38, 65%, 55%, 0.18)";
+const COMPOSITE_COLOR = "hsla(0, 0%, 90%, 0.05)";
+const AXIS_COLOR = "hsla(0, 0%, 90%, 0.07)";
 
 const PrimeGrid = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
