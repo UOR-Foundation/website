@@ -80,7 +80,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-[clamp(0.875rem,1.1vw,1.35rem)] text-foreground/60 max-w-[min(780px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            The open specification for content-addressed data identity. Built by the community, for the community.
+            The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] animate-fade-in-up opacity-0"
