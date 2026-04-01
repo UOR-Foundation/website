@@ -17,7 +17,7 @@ const HeroSection = () => {
         className="absolute inset-0 flex items-center justify-end animate-fade-in opacity-0"
         style={{ animationDelay: "0.13s" }}
       >
-        <div className="relative w-[85%] h-[85%] md:w-[62%] md:h-[90%] mr-[-8%] md:mr-[-2%]">
+        <div className="relative w-[85%] h-[85%] md:w-[58%] md:h-[90%] lg:w-[55%] lg:h-[95%] mr-[-8%] md:mr-[-4%]">
           <GalaxyAnimation />
         </div>
       </div>
