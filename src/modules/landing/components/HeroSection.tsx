@@ -1,5 +1,4 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
-import PrimeSequenceCanvas from "@/modules/landing/components/PrimeSequenceCanvas";
 import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import { ArrowRight } from "lucide-react";
 
