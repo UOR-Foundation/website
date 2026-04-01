@@ -384,7 +384,7 @@ const ApiPage = () => {
       `}</style>
 
       <div className="dark bg-section-dark text-section-dark-foreground min-h-screen pt-36 md:pt-44">
-        <div className="flex max-w-[1800px] mx-auto">
+        <div className="flex mx-auto">
           <Sidebar activeId={activeId} />
 
           <main className="flex-1 min-w-0 px-6 md:px-10 lg:px-12 py-8 max-w-4xl">
