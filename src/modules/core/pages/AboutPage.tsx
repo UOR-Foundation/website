@@ -17,7 +17,7 @@ const About = () => {
             About
           </h1>
           <p
-            className="mt-5 text-muted-foreground font-body text-base leading-[1.7] max-w-2xl animate-fade-in-up opacity-0"
+            className="mt-5 text-muted-foreground font-body text-base leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
@@ -65,7 +65,7 @@ const About = () => {
               Governance Board
             </h2>
             <p
-              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-3xl animate-fade-in-up opacity-0"
+              className="text-muted-foreground font-body text-base leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
