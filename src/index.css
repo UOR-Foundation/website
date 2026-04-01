@@ -241,6 +241,20 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* ── Global interaction crispness ──────────────────────────────────
+   * GPU-accelerated transitions on all interactive elements.
+   * Snappy 150ms default for hover/focus, longer for layout shifts.
+   */
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  img, video {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'DM Sans', system-ui, sans-serif;
     letter-spacing: 0.04em;
