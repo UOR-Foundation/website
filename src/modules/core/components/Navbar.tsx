@@ -63,7 +63,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`px-3 lg:px-5 py-2 text-[clamp(11px,0.85vw,15px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+                  className={`px-3 lg:px-5 py-2 text-[clamp(13px,1vw,16px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
                     location.pathname === item.href
                       ? "text-foreground"
                       : "text-foreground/60 hover:text-foreground"
