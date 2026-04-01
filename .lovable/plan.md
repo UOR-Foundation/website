@@ -1,82 +1,97 @@
 
 
-# Deepen Foundation Aesthetic — 11 Principles Alignment
+# Integrate Pretext for Canvas-Rendered Prime Number Field
 
-## Assessment
+## What is Pretext
 
-Comparing the 11 Foundation principles against the current site, most are already well-addressed (dark palette, gold accents, prime grid, uppercase typography, mathematical spacing). Here are the gaps:
+Pretext (`@chenglou/pretext`) is a pure JS library that measures and lays out multiline text without DOM reflow. It renders text to Canvas, SVG, or DOM with pixel-perfect accuracy. Key APIs: `prepare()` (one-time measurement), `layout()` (pure arithmetic height calc), `layoutWithLines()` (manual line rendering to Canvas).
 
-| Principle | Status | Gap |
-|-----------|--------|-----|
-| 1. Intellectual Minimalism | Mostly done | Community section has faces/photos — violates principle 10 |
-| 2. Monumental Scale, Minimal Detail | Partial | Sections feel equally weighted; hero needs more breathing room |
-| 3. System-First Aesthetic | Partial | Cards lack "analytical module" feel; no system-state language |
-| 4. Mathematical & Abstract | Good | Prime grid exists; could add coordinate labels |
-| 5. Structured Irregularity | Good | Prime spacing in place |
-| 6. Restrained Color | Good | Gold palette done |
-| 7. Language as Design | Partial | Some copy still reads like marketing ("Ready to Build?") |
-| 8. Calm, Predictable Motion | Good | Prime timing done |
-| 9. Layered Reality | Partial | No hover-reveal of deeper structure |
-| 10. Absence of Human-Centric Design | **Violated** | Community section shows faces prominently |
-| 11. Retro-Futuristic Rationalism | Good | Clean and rational |
+## The Idea
+
+Replace the current **PrimeGrid** (1,392 DOM nodes of tiny dots) with a single `<canvas>` element that renders a **prime number matrix** using Pretext. Instead of abstract dots, you see the actual numbers 1 through 1392 rendered in a grid. Primes glow gold. Composites are near-invisible gray. The numbers themselves become the texture.
+
+This is more aligned with Foundation's "mathematical instrument revealing hidden structure" because you can actually read the primes. It also eliminates ~1,400 DOM nodes in favor of a single Canvas, which is a major performance win.
+
+Additionally, we add a second Pretext-powered Canvas to the **Hero section**: a slowly drifting prime sequence rendered to Canvas that replaces the current DOM-based `<p>` tag background texture. This enables smooth animation (a gentle horizontal drift of the numbers, like data streaming through a psychohistorical console).
 
 ## Changes
 
-### 1. Community Section — System-First Redesign
-**File:** `src/modules/landing/components/CommunitySection.tsx`
+### 1. Install Pretext
+Add `@chenglou/pretext` as a dependency.
 
-Replace face photos with a contributor grid that feels like a system registry. Each contributor becomes a small monospaced entry showing initials in a gold-bordered square + name + role. No photos. The `+150` becomes a system counter: `+150 nodes`. This shifts from human-centric to system-first while still crediting people.
-
-### 2. Project Cards — Analytical Module Styling
-**File:** `src/modules/landing/components/ProjectsShowcase.tsx`
-
-Add `panel-active` class to project cards for gold-tinted hover borders. Add a faint monospaced index number (`01`, `02`, `03`) in the top-right corner of each card, making them feel like indexed system modules.
-
-### 3. Copy Tone — Declarative System Language
-**Files:** `CTASection.tsx`, `PillarsSection.tsx`
-
-- CTA heading: "Ready to Build?" → "Begin Verification"
-- CTA subtitle: "Verify your first address in five minutes, then join the community." → "Derive your first address. Verify its structure. Five minutes."
-- Pillar CTA labels already say "Explore" / "Join" which are fine
-
-### 4. Hover-Reveal Deeper Structure (Layered Reality)
-**File:** `src/modules/landing/components/ApplicationsSection.tsx`
-
-On hover of each application card, reveal a faint monospaced "system ID" line (e.g., `sys.semantic-web.v1`) below the description. This creates the "surface vs underlying system" layered reality effect. Pure CSS transition, appears on hover only.
-
-### 5. Coordinate Axis Labels on Prime Grid
+### 2. Replace PrimeGrid with Canvas-Based Prime Number Matrix
 **File:** `src/modules/landing/components/PrimeGrid.tsx`
 
-Add faint axis markers at the edges: column numbers at top (every 7th column), row numbers on left (every 7th row), in ultra-low-opacity monospaced text. This makes the grid feel like a coordinate system you're looking through, reinforcing "mathematical instrument revealing hidden structure."
+- Replace the 1,392-div grid with a single `<canvas>` element
+- Use `prepare()` + `layoutWithLines()` to measure each number's width
+- Render numbers 1..1392 in a grid pattern to Canvas via `ctx.fillText`
+- Primes: rendered in gold (`hsl(38, 65%, 55%)`) at ~12% opacity
+- Composites: rendered in white at ~3% opacity
+- Coordinate axis labels still rendered at every 7th interval
+- Canvas stays `position: fixed; inset: 0; z-0; pointer-events: none`
+- Responsive: re-render on resize using `ResizeObserver`
+- Single `useEffect` + `useRef` pattern, no DOM node explosion
 
-### 6. Section Divider Enhancement — ProjectsShowcase
-**File:** `src/modules/landing/components/ProjectsShowcase.tsx`
+### 3. Hero Section — Canvas-Rendered Drifting Prime Sequence
+**File:** `src/modules/landing/components/PrimeSequenceCanvas.tsx` (new)
 
-Replace the flat `bg-foreground/8` divider with `rule-prime` class (already exists but not applied here).
+- A full-width Canvas behind the hero text
+- Uses Pretext to lay out the prime sequence `2 3 5 7 11 13...` in monospaced font
+- Gentle horizontal drift animation via `requestAnimationFrame` (0.5px/frame, very slow)
+- Primes rendered in gold at 4% opacity, creating the "data stream" effect
+- Replaces the current DOM `<p>` tag in HeroSection
 
-### 7. CommunitySection + HighlightsSection — Add section-depth
-**Files:** `CommunitySection.tsx`, `HighlightsSection.tsx` (if on dark bg)
+**File:** `src/modules/landing/components/HeroSection.tsx`
+- Remove the DOM-based prime sequence `<p>` tag
+- Mount `<PrimeSequenceCanvas />` in its place
 
-Add `section-depth` class to CommunitySection for the radial depth gradient, making it feel like looking into a deeper layer of the system.
+### 4. Masonry-Style Highlights Section Height Prediction
+**File:** `src/modules/landing/components/HighlightsSection.tsx`
+
+- Use Pretext's `prepare()` + `layout()` to predict text heights for highlight card titles and descriptions
+- This enables a true masonry layout where cards are tightly packed based on actual text height rather than uniform grid cells
+- Cards with shorter titles get less vertical space, creating the "structured irregularity" effect aligned with Foundation principle 5
 
 ## Technical Details
 
-**Community Section redesign:**
-- Remove `<img>` tags and photo imports
-- Render contributors as small rectangular cells with initials + name
-- Monospaced font for initials, system-registry visual language
-- Gold border on the cell, very thin (1px), with `panel-active` hover behavior
+**PrimeGrid Canvas rendering loop:**
+```text
+1. Sieve primes up to COLS × ROWS
+2. For each cell (row, col):
+   - number = row * COLS + col + 1
+   - x = col * cellWidth + padding
+   - y = row * cellHeight + padding
+   - ctx.fillStyle = isPrime ? goldAt12% : whiteAt3%
+   - ctx.font = "9px 'IBM Plex Mono'"
+   - ctx.fillText(String(number), x, y)
+3. Overlay axis labels at every 7th interval
+```
 
-**Hover-reveal system IDs:**
-- Add a `<span>` with `opacity-0 group-hover:opacity-100 transition-opacity` 
-- Content is a deterministic system path derived from the title
+**Hero drift animation:**
+```text
+1. prepare(primeSequenceString, "10px 'IBM Plex Mono'")
+2. layoutWithLines(prepared, canvasWidth * 3, lineHeight)
+3. Each frame: clear canvas, offset x by -0.3px, draw lines
+4. When offset exceeds one "page width", reset (seamless loop)
+```
 
-**Files modified:**
+**Performance:**
+- PrimeGrid: 1,392 DOM nodes → 1 Canvas node (massive improvement)
+- Hero texture: 1 DOM `<p>` → 1 Canvas with RAF animation
+- Pretext's `prepare()` runs once; `layout()` is pure arithmetic (~0.09ms for 500 texts)
+
+## Files Modified
 | File | Change |
 |------|--------|
-| `CommunitySection.tsx` | System-registry redesign, remove photos |
-| `ProjectsShowcase.tsx` | panel-active, index numbers, rule-prime divider |
-| `CTASection.tsx` | Declarative copy |
-| `ApplicationsSection.tsx` | Hover-reveal system IDs |
-| `PrimeGrid.tsx` | Coordinate axis labels |
+| `package.json` | Add `@chenglou/pretext` dependency |
+| `PrimeGrid.tsx` | Rewrite: DOM grid → Canvas with Pretext-measured numbers |
+| `PrimeSequenceCanvas.tsx` | New: drifting prime sequence Canvas for hero |
+| `HeroSection.tsx` | Swap DOM `<p>` texture for `<PrimeSequenceCanvas />` |
+| `HighlightsSection.tsx` | Use Pretext height prediction for masonry layout |
+
+## What Stays the Same
+- Galaxy animation, all section content, gold/navy palette
+- Prime section indexes (§2, §3, etc.)
+- Layout structure, typography, animation timing
+- All other landing components unchanged
 
