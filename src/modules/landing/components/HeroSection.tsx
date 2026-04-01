@@ -60,7 +60,7 @@ const HeroSection = () => {
         className="hidden md:flex absolute inset-0 items-center justify-end animate-fade-in opacity-0 pointer-events-none"
         style={{ animationDelay: "0.13s" }}
       >
-        <div className="relative w-[min(78vw,82vh*1.1)] h-[min(110vh,78vw*1.1)] lg:w-[min(74vw,80vh*1.1)] lg:h-[min(115vh,74vw*1.1)] mr-[1%] lg:mr-[2%]">
+        <div className="relative w-[min(90vw,95vh*1.1)] h-[min(120vh,90vw*1.1)] lg:w-[min(85vw,92vh*1.1)] lg:h-[min(125vh,85vw*1.1)] mr-[0%] lg:mr-[1%]">
           <GalaxyAnimation />
         </div>
       </div>
