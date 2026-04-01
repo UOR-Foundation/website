@@ -35,7 +35,7 @@ const PillarsSection = () => {
                     {pillar.title}
                   </h3>
                 </div>
-                <p className="text-foreground/65 font-body leading-[1.68] flex-1 text-fluid-body-sm">
+                <p className="text-foreground/65 font-body leading-[1.68] flex-1 text-fluid-lead">
                   {pillar.description}
                 </p>
                 <div className="flex justify-start mt-golden-lg">
