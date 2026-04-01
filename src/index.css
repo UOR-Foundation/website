@@ -86,23 +86,24 @@
     --still-chrome-scale: 1;
     --still-noise-opacity: 0.04;
     /* ── Design tokens — SpaceX-inspired dark-first ─────────────── */
-    --background: 220 20% 4%;
+    /* ── Foundation-inspired midnight navy + gold palette ──────── */
+    --background: 225 30% 5%;
     --foreground: 0 0% 96%;
 
-    --card: 220 18% 7%;
+    --card: 225 22% 7%;
     --card-foreground: 0 0% 93%;
 
-    --popover: 220 18% 7%;
+    --popover: 225 22% 7%;
     --popover-foreground: 0 0% 93%;
 
-    --primary: 174 72% 46%;
+    --primary: 38 65% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 12%;
+    --secondary: 225 18% 12%;
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 220 14% 12%;
-    --muted-foreground: 220 8% 55%;
+    --muted: 225 18% 12%;
+    --muted-foreground: 225 10% 55%;
 
     --accent: 270 50% 55%;
     --accent-foreground: 0 0% 100%;
@@ -110,17 +111,17 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 14%;
-    --input: 220 14% 14%;
-    --ring: 210 100% 56%;
+    --border: 225 18% 13%;
+    --input: 225 18% 13%;
+    --ring: 38 60% 50%;
 
     --radius: 0.25rem;
 
     /* Structural tokens */
-    --section-dark: 225 25% 5%;
+    --section-dark: 230 28% 4%;
     --section-dark-foreground: 0 0% 88%;
-    --pill-border: 220 12% 20%;
-    --rule: 220 14% 14%;
+    --pill-border: 225 15% 20%;
+    --rule: 225 18% 13%;
 
     font-family: 'DM Sans', system-ui, sans-serif;
   }
