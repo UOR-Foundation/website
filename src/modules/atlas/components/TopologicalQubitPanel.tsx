@@ -19,7 +19,7 @@ export default function TopologicalQubitPanel() {
   }
 
   return (
-    <div className="p-6 max-w-[1800px] mx-auto space-y-6">
+    <div className="p-6 mx-auto space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <h2 className="text-[15px] font-mono tracking-wide text-[hsl(38,50%,65%)]">

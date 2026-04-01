@@ -12,7 +12,7 @@ const About = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-[1800px]">
+        <div className="container">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
             About
           </h1>
@@ -26,7 +26,7 @@ const About = () => {
       </section>
 
       <section className="py-section-sm bg-background">
-        <div className="container max-w-[1800px] space-y-golden-lg">
+        <div className="container space-y-golden-lg">
 
           {/* What We Do */}
           <div>

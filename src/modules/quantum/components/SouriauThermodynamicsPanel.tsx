@@ -70,7 +70,7 @@ export default function SouriauThermodynamicsPanel() {
   const maxFR = Math.max(...state.fisherRao.diagonal, 0.01);
 
   return (
-    <div className="p-6 max-w-[1800px] mx-auto space-y-5">
+    <div className="p-6 mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

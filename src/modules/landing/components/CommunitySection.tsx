@@ -3,7 +3,7 @@ import { teamMembers } from "@/data/team-members";
 const CommunitySection = () => {
   return (
     <section className="py-section-md bg-section-dark section-depth">
-      <div className="container max-w-[1800px]">
+      <div className="container">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
           <div className="flex items-center gap-3 mb-golden-lg">
             <span className="font-mono text-fluid-body tracking-[0.12em] text-foreground/25">§7</span>
