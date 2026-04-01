@@ -559,7 +559,7 @@ export default function BulkPinPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background text-foreground pt-28 md:pt-52 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1400px] mx-auto space-y-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Schema.org → IPFS Bulk Inscription</h1>

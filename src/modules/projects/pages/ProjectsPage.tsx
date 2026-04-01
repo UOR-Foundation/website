@@ -215,7 +215,7 @@ const Projects = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
@@ -238,7 +238,7 @@ const Projects = () => {
 
       {/* Projects by maturity */}
       <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
-        <div className="container max-w-[1400px] space-y-8">
+        <div className="container max-w-[1600px] space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
@@ -256,7 +256,7 @@ const Projects = () => {
             Project Maturity Levels
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-[1400px] mx-auto items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-[1600px] mx-auto items-stretch">
             {maturityInfo.map((stage, idx) => {
               const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
               return (
@@ -321,7 +321,7 @@ const Projects = () => {
 
       {/* Submission Process */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-fluid-label font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
@@ -352,7 +352,7 @@ const Projects = () => {
 
       {/* Submit Form */}
       <section id="submit" className="section-dark py-section-sm">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <div className="text-center mb-8">
             <span className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
               <Send size={14} /> Open to everyone

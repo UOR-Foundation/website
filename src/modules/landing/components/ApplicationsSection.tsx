@@ -47,7 +47,7 @@ const applications: Application[] = [
 const ApplicationsSection = () => {
   return (
     <section className="py-section-md bg-section-dark section-depth">
-      <div className="container max-w-[1400px]">
+      <div className="container max-w-[1600px]">
         <div className="flex items-center gap-3 mb-golden-md">
           <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§3</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">

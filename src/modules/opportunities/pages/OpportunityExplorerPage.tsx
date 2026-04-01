@@ -220,7 +220,7 @@ export default function OpportunityExplorerPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <Link
             to="/console"
             className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
@@ -238,7 +238,7 @@ export default function OpportunityExplorerPage() {
         </div>
       </header>
 
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Hash Input */}
         <HashInput hex={hex} onHexChange={setHex} />
 

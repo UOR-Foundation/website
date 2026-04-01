@@ -9,7 +9,7 @@ const CTASection = () => {
        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] md:w-[900px] md:h-[500px] rounded-full bg-primary/[0.06] blur-[120px]" />
        </div>
-       <div className="relative container max-w-[1400px] text-center">
+       <div className="relative container max-w-[1600px] text-center">
          <div className="relative h-px w-full mb-golden-xl" aria-hidden="true">
            <div className="absolute inset-0 bg-foreground/[0.06]" />
            {PRIME_POSITIONS.map((p) => (
