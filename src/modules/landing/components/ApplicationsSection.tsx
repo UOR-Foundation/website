@@ -50,14 +50,14 @@ const ApplicationsSection = () => {
       <div className="container max-w-7xl">
         <div className="flex items-center gap-3 mb-6">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§3</span>
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             Where It Applies
           </p>
         </div>
         <div className="rule-prime" />
         <p
-          className="py-8 md:py-10 text-foreground/70 font-body leading-[1.75] max-w-4xl animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.11s", fontSize: 'clamp(16px, 1.1vw, 20px)' }}
+          className="py-8 md:py-10 text-foreground/70 font-body leading-[1.75] max-w-4xl animate-fade-in-up opacity-0 text-fluid-body"
+          style={{ animationDelay: "0.11s" }}
         >
           When every system shares one way to address data, new capabilities emerge.
         </p>
@@ -76,10 +76,10 @@ const ApplicationsSection = () => {
                   className="text-primary/60 shrink-0 transition-colors duration-300 group-hover:text-primary"
                   strokeWidth={1.5}
                 />
-                <h3 className="font-display font-semibold text-foreground leading-tight" style={{ fontSize: 'clamp(1.125rem, 1.2vw, 1.5rem)' }}>
+                <h3 className="font-display font-semibold text-foreground leading-tight text-fluid-card-title">
                   {app.title}
                 </h3>
-                <p className="text-foreground/65 font-body leading-[1.7]" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
+                <p className="text-foreground/65 font-body leading-[1.7] text-fluid-body-sm">
                   {app.description}
                 </p>
                 <span className="font-mono text-[0.625rem] text-primary/0 group-hover:text-primary/25 transition-colors duration-500 tracking-wider">
