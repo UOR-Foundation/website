@@ -1,87 +1,86 @@
 
 
-# Golden Ratio Hero & Navigation — SpaceX-Grade Balance
+# Prime Spiral — Living Intelligence Field
 
-## Analysis
+## Concept
 
-Comparing the SpaceX reference to current implementation:
+Replace the busy grid of numbered cells with a **prime spiral** inspired by the Ulam spiral / the uploaded reference image. Numbers are plotted on a spiral path from the center outward. **Only prime numbers** are rendered as small luminous dots — composites are invisible. The result is a mysterious, organic pattern of dots spiraling outward that looks almost like DNA or a galaxy.
 
-1. **Navbar text too small**: Currently 11px — SpaceX uses ~13px with generous spacing. On large screens (1920px+) the nav feels tiny.
-2. **Hero headline too small**: Clamped at max 3.5rem (56px) — SpaceX headline is ~48-60px and feels commanding. On large screens the text doesn't scale up enough.
-3. **Text positioned too low**: `pb-[18vh]` pushes text to the bottom. SpaceX positions text at roughly the vertical center-left (~40-45% from top).
-4. **Galaxy not dramatic enough on large screens**: Currently 62% width — SpaceX's Mars takes ~55-60% of viewport and is positioned to bleed off the right edge.
-5. **No golden ratio in layout**: Spacing between elements should follow φ (1.618) relationships.
+The cursor acts as a **spotlight**: in darkness, the spiral is barely visible (2-3% opacity). As the mouse moves, a soft radial glow (~280px radius) illuminates nearby prime dots, making them bloom to full gold brightness. Outside the spotlight, primes fade back to near-invisibility. The effect is visceral — you're literally searching through a field of mathematical intelligence.
 
-## Plan
+The spiral **breathes**: a slow, continuous rotation (~0.0003 rad/frame) keeps it alive without being distracting. No text, no numbers, no factorizations — just pure dots on a spiral. Clean, crisp, precise.
 
-### 1. Navbar — Larger, More Confident Typography
+## Changes
 
-**File:** `src/modules/core/components/Navbar.tsx`
+### 1. PrimeGrid.tsx — Complete Rewrite as Prime Spiral
 
-- Increase nav link font size: `11px` → `clamp(11px, 0.85vw, 14px)` — scales fluidly from small to large screens
-- Increase link padding: `px-5 lg:px-6` → `px-4 lg:px-7` for wider breathing room on large screens
-- Logo wordmark: `11px` → `clamp(11px, 0.85vw, 13px)` 
-- Donate button text: `10px` → `clamp(10px, 0.7vw, 12px)`
-- Social icons: `15px` → `17px`
-- Navbar height: keep `4.5rem` on desktop (matches SpaceX's slim bar)
+**Remove entirely**: the rectangular grid, factorization strings, pretext measurement, all text rendering.
 
-### 2. HeroSection — Golden Ratio Positioning & Bigger Type
+**New approach — spiral dot field:**
+- Plot integers 1–4000 on an **Archimedean spiral** path: `r = a * sqrt(n)`, `θ = n * goldenAngle` (using golden angle ~2.3999 radians for even distribution, like sunflower seeds)
+- For each position, check if `n` is prime — if yes, render a small dot; if no, skip entirely
+- This naturally produces ~550 prime dots in a beautiful spiral pattern
+- Center the spiral at viewport center (or slightly right to complement the left-aligned text)
 
-**File:** `src/modules/landing/components/HeroSection.tsx`
+**Dot rendering:**
+- Base state: tiny circle (radius 1.5px), opacity 3% — barely a whisper
+- Inside spotlight: radius grows to 2.5px, opacity rises to 40-50% gold (`hsl(38, 65%, 55%)`)
+- Smooth cubic distance falloff within the spotlight radius
+- No text whatsoever — dots only
 
-**Text positioning** — use golden ratio vertical placement:
-- Instead of `justify-end` with `pb-[18vh]`, use `justify-center` with a slight upward offset
-- Text block sits at ~38.2% from top (1 - 1/φ ≈ 0.382) — the golden section point
-- Implement as: `items-start` + `pt-[38.2vh]` equivalent, or a flex layout with golden ratio spacers
+**Spotlight (mouse lens):**
+- 280px radius, cubic falloff
+- Creates a dramatic "flashlight in the dark" effect
+- On mouse leave, everything fades to whisper state
 
-**Headline sizing** — much larger, fluid:
-- Mobile: `clamp(2.2rem, 8vw, 3rem)` 
-- Desktop: `clamp(2.5rem, 4vw, 4.5rem)` — allows up to 72px on ultrawide
-- This matches SpaceX's bold, commanding presence
+**Animation — living spiral:**
+- Slow continuous rotation: `globalAngle += 0.0003` per frame
+- This makes the entire spiral slowly turn, giving it a living, breathing quality
+- Only re-render when mouse moves OR on each animation frame (rotation is always-on but cheap)
 
-**Subtext**: `14px` → `clamp(14px, 1vw, 17px)` for proportional scaling
+**Mobile:** No spotlight (no mouse). Instead, render primes at slightly higher base opacity (6%) so the pattern is visible as a static texture.
 
-**CTA button**: `10px` → `clamp(10px, 0.7vw, 12px)` with slightly larger padding
+### 2. Remove PrimeSequenceCanvas
 
-**Galaxy positioning** — more dramatic:
-- Desktop: `w-[62%]` → `w-[58%]` with `mr-[-4%]` to bleed slightly off-edge like Mars in SpaceX
-- Large screens (lg+): scale up to `w-[55%] h-[95%]` for maximum drama
-- The galaxy should feel like it's emerging from the right edge
+The drifting text stream competes with the spiral. Remove it from HeroSection to let the spiral be the single, clean prime visualization.
 
-### 3. Responsive Scaling Table
+### 3. HeroSection.tsx — Simplified Background Layers
 
+- Remove `PrimeSequenceCanvas` import and rendering
+- Keep `PrimeGrid` (now the spiral) and `GalaxyAnimation`
+- The spiral dots will complement the galaxy animation beautifully — both are circular/radial
+
+## Technical Details
+
+**Spiral positioning math:**
 ```text
-Viewport    Nav Links    Headline        Subtext    Galaxy Width
-─────────   ─────────    ────────        ───────    ────────────
-375px       11px         2.2rem (35px)   14px       85%
-768px       12px         2.5rem (40px)   15px       62%
-1280px      13px         3.5rem (56px)   16px       58%
-1920px      14px         4.2rem (67px)   17px       55%
-2560px      14px         4.5rem (72px)   17px       55%
+for n = 1 to 4000:
+  angle = n * 2.3999632 + globalRotation  // golden angle
+  radius = spacing * sqrt(n)              // Archimedean via sqrt
+  x = centerX + radius * cos(angle)
+  y = centerY + radius * sin(angle)
+  if isPrime(n): drawDot(x, y, ...)
 ```
 
-### 4. Golden Ratio Spacing Relationships
-
+**Spotlight opacity calculation:**
 ```text
-Hero vertical layout (top to bottom):
-┌─────────────────────────────┐
-│   38.2% (1/φ)               │  ← empty space / navbar
-│─────────────────────────────│
-│   HEADLINE                  │
-│   gap: 1.618rem             │
-│   Subtext                   │
-│   gap: 2.618rem (φ²)        │
-│   [CTA Button]              │
-│                             │
-│   remaining 61.8% fills     │
-│   below text naturally      │
-└─────────────────────────────┘
+dist = hypot(dotX - mouseX, dotY - mouseY)
+if dist < 280:
+  t = 1 - (dist/280)^3        // cubic falloff
+  opacity = lerp(0.03, 0.45, t)
+  dotRadius = lerp(1.5, 2.5, t)
+else:
+  opacity = 0.03
+  dotRadius = 1.5
 ```
+
+**Performance:** ~550 prime dots (primes below 4000) — trivial to render. No text measurement, no pretext needed. Pure circle drawing at 60fps.
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `Navbar.tsx` | Fluid font sizes with clamp(), larger icons, proportional spacing |
-| `HeroSection.tsx` | Golden ratio vertical positioning, larger fluid headline, dramatic galaxy sizing |
+| `PrimeGrid.tsx` | Complete rewrite: spiral dot field with spotlight |
+| `HeroSection.tsx` | Remove PrimeSequenceCanvas, keep spiral + galaxy |
+| `PrimeSequenceCanvas.tsx` | No changes (just removed from HeroSection) |
 
