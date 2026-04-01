@@ -11,7 +11,7 @@ const CTASection = () => {
        </div>
        <div className="relative container text-center">
           <div className="flex items-center justify-center gap-3 mb-golden-md">
-            <span className="font-mono text-fluid-body tracking-[0.12em] text-foreground/25">§17</span>
+            <span className="font-mono text-fluid-body tracking-[0.12em] text-foreground/80">§17</span>
           </div>
 
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
