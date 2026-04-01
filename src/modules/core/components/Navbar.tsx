@@ -47,13 +47,13 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         <div className="flex items-center justify-between h-[5rem] md:h-[4.5rem] pt-3 md:pt-4 px-6 md:px-10 lg:px-14">
           {/* Left group: Logo + Nav links (SpaceX-style) */}
           <div className="flex items-center gap-8 lg:gap-12 relative z-[60]">
-            <Link to="/" className="flex items-center gap-2.5 group">
+            <Link to="/" className="flex items-center gap-3 group">
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
-                className="w-9 h-9 md:w-7 md:h-7 object-contain invert brightness-[100] transition-all duration-300"
+                className="w-10 h-10 md:w-8 md:h-8 object-contain invert brightness-[100] transition-all duration-300"
               />
-              <span className="font-display text-[15px] md:text-[clamp(11px,0.85vw,13px)] font-semibold tracking-[0.18em] uppercase text-foreground">
+              <span className="font-display text-[16px] md:text-[clamp(13px,1vw,15px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 UOR Foundation
               </span>
             </Link>
@@ -63,7 +63,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`px-3 lg:px-5 py-2 text-[clamp(11px,0.85vw,15px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
+                  className={`px-3 lg:px-5 py-2 text-[clamp(13px,1vw,16px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
                     location.pathname === item.href
                       ? "text-foreground"
                       : "text-foreground/60 hover:text-foreground"
@@ -90,7 +90,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-5 py-2 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/70 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
+              className="px-5 py-2.5 text-[clamp(11px,0.8vw,13px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/70 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
               <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
