@@ -16,17 +16,17 @@ const ProjectsShowcase = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§5</span>
-              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-primary/70 font-body">
+              <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                 UOR Ecosystem
               </p>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="font-display font-bold text-foreground" style={{ fontSize: 'clamp(1.875rem, 2.5vw, 3rem)' }}>
               Featured Projects
             </h2>
           </div>
           <Link
             to="/projects"
-            className="group flex items-center gap-2 text-foreground/40 hover:text-foreground text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body"
+            className="group flex items-center gap-2 text-foreground/40 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
           >
             View all projects
             <ArrowRight
@@ -42,29 +42,28 @@ const ProjectsShowcase = () => {
           {featuredProjects.map((project, index) => (
             <div
               key={project.name}
-              className="group relative p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 panel-active animate-fade-in-up opacity-0"
+              className="group relative p-6 md:p-8 lg:p-10 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 panel-active animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.11}s` }}
             >
-              {/* Module index */}
               <span className="absolute top-4 right-4 font-mono text-[0.625rem] text-foreground/[0.08]">
                 {String(index + 1).padStart(2, "0")}
               </span>
 
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />
-                <span className="text-xs font-semibold text-foreground/30 font-body uppercase tracking-[0.15em]">
+                <span className="font-semibold text-foreground/30 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   {project.maturity}
                 </span>
               </div>
-              <h3 className="font-display text-lg font-semibold text-foreground">
+              <h3 className="font-display font-semibold text-foreground" style={{ fontSize: 'clamp(1.125rem, 1.2vw, 1.5rem)' }}>
                 {project.name}
               </h3>
-              <p className="text-foreground/40 font-body text-base leading-relaxed flex-1">
+              <p className="text-foreground/40 font-body leading-relaxed flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-foreground/25 font-body uppercase tracking-[0.15em]">
+                  <span className="font-semibold text-foreground/25 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                     {project.category}
                   </span>
                   {project.license && (

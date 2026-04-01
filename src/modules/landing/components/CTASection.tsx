@@ -1,18 +1,15 @@
 import { ArrowRight } from "lucide-react";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
-/** Gold dots at prime-percentage positions along a horizontal line */
 const PRIME_POSITIONS = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
 
 const CTASection = () => {
   return (
      <section className="relative py-32 md:py-40 bg-background overflow-hidden">
-       {/* Radial glow */}
        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] md:w-[900px] md:h-[500px] rounded-full bg-primary/[0.06] blur-[120px]" />
        </div>
        <div className="relative container max-w-7xl text-center">
-         {/* Timeline of Inevitability */}
          <div className="relative h-px w-full mb-13 md:mb-17" aria-hidden="true">
            <div className="absolute inset-0 bg-foreground/[0.06]" />
            {PRIME_POSITIONS.map((p) => (
@@ -28,10 +25,10 @@ const CTASection = () => {
            <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§17</span>
          </div>
 
-         <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
+         <h2 className="font-display font-bold text-foreground" style={{ fontSize: 'clamp(1.875rem, 2.5vw, 3rem)' }}>
           Begin Verification
         </h2>
-        <p className="mt-6 md:mt-8 text-base text-foreground/40 font-body leading-[1.68] max-w-2xl mx-auto" style={{ textTransform: 'none' }}>
+        <p className="mt-6 md:mt-8 text-foreground/40 font-body leading-[1.68] max-w-3xl mx-auto" style={{ fontSize: 'clamp(16px, 1.1vw, 20px)', textTransform: 'none' }}>
           Derive your first address. Verify its structure. Five minutes.
         </p>
 
