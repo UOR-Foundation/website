@@ -56,7 +56,7 @@ const ApplicationsSection = () => {
         </div>
         <div className="rule-prime" />
         <p
-          className="py-golden-lg text-foreground/70 font-body leading-[1.75] max-w-6xl animate-fade-in-up opacity-0 text-fluid-body"
+          className="py-golden-lg text-foreground/70 font-body leading-[1.75] max-w-6xl animate-fade-in-up opacity-0 text-fluid-lead"
           style={{ animationDelay: "0.11s" }}
         >
           When every system shares one way to address data, new capabilities emerge.
