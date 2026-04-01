@@ -237,7 +237,7 @@ const Projects = () => {
       </section>
 
       {/* Projects by maturity */}
-      <section id="projects-list" className="py-8 md:py-14 bg-background scroll-mt-28">
+      <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
         <div className="container max-w-[1400px] space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
@@ -250,7 +250,7 @@ const Projects = () => {
       </section>
 
       {/* Maturity Levels */}
-      <section id="maturity" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container">
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10 text-center">
             Project Maturity Levels
@@ -320,7 +320,7 @@ const Projects = () => {
       </section>
 
       {/* Submission Process */}
-      <section className="py-8 md:py-14 bg-background border-b border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container max-w-[1400px]">
           <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-fluid-label font-medium uppercase tracking-wider text-primary font-body mb-4">
@@ -351,7 +351,7 @@ const Projects = () => {
       </section>
 
       {/* Submit Form */}
-      <section id="submit" className="section-dark py-8 md:py-14">
+      <section id="submit" className="section-dark py-section-sm">
         <div className="container max-w-[1400px]">
           <div className="text-center mb-8">
             <span className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">

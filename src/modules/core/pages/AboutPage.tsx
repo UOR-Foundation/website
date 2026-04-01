@@ -25,14 +25,14 @@ const About = () => {
         </div>
       </section>
 
-      <section className="py-8 md:py-14 bg-background">
-        <div className="container max-w-[1400px] space-y-8 md:space-y-12">
+      <section className="py-section-sm bg-background">
+        <div className="container max-w-[1400px] space-y-golden-lg">
 
           {/* What We Do */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
+            <div className="h-px w-full bg-border/40 mb-golden-md" />
             <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
+              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               What We Do
@@ -57,7 +57,7 @@ const About = () => {
 
           {/* Governance Board */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
+            <div className="h-px w-full bg-border/40 mb-golden-md" />
             <h2
               className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
@@ -65,7 +65,7 @@ const About = () => {
               Governance Board
             </h2>
             <p
-              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-6 md:mb-8 max-w-4xl animate-fade-in-up opacity-0"
+              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-5xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}
@@ -115,9 +115,9 @@ const About = () => {
 
           {/* Resources */}
           <div>
-            <div className="h-px w-full bg-border/40 mb-6 md:mb-8" />
+            <div className="h-px w-full bg-border/40 mb-golden-md" />
             <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-6 md:mb-8 animate-fade-in-up opacity-0"
+              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
               Resources

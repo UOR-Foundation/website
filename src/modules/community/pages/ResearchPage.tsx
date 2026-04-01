@@ -63,7 +63,7 @@ const Research = () => {
       </section>
 
       {/* Research */}
-      <section id="research" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="research" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Open Research
@@ -174,7 +174,7 @@ const Research = () => {
       </section>
 
       {/* Blog */}
-      <section id="blog" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="blog" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Blog
@@ -219,7 +219,7 @@ const Research = () => {
       </section>
 
       {/* Events */}
-      <section id="events" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="events" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Events
@@ -284,8 +284,8 @@ const Research = () => {
       </section>
 
       {/* Join CTA */}
-      <section id="join" className="section-dark py-8 md:py-14 scroll-mt-28">
-        <div className="container max-w-4xl text-center">
+      <section id="join" className="section-dark py-section-sm scroll-mt-28">
+        <div className="container max-w-5xl text-center">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>

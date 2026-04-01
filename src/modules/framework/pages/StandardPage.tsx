@@ -171,13 +171,13 @@ const Standard = () => {
       </section>
 
       {/* The Problem */}
-      <section className="py-8 md:py-14 bg-background border-b border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             The Problem
           </p>
           <div
-            className="pt-8 md:pt-10 max-w-4xl animate-fade-in-up opacity-0"
+            className="pt-8 md:pt-10 max-w-5xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             <p className="text-foreground font-body text-fluid-body leading-[1.85] md:leading-[1.9] font-medium">
@@ -191,7 +191,7 @@ const Standard = () => {
       </section>
 
       {/* Visual Diagram */}
-      <section className="py-8 md:py-14 bg-background border-b border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
             How It Works
@@ -201,7 +201,7 @@ const Standard = () => {
       </section>
 
       {/* Anatomy of an Address */}
-      <section className="py-8 md:py-14 bg-background border-b border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Anatomy of an Address
@@ -251,7 +251,7 @@ const Standard = () => {
       </section>
 
       {/* Applications */}
-      <section className="py-8 md:py-14 bg-background border-b border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Where It Applies
@@ -278,7 +278,7 @@ const Standard = () => {
       </section>
 
       {/* Framework Architecture */}
-      <section id="architecture" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
+      <section id="architecture" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container max-w-[1400px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Architecture
@@ -286,7 +286,7 @@ const Standard = () => {
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
             Framework Architecture
           </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-10 md:mb-12">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-lg">
             Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
@@ -295,8 +295,8 @@ const Standard = () => {
 
 
       {/* CTA */}
-      <section className="section-dark py-8 md:py-14">
-        <div className="container max-w-4xl text-center">
+      <section className="section-dark py-section-sm">
+        <div className="container max-w-5xl text-center">
           <h2 className="font-display text-fluid-heading font-bold mb-4">
             Explore the Full Specification
           </h2>
