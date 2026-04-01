@@ -7,7 +7,7 @@ export const featuredProjects = [
   {
     name: "Hologram",
     category: "Systems",
-    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
+    description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required, no special infrastructure needed.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://gethologram.ai/",
