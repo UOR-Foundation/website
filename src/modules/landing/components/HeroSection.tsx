@@ -12,11 +12,11 @@ const HeroSection = () => {
       {!isMobile && <PrimeGrid />}
 
       {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
-      <div className="md:hidden relative z-10 h-full flex flex-col items-center justify-center px-6 pointer-events-none">
-        {/* Top spacer — push content to lower-center */}
-        <div className="basis-[22%] shrink-0" />
+      <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
+        {/* Top spacer — φ ratio: content sits in lower golden zone */}
+        <div className="flex-[1]" />
 
-        {/* Galaxy orb — circular, larger */}
+        {/* Galaxy orb — circular */}
         <div
           className="w-[min(62vw,270px)] h-[min(62vw,270px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
@@ -24,8 +24,8 @@ const HeroSection = () => {
           <GalaxyAnimation />
         </div>
 
-        {/* Spacer */}
-        <div className="h-[clamp(3rem,8vw,4.5rem)] shrink-0" />
+        {/* Spacer between galaxy and text — generous */}
+        <div className="h-[clamp(2.5rem,7vw,4rem)] shrink-0" />
 
         {/* Headline — centered, clean */}
         <h1
@@ -51,8 +51,8 @@ const HeroSection = () => {
           </a>
         </div>
 
-        {/* Bottom spacer */}
-        <div className="flex-[1.618]" />
+        {/* Bottom spacer — φ proportion */}
+        <div className="flex-[0.618]" />
       </div>
 
       {/* Desktop: original layout with galaxy right-aligned */}
