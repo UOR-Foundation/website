@@ -44,7 +44,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         }`}
       >
         {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
-        <div className="flex items-center justify-between h-[5rem] md:h-[4.5rem] pt-3 md:pt-4 px-6 md:px-10 lg:px-14">
+        <div className="flex items-center justify-between h-[5rem] md:h-[5.5rem] pt-4 md:pt-6 px-6 md:px-10 lg:px-14">
           {/* Left group: Logo + Nav links (SpaceX-style) */}
           <div className="flex items-center gap-8 lg:gap-12 relative z-[60]">
             <Link to="/" className="flex items-center gap-3 group">
