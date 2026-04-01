@@ -30,10 +30,10 @@ const CommunitySection = () => {
                     loading="lazy"
                   />
                 </div>
-                <p className="font-body font-semibold text-foreground leading-tight text-fluid-body-sm">
+                <p className="font-body font-semibold text-foreground leading-tight text-fluid-body">
                   {member.name.split(" ")[0]}
                 </p>
-                <p className="font-body text-foreground/55 leading-snug mt-1 text-fluid-label">
+                <p className="font-body text-foreground/55 leading-snug mt-1 text-fluid-body">
                   {member.role}
                 </p>
               </a>
@@ -44,7 +44,7 @@ const CommunitySection = () => {
               <div className="w-[4.5rem] h-[4.5rem] md:w-24 md:h-24 border border-foreground/10 flex items-center justify-center mb-3" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
                 <span className="font-mono text-foreground/50 text-lg">+</span>
               </div>
-              <p className="font-mono text-foreground/50 text-fluid-body-sm">
+              <p className="font-mono text-foreground/50 text-fluid-body">
                 150 contributors
               </p>
             </div>
