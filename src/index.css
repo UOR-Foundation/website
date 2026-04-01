@@ -39,14 +39,21 @@
     --holo-text-2xl:     calc(28px * var(--holo-scale) * var(--holo-user-scale));
     --holo-text-display: calc(36px * var(--holo-scale) * var(--holo-user-scale));
 
-    /* Proportional spacing tokens */
-    --holo-space-1: calc(4px * var(--holo-scale));
-    --holo-space-2: calc(8px * var(--holo-scale));
-    --holo-space-3: calc(12px * var(--holo-scale));
-    --holo-space-4: calc(16px * var(--holo-scale));
-    --holo-space-5: calc(20px * var(--holo-scale));
-    --holo-space-6: calc(24px * var(--holo-scale));
-    --holo-space-8: calc(32px * var(--holo-scale));
+    /* Proportional spacing tokens — prime-based scale */
+    --holo-space-1: calc(2px * var(--holo-scale));
+    --holo-space-2: calc(3px * var(--holo-scale));
+    --holo-space-3: calc(5px * var(--holo-scale));
+    --holo-space-4: calc(7px * var(--holo-scale));
+    --holo-space-5: calc(11px * var(--holo-scale));
+    --holo-space-6: calc(13px * var(--holo-scale));
+    --holo-space-8: calc(17px * var(--holo-scale));
+    --holo-space-11: calc(19px * var(--holo-scale));
+    --holo-space-13: calc(23px * var(--holo-scale));
+    --holo-space-17: calc(29px * var(--holo-scale));
+    --holo-space-19: calc(31px * var(--holo-scale));
+    --holo-space-23: calc(37px * var(--holo-scale));
+    --holo-space-29: calc(41px * var(--holo-scale));
+    --holo-space-31: calc(43px * var(--holo-scale));
 
     /* ── Hologram Glass Palette ──────────────────────────────────── */
     --hologram-bg: 25 8% 6%;
@@ -169,6 +176,16 @@
     background: hsl(var(--primary) / 0.15);
     color: hsl(var(--foreground));
   }
+}
+
+/* ── Prime Number Utility Classes ───────────────────────────────── */
+.prime-gold { color: hsl(var(--primary)); }
+.non-prime-neutral { color: hsl(var(--muted-foreground)); }
+.prime-index {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  color: hsl(var(--foreground) / 0.12);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
