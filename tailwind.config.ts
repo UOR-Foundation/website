@@ -14,6 +14,7 @@ export default {
         lg: "6%",
         xl: "7%",
       },
+      screens: {},
     },
     extend: {
       fontFamily: {
