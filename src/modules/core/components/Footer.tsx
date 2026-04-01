@@ -48,7 +48,16 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="rule-glow mt-golden-lg mb-golden-sm" />
+        <div className="relative h-px w-full mt-golden-lg mb-golden-sm" aria-hidden="true">
+          <div className="absolute inset-0 bg-foreground/[0.06]" />
+          {[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47].map((p) => (
+            <div
+              key={p}
+              className="absolute top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-primary/60"
+              style={{ left: `${p}%` }}
+            />
+          ))}
+        </div>
         <p className="text-foreground/40 text-fluid-caption font-body text-right uppercase tracking-[0.1em]">
           © {new Date().getFullYear()} The UOR Foundation
         </p>

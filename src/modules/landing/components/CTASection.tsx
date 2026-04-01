@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
-const PRIME_POSITIONS = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+
 
 const CTASection = () => {
   return (
@@ -10,20 +10,9 @@ const CTASection = () => {
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] md:w-[900px] md:h-[500px] rounded-full bg-primary/[0.06] blur-[120px]" />
        </div>
        <div className="relative container max-w-[1600px] text-center">
-         <div className="relative h-px w-full mb-golden-xl" aria-hidden="true">
-           <div className="absolute inset-0 bg-foreground/[0.06]" />
-           {PRIME_POSITIONS.map((p) => (
-             <div
-               key={p}
-               className="absolute top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-primary/60"
-               style={{ left: `${p}%` }}
-             />
-           ))}
-         </div>
-
-         <div className="flex items-center justify-center gap-3 mb-golden-md">
-           <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§17</span>
-         </div>
+          <div className="flex items-center justify-center gap-3 mb-golden-md">
+            <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§17</span>
+          </div>
 
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
            Join the UOR Mission
