@@ -7,7 +7,7 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="py-24 md:py-32 bg-section-dark">
+    <section id="pillars" className="py-24 md:py-32 bg-section-dark section-depth">
       <div className="container max-w-6xl">
         <div className="flex items-center gap-3 mb-6">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§13</span>
@@ -15,7 +15,7 @@ const PillarsSection = () => {
             Get Involved
           </p>
         </div>
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mt-0">
           {pillars.map((pillar, index) => {
             const Icon = iconMap[pillar.iconKey];

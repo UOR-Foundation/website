@@ -43,6 +43,11 @@ const HeroSection = () => {
           >
             Deterministic identity. Content-addressed structure. Indexed by prime decomposition.
           </p>
+          {/* Gold accent rule — console readout aesthetic */}
+          <div
+            className="mt-5 w-[61px] h-px bg-primary/20 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.53s" }}
+          />
           <div
             className="mt-8 md:mt-10 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
@@ -57,6 +62,14 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Origin coordinate marker */}
+      <span
+        className="absolute bottom-6 left-6 font-mono text-[10px] text-foreground/[0.04] tracking-[0.2em] select-none pointer-events-none"
+        aria-hidden="true"
+      >
+        [ 0, 0 ]
+      </span>
     </section>
   );
 };

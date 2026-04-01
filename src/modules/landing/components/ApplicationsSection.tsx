@@ -41,7 +41,7 @@ const applications: Application[] = [
 
 const ApplicationsSection = () => {
   return (
-    <section className="py-24 md:py-32 bg-section-dark">
+    <section className="py-24 md:py-32 bg-section-dark section-depth">
       <div className="container max-w-6xl">
         <div className="flex items-center gap-3 mb-6">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§3</span>
@@ -49,7 +49,7 @@ const ApplicationsSection = () => {
             Where It Applies
           </p>
         </div>
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
         <p
           className="py-8 md:py-10 text-foreground/60 font-body text-base leading-[1.75] max-w-3xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s" }}
