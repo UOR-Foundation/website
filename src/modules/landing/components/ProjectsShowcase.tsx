@@ -58,7 +58,7 @@ const ProjectsShowcase = () => {
               <h3 className="font-display font-semibold text-foreground text-fluid-card-title">
                 {project.name}
               </h3>
-              <p className="text-foreground/65 font-body leading-relaxed flex-1 text-fluid-body-sm">
+              <p className="text-foreground/65 font-body leading-relaxed flex-1 text-fluid-lead">
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-golden-sm">

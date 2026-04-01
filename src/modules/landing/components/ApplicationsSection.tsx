@@ -79,7 +79,7 @@ const ApplicationsSection = () => {
                 <h3 className="font-display font-semibold text-foreground leading-tight text-fluid-card-title">
                   {app.title}
                 </h3>
-                <p className="text-foreground/65 font-body leading-[1.7] text-fluid-body-sm">
+                <p className="text-foreground/65 font-body leading-[1.7] text-fluid-lead">
                   {app.description}
                 </p>
                 <span className="font-mono text-[0.625rem] text-primary/0 group-hover:text-primary/25 transition-colors duration-500 tracking-wider">
