@@ -33,7 +33,7 @@ const CommunitySection = () => {
                 <p className="font-body font-semibold text-foreground leading-tight text-fluid-body">
                   {member.name.split(" ")[0]}
                 </p>
-                <p className="font-body text-foreground/55 leading-snug mt-1 text-fluid-label">
+                <p className="font-body text-foreground/55 leading-snug mt-1 text-fluid-body">
                   {member.role}
                 </p>
               </a>
