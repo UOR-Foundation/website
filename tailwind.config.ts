@@ -114,6 +114,14 @@ export default {
         "holo-23": "var(--holo-space-23)",
         "holo-29": "var(--holo-space-29)",
         "holo-31": "var(--holo-space-31)",
+        /* Golden ratio spacing */
+        "golden-sm": "var(--content-gap-sm)",
+        "golden-md": "var(--content-gap-md)",
+        "golden-lg": "var(--content-gap-lg)",
+        "golden-xl": "var(--content-gap-xl)",
+        "section-sm": "var(--section-py-sm)",
+        "section-md": "var(--section-py-md)",
+        "section-lg": "var(--section-py-lg)",
       },
       borderRadius: {
         lg: "var(--radius)",
