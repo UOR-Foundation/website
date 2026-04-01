@@ -511,7 +511,7 @@ const SparqlPage = () => {
   return (
     <Layout>
       <section className="bg-[hsl(var(--primary))] py-12 md:py-16">
-        <div className="container max-w-4xl">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <div className="flex items-center gap-3 mb-3">
             <Database size={28} className="text-primary-foreground/80" />
             <h1 className="font-display text-2xl md:text-3xl font-bold text-primary-foreground">
@@ -525,7 +525,7 @@ const SparqlPage = () => {
       </section>
 
       <section className="py-10 md:py-14">
-        <div className="container max-w-4xl space-y-8">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl space-y-8">
           <QueryEditorControlled
             key={editorKey}
             onResult={handleResult}

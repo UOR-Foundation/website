@@ -286,7 +286,7 @@ const SemanticWebPage = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-52 pb-16 md:pb-22">
-        <div className="container max-w-4xl">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
             The Semantic Web, Powered by UOR
           </h1>
@@ -312,7 +312,7 @@ const SemanticWebPage = () => {
 
       {/* Definition */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-6">
             Definition
           </p>
@@ -344,7 +344,7 @@ const SemanticWebPage = () => {
 
       {/* Tower */}
       <section id="tower" className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Architecture
           </p>
@@ -371,7 +371,7 @@ const SemanticWebPage = () => {
 
       {/* Layer Details */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Layer by Layer
           </p>
@@ -389,7 +389,7 @@ const SemanticWebPage = () => {
 
       {/* Comparison Table */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Comparison
           </p>
@@ -442,7 +442,7 @@ const SemanticWebPage = () => {
 
       {/* CTA */}
       <section className="py-16 md:py-24 bg-background">
-        <div className="container max-w-4xl text-center">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl text-center">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
             Explore the full framework
           </h2>

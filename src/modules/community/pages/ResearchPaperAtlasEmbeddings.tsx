@@ -7,7 +7,7 @@ const ResearchPaperAtlasEmbeddings = () => {
   return (
     <Layout>
       <article className="pt-32 md:pt-44 pb-20 md:pb-28">
-        <div className="container max-w-4xl">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           {/* Back link */}
           <Link
             to="/research#research"

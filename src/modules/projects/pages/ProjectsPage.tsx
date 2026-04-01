@@ -215,7 +215,7 @@ const Projects = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
@@ -238,7 +238,7 @@ const Projects = () => {
 
       {/* Projects by maturity */}
       <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
-        <div className="container space-y-8">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] space-y-8">
           {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
             const levelProjects = projects.filter((p) => p.maturity === level);
             const hasProjects = levelProjects.length > 0;
@@ -251,7 +251,7 @@ const Projects = () => {
 
       {/* Maturity Levels */}
       <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10 text-center">
             Project Maturity Levels
           </h2>
@@ -321,7 +321,7 @@ const Projects = () => {
 
       {/* Submission Process */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="text-center mb-10">
             <span className="inline-flex items-center gap-2 text-fluid-label font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
@@ -352,7 +352,7 @@ const Projects = () => {
 
       {/* Submit Form */}
       <section id="submit" className="section-dark py-section-sm">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="text-center mb-8">
             <span className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
               <Send size={14} /> Open to everyone
