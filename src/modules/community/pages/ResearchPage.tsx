@@ -41,11 +41,11 @@ const Research = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             Our Community
           </h1>
-          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
             Researchers and builders working across disciplines to test ideas, validate results, and publish openly. Progress is faster when it is shared.
           </p>
           <div
@@ -64,14 +64,14 @@ const Research = () => {
 
       {/* Research */}
       <section id="research" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Open Research
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
             Research Areas
           </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-8">
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
             Find your discipline, validate ideas, and collaborate on{" "}
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
           </p>
@@ -175,7 +175,7 @@ const Research = () => {
 
       {/* Blog */}
       <section id="blog" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Blog
           </p>
@@ -220,7 +220,7 @@ const Research = () => {
 
       {/* Events */}
       <section id="events" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Events
           </p>
@@ -285,7 +285,7 @@ const Research = () => {
 
       {/* Join CTA */}
       <section id="join" className="section-dark py-section-sm scroll-mt-28">
-        <div className="container max-w-5xl text-center">
+        <div className="container max-w-6xl text-center">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-section-dark-foreground/50 mb-6">
             Get Involved
           </p>

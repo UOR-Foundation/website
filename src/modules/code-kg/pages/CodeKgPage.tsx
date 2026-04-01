@@ -283,7 +283,7 @@ export default function CodeKgPage() {
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Code That Understands Itself
         </h2>
-        <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+        <p className="text-sm text-muted-foreground max-w-4xl leading-relaxed">
           Inspired by{" "}
           <a href="https://github.com/Bevel-Software/code-to-knowledge-graph" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
             Bevel's Code-to-Knowledge-Graph

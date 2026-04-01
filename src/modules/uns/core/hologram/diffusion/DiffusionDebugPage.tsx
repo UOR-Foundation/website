@@ -151,7 +151,7 @@ export default function DiffusionDebugPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8 font-mono">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">

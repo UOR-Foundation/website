@@ -64,7 +64,7 @@ export default function CoherenceGatePage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background text-foreground">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-12">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-12">
 
           {/* Header */}
           <div className="text-center mb-12">

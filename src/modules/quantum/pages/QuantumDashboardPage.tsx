@@ -371,7 +371,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   ];
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Hero */}
       <div className="text-center space-y-3">
         <h1 className="text-[22px] font-mono tracking-wide text-[hsl(280,50%,70%)]">

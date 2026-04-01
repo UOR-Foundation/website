@@ -104,8 +104,8 @@ export default function ContinuityPage() {
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 pt-28 md:pt-52 pb-14">
-            <div className="max-w-3xl">
+          <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 pt-28 md:pt-52 pb-14">
+            <div className="max-w-4xl">
               <span className="inline-block px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-mono font-medium mb-4">
                 Memory is Sacred
               </span>
@@ -144,7 +144,7 @@ export default function ContinuityPage() {
         </section>
 
         {/* Content */}
-        <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {!agentId ? (
             /* ── Empty State ─────────────────────────────────── */
             <div className="space-y-8">

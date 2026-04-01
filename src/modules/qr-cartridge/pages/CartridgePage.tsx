@@ -164,7 +164,7 @@ const CartridgePage = () => {
         {/* ── Generator ────────────────────────────────────────────────── */}
         <section className="pb-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
               {/* Left: Input */}
               <div className="space-y-5">
@@ -341,7 +341,7 @@ const CartridgePage = () => {
         {/* ── How It Works ─────────────────────────────────────────────── */}
         <section className="py-16 border-t border-border">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground text-center mb-10">How It Works</h2>
               <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
                 {STEPS.map((s, i) => (

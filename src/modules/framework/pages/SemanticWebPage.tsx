@@ -312,11 +312,11 @@ const SemanticWebPage = () => {
 
       {/* Definition */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-6">
             Definition
           </p>
-          <blockquote className="border-l-4 border-primary pl-6 py-2 max-w-3xl">
+          <blockquote className="border-l-4 border-primary pl-6 py-2 max-w-4xl">
             <p className="text-foreground font-display text-xl md:text-2xl font-medium italic leading-relaxed">
               "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
             </p>
@@ -333,7 +333,7 @@ const SemanticWebPage = () => {
               . Scientific American, May 2001.
             </footer>
           </blockquote>
-          <p className="mt-8 text-muted-foreground font-body text-base md:text-lg leading-[1.85] max-w-3xl">
+          <p className="mt-8 text-muted-foreground font-body text-base md:text-lg leading-[1.85] max-w-4xl">
             The Semantic Web extends the web from a network of documents into a network of{" "}
             <span className="text-foreground font-medium">machine-understandable data</span>.
             Its architecture is organized as a layered tower, where each level builds on the one below.
@@ -344,7 +344,7 @@ const SemanticWebPage = () => {
 
       {/* Tower */}
       <section id="tower" className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Architecture
           </p>
@@ -371,7 +371,7 @@ const SemanticWebPage = () => {
 
       {/* Layer Details */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Layer by Layer
           </p>
@@ -389,7 +389,7 @@ const SemanticWebPage = () => {
 
       {/* Comparison Table */}
       <section className="py-8 md:py-14 bg-background border-b border-border">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Comparison
           </p>

@@ -55,7 +55,7 @@ const AuditPage = () => {
   return (
     <Layout>
       <section className="py-20 px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
             System Audit
           </h1>

@@ -12,12 +12,12 @@ const About = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container max-w-[1400px]">
+        <div className="container max-w-[1600px]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
             About
           </h1>
           <p
-            className="mt-5 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-3xl animate-fade-in-up opacity-0"
+            className="mt-5 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
             A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
@@ -26,7 +26,7 @@ const About = () => {
       </section>
 
       <section className="py-section-sm bg-background">
-        <div className="container max-w-[1400px] space-y-golden-lg">
+        <div className="container max-w-[1600px] space-y-golden-lg">
 
           {/* What We Do */}
           <div>
@@ -65,7 +65,7 @@ const About = () => {
               Governance Board
             </h2>
             <p
-              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-5xl animate-fade-in-up opacity-0"
+              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-6xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
             >
               A five-member board serving three-year terms. All governance rules are published on{" "}

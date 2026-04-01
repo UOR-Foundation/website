@@ -1,7 +1,7 @@
 const IntroSection = () => {
   return (
     <section id="intro" className="py-section-md bg-background scroll-mt-16">
-      <div className="container max-w-[1400px]">
+      <div className="container max-w-[1600px]">
         <div className="flex items-center gap-3 mb-golden-md">
           <span className="font-mono text-fluid-caption tracking-[0.05em] text-foreground/[0.12]">§2</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
@@ -10,7 +10,7 @@ const IntroSection = () => {
         </div>
         <div className="rule-prime" />
         <div
-          className="py-golden-lg max-w-5xl animate-fade-in-up opacity-0"
+          className="py-golden-lg max-w-6xl animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.11s" }}
         >
           <p className="text-foreground/90 font-medium font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
