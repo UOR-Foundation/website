@@ -84,11 +84,11 @@ const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { l
         className={`w-full flex items-center gap-3 px-4 py-4 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
       >
         <span className={`w-3 h-3 rounded-full ${dotColor}`} />
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+        <h2 className="font-display text-fluid-heading font-bold text-foreground">
           {level}
         </h2>
         {count > 0 && (
-          <span className="text-base text-foreground/70 font-body">
+          <span className="text-fluid-body text-foreground/70 font-body">
             {count} {count === 1 ? "project" : "projects"}
           </span>
         )}
@@ -134,21 +134,21 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
             )}
             <div className="p-5 md:p-9 flex flex-col flex-1">
               <div className="flex items-center justify-between gap-2 mb-5">
-                <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
+                <span className="text-fluid-label font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">
                   {project.category}
                 </span>
                 <span className={`text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>
                   {project.maturity}
                 </span>
               </div>
-              <h3 className="font-display text-xl font-semibold text-foreground mb-4">
+              <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-4">
                 {project.name}
               </h3>
-              <p className="text-foreground/70 font-body text-base leading-relaxed">
+              <p className="text-foreground/70 font-body text-fluid-body leading-relaxed">
                 {project.description}
               </p>
               <div className="mt-auto pt-6">
-                <span className="flex items-center gap-1.5 text-primary text-base font-medium font-body hover:underline">
+                <span className="flex items-center gap-1.5 text-primary text-fluid-body font-medium font-body hover:underline">
                   Learn more <ChevronRight size={16} />
                 </span>
               </div>
@@ -160,7 +160,7 @@ const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: 
         <div className="flex justify-center mt-8">
           <button
             onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-muted-foreground font-medium font-body text-sm hover:border-primary/30 hover:text-foreground transition-all duration-200"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-muted-foreground font-medium font-body text-fluid-label hover:border-primary/30 hover:text-foreground transition-all duration-200"
           >
             Show {remaining} more {remaining === 1 ? 'project' : 'projects'}
             <ChevronDown size={16} />
@@ -216,10 +216,10 @@ const Projects = () => {
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container max-w-7xl">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
-          <p className="mt-6 text-base text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR specification, organized by maturity level.
           </p>
           <div
@@ -252,7 +252,7 @@ const Projects = () => {
       {/* Maturity Levels */}
       <section id="maturity" className="py-8 md:py-14 bg-background border-b border-border/40 scroll-mt-28">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-10 text-center">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10 text-center">
             Project Maturity Levels
           </h2>
 
@@ -280,7 +280,7 @@ const Projects = () => {
                       }`}>
                         <StageIcon size={20} />
                       </div>
-                      <span className="text-sm font-bold text-foreground/40 font-body uppercase tracking-widest">
+                      <span className="text-fluid-label font-bold text-foreground/40 font-body uppercase tracking-widest">
                         Stage {idx + 1}
                       </span>
                     </div>
@@ -288,23 +288,23 @@ const Projects = () => {
                       <span className={`w-3.5 h-3.5 rounded-full ${maturityDotColors[stage.level]} ${
                         idx === 0 ? 'opacity-40' : idx === 1 ? 'opacity-70' : 'opacity-100'
                       }`} />
-                      <h3 className="font-display text-xl font-bold text-foreground">
+                      <h3 className="font-display text-fluid-card-title font-bold text-foreground">
                         {stage.level}
                       </h3>
                     </div>
-                    <p className="text-base font-medium text-foreground/70 font-body mb-4 italic md:min-h-[3rem]">
+                    <p className="text-fluid-body font-medium text-foreground/70 font-body mb-4 italic md:min-h-[3rem]">
                       {stage.tagline}
                     </p>
-                    <p className="text-base text-foreground/70 font-body leading-relaxed mb-7 md:min-h-[5.5rem]">
+                    <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mb-7 md:min-h-[5.5rem]">
                       {stage.description}
                     </p>
                     <div className="space-y-3 mt-auto">
-                      <p className="text-sm font-semibold text-foreground/50 uppercase tracking-wider font-body mb-1">
+                      <p className="text-fluid-label font-semibold text-foreground/50 uppercase tracking-wider font-body mb-1">
                         Criteria
                       </p>
                       <ul className="space-y-2.5">
                         {stage.criteria.map((c) => (
-                          <li key={c} className="text-base text-foreground/70 font-body flex items-start gap-2">
+                          <li key={c} className="text-fluid-body text-foreground/70 font-body flex items-start gap-2">
                             <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                             {c}
                           </li>
@@ -323,10 +323,10 @@ const Projects = () => {
       <section className="py-8 md:py-14 bg-background border-b border-border/40">
         <div className="container max-w-7xl">
           <div className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-primary font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-fluid-label font-medium uppercase tracking-wider text-primary font-body mb-4">
               <Scale size={14} /> Open governance
             </span>
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+            <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
               How to Submit a Project
             </h2>
             <p className="text-foreground/70 font-body max-w-3xl mx-auto leading-relaxed">
@@ -341,9 +341,9 @@ const Projects = () => {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <step.icon size={20} className="text-primary" />
                   </div>
-                  <h3 className="font-display text-lg font-bold text-foreground">{step.title}</h3>
+                  <h3 className="font-display text-fluid-card-title font-bold text-foreground">{step.title}</h3>
                 </div>
-                <p className="text-base text-foreground/70 font-body leading-relaxed">{step.description}</p>
+                <p className="text-fluid-body text-foreground/70 font-body leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
@@ -354,10 +354,10 @@ const Projects = () => {
       <section id="submit" className="section-dark py-8 md:py-14">
         <div className="container max-w-7xl">
           <div className="text-center mb-8">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
+            <span className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-wider text-section-dark-foreground/50 font-body mb-4">
               <Send size={14} /> Open to everyone
             </span>
-            <h2 className="font-display text-3xl md:text-4xl font-bold">
+            <h2 className="font-display text-fluid-heading font-bold">
               Submit for Sandbox Review
             </h2>
             <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
@@ -375,13 +375,13 @@ const Projects = () => {
                 </div>
               </div>
 
-              <h3 className="font-display text-4xl md:text-5xl font-bold text-section-dark-foreground mb-5 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <h3 className="font-display text-fluid-page-title font-bold text-section-dark-foreground mb-5 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 You're In.
               </h3>
               <p className="text-xl md:text-2xl text-section-dark-foreground/70 font-body mb-4 animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
                 Your project has been submitted for Sandbox review.
               </p>
-              <p className="text-base text-section-dark-foreground/45 font-body max-w-md mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              <p className="text-fluid-body text-section-dark-foreground/45 font-body max-w-md mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
                 Our technical committee will review your submission and respond within 3 weeks.
               </p>
 
@@ -407,7 +407,7 @@ const Projects = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-base font-medium text-section-dark-foreground font-body">
+                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">
                     Project Name *
                   </label>
                   <input
@@ -416,11 +416,11 @@ const Projects = () => {
                     value={formData.projectName}
                     onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                     placeholder="e.g. UOR Visualization Engine"
-                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-base font-medium text-section-dark-foreground font-body">
+                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">
                     Repository URL *
                   </label>
                   <input
@@ -429,13 +429,13 @@ const Projects = () => {
                     value={formData.repoUrl}
                     onChange={(e) => setFormData({ ...formData, repoUrl: e.target.value })}
                     placeholder="https://github.com/..."
-                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                    className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-base font-medium text-section-dark-foreground font-body">
+                <label className="text-fluid-body font-medium text-section-dark-foreground font-body">
                   Contact Email *
                 </label>
                 <input
@@ -444,12 +444,12 @@ const Projects = () => {
                   value={formData.contactEmail}
                   onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
                   placeholder="maintainer@example.com"
-                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-base font-medium text-section-dark-foreground font-body">
+                <label className="text-fluid-body font-medium text-section-dark-foreground font-body">
                   Short Description *
                 </label>
                 <input
@@ -458,13 +458,13 @@ const Projects = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="One-line summary of what your project does"
-                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
               </div>
 
 
               {submitError && (
-                <p className="text-sm text-destructive font-body">{submitError}</p>
+                <p className="text-fluid-label text-destructive font-body">{submitError}</p>
               )}
 
               <button
