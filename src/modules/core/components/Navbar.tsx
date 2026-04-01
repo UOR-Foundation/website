@@ -44,16 +44,16 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         }`}
       >
         {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
-        <div className="flex items-center justify-between h-[5rem] md:h-[5.5rem] pt-4 md:pt-6 px-6 md:px-10 lg:px-14">
-          {/* Left group: Logo + Nav links (SpaceX-style) */}
-          <div className="flex items-center gap-8 lg:gap-12 relative z-[60]">
+        <div className="flex items-center justify-between h-[5rem] md:h-[clamp(4.5rem,6vw,6rem)] pt-4 md:pt-[clamp(1rem,1.5vw,2rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          {/* Left group: Logo + Nav links */}
+          <div className="flex items-center gap-8 lg:gap-[clamp(2rem,2.5vw,4rem)] relative z-[60]">
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
-                className="w-10 h-10 md:w-9 md:h-9 object-contain invert brightness-[200] contrast-[1.2] transition-all duration-300"
+                className="w-10 h-10 md:w-[clamp(2rem,2.2vw,2.75rem)] md:h-[clamp(2rem,2.2vw,2.75rem)] object-contain invert brightness-[200] contrast-[1.2] transition-all duration-300"
               />
-              <span className="font-display text-[16px] md:text-[clamp(14px,1.1vw,16px)] font-semibold tracking-[0.18em] uppercase text-foreground">
+              <span className="font-display text-[16px] md:text-[clamp(14px,1vw,18px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 UOR Foundation
               </span>
             </Link>
