@@ -44,7 +44,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         }`}
       >
         {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
-        <div className="flex items-center justify-between h-[5rem] md:h-[clamp(4.5rem,6vw,6rem)] pt-4 md:pt-[clamp(1rem,1.5vw,2rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="flex items-center justify-between h-[5rem] md:h-[clamp(5rem,6.5vw,7rem)] pt-5 md:pt-[clamp(1.25rem,2vw,2.5rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           {/* Left group: Logo + Nav links */}
           <div className="flex items-center gap-8 lg:gap-[clamp(2rem,2.5vw,4rem)] relative z-[60]">
             <Link to="/" className="flex items-center gap-3 group">
@@ -53,7 +53,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 alt="UOR Foundation"
                 className="w-10 h-10 md:w-[clamp(2rem,2.2vw,2.75rem)] md:h-[clamp(2rem,2.2vw,2.75rem)] object-contain invert brightness-[300] contrast-[1.5] drop-shadow-[0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300"
               />
-              <span className="font-display text-[16px] md:text-[clamp(14px,1vw,18px)] font-semibold tracking-[0.18em] uppercase text-foreground">
+              <span className="font-display text-[16px] md:text-[clamp(15px,1.1vw,19px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 The UOR Foundation
               </span>
             </Link>
@@ -63,7 +63,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`px-3 lg:px-[clamp(1rem,1.2vw,1.75rem)] py-2 text-[clamp(13px,0.9vw,18px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-150 ease-out ${
+                  className={`px-3 lg:px-[clamp(1rem,1.2vw,1.75rem)] py-2 text-[clamp(14px,1vw,19px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-150 ease-out ${
                     location.pathname === item.href
                       ? "text-foreground"
                       : "text-foreground/60 hover:text-foreground active:text-foreground/80"
@@ -79,20 +79,20 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1.5">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
-                <DiscordIcon className="w-[clamp(17px,1.2vw,22px)] h-[clamp(17px,1.2vw,22px)]" />
+                <DiscordIcon className="w-[clamp(19px,1.3vw,24px)] h-[clamp(19px,1.3vw,24px)]" />
               </a>
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
-                <Github className="w-[clamp(17px,1.2vw,22px)] h-[clamp(17px,1.2vw,22px)]" />
+                <Github className="w-[clamp(19px,1.3vw,24px)] h-[clamp(19px,1.3vw,24px)]" />
               </a>
               <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
-                <Linkedin className="w-[clamp(17px,1.2vw,22px)] h-[clamp(17px,1.2vw,22px)]" />
+                <Linkedin className="w-[clamp(19px,1.3vw,24px)] h-[clamp(19px,1.3vw,24px)]" />
               </a>
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-[clamp(1.25rem,1.5vw,2rem)] py-[clamp(0.6rem,0.8vw,1rem)] text-[clamp(11px,0.75vw,14px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground active:scale-[0.97] transition-all duration-150 ease-out inline-flex items-center cursor-pointer"
+              className="px-[clamp(1.25rem,1.5vw,2rem)] py-[clamp(0.6rem,0.8vw,1rem)] text-[clamp(12px,0.85vw,15px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground active:scale-[0.97] transition-all duration-150 ease-out inline-flex items-center cursor-pointer"
             >
-              <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
+              <Heart size={12} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
             </button>
           </div>
