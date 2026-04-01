@@ -25,7 +25,7 @@ const HeroSection = () => {
         <div className="basis-[38.2%] shrink-0" />
         <div>
           <h1
-            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[680px]"
+            className="font-display text-[clamp(2.2rem,8vw,3rem)] md:text-[clamp(2.5rem,4vw,4.5rem)] font-bold leading-[1.12] tracking-[0.04em] uppercase text-foreground animate-fade-in-up opacity-0 max-w-[800px]"
             style={{ animationDelay: "0.29s" }}
           >
             Your Universal<br />
