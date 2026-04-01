@@ -38,16 +38,16 @@ const HighlightsSection = () => {
                 />
               </div>
               <div className="flex flex-col flex-1 py-6 md:py-8 pr-4">
-                <span className="self-start font-semibold font-body text-foreground/30 uppercase tracking-[0.15em] mb-3" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   {item.tag}
                 </span>
                 <h3 className="font-display font-semibold text-foreground leading-snug flex-1" style={{ fontSize: 'clamp(1rem, 1.1vw, 1.375rem)' }}>
                   {item.title}
                 </h3>
-                <p className="mt-3 text-foreground/30 font-body" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
+                <p className="mt-3 text-foreground/50 font-body" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/50 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   Learn more <ArrowRight size={12} />
                 </span>
               </div>

@@ -26,7 +26,7 @@ const ProjectsShowcase = () => {
           </div>
           <Link
             to="/projects"
-            className="group flex items-center gap-2 text-foreground/40 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
+            className="group flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}
           >
             View all projects
             <ArrowRight
@@ -51,23 +51,23 @@ const ProjectsShowcase = () => {
 
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />
-                <span className="font-semibold text-foreground/30 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                <span className="font-semibold text-foreground/50 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                   {project.maturity}
                 </span>
               </div>
               <h3 className="font-display font-semibold text-foreground" style={{ fontSize: 'clamp(1.125rem, 1.2vw, 1.5rem)' }}>
                 {project.name}
               </h3>
-              <p className="text-foreground/40 font-body leading-relaxed flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
+              <p className="text-foreground/65 font-body leading-relaxed flex-1" style={{ fontSize: 'clamp(15px, 1vw, 18px)' }}>
                 {project.description}
               </p>
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-foreground/25 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
+                  <span className="font-semibold text-foreground/45 font-body uppercase tracking-[0.15em]" style={{ fontSize: 'clamp(12px, 0.8vw, 14px)' }}>
                     {project.category}
                   </span>
                   {project.license && (
-                    <span className="text-xs font-mono text-foreground/25 border border-foreground/10 px-1.5 py-0.5">
+                    <span className="text-xs font-mono text-foreground/45 border border-foreground/15 px-1.5 py-0.5">
                       {project.license}
                     </span>
                   )}
@@ -77,7 +77,7 @@ const ProjectsShowcase = () => {
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-foreground/30 hover:text-foreground transition-colors"
+                    className="text-foreground/50 hover:text-foreground transition-colors"
                   >
                     <ExternalLink size={14} />
                   </a>

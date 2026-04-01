@@ -33,7 +33,7 @@ const HeroSection = () => {
             for Information
           </h1>
           <p
-            className="mt-[1.618rem] text-[clamp(13px,1vw,17px)] text-foreground/40 max-w-[620px] leading-[1.75] font-body animate-fade-in-up opacity-0"
+            className="mt-[1.618rem] text-[clamp(13px,1vw,17px)] text-foreground/60 max-w-[620px] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
             The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.

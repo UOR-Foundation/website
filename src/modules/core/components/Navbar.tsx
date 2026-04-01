@@ -66,7 +66,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                   className={`px-3 lg:px-5 py-2 text-[clamp(11px,0.85vw,15px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ${
                     location.pathname === item.href
                       ? "text-foreground"
-                      : "text-foreground/50 hover:text-foreground"
+                      : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
                   {item.label}
@@ -78,19 +78,19 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           {/* Right group: social icons + donate CTA */}
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="Discord">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="Discord">
                 <DiscordIcon size={17} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="GitHub">
                 <Github size={17} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/30 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-1.5 text-foreground/50 hover:text-foreground transition-colors duration-200" aria-label="LinkedIn">
                 <Linkedin size={17} />
               </a>
             </div>
             <button
               onClick={() => setDonateOpen(true)}
-              className="px-5 py-2 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/60 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
+              className="px-5 py-2 text-[clamp(10px,0.7vw,12px)] font-semibold uppercase tracking-[0.2em] border border-foreground/20 text-foreground/70 hover:border-foreground/60 hover:text-foreground transition-all duration-300 inline-flex items-center cursor-pointer"
             >
               <Heart size={10} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
               Donate
@@ -130,7 +130,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 } ${
                   location.pathname === item.href
                     ? "text-foreground"
-                    : "text-foreground/50 active:text-foreground"
+                    : "text-foreground/60 active:text-foreground"
                 }`}
                 style={{ transitionDelay: mobileOpen ? `${80 + idx * 50}ms` : "0ms" }}
               >
@@ -155,13 +155,13 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               Donate
             </button>
             <div className="flex items-center justify-center gap-8 py-2">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="Discord">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="Discord">
                 <DiscordIcon size={22} />
               </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="GitHub">
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="GitHub">
                 <Github size={22} />
               </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/30 hover:text-foreground transition-colors" aria-label="LinkedIn">
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2.5 text-foreground/50 hover:text-foreground transition-colors" aria-label="LinkedIn">
                 <Linkedin size={22} />
               </a>
             </div>
