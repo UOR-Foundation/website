@@ -94,7 +94,7 @@ const About = () => {
                         {member.role}
                       </p>
                       {member.bio && (
-                        <p className="text-sm text-muted-foreground font-body mt-1 leading-snug">
+                        <p className="text-sm text-foreground/65 font-body mt-1 leading-snug">
                           {member.bio}
                         </p>
                       )}
