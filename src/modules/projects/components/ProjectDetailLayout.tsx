@@ -293,7 +293,7 @@ const ProjectDetailLayout = ({
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-32 md:pt-44 pb-12 md:pb-16">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <Link
             to="/projects"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
@@ -342,7 +342,7 @@ const ProjectDetailLayout = ({
           key={section.heading}
           className={`py-8 md:py-14 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
         >
-          <div className="container">
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
               {section.heading}
             </h2>
@@ -355,7 +355,7 @@ const ProjectDetailLayout = ({
 
       {/* Agent Instructions */}
       <section className="py-8 md:py-14 bg-muted/30 border-b border-border">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="flex items-center gap-3 mb-6">
             <Bot size={20} className="text-primary" />
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">

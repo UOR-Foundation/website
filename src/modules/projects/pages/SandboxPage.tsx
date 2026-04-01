@@ -63,7 +63,7 @@ const SandboxPage = () => {
     <Layout>
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-52 pb-20 md:pb-28">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="flex items-center gap-3 mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.05s" }}>
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Globe size={20} className="text-primary" />
@@ -100,7 +100,7 @@ const SandboxPage = () => {
 
       {/* Stats strip */}
       <section className="border-b border-border bg-card">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
             {[
               { label: "Total Projects", value: allProjects.length },
@@ -119,7 +119,7 @@ const SandboxPage = () => {
 
       {/* All Projects Grid */}
       <section className="py-20 md:py-32 bg-background">
-        <div className="container">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           {categories.map((category, catIdx) => {
             const CategoryIcon = categoryIcons[category] || Globe;
             const categoryProjects = allProjects.filter(p => p.category === category);
