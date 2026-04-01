@@ -153,8 +153,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.02em;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     font-optical-sizing: auto;
   }
 
