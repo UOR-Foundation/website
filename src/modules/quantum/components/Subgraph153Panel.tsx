@@ -46,7 +46,7 @@ export default function Subgraph153Panel() {
   const maxE = Math.max(...allEdgeCounts, TARGET_EDGES + 10);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-5">
+    <div className="p-6 max-w-[1800px] mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

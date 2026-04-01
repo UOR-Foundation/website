@@ -80,7 +80,7 @@ const CodeKnowledgeGraphPage = () => {
   return (
     <Layout>
       <section className="py-20 px-4">
-        <div className="max-w-[1600px] mx-auto">
+        <div className="max-w-[1800px] mx-auto">
           <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
             Code → Knowledge Graph
           </h1>

@@ -254,7 +254,7 @@ export default function SchemaOrgExplorerPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/30 backdrop-blur-sm">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
+        <div className="max-w-[1800px] mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <span className="text-xl">🔗</span>
@@ -288,7 +288,7 @@ export default function SchemaOrgExplorerPage() {
       </header>
 
       {/* Main content */}
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
+      <div className="max-w-[1800px] mx-auto px-6 py-8">
         {/* Search */}
         <div className="relative max-w-md mb-8">
           <IconSearch
