@@ -316,7 +316,12 @@
 
   .rule-accent {
     @apply h-px w-full;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.45), transparent);
+  }
+
+  .rule-glow {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent 5%, hsl(var(--primary) / 0.25) 30%, hsl(var(--primary) / 0.5) 50%, hsl(var(--primary) / 0.25) 70%, transparent 95%);
   }
 
   /* SpaceX-style rectangular buttons */
