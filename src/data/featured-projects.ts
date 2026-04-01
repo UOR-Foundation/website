@@ -23,7 +23,7 @@ export const featuredProjects = [
   {
     name: "UOR MCP",
     category: "Developer Tools",
-    description: "A server that connects AI models to the UOR kernel. Every response is verified and auditable.",
+    description: "A server that connects AI models to the UOR kernel. Every response is cryptographically verified, auditable, and fully reproducible.",
     maturity: "Sandbox" as MaturityLevel,
     license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/uor-mcp",
