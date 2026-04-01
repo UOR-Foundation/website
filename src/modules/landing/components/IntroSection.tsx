@@ -2,6 +2,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
+const IntroSection = () => {
   return (
     <section id="intro" className="py-section-md bg-background scroll-mt-16">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
