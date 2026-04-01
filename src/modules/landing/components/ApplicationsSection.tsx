@@ -46,9 +46,9 @@ const applications: Application[] = [
 
 const ApplicationsSection = () => {
   return (
-    <section className="py-24 md:py-32 bg-section-dark section-depth">
-      <div className="container max-w-7xl">
-        <div className="flex items-center gap-3 mb-6">
+    <section className="py-section-md bg-section-dark section-depth">
+      <div className="container max-w-[1400px]">
+        <div className="flex items-center gap-3 mb-golden-md">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§3</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             Where It Applies
@@ -56,7 +56,7 @@ const ApplicationsSection = () => {
         </div>
         <div className="rule-prime" />
         <p
-          className="py-8 md:py-10 text-foreground/70 font-body leading-[1.75] max-w-4xl animate-fade-in-up opacity-0 text-fluid-body"
+          className="py-golden-lg text-foreground/70 font-body leading-[1.75] max-w-5xl animate-fade-in-up opacity-0 text-fluid-body"
           style={{ animationDelay: "0.11s" }}
         >
           When every system shares one way to address data, new capabilities emerge.
@@ -68,7 +68,7 @@ const ApplicationsSection = () => {
             return (
               <div
                 key={app.title}
-                className="group p-8 md:p-10 lg:p-12 border-t border-foreground/8 flex flex-col gap-4 panel-active animate-fade-in-up opacity-0"
+                className="group p-8 md:p-10 lg:p-12 border-t border-foreground/8 flex flex-col gap-golden-sm panel-active animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.17 + idx * 0.07}s` }}
               >
                 <Icon

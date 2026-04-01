@@ -12,9 +12,9 @@ const imageMap: Record<string, string> = {
 
 const HighlightsSection = () => {
   return (
-    <section className="py-24 md:py-32 bg-background">
-      <div className="container max-w-7xl">
-        <div className="flex items-center gap-3 mb-10 md:mb-14">
+    <section className="py-section-md bg-background">
+      <div className="container max-w-[1400px]">
+        <div className="flex items-center gap-3 mb-golden-lg">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§11</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             Community Highlights
@@ -37,7 +37,7 @@ const HighlightsSection = () => {
                   loading="lazy"
                 />
               </div>
-              <div className="flex flex-col flex-1 py-6 md:py-8 pr-4">
+              <div className="flex flex-col flex-1 py-golden-md pr-4">
                 <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3 text-fluid-label">
                   {item.tag}
                 </span>
@@ -47,7 +47,7 @@ const HighlightsSection = () => {
                 <p className="mt-3 text-foreground/50 font-body text-fluid-label">
                   {item.date}
                 </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300 text-fluid-label">
+                <span className="inline-flex items-center gap-1.5 mt-golden-sm font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300 text-fluid-label">
                   Learn more <ArrowRight size={12} />
                 </span>
               </div>

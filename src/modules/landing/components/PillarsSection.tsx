@@ -7,9 +7,9 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const PillarsSection = () => {
   return (
-    <section id="pillars" className="py-24 md:py-32 bg-section-dark section-depth">
-      <div className="container max-w-7xl">
-        <div className="flex items-center gap-3 mb-6">
+    <section id="pillars" className="py-section-md bg-section-dark section-depth">
+      <div className="container max-w-[1400px]">
+        <div className="flex items-center gap-3 mb-golden-md">
           <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§13</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label">
             Get Involved
@@ -26,7 +26,7 @@ const PillarsSection = () => {
                 className="group flex flex-col p-8 md:p-10 lg:p-12 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 transition-all duration-300 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.17 + index * 0.13}s` }}
               >
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-golden-md">
                   <Icon
                     className="w-5 h-5 text-primary/60 transition-colors duration-300 group-hover:text-primary"
                     strokeWidth={1.5}
@@ -38,7 +38,7 @@ const PillarsSection = () => {
                 <p className="text-foreground/65 font-body leading-[1.68] flex-1 text-fluid-body-sm">
                   {pillar.description}
                 </p>
-                <div className="flex justify-start mt-8">
+                <div className="flex justify-start mt-golden-lg">
                   <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground transition-all duration-300 text-fluid-label">
                     {pillar.cta}
                     <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />

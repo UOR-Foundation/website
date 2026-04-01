@@ -33,13 +33,13 @@ const HeroSection = () => {
             for Information
           </h1>
           <p
-            className="mt-[1.618rem] text-fluid-body text-foreground/60 max-w-[620px] leading-[1.75] font-body animate-fade-in-up opacity-0"
+            className="mt-golden-md text-fluid-body text-foreground/60 max-w-[620px] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
             The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
           </p>
           <div
-            className="mt-[2.618rem] animate-fade-in-up opacity-0"
+            className="mt-golden-lg animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a

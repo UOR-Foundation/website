@@ -10,11 +10,11 @@ const maturityDotColors: Record<MaturityLevel, string> = {
 
 const ProjectsShowcase = () => {
   return (
-    <section className="py-24 md:py-32 bg-background">
-      <div className="container max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-4">
+    <section className="py-section-md bg-background">
+      <div className="container max-w-[1400px]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-golden-sm">
               <span className="font-mono text-[0.6875rem] tracking-[0.05em] text-foreground/[0.12]">§5</span>
               <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-label">
                 UOR Ecosystem
@@ -61,7 +61,7 @@ const ProjectsShowcase = () => {
               <p className="text-foreground/65 font-body leading-relaxed flex-1 text-fluid-body-sm">
                 {project.description}
               </p>
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center justify-between mt-golden-sm">
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-foreground/45 font-body uppercase tracking-[0.15em] text-fluid-label">
                     {project.category}
