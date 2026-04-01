@@ -12,66 +12,61 @@ function sievePrimes(max: number): Set<number> {
   return s;
 }
 
-/* ── Ulam spiral coordinate mapping ──────────────────────────── */
-function ulamCoords(n: number): [number, number] {
-  if (n === 1) return [0, 0];
-  const k = Math.ceil((Math.sqrt(n) - 1) / 2);
-  const m = (2 * k + 1) ** 2;
-  const side = 2 * k;
-
-  if (n > m - side) {
-    return [-k + (n - (m - side)), -k];
-  } else if (n > m - 2 * side) {
-    return [k, k - (n - (m - 2 * side))];
-  } else if (n > m - 3 * side) {
-    return [k - (n - (m - 3 * side)), k];
-  } else {
-    return [-k, -k + (n - (m - 4 * side))];
-  }
-}
-
 /* ── Constants ───────────────────────────────────────────────── */
-const MAX_N = 28000;
-const ROTATION_SPEED = 0.00006;
+const MAX_N = 8000;
+const GOLDEN_ANGLE = 2.3999632297286533;
+const ROTATION_SPEED = 0.00004;
 const GOLD = "38, 65%, 55%";
+const SILVER = "220, 15%, 70%";
 
-// Scroll thresholds — subtle reveal, only truly visible near the bottom
-const SCROLL_START = 0.45;
-const SCROLL_FULL = 0.92;
+// Scroll: starts faintly at 30%, fully visible by 85%
+const SCROLL_START = 0.30;
+const SCROLL_FULL = 0.85;
 
-// Dot sizing
-const BASE_DOT_R = 0.8;
-const PEAK_DOT_R = 1.6;
-const PEAK_ALPHA = 0.12; // Subtle, not overpowering
+const PEAK_ALPHA = 0.18;
+const COMPOSITE_ALPHA = 0.04;
+const DOT_R_PRIME = 1.5;
+const DOT_R_COMPOSITE = 0.6;
+const PULSE_SPEED = 0.0003;
 
-// Constellation lines
-const LINE_ALPHA_MULT = 0.25;
-const MAX_LINE_DIST = 2;
+/* ── Orion constellation pattern ─────────────────────────────
+ * Defined as normalized coordinates (0-1 range, centered at 0.5).
+ * Each star is mapped to the nearest prime in the Vogel spiral.
+ * Lines define the stick figure of Orion.
+ */
+const ORION_STARS = [
+  // Belt: Alnitak, Alnilam, Mintaka
+  { name: "Alnitak",    nx: 0.44, ny: 0.48, brightness: 1.4 },
+  { name: "Alnilam",    nx: 0.50, ny: 0.47, brightness: 1.6 },
+  { name: "Mintaka",    nx: 0.56, ny: 0.46, brightness: 1.3 },
+  // Shoulders: Betelgeuse, Bellatrix
+  { name: "Betelgeuse", nx: 0.38, ny: 0.34, brightness: 1.8 },
+  { name: "Bellatrix",  nx: 0.60, ny: 0.35, brightness: 1.3 },
+  // Feet: Saiph, Rigel
+  { name: "Saiph",      nx: 0.40, ny: 0.64, brightness: 1.1 },
+  { name: "Rigel",      nx: 0.58, ny: 0.65, brightness: 1.5 },
+  // Sword (below belt)
+  { name: "Sword",      nx: 0.49, ny: 0.55, brightness: 1.0 },
+];
 
-// Glow pulsation
-const PULSE_SPEED = 0.0004;
+// Orion stick figure connections (indices into ORION_STARS)
+const ORION_LINES: [number, number][] = [
+  // Belt
+  [0, 1], [1, 2],
+  // Shoulders to belt
+  [3, 0], [4, 2],
+  // Shoulders across
+  [3, 4],
+  // Belt to feet
+  [0, 5], [2, 6],
+  // Sword from belt center
+  [1, 7],
+];
 
-/* ── Pre-compute prime positions ─────────────────────────────── */
+/* ── Pre-compute ─────────────────────────────────────────────── */
 const primes = sievePrimes(MAX_N);
-const primePositions: Array<{ n: number; x: number; y: number }> = [];
-for (let n = 2; n <= MAX_N; n++) {
-  if (primes.has(n)) {
-    const [x, y] = ulamCoords(n);
-    primePositions.push({ n, x, y });
-  }
-}
-
-// Pre-compute constellation edges
-const constellationEdges: Array<[number, number]> = [];
-for (let i = 0; i < primePositions.length; i++) {
-  for (let j = i + 1; j < primePositions.length; j++) {
-    const dx = Math.abs(primePositions[i].x - primePositions[j].x);
-    const dy = Math.abs(primePositions[i].y - primePositions[j].y);
-    if (dx <= MAX_LINE_DIST && dy <= MAX_LINE_DIST && dx + dy <= MAX_LINE_DIST) {
-      constellationEdges.push([i, j]);
-    }
-  }
-}
+const primeList: number[] = [];
+for (let n = 2; n <= MAX_N; n++) if (primes.has(n)) primeList.push(n);
 
 /* ── Component ───────────────────────────────────────────────── */
 const PrimeConstellationBg = () => {
@@ -114,61 +109,77 @@ const PrimeConstellationBg = () => {
 
     const cx = w * 0.5;
     const cy = h * 0.5;
-
-    // Scale so spiral fills the viewport nicely
-    const minDim = Math.min(w, h);
-    const spacing = minDim / (Math.sqrt(MAX_N) * 0.48);
+    const diagonal = Math.sqrt(w * w + h * h) * 0.48;
+    const spacing = diagonal / Math.sqrt(MAX_N);
 
     const globalAngle = angleRef.current;
-    const cosA = Math.cos(globalAngle);
-    const sinA = Math.sin(globalAngle);
+    const pulse = 1 + 0.06 * Math.sin(timeRef.current);
+    const masterAlpha = easedT * pulse;
 
-    // Subtle breathing pulse
-    const pulse = 1 + 0.08 * Math.sin(timeRef.current);
-    const alpha = easedT * PEAK_ALPHA * pulse;
-    const dotR = (BASE_DOT_R + easedT * (PEAK_DOT_R - BASE_DOT_R)) * pulse;
+    // Draw all integers on Vogel spiral — primes brighter
+    for (let n = 1; n <= MAX_N; n++) {
+      const angle = n * GOLDEN_ANGLE + globalAngle;
+      const r = spacing * Math.sqrt(n);
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
 
-    const toScreen = (gx: number, gy: number): [number, number] => {
-      const rx = gx * cosA - gy * sinA;
-      const ry = gx * sinA + gy * cosA;
-      return [cx + rx * spacing, cy + ry * spacing];
-    };
-
-    // Draw constellation lines
-    if (easedT > 0.1) {
-      const lineAlpha = alpha * LINE_ALPHA_MULT * Math.min(1, (easedT - 0.1) / 0.25);
-      ctx.strokeStyle = `hsla(${GOLD}, ${lineAlpha})`;
-      ctx.lineWidth = 0.4;
-      ctx.beginPath();
-      for (let e = 0; e < constellationEdges.length; e++) {
-        const [i, j] = constellationEdges[e];
-        const [x1, y1] = toScreen(primePositions[i].x, primePositions[i].y);
-        const [x2, y2] = toScreen(primePositions[j].x, primePositions[j].y);
-        if (
-          (x1 < -10 && x2 < -10) || (x1 > w + 10 && x2 > w + 10) ||
-          (y1 < -10 && y2 < -10) || (y1 > h + 10 && y2 > h + 10)
-        ) continue;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-      }
-      ctx.stroke();
-    }
-
-    // Draw prime dots with a warm glow
-    for (let i = 0; i < primePositions.length; i++) {
-      const p = primePositions[i];
-      const [x, y] = toScreen(p.x, p.y);
       if (x < -5 || x > w + 5 || y < -5 || y > h + 5) continue;
 
-      // Larger primes glow slightly brighter (twin primes, etc.)
-      const isTwin = primes.has(p.n + 2) || primes.has(p.n - 2);
-      const dotAlpha = isTwin ? alpha * 1.4 : alpha;
-      const r = isTwin ? dotR * 1.3 : dotR;
+      const isPrime = primes.has(n);
+      const alpha = masterAlpha * (isPrime ? PEAK_ALPHA : COMPOSITE_ALPHA);
+      const dotR = isPrime ? DOT_R_PRIME : DOT_R_COMPOSITE;
+      const color = isPrime ? GOLD : SILVER;
 
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${GOLD}, ${dotAlpha})`;
+      ctx.arc(x, y, dotR * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${color}, ${alpha})`;
       ctx.fill();
+    }
+
+    // Draw Orion constellation overlay once sufficiently visible
+    if (easedT > 0.25) {
+      const orionAlpha = Math.min(1, (easedT - 0.25) / 0.4) * 0.35 * pulse;
+
+      // Compute Orion star screen positions
+      const orionScreenPos = ORION_STARS.map(star => ({
+        x: star.nx * w,
+        y: star.ny * h,
+        brightness: star.brightness,
+        name: star.name,
+      }));
+
+      // Draw constellation lines
+      ctx.strokeStyle = `hsla(${GOLD}, ${orionAlpha * 0.5})`;
+      ctx.lineWidth = 0.8;
+      ctx.setLineDash([4, 6]);
+      for (const [a, b] of ORION_LINES) {
+        ctx.beginPath();
+        ctx.moveTo(orionScreenPos[a].x, orionScreenPos[a].y);
+        ctx.lineTo(orionScreenPos[b].x, orionScreenPos[b].y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Draw Orion stars as bright prime-gold dots with glow
+      for (const star of orionScreenPos) {
+        const starR = 2.5 * star.brightness * pulse;
+        const starAlpha = orionAlpha * star.brightness;
+
+        // Outer glow
+        const grad = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, starR * 4);
+        grad.addColorStop(0, `hsla(${GOLD}, ${starAlpha * 0.4})`);
+        grad.addColorStop(1, `hsla(${GOLD}, 0)`);
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, starR * 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Core dot
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, starR, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${GOLD}, ${starAlpha})`;
+        ctx.fill();
+      }
     }
 
     ctx.restore();
