@@ -15,6 +15,7 @@ function sievePrimes(max: number): Set<number> {
 const COLS = 48;
 const ROWS = 29;
 const TOTAL = COLS * ROWS;
+const AXIS_INTERVAL = 7;
 
 const PrimeGrid = () => {
   const primes = useMemo(() => sievePrimes(TOTAL + 1), []);
@@ -26,6 +27,24 @@ const PrimeGrid = () => {
     }
     return result;
   }, [primes]);
+
+  /* Column axis labels (top edge, every 7th column) */
+  const colLabels = useMemo(() => {
+    const labels: { col: number; label: string }[] = [];
+    for (let c = AXIS_INTERVAL - 1; c < COLS; c += AXIS_INTERVAL) {
+      labels.push({ col: c, label: String(c + 1).padStart(2, "0") });
+    }
+    return labels;
+  }, []);
+
+  /* Row axis labels (left edge, every 7th row) */
+  const rowLabels = useMemo(() => {
+    const labels: { row: number; label: string }[] = [];
+    for (let r = AXIS_INTERVAL - 1; r < ROWS; r += AXIS_INTERVAL) {
+      labels.push({ row: r, label: String(r + 1).padStart(2, "0") });
+    }
+    return labels;
+  }, []);
 
   return (
     <div
@@ -39,17 +58,34 @@ const PrimeGrid = () => {
         gap: 0,
       }}
     >
-      {dots.map((isPrime, i) => (
-        <div key={i} className="flex items-center justify-center">
-          <div
-            className={
-              isPrime
-                ? "w-[2px] h-[2px] rounded-full bg-primary/[0.08]"
-                : "w-[1.5px] h-[1.5px] rounded-full bg-foreground/[0.025]"
-            }
-          />
-        </div>
-      ))}
+      {dots.map((isPrime, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const isColLabel = row === 0 && (col + 1) % AXIS_INTERVAL === 0;
+        const isRowLabel = col === 0 && (row + 1) % AXIS_INTERVAL === 0;
+
+        return (
+          <div key={i} className="relative flex items-center justify-center">
+            <div
+              className={
+                isPrime
+                  ? "w-[2px] h-[2px] rounded-full bg-primary/[0.08]"
+                  : "w-[1.5px] h-[1.5px] rounded-full bg-foreground/[0.025]"
+              }
+            />
+            {isColLabel && (
+              <span className="absolute -top-3 font-mono text-[0.5rem] text-foreground/[0.04] select-none">
+                {String(col + 1).padStart(2, "0")}
+              </span>
+            )}
+            {isRowLabel && (
+              <span className="absolute -left-4 font-mono text-[0.5rem] text-foreground/[0.04] select-none">
+                {String(row + 1).padStart(2, "0")}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

@@ -29,10 +29,10 @@ const CTASection = () => {
          </div>
 
          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
-          Ready to Build?
+          Begin Verification
         </h2>
         <p className="mt-6 md:mt-8 text-base text-foreground/40 font-body leading-[1.68] max-w-2xl mx-auto" style={{ textTransform: 'none' }}>
-          Verify your first address in five minutes, then join the community.
+          Derive your first address. Verify its structure. Five minutes.
         </p>
 
         <div className="mt-10 md:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">

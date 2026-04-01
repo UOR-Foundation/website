@@ -36,15 +36,20 @@ const ProjectsShowcase = () => {
           </Link>
         </div>
 
-        <div className="h-px w-full bg-foreground/8" />
+        <div className="rule-prime" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
           {featuredProjects.map((project, index) => (
             <div
               key={project.name}
-              className="group p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 animate-fade-in-up opacity-0"
+              className="group relative p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 panel-active animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.11}s` }}
             >
+              {/* Module index */}
+              <span className="absolute top-4 right-4 font-mono text-[0.625rem] text-foreground/[0.08]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+
               <div className="flex items-center gap-2 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />
                 <span className="text-xs font-semibold text-foreground/30 font-body uppercase tracking-[0.15em]">
