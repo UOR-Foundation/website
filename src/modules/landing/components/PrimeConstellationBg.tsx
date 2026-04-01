@@ -13,46 +13,43 @@ function sievePrimes(max: number): Set<number> {
 }
 
 /* ── Ulam spiral coordinate mapping ──────────────────────────── */
-// Maps integer n (1-based) to (x, y) on a rectangular spiral
-// 1 is at origin, then right, up, left, left, down, down, right, right, right…
 function ulamCoords(n: number): [number, number] {
   if (n === 1) return [0, 0];
-  // Which "shell" (layer) is n in?
   const k = Math.ceil((Math.sqrt(n) - 1) / 2);
-  const m = (2 * k + 1) ** 2; // max number in this shell
-  const side = 2 * k; // length of a side in this shell
+  const m = (2 * k + 1) ** 2;
+  const side = 2 * k;
 
   if (n > m - side) {
-    // bottom side (moving right)
     return [-k + (n - (m - side)), -k];
   } else if (n > m - 2 * side) {
-    // right side (moving down)
     return [k, k - (n - (m - 2 * side))];
   } else if (n > m - 3 * side) {
-    // top side (moving left)
     return [k - (n - (m - 3 * side)), k];
   } else {
-    // left side (moving up)
     return [-k, -k + (n - (m - 4 * side))];
   }
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const MAX_N = 40000;
-const ROTATION_SPEED = 0.00008; // rad per frame — very slow, meditative
+const MAX_N = 28000;
+const ROTATION_SPEED = 0.00006;
 const GOLD = "38, 65%, 55%";
 
-// Scroll thresholds
-const SCROLL_START = 0.05; // start revealing at 5% scroll
-const SCROLL_FULL = 0.55; // fully revealed by 55%
+// Scroll thresholds — starts revealing at 8%, peaks at 50%
+const SCROLL_START = 0.08;
+const SCROLL_FULL = 0.50;
 
-const BASE_DOT_R = 0.8;
-const PEAK_DOT_R = 1.6;
-const PEAK_ALPHA = 0.07;
+// Dot sizing
+const BASE_DOT_R = 1.0;
+const PEAK_DOT_R = 2.2;
+const PEAK_ALPHA = 0.28; // Much more visible as an overlay
 
 // Constellation lines
-const LINE_ALPHA_MULT = 0.3; // lines are fainter than dots
-const MAX_LINE_DIST = 3; // max grid distance for constellation lines
+const LINE_ALPHA_MULT = 0.25;
+const MAX_LINE_DIST = 2;
+
+// Glow pulsation
+const PULSE_SPEED = 0.0004;
 
 /* ── Pre-compute prime positions ─────────────────────────────── */
 const primes = sievePrimes(MAX_N);
@@ -64,7 +61,7 @@ for (let n = 2; n <= MAX_N; n++) {
   }
 }
 
-// Pre-compute constellation edges (adjacent primes within MAX_LINE_DIST on the grid)
+// Pre-compute constellation edges
 const constellationEdges: Array<[number, number]> = [];
 for (let i = 0; i < primePositions.length; i++) {
   for (let j = i + 1; j < primePositions.length; j++) {
@@ -82,6 +79,7 @@ const PrimeConstellationBg = () => {
   const rafRef = useRef(0);
   const angleRef = useRef(0);
   const scrollRef = useRef(0);
+  const timeRef = useRef(0);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -98,90 +96,85 @@ const PrimeConstellationBg = () => {
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
 
-    // Calculate scroll progress
     const scrollFrac = scrollRef.current;
-    const t = Math.min(
-      1,
-      Math.max(0, (scrollFrac - SCROLL_START) / (SCROLL_FULL - SCROLL_START))
-    );
+    const t = Math.min(1, Math.max(0, (scrollFrac - SCROLL_START) / (SCROLL_FULL - SCROLL_START)));
+    const easedT = t * t * (3 - 2 * t);
 
-    // Ease in with cubic
-    const easedT = t * t * (3 - 2 * t); // smoothstep
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Skip drawing if invisible
     if (easedT < 0.001) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       angleRef.current += ROTATION_SPEED;
+      timeRef.current += PULSE_SPEED;
       rafRef.current = requestAnimationFrame(draw);
       return;
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
 
     const cx = w * 0.5;
     const cy = h * 0.5;
 
-    // Scale so spiral fills roughly the viewport
+    // Scale so spiral fills the viewport nicely
     const minDim = Math.min(w, h);
-    const spacing = minDim / (Math.sqrt(MAX_N) * 0.52);
+    const spacing = minDim / (Math.sqrt(MAX_N) * 0.48);
 
     const globalAngle = angleRef.current;
     const cosA = Math.cos(globalAngle);
     const sinA = Math.sin(globalAngle);
 
-    const alpha = easedT * PEAK_ALPHA;
-    const dotR = BASE_DOT_R + easedT * (PEAK_DOT_R - BASE_DOT_R);
+    // Subtle breathing pulse
+    const pulse = 1 + 0.08 * Math.sin(timeRef.current);
+    const alpha = easedT * PEAK_ALPHA * pulse;
+    const dotR = (BASE_DOT_R + easedT * (PEAK_DOT_R - BASE_DOT_R)) * pulse;
 
-    // Transform grid coords to screen coords with rotation
     const toScreen = (gx: number, gy: number): [number, number] => {
       const rx = gx * cosA - gy * sinA;
       const ry = gx * sinA + gy * cosA;
       return [cx + rx * spacing, cy + ry * spacing];
     };
 
-    // Draw constellation lines first (behind dots)
-    if (easedT > 0.15) {
-      const lineAlpha = alpha * LINE_ALPHA_MULT * Math.min(1, (easedT - 0.15) / 0.3);
+    // Draw constellation lines
+    if (easedT > 0.1) {
+      const lineAlpha = alpha * LINE_ALPHA_MULT * Math.min(1, (easedT - 0.1) / 0.25);
       ctx.strokeStyle = `hsla(${GOLD}, ${lineAlpha})`;
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 0.4;
       ctx.beginPath();
       for (let e = 0; e < constellationEdges.length; e++) {
         const [i, j] = constellationEdges[e];
         const [x1, y1] = toScreen(primePositions[i].x, primePositions[i].y);
         const [x2, y2] = toScreen(primePositions[j].x, primePositions[j].y);
-        // Cull if both endpoints are off-screen
         if (
-          (x1 < -10 && x2 < -10) ||
-          (x1 > w + 10 && x2 > w + 10) ||
-          (y1 < -10 && y2 < -10) ||
-          (y1 > h + 10 && y2 > h + 10)
-        )
-          continue;
+          (x1 < -10 && x2 < -10) || (x1 > w + 10 && x2 > w + 10) ||
+          (y1 < -10 && y2 < -10) || (y1 > h + 10 && y2 > h + 10)
+        ) continue;
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
       }
       ctx.stroke();
     }
 
-    // Draw prime dots
-    ctx.fillStyle = `hsla(${GOLD}, ${alpha})`;
+    // Draw prime dots with a warm glow
     for (let i = 0; i < primePositions.length; i++) {
       const p = primePositions[i];
       const [x, y] = toScreen(p.x, p.y);
-
-      // Cull off-screen
       if (x < -5 || x > w + 5 || y < -5 || y > h + 5) continue;
 
+      // Larger primes glow slightly brighter (twin primes, etc.)
+      const isTwin = primes.has(p.n + 2) || primes.has(p.n - 2);
+      const dotAlpha = isTwin ? alpha * 1.4 : alpha;
+      const r = isTwin ? dotR * 1.3 : dotR;
+
       ctx.beginPath();
-      ctx.arc(x, y, dotR, 0, Math.PI * 2);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${GOLD}, ${dotAlpha})`;
       ctx.fill();
     }
 
     ctx.restore();
 
     angleRef.current += ROTATION_SPEED;
+    timeRef.current += PULSE_SPEED;
     rafRef.current = requestAnimationFrame(draw);
   }, []);
 
@@ -207,7 +200,6 @@ const PrimeConstellationBg = () => {
 
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
-
     rafRef.current = requestAnimationFrame(draw);
 
     return () => {
@@ -220,7 +212,7 @@ const PrimeConstellationBg = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-0 pointer-events-none"
+      className="fixed inset-0 z-[5] pointer-events-none"
       aria-hidden="true"
     />
   );
