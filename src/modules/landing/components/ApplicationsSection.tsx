@@ -18,7 +18,7 @@ const applications: Application[] = [
     icon: Globe,
     title: "Semantic Web",
     description:
-      "Make data understandable by both people and machines, so systems can work together without custom translations.",
+      "Make data understandable by both people and machines, so systems can work together without custom translations or middleware.",
     systemId: "sys.semantic-web.v1",
   },
   {
