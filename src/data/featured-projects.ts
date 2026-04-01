@@ -15,7 +15,7 @@ export const featuredProjects = [
   {
     name: "Atlas Embeddings",
     category: "Open Science",
-    description: "Research showing that five of the most complex structures in mathematics all come from a single, simple starting point, revealing a deeper shared order.",
+    description: "Research showing that five of the most complex structures in mathematics share a single origin, revealing a deeper order beneath the surface.",
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
