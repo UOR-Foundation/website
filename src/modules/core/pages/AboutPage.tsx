@@ -138,7 +138,7 @@ const About = () => {
                   style={{ animationDelay: `${0.25 + idx * 0.06}s` }}
                 >
                   <span className="text-base font-medium text-foreground font-body">{link.label}</span>
-                  <ExternalLink size={15} className="text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                  <ExternalLink size={15} className="text-foreground/40 group-hover:text-primary transition-colors" />
                 </a>
               ))}
             </div>
