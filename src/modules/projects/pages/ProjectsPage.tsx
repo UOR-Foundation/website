@@ -262,7 +262,7 @@ const Projects = () => {
               return (
                 <div key={stage.level} className="relative flex flex-col">
                   {idx > 0 && (
-                    <div className="md:hidden flex justify-center -mb-1 -mt-1 text-muted-foreground/30">
+                    <div className="md:hidden flex justify-center -mb-1 -mt-1 text-foreground/30">
                       <ChevronRight size={24} className="rotate-90" />
                     </div>
                   )}
@@ -280,7 +280,7 @@ const Projects = () => {
                       }`}>
                         <StageIcon size={20} />
                       </div>
-                      <span className="text-sm font-bold text-muted-foreground/40 font-body uppercase tracking-widest">
+                      <span className="text-sm font-bold text-foreground/40 font-body uppercase tracking-widest">
                         Stage {idx + 1}
                       </span>
                     </div>
