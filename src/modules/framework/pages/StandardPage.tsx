@@ -3,145 +3,18 @@ import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket, Copy
 import { useState, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
-import { quantumLevels } from "@/data/quantum-levels";
-import { closureModes } from "@/data/closure-modes";
-import { signatureOps } from "@/data/signature-ops";
 import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, GITHUB_PRISM_URL } from "@/data/external-links";
 import UORDiagram from "@/modules/framework/components/UORDiagram";
 import FrameworkLayers from "@/modules/framework/components/FrameworkLayers";
 
 const iconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
 
-const MCP_URL = "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp";
-
-const MCP_CONFIG = JSON.stringify({ mcpServers: { uor: { url: MCP_URL } } }, null, 2);
-
-const clients = [
-  {
-    name: "Claude Desktop",
-    file: "claude_desktop_config.json",
-    docsUrl: "https://modelcontextprotocol.io/quickstart/user",
-    steps: [
-      "Open Claude Desktop → Settings → Developer → Edit Config",
-      "Paste the config below and save",
-      "Restart Claude Desktop",
-    ],
-  },
-  {
-    name: "Cursor",
-    file: ".cursor/mcp.json",
-    docsUrl: "https://docs.cursor.com/context/model-context-protocol",
-    steps: [
-      "Open Cursor → Settings → MCP → Add new global MCP server",
-      "Paste the config below and save",
-      "The UOR tools appear automatically",
-    ],
-  },
-  {
-    name: "Windsurf",
-    file: "~/.codeium/windsurf/mcp_config.json",
-    docsUrl: "https://docs.windsurf.com/windsurf/mcp",
-    steps: [
-      "Open Windsurf → Cascade → Click the hammer icon → Configure",
-      "Paste the config below and save",
-      "Restart Windsurf",
-    ],
-  },
-  {
-    name: "VS Code",
-    file: ".vscode/mcp.json",
-    docsUrl: "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
-    steps: [
-      "Open Command Palette → MCP: Add Server → HTTP",
-      'Enter the URL below as the server URL, name it "uor"',
-      "The tools are available in Copilot Chat immediately",
-    ],
-  },
-] as const;
-
-function CopyBtn({ text, label }: { text: string; label?: string }) {
-  const [copied, setCopied] = useState(false);
-  const handle = useCallback(() => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }, [text]);
-  return (
-    <button onClick={handle} className="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-fluid-label font-body font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" aria-label="Copy">
-      {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> {label || "Copy"}</>}
-    </button>
-  );
-}
-
-function McpClientCards() {
-  const [active, setActive] = useState(0);
-  const c = clients[active];
-  return (
-    <div>
-      {/* Client tabs */}
-      <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2 mb-6 pb-1 sm:pb-0 scrollbar-hide">
-        {clients.map((cl, i) => (
-          <button
-            key={cl.name}
-            onClick={() => setActive(i)}
-            className={`px-4 py-2 rounded-full text-fluid-label font-body font-medium transition-colors border ${
-              i === active
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted/40 text-foreground/70 border-border hover:border-primary/40"
-            }`}
-          >
-            {cl.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Steps */}
-      <div className="rounded-2xl border border-border bg-card p-5 md:p-7 mb-5">
-        <ol className="space-y-3 mb-6">
-          {c.steps.map((step, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-                {i + 1}
-              </span>
-              <p className="text-fluid-body font-body text-foreground leading-relaxed">{step}</p>
-            </li>
-          ))}
-        </ol>
-
-        {/* Config block */}
-        <div className="bg-muted/50 rounded-xl p-4 overflow-x-auto mb-4">
-          <pre className="text-fluid-label font-mono text-foreground leading-relaxed">{MCP_CONFIG}</pre>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <CopyBtn text={MCP_CONFIG} label="Copy config" />
-          <CopyBtn text={MCP_URL} label="Copy URL" />
-          <a
-            href={c.docsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-fluid-label font-body text-primary hover:underline"
-          >
-            Full guide <ExternalLink size={13} />
-          </a>
-        </div>
-      </div>
-
-      {/* Tools summary */}
-      <p className="text-fluid-label font-body text-foreground/70 leading-relaxed">
-        <span className="text-foreground font-medium">Five tools:</span>{" "}
-        derive · verify · query · correlate · partition. Every output carries a derivation ID and content-addressed IRI.
-      </p>
-    </div>
-  );
-}
-
 const Standard = () => {
   return (
     <Layout>
-      {/* Hero */}
+      {/* Hero — absorbs "The Problem" */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
           </h1>
@@ -149,7 +22,7 @@ const Standard = () => {
             className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
             style={{ animationDelay: "0.15s" }}
           >
-            A formal specification for content-addressed object spaces. Defines addressing, resolution, verification, and transformation across six layers.
+            A formal specification for content-addressed object spaces. Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export. UOR eliminates this by deriving identity from content structure — the address is the data, so there is nothing to translate.
           </p>
           <div
             className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -170,116 +43,64 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* The Problem */}
+      {/* Content A: How It Works — Diagram + Anatomy merged */}
       <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-            The Problem
-          </p>
-          <div
-            className="pt-8 md:pt-10 max-w-6xl animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <p className="text-foreground font-body text-fluid-body leading-[1.85] md:leading-[1.9] font-medium">
-              Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export.
-            </p>
-            <p className="mt-6 text-foreground/70 font-body text-fluid-body leading-[1.85] md:leading-[1.9]">
-              Every integration layer adds translation code. UOR eliminates this by <span className="text-foreground font-medium">deriving identity from content structure</span>. The address is the data, so there is nothing to translate.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Visual Diagram */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
             How It Works
           </p>
           <UORDiagram />
-        </div>
-      </section>
 
-      {/* Anatomy of an Address */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-            Anatomy of an Address
-          </p>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-            Every piece of data in UOR is described by three coordinates. Together, they tell you everything about what the data is, how complex it is, and what it is made of.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
-              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
-              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
-              </p>
-              <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>
-                <p className="font-mono text-fluid-label text-foreground font-semibold">01010101</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
-              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Weight</h3>
-              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                How many "active" bits are in the value. This is a measure of complexity: a weight of 0 means empty, a weight of 8 means fully packed.
-              </p>
-              <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">85 has four 1-bits</p>
-                <p className="font-mono text-fluid-label text-foreground font-semibold">Weight: 4</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
-              <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
-              <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                Which specific building blocks make up the value. This lets you reconstruct the original from its parts, with nothing lost.
-              </p>
-              <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Active positions</p>
-                <p className="font-mono text-fluid-label text-foreground font-semibold">Positions: 0, 2, 4, 6</p>
-              </div>
-            </div>
-          </div>
-          <p className="text-fluid-label text-foreground/60 font-body leading-relaxed mt-6 max-w-4xl">
-            These three pieces together form a complete fingerprint. Given any two of them, you can derive the third. This is what makes UOR addresses self-verifying: the data proves its own identity.
-          </p>
-        </div>
-      </section>
-
-      {/* Applications */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-            Where It Applies
-          </p>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-            When every system shares one way to address data, new capabilities emerge.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {applications.map((item) => {
-              const Icon = iconMap[item.iconKey];
-              return (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-                >
-                  {Icon && <Icon size={20} className="text-primary mb-4" />}
-                  <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">{item.text}</p>
+          {/* Anatomy of an Address — inline */}
+          <div className="mt-golden-lg pt-golden-lg border-t border-border/40">
+            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+              Anatomy of an Address
+            </p>
+            <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
+              Every piece of data in UOR is described by three coordinates that form a complete, self-verifying fingerprint.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
+                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
+                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
+                  The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
+                </p>
+                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
+                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">01010101</p>
                 </div>
-              );
-            })}
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
+                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Weight</h3>
+                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
+                  How many "active" bits are in the value — a measure of complexity.
+                </p>
+                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
+                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">85 has four 1-bits</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">Weight: 4</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
+                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
+                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
+                  Which specific building blocks make up the value, enabling lossless reconstruction.
+                </p>
+                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
+                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Active positions</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">Positions: 0, 2, 4, 6</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Framework Architecture */}
+      {/* Content B: Architecture & Applications merged */}
       <section id="architecture" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Architecture
           </p>
@@ -287,12 +108,33 @@ const Standard = () => {
             Framework Architecture
           </h2>
           <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-golden-lg">
-            Six layers, each building on the one below it. Together they form a complete system: from the ground rules, to naming, to finding, proving, and transforming data.
+            Six layers, each building on the one below it. Together they form a complete system for naming, finding, proving, and transforming data.
           </p>
           <FrameworkLayers />
+
+          {/* Applications inline */}
+          <div className="mt-golden-lg pt-golden-lg border-t border-border/40">
+            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+              Where It Applies
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+              {applications.map((item) => {
+                const Icon = iconMap[item.iconKey];
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
+                  >
+                    {Icon && <Icon size={20} className="text-primary mb-4" />}
+                    <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">{item.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
-
 
       {/* CTA */}
       <section className="section-dark py-section-sm">
