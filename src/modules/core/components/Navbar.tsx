@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X, Heart, Github, Linkedin } from "lucide-react";
+import { Menu, X, Github, Linkedin } from "lucide-react";
 import uorIcon from "@/assets/uor-icon-new.png";
-import DonatePopup from "@/modules/donate/components/DonatePopup";
 import { navItems } from "@/data/nav-items";
 import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
@@ -11,7 +10,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [donateOpen, setDonateOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -43,7 +41,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               : "bg-transparent"
         }`}
       >
-        {/* SpaceX-style: generous horizontal padding, taller bar, items spread edge-to-edge */}
         <div className="flex items-center justify-between h-[5rem] md:h-[clamp(5rem,6.5vw,7rem)] pt-5 md:pt-[clamp(1.25rem,2vw,2.5rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           {/* Left group: Logo + Nav links */}
           <div className="flex items-center gap-8 lg:gap-[clamp(2rem,2.5vw,4rem)] relative z-[60]">
@@ -75,7 +72,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </nav>
           </div>
 
-          {/* Right group: social icons + donate CTA */}
+          {/* Right group: social icons + Contribute CTA */}
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1.5">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
@@ -94,13 +91,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             >
               Contribute
             </Link>
-            <button
-              onClick={() => setDonateOpen(true)}
-              className="px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out inline-flex items-center cursor-pointer"
-            >
-              <Heart size={12} fill="currentColor" strokeWidth={0} className="mr-2 opacity-60" />
-              Donate
-            </button>
           </div>
 
           <button
@@ -113,7 +103,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
         </div>
       </header>
 
-      {/* Full-screen mobile menu — Foundation-themed with prime stagger */}
+      {/* Full-screen mobile menu */}
       <div
         className={`md:hidden fixed inset-0 z-40 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           mobileOpen
@@ -121,9 +111,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* Backdrop with subtle depth */}
         <div className="absolute inset-0 bg-background" />
-        {/* Faint radial glow — Foundation ambience */}
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
           style={{
@@ -136,7 +124,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
 
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
             {navItems.filter(item => !(item as any).isCta).map((item, idx) => {
-              // φ-based stagger: 100, 162, 262, 424ms
               const phiDelay = Math.round(100 * Math.pow(1.618, idx));
               const sectionNum = idx + 1;
               return (
@@ -169,13 +156,12 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             }`}
             style={{ transitionDelay: mobileOpen ? "450ms" : "0ms" }}
           >
-            <button
-              onClick={() => { setDonateOpen(true); setMobileOpen(false); }}
-              className="w-full max-w-xs py-4 text-[13px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-foreground/20 text-foreground/80 flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.97] transition-all"
+            <Link
+              to="/projects#submit"
+              className="w-full max-w-xs py-4 text-[13px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-primary/60 text-primary flex items-center justify-center gap-2.5 active:scale-[0.97] transition-all"
             >
-              <Heart size={12} fill="currentColor" strokeWidth={0} className="opacity-60" />
-              Donate
-            </button>
+              Contribute
+            </Link>
             <div className="flex items-center justify-center gap-10 py-3">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="Discord">
                 <DiscordIcon size={24} />
@@ -187,15 +173,12 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Linkedin size={24} />
               </a>
             </div>
-            {/* Prime coordinate whisper */}
             <span className="font-mono text-[9px] text-foreground/[0.06] tracking-[0.25em] uppercase select-none pb-2">
               §0 · Navigate
             </span>
           </div>
         </div>
       </div>
-
-      <DonatePopup open={donateOpen} onOpenChange={setDonateOpen} />
     </>
   );
 };
