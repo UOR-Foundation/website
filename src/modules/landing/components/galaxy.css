@@ -63,21 +63,21 @@
    Gold → Violet → Deep Blue gradient
    Echoes Foundation's psychohistory mural */
 .dot:nth-child(1)  { transform: rotate(0deg) translate(120px) scale(1);    border-color: hsla(38, 80%, 60%, 1); }
-.dot:nth-child(2)  { transform: rotate(10.28deg) translate(120px) scale(0.97); border-color: hsla(35, 75%, 58%, 1); }
-.dot:nth-child(3)  { transform: rotate(20.57deg) translate(120px) scale(0.94); border-color: hsla(32, 70%, 56%, 1); }
-.dot:nth-child(4)  { transform: rotate(30.85deg) translate(120px) scale(0.91); border-color: hsla(28, 65%, 54%, 1); }
-.dot:nth-child(5)  { transform: rotate(41.14deg) translate(120px) scale(0.88); border-color: hsla(24, 60%, 52%, 1); }
-.dot:nth-child(6)  { transform: rotate(51.42deg) translate(120px) scale(0.85); border-color: hsla(18, 55%, 50%, 1); }
-.dot:nth-child(7)  { transform: rotate(61.71deg) translate(120px) scale(0.82); border-color: hsla(12, 50%, 48%, 1); }
-.dot:nth-child(8)  { transform: rotate(71.99deg) translate(120px) scale(0.79); border-color: hsla(5, 50%, 46%, 1); }
-.dot:nth-child(9)  { transform: rotate(82.28deg) translate(120px) scale(0.76); border-color: hsla(355, 50%, 48%, 1); }
-.dot:nth-child(10) { transform: rotate(92.56deg) translate(120px) scale(0.73); border-color: hsla(345, 50%, 48%, 1); }
-.dot:nth-child(11) { transform: rotate(102.85deg) translate(120px) scale(0.7); border-color: hsla(335, 50%, 48%, 1); }
-.dot:nth-child(12) { transform: rotate(113.13deg) translate(120px) scale(0.67); border-color: hsla(325, 50%, 48%, 1); }
-.dot:nth-child(13) { transform: rotate(123.42deg) translate(120px) scale(0.64); border-color: hsla(315, 50%, 48%, 1); }
-.dot:nth-child(14) { transform: rotate(133.7deg) translate(120px) scale(0.61); border-color: hsla(305, 50%, 46%, 1); }
-.dot:nth-child(15) { transform: rotate(143.99deg) translate(120px) scale(0.58); border-color: hsla(295, 50%, 45%, 1); }
-.dot:nth-child(16) { transform: rotate(154.27deg) translate(120px) scale(0.55); border-color: hsla(285, 50%, 44%, 1); }
+.dot:nth-child(2)  { transform: rotate(10.28deg) translate(120px) scale(0.97); border-color: hsla(36, 75%, 58%, 1); }
+.dot:nth-child(3)  { transform: rotate(20.57deg) translate(120px) scale(0.94); border-color: hsla(34, 72%, 56%, 1); }
+.dot:nth-child(4)  { transform: rotate(30.85deg) translate(120px) scale(0.91); border-color: hsla(32, 68%, 54%, 1); }
+.dot:nth-child(5)  { transform: rotate(41.14deg) translate(120px) scale(0.88); border-color: hsla(30, 64%, 52%, 1); }
+.dot:nth-child(6)  { transform: rotate(51.42deg) translate(120px) scale(0.85); border-color: hsla(28, 60%, 50%, 1); }
+.dot:nth-child(7)  { transform: rotate(61.71deg) translate(120px) scale(0.82); border-color: hsla(25, 55%, 48%, 1); }
+.dot:nth-child(8)  { transform: rotate(71.99deg) translate(120px) scale(0.79); border-color: hsla(22, 52%, 46%, 1); }
+.dot:nth-child(9)  { transform: rotate(82.28deg) translate(120px) scale(0.76); border-color: hsla(18, 50%, 46%, 1); }
+.dot:nth-child(10) { transform: rotate(92.56deg) translate(120px) scale(0.73); border-color: hsla(14, 48%, 46%, 1); }
+.dot:nth-child(11) { transform: rotate(102.85deg) translate(120px) scale(0.7); border-color: hsla(10, 46%, 46%, 1); }
+.dot:nth-child(12) { transform: rotate(113.13deg) translate(120px) scale(0.67); border-color: hsla(5, 44%, 46%, 1); }
+.dot:nth-child(13) { transform: rotate(123.42deg) translate(120px) scale(0.64); border-color: hsla(0, 42%, 46%, 1); }
+.dot:nth-child(14) { transform: rotate(133.7deg) translate(120px) scale(0.61); border-color: hsla(355, 42%, 44%, 1); }
+.dot:nth-child(15) { transform: rotate(143.99deg) translate(120px) scale(0.58); border-color: hsla(348, 42%, 43%, 1); }
+.dot:nth-child(16) { transform: rotate(154.27deg) translate(120px) scale(0.55); border-color: hsla(340, 40%, 42%, 1); }
 .dot:nth-child(17) { transform: rotate(164.56deg) translate(120px) scale(0.52); border-color: hsla(278, 50%, 44%, 1); }
 .dot:nth-child(18) { transform: rotate(174.84deg) translate(120px) scale(0.49); border-color: hsla(272, 50%, 44%, 1); }
 .dot:nth-child(19) { transform: rotate(185.13deg) translate(120px) scale(0.46); border-color: hsla(266, 50%, 44%, 1); }
