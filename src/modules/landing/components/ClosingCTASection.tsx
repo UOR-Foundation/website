@@ -11,9 +11,9 @@ const ClosingCTASection = () => {
     <section className="py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
-          <h2 className="font-display font-bold text-foreground text-fluid-heading tracking-[0.04em]">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
             Getting Started
-          </h2>
+          </p>
         </div>
 
         {/* Pillars */}
