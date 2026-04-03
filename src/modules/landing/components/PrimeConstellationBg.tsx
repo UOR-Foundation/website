@@ -292,7 +292,7 @@ const PrimeConstellationBg = () => {
           const bx = ax + (starPositions[b].x - ax) * lineT;
           const by = ay + (starPositions[b].y - ay) * lineT;
 
-          const lineAlpha = cT * 0.12 * breathe;
+          const lineAlpha = cT * 0.28 * breathe;
 
           // Traveling pulse along line — Foundation data-flow effect
           const pulsePos = (time * 0.4 + li * 0.5 + ci * 1.2) % 1;
