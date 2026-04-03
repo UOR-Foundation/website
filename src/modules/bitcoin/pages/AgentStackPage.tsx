@@ -1,5 +1,5 @@
 /**
- * Agent Infrastructure Stack — UOR Trust Layer
+ * Agent Infrastructure Stack: UOR Trust Layer
  * ═════════════════════════════════════════════
  *
  * Visualizes UOR as the content-addressed trust layer beneath the
@@ -48,7 +48,7 @@ const AGENT_PROTOCOLS = [
     icon: Wrench,
     color: "text-purple-400",
     tier: "Communication",
-    desc: "Content-addressed tool outputs — provenance tracking for context",
+    desc: "Content-addressed tool outputs: provenance tracking for context",
   },
   {
     key: "mcp-context",
@@ -57,7 +57,7 @@ const AGENT_PROTOCOLS = [
     icon: Wrench,
     color: "text-purple-300",
     tier: "Communication",
-    desc: "Context-block provenance — distinguishes trusted from untrusted content entries",
+    desc: "Context-block provenance: distinguishes trusted from untrusted content entries",
   },
   {
     key: "skill-md",
@@ -84,7 +84,7 @@ const AGENT_PROTOCOLS = [
     icon: MessageSquare,
     color: "text-cyan-300",
     tier: "Communication",
-    desc: "Verifiable task chain — who initiated, what transformed, whether output matches request",
+    desc: "Verifiable task chain: who initiated, what transformed, whether output matches request",
   },
   {
     key: "oasf",
@@ -102,7 +102,7 @@ const AGENT_PROTOCOLS = [
     icon: Bot,
     color: "text-orange-400",
     tier: "AI Models",
-    desc: "Content-addressed model integrity — if a single weight changes, the hash changes",
+    desc: "Content-addressed model integrity: if a single weight changes, the hash changes",
   },
   {
     key: "onnx-op",
@@ -111,7 +111,7 @@ const AGENT_PROTOCOLS = [
     icon: Bot,
     color: "text-orange-300",
     tier: "AI Models",
-    desc: "Operator-level identity — verifiable reuse tracking across models",
+    desc: "Operator-level identity: verifiable reuse tracking across models",
   },
 ] as const;
 
@@ -172,7 +172,7 @@ export default function AgentStackPage() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono mb-4">
               <Bot size={14} />
-              TIER 7 — AGENTIC AI INFRASTRUCTURE
+              TIER 7: AGENTIC AI INFRASTRUCTURE
             </div>
             <h1 className="text-3xl font-bold mb-3">
               Agent Infrastructure Stack
@@ -226,7 +226,7 @@ export default function AgentStackPage() {
                   <Bot size={14} />
                   Agent Protocol Projections
                   <span className="text-xs text-muted-foreground font-normal">
-                    — 6 protocols, one identity
+                   : 6 protocols, one identity
                   </span>
                 </h2>
 

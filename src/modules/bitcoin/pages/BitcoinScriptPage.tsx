@@ -6,9 +6,9 @@
  * with opcode-by-opcode breakdown and copy-to-clipboard.
  *
  * Layers:
- *   L1 OP_RETURN  — On-chain timestamping (bitcoin projection)
- *   L1 HTLC       — Content-gated spending (bitcoin-hashlock projection)
- *   L2 Lightning   — Content-gated micropayments (lightning projection)
+ *   L1 OP_RETURN : On-chain timestamping (bitcoin projection)
+ *   L1 HTLC      : Content-gated spending (bitcoin-hashlock projection)
+ *   L2 Lightning  : Content-gated micropayments (lightning projection)
  */
 
 import { useState, useCallback, useMemo } from "react";
@@ -74,7 +74,7 @@ const OPCODE_COLORS: Record<OpcodeSegment["color"], string> = {
 
 function parseOpReturn(script: string): OpcodeSegment[] {
   return [
-    { hex: "6a",     label: "OP_RETURN",       description: "Marks output as provably unspendable — data carrier only", color: "opcode" },
+    { hex: "6a",     label: "OP_RETURN",       description: "Marks output as provably unspendable: data carrier only", color: "opcode" },
     { hex: "24",     label: "OP_PUSHBYTES_36", description: "Push the next 36 bytes onto the stack (0x24 = 36)", color: "length" },
     { hex: "554f52", label: '"UOR"',           description: "Protocol magic prefix: ASCII 'U'(55) 'O'(4f) 'R'(52)", color: "magic" },
     { hex: script.slice(10), label: "SHA-256 Hash", description: "Full 256-bit UOR canonical identity (32 bytes, lossless)", color: "data" },
@@ -83,9 +83,9 @@ function parseOpReturn(script: string): OpcodeSegment[] {
 
 function parseHashLock(script: string): OpcodeSegment[] {
   return [
-    { hex: "a8",   label: "OP_SHA256",        description: "Hash the top stack item with SHA-256 — identical to UOR's hash function", color: "opcode" },
+    { hex: "a8",   label: "OP_SHA256",        description: "Hash the top stack item with SHA-256: identical to UOR's hash function", color: "opcode" },
     { hex: "20",   label: "OP_PUSHBYTES_32",  description: "Push the next 32 bytes onto the stack (0x20 = 32)", color: "length" },
-    { hex: script.slice(4, 68), label: "SHA-256 Hash", description: "The UOR identity hash — preimage is the URDNA2015 canonical bytes", color: "data" },
+    { hex: script.slice(4, 68), label: "SHA-256 Hash", description: "The UOR identity hash: preimage is the URDNA2015 canonical bytes", color: "data" },
     { hex: "87",   label: "OP_EQUAL",         description: "Compare: SHA256(preimage) === hash? If true, script succeeds", color: "opcode" },
   ];
 }
@@ -94,7 +94,7 @@ function parseLightning(tagged: string): OpcodeSegment[] {
   return [
     { hex: "p",  label: "Tag Type",     description: "BOLT-11 tag 'p' (type=1): payment_hash field", color: "opcode" },
     { hex: "p5", label: "Data Length",   description: "52 five-bit groups (1×32 + 20 = 52, encoding 256 bits)", color: "length" },
-    { hex: tagged.slice(3), label: "Payment Hash (bech32)", description: "256-bit SHA-256 hash in bech32 5-bit encoding — the preimage settles the payment", color: "data" },
+    { hex: tagged.slice(3), label: "Payment Hash (bech32)", description: "256-bit SHA-256 hash in bech32 5-bit encoding: the preimage settles the payment", color: "data" },
   ];
 }
 
@@ -329,7 +329,7 @@ function BitcoinScriptPage() {
               {isValidHex && (
                 <div className="flex items-center gap-2 mt-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-xs text-primary font-mono">Identity locked — 3 projections active</span>
+                  <span className="text-xs text-primary font-mono">Identity locked: 3 projections active</span>
                 </div>
               )}
             </Card>
@@ -374,7 +374,7 @@ function BitcoinScriptPage() {
                 <div className="mt-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="text-xs text-primary font-mono">Identity computed — 3 projections active</span>
+                    <span className="text-xs text-primary font-mono">Identity computed: 3 projections active</span>
                   </div>
                   <div className="rounded-xl border border-border bg-muted/30 p-3">
                     <div className="flex items-center justify-between mb-1">
@@ -424,7 +424,7 @@ function BitcoinScriptPage() {
               <ScriptCard
                 title="OP_RETURN Commitment"
                 icon={FileText}
-                tier="Layer 1 — On-Chain Timestamping"
+                tier="Layer 1: On-Chain Timestamping"
                 spec="BIP-141"
                 specUrl="https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki"
                 rawScript={scripts.bitcoin.value}
@@ -437,26 +437,26 @@ function BitcoinScriptPage() {
               <ScriptCard
                 title="HTLC Hash Lock"
                 icon={Lock}
-                tier="Layer 1 — Content-Gated Spending"
+                tier="Layer 1: Content-Gated Spending"
                 spec="BIP-199"
                 specUrl="https://github.com/bitcoin/bips/blob/master/bip-0199.mediawiki"
                 rawScript={scripts.hashlock.value}
                 segments={parseHashLock(scripts.hashlock.value)}
                 fidelity="LOSSLESS"
-                description="A Bitcoin UTXO locked to a UOR identity. To spend these sats, reveal the URDNA2015 canonical bytes of the object — the content IS the key. Bitcoin's OP_SHA256 performs single SHA-256, identical to UOR's hash function."
+                description="A Bitcoin UTXO locked to a UOR identity. To spend these sats, reveal the URDNA2015 canonical bytes of the object: the content IS the key. Bitcoin's OP_SHA256 performs single SHA-256, identical to UOR's hash function."
               />
 
               {/* L2: Lightning */}
               <ScriptCard
                 title="Lightning Payment Hash"
                 icon={Zap}
-                tier="Layer 2 — Content-Gated Micropayments"
+                tier="Layer 2: Content-Gated Micropayments"
                 spec="BOLT-11"
                 specUrl="https://github.com/lightning/bolts/blob/master/11-payment-encoding.md"
                 rawScript={scripts.lightning.value}
                 segments={parseLightning(scripts.lightning.value)}
                 fidelity="LOSSLESS"
-                description="The BOLT-11 'p' tagged field in native bech32 wire encoding. A Lightning HTLC locked to this hash settles when the UOR canonical bytes are revealed — content delivery IS payment settlement, at sub-second latency."
+                description="The BOLT-11 'p' tagged field in native bech32 wire encoding. A Lightning HTLC locked to this hash settles when the UOR canonical bytes are revealed: content delivery IS payment settlement, at sub-second latency."
               />
 
               {/* Insight panel */}
@@ -470,7 +470,7 @@ function BitcoinScriptPage() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       All three projections embed the <strong className="text-foreground">same 256-bit identity</strong> in
                       three protocol-native formats. Bitcoin's <code className="font-mono text-xs px-1 py-0.5 rounded bg-muted">OP_SHA256</code> opcode
-                      performs single SHA-256 — identical to UOR's canonical hash. No translation layer, no double-hashing,
+                      performs single SHA-256: identical to UOR's canonical hash. No translation layer, no double-hashing,
                       no protocol adapter. The UOR canonical bytes of any object ARE a valid Bitcoin hash-lock preimage.
                       Revealing the object's URDNA2015 form simultaneously <strong className="text-foreground">proves its identity</strong> and{" "}
                       <strong className="text-foreground">settles the payment</strong>.

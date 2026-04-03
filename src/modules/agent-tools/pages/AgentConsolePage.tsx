@@ -455,7 +455,7 @@ const AgentConsolePage = () => {
             Agent Console
           </h1>
           <p className="text-muted-foreground mb-8 max-w-2xl">
-            The 5 canonical tool functions plus the 8-stage resolution cycle — the "system calls" of the Semantic Web.
+            The 5 canonical tool functions plus the 8-stage resolution cycle: the "system calls" of the Semantic Web.
             Each tool produces a self-verified canonical receipt.
           </p>
 

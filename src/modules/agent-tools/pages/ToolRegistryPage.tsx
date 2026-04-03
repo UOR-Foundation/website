@@ -83,10 +83,10 @@ function MorphismHierarchy() {
   return (
     <section className="mb-16">
       <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-foreground mb-2">Morphism Hierarchy</h2>
-      <p className="text-muted-foreground text-sm mb-6">Whitepaper §3.4 — exact ontological structure</p>
+      <p className="text-muted-foreground text-sm mb-6">Whitepaper §3.4: exact ontological structure</p>
       <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm leading-relaxed">
         <div className="text-foreground">
-          <span className="text-primary font-bold">morphism:Transform</span> <span className="text-muted-foreground">(root — maps between UOR objects)</span>
+          <span className="text-primary font-bold">morphism:Transform</span> <span className="text-muted-foreground">(root, maps between UOR objects)</span>
         </div>
         <div className="ml-4 border-l-2 border-border pl-4 mt-1 space-y-1">
           <div>
