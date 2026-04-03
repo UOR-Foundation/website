@@ -125,6 +125,24 @@ const HeroSection = () => {
           </div>
         </div>
         <div className="flex-1" />
+
+        {/* Stats bar — desktop */}
+        <div
+          className="w-full flex justify-center gap-10 lg:gap-14 pb-[clamp(2rem,3vh,3.5rem)] animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0.75s" }}
+        >
+          {[
+            { value: "11", label: "Projects" },
+            { value: "150+", label: "Contributors" },
+            { value: "12", label: "Research Areas" },
+            { value: "Open", label: "Governance" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="font-display font-bold text-foreground text-[clamp(1.75rem,2.5vw,3rem)] leading-none">{stat.value}</p>
+              <p className="font-body text-foreground/40 text-fluid-label uppercase tracking-[0.15em] mt-1.5">{stat.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
     </section>
