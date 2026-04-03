@@ -306,7 +306,7 @@ const PrimeConstellationBg = () => {
           grad.addColorStop(1, `hsla(${baseHue}, ${lineAlpha * 0.1})`);
 
           ctx.strokeStyle = grad;
-          ctx.lineWidth = (0.4 + 0.15 * breathe) * lineT;
+          ctx.lineWidth = (0.7 + 0.3 * breathe) * lineT;
           ctx.beginPath();
           ctx.moveTo(ax, ay);
           ctx.lineTo(bx, by);
