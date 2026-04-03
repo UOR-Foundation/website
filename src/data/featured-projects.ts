@@ -6,6 +6,7 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 export const featuredProjects = [
   {
     name: "Hologram",
+    slug: "hologram",
     category: "Systems",
     description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required, no special infrastructure needed.",
     maturity: "Sandbox" as MaturityLevel,
@@ -14,6 +15,7 @@ export const featuredProjects = [
   },
   {
     name: "Atlas Embeddings",
+    slug: "atlas-embeddings",
     category: "Open Science",
     description: "Research showing that five of the most complex structures in mathematics share a single origin, revealing a deeper order beneath the surface.",
     maturity: "Sandbox" as MaturityLevel,
@@ -22,6 +24,7 @@ export const featuredProjects = [
   },
   {
     name: "UOR MCP",
+    slug: "uor-mcp",
     category: "Developer Tools",
     description: "A server that connects AI models to the UOR kernel. Every response is cryptographically verified, auditable, and fully reproducible.",
     maturity: "Sandbox" as MaturityLevel,

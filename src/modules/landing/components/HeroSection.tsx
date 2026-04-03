@@ -95,7 +95,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            A nonprofit home for open-source projects building universal data identity. Learn the framework, connect with contributors, and build together.
+            We support open-source projects that give data a permanent, verifiable address. Learn the framework, connect with contributors, and start building.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"

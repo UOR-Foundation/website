@@ -62,6 +62,55 @@ const Research = () => {
         </div>
       </section>
 
+      {/* How to Participate */}
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+            Get Involved
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            How to Participate
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {[
+              { title: "Discuss", description: "Join Discord, ask questions, share ideas, and connect with other contributors.", href: DISCORD_URL, cta: "Join Discord", external: true },
+              { title: "Contribute", description: "Pick a project on GitHub, check open issues, and open your first pull request.", href: GITHUB_ORG_URL, cta: "Browse Projects", external: true },
+              { title: "Research", description: "Propose a paper, collaborate on validation, and publish results in the open.", href: "#research", cta: "Explore Research", external: false },
+            ].map((path, idx) => (
+              path.external ? (
+                <a
+                  key={path.title}
+                  href={path.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col rounded-xl border border-border bg-card p-6 md:p-8 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{path.title}</h3>
+                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{path.description}</p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
+                    {path.cta} <ArrowRight size={13} />
+                  </span>
+                </a>
+              ) : (
+                <a
+                  key={path.title}
+                  href={path.href}
+                  className="group flex flex-col rounded-xl border border-border bg-card p-6 md:p-8 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{path.title}</h3>
+                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{path.description}</p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
+                    {path.cta} <ArrowRight size={13} />
+                  </span>
+                </a>
+              )
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Content A: Research */}
       <section id="research" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
