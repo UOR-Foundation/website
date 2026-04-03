@@ -2,10 +2,6 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { featuredProjects, type MaturityLevel } from "@/data/featured-projects";
 import { teamMembers } from "@/data/team-members";
-import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
-import highlightSemanticWeb from "@/assets/highlight-semantic-web.jpg";
-import { highlights } from "@/data/highlights";
 
 const maturityDotColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary",
