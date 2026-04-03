@@ -92,9 +92,9 @@ const HeroSection = () => {
         <div
           className="absolute right-0 top-1/2 -translate-y-1/2"
           style={{
-            width: "min(68vw, 110vh)",
-            height: "min(68vw, 110vh)",
-            marginRight: "clamp(-8%, 0vw, 2%)",
+            width: "min(85vw, 137vh)",
+            height: "min(85vw, 137vh)",
+            marginRight: "clamp(-15%, -2vw, 0%)",
           }}
         >
           <GalaxyAnimation />
