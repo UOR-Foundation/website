@@ -1,25 +1,55 @@
-import { useState, useEffect } from "react";
-
-const TOTAL_DOTS = 8;
+import { useState, useEffect, useCallback } from "react";
 
 const ScrollProgress = () => {
-  const [progress, setProgress] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [sectionCount, setSectionCount] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = docHeight > 0 ? scrollTop / docHeight : 0;
-      setProgress(Math.min(scrollPercent, 1));
-      setVisible(scrollTop > 100);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const update = useCallback(() => {
+    const sections = document.querySelectorAll("main section");
+    const count = sections.length;
+    if (count !== sectionCount) setSectionCount(count);
+    if (count === 0) return;
 
-  const activeDot = progress * (TOTAL_DOTS - 1);
+    setVisible(window.scrollY > 100);
+
+    // Find which section is most in view
+    const vh = window.innerHeight;
+    let bestIdx = 0;
+    let bestScore = -Infinity;
+
+    sections.forEach((sec, i) => {
+      const rect = sec.getBoundingClientRect();
+      // How much of the viewport center this section covers
+      const top = Math.max(rect.top, 0);
+      const bottom = Math.min(rect.bottom, vh);
+      const visible = Math.max(0, bottom - top);
+      // Bias toward sections whose top is near viewport top
+      const centerBias = 1 - Math.abs(rect.top + rect.height / 2 - vh * 0.4) / vh;
+      const score = visible + centerBias * 200;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    });
+
+    setActiveIndex(bestIdx);
+  }, [sectionCount]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", update, { passive: true });
+    // Re-detect on route change / content change
+    const observer = new MutationObserver(update);
+    const main = document.querySelector("main");
+    if (main) observer.observe(main, { childList: true, subtree: true });
+    update();
+    return () => {
+      window.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [update]);
+
+  if (sectionCount < 2) return null;
 
   return (
     <div
@@ -27,26 +57,31 @@ const ScrollProgress = () => {
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
-      {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
-        const distance = Math.abs(i - activeDot);
-        const isActive = distance < 0.6;
-        const isNear = distance < 1.4;
-        const isPast = i <= activeDot;
+      {Array.from({ length: sectionCount }).map((_, i) => {
+        const isActive = i === activeIndex;
+        const isPast = i < activeIndex;
 
         return (
-          <div
+          <button
             key={i}
-            className="transition-all duration-300 ease-out rounded-full"
+            onClick={() => {
+              const sections = document.querySelectorAll("main section");
+              sections[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="transition-all duration-300 ease-out rounded-full cursor-pointer"
             style={{
-              width: isActive ? 7 : isNear ? 5 : 4,
-              height: isActive ? 7 : isNear ? 5 : 4,
+              width: isActive ? 7 : 4,
+              height: isActive ? 7 : 4,
               backgroundColor: isActive
                 ? "hsl(0 0% 100%)"
                 : isPast
                   ? "hsl(0 0% 100% / 0.35)"
                   : "hsl(0 0% 100% / 0.1)",
               boxShadow: isActive ? "0 0 8px hsl(0 0% 100% / 0.3)" : "none",
+              border: "none",
+              padding: 0,
             }}
+            aria-label={`Scroll to section ${i + 1}`}
           />
         );
       })}
