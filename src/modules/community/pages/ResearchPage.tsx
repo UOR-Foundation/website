@@ -1,27 +1,20 @@
-import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { BookOpen, Calendar, ExternalLink, ArrowRight, Cpu, Shield, Calculator, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf, Plus } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Calendar, ExternalLink, ArrowRight, Plus } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
-import { researchCategories } from "@/data/research-categories";
 import { blogPosts } from "@/data/blog-posts";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
-
-const iconMap: Record<string, LucideIcon> = {
-  Calculator, Cpu, Shield, TrendingUp, Bot, Atom, BarChart3, HeartPulse, Globe, Microscope, Rocket, Leaf,
-};
+import { categoryResearch } from "@/data/research-papers";
+import { events } from "@/data/events";
+import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 
 const coverMap: Record<string, string> = {
   knowledgeGraph: blogKnowledgeGraph,
   goldenSeed: blogGoldenSeed,
   frameworkLaunch: blogFrameworkLaunch,
 };
-
-import { categoryResearch } from "@/data/research-papers";
-import { events } from "@/data/events";
 
 const tagStyles: Record<string, string> = {
   "Open Research": "bg-primary/10 text-primary",
@@ -33,10 +26,10 @@ const tagStyles: Record<string, string> = {
   Conference: "bg-primary/8 text-primary/80 border border-primary/15",
 };
 
-const Research = () => {
-  const [selectedCategory, setSelectedCategory] = useState("mathematics");
-  const highlights = categoryResearch[selectedCategory] || [];
+/* Flatten all published research into a single list */
+const allPapers = Object.values(categoryResearch).flat();
 
+const Research = () => {
   return (
     <Layout>
       {/* Hero */}
@@ -46,168 +39,159 @@ const Research = () => {
             Community
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Propose ideas, review work, and ship projects in the open.
+            Propose ideas, contribute code, review research, and ship projects in the open.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
-            <a href="#research" className="btn-primary">
-              Explore Research
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <DiscordIcon size={16} />
+              Join Discord
             </a>
-            <a href="#join" className="btn-outline">
-              Join the Community
+            <a
+              href={GITHUB_ORG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-outline"
+            >
+              Contribute on GitHub
             </a>
           </div>
         </div>
       </section>
 
-      {/* How to Participate */}
+      {/* Get Involved */}
       <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Get Involved
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
-            How to Participate
+            Start Contributing
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {[
-              { title: "Discuss", description: "Join Discord, ask questions, share ideas, and connect with other contributors.", href: DISCORD_URL, cta: "Join Discord", external: true },
-              { title: "Contribute", description: "Pick a project on GitHub, check open issues, and open your first pull request.", href: GITHUB_ORG_URL, cta: "Browse Projects", external: true },
-              { title: "Research", description: "Propose a paper, collaborate on validation, and publish results in the open.", href: "#research", cta: "Explore Research", external: false },
+              {
+                title: "Discuss",
+                description: "Ask questions, share ideas, and connect with contributors on Discord.",
+                href: DISCORD_URL,
+                cta: "Join Discord",
+                external: true,
+              },
+              {
+                title: "Contribute",
+                description: "Browse open issues, submit pull requests, and review code on GitHub.",
+                href: GITHUB_ORG_URL,
+                cta: "Browse Projects",
+                external: true,
+              },
+              {
+                title: "Propose Research",
+                description: "Submit a paper, get peer review, and publish results openly.",
+                href: GITHUB_RESEARCH_URL,
+                cta: "View Research Repo",
+                external: true,
+              },
             ].map((path, idx) => (
-              path.external ? (
-                <a
-                  key={path.title}
-                  href={path.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col rounded-xl border border-border bg-card p-6 md:p-8 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{path.title}</h3>
-                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{path.description}</p>
-                  <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
-                    {path.cta} <ArrowRight size={13} />
-                  </span>
-                </a>
-              ) : (
-                <a
-                  key={path.title}
-                  href={path.href}
-                  className="group flex flex-col rounded-xl border border-border bg-card p-6 md:p-8 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{path.title}</h3>
-                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{path.description}</p>
-                  <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
-                    {path.cta} <ArrowRight size={13} />
-                  </span>
-                </a>
-              )
+              <a
+                key={path.title}
+                href={path.href}
+                target={path.external ? "_blank" : undefined}
+                rel={path.external ? "noopener noreferrer" : undefined}
+                className="group flex flex-col rounded-xl border border-border bg-card p-6 md:p-8 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {path.title}
+                </h3>
+                <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">
+                  {path.description}
+                </p>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
+                  {path.cta} <ArrowRight size={13} />
+                </span>
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Content A: Research */}
+      {/* Research */}
       <section id="research" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
             Open Research
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
-            Research Areas
+            Published Research
           </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-            Find your discipline, validate ideas, and collaborate on{" "}
-            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Discord</a>.
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-10">
+            Peer-reviewed papers from the community. All results are reproducible and openly licensed.
           </p>
 
-          <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-2.5 sm:gap-3 mb-10 pb-2 sm:pb-0 -mx-1.5 px-1.5 sm:mx-0 sm:px-0 justify-start sm:justify-center scrollbar-hide">
-            {researchCategories.map((cat, index) => {
-              const isSelected = cat.slug === selectedCategory;
-              const isDisabled = !cat.active;
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            {allPapers.map((item, index) => {
+              const isInternal = item.href.startsWith("/");
+              const CardWrapper = isInternal ? Link : "a";
+              const linkProps = isInternal
+                ? { to: item.href }
+                : { href: item.href, target: "_blank", rel: "noopener noreferrer" };
               return (
-                <button
-                  key={cat.slug}
-                  onClick={() => cat.active && setSelectedCategory(cat.slug)}
-                  disabled={isDisabled}
-                  className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-full border transition-all duration-200 animate-fade-in-up text-fluid-label font-medium font-body whitespace-nowrap ${
-                    isSelected
-                      ? "border-primary bg-primary/10 text-primary shadow-sm"
-                      : isDisabled
-                      ? "border-border/30 bg-card/40 text-foreground/45 cursor-default"
-                      : "border-border bg-card hover:border-primary/25 hover:shadow-sm cursor-pointer text-foreground"
-                  }`}
-                  style={{ animationDelay: `${index * 0.04}s` }}
+                <CardWrapper
+                  key={item.title}
+                  {...(linkProps as any)}
+                  className="group flex flex-col rounded-xl border border-border bg-card p-6 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  {(() => { const Icon = iconMap[cat.iconKey]; return Icon ? <Icon size={15} className={isSelected ? "text-primary" : isDisabled ? "text-foreground/40" : "text-primary"} /> : null; })()}
-                  <span>{cat.label}</span>
-                </button>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-fluid-caption font-medium font-body ${
+                      item.status === "Published" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-fluid-body-sm font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
+                    {item.title}
+                  </h3>
+                  <p className="text-fluid-caption text-foreground/55 font-body mb-3">{item.authors}</p>
+                  <p className="text-fluid-label text-foreground/70 font-body leading-relaxed flex-1">
+                    {item.description}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
+                    View research <ArrowRight size={13} />
+                  </span>
+                </CardWrapper>
               );
             })}
+
+            {/* Submit card */}
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-primary/20 bg-primary/[0.03] p-6 hover:border-primary/40 hover:bg-primary/[0.06] transition-all duration-300 animate-fade-in-up opacity-0"
+              style={{ animationDelay: `${allPapers.length * 0.1}s` }}
+            >
+              <div className="w-9 h-9 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center mb-4 group-hover:border-primary/40 group-hover:bg-primary/10 transition-all duration-300">
+                <Plus size={16} className="text-primary/60 group-hover:text-primary transition-colors duration-200" />
+              </div>
+              <h3 className="font-display text-fluid-body-sm font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
+                Submit Your Research
+              </h3>
+              <p className="text-fluid-label text-foreground/70 font-body leading-relaxed max-w-[240px]">
+                Share your work with the community for validation and collaboration.
+              </p>
+              <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-primary/60 group-hover:text-primary transition-colors duration-200 font-body">
+                Submit now <ArrowRight size={13} />
+              </span>
+            </a>
           </div>
-
-          {highlights.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-              {highlights.map((item, index) => {
-                const isInternal = item.href.startsWith("/");
-                const CardWrapper = isInternal ? Link : "a";
-                const linkProps = isInternal
-                  ? { to: item.href }
-                  : { href: item.href, target: "_blank", rel: "noopener noreferrer" };
-                return (
-                  <CardWrapper
-                    key={item.title}
-                    {...(linkProps as any)}
-                    className="group flex flex-col rounded-xl border border-border bg-card p-6 hover:border-primary/20 hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-fluid-caption font-medium font-body ${
-                        item.status === "Published" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
-                      }`}>
-                        {item.status}
-                      </span>
-                    </div>
-                    <h3 className="font-display text-fluid-body-sm font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
-                      {item.title}
-                    </h3>
-                    <p className="text-fluid-caption text-foreground/55 font-body mb-3">{item.authors}</p>
-                    <p className="text-fluid-label text-foreground/70 font-body leading-relaxed flex-1">
-                      {item.description}
-                    </p>
-                    <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
-                      View research <ArrowRight size={13} />
-                    </span>
-                  </CardWrapper>
-                );
-              })}
-
-              <a
-                href={DISCORD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-primary/20 bg-primary/[0.03] p-6 hover:border-primary/40 hover:bg-primary/[0.06] transition-all duration-300 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${highlights.length * 0.1}s` }}
-              >
-                <div className="w-9 h-9 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center mb-4 group-hover:border-primary/40 group-hover:bg-primary/10 transition-all duration-300">
-                  <Plus size={16} className="text-primary/60 group-hover:text-primary transition-colors duration-200" />
-                </div>
-                <h3 className="font-display text-fluid-body-sm font-semibold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200">
-                  Submit Your Research
-                </h3>
-                <p className="text-fluid-label text-foreground/70 font-body leading-relaxed max-w-[240px]">
-                  Share your work with the community for validation and collaboration.
-                </p>
-                <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-medium text-primary/60 group-hover:text-primary transition-colors duration-200 font-body">
-                  Submit now <ArrowRight size={13} />
-                </span>
-              </a>
-            </div>
-          )}
 
           <a
             href={GITHUB_RESEARCH_URL}
@@ -215,23 +199,22 @@ const Research = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-fluid-label font-medium text-primary hover:underline font-body transition-colors"
           >
-            View our research on GitHub <ExternalLink size={14} />
+            View all research on GitHub <ExternalLink size={14} />
           </a>
         </div>
       </section>
 
-      {/* Content B: Blog & Events merged */}
+      {/* Blog */}
       <section id="blog" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-            Blog & Events
+            Blog
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
-            Highlights & Upcoming
+            Latest Posts
           </h2>
 
-          {/* Blog posts */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-golden-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {blogPosts.map((post, index) => (
               <Link
                 key={post.title}
@@ -263,69 +246,75 @@ const Research = () => {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Events — inline */}
-          <div className="pt-golden-lg border-t border-border/40">
-            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-6">
-              Upcoming Events
-            </p>
-            <div className="space-y-0">
-              {events.map((event, index) => (
-                <div
-                  key={event.title}
-                  className="animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {index === 0 && <div className="h-px w-full bg-border" />}
-                  <div className="group py-6 md:py-8 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
-                    <div>
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className={`px-3 py-1 rounded-full text-fluid-caption font-medium font-body ${tagStyles[event.type]}`}>
-                          {event.type}
-                        </span>
-                      </div>
-                      <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
-                        {event.title}
-                      </h3>
-                      <p className="text-foreground/70 font-body text-fluid-body leading-relaxed">
-                        {event.location}
-                        {event.link && (
-                          <>
-                            {" · "}
-                            <a href={event.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-                              Join on Discord
-                            </a>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 md:mt-1">
-                      <span className="text-fluid-label font-medium text-foreground/55 font-body flex items-center gap-2">
-                        <Calendar size={14} />
-                        {event.date}
+      {/* Events */}
+      <section id="events" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+            Events
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Upcoming
+          </h2>
+
+          <div className="space-y-0">
+            {events.map((event, index) => (
+              <div
+                key={event.title}
+                className="animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {index === 0 && <div className="h-px w-full bg-border" />}
+                <div className="group py-6 md:py-8 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`px-3 py-1 rounded-full text-fluid-caption font-medium font-body ${tagStyles[event.type]}`}>
+                        {event.type}
                       </span>
-                      {event.calendarDate && (
-                        <a
-                          href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-fluid-caption font-medium text-primary hover:underline font-body flex items-center gap-1.5"
-                        >
-                          <ExternalLink size={11} />
-                          Add to Calendar
-                        </a>
-                      )}
                     </div>
+                    <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
+                      {event.title}
+                    </h3>
+                    <p className="text-foreground/70 font-body text-fluid-body leading-relaxed">
+                      {event.location}
+                      {event.link && (
+                        <>
+                          {" · "}
+                          <a href={event.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                            Join on Discord
+                          </a>
+                        </>
+                      )}
+                    </p>
                   </div>
-                  <div className="h-px w-full bg-border" />
+                  <div className="flex flex-col items-end gap-2 md:mt-1">
+                    <span className="text-fluid-label font-medium text-foreground/55 font-body flex items-center gap-2">
+                      <Calendar size={14} />
+                      {event.date}
+                    </span>
+                    {event.calendarDate && (
+                      <a
+                        href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-fluid-caption font-medium text-primary hover:underline font-body flex items-center gap-1.5"
+                      >
+                        <ExternalLink size={11} />
+                        Add to Calendar
+                      </a>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="h-px w-full bg-border" />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA: Join */}
+      {/* CTA */}
       <section id="join" className="section-dark py-section-sm scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl text-center">
           <h2 className="font-display text-fluid-heading font-bold mb-6">
