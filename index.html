@@ -139,11 +139,19 @@
           "url": "https://uor.foundation",
           "publisher": { "@id": "https://uor.foundation/#org" },
           "description": "Universal Object Reference — an open data standard for content-addressed, algebraically-structured object spaces.",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://uor.foundation/?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
+          "potentialAction": [
+            {
+              "@type": "SearchAction",
+              "target": "https://uor.foundation/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            },
+            {
+              "@type": "ReadAction",
+              "target": "https://uor.foundation/llms.md",
+              "name": "Agent Onboarding",
+              "description": "Canonical machine-readable entry point for AI agents and LLMs. Contains Quick Start, six-layer architecture, API examples, and tool-calling endpoints."
+            }
+          ]
         },
         {
           "@type": "SiteNavigationElement",
