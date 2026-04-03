@@ -4,7 +4,7 @@
  */
 export const researchCategories = [
   { iconKey: "Calculator", label: "Mathematics", slug: "mathematics", description: "The mathematical structures that UOR is built on. Proofs, algebra, and formal verification.", active: true },
-  { iconKey: "Cpu", label: "Hardware & Robotics", slug: "hardware-robotics", description: "Running UOR on physical devices — embedded systems, sensors, and robotics.", active: false },
+  { iconKey: "Cpu", label: "Hardware & Robotics", slug: "hardware-robotics", description: "Running UOR on physical devices: embedded systems, sensors, and robotics.", active: false },
   { iconKey: "Shield", label: "Cybersecurity", slug: "cybersecurity", description: "Security that is built into the data itself. Verify where information came from and confirm it has not been altered.", active: false },
   { iconKey: "TrendingUp", label: "Finance", slug: "finance", description: "Financial systems where every transaction is independently auditable and data flows reliably between institutions.", active: false },
   { iconKey: "Bot", label: "Agentic AI", slug: "agentic-ai", description: "Give AI systems a reliable, shared map of data so they can find, verify, and use information without custom integrations.", active: false },

@@ -399,7 +399,7 @@ const ApiPage = () => {
             <section id="overview" className="scroll-mt-28 mb-14">
               <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">UOR Framework API</h1>
               <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mb-6">
-                A content-addressed computation substrate you can call from any language. Every endpoint is deterministic — same input, same output, every time, on any machine. No account required. No API key needed.
+                A content-addressed computation substrate you can call from any language. Every endpoint is deterministic. Same input, same output, every time, on any machine. No account required. No API key needed.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
@@ -480,7 +480,7 @@ const ApiPage = () => {
             <section id="authentication" className="scroll-mt-28 mb-14">
               <h2 className="font-display text-2xl font-bold text-foreground mb-2">Authentication</h2>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mb-4">
-                All GET endpoints are open — no authentication required. POST endpoints accept an optional <code className="font-mono text-xs bg-background/50 px-1.5 py-0.5 rounded">X-UOR-Agent-Key</code> header for elevated rate limits.
+                All GET endpoints are open, no authentication required. POST endpoints accept an optional <code className="font-mono text-xs bg-background/50 px-1.5 py-0.5 rounded">X-UOR-Agent-Key</code> header for elevated rate limits.
               </p>
               <div className="rounded-xl border border-border/40 bg-card/20 p-5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Example with agent key</p>
@@ -491,14 +491,14 @@ const ApiPage = () => {
                   <CopyButton text={`curl -H "X-UOR-Agent-Key: YOUR_KEY" "${BASE}/kernel/op/verify?x=42"`} size="xs" />
                 </div>
                 <p className="text-xs text-muted-foreground/70 mt-2">
-                  Without a key, you still get full access — just at the standard rate limit. Keys are only needed for high-throughput workloads.
+                  Without a key, you still get full access, just at the standard rate limit. Keys are only needed for high-throughput workloads.
                 </p>
               </div>
             </section>
 
             {/* ── Discovery endpoints ─────────────────────────── */}
             <div className="mb-10">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">API Discovery — Start here</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">API Discovery: Start here</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {DISCOVERY_ENDPOINTS.map(ep => (
                   <div key={ep.path} className="rounded-xl border border-border/40 bg-card/20 p-4">
@@ -542,7 +542,7 @@ const ApiPage = () => {
               <div className="space-y-3">
                 {[
                   { step: "1", label: "/.well-known/uor.json", note: "Organisation descriptor. The uor:api.openapi field points to the spec.", href: "https://uor.foundation/.well-known/uor.json" },
-                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 spec — all paths, schemas, response types.", href: `${BASE}/openapi.json` },
+                  { step: "2", label: "GET /openapi.json", note: "Full OpenAPI 3.1.0 spec: all paths, schemas, response types.", href: `${BASE}/openapi.json` },
                   { step: "3", label: "GET /navigate", note: "Complete endpoint index with required params and example URLs.", href: `${BASE}/navigate` },
                   { step: "4", label: "GET /kernel/op/verify?x=42", note: "First verifiable claim. Zero auth. Full proof in under 100ms.", href: `${BASE}/kernel/op/verify?x=42` },
                   { step: "5", label: "GET /store/gateways", note: "Check IPFS gateway health. Then POST /store/write for your first verified object.", href: `${BASE}/store/gateways` },

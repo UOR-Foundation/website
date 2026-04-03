@@ -177,7 +177,7 @@ const Projects = () => {
             UOR Projects
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Every project in the UOR ecosystem — from early experiments to production-ready tools. Find something to use, or submit your own.
+            Every project in the UOR ecosystem, from early experiments to production-ready tools. Find something to use, or submit your own.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"

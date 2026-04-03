@@ -26,7 +26,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "The complete mathematical proofs behind the physical theory — how the core geometric property emerges and why it is unique.",
+        "The complete mathematical proofs behind the physical theory: how the core geometric property emerges and why it is unique.",
       href: "/research/qsvg-technical-appendices",
     },
     {
@@ -42,7 +42,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Concrete predictions that can be tested within 3–5 years. Every prediction has zero free parameters — the geometry either matches experiment or it doesn't.",
+        "Concrete predictions that can be tested within 3–5 years. Every prediction has zero free parameters. The geometry either matches experiment or it doesn't.",
       href: "/research/qsvg-experimental-roadmap",
     },
   ],
