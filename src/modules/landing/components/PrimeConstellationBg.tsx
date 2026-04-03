@@ -11,14 +11,14 @@ function mulberry32(seed: number) {
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const ROTATION_SPEED = 0.000015;
-const PULSE_SPEED = 0.0004;
+const ROTATION_SPEED = 0.000018;
+const PULSE_SPEED = 0.0005;
 
-// Scroll phases
-const SCROLL_STARS_START = 0.06;
-const SCROLL_STARS_FULL = 0.45;
-const SCROLL_CONST_START = 0.40;
-const SCROLL_CONST_FULL = 0.90;
+// Scroll phases — reveal earlier for more visible experience
+const SCROLL_STARS_START = 0.03;
+const SCROLL_STARS_FULL = 0.30;
+const SCROLL_CONST_START = 0.25;
+const SCROLL_CONST_FULL = 0.70;
 
 // Star colors — cool whites and silvers, NO yellow/gold
 const STAR_HUES = [
