@@ -89,8 +89,8 @@ const ScrollProgress = () => {
               <div
                 style={{
                   width: 1,
-                  height: 12,
-                  backgroundColor: "hsl(0 0% 100% / 0.08)",
+                  height: 18,
+                  backgroundColor: "hsl(0 0% 100% / 0.12)",
                 }}
               />
             )}
