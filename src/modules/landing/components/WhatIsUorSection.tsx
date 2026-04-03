@@ -93,7 +93,7 @@ const UorDiagramCompact = () => (
             ))}
           </svg>
         </div>
-        <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
+        <p className="text-[11px] md:text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
           One Shared<br />System
         </p>
       </div>
