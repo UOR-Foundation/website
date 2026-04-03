@@ -29,14 +29,22 @@ const STAR_HUES = [
   "0, 0%, 90%",     // pure white
 ];
 
+// Foundation amber accent for brightest constellation nodes
+const AMBER_HUE = "38, 40%, 70%";
+
 /* ── Field stars — sparse, distant, galaxy-like ──────────────── */
 interface FieldStar {
-  x: number; // normalized 0..1
+  x: number;
   y: number;
-  size: number; // 0.3..1.2
+  size: number;
   hueIdx: number;
   twinklePhase: number;
-  depth: number; // 0..1, controls when it appears (inner=0, outer=1)
+  depth: number;
+  // Orbital drift parameters
+  orbitRx: number;
+  orbitRy: number;
+  orbitSpeed: number;
+  orbitPhase: number;
 }
 
 const rand = mulberry32(42);
@@ -54,23 +62,26 @@ for (let i = 0; i < FIELD_STAR_COUNT; i++) {
     size: 0.3 + rand() * 0.9,
     hueIdx: Math.floor(rand() * STAR_HUES.length),
     twinklePhase: rand() * Math.PI * 2,
-    depth: Math.sqrt(dx * dx + dy * dy) / 0.707, // distance from center normalized
+    depth: Math.sqrt(dx * dx + dy * dy) / 0.707,
+    orbitRx: 0.001 + rand() * 0.003,
+    orbitRy: 0.001 + rand() * 0.003,
+    orbitSpeed: 0.15 + rand() * 0.25,
+    orbitPhase: rand() * Math.PI * 2,
   });
 }
 
 /* ── Constellation definitions ───────────────────────────────── */
 interface ConstellationDef {
-  // Star positions relative to constellation center (normalized -0.15..0.15)
   stars: Array<{ ox: number; oy: number; brightness: number }>;
   lines: [number, number][];
-  cx: number; cy: number; // center position (normalized 0..1)
+  cx: number; cy: number;
   hueIdx: number;
   breathePhase: number;
+  isFocalCluster?: boolean; // brightest nodes get amber tint
 }
 
 const constellationDefs: ConstellationDef[] = [
   {
-    // Orion-like — top right
     cx: 0.78, cy: 0.25,
     stars: [
       { ox: 0, oy: -0.06, brightness: 1.5 },
@@ -83,9 +94,9 @@ const constellationDefs: ConstellationDef[] = [
     ],
     lines: [[0,1],[0,2],[1,3],[2,3],[3,4],[4,5],[4,6]],
     hueIdx: 0, breathePhase: 0,
+    isFocalCluster: true,
   },
   {
-    // Cassiopeia-like W — top left
     cx: 0.18, cy: 0.20,
     stars: [
       { ox: -0.06, oy: 0, brightness: 1.2 },
@@ -98,7 +109,6 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 1, breathePhase: 1.5,
   },
   {
-    // Triangle — center-left
     cx: 0.25, cy: 0.60,
     stars: [
       { ox: 0, oy: -0.04, brightness: 1.5 },
@@ -110,7 +120,6 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 2, breathePhase: 3.0,
   },
   {
-    // Dipper-like arc — bottom right
     cx: 0.72, cy: 0.72,
     stars: [
       { ox: -0.07, oy: -0.02, brightness: 1.0 },
@@ -123,9 +132,9 @@ const constellationDefs: ConstellationDef[] = [
     ],
     lines: [[0,1],[1,2],[2,3],[3,4],[3,5],[5,6]],
     hueIdx: 3, breathePhase: 4.5,
+    isFocalCluster: true,
   },
   {
-    // Cross — center
     cx: 0.50, cy: 0.45,
     stars: [
       { ox: 0, oy: -0.05, brightness: 1.5 },
@@ -136,9 +145,9 @@ const constellationDefs: ConstellationDef[] = [
     ],
     lines: [[0,1],[1,2],[1,3],[1,4]],
     hueIdx: 4, breathePhase: 6.0,
+    isFocalCluster: true,
   },
   {
-    // Small cluster — bottom left
     cx: 0.15, cy: 0.82,
     stars: [
       { ox: -0.02, oy: -0.02, brightness: 1.3 },
@@ -149,7 +158,6 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 1, breathePhase: 7.5,
   },
   {
-    // Serpent — upper center
     cx: 0.45, cy: 0.15,
     stars: [
       { ox: -0.06, oy: 0.01, brightness: 0.9 },
@@ -191,7 +199,6 @@ const PrimeConstellationBg = () => {
     const scrollFrac = scrollRef.current;
     const time = timeRef.current;
 
-    // Phase progressions
     const tStars = smoothstep(Math.min(1, Math.max(0, (scrollFrac - SCROLL_STARS_START) / (SCROLL_STARS_FULL - SCROLL_STARS_START))));
     const tConst = smoothstep(Math.min(1, Math.max(0, (scrollFrac - SCROLL_CONST_START) / (SCROLL_CONST_FULL - SCROLL_CONST_START))));
 
@@ -209,18 +216,19 @@ const PrimeConstellationBg = () => {
 
     const globalAngle = angleRef.current;
 
-    // ── Phase 1: Sparse distant stars fade in ──────────────────
+    // ── Phase 1: Field stars with orbital drift ────────────────
     for (const star of fieldStars) {
-      // Stagger by depth — inner stars first
       const localT = Math.max(0, Math.min(1, (tStars - star.depth * 0.6) / 0.4));
       if (localT < 0.01) continue;
 
-      // Gentle twinkle
       const twinkle = 0.55 + 0.45 * Math.sin(time * 1.8 + star.twinklePhase);
 
-      // Very subtle parallax rotation around center
-      const dx = star.x - 0.5;
-      const dy = star.y - 0.5;
+      // Orbital drift — each star traces a tiny ellipse
+      const orbitX = Math.cos(time * star.orbitSpeed + star.orbitPhase) * star.orbitRx;
+      const orbitY = Math.sin(time * star.orbitSpeed + star.orbitPhase) * star.orbitRy;
+
+      const dx = star.x + orbitX - 0.5;
+      const dy = star.y + orbitY - 0.5;
       const cosA = Math.cos(globalAngle * (0.5 + star.depth));
       const sinA = Math.sin(globalAngle * (0.5 + star.depth));
       const rx = 0.5 + dx * cosA - dy * sinA;
@@ -234,7 +242,6 @@ const PrimeConstellationBg = () => {
       const r = star.size * localT;
       const hue = STAR_HUES[star.hueIdx];
 
-      // Soft glow
       const glowR = r * 4;
       const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
       glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.6})`);
@@ -245,33 +252,35 @@ const PrimeConstellationBg = () => {
       ctx.fillStyle = glow;
       ctx.fill();
 
-      // Sharp core
       ctx.beginPath();
       ctx.arc(sx, sy, Math.max(r * 0.35, 0.4), 0, Math.PI * 2);
       ctx.fillStyle = `hsla(${hue}, ${Math.min(alpha * 2.5, 0.7)})`;
       ctx.fill();
     }
 
-    // ── Phase 2: Constellations emerge and connect ─────────────
+    // ── Phase 2: Constellations with pulsing lines & focal clusters ──
     if (tConst > 0.01) {
       for (let ci = 0; ci < constellationDefs.length; ci++) {
         const c = constellationDefs[ci];
-        // Stagger constellations
         const cDelay = ci * 0.08;
         const cT = smoothstep(Math.max(0, Math.min(1, (tConst - cDelay) / (1 - cDelay * 0.5))));
         if (cT < 0.01) continue;
 
         const breathe = 1 + 0.1 * Math.sin(time * 1.0 + c.breathePhase);
-        const hue = STAR_HUES[c.hueIdx];
+        const baseHue = STAR_HUES[c.hueIdx];
 
-        // Compute constellation star positions
-        const starPositions = c.stars.map(s => ({
-          x: (c.cx + s.ox) * w,
-          y: (c.cy + s.oy) * h,
-          brightness: s.brightness,
-        }));
+        // Compute constellation star positions with orbital drift
+        const starPositions = c.stars.map((s, si) => {
+          const drift = 0.002 * Math.sin(time * 0.3 + si * 1.7 + c.breathePhase);
+          const driftY = 0.002 * Math.cos(time * 0.25 + si * 2.1 + c.breathePhase);
+          return {
+            x: (c.cx + s.ox + drift) * w,
+            y: (c.cy + s.oy + driftY) * h,
+            brightness: s.brightness,
+          };
+        });
 
-        // Draw connecting lines — each grows in sequentially
+        // Draw connecting lines with traveling pulse
         for (let li = 0; li < c.lines.length; li++) {
           const [a, b] = c.lines[li];
           const lineDelay = li * 0.07;
@@ -285,11 +294,16 @@ const PrimeConstellationBg = () => {
 
           const lineAlpha = cT * 0.12 * breathe;
 
-          // Line with fading tip
+          // Traveling pulse along line — Foundation data-flow effect
+          const pulsePos = (time * 0.4 + li * 0.5 + ci * 1.2) % 1;
+          const pulseMidX = ax + (bx - ax) * pulsePos;
+          const pulseMidY = ay + (by - ay) * pulsePos;
+
+          // Base line
           const grad = ctx.createLinearGradient(ax, ay, bx, by);
-          grad.addColorStop(0, `hsla(${hue}, ${lineAlpha})`);
-          grad.addColorStop(0.8, `hsla(${hue}, ${lineAlpha * 0.6})`);
-          grad.addColorStop(1, `hsla(${hue}, ${lineAlpha * 0.1})`);
+          grad.addColorStop(0, `hsla(${baseHue}, ${lineAlpha})`);
+          grad.addColorStop(0.8, `hsla(${baseHue}, ${lineAlpha * 0.6})`);
+          grad.addColorStop(1, `hsla(${baseHue}, ${lineAlpha * 0.1})`);
 
           ctx.strokeStyle = grad;
           ctx.lineWidth = (0.4 + 0.15 * breathe) * lineT;
@@ -297,17 +311,33 @@ const PrimeConstellationBg = () => {
           ctx.moveTo(ax, ay);
           ctx.lineTo(bx, by);
           ctx.stroke();
+
+          // Pulse glow traveling along line
+          if (lineT > 0.5) {
+            const pulseR = 6;
+            const pulseGlow = ctx.createRadialGradient(pulseMidX, pulseMidY, 0, pulseMidX, pulseMidY, pulseR);
+            const pulseAlpha = lineAlpha * 1.5 * lineT;
+            pulseGlow.addColorStop(0, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.4})`);
+            pulseGlow.addColorStop(1, `hsla(${AMBER_HUE}, 0)`);
+            ctx.beginPath();
+            ctx.arc(pulseMidX, pulseMidY, pulseR, 0, Math.PI * 2);
+            ctx.fillStyle = pulseGlow;
+            ctx.fill();
+          }
         }
 
-        // Draw constellation stars — brighter than field, with nebula halo
+        // Draw constellation stars
         for (const star of starPositions) {
           const starAlpha = cT * 0.4 * star.brightness * breathe;
           const starR = 1.2 * star.brightness * breathe;
+          // Focal clusters: brightest stars get amber tint
+          const useAmber = c.isFocalCluster && star.brightness >= 1.3;
+          const hue = useAmber ? AMBER_HUE : baseHue;
 
           // Nebula halo
-          const nebulaR = starR * 10;
+          const nebulaR = starR * (useAmber ? 14 : 10);
           const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.1})`);
+          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.15 : 0.1)})`);
           nebula.addColorStop(0.25, `hsla(${hue}, ${starAlpha * 0.03})`);
           nebula.addColorStop(1, `hsla(${hue}, 0)`);
           ctx.beginPath();

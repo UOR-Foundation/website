@@ -263,6 +263,10 @@
     font-optical-sizing: auto;
   }
 
+  h2, h3 {
+    letter-spacing: 0.06em;
+  }
+
   /* Windows ClearType optimization — subpixel rendering */
   @supports (-ms-accelerator: true) {
     body { -webkit-font-smoothing: subpixel-antialiased; }
