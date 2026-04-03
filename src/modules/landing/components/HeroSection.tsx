@@ -26,11 +26,12 @@ const HeroSection = () => {
         <div className="h-[clamp(2.5rem,7vw,4rem)] shrink-0" />
 
         <h1
-          className="font-display text-[clamp(1.75rem,7.5vw,2.75rem)] font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
+          className="font-display font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
           style={{ animationDelay: "0.29s" }}
         >
-           Make Data Identity<br />
-           Universal
+           <span className="text-[clamp(1.5rem,6vw,2.25rem)]">Make Data Identity</span>
+           <br />
+           <span className="text-[clamp(2.25rem,10vw,3.5rem)]">Universal</span>
         </h1>
 
         <div
@@ -83,11 +84,11 @@ const HeroSection = () => {
         <div className="basis-[38%] shrink-0" />
         <div className="max-w-[55%]">
           <h1
-            className="font-display text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
+            className="font-display font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
-             Make Data Identity<br />
-             Universal
+             <span className="text-[clamp(2.5rem,3.2vw,5.5rem)] block">Make Data Identity</span>
+             <span className="text-[clamp(3.5rem,5vw,8.5rem)] block">Universal</span>
           </h1>
           <p
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
