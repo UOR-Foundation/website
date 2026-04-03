@@ -120,7 +120,7 @@ const WhatIsUorSection = () => {
               <span className="text-foreground/70 font-normal">UOR fixes this with one rule: the address comes from the content itself. Same data, same address, everywhere.</span>
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              Move data anywhere — the address stays the same. No central authority required, no single point of failure.
+              Move data anywhere, the address stays the same. No central authority required, no single point of failure.
             </p>
             <div className="mt-golden-lg">
               <a
