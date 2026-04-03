@@ -125,10 +125,10 @@ const WhatIsUorSection = () => {
             </p>
             <div className="mt-golden-lg">
               <a
-                href="/docs"
+                href="/framework"
                 className="inline-flex items-center gap-3 text-fluid-body font-semibold uppercase tracking-[0.18em] text-primary/80 hover:text-primary transition-colors duration-150 ease-out"
               >
-                Read the Docs
+                Explore the Framework
                 <ArrowRight size={15} />
               </a>
             </div>

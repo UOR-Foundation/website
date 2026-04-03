@@ -241,8 +241,8 @@ const SemanticWebPage = () => {
             Every layer is formally specified, implemented, and independently verifiable.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/docs" className="btn-primary inline-flex items-center gap-2">
-              UOR Docs <ArrowRight className="w-4 h-4" />
+            <Link to="/framework" className="btn-primary inline-flex items-center gap-2">
+              UOR Framework <ArrowRight className="w-4 h-4" />
             </Link>
             <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
               W3C Reference <ExternalLink className="w-4 h-4" />
