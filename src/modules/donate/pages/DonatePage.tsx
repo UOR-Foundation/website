@@ -57,7 +57,7 @@ const Donate = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
+      <section className="hero-gradient pt-36 md:pt-48 pb-12 md:pb-16">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
             Fund open infrastructure
