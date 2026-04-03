@@ -58,9 +58,17 @@ const Footer = () => {
             />
           ))}
         </div>
-        <p className="text-foreground/40 text-fluid-caption font-body text-right uppercase tracking-[0.1em]">
-          © {new Date().getFullYear()} The UOR Foundation
-        </p>
+        <div className="flex items-center justify-between">
+          <a
+            href="/llms.md"
+            className="text-foreground/40 hover:text-foreground/60 transition-colors duration-150 ease-out text-fluid-caption font-body uppercase tracking-[0.1em]"
+          >
+            Open Standard
+          </a>
+          <p className="text-foreground/40 text-fluid-caption font-body uppercase tracking-[0.1em]">
+            © {new Date().getFullYear()} The UOR Foundation
+          </p>
+        </div>
       </div>
     </footer>
   );
