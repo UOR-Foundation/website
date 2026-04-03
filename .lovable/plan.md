@@ -1,56 +1,102 @@
 
 
-# Mobile Experience Refinement — Crisp, Golden, Magical
+# Streamline Every Page to 4 Sections
 
-## Issues Found
+## The Problem
+Pages range from 3 to 8 sections, creating an inconsistent, busy experience. Users scroll too much and lose context.
 
-From the mobile screenshots (390×844):
+## The Rule
+Every page gets exactly **4 sections**: Hero → Content A → Content B → CTA/Footer-close. This creates a rhythm users learn once and never think about again.
 
-1. **Hero section**: The galaxy animation overlaps heavily with headline text — readability is compromised. The text runs to 6 lines ("YOUR / UNIVERSAL / COORDINATE / SYSTEM / FOR / INFORMATION") when it should be 3. The `max-w-[55%]` constraint forces the text too narrow on mobile. The "Explore Projects" CTA is barely visible, cut off at the bottom.
+```text
+┌──────────────────────┐
+│       HERO           │  Identity: title + subtitle + action
+├──────────────────────┤
+│     CONTENT A        │  Primary substance (the "what")
+├──────────────────────┤
+│     CONTENT B        │  Supporting detail (the "how" or "proof")
+├──────────────────────┤
+│       CTA            │  Single call-to-action closure
+└──────────────────────┘
+```
 
-2. **Hero vertical balance**: Too much empty space above the galaxy (the `basis-[38%]` spacer). The galaxy and text compete for the same left-aligned area.
+---
 
-3. **Mobile menu**: Functional but lacks the "magical" quality — no prime/Foundation theming. The nav links are small (15px) and feel sparse. Could use a subtle prime constellation or golden ratio breathing animation.
+## Page-by-Page Changes
 
-4. **Footer**: The nav links overflow horizontally ("ABOUT" is cut off). Social icons are cramped.
+### 1. Home (8 → 4)
+- **Hero** — keep as-is
+- **Content A: "What is UOR"** — merge the current Intro diagram + Applications cards into one section (diagram left, 4 app cards right, or stacked)
+- **Content B: "Ecosystem"** — merge Projects showcase + Community members into one section (projects row on top, community avatars below, with a Highlights stat bar between them)
+- **CTA** — merge Pillars + CTA into one closing section: three pillar cards above the final call-to-action buttons
 
-5. **Section spacing**: The golden ratio spacing system exists but some sections feel tight on mobile — particularly the community grid (people overflow in pairs).
+**Removed/merged**: Intro, Applications, ProjectsShowcase, Community, Highlights, Pillars, CTA → condensed into 3 body sections + hero
 
-6. **Container padding**: Currently `2rem` from Tailwind config but the hero uses `px-6` (1.5rem). Some inconsistency.
+### 2. Framework `/standard` (7 → 4)
+- **Hero** — keep, fold "The Problem" text into the hero subtitle (it's just two paragraphs)
+- **Content A: "How It Works"** — merge the UOR Diagram + Anatomy of an Address into one section
+- **Content B: "Architecture & Applications"** — merge Framework Architecture layers + Applications grid into one section
+- **CTA** — keep as-is
 
-## Plan
+**Removed/merged**: Problem section absorbed into hero; Diagram + Anatomy merged; Architecture + Applications merged
 
-### 1. Hero Section Mobile Overhaul (`HeroSection.tsx`)
-- On mobile: center the galaxy above the text instead of right-aligned overlap
-- Use a stacked vertical layout: navbar → galaxy (centered, constrained) → headline → subtitle → CTA
-- Headline: `text-[clamp(2.2rem,8vw,3rem)]` stays but remove `max-w-[55%]` on mobile (use full width)
-- Move galaxy to a contained size on mobile: `w-[min(65vw,280px)]` centered
-- Reduce the `basis-[38%]` spacer to something smaller on mobile
-- Ensure CTA button is fully visible above the fold
+### 3. Community `/research` (5 → 4)
+- **Hero** — keep as-is
+- **Content A: "Research"** — keep the research categories + papers section as-is (it's the core content)
+- **Content B: "Blog & Events"** — merge Blog cards and Events list into one combined section (blog cards row, then events list below)
+- **CTA: "Join"** — keep as-is
 
-### 2. Mobile Menu Enhancement (`Navbar.tsx`)
-- Add a subtle, slow-rotating PrimeGrid canvas as background behind the mobile menu (very low opacity, gold dots)
-- Increase nav link sizes on mobile: `text-[17px]` with more generous `py-4` padding
-- Add a golden-ratio breathing animation to the menu transition — links stagger in with φ-based delays (current 50ms gaps → 80ms with φ scaling)
-- Add a faint section number before each nav item (§2, §3, etc.) to echo the Foundation theme
-- Improve the transition: add a subtle scale-up from 0.98 to 1.0 on the entire menu
+**Removed/merged**: Blog and Events become one section
 
-### 3. Footer Mobile Fix (`Footer.tsx`)
-- Wrap footer nav items to prevent horizontal overflow — use `flex-wrap` or stack vertically on mobile
-- Increase social icon tap targets
+### 4. Projects `/projects` (5 → 4)
+- **Hero** — keep as-is
+- **Content A: "Project Catalog"** — keep the collapsible maturity-tier project listing as-is
+- **Content B: "Submit a Project"** — merge Maturity Levels explanation + Submission Process steps + Submit Form into one section (maturity cards as a compact reference row, then the form below)
+- **CTA** — the submit form itself serves as the closing action (dark section with form = natural page closer)
 
-### 4. Community Section Mobile (`CommunitySection.tsx`)
-- Use `grid grid-cols-2` instead of `flex-wrap` on mobile for even 2-column layout
-- Increase hexagon size slightly on mobile for better photo visibility
+**Removed/merged**: Maturity Levels, Submission Process, and Submit Form collapse into one section
 
-### 5. Global Mobile Polish (`index.css` + components)
-- Ensure consistent `px-6` (24px) container padding on mobile across all sections
-- Add a CSS media query to reduce `--section-py-md` slightly on small screens so content doesn't feel over-spaced
+### 5. About `/about` (4 → 4)
+- Already at 4 logical sections (Hero, What We Do, Governance, Resources). **No changes needed** — it's already the model.
 
-## Files Modified
-- `src/modules/landing/components/HeroSection.tsx` — mobile-first hero layout
-- `src/modules/core/components/Navbar.tsx` — enhanced mobile menu with prime theming
-- `src/modules/core/components/Footer.tsx` — fix mobile overflow
-- `src/modules/landing/components/CommunitySection.tsx` — mobile grid improvement
-- `src/index.css` — mobile spacing tuning
+### 6. Donate `/donate` (3 → 4)
+- **Hero** — keep as-is
+- **Content A: "Projects to Support"** — keep as-is
+- **Content B: "Ways to Donate"** — keep as-is
+- **CTA** — add a brief closing section with a final "Donate Now" button and a thank-you message
+
+**Change**: Add a small closing CTA section for consistency
+
+### 7. Semantic Web `/semantic-web` (6 → 4)
+- **Hero** — keep, fold the Definition blockquote into the hero (it's a single quote + one paragraph)
+- **Content A: "The Tower"** — merge the Tower diagram + Layer Detail cards into one section (diagram at top, expandable/accordion layer cards below)
+- **Content B: "Comparison"** — keep the comparison table as-is
+- **CTA** — keep as-is
+
+**Removed/merged**: Definition absorbed into hero; Tower + Layer Details merged
+
+---
+
+## Technical Details
+
+### Files Modified
+1. `src/modules/landing/pages/IndexPage.tsx` — reduce from 8 to 4 component imports
+2. `src/modules/landing/components/` — create 2 new merged components (e.g., `WhatIsUorSection.tsx`, `EcosystemSection.tsx`), retire individual ones
+3. `src/modules/framework/pages/StandardPage.tsx` — restructure sections
+4. `src/modules/community/pages/ResearchPage.tsx` — merge Blog + Events
+5. `src/modules/projects/pages/ProjectsPage.tsx` — merge submission sections
+6. `src/modules/donate/pages/DonatePage.tsx` — add closing CTA
+7. `src/modules/framework/pages/SemanticWebPage.tsx` — merge sections
+
+### What Gets Preserved
+- All existing content and data — nothing is deleted, only reorganized
+- All animations and styling patterns
+- All external links and CTAs
+- The design system (cards, typography, spacing tokens)
+
+### What Changes
+- Section count becomes uniform (4 per page)
+- Less whitespace between conceptually related blocks
+- Fewer full-width dividers and section headers
+- Faster time-to-bottom on every page
 
