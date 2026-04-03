@@ -82,7 +82,7 @@ const HeroSection = () => {
             style={{ animationDelay: "0.29s" }}
           >
              <span className="text-[clamp(2.5rem,3.2vw,5.5rem)] block">Make Data Identity</span>
-             <span className="text-[clamp(4rem,7.5vw,12rem)] block tracking-[0.35em]">Universal</span>
+             <span className="text-[clamp(4rem,7.5vw,12rem)] block tracking-[0.18em]">Universal</span>
           </h1>
           <p
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
