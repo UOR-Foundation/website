@@ -6,7 +6,7 @@ export const governanceBoard = [
   {
     name: "Bill Wright",
     role: "Chair",
-    bio: "Senior AI architect at Red Hat. Led adoption of enterprise software architectures across multinational corporations.",
+    bio: "Chairman at Enterprise Neurosystems. Led adoption of enterprise software architectures across multinational corporations.",
     image: "/images/profiles/bill-wright.jpg",
     link: "https://www.linkedin.com/in/billwright1/",
   },
