@@ -135,7 +135,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="h-[5rem] shrink-0" />
 
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
-            {navItems.map((item, idx) => {
+            {navItems.filter(item => !(item as any).isCta).map((item, idx) => {
               // φ-based stagger: 100, 162, 262, 424ms
               const phiDelay = Math.round(100 * Math.pow(1.618, idx));
               const sectionNum = idx + 1;
