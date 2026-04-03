@@ -79,7 +79,7 @@ const HeroSection = () => {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 60% 50% at 70% 50%, hsla(38, 50%, 45%, 0.04), transparent 70%)",
+            background: "radial-gradient(ellipse 50% 50% at 75% 50%, hsla(38, 50%, 45%, 0.04), transparent 70%)",
           }}
         />
         {/* Galactic plane. faint horizontal light band */}
@@ -89,7 +89,14 @@ const HeroSection = () => {
             background: "linear-gradient(to bottom, transparent 42%, hsla(38, 40%, 50%, 0.015) 49%, hsla(38, 40%, 50%, 0.02) 51%, hsla(38, 40%, 50%, 0.015) 53%, transparent 60%)",
           }}
         />
-        <div className="relative w-[min(190vw,195vh*1.1)] h-[min(220vh,190vw*1.1)] lg:w-[min(185vw,190vh*1.1)] lg:h-[min(225vh,185vw*1.1)] mr-[-24%] lg:mr-[-22%]">
+        <div
+          className="absolute right-0 top-1/2 -translate-y-1/2"
+          style={{
+            width: "min(55vw, 90vh)",
+            height: "min(55vw, 90vh)",
+            marginRight: "clamp(-4%, 2vw, 5%)",
+          }}
+        >
           <GalaxyAnimation />
         </div>
       </div>
