@@ -3,47 +3,42 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
 const UorDiagramCompact = () => (
-  <div className="w-full bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-10 md:p-12 overflow-hidden">
-    {/* Header */}
-    <p className="text-sm md:text-base font-body font-semibold tracking-[0.18em] uppercase text-[hsl(var(--section-dark-foreground)/0.7)] mb-10 text-center">
+  <div className="mx-auto w-full max-w-[54rem] rounded-[1.75rem] border border-[hsl(var(--section-dark-foreground)/0.1)] bg-[hsl(var(--section-dark))] px-[clamp(1.5rem,2vw,2.75rem)] py-[clamp(1.75rem,2.4vw,3rem)] lg:min-h-[clamp(23rem,28vw,29rem)]">
+    <p className="text-center font-body text-[clamp(0.8rem,0.28vw+0.76rem,1rem)] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--section-dark-foreground)/0.68)]">
       Fragmentation → Unification
     </p>
 
-    {/* Three-stage flow */}
-    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-0">
-      {/* Stage 1: Fragmented silos */}
-      <div className="flex-1 w-full flex flex-col items-center">
-        <div className="grid grid-cols-3 gap-3 max-w-[280px] w-full">
+    <div className="mt-[clamp(1.75rem,2.4vw,2.75rem)] flex flex-col items-center gap-8 md:grid md:grid-cols-[minmax(0,1fr)_minmax(9.75rem,0.618fr)_minmax(0,1fr)] md:items-center md:gap-[clamp(1.25rem,2vw,2.5rem)]">
+      <div className="flex w-full max-w-[19rem] flex-col items-center md:justify-self-start">
+        <div className="grid w-full grid-cols-3 gap-[clamp(0.55rem,0.8vw,0.9rem)]">
           {silos.map((s) => (
             <div
               key={s}
-              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[72px] text-sm md:text-base font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+              className="flex min-h-[clamp(4rem,4.3vw,4.75rem)] items-center justify-center rounded-xl border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] px-2 text-center text-[clamp(0.95rem,0.35vw+0.82rem,1.08rem)] leading-[1.15] font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
             >
               {s}
             </div>
           ))}
         </div>
-        <p className="text-sm md:text-base font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
+        <p className="mt-5 text-center font-body text-[clamp(0.95rem,0.35vw+0.82rem,1.08rem)] font-semibold uppercase tracking-[0.15em] leading-[1.35] text-[hsl(var(--section-dark-foreground)/0.62)]">
           Isolated Data<br />Systems and Formats
         </p>
       </div>
 
-      {/* Arrow + UOR label */}
-      <div className="flex flex-col items-center justify-center shrink-0 md:px-8 py-2 md:py-0">
-        <ArrowRight className="hidden md:block w-8 h-8 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
-        <ArrowDown className="block md:hidden w-6 h-6 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
-        <span className="text-2xl md:text-3xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-3">
+      <div className="flex w-full max-w-[11.75rem] flex-col items-center justify-center md:justify-self-center">
+        <ArrowRight className="hidden h-8 w-8 text-[hsl(var(--section-dark-foreground)/0.9)] md:block" strokeWidth={1.5} />
+        <ArrowDown className="block h-7 w-7 text-[hsl(var(--section-dark-foreground)/0.9)] md:hidden" strokeWidth={1.5} />
+        <span className="mt-3 font-display text-[clamp(1.95rem,0.95vw+1.35rem,2.7rem)] font-extrabold uppercase tracking-[0.28em] text-[hsl(var(--section-dark-foreground))]">
           UOR
         </span>
-        <span className="text-sm md:text-base font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1.5 tracking-[0.15em] uppercase text-center leading-snug">
+        <span className="mt-2 text-center font-body text-[clamp(0.95rem,0.35vw+0.82rem,1.08rem)] font-semibold uppercase tracking-[0.15em] leading-[1.35] text-[hsl(var(--section-dark-foreground)/0.62)]">
           Universal<br />Address System
         </span>
       </div>
 
-      {/* Stage 3: Unified graph */}
-      <div className="flex-1 w-full flex flex-col items-center">
-        <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-5 aspect-square max-w-[280px] w-full">
-          <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
+      <div className="flex w-full max-w-[19rem] flex-col items-center md:justify-self-end">
+        <div className="relative aspect-square w-full rounded-[1.35rem] border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-[clamp(1rem,1.2vw,1.35rem)]">
+          <svg viewBox="0 0 100 100" className="h-full w-full" fill="none">
             <defs>
               <radialGradient id="homeNodeGlow">
                 <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.5" />
@@ -75,23 +70,32 @@ const UorDiagramCompact = () => (
               `}</style>
             </defs>
             {[
-              [30, 25, 70, 50], [70, 50, 50, 75], [50, 75, 30, 25],
-              [30, 25, 20, 50], [70, 50, 80, 25], [50, 75, 80, 75],
+              [30, 25, 70, 50],
+              [70, 50, 50, 75],
+              [50, 75, 30, 25],
+              [30, 25, 20, 50],
+              [70, 50, 80, 25],
+              [50, 75, 80, 75],
             ].map(([x1, y1, x2, y2], i) => (
-              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" className="home-line-breathe" />
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1.1" className="home-line-breathe" />
             ))}
             {[
-              [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
+              [30, 25],
+              [70, 50],
+              [50, 75],
+              [20, 50],
+              [80, 25],
+              [80, 75],
             ].map(([cx, cy], i) => (
               <g key={i}>
                 <circle cx={cx} cy={cy} r={i < 3 ? 18 : 13} fill="url(#homeNodeGlow)" className="home-emanate" />
                 <circle cx={cx} cy={cy} r={i < 3 ? 4.5 : 2.8} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />
-                <circle cx={cx} cy={cy} r={i < 3 ? 8 : 5.5} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.5" opacity="0.18" />
+                <circle cx={cx} cy={cy} r={i < 3 ? 8 : 5.5} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.6" opacity="0.18" />
               </g>
             ))}
           </svg>
         </div>
-        <p className="text-sm md:text-base font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
+        <p className="mt-5 text-center font-body text-[clamp(0.95rem,0.35vw+0.82rem,1.08rem)] font-semibold uppercase tracking-[0.15em] leading-[1.35] text-[hsl(var(--section-dark-foreground)/0.62)]">
           One Shared<br />System
         </p>
       </div>
@@ -110,9 +114,8 @@ const WhatIsUorSection = () => {
         </div>
         <div className="rule-prime" />
 
-        <div className="py-golden-lg flex flex-col lg:flex-row lg:items-center lg:gap-20 animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
-          {/* Text */}
-          <div className="max-w-2xl lg:flex-1">
+        <div className="py-golden-lg mx-auto grid max-w-[1680px] grid-cols-1 items-center gap-[clamp(2.5rem,4vw,5.5rem)] animate-fade-in-up opacity-0 lg:grid-cols-[minmax(0,0.618fr)_minmax(0,1fr)]" style={{ animationDelay: "0.11s" }}>
+          <div className="max-w-[42rem]">
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
               <span className="text-foreground/90 font-medium">Today, the same data gets different IDs in different systems. Move it, copy it, or federate it. The IDs break.</span>{" "}
               <span className="text-foreground/70 font-normal">UOR fixes this with one rule: the address comes from the content itself. Same data, same address, everywhere.</span>
@@ -131,8 +134,7 @@ const WhatIsUorSection = () => {
             </div>
           </div>
 
-          {/* Schematic */}
-          <div className="mt-golden-lg lg:mt-0 lg:flex-1 flex justify-center">
+          <div className="flex justify-center lg:justify-end">
             <UorDiagramCompact />
           </div>
         </div>
