@@ -26,11 +26,12 @@ const HeroSection = () => {
         <div className="h-[clamp(2.5rem,7vw,4rem)] shrink-0" />
 
         <h1
-          className="font-display text-[clamp(1.75rem,7.5vw,2.75rem)] font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
+          className="font-display font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
           style={{ animationDelay: "0.29s" }}
         >
-           Make Data Identity<br />
-           Universal
+           <span className="text-[clamp(1.5rem,6vw,2.25rem)]">Make Data Identity</span>
+           <br />
+           <span className="text-[clamp(2.25rem,10vw,3.5rem)]">Universal</span>
         </h1>
 
         <div
