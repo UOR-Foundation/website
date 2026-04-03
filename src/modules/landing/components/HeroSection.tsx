@@ -17,7 +17,7 @@ const HeroSection = () => {
 
         {/* Galaxy orb — circular */}
         <div
-          className="w-[min(62vw,270px)] h-[min(62vw,270px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
+          className="w-[min(75vw,320px)] h-[min(75vw,320px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
         >
           <GalaxyAnimation />
