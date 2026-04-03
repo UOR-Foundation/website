@@ -19,13 +19,13 @@ const Standard = () => {
             The UOR Framework
           </h1>
           <p
-            className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
+            className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
             style={{ animationDelay: "0.15s" }}
           >
             A formal specification for content-addressed object spaces. Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export. UOR eliminates this by deriving identity from content structure — the address is the data, so there is nothing to translate.
           </p>
           <div
-            className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
             <a

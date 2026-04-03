@@ -176,11 +176,11 @@ const Projects = () => {
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             UOR Projects
           </h1>
-          <p className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
             Open-source projects built on the UOR specification, organized by maturity level.
           </p>
           <div
-            className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
             <a href="#submit" className="btn-primary">

@@ -126,7 +126,7 @@ const SemanticWebPage = () => {
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The Semantic Web, Powered by UOR
           </h1>
-          <p className="mt-6 text-fluid-body text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             How the UOR Framework implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI.
           </p>
           <blockquote className="mt-8 border-l-4 border-primary pl-6 py-2 max-w-3xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
@@ -138,7 +138,7 @@ const SemanticWebPage = () => {
               <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
             </footer>
           </blockquote>
-          <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.35s" }}>
+          <div className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.35s" }}>
             <a href="#tower" className="btn-primary">See the Architecture</a>
             <Link to="/standard" className="btn-outline">UOR Framework</Link>
           </div>
