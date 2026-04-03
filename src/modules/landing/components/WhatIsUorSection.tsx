@@ -116,7 +116,7 @@ const WhatIsUorSection = () => {
           {/* Text */}
           <div className="max-w-2xl lg:flex-1">
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              <span className="text-foreground/90 font-medium">Today, the same data gets different IDs in different systems. Move it, copy it, or federate it — the IDs break.</span>{" "}
+              <span className="text-foreground/90 font-medium">Today, the same data gets different IDs in different systems. Move it, copy it, or federate it. The IDs break.</span>{" "}
               <span className="text-foreground/70 font-normal">UOR fixes this with one rule: the address comes from the content itself. Same data, same address, everywhere.</span>
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
