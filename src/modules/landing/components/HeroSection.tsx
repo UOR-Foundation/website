@@ -87,9 +87,9 @@ const HeroSection = () => {
             className="font-display text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
-            Your Universal<br />
-            Coordinate System<br />
-            for Information
+             The Open Foundation<br />
+             for Universal<br />
+             Data Identity
           </h1>
           <p
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
