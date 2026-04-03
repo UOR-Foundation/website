@@ -160,11 +160,9 @@ const About = () => {
           {/* Resources */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               Resources
+            </p>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
               {[
