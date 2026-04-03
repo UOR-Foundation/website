@@ -57,6 +57,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             What We Do
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Our Focus Areas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
             {whatWeDoCards.map((item, idx) => {
               const Icon = cardIconMap[item.iconKey];
@@ -83,6 +84,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Governance Board
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Leadership</h2>
           <p
             className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-6xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
@@ -139,6 +141,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Resources
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Governance Documents</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
             {[
               { label: "Foundation Bylaws", href: "https://github.com/UOR-Foundation/.github/blob/main/governance/The_UOR_Foundation_Bylaws.pdf" },
@@ -168,6 +171,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Support the Foundation
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Fund Open Infrastructure</h2>
           <p
             className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
