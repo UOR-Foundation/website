@@ -313,11 +313,12 @@ const PrimeConstellationBg = () => {
           ctx.stroke();
 
           // Pulse glow traveling along line
-          if (lineT > 0.5) {
-            const pulseR = 6;
+          if (lineT > 0.3) {
+            const pulseR = 10;
             const pulseGlow = ctx.createRadialGradient(pulseMidX, pulseMidY, 0, pulseMidX, pulseMidY, pulseR);
-            const pulseAlpha = lineAlpha * 1.5 * lineT;
-            pulseGlow.addColorStop(0, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.4})`);
+            const pulseAlpha = lineAlpha * 2.0 * lineT;
+            pulseGlow.addColorStop(0, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.6})`);
+            pulseGlow.addColorStop(0.5, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.15})`);
             pulseGlow.addColorStop(1, `hsla(${AMBER_HUE}, 0)`);
             ctx.beginPath();
             ctx.arc(pulseMidX, pulseMidY, pulseR, 0, Math.PI * 2);
