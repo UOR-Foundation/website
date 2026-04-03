@@ -6,7 +6,7 @@ export const routeTable = [
   { path: "/about", label: "About" },
   { path: "/docs", label: "Docs" },
   { path: "/semantic-web", label: "Semantic Web" },
-  { path: "/research", label: "Community" },
+  { path: "/community", label: "Community" },
   { path: "/projects", label: "Projects" },
   { path: "/donate", label: "Donate" },
   { path: "/blog/building-the-internets-knowledge-graph", label: "Blog: Knowledge Graph" },

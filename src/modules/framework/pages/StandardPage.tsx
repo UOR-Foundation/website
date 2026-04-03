@@ -152,7 +152,7 @@ const Standard = () => {
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
-              Browse the Ontology
+              Read the Specification
               <ExternalLink size={15} />
             </a>
             <a

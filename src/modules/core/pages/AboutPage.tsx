@@ -55,6 +55,30 @@ const About = () => {
             </div>
           </div>
 
+          {/* Our Principles */}
+          <div>
+            <div className="h-px w-full bg-border/40 mb-golden-md" />
+            <h2
+              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Our Principles
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+              {ourPrinciplesCards.map((item, idx) => (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-border/30 bg-card p-5 md:p-6 flex flex-col gap-3 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${0.25 + idx * 0.08}s` }}
+                >
+                  <Shield size={20} className="text-primary" strokeWidth={1.5} />
+                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground">{item.title}</h3>
+                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Governance Board */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />

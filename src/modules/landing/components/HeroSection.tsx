@@ -95,7 +95,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
+            The UOR Foundation is a nonprofit home for open-source projects that need a universal way to identify, verify, and share data across systems.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
