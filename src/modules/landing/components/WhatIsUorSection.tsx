@@ -12,22 +12,22 @@ interface Application {
 const applications: Application[] = [
   {
     icon: Globe,
-    title: "Semantic Web",
-    description: "Make data understandable by both people and machines, so systems can work together without custom translations.",
+    title: "Interoperability",
+    description: "Connect systems that were never designed to talk to each other — without custom adapters or translations.",
   },
   {
     icon: ShieldCheck,
-    title: "Proof-Based Computation",
+    title: "Verifiable Computing",
     description: "Run a computation once and produce a receipt anyone can check. No need to re-run it or trust the source.",
   },
   {
     icon: Bot,
-    title: "Agentic AI",
+    title: "AI Infrastructure",
     description: "Give AI systems a single, reliable map of all available data so they can find, verify, and use information.",
   },
   {
     icon: Microscope,
-    title: "Open Science",
+    title: "Research Data",
     description: "Make research data findable, reproducible, and composable across institutions and disciplines.",
   },
 ];
