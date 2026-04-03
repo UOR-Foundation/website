@@ -79,22 +79,6 @@ const About = () => {
             })}
           </div>
 
-          {/* Principles. compact inline row */}
-          <div className="mt-6 pt-5 border-t border-border/30 flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-8">
-            {ourPrinciplesCards.map((item, idx) => (
-              <div
-                key={item.title}
-                className="flex items-start gap-2.5 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${0.35 + idx * 0.06}s` }}
-              >
-                <div className={`w-2 h-2 rounded-full mt-[7px] shrink-0 ${principleColors[idx]}`} />
-                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
-                  <span className="font-semibold text-foreground">{item.title}.</span>{" "}
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
