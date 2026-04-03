@@ -10,6 +10,8 @@ import DonatePopup from "@/modules/donate/components/DonatePopup";
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
 const About = () => {
+  const [donateOpen, setDonateOpen] = useState(false);
+
   return (
     <Layout>
       {/* Hero */}
