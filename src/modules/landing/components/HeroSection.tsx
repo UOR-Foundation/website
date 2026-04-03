@@ -110,7 +110,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            We build open standards that give every piece of data a permanent, verifiable address. Found by anyone, proven by anyone, trusted everywhere.
+            We build open standards that give every piece of data a permanent, verifiable address. Discoverable, provable, and trusted everywhere.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
