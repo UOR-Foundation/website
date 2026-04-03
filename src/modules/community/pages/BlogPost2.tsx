@@ -182,7 +182,7 @@ const BlogPost2 = () => {
               >
                 Join Our Discord
               </a>
-              <Link to="/research" className="btn-outline">
+              <Link to="/community" className="btn-outline">
                 Back to Community
               </Link>
             </div>
