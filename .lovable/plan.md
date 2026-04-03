@@ -1,105 +1,154 @@
 
 
-# Foundation Series Style Analysis & Alignment Suggestions
+# Streamline the Website for Clarity & Project Focus
 
-## Foundation (Apple TV+) — Key Themes & Style DNA
+## The Problem Today
 
-### Core Themes
-- **Mathematical destiny**: Psychohistory — predicting civilizational collapse through equations. The Prime Radiant is a living holographic math model.
-- **Empire vs. knowledge**: Monumental power structures decaying from hubris, countered by a small band preserving knowledge.
-- **Scale & deep time**: Spans millennia, galaxies, civilizations. Every frame communicates vastness.
-- **Living data**: The Mural of Souls — an ever-evolving particle painting that records history. Information is alive and luminous.
+A newcomer landing on this site encounters: abstract terminology ("content-addressed object spaces," "algebraic identity," "canonicalization rules"), a fragmented navigation with overlapping content, and too many sections competing for attention before they understand what UOR actually is or why they should care. Someone from the CNCF or Linux world would bounce.
 
-### Visual Style Parameters
-1. **Color**: Deep midnight blues/navys as base. Gold/amber as the accent of power and mathematics. Occasional deep crimson for empire/conflict. Cool steel-blue for technology. Warm amber particle fields for the Prime Radiant.
-2. **Light**: Volumetric, atmospheric. Light sources feel like they're coming from within objects or data itself. Lens flares and god-rays through vast architectural spaces.
-3. **Typography**: Ultra-wide letter-spacing, uppercase, geometric sans-serifs. The show's logo uses extremely wide tracking — almost monument-inscribed.
-4. **Geometry**: Sacred geometry, triangles, concentric circles, radial symmetry. The Prime Radiant uses orbiting mathematical nodes. Brutalist architectural forms.
-5. **Particles**: The signature visual — millions of luminous particles forming structures, dissolving, reforming. Not random scatter but mathematically organized swarms.
-6. **Space**: Extreme negative space. Compositions are 70-80% darkness with concentrated focal points of light and detail.
-7. **Motion**: Slow, deliberate, ceremonial. Nothing moves fast. Everything breathes and drifts.
-8. **Materials**: Glass, polished stone, brushed metal. Translucency and depth. Surfaces feel like they have interior light.
+## Guiding Principle
+
+**Every page should answer: "What does this do, and how do I get involved?"** — in language anyone from an open-source community would immediately understand.
 
 ---
 
-## Where Your Site Already Aligns
+## 1. Reorder Navigation — Projects First
 
-Your site is already surprisingly close to the Foundation aesthetic:
-- **Dark-first palette** with midnight navy (`225 30% 5%`) — excellent match
-- **Gold primary** (`38 65% 55%`) — directly echoes the Prime Radiant amber
-- **Galaxy animation** on the hero — particle-based, mathematically driven
-- **Wide letter-spacing** on nav and headings — matches the monumental typography
-- **Constellation background** — the scroll-reveal starfield is very Foundation
-- **Prime number mathematical motifs** — the dot dividers, Vogel spiral — this is *exactly* psychohistory energy
+Current: `Framework | Community | Projects | About`
+New: `Projects | Docs | Community | About`
 
-## Suggested Refinements to Deepen the Alignment
+- "Projects" moves to position 1 — it's the most tangible entry point
+- "Framework" becomes "Docs" — familiar to every open-source contributor (Linux, CNCF, Kubernetes all use "Docs")
+- This signals: "we ship software" before "we have a spec"
 
-### 1. Constellation Background: Make It Feel Like the Prime Radiant
-Currently your constellations are static patterns. Foundation's Prime Radiant is a *living mathematical model* — nodes orbit, lines pulse, clusters breathe in response to data.
+**Files:** `src/data/nav-items.ts`
 
-**Changes to `PrimeConstellationBg.tsx`:**
-- Add slow orbital drift to constellation nodes (each star moves on a tiny elliptical path, not just twinkles)
-- Constellation lines should pulse with a faint traveling light along them (like data flowing through connections)
-- When fully revealed, add 2-3 "focal clusters" where stars are denser and brighter, creating depth hierarchy — like the Prime Radiant's prediction nodes
-- Use a very subtle warm amber tint (`hsl(38, 40%, 70%)`) on just the brightest constellation nodes, not on background stars
+---
 
-### 2. Hero Section: More Volumetric Depth
-Foundation heroes feature a single luminous focal point surrounded by vast darkness.
+## 2. Homepage — Simplify the "What is UOR" Copy
 
-**Changes to `HeroSection.tsx`:**
-- Add a very subtle radial gradient behind the galaxy animation — a warm amber-to-transparent glow at maybe 3-5% opacity, suggesting the galaxy is emitting light into its surroundings
-- Add a barely-visible horizontal light band across the middle of the viewport (like a galactic plane) at 1-2% opacity
+Current copy uses phrases like "content-addressed data identity," "location-dependent identifiers," "derives identity from content structure." These are accurate but alienating.
 
-### 3. Section Transitions: Atmospheric Light
-Foundation transitions between scenes with volumetric light shifts, not hard cuts.
+**Rewrite to plain language:**
+- "Every piece of data gets a permanent address based on what it is, not where it's stored. The same data always gets the same address, on any system."
+- Replace "References that survive migration, replication, and federation" with "Move data anywhere — the address stays the same."
+- Replace "No central registry, no coordination protocol" with "No central authority required."
 
-**Changes to `index.css` / section styling:**
-- Add a new `.section-glow` utility: a very subtle top-edge radial gradient (warm amber, 2-3% opacity, 200px tall) at the top of Content A and Content B sections, creating the feeling of light bleeding between sections
-- Replace hard `border-b border-border/40` dividers with these atmospheric gradients
+The diagram label "Fragmentation → Unification" stays — it's clear. But update "Isolated Data Systems" → "Separate Systems" and keep "One Shared System."
 
-### 4. Cards: Interior Luminosity
-Foundation surfaces feel like they contain light within them, not just reflect it.
+**Files:** `src/modules/landing/components/WhatIsUorSection.tsx`
 
-**Changes to card styling in `index.css`:**
-- Add a very subtle inner glow to `.bg-card` on hover: `box-shadow: inset 0 0 60px hsla(38, 50%, 55%, 0.03)` transitioning to `0.06` on hover
-- This makes cards feel like they have a warm mathematical energy inside
+---
 
-### 5. Typography Refinement
-Foundation's typography is monumental — extremely wide tracking on titles, thinner weight on body.
+## 3. Homepage — Tighten the Ecosystem Section
+
+Currently has three sub-sections stacked: Featured Projects, Community Highlights, Community Members. This is a lot of scrolling with diminishing engagement.
 
 **Changes:**
-- Increase hero title letter-spacing from `0.04em` to `0.06em` on desktop
-- Consider adding Playfair Display (already imported) as an accent for pull-quotes and blockquotes — it has that imperial, timeless quality that matches Empire scenes
-- Section headings: add `0.02em` letter-spacing for that inscribed-in-stone feel
+- Keep Featured Projects (3 cards) — this is strong
+- Keep Community Members grid — social proof matters
+- **Remove Community Highlights** (blog cards) from the homepage. They're already on the Community page and add scroll length without driving action. The blog content is important but belongs on its dedicated page.
 
-### 6. Scroll Progress Indicator
-The current dot indicator is functional. Foundation would make it feel like navigation through a mathematical model.
-
-**Changes to `ScrollProgress.tsx`:**
-- Connect the dots with a faint vertical line (1px, `foreground/10`)
-- Active dot gets a tiny amber glow ring (`box-shadow: 0 0 8px hsla(38, 60%, 55%, 0.3)`)
-- Dots could be slightly smaller (4px) with the active one at 6px — more precise, more mathematical
-
-### 7. Galaxy Animation: Warmer, More Alive
-The current galaxy is beautiful but leans cool/purple. Foundation's Prime Radiant is warm amber/gold.
-
-**Changes to `galaxy.css`:**
-- Shift the dominant particle hue slightly warmer — more amber-gold, less purple
-- Add a very subtle outer glow to the galaxy container — a warm radial shadow suggesting it's projecting light
+**Files:** `src/modules/landing/components/EcosystemSection.tsx`
 
 ---
 
-## Summary of Changes
+## 4. Homepage — Simplify the Pillars CTA
 
-| Area | File(s) | Nature |
-|------|---------|--------|
-| Constellation depth | `PrimeConstellationBg.tsx` | Add orbital drift, pulsing lines, focal clusters, amber accent on brightest nodes |
-| Hero atmosphere | `HeroSection.tsx` | Subtle radial glow behind galaxy |
-| Section transitions | `index.css` | Replace border dividers with atmospheric light gradients |
-| Card luminosity | `index.css` | Inner glow on cards, warmer on hover |
-| Typography | `HeroSection.tsx`, section headings | Wider tracking on titles, letter-spacing on headings |
-| Scroll indicator | `ScrollProgress.tsx` | Connecting line, amber glow on active dot |
-| Galaxy warmth | `galaxy.css` | Shift particle hues warmer, add outer glow |
+The three pillars ("UOR Framework," "Research Community," "Project Launchpad") duplicate navigation. They're well-written but add another decision layer before the final CTA.
 
-No content changes. No structural changes. Pure atmospheric refinement to bring the site closer to Foundation's "living mathematical universe" aesthetic.
+**Changes:**
+- Shorten pillar descriptions by ~30% — one sentence each instead of two
+- Update pillar titles and CTAs to match new nav labels ("Docs" instead of "UOR Framework")
+
+**Files:** `src/data/pillars.ts`, `src/modules/landing/components/ClosingCTASection.tsx`
+
+---
+
+## 5. Framework Page → "Docs" — Remove Jargon from Hero
+
+Current hero: "A formal specification for content-addressed object spaces. Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries..."
+
+**Rewrite:**
+- "The open specification for how UOR addressing works. If you're building on UOR or evaluating it for your project, start here."
+- Keep the architecture section and layer cards — developers expect this depth on a docs page
+- Simplify the "Anatomy of an Address" descriptions to avoid "raw data itself, stored as a sequence of bytes"
+
+The CTA "14 namespaces, 82 classes, 124 properties" is impressive to spec authors but meaningless to most visitors. Replace with: "The full specification is open source. Read it, fork it, build on it."
+
+**Files:** `src/modules/framework/pages/StandardPage.tsx`
+
+---
+
+## 6. Semantic Web Page — Reduce Jargon in Hero & Comparison Table
+
+This page serves a specific audience (people who know the W3C Semantic Web stack). It's valuable but the hero copy and comparison table use dense terminology.
+
+**Changes:**
+- Hero subtitle: simplify "implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI" → "How UOR implements each layer of the W3C Semantic Web stack."
+- Comparison table "Original" column: keep as-is (it's describing the original spec accurately)
+- Comparison table "UOR" column: simplify phrases like "neg(bnot(x)) = succ(x) verifiable by any machine" → "Built-in mathematical verification. Any machine can check it."
+- Keep the tower diagram and layer cards — they're the core value of this page
+
+**Files:** `src/modules/framework/pages/SemanticWebPage.tsx`
+
+---
+
+## 7. Community Page — Simplify Hero Copy
+
+Current: "Researchers and builders working across disciplines to test ideas, validate results, and publish openly."
+
+This is already decent. Minor tweaks:
+- Make it clearer this is about participation: "A global community of researchers and developers. Propose ideas, get peer review, and publish results — all in the open."
+
+**Files:** `src/modules/community/pages/ResearchPage.tsx`
+
+---
+
+## 8. Projects Page — Simplify Hero Copy
+
+Current: "Open-source projects built on the UOR specification, organized by maturity level."
+
+**Rewrite:** "Every project in the UOR ecosystem — from early experiments to production-ready tools. Find something to use, or submit your own."
+
+This immediately tells the visitor what they can *do* here.
+
+**Files:** `src/modules/projects/pages/ProjectsPage.tsx`
+
+---
+
+## 9. About Page — Minor Copy Polish
+
+Current hero: "A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data."
+
+**Rewrite:** "A 501(c)(3) nonprofit maintaining the UOR specification and supporting the projects built on it."
+
+This is clearer about what the foundation actually does.
+
+**Files:** `src/modules/core/pages/AboutPage.tsx`
+
+---
+
+## 10. Update Route Path for Framework → Docs
+
+Change `/standard` to `/docs` to match the new nav label. Add a redirect from `/standard` → `/docs` for any existing links.
+
+**Files:** `src/App.tsx`, `src/data/nav-items.ts`, internal links in `SemanticWebPage.tsx`, `ClosingCTASection.tsx`, `WhatIsUorSection.tsx`
+
+---
+
+## Summary
+
+| Change | Impact |
+|--------|--------|
+| Nav reorder: Projects first, "Docs" label | Immediate clarity on what the org ships |
+| Homepage copy simplification | Removes jargon barrier for newcomers |
+| Remove blog highlights from homepage | Shorter scroll, fewer distractions |
+| Shorter pillar descriptions | Faster path to action |
+| Docs page hero rewrite | Welcoming instead of intimidating |
+| Semantic Web jargon reduction | Accessible to broader audience |
+| Projects hero rewrite | Action-oriented, inviting |
+| Route `/standard` → `/docs` | Familiar convention |
+
+**Files modified:** 10 files. No new files. No structural changes to components. Pure copy, routing, and ordering refinements.
 
