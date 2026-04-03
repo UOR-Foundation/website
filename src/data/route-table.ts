@@ -4,10 +4,10 @@
 export const routeTable = [
   { path: "/", label: "Home" },
   { path: "/about", label: "About" },
-  { path: "/standard", label: "UOR Framework" },
+  { path: "/docs", label: "Docs" },
   { path: "/semantic-web", label: "Semantic Web" },
-  { path: "/research", label: "Our Community" },
-  { path: "/projects", label: "Your Projects" },
+  { path: "/research", label: "Community" },
+  { path: "/projects", label: "Projects" },
   { path: "/donate", label: "Donate" },
   { path: "/blog/building-the-internets-knowledge-graph", label: "Blog: Knowledge Graph" },
   { path: "/blog/universal-mathematical-language", label: "Blog: Universal Language" },

@@ -81,7 +81,7 @@ const WhatIsUorSection = () => {
                     ))}
                   </div>
                   <p className="text-sm md:text-base font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
-                    Isolated Data<br />Systems
+                    Separate<br />Systems
                   </p>
                 </div>
                 <div className="flex flex-col items-center justify-center shrink-0 md:px-8 lg:px-10 py-2 md:py-0">

@@ -64,7 +64,7 @@ const Standard = () => {
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
+                  The actual content being addressed — a number, a document, a record. This is the "what."
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                   <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>

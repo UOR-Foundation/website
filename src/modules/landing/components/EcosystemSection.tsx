@@ -69,34 +69,6 @@ const EcosystemSection = () => {
           ))}
         </div>
 
-        {/* Community Highlights — compact row */}
-        <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
-            Community Highlights
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
-            {highlights.map((item, index) => (
-              <a
-                key={item.title}
-                href={item.href}
-                className="group flex flex-col overflow-hidden border-t border-foreground/8 transition-all duration-300 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${0.11 + index * 0.11}s` }}
-              >
-                <div className="relative aspect-[5/3] overflow-hidden">
-                  <img src={imageMap[item.imageKey]} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                </div>
-                <div className="flex flex-col flex-1 py-golden-md pr-4">
-                  <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3 text-fluid-label">{item.tag}</span>
-                  <h3 className="font-display font-semibold text-foreground leading-snug flex-1 text-fluid-card-title">{item.title}</h3>
-                  <span className="inline-flex items-center gap-1.5 mt-golden-sm font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground transition-all duration-300 text-fluid-label">
-                    Learn more <ArrowRight size={12} />
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-
         {/* Community members — compact */}
         <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">

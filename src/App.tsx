@@ -53,7 +53,8 @@ const App = () => {
               {/* Core pages */}
               <Route path="/" element={<IndexPage />} />
               <Route path="/about" element={<AboutPage />} />
-              <Route path="/standard" element={<StandardPage />} />
+              <Route path="/docs" element={<StandardPage />} />
+              <Route path="/standard" element={<Navigate to="/docs" replace />} />
               <Route path="/semantic-web" element={<SemanticWebPage />} />
               <Route path="/research" element={<ResearchPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
