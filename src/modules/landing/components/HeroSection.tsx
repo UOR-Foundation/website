@@ -26,12 +26,13 @@ const HeroSection = () => {
         <div className="h-[clamp(2.5rem,7vw,4rem)] shrink-0" />
 
         <h1
-          className="font-display font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
+          className="font-display font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block"
           style={{ animationDelay: "0.29s" }}
         >
-           <span className="text-[clamp(1.5rem,6vw,2.25rem)]">Make Data Identity</span>
-           <br />
-           <span className="text-[clamp(2.25rem,10vw,3.5rem)] tracking-[0.2em]">Universal</span>
+           <span className="text-[clamp(1.5rem,6vw,2.25rem)] block">Make Data Identity</span>
+           <span className="text-[clamp(1.8rem,7vw,2.75rem)] flex justify-between w-full" aria-label="Universal">
+             {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
+           </span>
         </h1>
 
         <div
