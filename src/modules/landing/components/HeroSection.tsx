@@ -35,7 +35,7 @@ const HeroSection = () => {
         </h1>
 
         <div
-          className="mt-[clamp(1.75rem,5vw,3rem)] animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.75rem,5vw,3rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
@@ -44,6 +44,12 @@ const HeroSection = () => {
           >
             Explore Projects
             <ArrowRight size={15} />
+          </a>
+          <a
+            href="#intro"
+            className="pointer-events-auto inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-foreground/50 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
+          >
+            What is UOR?
           </a>
         </div>
 
