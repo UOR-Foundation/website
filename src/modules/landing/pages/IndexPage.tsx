@@ -13,9 +13,9 @@ const Index = () => {
     <Layout>
       <PrimeConstellationBg />
       <HeroSection />
+      <CommunitySection />
       <WhatIsUorSection />
       <ClosingCTASection />
-      <CommunitySection />
       <EcosystemSection />
       <HighlightsSection />
       <ReadyToBuildCTA />
