@@ -86,15 +86,14 @@ const HeroSection = () => {
             className="font-display text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
-             The Foundation<br />
-             for Universal<br />
-             Data Identity
+             Make Data Identity<br />
+             Universal
           </h1>
           <p
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            We support open-source projects that give data a permanent, verifiable address. Learn the framework, connect with contributors, and start building.
+            The UOR Foundation is the open-source home for projects that give every piece of data a permanent, verifiable address — so it can be found, proven, and trusted anywhere.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
