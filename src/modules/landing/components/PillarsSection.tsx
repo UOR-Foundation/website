@@ -10,7 +10,6 @@ const PillarsSection = () => {
     <section id="pillars" className="py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="flex items-center gap-3 mb-golden-md">
-          <span className="font-mono text-fluid-body tracking-[0.12em] text-foreground/80">§13</span>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
             Get Involved
           </p>
