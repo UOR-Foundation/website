@@ -156,7 +156,7 @@ const ResearchPaperAtlasEmbeddings = () => {
               <div>
                 <h3 className="font-display text-base font-semibold text-foreground mb-2">1. Construction of the Atlas</h3>
                 <p>
-                  The Atlas of Resonance Classes is derived from first principles. An <em>action functional</em>—a mathematical rule that assigns a cost to every possible configuration—is applied to the boundary of a 12,288-cell polytope. The 96 vertices that minimise this cost form the Atlas. This is not a design choice; it is a mathematical necessity. Exactly 96 resonance classes satisfy the stationarity condition.
+                  The Atlas of Resonance Classes is derived from first principles. An <em>action functional</em>, a mathematical rule that assigns a cost to every possible configuration, is applied to the boundary of a 12,288-cell polytope. The 96 vertices that minimise this cost form the Atlas. This is not a design choice; it is a mathematical necessity. Exactly 96 resonance classes satisfy the stationarity condition.
                 </p>
               </div>
               <div>
