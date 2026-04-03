@@ -57,7 +57,7 @@ const Standard = () => {
               Anatomy of an Address
             </p>
             <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-              Every piece of data in UOR is described by three coordinates that form a complete, self-verifying fingerprint.
+              Every piece of data has three coordinates. Together they form a unique, self-verifying address.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-border bg-card p-6">
