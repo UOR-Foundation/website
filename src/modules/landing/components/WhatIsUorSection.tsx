@@ -35,7 +35,7 @@ const UorDiagramCompact = () => (
         <span className="text-xl md:text-2xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
           UOR
         </span>
-        <span className="text-[10px] md:text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
+        <span className="text-[11px] md:text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
           Universal<br />Address System
         </span>
       </div>
