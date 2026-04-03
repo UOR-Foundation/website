@@ -238,14 +238,14 @@ const PrimeConstellationBg = () => {
       const sy = ry * h;
       if (sx < -10 || sx > w + 10 || sy < -10 || sy > h + 10) continue;
 
-      const alpha = localT * twinkle * 0.35;
-      const r = star.size * localT;
+      const alpha = localT * twinkle * 0.65;
+      const r = star.size * localT * 1.3;
       const hue = STAR_HUES[star.hueIdx];
 
-      const glowR = r * 4;
+      const glowR = r * 5;
       const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
-      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.6})`);
-      glow.addColorStop(0.4, `hsla(${hue}, ${alpha * 0.12})`);
+      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.8})`);
+      glow.addColorStop(0.3, `hsla(${hue}, ${alpha * 0.2})`);
       glow.addColorStop(1, `hsla(${hue}, 0)`);
       ctx.beginPath();
       ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
@@ -253,8 +253,8 @@ const PrimeConstellationBg = () => {
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(sx, sy, Math.max(r * 0.35, 0.4), 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${hue}, ${Math.min(alpha * 2.5, 0.7)})`;
+      ctx.arc(sx, sy, Math.max(r * 0.4, 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${hue}, ${Math.min(alpha * 2.5, 0.9)})`;
       ctx.fill();
     }
 
