@@ -141,6 +141,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Resources
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Governance Documents</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
             {[
               { label: "Foundation Bylaws", href: "https://github.com/UOR-Foundation/.github/blob/main/governance/The_UOR_Foundation_Bylaws.pdf" },
