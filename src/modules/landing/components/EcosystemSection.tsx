@@ -109,7 +109,6 @@ const EcosystemSection = () => {
           </div>
         </div>
 
-        </div>
       </div>
     </section>
   );
