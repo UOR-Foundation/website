@@ -11,14 +11,14 @@ function mulberry32(seed: number) {
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const ROTATION_SPEED = 0.000015;
-const PULSE_SPEED = 0.0004;
+const ROTATION_SPEED = 0.000018;
+const PULSE_SPEED = 0.0005;
 
-// Scroll phases
-const SCROLL_STARS_START = 0.06;
-const SCROLL_STARS_FULL = 0.45;
-const SCROLL_CONST_START = 0.40;
-const SCROLL_CONST_FULL = 0.90;
+// Scroll phases — reveal earlier for more visible experience
+const SCROLL_STARS_START = 0.03;
+const SCROLL_STARS_FULL = 0.30;
+const SCROLL_CONST_START = 0.25;
+const SCROLL_CONST_FULL = 0.70;
 
 // Star colors — cool whites and silvers, NO yellow/gold
 const STAR_HUES = [
@@ -48,7 +48,7 @@ interface FieldStar {
 }
 
 const rand = mulberry32(42);
-const FIELD_STAR_COUNT = 90;
+const FIELD_STAR_COUNT = 160;
 const fieldStars: FieldStar[] = [];
 
 for (let i = 0; i < FIELD_STAR_COUNT; i++) {
@@ -238,14 +238,14 @@ const PrimeConstellationBg = () => {
       const sy = ry * h;
       if (sx < -10 || sx > w + 10 || sy < -10 || sy > h + 10) continue;
 
-      const alpha = localT * twinkle * 0.35;
-      const r = star.size * localT;
+      const alpha = localT * twinkle * 0.65;
+      const r = star.size * localT * 1.3;
       const hue = STAR_HUES[star.hueIdx];
 
-      const glowR = r * 4;
+      const glowR = r * 5;
       const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
-      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.6})`);
-      glow.addColorStop(0.4, `hsla(${hue}, ${alpha * 0.12})`);
+      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.8})`);
+      glow.addColorStop(0.3, `hsla(${hue}, ${alpha * 0.2})`);
       glow.addColorStop(1, `hsla(${hue}, 0)`);
       ctx.beginPath();
       ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
@@ -253,8 +253,8 @@ const PrimeConstellationBg = () => {
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(sx, sy, Math.max(r * 0.35, 0.4), 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${hue}, ${Math.min(alpha * 2.5, 0.7)})`;
+      ctx.arc(sx, sy, Math.max(r * 0.4, 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${hue}, ${Math.min(alpha * 2.5, 0.9)})`;
       ctx.fill();
     }
 
@@ -266,7 +266,7 @@ const PrimeConstellationBg = () => {
         const cT = smoothstep(Math.max(0, Math.min(1, (tConst - cDelay) / (1 - cDelay * 0.5))));
         if (cT < 0.01) continue;
 
-        const breathe = 1 + 0.1 * Math.sin(time * 1.0 + c.breathePhase);
+        const breathe = 1 + 0.15 * Math.sin(time * 1.0 + c.breathePhase);
         const baseHue = STAR_HUES[c.hueIdx];
 
         // Compute constellation star positions with orbital drift
@@ -292,7 +292,7 @@ const PrimeConstellationBg = () => {
           const bx = ax + (starPositions[b].x - ax) * lineT;
           const by = ay + (starPositions[b].y - ay) * lineT;
 
-          const lineAlpha = cT * 0.12 * breathe;
+          const lineAlpha = cT * 0.28 * breathe;
 
           // Traveling pulse along line — Foundation data-flow effect
           const pulsePos = (time * 0.4 + li * 0.5 + ci * 1.2) % 1;
@@ -306,18 +306,19 @@ const PrimeConstellationBg = () => {
           grad.addColorStop(1, `hsla(${baseHue}, ${lineAlpha * 0.1})`);
 
           ctx.strokeStyle = grad;
-          ctx.lineWidth = (0.4 + 0.15 * breathe) * lineT;
+          ctx.lineWidth = (0.7 + 0.3 * breathe) * lineT;
           ctx.beginPath();
           ctx.moveTo(ax, ay);
           ctx.lineTo(bx, by);
           ctx.stroke();
 
           // Pulse glow traveling along line
-          if (lineT > 0.5) {
-            const pulseR = 6;
+          if (lineT > 0.3) {
+            const pulseR = 10;
             const pulseGlow = ctx.createRadialGradient(pulseMidX, pulseMidY, 0, pulseMidX, pulseMidY, pulseR);
-            const pulseAlpha = lineAlpha * 1.5 * lineT;
-            pulseGlow.addColorStop(0, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.4})`);
+            const pulseAlpha = lineAlpha * 2.0 * lineT;
+            pulseGlow.addColorStop(0, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.6})`);
+            pulseGlow.addColorStop(0.5, `hsla(${AMBER_HUE}, ${pulseAlpha * 0.15})`);
             pulseGlow.addColorStop(1, `hsla(${AMBER_HUE}, 0)`);
             ctx.beginPath();
             ctx.arc(pulseMidX, pulseMidY, pulseR, 0, Math.PI * 2);
@@ -328,17 +329,17 @@ const PrimeConstellationBg = () => {
 
         // Draw constellation stars
         for (const star of starPositions) {
-          const starAlpha = cT * 0.4 * star.brightness * breathe;
-          const starR = 1.2 * star.brightness * breathe;
+          const starAlpha = cT * 0.7 * star.brightness * breathe;
+          const starR = 1.6 * star.brightness * breathe;
           // Focal clusters: brightest stars get amber tint
           const useAmber = c.isFocalCluster && star.brightness >= 1.3;
           const hue = useAmber ? AMBER_HUE : baseHue;
 
-          // Nebula halo
-          const nebulaR = starR * (useAmber ? 14 : 10);
+          // Nebula halo — larger, more visible
+          const nebulaR = starR * (useAmber ? 18 : 14);
           const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.15 : 0.1)})`);
-          nebula.addColorStop(0.25, `hsla(${hue}, ${starAlpha * 0.03})`);
+          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.25 : 0.18)})`);
+          nebula.addColorStop(0.3, `hsla(${hue}, ${starAlpha * 0.06})`);
           nebula.addColorStop(1, `hsla(${hue}, 0)`);
           ctx.beginPath();
           ctx.arc(star.x, star.y, nebulaR, 0, Math.PI * 2);
@@ -346,9 +347,9 @@ const PrimeConstellationBg = () => {
           ctx.fill();
 
           // Inner glow
-          const innerR = starR * 3.5;
+          const innerR = starR * 4.5;
           const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, innerR);
-          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.5})`);
+          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.7})`);
           inner.addColorStop(1, `hsla(${hue}, 0)`);
           ctx.beginPath();
           ctx.arc(star.x, star.y, innerR, 0, Math.PI * 2);
@@ -357,7 +358,7 @@ const PrimeConstellationBg = () => {
 
           // Bright core
           ctx.beginPath();
-          ctx.arc(star.x, star.y, starR * 0.5, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, starR * 0.6, 0, Math.PI * 2);
           ctx.fillStyle = `hsla(${hue}, ${Math.min(starAlpha * 1.8, 0.8)})`;
           ctx.fill();
         }
