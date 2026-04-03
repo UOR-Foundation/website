@@ -1,137 +1,171 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket, Copy, Check } from "lucide-react";
-import { useState, useCallback } from "react";
+import { ExternalLink, BookOpen, Layers, Rocket, Globe, ShieldCheck, Bot, Microscope } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
-import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, GITHUB_PRISM_URL } from "@/data/external-links";
-import UORDiagram from "@/modules/framework/components/UORDiagram";
-import FrameworkLayers from "@/modules/framework/components/FrameworkLayers";
+import { frameworkLayers } from "@/data/framework-layers";
+import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 
-const iconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
+const appIconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
+
+const gettingStarted = [
+  {
+    icon: BookOpen,
+    title: "Overview",
+    description: "What UOR is, what problem it solves, and how content-derived addressing works.",
+    url: `${GITHUB_FRAMEWORK_DOCS_URL}docs/overview.html`,
+  },
+  {
+    icon: Layers,
+    title: "Architecture",
+    description: "Six layers — from mathematical foundation to lossless data transformation.",
+    url: `${GITHUB_FRAMEWORK_DOCS_URL}docs/architecture.html`,
+  },
+  {
+    icon: Rocket,
+    title: "Quick Start",
+    description: "Clone the repo, run the core identity proof, and explore the API.",
+    url: GITHUB_FRAMEWORK_URL,
+  },
+];
 
 const Standard = () => {
   return (
     <Layout>
-      {/* Hero — absorbs "The Problem" */}
+      {/* Hero */}
       <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
-            The UOR Framework
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
+            Documentation
           </h1>
           <p
-            className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
-            style={{ animationDelay: "0.15s" }}
+            className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-3xl"
+            style={{ animationDelay: "0.12s" }}
           >
-            The open specification for how UOR addressing works. If you're building on UOR or evaluating it for your project, start here.
+            Everything you need to understand, evaluate, and build with the UOR Framework.
           </p>
           <div
-            className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.35s" }}
+            className="mt-10 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.3s" }}
           >
             <a
               href={GITHUB_FRAMEWORK_DOCS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary"
+              className="btn-primary inline-flex items-center gap-2"
             >
-              Browse the Framework
+              Read the Docs
+              <ExternalLink size={14} />
             </a>
-            <a href="#architecture" className="btn-outline">
-              How It Works
+            <a
+              href={GITHUB_FRAMEWORK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-outline inline-flex items-center gap-2"
+            >
+              View on GitHub
             </a>
           </div>
         </div>
       </section>
 
-      {/* Content A: How It Works — Diagram + Anatomy merged */}
+      {/* Getting Started */}
       <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-8">
-            How It Works
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+            Getting Started
           </p>
-          <UORDiagram />
-
-          {/* Anatomy of an Address — inline */}
-          <div className="mt-golden-lg pt-golden-lg border-t border-border/40">
-            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-              Anatomy of an Address
-            </p>
-            <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-              Every piece of data has three coordinates. Together they form a unique, self-verifying address.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
-                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
-                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The data itself — a document, a number, a record. This is the "what."
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-golden-lg">
+            Start here
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {gettingStarted.map((item) => (
+              <a
+                key={item.title}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
+              >
+                <item.icon size={20} className="text-primary mb-4" />
+                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
+                  {item.description}
                 </p>
-                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">Document, number, or any content</p>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
-                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Weight</h3>
-                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  A measure of the data's complexity — how much information it contains.
-                </p>
-                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">Complexity score: 4</p>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
-                <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
-                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The parts that make up the data. Given these, anyone can reconstruct the original exactly.
-                </p>
-                <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">e.g. [2, 3, 5, 7]</p>
-                </div>
-              </div>
-            </div>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-body font-medium text-primary/70 group-hover:text-primary transition-colors">
+                  Read more
+                  <ExternalLink size={13} className="opacity-60" />
+                </span>
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Content B: Architecture & Applications merged */}
-      <section id="architecture" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
+      {/* Key Concepts — simplified layer index */}
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-            Architecture
+            Key Concepts
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
-            Framework Architecture
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-2">
+            Framework Layers
           </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-golden-lg">
-            Six layers. Each builds on the one below. Together they handle naming, discovery, verification, and transformation.
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-lg">
+            Six layers, each building on the one below. Together they handle naming, discovery, verification, and transformation.
           </p>
-          <FrameworkLayers />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {frameworkLayers.map((layer) => (
+              <a
+                key={layer.number}
+                href={layer.namespaces[0]?.url ?? GITHUB_FRAMEWORK_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
+              >
+                <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
+                  Layer {layer.number}
+                </span>
+                <h3 className="font-display text-fluid-card-title font-bold text-foreground mt-1 mb-2 group-hover:text-primary transition-colors">
+                  {layer.title}
+                </h3>
+                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
+                  {layer.summary}
+                </p>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-body font-medium text-primary/70 group-hover:text-primary transition-colors">
+                  View docs
+                  <ExternalLink size={13} className="opacity-60" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Applications inline */}
-          <div className="mt-golden-lg pt-golden-lg border-t border-border/40">
-            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
-              Where It Applies
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-              {applications.map((item) => {
-                const Icon = iconMap[item.iconKey];
-                return (
-                  <div
-                    key={item.title}
-                    className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-                  >
-                    {Icon && <Icon size={20} className="text-primary mb-4" />}
-                    <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">{item.title}</h3>
-                    <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">{item.text}</p>
-                  </div>
-                );
-              })}
-            </div>
+      {/* Where It Applies */}
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+            Where It Applies
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-golden-lg">
+            Use Cases
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {applications.map((item) => {
+              const Icon = appIconMap[item.iconKey];
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-border bg-card p-6"
+                >
+                  {Icon && <Icon size={20} className="text-primary mb-4" />}
+                  <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">{item.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -153,15 +187,6 @@ const Standard = () => {
               className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
               Read the Specification
-              <ExternalLink size={15} />
-            </a>
-            <a
-              href={GITHUB_PRISM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
-            >
-              Try Prism
               <ExternalLink size={15} />
             </a>
             <a
