@@ -98,13 +98,6 @@ const HeroSection = () => {
         <div className="flex-1" />
       </div>
 
-      {/* Origin coordinate marker */}
-      <span
-        className="absolute bottom-6 right-6 md:right-10 font-mono text-[9px] text-foreground/[0.06] tracking-[0.25em] uppercase select-none pointer-events-none"
-        aria-hidden="true"
-      >
-        §0 · Origin
-      </span>
     </section>
   );
 };
