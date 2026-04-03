@@ -1,5 +1,4 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
-import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -8,8 +7,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
-      {/* Living prime number field. desktop only */}
-      {!isMobile && <PrimeGrid />}
+      {/* Prime field now merged into PrimeConstellationBg */}
 
       {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
