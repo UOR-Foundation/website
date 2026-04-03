@@ -1,13 +1,19 @@
-import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield, Heart } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Heart, Github } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
-import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
+import { GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 import DonatePopup from "@/modules/donate/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
+
+const principleColors = [
+  "bg-primary",
+  "bg-accent",
+  "bg-muted-foreground",
+];
 
 const About = () => {
   const [donateOpen, setDonateOpen] = useState(false);
@@ -24,8 +30,29 @@ const About = () => {
             className="mt-10 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            A 501(c)(3) nonprofit maintaining the UOR specification and supporting the projects built on it.
+            A 501(c)(3) nonprofit maintaining the UOR specification and the projects built on it.
           </p>
+          <div
+            className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.25s" }}
+          >
+            <a
+              href="https://github.com/UOR-Foundation/.github"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground/60 text-foreground font-medium font-body text-fluid-body hover:bg-foreground hover:text-background transition-all duration-200"
+            >
+              <Github size={16} />
+              Governance on GitHub
+            </a>
+            <button
+              onClick={() => setDonateOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground/60 text-foreground font-medium font-body text-fluid-body hover:bg-foreground hover:text-background transition-all duration-200 cursor-pointer"
+            >
+              <Heart size={16} />
+              Make a Donation
+            </button>
+          </div>
         </div>
       </section>
 
@@ -57,27 +84,20 @@ const About = () => {
                 );
               })}
             </div>
-          </div>
 
-          {/* Our Principles */}
-          <div>
-            <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
-              Our Principles
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+            {/* Principles — compact inline row */}
+            <div className="mt-6 pt-5 border-t border-border/30 flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-8">
               {ourPrinciplesCards.map((item, idx) => (
                 <div
                   key={item.title}
-                  className="rounded-xl border border-border/30 bg-card p-5 md:p-6 flex flex-col gap-3 animate-fade-in-up opacity-0"
-                  style={{ animationDelay: `${0.25 + idx * 0.08}s` }}
+                  className="flex items-start gap-2.5 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${0.35 + idx * 0.06}s` }}
                 >
-                  <Shield size={20} className="text-primary" strokeWidth={1.5} />
-                  <h3 className="font-display text-fluid-card-title font-semibold text-foreground">{item.title}</h3>
-                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed">{item.desc}</p>
+                  <div className={`w-2 h-2 rounded-full mt-[7px] shrink-0 ${principleColors[idx]}`} />
+                  <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
+                    <span className="font-semibold text-foreground">{item.title}.</span>{" "}
+                    {item.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -171,6 +191,7 @@ const About = () => {
               ))}
             </div>
           </div>
+
           {/* Support the Foundation */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
