@@ -13,7 +13,7 @@ const UorDiagramCompact = () => (
     <div className="flex flex-col md:flex-row items-center gap-5 md:gap-0">
       {/* Stage 1: Fragmented silos */}
       <div className="flex-1 w-full flex flex-col items-center">
-        <div className="grid grid-cols-3 gap-2 max-w-[180px] w-full">
+        <div className="grid grid-cols-3 gap-2.5 max-w-[210px] w-full">
           {silos.map((s) => (
             <div
               key={s}
