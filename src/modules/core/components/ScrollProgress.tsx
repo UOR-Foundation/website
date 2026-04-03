@@ -49,7 +49,7 @@ const ScrollProgress = () => {
 
   return (
     <div
-      className={`fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center transition-opacity duration-500 ${
+      className={`fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center transition-opacity duration-500 ${
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       style={{ gap: 0 }}
@@ -69,15 +69,15 @@ const ScrollProgress = () => {
               }}
               className="transition-all duration-300 ease-out rounded-full cursor-pointer"
               style={{
-                width: isActive ? 6 : 4,
-                height: isActive ? 6 : 4,
+                width: isActive ? 10 : 6,
+                height: isActive ? 10 : 6,
                 backgroundColor: isActive
                   ? "hsl(38 60% 55%)"
                   : isPast
-                    ? "hsl(0 0% 100% / 0.3)"
-                    : "hsl(0 0% 100% / 0.1)",
+                    ? "hsl(0 0% 100% / 0.35)"
+                    : "hsl(0 0% 100% / 0.15)",
                 boxShadow: isActive
-                  ? "0 0 8px hsla(38, 60%, 55%, 0.35), 0 0 16px hsla(38, 60%, 55%, 0.15)"
+                  ? "0 0 10px hsla(38, 60%, 55%, 0.4), 0 0 20px hsla(38, 60%, 55%, 0.18)"
                   : "none",
                 border: "none",
                 padding: 0,
@@ -89,8 +89,8 @@ const ScrollProgress = () => {
               <div
                 style={{
                   width: 1,
-                  height: 12,
-                  backgroundColor: "hsl(0 0% 100% / 0.08)",
+                  height: 18,
+                  backgroundColor: "hsl(0 0% 100% / 0.12)",
                 }}
               />
             )}
