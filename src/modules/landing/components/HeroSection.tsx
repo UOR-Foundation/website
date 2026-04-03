@@ -45,12 +45,6 @@ const HeroSection = () => {
             Explore Projects
             <ArrowRight size={15} />
           </a>
-          <a
-            href="#intro"
-            className="pointer-events-auto inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-foreground/50 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
-          >
-            What is UOR?
-          </a>
         </div>
 
         <div className="flex-[0.618]" />
