@@ -242,7 +242,7 @@ const ResearchPaperAtlasEmbeddings = () => {
                   <strong className="text-foreground">Formal proof verification.</strong> A complete formalisation in Lean 4 (a machine-checked proof assistant) accompanies the computational implementation. The formalisation comprises 8 modules, 1,454 lines of proof, and 54 theorems, all verified with zero unresolved obligations ("sorrys"). Any reviewer with Lean 4 installed can independently check every proof.
                 </li>
                 <li>
-                  <strong className="text-foreground">Comparison with established theory.</strong> The Cartan matrices and Dynkin diagrams produced by the construction can be compared against any standard reference in Lie theory (e.g., Carter 2005, Conway &amp; Sloane 1988). The results must—and do—match exactly.
+                  <strong className="text-foreground">Comparison with established theory.</strong> The Cartan matrices and Dynkin diagrams produced by the construction can be compared against any standard reference in Lie theory (e.g., Carter 2005, Conway &amp; Sloane 1988). The results must, and do, match exactly.
                 </li>
                 <li>
                   <strong className="text-foreground">No external dependencies.</strong> The exceptional groups are constructed entirely from the Atlas structure, without importing known Lie-theoretic data. This means the construction is self-contained and cannot be circular.
