@@ -329,17 +329,17 @@ const PrimeConstellationBg = () => {
 
         // Draw constellation stars
         for (const star of starPositions) {
-          const starAlpha = cT * 0.4 * star.brightness * breathe;
-          const starR = 1.2 * star.brightness * breathe;
+          const starAlpha = cT * 0.7 * star.brightness * breathe;
+          const starR = 1.6 * star.brightness * breathe;
           // Focal clusters: brightest stars get amber tint
           const useAmber = c.isFocalCluster && star.brightness >= 1.3;
           const hue = useAmber ? AMBER_HUE : baseHue;
 
-          // Nebula halo
-          const nebulaR = starR * (useAmber ? 14 : 10);
+          // Nebula halo — larger, more visible
+          const nebulaR = starR * (useAmber ? 18 : 14);
           const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.15 : 0.1)})`);
-          nebula.addColorStop(0.25, `hsla(${hue}, ${starAlpha * 0.03})`);
+          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.25 : 0.18)})`);
+          nebula.addColorStop(0.3, `hsla(${hue}, ${starAlpha * 0.06})`);
           nebula.addColorStop(1, `hsla(${hue}, 0)`);
           ctx.beginPath();
           ctx.arc(star.x, star.y, nebulaR, 0, Math.PI * 2);
@@ -347,9 +347,9 @@ const PrimeConstellationBg = () => {
           ctx.fill();
 
           // Inner glow
-          const innerR = starR * 3.5;
+          const innerR = starR * 4.5;
           const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, innerR);
-          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.5})`);
+          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.7})`);
           inner.addColorStop(1, `hsla(${hue}, 0)`);
           ctx.beginPath();
           ctx.arc(star.x, star.y, innerR, 0, Math.PI * 2);
@@ -358,7 +358,7 @@ const PrimeConstellationBg = () => {
 
           // Bright core
           ctx.beginPath();
-          ctx.arc(star.x, star.y, starR * 0.5, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, starR * 0.6, 0, Math.PI * 2);
           ctx.fillStyle = `hsla(${hue}, ${Math.min(starAlpha * 1.8, 0.8)})`;
           ctx.fill();
         }
