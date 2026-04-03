@@ -48,7 +48,7 @@ interface FieldStar {
 }
 
 const rand = mulberry32(42);
-const FIELD_STAR_COUNT = 90;
+const FIELD_STAR_COUNT = 160;
 const fieldStars: FieldStar[] = [];
 
 for (let i = 0; i < FIELD_STAR_COUNT; i++) {
