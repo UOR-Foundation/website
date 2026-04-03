@@ -266,7 +266,7 @@ const PrimeConstellationBg = () => {
         const cT = smoothstep(Math.max(0, Math.min(1, (tConst - cDelay) / (1 - cDelay * 0.5))));
         if (cT < 0.01) continue;
 
-        const breathe = 1 + 0.1 * Math.sin(time * 1.0 + c.breathePhase);
+        const breathe = 1 + 0.15 * Math.sin(time * 1.0 + c.breathePhase);
         const baseHue = STAR_HUES[c.hueIdx];
 
         // Compute constellation star positions with orbital drift
