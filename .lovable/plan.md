@@ -1,34 +1,47 @@
 
 
-# About Page Streamlining
+# Uniform Two-Tier Section Headers
 
-## What changes
-One file: `src/modules/core/pages/AboutPage.tsx`
+## The pattern (from Community page)
+Every content section follows: **gold pre-label** (uppercase, tracked) + **bold h2 heading** underneath. The pre-label categorizes; the h2 describes in plain language.
 
-The About page already has good content and structure. The refinements bring it into tighter alignment with the Docs, Community, and Projects pages:
+```text
+GET INVOLVED          ← gold pre-label
+Start Contributing    ← bold h2 heading
+```
 
-### 1. Hero (minor copy tightening)
-- Subtitle becomes: "A 501(c)(3) nonprofit maintaining the UOR specification and the projects built on it."
-- Add two hero buttons matching other pages: "Governance on GitHub" and "Make a Donation" (opens donate popup)
+## What's missing
 
-### 2. Merge "What We Do" and "Our Principles" into one section
-- These two 3-card grids feel redundant as separate sections. Combine into a single "What We Do" section with the three activity cards only.
-- Move the three principles (Transparency, Interoperability, Trust) into a compact inline row below the cards, similar to how Projects shows the maturity model: colored dot + title + one-line description. No full card treatment. This reduces visual weight while keeping the content.
+### About page (4 sections need h2 headings added)
+| Pre-label | Missing h2 (to add) |
+|---|---|
+| What We Do | Our Focus Areas |
+| Governance Board | *(already has descriptive paragraph, add h2)* → Leadership |
+| Resources | Governance Documents |
+| Support the Foundation | Fund Open Infrastructure |
 
-### 3. Governance Board (keep as-is)
-- The board cards with photos are already clean and match the design system. No changes needed.
+### Projects page (2 sections need h2 headings added)
+| Pre-label | Missing h2 (to add) |
+|---|---|
+| Project Maturity | How Projects Advance |
+| All Projects | Browse the Catalog |
 
-### 4. Resources (keep as-is)
-- The 2-column link list is already compact and scannable. No changes.
+### Docs page — already correct
+All three sections (Getting Started → "Start here", Key Concepts → "Framework Layers", Where It Applies → "Use Cases") already have the two-tier pattern.
 
-### 5. Support the Foundation (keep as-is)
-- Donate button and copy are already clean. No changes.
+## Implementation
 
-### 6. Remove redundant icons
-- "Our Principles" cards all use the same Shield icon, which adds no information. The new inline treatment removes icons entirely for principles.
+### File: `src/modules/core/pages/AboutPage.tsx`
+Add an `<h2>` with class `font-display text-fluid-heading font-bold text-foreground mb-8` below each pre-label `<p>` in all four sections:
+- "What We Do" → add `<h2>Our Focus Areas</h2>`
+- "Governance Board" → add `<h2>Leadership</h2>`
+- "Resources" → add `<h2>Governance Documents</h2>`
+- "Support the Foundation" → add `<h2>Fund Open Infrastructure</h2>`
 
-## Summary of visual flow
-Hero → What We Do (3 cards + 3 inline principles) → Governance Board → Resources → Support
+### File: `src/modules/projects/pages/ProjectsPage.tsx`
+Add the same `<h2>` pattern:
+- "Project Maturity" → add `<h2>How Projects Advance</h2>`
+- "All Projects" → add `<h2>Browse the Catalog</h2>`
 
-This reduces the page from 5 distinct content sections to 4, matching the tighter rhythm of Community and Projects.
+Two files edited total. No structural or data changes.
 
