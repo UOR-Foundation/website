@@ -1,5 +1,4 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
-import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
