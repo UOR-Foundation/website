@@ -9,11 +9,6 @@ import DonatePopup from "@/modules/donate/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
-const principleColors = [
-  "bg-primary",
-  "bg-accent",
-  "bg-muted-foreground",
-];
 
 const About = () => {
   const [donateOpen, setDonateOpen] = useState(false);
