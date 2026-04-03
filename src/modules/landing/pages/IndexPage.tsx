@@ -11,9 +11,9 @@ const Index = () => {
     <Layout>
       <PrimeConstellationBg />
       <HeroSection />
+      <WhatIsUorSection />
       <CommunitySection />
       <EcosystemSection />
-      <WhatIsUorSection />
       <ClosingCTASection />
     </Layout>
   );
