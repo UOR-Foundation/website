@@ -1,42 +1,10 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ExternalLink, ChevronRight, ChevronDown, Send, FlaskConical, Rocket, GraduationCap, FolderGit2, SearchCheck, BadgeCheck, Users, Scale, CheckCircle2 } from "lucide-react";
+import { ExternalLink, ChevronRight, Send, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
-import projectHologramImg from "@/assets/project-hologram.jpg";
-import projectAtlasImg from "@/assets/project-atlas.png";
-import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
-import projectPrismImg from "@/assets/project-prism.png";
-import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
-import projectUnsImg from "@/assets/project-uns.jpg";
-import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
-import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
-import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
-import projectUorPrivacyImg from "@/assets/project-uor-privacy.jpg";
-import projectUorCertificateImg from "@/assets/project-uor-certificate.jpg";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
-import { DISCORD_URL } from "@/data/external-links";
+import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
-
-const imageMap: Record<string, string> = {
-  hologram: projectHologramImg,
-  atlas: projectAtlasImg,
-  atomicLang: projectAtomicLangImg,
-  prism: projectPrismImg,
-  uorMcp: projectUorMcpImg,
-  uns: projectUnsImg,
-  qrCartridge: projectQrCartridgeImg,
-  hologramSdk: projectHologramSdkImg,
-  uorIdentity: projectUorIdentityImg,
-  uorPrivacy: projectUorPrivacyImg,
-  uorCertificate: projectUorCertificateImg,
-};
-
-type Project = ProjectData & { image?: string };
-
-const projects: Project[] = projectsData.map(p => ({
-  ...p,
-  image: p.imageKey ? imageMap[p.imageKey] : undefined,
-}));
 
 const maturityColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary/15 text-primary border-primary/20",
@@ -55,79 +23,6 @@ const maturityBgColors: Record<MaturityLevel, string> = {
   Incubating: "border-accent/20 bg-accent/5",
   Sandbox: "border-border bg-muted/30",
 };
-
-const CollapsibleCategory = ({ level, count, dotColor, children, disabled }: { level: string; count: number; dotColor: string; children: React.ReactNode; disabled?: boolean }) => {
-  const [open, setOpen] = useState(true);
-  const canToggle = !disabled;
-  return (
-    <div className="border border-border rounded-2xl bg-card overflow-hidden">
-      <button
-        onClick={() => canToggle && setOpen(!open)}
-        className={`w-full flex items-center gap-3 px-4 py-4 md:px-8 md:py-6 transition-colors ${canToggle ? 'hover:bg-muted/30 cursor-pointer' : 'cursor-default'}`}
-      >
-        <span className={`w-3 h-3 rounded-full ${dotColor}`} />
-        <h2 className="font-display text-fluid-heading font-bold text-foreground">{level}</h2>
-        {count > 0 && (
-          <span className="text-fluid-body text-foreground/70 font-body">{count} {count === 1 ? "project" : "projects"}</span>
-        )}
-        <ChevronDown size={20} className={`ml-auto text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && <div className="px-4 pb-4 md:px-8 md:pb-8">{children}</div>}
-    </div>
-  );
-};
-
-const INITIAL_VISIBLE = 6;
-
-const ProjectCategorySection = ({ level, levelProjects, hasProjects }: { level: MaturityLevel; levelProjects: Project[]; hasProjects: boolean }) => {
-  const [showAll, setShowAll] = useState(levelProjects.length <= INITIAL_VISIBLE);
-  const visibleProjects = showAll ? levelProjects : levelProjects.slice(0, INITIAL_VISIBLE);
-  const remaining = levelProjects.length - INITIAL_VISIBLE;
-
-  return (
-    <CollapsibleCategory level={level} count={levelProjects.length} dotColor={maturityDotColors[level]} disabled={!hasProjects}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-        {visibleProjects.map((project, index) => (
-          <Link
-            key={project.name}
-            to={`/projects/${project.slug}`}
-            className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up flex flex-col cursor-pointer"
-            style={{ animationDelay: `${index * 0.08}s` }}
-          >
-            {project.image && (
-              <div className={`w-full h-60 overflow-hidden relative ${project.maturity === 'Sandbox' ? 'project-card-glow' : ''}`}>
-                <img src={project.image} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              </div>
-            )}
-            <div className="p-5 md:p-9 flex flex-col flex-1">
-              <div className="flex items-center justify-between gap-2 mb-5">
-                <span className="text-fluid-label font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap truncate">{project.category}</span>
-                <span className={`text-sm font-medium px-2.5 py-1 rounded-full border font-body whitespace-nowrap shrink-0 ${maturityColors[project.maturity]}`}>{project.maturity}</span>
-              </div>
-              <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-4">{project.name}</h3>
-              <p className="text-foreground/70 font-body text-fluid-body leading-relaxed">{project.description}</p>
-              <div className="mt-auto pt-6">
-                <span className="flex items-center gap-1.5 text-primary text-fluid-body font-medium font-body hover:underline">Learn more <ChevronRight size={16} /></span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-      {!showAll && remaining > 0 && (
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-muted-foreground font-medium font-body text-fluid-label hover:border-primary/30 hover:text-foreground transition-all duration-200"
-          >
-            Show {remaining} more {remaining === 1 ? 'project' : 'projects'}
-            <ChevronDown size={16} />
-          </button>
-        </div>
-      )}
-    </CollapsibleCategory>
-  );
-};
-
 
 const Projects = () => {
   const [formData, setFormData] = useState({
@@ -174,44 +69,42 @@ const Projects = () => {
       <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
-            UOR Projects
+            Projects
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Every project in the UOR ecosystem, from early experiments to production-ready tools. Find something to use, or submit your own.
+            Open-source tools and infrastructure built on the UOR Framework. Browse the catalog, or submit your own.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.35s" }}
           >
             <a href="#submit" className="btn-primary">
-              Submit Your Project
+              Submit a Project
             </a>
-            <a href="#maturity" className="btn-outline">
-              How Maturity Works
+            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
+              View on GitHub <ExternalLink size={14} />
             </a>
           </div>
         </div>
       </section>
 
-      {/* How to Contribute — 3-step quick guide */}
-      <section className="py-section-sm bg-background border-b border-foreground/8">
+      {/* Maturity Model — compact inline reference */}
+      <section id="maturity" className="py-section-sm bg-background border-b border-foreground/8 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            How to Contribute
+            Project Maturity
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {[
-              { step: "1", icon: SearchCheck, title: "Find a Project", description: "Browse the catalog below. Each project lists its maturity level, category, and links to the source code." },
-              { step: "2", icon: FolderGit2, title: "Start Contributing", description: "Check the project's GitHub for open issues, contribution guidelines, and documentation to get started." },
-              { step: "3", icon: Send, title: "Submit Your Own", description: "Have a project that uses UOR? Use the form at the bottom of this page to submit it for review." },
-            ].map((item, idx) => (
-              <div key={item.step} className="flex gap-4 animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <div className="flex-shrink-0 w-10 h-10 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center">
-                  <item.icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {maturityInfo.map((stage, idx) => (
+              <div
+                key={stage.level}
+                className={`rounded-2xl border p-5 flex items-start gap-3 ${maturityBgColors[stage.level]} animate-fade-in-up opacity-0`}
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <span className={`mt-1.5 w-3 h-3 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
                 <div>
-                  <h3 className="font-display font-semibold text-foreground text-fluid-card-title mb-1">{item.title}</h3>
-                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed">{item.description}</p>
+                  <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
+                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mt-1">{stage.tagline}</p>
                 </div>
               </div>
             ))}
@@ -219,118 +112,106 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* The Project Journey — maturity framework before catalog */}
-      <section id="maturity" className="py-section-sm bg-background border-b border-foreground/8 scroll-mt-28">
+      {/* All Projects — flat grid */}
+      <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            The Project Journey
+            All Projects
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {maturityInfo.map((stage, idx) => {
-              const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
-              return (
-                <div
-                  key={stage.level}
-                  className={`rounded-2xl border p-6 flex flex-col ${maturityBgColors[stage.level]} ${idx === 2 ? 'border-primary/30' : ''} animate-fade-in-up opacity-0`}
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <StageIcon size={18} className={idx === 2 ? 'text-primary' : 'text-foreground/50'} />
-                    <span className={`w-2.5 h-2.5 rounded-full ${maturityDotColors[stage.level]}`} />
-                    <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
-                  </div>
-                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mb-3">{stage.tagline}</p>
-                  <ul className="space-y-1.5 mt-auto">
-                    {stage.criteria.map((c) => (
-                      <li key={c} className="text-fluid-label text-foreground/60 font-body flex items-start gap-2">
-                        <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
-                        {c}
-                      </li>
-                    ))}
-                  </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projectsData.map((project, index) => (
+              <Link
+                key={project.slug}
+                to={`/projects/${project.slug}`}
+                className="group rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up opacity-0 flex flex-col"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-fluid-label font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body truncate">{project.category}</span>
+                  <span className={`text-fluid-label font-medium px-2 py-0.5 rounded-full border font-body shrink-0 ${maturityColors[project.maturity]}`}>{project.maturity}</span>
                 </div>
-              );
-            })}
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
+                <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{project.description}</p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="flex items-center gap-1 text-primary text-fluid-label font-medium font-body group-hover:gap-2 transition-all">
+                    Learn more <ChevronRight size={14} />
+                  </span>
+                  {project.url && (
+                    <span
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(project.url, "_blank"); }}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Content A: Project Catalog */}
-      <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] space-y-8">
-          {(["Sandbox", "Incubating", "Graduated"] as MaturityLevel[]).map((level) => {
-            const levelProjects = projects.filter((p) => p.maturity === level);
-            return (
-              <ProjectCategorySection key={level} level={level} levelProjects={levelProjects} hasProjects={levelProjects.length > 0} />
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Content B: Submit a Project — maturity levels + process + form merged */}
+      {/* Submit a Project */}
       <section id="submit" className="section-dark py-section-sm scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          {/* Submit form */}
-          <div className="pt-golden-lg border-t border-section-dark-foreground/10">
-            <div className="text-center mb-8">
-              <h2 className="font-display text-fluid-heading font-bold">
-                Submit for Sandbox Review
-              </h2>
-              <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-                All you need is an open-source repository and a clear problem statement. Our technical committee reviews every submission within 3 weeks.
-              </p>
-            </div>
+          <div className="text-center mb-8">
+            <h2 className="font-display text-fluid-heading font-bold">
+              Submit a Project
+            </h2>
+            <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
+              All you need is an open-source repository and a clear description. Our technical committee reviews every submission within 3 weeks.
+            </p>
+          </div>
 
-            {submitted ? (
-              <div className="text-center py-16 animate-fade-in-up">
-                <div className="relative w-28 h-28 mx-auto mb-10">
-                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '1.94s' }} />
-                  <div className="relative w-28 h-28 rounded-full bg-primary/15 flex items-center justify-center border border-primary/20">
-                    <CheckCircle2 size={48} className="text-primary" />
-                  </div>
-                </div>
-                <h3 className="font-display text-fluid-page-title font-bold text-section-dark-foreground mb-5">You're In.</h3>
-                <p className="text-xl text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for Sandbox review.</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                  <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body">
-                    Join Our Discord <ExternalLink size={14} />
-                  </a>
-                  <button
-                    onClick={() => { setSubmitted(false); setFormData({ projectName: "", repoUrl: "", contactEmail: "", description: "", problemStatement: "N/A" }); }}
-                    className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/60 font-medium hover:border-section-dark-foreground/30 transition-colors font-body"
-                  >
-                    Submit Another
-                  </button>
+          {submitted ? (
+            <div className="text-center py-16 animate-fade-in-up">
+              <div className="relative w-28 h-28 mx-auto mb-10">
+                <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: '1.94s' }} />
+                <div className="relative w-28 h-28 rounded-full bg-primary/15 flex items-center justify-center border border-primary/20">
+                  <CheckCircle2 size={48} className="text-primary" />
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Project Name *</label>
-                    <input type="text" required value={formData.projectName} onChange={(e) => setFormData({ ...formData, projectName: e.target.value })} placeholder="e.g. UOR Visualization Engine" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Repository URL *</label>
-                    <input type="url" required value={formData.repoUrl} onChange={(e) => setFormData({ ...formData, repoUrl: e.target.value })} placeholder="https://github.com/..." className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Contact Email *</label>
-                  <input type="email" required value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} placeholder="maintainer@example.com" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Short Description *</label>
-                  <input type="text" required value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="One-line summary of what your project does" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                </div>
-                {submitError && <p className="text-fluid-label text-destructive font-body">{submitError}</p>}
-                <button type="submit" disabled={submitting} className="w-full md:w-auto px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <Send size={16} className={submitting ? 'animate-pulse' : ''} />
-                  {submitting ? 'Submitting…' : 'Submit for Sandbox Review'}
+              <h3 className="font-display text-fluid-page-title font-bold text-section-dark-foreground mb-5">You're In.</h3>
+              <p className="text-xl text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for Sandbox review.</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body">
+                  Join Our Discord <ExternalLink size={14} />
+                </a>
+                <button
+                  onClick={() => { setSubmitted(false); setFormData({ projectName: "", repoUrl: "", contactEmail: "", description: "", problemStatement: "N/A" }); }}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/60 font-medium hover:border-section-dark-foreground/30 transition-colors font-body"
+                >
+                  Submit Another
                 </button>
-              </form>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Project Name *</label>
+                  <input type="text" required value={formData.projectName} onChange={(e) => setFormData({ ...formData, projectName: e.target.value })} placeholder="e.g. UOR Visualization Engine" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Repository URL *</label>
+                  <input type="url" required value={formData.repoUrl} onChange={(e) => setFormData({ ...formData, repoUrl: e.target.value })} placeholder="https://github.com/..." className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Contact Email *</label>
+                <input type="email" required value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} placeholder="maintainer@example.com" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-fluid-body font-medium text-section-dark-foreground font-body">Short Description *</label>
+                <input type="text" required value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="One-line summary of what your project does" className="w-full h-11 px-4 rounded-xl border border-section-dark-foreground/15 bg-section-dark-foreground/5 text-section-dark-foreground placeholder:text-section-dark-foreground/30 font-body text-fluid-body focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              </div>
+              {submitError && <p className="text-fluid-label text-destructive font-body">{submitError}</p>}
+              <button type="submit" disabled={submitting} className="w-full md:w-auto px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <Send size={16} className={submitting ? 'animate-pulse' : ''} />
+                {submitting ? 'Submitting…' : 'Submit for Review'}
+              </button>
+            </form>
+          )}
         </div>
       </section>
     </Layout>
