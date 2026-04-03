@@ -123,7 +123,7 @@ const ResearchPaperAtlasEmbeddings = () => {
             </h2>
             <div className="space-y-4 text-sm md:text-base text-muted-foreground font-body leading-relaxed">
               <p>
-                In mathematics, <strong>symmetry</strong> is not just a visual property—it is a precise, measurable structure. The most complex symmetries in nature are captured by objects called <em>Lie groups</em>. Among these, five stand apart: the <strong>exceptional Lie groups</strong> (G₂, F₄, E₆, E₇, E₈). For over a century, these groups have been studied individually, each with its own construction. No single origin has been known.
+                In mathematics, <strong>symmetry</strong> is not just a visual property; it is a precise, measurable structure. The most complex symmetries in nature are captured by objects called <em>Lie groups</em>. Among these, five stand apart: the <strong>exceptional Lie groups</strong> (G₂, F₄, E₆, E₇, E₈). For over a century, these groups have been studied individually, each with its own construction. No single origin has been known.
               </p>
               <p>
                 This research changes that. We show that <em>all five</em> exceptional groups can be constructed from one starting point: a graph with exactly 96 vertices called the <strong>Atlas of Resonance Classes</strong>. This graph is not chosen arbitrarily—it is the unique solution to a mathematical optimisation principle (the stationarity of an action functional on a 12,288-cell boundary).
