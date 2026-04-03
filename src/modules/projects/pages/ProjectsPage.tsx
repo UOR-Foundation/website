@@ -193,6 +193,32 @@ const Projects = () => {
         </div>
       </section>
 
+      {/* How to Contribute — 3-step quick guide */}
+      <section className="py-section-sm bg-background border-b border-foreground/8">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            How to Contribute
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {[
+              { step: "1", icon: SearchCheck, title: "Find a Project", description: "Browse the catalog below. Each project lists its maturity level, category, and links to the source code." },
+              { step: "2", icon: FolderGit2, title: "Start Contributing", description: "Check the project's GitHub for open issues, contribution guidelines, and documentation to get started." },
+              { step: "3", icon: Send, title: "Submit Your Own", description: "Have a project that uses UOR? Use the form at the bottom of this page to submit it for review." },
+            ].map((item, idx) => (
+              <div key={item.step} className="flex gap-4 animate-fade-in-up opacity-0" style={{ animationDelay: `${idx * 0.1}s` }}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center">
+                  <item.icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <h3 className="font-display font-semibold text-foreground text-fluid-card-title mb-1">{item.title}</h3>
+                  <p className="text-foreground/65 font-body text-fluid-body leading-relaxed">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Content A: Project Catalog */}
       <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] space-y-8">

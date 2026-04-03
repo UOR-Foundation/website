@@ -59,7 +59,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </Link>
 
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-              {navItems.map((item) => (
+              {navItems.filter(item => !(item as any).isCta).map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}

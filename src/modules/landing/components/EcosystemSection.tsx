@@ -32,8 +32,8 @@ const EcosystemSection = () => {
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
-            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
-              UOR Ecosystem
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
+              Our Projects
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
               Featured Projects
