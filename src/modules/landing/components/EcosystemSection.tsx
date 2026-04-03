@@ -1,7 +1,7 @@
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { featuredProjects, type MaturityLevel } from "@/data/featured-projects";
-import { teamMembers } from "@/data/team-members";
+
 
 const maturityDotColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary",
@@ -109,36 +109,6 @@ const EcosystemSection = () => {
           </div>
         </div>
 
-        {/* Community members */}
-        <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
-            UOR Community
-          </p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 justify-items-center gap-x-4 gap-y-6 md:gap-x-6 md:gap-y-8">
-            {teamMembers.map((member, idx) => (
-              <a
-                key={member.name}
-                href={member.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col items-center text-center animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${0.1 + idx * 0.03}s` }}
-              >
-                <div className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-105 transition-transform duration-300" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover object-top" loading="lazy" />
-                </div>
-                <p className="font-body font-semibold text-foreground leading-tight text-xs md:text-sm">{member.name.split(" ")[0]}</p>
-                <p className="font-body text-foreground/55 leading-snug mt-0.5 text-xs">{member.role}</p>
-              </a>
-            ))}
-            <div className="flex flex-col items-center text-center justify-center">
-              <div className="w-16 h-16 md:w-20 md:h-20 border border-foreground/10 flex items-center justify-center mb-2" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)' }}>
-                <span className="font-mono text-foreground/50 text-sm">+</span>
-              </div>
-              <p className="font-mono text-foreground/50 text-xs">150+</p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
