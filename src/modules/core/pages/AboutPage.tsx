@@ -65,7 +65,6 @@ const About = () => {
             <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               What We Do
             </p>
-            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
               {whatWeDoCards.map((item, idx) => {
                 const Icon = cardIconMap[item.iconKey];
