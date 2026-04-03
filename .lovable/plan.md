@@ -1,110 +1,104 @@
 
 
-# Further Sharpen the Project-Centric Experience
+# Copy Clarity Pass — Precise, Jargon-Free, Developer-Familiar
 
-## Current State Assessment
-
-The site has improved significantly — Projects in nav position 1, Learn/Connect/Build pillars, stats bar, contribution guide. But comparing against CNCF's ruthless simplicity, there are still friction points:
-
-1. **The hero title** ("Your Universal Coordinate System for Information") is branded but abstract. CNCF says "Cloud Native Computing Foundation" — you know exactly what it is. A newcomer from CNCF still doesn't know what "Universal Coordinate System for Information" means.
-2. **The "What is UOR" section** is still explanation-heavy — a two-column layout with a diagram, followed by four application cards. On a project-centric site, this should be a quick bridge between the hero and the projects, not a mini-lesson.
-3. **The maturity pipeline** (Sandbox → Incubating → Graduated) is buried at the bottom of the Projects page. CNCF puts this front and center on their projects page — it's the organizing principle. It should also appear on the homepage as a visual pipeline.
-4. **The Community page** leads with "Research Areas" — 12 category buttons, research papers. This is valuable but it buries the participation paths. A CNCF/Linux contributor lands here and asks "how do I get involved?" — the answer should be immediate.
-5. **Featured projects on the homepage** don't link to their detail pages — they only have external links. Every card should route to the internal project page.
+After reviewing every page and data file, here are the specific text changes needed. Each change removes vagueness, tightens language, or replaces internal jargon with words an open-source developer already knows.
 
 ---
 
-## Changes
+## 1. UNS Page — Remove Dense Jargon
 
-### 1. Hero Title — Say What the Foundation Does
+**File:** `src/modules/uns/pages/UnsPage.tsx`
 
-**Current:** "Your Universal Coordinate System for Information"
-**New:** "The Open Foundation for Universal Data Identity"
-
-This follows CNCF's pattern exactly: "The [adjective] [org type] for [domain]." A developer immediately understands: it's open, it's a foundation, it's about data identity. The subtitle already fills in the details.
-
-Also tighten the subtitle from "A nonprofit home for open-source projects building universal data identity. Learn the framework, connect with contributors, and build together." to: "We support open-source projects that give data a permanent, verifiable address. Learn the framework, connect with contributors, and start building."
-
-**File:** `src/modules/landing/components/HeroSection.tsx`
-
-### 2. Condense "What is UOR" Into a Single-Row Explainer
-
-The current two-column layout with diagram + four application cards takes significant scroll real estate. For a project-centric site, this should be a quick conceptual bridge.
-
-**Replace the current section with:**
-- One concise paragraph (the existing "Today, the same data gets different IDs..." text — already good)
-- Remove the full diagram — it's useful on the Docs page, not the homepage
-- Remove the four application cards — they're domain categories that add cognitive load without driving action
-- Keep the "Read the Docs →" link
-- This makes the section ~60% shorter, getting visitors to the closing CTA faster
-
-**File:** `src/modules/landing/components/WhatIsUorSection.tsx`
-
-### 3. Homepage Featured Projects — Link to Internal Pages
-
-Currently the project cards on the homepage only have an ExternalLink icon going to GitHub. They should link to the internal project detail pages (e.g., `/projects/hologram`) so visitors stay on the site and learn more.
+The UNS page is the worst offender. It reads like an internal RFC, not a project page. Terms like "IPv6 content-addressing," "UOR algebraic identity," "CIDv1," "Braille address," "derivation ID," "epistemic grading," and "cert:UnsCertificate" will alienate anyone who isn't already deep in the project.
 
 **Changes:**
-- Wrap each project card in a `Link` to `/projects/{slug}`
-- Add slug to `featured-projects.ts` data
-- Keep the external link icon as a secondary action
+- Hero description: Replace "Decentralized name resolution via IPv6 content-addressing and UOR algebraic identity..." → "A naming system where addresses come from the content itself. Look up any name, verify it independently, no central authority required."
+- Forward Resolution: "Resolve human-readable names to UOR identities..." → "Turn a human-readable name into a verified address. One lookup, one result, fully traceable."
+- Reverse Resolution: "Map IPv6 ULA addresses back to registered names, analogous to DNS PTR records but content-verified." → "Go from an address back to its registered name. Like reverse DNS, but the result is self-verifying."
+- Zone Management: "Create and manage self-certifying zones. Each zone is anchored to a UOR address with a dedicated IPv6 /48 prefix." → "Create and manage zones. Each zone has its own address space and verifies itself — no external certificate authority needed."
+- Record Certification: "Every record is issued a cert:UnsCertificate with derivation-based integrity proofs and epistemic grading." → "Every record comes with a built-in proof of integrity. Anyone can verify it, anywhere, without special tools."
+- Record Types table: Keep the type codes (UAAA, UCID, etc.) but simplify descriptions. E.g., "Name → CIDv1 content identifier" → "Name → content address". "Name → UOR Braille glyph address" → "Name → compact visual address". "Name → verification certificate" → "Name → integrity proof".
 
-**Files:** `src/data/featured-projects.ts`, `src/modules/landing/components/EcosystemSection.tsx`
+## 2. Research Categories — Tighten Descriptions
 
-### 4. Add Maturity Pipeline Visual to Homepage
+**File:** `src/data/research-categories.ts`
 
-CNCF's core narrative is Sandbox → Incubating → Graduated. This pipeline should be visible on the homepage, not just buried on the Projects page.
+Several descriptions use phrases that either restate the label or drift into vague territory.
 
-**Add a compact horizontal pipeline** below the Featured Projects in EcosystemSection: three connected steps showing Sandbox → Incubating → Graduated with one-line descriptions and project counts. This makes the maturity journey immediately visible and reinforces the project-centric identity.
+- "Formal methods, algebraic structures, and mathematical foundations of UOR." → "The mathematical structures that UOR is built on. Proofs, algebra, and formal verification."
+- "Embedded systems, robotics middleware, and UOR-native hardware interfaces." → "Running UOR on physical devices — embedded systems, sensors, and robotics."
+- "Semantic datasets, reproducible pipelines, and interoperable analytics." → "Reproducible data pipelines and analytics that work across tools and teams."
+- "Medical data interoperability, patient-centric identity, and open health standards." → "Portable medical records and patient-owned identity. Data moves with the person, not the institution."
+- "Decentralized protocols, on-chain identity, and content-addressed storage." → "Decentralized identity and storage. UOR addressing works natively with blockchain protocols."
+- "Emerging technology exploration at the intersection of UOR and next-gen infrastructure." → "Early-stage work on technologies that don't fit existing categories yet."
+- "Sustainable infrastructure, carbon accounting, and open energy data standards." → "Open data standards for carbon accounting, energy tracking, and climate infrastructure."
 
-```text
-[ Sandbox ]  →  [ Incubating ]  →  [ Graduated ]
-  11 projects      0 projects        0 projects
-```
+## 3. Research Papers — Simplify Physics Descriptions
+
+**File:** `src/data/research-papers.ts`
+
+The physics papers have descriptions loaded with notation (δ₀ = 6.8°, α⁻¹ = 137.036, D = 1.9206, τ_p = 8.9 × 10³⁴ yr) that is appropriate for a paper abstract but not a card description on a community page.
+
+- "Quantum Self-Verification Geometry" description → "Shows that all fundamental physical constants can be derived from a single geometric property of spacetime. No free parameters."
+- "QSVG Technical Appendices" description → "The complete mathematical proofs behind the physical theory — how the core geometric property emerges and why it is unique."
+- "QSVG Fundamental Interactions Atlas" description → "Derives all four fundamental forces and dark energy from the same geometric framework. Each force emerges as a different facet of one structure."
+- "QSVG Experimental Roadmap" description → "Concrete predictions that can be tested within 3–5 years. Every prediction has zero free parameters — the geometry either matches experiment or it doesn't."
+
+## 4. Ecosystem Section — Pipeline Descriptions
 
 **File:** `src/modules/landing/components/EcosystemSection.tsx`
 
-### 5. Community Page — Lead with Participation Paths, Not Research
+The pipeline descriptions are decent but can be sharper:
+- "Early-stage experiments with clear potential" → "Early-stage projects exploring new ideas"
+- "Growing adoption and community traction" → "Projects with active contributors and real-world use"
+- "Production-ready with proven stability" → "Stable, widely adopted, independently audited"
 
-Restructure the Community page so the first thing a visitor sees after the hero is "How to Participate" — three clear paths:
+## 5. About Page — Minor Tightening
 
-1. **Discuss** — Join Discord, ask questions, share ideas
-2. **Contribute** — Pick a project on GitHub, open a PR
-3. **Research** — Propose a paper, collaborate on validation
+**File:** `src/data/about-cards.ts`
 
-Then show Research Areas and Blog/Events below. This puts participation before content consumption.
+- "We coordinate working groups in mathematics, AI, and systems engineering. All proposals and results published on GitHub." → "We run working groups across mathematics, AI, and systems engineering. Everything is published on GitHub."
+- "We run a three-stage maturity pipeline (Sandbox → Incubation → Graduated) with community review and clear promotion criteria." → "Projects move through three stages — Sandbox, Incubating, Graduated — with community review at every step."
 
-**File:** `src/modules/community/pages/ResearchPage.tsx`
+## 6. Applications Cards — Remove Redundancy
 
-### 6. Projects Page — Promote the Maturity Pipeline as the Page's Core Narrative
+**File:** `src/data/applications.ts`
 
-Move the maturity level cards from the bottom (currently inside the "Submit" section) to directly after the "How to Contribute" guide, before the project catalog. This establishes the progression framework before showing the projects. Rename section header from "Project Maturity Levels" to "The Project Journey" — more active, more inviting.
+- "Run a computation once and produce a receipt that anyone can check. No need to re-run it, no need to trust the person who ran it." → "Run a computation once and get a proof anyone can check. No re-running, no trust required."
+- "Give AI systems a single, reliable map of all available data so they can find, verify, and use information on their own." → "Give AI a shared, verified index of data. Models find and use information without custom integrations."
+- "Let different fields share data and ideas without losing meaning in translation. One shared system, many disciplines." → "Share data across fields without losing meaning. One addressing system, every discipline."
+- "Provide a foundation for emerging fields like quantum computing and next-generation AI, where reliable data identity is essential." → "A foundation for quantum computing and next-generation AI, where data identity must be reliable from day one."
 
-**File:** `src/modules/projects/pages/ProjectsPage.tsx`
+## 7. Framework Page — "Anatomy of an Address" Clarity
 
-### 7. Tighten the Closing CTA Section
+**File:** `src/modules/framework/pages/StandardPage.tsx`
 
-The current CTA section has: three pillar cards + "Learn · Connect · Build" heading + three buttons (Getting Started Guide, Join Discord, GitHub Organization).
+- "Every piece of data in UOR is described by three coordinates that form a complete, self-verifying fingerprint." → "Every piece of data has three coordinates. Together they form a unique, self-verifying address."
+- "The building blocks that make up the data, enabling exact reconstruction." → "The parts that make up the data. Given these, anyone can reconstruct the original exactly."
+- Example text "4 distinct building blocks" → "e.g. [2, 3, 5, 7]" (concrete, not abstract)
+- "Six layers, each building on the one below it. Together they form a complete system for naming, finding, proving, and transforming data." → "Six layers. Each builds on the one below. Together they handle naming, discovery, verification, and transformation."
 
-The pillar cards already link to the right pages. The three buttons below duplicate what the pillars do. **Remove the three CTA buttons** and let the pillar cards do the work. Replace the "Learn · Connect · Build" heading + buttons with a simpler, single-line CTA: "Ready to build? Submit your project for review." with one button linking to `/projects#submit`.
+## 8. Donate Page — Tighten
 
-This eliminates redundancy and creates a single clear action at the bottom of the homepage.
+**File:** `src/modules/donate/pages/DonatePage.tsx`
 
-**File:** `src/modules/landing/components/ClosingCTASection.tsx`
+- "Your donation funds development, infrastructure, and a global research community. Every dollar goes directly to maintaining open tools that scientists, developers, and institutions rely on." → "Every dollar funds development, infrastructure, and research. We maintain open tools that developers and researchers depend on."
 
 ---
 
 ## Summary
 
-| # | Change | Why |
-|---|--------|-----|
-| 1 | Hero title: "The Open Foundation for Universal Data Identity" | Instantly tells what this org is, CNCF-style |
-| 2 | Condense "What is UOR" to one paragraph + link | Reduce scroll, project-centric focus |
-| 3 | Featured project cards link to internal pages | Keep visitors on-site, deepen engagement |
-| 4 | Maturity pipeline visual on homepage | Makes Sandbox→Graduated progression visible |
-| 5 | Community page leads with participation paths | "How to get involved" before "what we research" |
-| 6 | Projects page: maturity pipeline before catalog | Establish the journey before showing projects |
-| 7 | Simplify closing CTA to single action | Remove redundancy, one clear ask |
+| # | File(s) | Issue | Fix |
+|---|---------|-------|-----|
+| 1 | `UnsPage.tsx` | Dense internal jargon (IPv6 ULA, CIDv1, epistemic grading) | Plain English throughout |
+| 2 | `research-categories.ts` | Some descriptions restate the label or drift | Tighter, action-oriented |
+| 3 | `research-papers.ts` | Physics card descriptions full of notation | Remove notation, keep meaning |
+| 4 | `EcosystemSection.tsx` | Pipeline descriptions slightly vague | Sharper one-liners |
+| 5 | `about-cards.ts` | Minor wordiness | Trim |
+| 6 | `applications.ts` | Redundant phrasing in some cards | Tighter |
+| 7 | `StandardPage.tsx` | "Anatomy" section slightly abstract | More concrete |
+| 8 | `DonatePage.tsx` | Subtitle wordy | Trim |
 
-**7 changes across ~6 files. No new files. Pure focus, ordering, and copy refinements.**
+**8 targeted edits across 8 files. Pure copy changes — no structural or layout modifications.**
 
