@@ -32,7 +32,7 @@ const UorDiagramCompact = () => (
       <div className="flex flex-col items-center justify-center shrink-0 md:px-6 py-1 md:py-0">
         <ArrowRight className="hidden md:block w-6 h-6 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
         <ArrowDown className="block md:hidden w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
-        <span className="text-lg md:text-xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
+        <span className="text-xl md:text-2xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
           UOR
         </span>
         <span className="text-[10px] md:text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
