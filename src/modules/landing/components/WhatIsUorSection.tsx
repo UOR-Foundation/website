@@ -3,7 +3,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
 const UorDiagramCompact = () => (
-  <div className="w-full max-w-[520px] bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-6 md:p-8 overflow-hidden">
+  <div className="w-full max-w-[620px] bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-8 md:p-10 overflow-hidden">
     {/* Header */}
     <p className="text-xs md:text-sm font-body font-semibold tracking-[0.18em] uppercase text-[hsl(var(--section-dark-foreground)/0.7)] mb-8 text-center">
       Fragmentation → Unification
@@ -13,11 +13,11 @@ const UorDiagramCompact = () => (
     <div className="flex flex-col md:flex-row items-center gap-5 md:gap-0">
       {/* Stage 1: Fragmented silos */}
       <div className="flex-1 w-full flex flex-col items-center">
-        <div className="grid grid-cols-3 gap-2 max-w-[180px] w-full">
+        <div className="grid grid-cols-3 gap-2.5 max-w-[210px] w-full">
           {silos.map((s) => (
             <div
               key={s}
-              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[52px] text-[10px] md:text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[58px] text-[11px] md:text-sm font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
             >
               {s}
             </div>
@@ -32,17 +32,17 @@ const UorDiagramCompact = () => (
       <div className="flex flex-col items-center justify-center shrink-0 md:px-6 py-1 md:py-0">
         <ArrowRight className="hidden md:block w-6 h-6 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
         <ArrowDown className="block md:hidden w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
-        <span className="text-lg md:text-xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
+        <span className="text-xl md:text-2xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
           UOR
         </span>
-        <span className="text-[10px] md:text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
+        <span className="text-[11px] md:text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
           Universal<br />Address System
         </span>
       </div>
 
       {/* Stage 3: Unified graph */}
       <div className="flex-1 w-full flex flex-col items-center">
-        <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-3 aspect-square max-w-[180px] w-full">
+        <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-4 aspect-square max-w-[210px] w-full">
           <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
             <defs>
               <radialGradient id="homeNodeGlow">
@@ -93,7 +93,7 @@ const UorDiagramCompact = () => (
             ))}
           </svg>
         </div>
-        <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
+        <p className="text-[11px] md:text-sm font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
           One Shared<br />System
         </p>
       </div>
@@ -112,7 +112,7 @@ const WhatIsUorSection = () => {
         </div>
         <div className="rule-prime" />
 
-        <div className="py-golden-lg flex flex-col lg:flex-row lg:items-center lg:gap-16 animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
+        <div className="py-golden-lg flex flex-col lg:flex-row lg:items-center lg:gap-20 animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
           {/* Text */}
           <div className="max-w-2xl lg:flex-1">
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
