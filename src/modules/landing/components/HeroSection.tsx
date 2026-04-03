@@ -128,6 +128,7 @@ const HeroSection = () => {
         <div className="flex-1" />
 
         {/* Stats bar — desktop */}
+        <div className="w-3/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.7s" }} />
         <div
           className="w-full flex justify-center gap-10 lg:gap-14 pb-[clamp(2rem,3vh,3.5rem)] animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.75s" }}
