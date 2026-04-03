@@ -32,7 +32,7 @@ const Standard = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+      <section className="hero-gradient pt-48 md:pt-64 pb-20 md:pb-32">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
             The Framework
