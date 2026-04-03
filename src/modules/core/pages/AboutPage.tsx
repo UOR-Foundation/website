@@ -84,6 +84,7 @@ const About = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Governance Board
           </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Leadership</h2>
           <p
             className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-6xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}
