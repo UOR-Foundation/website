@@ -63,7 +63,7 @@ const Donate = () => {
             Fund open infrastructure
           </h1>
           <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
-            Your donation funds development, infrastructure, and a global research community. Every dollar goes directly to maintaining open tools that scientists, developers, and institutions rely on.
+            Every dollar funds development, infrastructure, and research. We maintain open tools that developers and researchers depend on.
           </p>
           <div className="mt-12 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
             <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">

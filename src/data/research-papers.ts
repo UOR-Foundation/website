@@ -18,7 +18,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Derives all fundamental constants from a single geometric angular defect δ₀ = 6.8° in tetrahedral spacetime. Predicts α⁻¹ = 137.036 from the Hopf fibration of the [3,3,5] Coxeter group, the same geometry underlying the Atlas substrate.",
+        "Shows that all fundamental physical constants can be derived from a single geometric property of spacetime. No free parameters.",
       href: "/research/qsvg-physical-theory",
     },
     {
@@ -26,7 +26,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Complete proofs establishing how δ₀ = 6.8° emerges from the {3,3,5} tessellation of H³, its connection to fractal dimension D = 1.9206, and the equivalence between the Riemann Hypothesis and geometric rigidity.",
+        "The complete mathematical proofs behind the physical theory — how the core geometric property emerges and why it is unique.",
       href: "/research/qsvg-technical-appendices",
     },
     {
@@ -34,7 +34,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Derives electromagnetism, gravity, strong and weak forces, and dark energy from tetrahedral geometry. Maxwell's equations emerge as the continuum limit of the CronNet-Holo operator restricted to photon tesseracts.",
+        "Derives all four fundamental forces and dark energy from the same geometric framework. Each force emerges as a different facet of one structure.",
       href: "/research/qsvg-interactions-atlas",
     },
     {
@@ -42,7 +42,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "Concrete, zero-free-parameter predictions testable within 3–5 years: muonium HFS shift (35.3 ± 3.5 Hz), cosmic birefringence (β ∝ ℓ^0.9206), primordial black hole spin (χ = 0.068), and proton lifetime (τ_p = 8.9 × 10³⁴ yr).",
+        "Concrete predictions that can be tested within 3–5 years. Every prediction has zero free parameters — the geometry either matches experiment or it doesn't.",
       href: "/research/qsvg-experimental-roadmap",
     },
   ],

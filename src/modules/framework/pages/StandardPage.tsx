@@ -57,7 +57,7 @@ const Standard = () => {
               Anatomy of an Address
             </p>
             <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-8">
-              Every piece of data in UOR is described by three coordinates that form a complete, self-verifying fingerprint.
+              Every piece of data has three coordinates. Together they form a unique, self-verifying address.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-border bg-card p-6">
@@ -86,11 +86,11 @@ const Standard = () => {
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The building blocks that make up the data, enabling exact reconstruction.
+                  The parts that make up the data. Given these, anyone can reconstruct the original exactly.
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                   <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">4 distinct building blocks</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">e.g. [2, 3, 5, 7]</p>
                 </div>
               </div>
             </div>
@@ -108,7 +108,7 @@ const Standard = () => {
             Framework Architecture
           </h2>
           <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-golden-lg">
-            Six layers, each building on the one below it. Together they form a complete system for naming, finding, proving, and transforming data.
+            Six layers. Each builds on the one below. Together they handle naming, discovery, verification, and transformation.
           </p>
           <FrameworkLayers />
 
