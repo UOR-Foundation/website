@@ -13,7 +13,7 @@ const Standard = () => {
   return (
     <Layout>
       {/* Hero — absorbs "The Problem" */}
-      <section className="hero-gradient pt-36 md:pt-48 pb-12 md:pb-16">
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The UOR Framework
