@@ -89,7 +89,7 @@ const HeroSection = () => {
             background: "linear-gradient(to bottom, transparent 42%, hsla(38, 40%, 50%, 0.015) 49%, hsla(38, 40%, 50%, 0.02) 51%, hsla(38, 40%, 50%, 0.015) 53%, transparent 60%)",
           }}
         />
-        <div className="relative w-[min(170vw,175vh*1.1)] h-[min(200vh,170vw*1.1)] lg:w-[min(165vw,170vh*1.1)] lg:h-[min(205vh,165vw*1.1)] mr-[-18%] lg:mr-[-16%]">
+        <div className="relative w-[min(190vw,195vh*1.1)] h-[min(220vh,190vw*1.1)] lg:w-[min(185vw,190vh*1.1)] lg:h-[min(225vh,185vw*1.1)] mr-[-24%] lg:mr-[-22%]">
           <GalaxyAnimation />
         </div>
       </div>
