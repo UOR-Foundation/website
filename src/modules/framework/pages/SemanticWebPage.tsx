@@ -140,7 +140,7 @@ const SemanticWebPage = () => {
           </blockquote>
           <div className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.35s" }}>
             <a href="#tower" className="btn-primary">See the Architecture</a>
-            <Link to="/standard" className="btn-outline">UOR Framework</Link>
+            <Link to="/docs" className="btn-outline">UOR Docs</Link>
           </div>
         </div>
       </section>
