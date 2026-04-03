@@ -90,7 +90,7 @@ const Standard = () => {
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                   <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">4 distinct building blocks</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">e.g. [2, 3, 5, 7]</p>
                 </div>
               </div>
             </div>
