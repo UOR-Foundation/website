@@ -22,7 +22,7 @@ const Standard = () => {
             className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
             style={{ animationDelay: "0.15s" }}
           >
-            A formal specification for content-addressed object spaces. Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries, database keys don't survive export. UOR eliminates this by deriving identity from content structure — the address is the data, so there is nothing to translate.
+            The open specification for how UOR addressing works. If you're building on UOR or evaluating it for your project, start here.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -64,7 +64,7 @@ const Standard = () => {
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The raw data itself, stored as a sequence of bytes. This is the "what": the actual content being addressed.
+                  The actual content being addressed — a number, a document, a record. This is the "what."
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                   <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>
@@ -143,7 +143,7 @@ const Standard = () => {
             Explore the Full Specification
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-fluid-body leading-relaxed max-w-xl mx-auto mb-10">
-            14 namespaces, 82 classes, 124 properties, and 14 named individuals. Open source and fully documented.
+            The full specification is open source. Read it, fork it, build on it.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <a

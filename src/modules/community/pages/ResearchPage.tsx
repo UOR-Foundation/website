@@ -46,7 +46,7 @@ const Research = () => {
             Our Community
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Researchers and builders working across disciplines to test ideas, validate results, and publish openly.
+            A global community of researchers and developers. Propose ideas, get peer review, and publish results — all in the open.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"

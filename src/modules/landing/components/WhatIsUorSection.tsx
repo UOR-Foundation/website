@@ -52,14 +52,14 @@ const WhatIsUorSection = () => {
               <span className="text-foreground/70 font-normal">The same input always produces the same address, on any machine, in any system.</span>
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              References that survive migration, replication, and federation. No central registry, no coordination protocol, no single point of failure.
+              Move data anywhere — the address stays the same. No central authority required, no single point of failure.
             </p>
             <div className="mt-golden-lg">
               <a
-                href="/framework"
+                href="/docs"
                 className="inline-flex items-center gap-3 text-fluid-body font-semibold uppercase tracking-[0.18em] text-primary/80 hover:text-primary transition-colors duration-150 ease-out"
               >
-                Read the Framework
+                Read the Docs
                 <ArrowRight size={15} />
               </a>
             </div>
@@ -81,7 +81,7 @@ const WhatIsUorSection = () => {
                     ))}
                   </div>
                   <p className="text-sm md:text-base font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-5 tracking-[0.15em] uppercase leading-snug">
-                    Isolated Data<br />Systems
+                    Separate<br />Systems
                   </p>
                 </div>
                 <div className="flex flex-col items-center justify-center shrink-0 md:px-8 lg:px-10 py-2 md:py-0">

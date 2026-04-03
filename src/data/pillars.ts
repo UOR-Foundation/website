@@ -5,26 +5,26 @@
 export const pillars = [
   {
     iconKey: "Globe",
-    title: "UOR Framework",
+    title: "Docs",
     description:
-      "Read the full specification. Six layers covering addressing, resolution, verification, and transformation for content-addressed data.",
-    href: "/standard",
-    cta: "Read the Spec",
+      "The open specification for how UOR addressing works. Six layers covering addressing, resolution, verification, and transformation.",
+    href: "/docs",
+    cta: "Read the Docs",
   },
   {
     iconKey: "Users",
-    title: "Research Community",
+    title: "Community",
     description:
-      "Propose ideas, get peer review, publish results. Active working groups across mathematics, AI, cryptography, and systems engineering.",
+      "Propose ideas, get peer review, and publish results. Active working groups across mathematics, AI, cryptography, and systems engineering.",
     href: "/research",
     cta: "Join the Discussion",
   },
   {
     iconKey: "Rocket",
-    title: "Project Launchpad",
+    title: "Projects",
     description:
-      "Ship your project through three stages: Sandbox, Incubation, Graduated. Community review, shared infrastructure, and clear criteria.",
+      "Every project in the UOR ecosystem — from early experiments to production-ready tools. Find something to use, or submit your own.",
     href: "/projects",
-    cta: "Submit a Project",
+    cta: "Explore Projects",
   },
 ];

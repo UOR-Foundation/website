@@ -114,7 +114,7 @@ const SemanticWebPage = () => {
     { aspect: "Schema", original: "Schemas authored separately and linked by convention. Validity requires external tools.", uor: "Schema embedded in every document via JSON-LD @context. Every document is self-describing." },
     { aspect: "Reasoning", original: "Open-world inference. Computationally expensive. May not terminate.", uor: "Seven deterministic canonicalization rules. Always terminates. Always verifiable." },
     { aspect: "Proof", original: "Proposed but never widely standardized. Most systems rely on source trust.", uor: "Every operation produces a PROV-O aligned derivation record. Proofs are structural, not optional." },
-    { aspect: "Trust", original: "Depends on digital signatures, certificate authorities, and institutional reputation.", uor: "Mathematical property. neg(bnot(x)) = succ(x) verifiable by any machine in under a second." },
+    { aspect: "Trust", original: "Depends on digital signatures, certificate authorities, and institutional reputation.", uor: "Built-in mathematical verification. Any machine can check it in under a second." },
     { aspect: "Deduplication", original: "owl:sameAs assertions: manual, error-prone, non-transitive at scale.", uor: "Same derivation ID = provably identical. Computed, not asserted." },
   ];
 
@@ -127,7 +127,7 @@ const SemanticWebPage = () => {
             The Semantic Web, Powered by UOR
           </h1>
           <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            How the UOR Framework implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI.
+            How UOR implements each layer of the W3C Semantic Web stack.
           </p>
           <blockquote className="mt-8 border-l-4 border-primary pl-6 py-2 max-w-3xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
             <p className="text-foreground font-display text-fluid-lead font-medium italic leading-relaxed">
@@ -140,7 +140,7 @@ const SemanticWebPage = () => {
           </blockquote>
           <div className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.35s" }}>
             <a href="#tower" className="btn-primary">See the Architecture</a>
-            <Link to="/standard" className="btn-outline">UOR Framework</Link>
+            <Link to="/docs" className="btn-outline">UOR Docs</Link>
           </div>
         </div>
       </section>
@@ -241,8 +241,8 @@ const SemanticWebPage = () => {
             Every layer is formally specified, implemented, and independently verifiable.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/standard" className="btn-primary inline-flex items-center gap-2">
-              UOR Framework <ArrowRight className="w-4 h-4" />
+            <Link to="/docs" className="btn-primary inline-flex items-center gap-2">
+              UOR Docs <ArrowRight className="w-4 h-4" />
             </Link>
             <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
               W3C Reference <ExternalLink className="w-4 h-4" />

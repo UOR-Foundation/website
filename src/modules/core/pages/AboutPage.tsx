@@ -20,7 +20,7 @@ const About = () => {
             className="mt-10 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data. We maintain the specification, support a global research community, and guide projects from idea to production.
+            A 501(c)(3) nonprofit maintaining the UOR specification and supporting the projects built on it.
           </p>
         </div>
       </section>
