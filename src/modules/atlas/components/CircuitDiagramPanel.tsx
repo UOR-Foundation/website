@@ -3,9 +3,9 @@
  * ═════════════════════
  *
  * Interactive SVG renderer for the categorical compiler output:
- *   1. Decomposition tree — morphisms → categorical primitives
- *   2. Primitive sequence — cup/cap/dagger/compose/edge/identity
- *   3. Optimized gate output — Clifford+T / Pauli / Clifford
+ *   1. Decomposition tree. morphisms → categorical primitives
+ *   2. Primitive sequence. cup/cap/dagger/compose/edge/identity
+ *   3. Optimized gate output. Clifford+T / Pauli / Clifford
  *
  * @module atlas/components/CircuitDiagramPanel
  */

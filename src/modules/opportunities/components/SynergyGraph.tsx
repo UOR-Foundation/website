@@ -40,7 +40,7 @@ interface SelectedNode {
   position: { x: number; y: number };
 }
 
-// ── Tier colors — HSL matching design system ─────────────────────────────
+// ── Tier colors. HSL matching design system ─────────────────────────────
 
 const TIER_COLORS: Record<string, string> = {
   lossless: "hsl(220, 60%, 55%)",

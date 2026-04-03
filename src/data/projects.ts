@@ -1,5 +1,5 @@
 /**
- * Full project catalog and maturity model — serializable data for UOR certification.
+ * Full project catalog and maturity model. serializable data for UOR certification.
  * Images are mapped at the component level by `imageKey`.
  */
 export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";

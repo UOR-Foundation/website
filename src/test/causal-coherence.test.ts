@@ -1,5 +1,5 @@
 /**
- * Causal Multi-Head Coherence — Test Suite
+ * Causal Multi-Head Coherence. Test Suite
  * ═════════════════════════════════════════
  *
  * Tests the causal mask extension: the categorical analogue of
@@ -105,7 +105,7 @@ describe("Soft Causal Mask", () => {
     expect(layer.causalMode).toBe("soft");
   });
 
-  it("soft mask never masks — all triples evaluated", () => {
+  it("soft mask never masks. all triples evaluated", () => {
     const layer = createSoftCausalCoherenceLayer();
     const causalMap = new Map([
       [0, 100], [1, 101], [2, 102], [3, 103], [4, 104],

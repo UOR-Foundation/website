@@ -1,7 +1,7 @@
 /**
- * UNS Ledger — Verifiable SQL with QueryProofs and Audit Chain
+ * UNS Ledger. Verifiable SQL with QueryProofs and Audit Chain
  *
- * Every query result is accompanied by a proof:QueryProof — a Dilithium-3
+ * Every query result is accompanied by a proof:QueryProof. a Dilithium-3
  * signed attestation binding the query, database state, and result together.
  * Any party can verify any historical query result without trusting the
  * database server.
@@ -13,9 +13,9 @@
  * Implementation: in-memory row store (browser-compatible).
  * Interface designed for SQLite/distributed backends.
  *
- * @see proof: namespace — query proofs
- * @see state: namespace — state transitions
- * @see derivation: namespace — canonical identity
+ * @see proof: namespace. query proofs
+ * @see state: namespace. state transitions
+ * @see derivation: namespace. canonical identity
  */
 
 import { singleProofHash } from "../core/identity";
@@ -38,7 +38,7 @@ export interface QueryResult {
   rows: Record<string, unknown>[];
   rowCount: number;
   queryProof: SignedRecord<QueryProof>;
-  /** P22: Epistemic grade — 'A' for signed QueryProof with derivationId. */
+  /** P22: Epistemic grade. 'A' for signed QueryProof with derivationId. */
   epistemic_grade: "A";
   epistemic_grade_label: string;
   "derivation:derivationId": string;
@@ -82,7 +82,7 @@ interface Table {
   autoIncrementCounter: number;
 }
 
-// ── SQL Parser (minimal — covers CREATE, INSERT, SELECT, UPDATE, DELETE) ────
+// ── SQL Parser (minimal. covers CREATE, INSERT, SELECT, UPDATE, DELETE) ────
 
 /** Parse a CREATE TABLE statement. */
 function parseCreateTable(sql: string): { name: string; columns: ColumnDef[] } | null {
@@ -312,7 +312,7 @@ export class UnsLedger {
       rowCount: rows.length,
       queryProof: signedProof,
       epistemic_grade: "A",
-      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
       "derivation:derivationId": queryIdentity["u:canonicalId"],
     };
   }

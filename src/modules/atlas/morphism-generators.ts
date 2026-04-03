@@ -1,19 +1,19 @@
 /**
- * Extended Morphism Generators — 5 → 7 Categorical Operations
+ * Extended Morphism Generators. 5 → 7 Categorical Operations
  * ═════════════════════════════════════════════════════════════
  *
  * Extends the original 5 categorical operations with 2 generators from Sigmatics:
  *
  *   Original 5:
- *     product     (G₂)  — decomposition into independent factors
- *     quotient    (F₄)  — equivalence-class collapse
- *     filtration  (E₆)  — graded subsets by property
- *     augmentation(E₇)  — extension with new structure
- *     embedding   (E₈)  — full structure-preserving injection
+ *     product     (G₂) . decomposition into independent factors
+ *     quotient    (F₄) . equivalence-class collapse
+ *     filtration  (E₆) . graded subsets by property
+ *     augmentation(E₇) . extension with new structure
+ *     embedding   (E₈) . full structure-preserving injection
  *
  *   New from Sigmatics:
- *     suspension  — A → ΣA — lifts to higher categorical level (quote)
- *     projection  — A×B → A — canonical factor extraction (split)
+ *     suspension . A → ΣA. lifts to higher categorical level (quote)
+ *     projection . A×B → A. canonical factor extraction (split)
  *
  * These 7 generators map to the 7 Fano plane points (e₁…e₇),
  * establishing a correspondence between morphism generators and
@@ -114,7 +114,7 @@ const GENERATOR_DEFS: CategoricalGenerator[] = [
     algebraicStructure: "ℂ-conjugation",
     dimension: 2,
     signature: "A × B → A",
-    description: "Canonical factor extraction (split). Dual of product — selects one component.",
+    description: "Canonical factor extraction (split). Dual of product. selects one component.",
     dualGenerator: "augmentation",
   },
   {

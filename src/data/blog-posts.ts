@@ -1,5 +1,5 @@
 /**
- * Blog post metadata — serializable data for UOR certification.
+ * Blog post metadata. serializable data for UOR certification.
  * Cover images are mapped at the component level by `coverKey`.
  */
 export const blogPosts = [

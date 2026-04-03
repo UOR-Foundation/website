@@ -192,7 +192,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       phase: "Phase 14",
       icon: <Terminal size={24} />,
       color: "hsl(200,60%,60%)",
-      description: "Quantum process scheduling using Hologram dehydrate/rehydrate. Quantum states as content-addressed objects — frozen, teleported across mesh nodes, and resumed with perfect fidelity.",
+      description: "Quantum process scheduling using Hologram dehydrate/rehydrate. Quantum states as content-addressed objects. frozen, teleported across mesh nodes, and resumed with perfect fidelity.",
       stats: [
         { label: "Syscalls", value: "10" },
         { label: "Mesh Nodes", value: "4" },
@@ -220,7 +220,7 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       phase: "Phase 16",
       icon: <BookOpen size={24} />,
       color: "hsl(50,80%,60%)",
-      description: "Constructive proof: Atlas₉₆ ≅ Stab₃/~ — bijection between 96 Atlas vertices and 96 canonical stabilizer state representatives under phase equivalence.",
+      description: "Constructive proof: Atlas₉₆ ≅ Stab₃/~. bijection between 96 Atlas vertices and 96 canonical stabilizer state representatives under phase equivalence.",
       stats: [
         { label: "Theorems", value: "4+2" },
         { label: "Bijection", value: "96↔96" },
@@ -435,21 +435,21 @@ function QuantumOverview({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase mb-3">Research Roadmap</div>
         <div className="space-y-2">
           {[
-            { status: "done", label: "Phase 10: Quantum ISA — Atlas → gate mapping (12 tests)" },
-            { status: "done", label: "Phase 11: Topological Qubit — α derivation + qubit instantiation (14 tests)" },
-            { status: "done", label: "Phase 12: QED Loop Corrections — α refinement via graph invariants (12 tests)" },
-            { status: "done", label: "Phase 13: 153-Link Search — T(17) subgraph + 4π fermionic resonance (12 tests)" },
-            { status: "done", label: "Phase 14: Q-Linux Kernel — quantum process scheduling (14 tests)" },
-            { status: "done", label: "Phase 15: Circuit Compiler — algorithm → Atlas gate sequences (12 tests)" },
-            { status: "done", label: "Phase 16: Stabilizer Proof — Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
-            { status: "done", label: "Phase 17: Quantum Radar — real-time network coherence monitor (12 tests)" },
-            { status: "done", label: "Phase 18: Geometric Qubit Emulator — Souriau quantization + braiding gates (14 tests)" },
-            { status: "done", label: "Phase 19: Circuit Composer — drag-and-drop builder + kernel execution" },
-            { status: "done", label: "Phase 20: Souriau Thermodynamics — zero-point info geometry & Cartan NN integration" },
-            { status: "done", label: "Phase 22: Quantum-Native Attention — attention head → quantum circuit compilation (10 tests)" },
-            { status: "done", label: "Phase 23: Geometric Error Correction — τ-mirror stabilizer code [[96,48,2]] (12 tests)" },
-            { status: "done", label: "Phase 24: Atlas Compilation Pipeline — model → Atlas → quantum circuit → OpenQASM 3.0 (12 tests)" },
-            { status: "done", label: "Phase 25: Cayley-Dickson ↔ Atlas — octonion doubling tower mapped to Atlas layers (14 tests)" },
+            { status: "done", label: "Phase 10: Quantum ISA. Atlas → gate mapping (12 tests)" },
+            { status: "done", label: "Phase 11: Topological Qubit. α derivation + qubit instantiation (14 tests)" },
+            { status: "done", label: "Phase 12: QED Loop Corrections. α refinement via graph invariants (12 tests)" },
+            { status: "done", label: "Phase 13: 153-Link Search. T(17) subgraph + 4π fermionic resonance (12 tests)" },
+            { status: "done", label: "Phase 14: Q-Linux Kernel. quantum process scheduling (14 tests)" },
+            { status: "done", label: "Phase 15: Circuit Compiler. algorithm → Atlas gate sequences (12 tests)" },
+            { status: "done", label: "Phase 16: Stabilizer Proof. Atlas₉₆ ≅ Stab₃/~ bijection (7 steps)" },
+            { status: "done", label: "Phase 17: Quantum Radar. real-time network coherence monitor (12 tests)" },
+            { status: "done", label: "Phase 18: Geometric Qubit Emulator. Souriau quantization + braiding gates (14 tests)" },
+            { status: "done", label: "Phase 19: Circuit Composer. drag-and-drop builder + kernel execution" },
+            { status: "done", label: "Phase 20: Souriau Thermodynamics. zero-point info geometry & Cartan NN integration" },
+            { status: "done", label: "Phase 22: Quantum-Native Attention. attention head → quantum circuit compilation (10 tests)" },
+            { status: "done", label: "Phase 23: Geometric Error Correction. τ-mirror stabilizer code [[96,48,2]] (12 tests)" },
+            { status: "done", label: "Phase 24: Atlas Compilation Pipeline. model → Atlas → quantum circuit → OpenQASM 3.0 (12 tests)" },
+            { status: "done", label: "Phase 25: Cayley-Dickson ↔ Atlas. octonion doubling tower mapped to Atlas layers (14 tests)" },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className={`text-[11px] ${item.status === "done" ? "text-[hsl(140,60%,55%)]" : "text-[hsl(210,10%,35%)]"}`}>

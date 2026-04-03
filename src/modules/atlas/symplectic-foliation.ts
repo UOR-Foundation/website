@@ -320,7 +320,7 @@ function computeGENERIC(leaves: SymplecticLeaf[], flows: TransverseFlow[]): GENE
       metricBracket: 0, // (E, S) = 0 by degeneracy
       totalRate: totalPoisson,
       degeneracySH: 0, // {S, H} = 0
-      degeneracyES: 0, // (E, S) = 0 — structural
+      degeneracyES: 0, // (E, S) = 0. structural
     },
     {
       observable: "Entropy S",
@@ -469,7 +469,7 @@ export function runFoliationAnalysis(): FoliationReport {
     },
     {
       name: "Exceptional chain monotonicity",
-      description: "G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈ — Casimir values increase along chain",
+      description: "G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈. Casimir values increase along chain",
       holds: (() => {
         const opCasimirs = OPERATION_ORDER.map(op => {
           const opLeaves = leaves.filter(l => l.operation === op);

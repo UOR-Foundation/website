@@ -1,5 +1,5 @@
 /**
- * UNS Build System — Test Suite
+ * UNS Build System. Test Suite
  *
  * Tests for: Uorfile parsing, Docker compatibility, Compose,
  * Secrets Manager, and Image Registry (tag/push/pull).

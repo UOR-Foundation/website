@@ -1,5 +1,5 @@
 /**
- * UOR Schema.org Extension — Semantic Web Surface.
+ * UOR Schema.org Extension. Semantic Web Surface.
  *
  * Converts UNS objects (records, functions, store objects) into
  * schema.org JSON-LD representations with UOR derivation attribution.

@@ -1,10 +1,10 @@
 /**
- * UNS Core — IPv6 Destination Options Extension Header
+ * UNS Core. IPv6 Destination Options Extension Header
  *
  * Implements lossless full-hash transport alongside every UNS packet.
  *
  * THE PROBLEM:
- *   The IPv6 address (fd00:0075:6f72::/48) carries only 80 content bits —
+ *   The IPv6 address (fd00:0075:6f72::/48) carries only 80 content bits.
  *   a lossy routing projection of the 256-bit canonical identity.
  *
  * THE SOLUTION:
@@ -29,8 +29,8 @@
  *   37      1     PadN option length = 0x02
  *   38–39   2     PadN padding = 0x00 0x00
  *
- * @see RFC 8200 §4.6 — Destination Options Header
- * @see RFC 2460 — TLV-encoded options
+ * @see RFC 8200 §4.6. Destination Options Header
+ * @see RFC 2460. TLV-encoded options
  */
 
 import { sha256, bytesToHex } from "./address";
@@ -132,7 +132,7 @@ export function decodeDestOptHeader(
   while (offset < totalLen) {
     const optType = buf[offset];
 
-    // Pad1 — single zero byte (RFC 8200 §4.2)
+    // Pad1. single zero byte (RFC 8200 §4.2)
     if (optType === 0x00) {
       offset++;
       continue;

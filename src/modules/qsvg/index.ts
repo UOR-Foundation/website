@@ -1,5 +1,5 @@
 /**
- * QSVG — Quantum Self-Verification Geometry
+ * QSVG. Quantum Self-Verification Geometry
  * ══════════════════════════════════════════
  *
  * A geometric framework for the unification of fundamental physics,

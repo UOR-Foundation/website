@@ -163,7 +163,7 @@ export function constructManifold22(): Manifold22 {
     });
   }
 
-  // 12 G₂ boundary nodes — each maps to a specific Atlas vertex via d45/binary structure
+  // 12 G₂ boundary nodes. each maps to a specific Atlas vertex via d45/binary structure
   // The 12 boundary elements {2,4,8,16,32,64,192,224,240,248,252,254}
   // Each corresponds to a specific Atlas vertex region
   const boundary12 = boundary.boundary12;
@@ -243,7 +243,7 @@ export function constructManifold22(): Manifold22 {
  *   = 256 × 12.566 / 96
  *   ≈ 33.5 ... too low
  *
- * Path 3 (Manifold resonance — the Pauli derivation):
+ * Path 3 (Manifold resonance. the Pauli derivation):
  *   Using the 153-link, 22-node structure with 720° = 4π fermionic paths
  *   and 2:1 compression:shear parity:
  *   α⁻¹ = links × (4π)² / (nodes × 2π × compressionRatio)
@@ -256,7 +256,7 @@ export function constructManifold22(): Manifold22 {
  *   = 1.7778 × 3.14159
  *   = 5.585 ... no
  *
- * Path 5 (Emergent — letting Atlas speak):
+ * Path 5 (Emergent. letting Atlas speak):
  *   Sum of all vertex degrees = 2 × edges = 512
  *   Total graph "energy" = Σ degree² = 64×25 + 32×36 = 1600 + 1152 = 2752
  *   α⁻¹ = totalEnergy / (4π × signClasses)

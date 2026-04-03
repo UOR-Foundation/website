@@ -116,12 +116,12 @@ function PipelineView({ result }: { result: PipelineResult }) {
   const { model, atlas, summary, ecc } = result;
 
   const stages = [
-    { name: "Model Intake", color: "hsl(280,50%,60%)", detail: `${model.name} — ${model.family} family, ${model.paramsB}B params`, status: "✓" },
+    { name: "Model Intake", color: "hsl(280,50%,60%)", detail: `${model.name}. ${model.family} family, ${model.paramsB}B params`, status: "✓" },
     { name: "Atlas Decomposition", color: "hsl(200,60%,60%)", detail: `d=${model.embeddingDim} → ${atlas.r8ElementsPerVector} R₈ elements, ${atlas.completeRings} complete rings`, status: "✓" },
     { name: "Head Compilation", color: "hsl(140,50%,60%)", detail: `${summary.headsCompiled} heads compiled, ${summary.totalLogicalQubits} logical qubits`, status: "✓" },
     { name: "Layer Assembly", color: "hsl(30,60%,55%)", detail: `${summary.layersCompiled} layers, depth=${summary.totalDepth}, T-count=${summary.totalTGates}`, status: "✓" },
-    { name: "ECC Wrapping", color: ecc ? "hsl(140,50%,55%)" : "hsl(210,10%,40%)", detail: ecc ? `[[96,48,2]] → ${ecc.additionalQubits} syndrome qubits, ${ecc.overheadFactor}× overhead` : "Disabled", status: ecc ? "✓" : "—" },
-    { name: "QASM Emission", color: "hsl(320,50%,60%)", detail: `OpenQASM 3.0 — ${result.qasm.lines} lines, ${result.qasm.gateCount} gate instructions`, status: "✓" },
+    { name: "ECC Wrapping", color: ecc ? "hsl(140,50%,55%)" : "hsl(210,10%,40%)", detail: ecc ? `[[96,48,2]] → ${ecc.additionalQubits} syndrome qubits, ${ecc.overheadFactor}× overhead` : "Disabled", status: ecc ? "✓" : ". " },
+    { name: "QASM Emission", color: "hsl(320,50%,60%)", detail: `OpenQASM 3.0. ${result.qasm.lines} lines, ${result.qasm.gateCount} gate instructions`, status: "✓" },
   ];
 
   return (
@@ -220,7 +220,7 @@ function QASMView({ result }: { result: PipelineResult }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-          OpenQASM 3.0 — {result.qasm.lines} lines, {result.qasm.qubits} qubits, {result.qasm.gateCount} gates
+          OpenQASM 3.0. {result.qasm.lines} lines, {result.qasm.qubits} qubits, {result.qasm.gateCount} gates
         </div>
         <button
           onClick={copyToClipboard}
@@ -240,7 +240,7 @@ function CatalogView({ catalog }: { catalog: ReturnType<typeof compileAllModels>
   return (
     <div className="space-y-3">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Full Model Catalog — {catalog.models.length} Models Compiled
+        Full Model Catalog. {catalog.models.length} Models Compiled
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[9px] font-mono">
@@ -279,7 +279,7 @@ function CatalogView({ catalog }: { catalog: ReturnType<typeof compileAllModels>
         <div className="text-[10px] font-mono text-[hsl(210,10%,55%)] space-y-1">
           <p>All models with d_k=128 compile to <strong className="text-[hsl(200,60%,65%)]">identical 29-qubit circuit topologies</strong> per head.</p>
           <p>GPT-2 (d_k=64) → 25 qubits/head. Phi-3-Mini (d_k=96) → 27 qubits/head.</p>
-          <p>The attention mechanism is a <strong className="text-[hsl(140,50%,65%)]">geometric invariant</strong> — architecture differences reduce to d_k alone.</p>
+          <p>The attention mechanism is a <strong className="text-[hsl(140,50%,65%)]">geometric invariant</strong>. architecture differences reduce to d_k alone.</p>
         </div>
       </div>
     </div>
@@ -290,7 +290,7 @@ function TestsView({ result }: { result: PipelineResult }) {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Pipeline Verification — {result.tests.filter(t => t.holds).length}/{result.tests.length} passed
+        Pipeline Verification. {result.tests.filter(t => t.holds).length}/{result.tests.length} passed
       </div>
       <div className="space-y-1.5">
         {result.tests.map((t, i) => (

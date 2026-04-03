@@ -1,5 +1,5 @@
 /**
- * Cayley-Dickson ↔ Atlas Correspondence — Phase 25
+ * Cayley-Dickson ↔ Atlas Correspondence. Phase 25
  * ══════════════════════════════════════════════════
  *
  * Constructs the Cayley-Dickson doubling tower:
@@ -11,7 +11,7 @@
  *
  *   DOUBLING     DIM    ATLAS LAYER              PROPERTY LOST
  *   ────────     ───    ───────────              ─────────────
- *   R            1      Unity positions (2)       —
+ *   R            1      Unity positions (2)      .
  *   R → C        2      Mirror involution τ       Ordering
  *   C → H        4      Klein-4 kernel (V₄)       Commutativity
  *   H → O        8      Sign classes (8×12)        Associativity
@@ -24,11 +24,11 @@
  *   This is the "Bott periodicity" anchor: Cl(n+8) ≅ Cl(n) ⊗ M₁₆(R)
  *
  * The exceptional Lie groups arise from the Cayley-Dickson algebras:
- *   G₂ = Aut(O)           — automorphisms of octonions
- *   F₄ = Isom(OP²)        — isometries of octonionic projective plane
- *   E₆ = Str(J₃(O))       — structure group of octonionic Jordan algebra
- *   E₇ = Aut(Freudenthal)  — Freudenthal triple system
- *   E₈ = from triality      — octonionic triality construction
+ *   G₂ = Aut(O)          . automorphisms of octonions
+ *   F₄ = Isom(OP²)       . isometries of octonionic projective plane
+ *   E₆ = Str(J₃(O))      . structure group of octonionic Jordan algebra
+ *   E₇ = Aut(Freudenthal) . Freudenthal triple system
+ *   E₈ = from triality     . octonionic triality construction
  *
  * @module atlas/cayley-dickson
  */
@@ -74,7 +74,7 @@ export interface AlgebraProperties {
   composition: boolean;
   /** Every nonzero element has inverse */
   division: boolean;
-  /** a(āb) = (aā)b — Moufang identity */
+  /** a(āb) = (aā)b. Moufang identity */
   moufang: boolean;
   /** Property lost at this doubling */
   propertyLost: string;
@@ -150,11 +150,11 @@ export interface CDTest {
 /**
  * Build the multiplication table for the Cayley-Dickson algebra at a given level.
  *
- * Level 0: R — {1}
- * Level 1: C — {1, i}
- * Level 2: H — {1, i, j, k}
- * Level 3: O — {1, e₁, e₂, e₃, e₄, e₅, e₆, e₇}
- * Level 4: S — {1, e₁, ..., e₁₅}
+ * Level 0: R. {1}
+ * Level 1: C. {1, i}
+ * Level 2: H. {1, i, j, k}
+ * Level 3: O. {1, e₁, e₂, e₃, e₄, e₅, e₆, e₇}
+ * Level 4: S. {1, e₁, ..., e₁₅}
  *
  * Doubling rule: (a,b)(c,d) = (ac - d̄b, da + bc̄)
  * Conjugation:   (a,b)* = (ā, -b)
@@ -313,47 +313,47 @@ function getAtlasLayer(level: number): AtlasLayer {
   const atlas = getAtlas();
 
   switch (level) {
-    case 0: // R — Reals
+    case 0: // R. Reals
       return {
         structure: "Unity positions",
         count: atlas.unityPositions.length,
-        exceptionalGroup: "—",
+        exceptionalGroup: ". ",
         roots: 0,
         manifestation: "The 2 unity positions {0, 128} in R₈ are the real scalars ±1. They form the kernel of every doubling.",
         coordinates: "All coordinates zero except d₄₅",
       };
 
-    case 1: // C — Complex numbers
+    case 1: // C. Complex numbers
       return {
         structure: "Mirror involution τ (e₇ flip)",
         count: 48,
-        exceptionalGroup: "—",
+        exceptionalGroup: ". ",
         roots: 0,
         manifestation: "The τ-involution (e₇: 0↔1) is complex conjugation. Each mirror pair (v, τ(v)) is a complex number z = v + iτ(v). 48 pairs = 48 complex dimensions.",
-        coordinates: "e₇ ∈ {0,1} — the imaginary unit i",
+        coordinates: "e₇ ∈ {0,1}. the imaginary unit i",
       };
 
-    case 2: // H — Quaternions
+    case 2: // H. Quaternions
       return {
         structure: "Klein-4 group V₄ in label kernel",
         count: 4,
         exceptionalGroup: "G₂ = Aut(O) restricted",
         roots: 12,
         manifestation: "The Klein-4 subgroup {id, flip-e₁, flip-e₂, flip-e₁e₂} acts on Atlas labels. Its 4 elements correspond to {1, i, j, k}. G₂'s 12 roots arise as 3 × V₄ = 12.",
-        coordinates: "e₁, e₂ ∈ {0,1} — quaternion units i,j (k=ij)",
+        coordinates: "e₁, e₂ ∈ {0,1}. quaternion units i,j (k=ij)",
       };
 
-    case 3: // O — Octonions
+    case 3: // O. Octonions
       return {
         structure: "8 sign classes × 12 vertices",
         count: 8,
         exceptionalGroup: "G₂ = Aut(O)",
         roots: 12,
         manifestation: "The 8 sign classes are the 8 octonionic basis elements {1, e₁,...,e₇}. Each class has 12 vertices = the G₂ orbit. The Fano plane structure (7 lines, 7 points) encodes octonionic multiplication.",
-        coordinates: "e₁, e₂, e₃ ∈ {0,1} — the 3-bit sign class = octonion index",
+        coordinates: "e₁, e₂, e₃ ∈ {0,1}. the 3-bit sign class = octonion index",
       };
 
-    case 4: // S — Sedenions
+    case 4: // S. Sedenions
     default:
       return {
         structure: "16 boundary elements (Ext+Unit+G₂)",
@@ -361,7 +361,7 @@ function getAtlasLayer(level: number): AtlasLayer {
         exceptionalGroup: "E₈ (via Bott periodicity)",
         roots: 240,
         manifestation: "The 16 boundary elements (2 exterior + 2 unit + 12 G₂) form the sedenion basis. 256 = 16² connects Cl(8,0) ≅ M₁₆(R). Bott periodicity: Cl(n+8) ≅ Cl(n) ⊗ M₁₆(R) anchors the Atlas at dimension 8.",
-        coordinates: "Full 6-tuple (e₁,e₂,e₃,d₄₅,e₆,e₇) — 16 boundary vertices",
+        coordinates: "Full 6-tuple (e₁,e₂,e₃,d₄₅,e₆,e₇). 16 boundary vertices",
       };
   }
 }
@@ -370,7 +370,7 @@ function getAtlasLayer(level: number): AtlasLayer {
 
 const ALGEBRA_NAMES: AlgebraName[] = ["R", "C", "H", "O", "S"];
 const FULL_NAMES = ["Reals", "Complex Numbers", "Quaternions", "Octonions", "Sedenions"];
-const PROPERTIES_LOST = ["—", "Ordering", "Commutativity", "Associativity", "Alternativity"];
+const PROPERTIES_LOST = [". ", "Ordering", "Commutativity", "Associativity", "Alternativity"];
 
 export function constructAlgebra(level: number): CayleyDicksonAlgebra {
   const { indices, signs } = buildMultiplicationTable(level);
@@ -443,7 +443,7 @@ export function buildTower(): CayleyDicksonTower {
 
   const cliffordConnection: CliffordConnection = {
     cliffordDim: 256,
-    matrixAlgebra: "M₁₆(R) — 16×16 real matrices",
+    matrixAlgebra: "M₁₆(R). 16×16 real matrices",
     bottPeriod: 8,
     atlasEdges: ATLAS_EDGE_COUNT_EXPECTED,
     sedenionDim: 16,

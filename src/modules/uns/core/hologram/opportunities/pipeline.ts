@@ -66,7 +66,7 @@ const LIFECYCLE_STAGES: ReadonlyArray<{
  * Build the complete agent lifecycle pipeline for a given identity.
  *
  * Every stage resolves the same 256-bit hash through a different
- * projection — the pipeline IS the proof that one identity threads
+ * projection. the pipeline IS the proof that one identity threads
  * through the entire agent lifecycle.
  */
 export function buildAgentLifecyclePipeline(input: ProjectionInput): AgentLifecyclePipeline {

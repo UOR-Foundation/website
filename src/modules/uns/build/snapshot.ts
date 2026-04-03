@@ -1,5 +1,5 @@
 /**
- * UNS Build — Deployment Snapshot
+ * UNS Build. Deployment Snapshot
  *
  * Unified versioning gate: binds code, dependencies, and data state
  * into a single content-addressed canonical ID. Everything goes through
@@ -7,7 +7,7 @@
  *
  * A DeploymentSnapshot is the atomic unit of "what was running at time T":
  *   - Code identity    (AppManifest canonical ID)
- *   - Image identity   (UorImage canonical ID — includes all build layers)
+ *   - Image identity   (UorImage canonical ID. includes all build layers)
  *   - Dependency lock   (SHA-256 of deterministic lockfile bytes)
  *   - Data state        (database state canonical ID from UnsLedger)
  *   - Config state      (environment + secrets fingerprint)
@@ -15,8 +15,8 @@
  * Snapshots form an immutable chain via previousSnapshotId, enabling
  * `uor rollback <snapshot-id>` and `uor diff <a> <b>`.
  *
- * @see derivation: namespace — canonical identity
- * @see state: namespace — state transitions
+ * @see derivation: namespace. canonical identity
+ * @see state: namespace. state transitions
  */
 
 import { singleProofHash } from "../core/identity";
@@ -36,7 +36,7 @@ export interface SnapshotComponent {
   sizeBytes?: number;
 }
 
-/** The unified deployment snapshot — one canonical ID for everything. */
+/** The unified deployment snapshot. one canonical ID for everything. */
 export interface DeploymentSnapshot {
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
   "@type": "state:DeploymentSnapshot";
@@ -98,7 +98,7 @@ export interface SnapshotDiff {
  *
  * All components pass through the same singleProofHash gate.
  * The snapshot's canonical ID is derived from the ordered list
- * of component canonical IDs — same components = same snapshot.
+ * of component canonical IDs. same components = same snapshot.
  */
 export async function createSnapshot(
   input: SnapshotInput,

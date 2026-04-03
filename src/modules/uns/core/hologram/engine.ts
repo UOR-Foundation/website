@@ -1,5 +1,5 @@
 /**
- * Hologram Engine — The Kernel of the Hologram OS
+ * Hologram Engine. The Kernel of the Hologram OS
  * ════════════════════════════════════════════════
  *
  * The engine is the central loop that drives the holographic lifecycle:
@@ -39,7 +39,7 @@ import {
   resume,
   grindExecutableBlueprint,
 } from "./executable-blueprint";
-// UI projection types (hologram-ui removed — stubs for type compat)
+// UI projection types (hologram-ui removed. stubs for type compat)
 type UIComponentType = string;
 type UIProjectionResult = { type: string; props: Record<string, unknown> };
 function resolveUIProjection(_id: unknown, type: UIComponentType, _o?: Record<string, unknown>): UIProjectionResult {
@@ -56,7 +56,7 @@ function resolveAllUIProjections(_id: unknown): ReadonlyMap<UIComponentType, UIP
  * Wraps a HologramSession with engine-level metadata.
  */
 export interface EngineProcess {
-  /** Process ID — the session's derivation ID. */
+  /** Process ID. the session's derivation ID. */
   readonly pid: string;
   /** The blueprint CID that spawned this process. */
   readonly blueprintCid: string;
@@ -71,7 +71,7 @@ export interface EngineProcess {
 }
 
 /**
- * The result of an engine tick — one cycle of the kernel loop.
+ * The result of an engine tick. one cycle of the kernel loop.
  *
  * A tick:
  *   1. Applies an interaction (if any) to the target session
@@ -97,7 +97,7 @@ export interface EngineTick {
 }
 
 /**
- * Engine state snapshot — the full kernel state, content-addressable.
+ * Engine state snapshot. the full kernel state, content-addressable.
  */
 export interface EngineSnapshot {
   readonly "@type": "uor:HologramEngineSnapshot";
@@ -133,7 +133,7 @@ export type EngineEvent =
 // ── Hologram Engine ────────────────────────────────────────────────────────
 
 /**
- * The Hologram Engine — kernel of the Hologram OS.
+ * The Hologram Engine. kernel of the Hologram OS.
  *
  * Manages a process table of HologramSessions, orchestrates the
  * boot → interact → project → render lifecycle, and provides
@@ -166,7 +166,7 @@ export class HologramEngine {
 
   /**
    * Spawn a new process from an Executable Blueprint.
-   * This is the `exec()` syscall — creates and boots a new session.
+   * This is the `exec()` syscall. creates and boots a new session.
    *
    * @returns The process ID (pid).
    */
@@ -192,7 +192,7 @@ export class HologramEngine {
   }
 
   /**
-   * Tick a process — one cycle of the kernel loop.
+   * Tick a process. one cycle of the kernel loop.
    *
    * The tick is the atomic unit of the engine:
    *   1. Optionally apply an interaction (position + direction)
@@ -200,7 +200,7 @@ export class HologramEngine {
    *   3. Project identity through all UI components
    *   4. Return projections for rendering
    *
-   * If no interaction is provided, this is a "read tick" — it just
+   * If no interaction is provided, this is a "read tick". it just
    * re-projects the current state without evolving it.
    */
   async tick(
@@ -273,7 +273,7 @@ export class HologramEngine {
   }
 
   /**
-   * Suspend a process — dehydrate to canonical bytes.
+   * Suspend a process. dehydrate to canonical bytes.
    * The process can be resumed later with `resumeProcess()`.
    */
   async suspendProcess(pid: string): Promise<SuspendedSession> {
@@ -312,7 +312,7 @@ export class HologramEngine {
   }
 
   /**
-   * Kill a process — halt permanently and remove from process table.
+   * Kill a process. halt permanently and remove from process table.
    */
   kill(pid: string): void {
     const process = this.getProcess(pid);
@@ -361,7 +361,7 @@ export class HologramEngine {
   }
 
   /**
-   * Snapshot the entire engine state — content-addressable.
+   * Snapshot the entire engine state. content-addressable.
    */
   async snapshot(): Promise<{ snapshot: EngineSnapshot; proof: SingleProofResult }> {
     const snapshot: EngineSnapshot = {
@@ -447,7 +447,7 @@ export class HologramEngine {
       try {
         listener(event);
       } catch {
-        // Swallow listener errors — engine must not crash
+        // Swallow listener errors. engine must not crash
       }
     }
   }

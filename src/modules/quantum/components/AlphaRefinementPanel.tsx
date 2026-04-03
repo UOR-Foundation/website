@@ -1,5 +1,5 @@
 /**
- * Alpha Refinement Panel — QED Loop Corrections from Atlas Graph Invariants
+ * Alpha Refinement Panel. QED Loop Corrections from Atlas Graph Invariants
  * ═════════════════════════════════════════════════════════════════════════
  * Phase 12b: Lanczos spectral upgrade + refined QED coefficient mappings
  */
@@ -44,7 +44,7 @@ export default function AlphaRefinementPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[18px] font-mono tracking-wide text-[hsl(30,80%,60%)]">
-            α⁻¹ Refinement — QED Loop Corrections
+            α⁻¹ Refinement. QED Loop Corrections
           </h2>
           <p className="text-[11px] font-mono text-[hsl(210,10%,50%)] mt-0.5">
             Lanczos spectral gap · Fiedler-optimal Cheeger · 6 QED-mapped corrections
@@ -57,7 +57,7 @@ export default function AlphaRefinementPanel() {
             ? "bg-[hsla(40,30%,15%,0.3)] border-[hsla(40,30%,25%,0.4)] text-[hsl(40,80%,55%)]"
             : "bg-[hsla(0,30%,15%,0.3)] border-[hsla(0,30%,25%,0.4)] text-[hsl(0,60%,55%)]"
         }`}>
-          {passedTests}/{report.tests.length} tests — residual {report.residualPercent.toFixed(3)}%
+          {passedTests}/{report.tests.length} tests. residual {report.residualPercent.toFixed(3)}%
         </div>
       </div>
 
@@ -282,7 +282,7 @@ export default function AlphaRefinementPanel() {
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-mono text-[hsl(210,10%,45%)] uppercase">
-            Verification — {passedTests}/{report.tests.length}
+            Verification. {passedTests}/{report.tests.length}
           </div>
           <button onClick={() => setShowTests(!showTests)}
             className="text-[9px] font-mono text-[hsl(210,10%,50%)] hover:text-[hsl(210,10%,70%)] px-2 py-0.5 rounded bg-[hsla(210,10%,20%,0.3)]">

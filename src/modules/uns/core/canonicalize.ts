@@ -1,5 +1,5 @@
 /**
- * UNS Core — URDNA2015 Canonicalization
+ * UNS Core. URDNA2015 Canonicalization
  *
  * Wraps the W3C jsonld.js reference implementation to produce
  * deterministic N-Quads from any object (JSON-LD or plain).
@@ -11,10 +11,10 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — jsonld v8 types may not resolve in all configurations
+// @ts-ignore. jsonld v8 types may not resolve in all configurations
 import jsonld from "jsonld";
 
-// ── Inline Contexts (offline-first — no network dependency) ─────────────────
+// ── Inline Contexts (offline-first. no network dependency) ─────────────────
 
 const UOR_WRAP_CONTEXT: Record<string, unknown> = {
   store: "https://uor.foundation/store/",
@@ -28,7 +28,7 @@ const UOR_WRAP_CONTEXT: Record<string, unknown> = {
 const UOR_V1_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 const UNS_V1_CONTEXT_URL = "https://uor.foundation/contexts/uns-v1.jsonld";
 
-// Inline context matching public/contexts/uor-v1.jsonld — avoids network fetch.
+// Inline context matching public/contexts/uor-v1.jsonld. avoids network fetch.
 // CRITICAL: This MUST be an exact mirror of the published context file.
 // Any divergence causes different URDNA2015 canonicalization output,
 // breaking content-addressed identity determinism.
@@ -106,7 +106,7 @@ const UOR_V1_INLINE_CONTEXT: Record<string, unknown> = {
   "store:pinsApiUrl": { "@id": "store:pinsApiUrl", "@type": "xsd:anyURI" },
 };
 
-/** UNS v1 context — inlined for offline canonicalization. */
+/** UNS v1 context. inlined for offline canonicalization. */
 const UNS_V1_INLINE_CONTEXT: Record<string, unknown> = {
   uns: "https://uor.foundation/uns/",
   u: "https://uor.foundation/u/",
@@ -260,7 +260,7 @@ function createDocumentLoader() {
       : (jsonld as any).documentLoaders?.node?.();
 
   return async (url: string) => {
-    // UOR v1 context — served locally
+    // UOR v1 context. served locally
     if (
       url === UOR_V1_CONTEXT_URL ||
       url === UOR_V1_CONTEXT_URL.replace("https://", "http://")
@@ -272,7 +272,7 @@ function createDocumentLoader() {
       };
     }
 
-    // UNS v1 context — served locally
+    // UNS v1 context. served locally
     if (
       url === UNS_V1_CONTEXT_URL ||
       url === UNS_V1_CONTEXT_URL.replace("https://", "http://")
@@ -284,7 +284,7 @@ function createDocumentLoader() {
       };
     }
 
-    // Schema.org — served locally to avoid CORS failures in-browser
+    // Schema.org. served locally to avoid CORS failures in-browser
     if (
       url === "https://schema.org" ||
       url === "https://schema.org/" ||
@@ -298,12 +298,12 @@ function createDocumentLoader() {
       };
     }
 
-    // FPP v1 context — served locally
+    // FPP v1 context. served locally
     if (url === FPP_V1_CONTEXT_URL || url === FPP_V1_CONTEXT_URL.replace("https://", "http://")) {
       return { contextUrl: null, documentUrl: url, document: { "@context": FPP_V1_INLINE_CONTEXT } };
     }
 
-    // TSP v1 context — served locally
+    // TSP v1 context. served locally
     if (url === TSP_V1_CONTEXT_URL || url === TSP_V1_CONTEXT_URL.replace("https://", "http://")) {
       return { contextUrl: null, documentUrl: url, document: { "@context": TSP_V1_INLINE_CONTEXT } };
     }

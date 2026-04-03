@@ -1,5 +1,5 @@
 /**
- * UOR Type System — type: namespace implementation.
+ * UOR Type System. type: namespace implementation.
  *
  * Four type classes from spec/src/namespaces/type_.rs:
  *   - PrimitiveType: single ring element (U8, U16, U32)

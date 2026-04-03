@@ -1,5 +1,5 @@
 /**
- * Atlas Compilation Pipeline — Phase 24
+ * Atlas Compilation Pipeline. Phase 24
  * ══════════════════════════════════════
  *
  * End-to-end pipeline: AI model → Atlas decomposition → quantum circuit spec.
@@ -290,7 +290,7 @@ function emitQASM(
   let totalGateInstructions = 0;
 
   // Header
-  lines.push(`// Atlas Compilation Pipeline — OpenQASM 3.0`);
+  lines.push(`// Atlas Compilation Pipeline. OpenQASM 3.0`);
   lines.push(`// Model: ${model.name} (${model.family})`);
   lines.push(`// d=${model.embeddingDim}, heads=${model.heads}, d_k=${model.headDim}, layers=${model.layers}`);
   lines.push(`// Parameters: ${model.paramsB}B`);
@@ -462,7 +462,7 @@ function emitQiskit(
   let totalGateInstructions = 0;
 
   // Imports
-  py.push(`"""Atlas Compilation Pipeline — Qiskit Circuit"""`);
+  py.push(`"""Atlas Compilation Pipeline. Qiskit Circuit"""`);
   py.push(`# Model: ${model.name} (${model.family})`);
   py.push(`# d=${model.embeddingDim}, heads=${model.heads}, d_k=${model.headDim}, layers=${model.layers}`);
   py.push(`# Parameters: ${model.paramsB}B`);

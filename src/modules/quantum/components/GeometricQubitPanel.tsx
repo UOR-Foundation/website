@@ -131,7 +131,7 @@ function InfoGeometryDuality() {
             ◇ Fisher-Rao ↔ Entanglement Duality
           </div>
           <div className="text-[8px] font-mono text-[hsl(210,10%,42%)] mt-0.5">
-            Bures-Fisher identity: ds²_Bures = (1/4) g^FR_ij dθ^i dθ^j — same information manifold, dual coordinates
+            Bures-Fisher identity: ds²_Bures = (1/4) g^FR_ij dθ^i dθ^j. same information manifold, dual coordinates
           </div>
         </div>
         <button
@@ -295,7 +295,7 @@ function InfoGeometryDuality() {
                 <div className="flex items-center justify-between text-[9px] font-mono mb-1">
                   <span className="text-[hsl(200,60%,55%)]">Convergence Ratio</span>
                   <span style={{ color: statusColor(selectedProbe.duality.verified) }}>
-                    {(selectedProbe.duality.convergenceRatio * 100).toFixed(1)}% — {selectedProbe.duality.verified ? "VERIFIED" : "GAP"}
+                    {(selectedProbe.duality.convergenceRatio * 100).toFixed(1)}%. {selectedProbe.duality.verified ? "VERIFIED" : "GAP"}
                   </span>
                 </div>
                 <div className="h-2 bg-[hsla(210,10%,12%,0.5)] rounded-full overflow-hidden mb-1.5">
@@ -329,7 +329,7 @@ function InfoGeometryDuality() {
                   <span style={{ color: statusColor(inv.holds) }}>{inv.holds ? "✓" : "✗"}</span>
                   <div className="flex-1">
                     <span className="text-[hsl(210,10%,60%)]">{inv.name}</span>
-                    <span className="text-[hsl(210,10%,40%)] ml-2">— {inv.evidence}</span>
+                    <span className="text-[hsl(210,10%,40%)] ml-2">. {inv.evidence}</span>
                   </div>
                 </div>
               ))}
@@ -340,7 +340,7 @@ function InfoGeometryDuality() {
           <div className="pt-2 border-t border-[hsla(200,15%,20%,0.3)] text-[8px] font-mono text-[hsl(200,20%,50%)] leading-relaxed space-y-0.5">
             <div><span className="text-[hsl(38,60%,55%)]">Fisher-Rao:</span> g_ij = Var_λ(Ψ_i, Ψ_j) = ∂²(log Z)/∂β_i∂β_j</div>
             <div><span className="text-[hsl(280,50%,60%)]">von Neumann:</span> S_E = -Tr(ρ_A log ρ_A)</div>
-            <div><span className="text-[hsl(200,60%,55%)]">Bures-Fisher:</span> ds²_Bures = (1/4) Tr(dρ G⁻¹_F dρ) — dual perspectives of ONE geometry</div>
+            <div><span className="text-[hsl(200,60%,55%)]">Bures-Fisher:</span> ds²_Bures = (1/4) Tr(dρ G⁻¹_F dρ). dual perspectives of ONE geometry</div>
           </div>
         </>
       )}
@@ -427,7 +427,7 @@ export default function GeometricQubitPanel() {
             Geometric Qubit Emulator
           </h2>
           <p className="text-[11px] font-mono text-[hsl(210,10%,50%)] mt-0.5">
-            Souriau's geometric quantization — qubits projected from Atlas mirror pairs, gates via braiding
+            Souriau's geometric quantization. qubits projected from Atlas mirror pairs, gates via braiding
           </p>
         </div>
         <div className="flex gap-2">
@@ -456,12 +456,12 @@ export default function GeometricQubitPanel() {
       {/* Souriau quote */}
       <div className="bg-[hsla(280,20%,12%,0.3)] border border-[hsla(280,20%,25%,0.3)] rounded-lg px-4 py-3">
         <p className="text-[10px] font-mono text-[hsl(280,30%,65%)] italic leading-relaxed">
-          "Quantique? Alors c'est Géométrique." — J.M. Souriau (2003)
+          "Quantique? Alors c'est Géométrique.". J.M. Souriau (2003)
         </p>
         <p className="text-[9px] font-mono text-[hsl(210,10%,45%)] mt-1">
           Quantum states are sections of the prequantization line bundle over the Atlas symplectic manifold.
           Gates are holonomies of the connection. Measurement is projection onto Lagrangian leaves.
-          ℏ_Atlas = 1/{8} = 1/(sign classes). Classical and quantum coexist — Landau-Lifshitz.
+          ℏ_Atlas = 1/{8} = 1/(sign classes). Classical and quantum coexist. Landau-Lifshitz.
         </p>
       </div>
 
@@ -471,7 +471,7 @@ export default function GeometricQubitPanel() {
           <div key={i} className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-mono text-[hsl(280,50%,60%)]">
-                Q{i} — pair ({q.vertex0}, {q.vertex1})
+                Q{i}. pair ({q.vertex0}, {q.vertex1})
               </div>
               <div className="text-[8px] font-mono text-[hsl(210,10%,40%)]">
                 SC{q.signClass}
@@ -589,7 +589,7 @@ export default function GeometricQubitPanel() {
       {history.length > 0 && (
         <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
           <div className="text-[9px] font-mono text-[hsl(210,10%,45%)] uppercase mb-2">
-            Circuit History — {history.length} operations
+            Circuit History. {history.length} operations
           </div>
           <div className="flex gap-1 flex-wrap">
             {history.map((op, i) => (
@@ -616,7 +616,7 @@ export default function GeometricQubitPanel() {
       {/* Particle Statistics */}
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="text-[9px] font-mono text-[hsl(30,70%,55%)] uppercase mb-2">
-          Emergent Particle Statistics — Braiding Phase → Boson / Fermion / Anyon
+          Emergent Particle Statistics. Braiding Phase → Boson / Fermion / Anyon
         </div>
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -667,10 +667,10 @@ export default function GeometricQubitPanel() {
           COEXIST, they do not succeed each other. The Atlas graph is a discrete symplectic
           manifold. Its adjacency encodes the symplectic 2-form ω. The mirror involution τ
           defines a real polarization. The 48 mirror pairs project exactly 48 topological
-          qubits — sections of the prequantization line bundle constant along τ-leaves.
+          qubits. sections of the prequantization line bundle constant along τ-leaves.
           Quantum gates are holonomies of the connection ∇ along braiding paths.
           Particle statistics (boson/fermion/anyon) emerge from the sign class structure
-          of these paths. This is not simulation — the Atlas IS the quantum computer,
+          of these paths. This is not simulation. the Atlas IS the quantum computer,
           and classical reality is its thermodynamic projection.
         </p>
       </div>
@@ -679,7 +679,7 @@ export default function GeometricQubitPanel() {
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="text-[10px] font-mono text-[hsl(210,10%,45%)] uppercase">
-            Verification — Souriau's Program
+            Verification. Souriau's Program
           </div>
           <button
             onClick={handleVerify}

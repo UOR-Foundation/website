@@ -1,5 +1,5 @@
 /**
- * UOR Self-Verification: Receipt Manager — generic receipt wrapper.
+ * UOR Self-Verification: Receipt Manager. generic receipt wrapper.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
  * Wraps ANY operation with canonical receipt generation.

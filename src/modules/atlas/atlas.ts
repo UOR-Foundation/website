@@ -1,5 +1,5 @@
 /**
- * Atlas of Resonance Classes — TypeScript Port
+ * Atlas of Resonance Classes. TypeScript Port
  *
  * A faithful TypeScript implementation of the 96-vertex Atlas graph from
  * the atlas-embeddings Rust crate (UOR Foundation).

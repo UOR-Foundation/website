@@ -15,10 +15,10 @@ beforeEach(() => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Phase 3-B Tests — 10/10
+// Phase 3-B Tests. 10/10
 // ═════════════════════════════════════════════════════════════════════════════
 
-describe("UNS Store — Phase 3-B: Content-Addressed Object Storage", () => {
+describe("UNS Store. Phase 3-B: Content-Addressed Object Storage", () => {
   const textBytes = new TextEncoder().encode("Hello, UNS Store!");
 
   // Test 1
@@ -112,7 +112,7 @@ describe("UNS Store — Phase 3-B: Content-Addressed Object Storage", () => {
   // Test 10
   it("10. Loss warning data present on all stored objects", async () => {
     const meta = await store.put(textBytes, "text/plain");
-    // ipv6 is a routing projection — loss warning is inherent
+    // ipv6 is a routing projection. loss warning is inherent
     expect(meta.ipv6).toMatch(/^fd00:0075:6f72:/);
     expect(meta.partitionDensity).toBeGreaterThanOrEqual(0);
     expect(meta.partitionDensity).toBeLessThanOrEqual(1);

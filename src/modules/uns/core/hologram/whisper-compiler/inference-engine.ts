@@ -1,5 +1,5 @@
 /**
- * Whisper Inference Engine — Phase 3 + Phase 4 (GPU) + KV-Cache
+ * Whisper Inference Engine. Phase 3 + Phase 4 (GPU) + KV-Cache
  * ══════════════════════════════════════════════════════════════
  *
  * Runs Whisper tiny.en inference using compiled weights from
@@ -324,7 +324,7 @@ export class WhisperEngine {
   ): Promise<Float32Array> {
     const T = newTokens.length;
 
-    // Token + positional embedding (CPU — tiny lookup)
+    // Token + positional embedding (CPU. tiny lookup)
     const tokenEmbed = this.w("embed_tokens.weight");
     let x = embedding(tokenEmbed, D_MODEL, newTokens);
     const posEmbed = this.w("embed_positions.weight");

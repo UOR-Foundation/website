@@ -1,5 +1,5 @@
 /**
- * Cognitive Gravity — Isomorphism Proof Test Suite
+ * Cognitive Gravity. Isomorphism Proof Test Suite
  * ════════════════════════════════════════════════
  */
 
@@ -117,7 +117,7 @@ describe("Gravity Field over Polynon Layers", () => {
 // Part IV: Full Report & Internal Tests
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Cognitive Gravity — Full Report", () => {
+describe("Cognitive Gravity. Full Report", () => {
   let report: CognitiveGravityReport;
 
   it("runs full analysis", () => {
@@ -135,7 +135,7 @@ describe("Cognitive Gravity — Full Report", () => {
 
   it("all 14 internal tests pass", () => {
     for (const t of report.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(report.allPassed).toBe(true);
     expect(report.tests.length).toBe(14);

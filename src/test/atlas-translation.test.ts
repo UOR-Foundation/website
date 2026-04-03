@@ -1,18 +1,18 @@
 /**
- * Atlas Cross-Model Translation — Verification Suite
+ * Atlas Cross-Model Translation. Verification Suite
  * ════════════════════════════════════════════════════
  *
  * Proves that the Atlas R₈ substrate enables faithful translation
  * between different model embedding spaces.
  *
- * T6.1: Decomposition correctness — embeddings map to valid R₈ coordinates
- * T6.2: Reconstruction fidelity — same-dim round-trip is near-lossless
- * T6.3: Cross-model translation — different dims produce valid embeddings
- * T6.4: Sign class preservation — R₈ structural invariants hold
- * T6.5: Universal invariants — all 8 invariants verified across model pairs
- * T6.6: Round-trip convergence — A→B→A preserves structure
- * T6.7: Embedding injectivity — small→large is lossless on shared dims
- * T6.8: Entropy conservation — sign class distribution stays uniform
+ * T6.1: Decomposition correctness. embeddings map to valid R₈ coordinates
+ * T6.2: Reconstruction fidelity. same-dim round-trip is near-lossless
+ * T6.3: Cross-model translation. different dims produce valid embeddings
+ * T6.4: Sign class preservation. R₈ structural invariants hold
+ * T6.5: Universal invariants. all 8 invariants verified across model pairs
+ * T6.6: Round-trip convergence. A→B→A preserves structure
+ * T6.7: Embedding injectivity. small→large is lossless on shared dims
+ * T6.8: Entropy conservation. sign class distribution stays uniform
  */
 import { describe, it, expect } from "vitest";
 import { MODEL_CATALOG } from "@/modules/atlas/convergence";

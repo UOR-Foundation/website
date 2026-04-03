@@ -1,5 +1,5 @@
 /**
- * Transform Group — Aut(Atlas) = R(4) × D(3) × T(8) × M(2)
+ * Transform Group. Aut(Atlas) = R(4) × D(3) × T(8) × M(2)
  * ═══════════════════════════════════════════════════════════
  *
  * The full automorphism group of the Atlas has order:
@@ -7,10 +7,10 @@
  *
  * Four generating transforms act on triality coordinates (h₂, d, ℓ):
  *
- *   R_k : (h₂, d, ℓ) → ((h₂+k) mod 4, d, ℓ)     — quadrant rotation (Z/4Z)
- *   D_k : (h₂, d, ℓ) → (h₂, (d+k) mod 3, ℓ)      — modality/triality (Z/3Z)
- *   T_k : (h₂, d, ℓ) → (h₂, d, (ℓ+k) mod 8)      — slot translation (Z/8Z)
- *   M   : (h₂, d, ℓ) → mirror(24h₂ + 8d + ℓ)      — mirror involution (Z/2Z)
+ *   R_k : (h₂, d, ℓ) → ((h₂+k) mod 4, d, ℓ)    . quadrant rotation (Z/4Z)
+ *   D_k : (h₂, d, ℓ) → (h₂, (d+k) mod 3, ℓ)     . modality/triality (Z/3Z)
+ *   T_k : (h₂, d, ℓ) → (h₂, d, (ℓ+k) mod 8)     . slot translation (Z/8Z)
+ *   M   : (h₂, d, ℓ) → mirror(24h₂ + 8d + ℓ)     . mirror involution (Z/2Z)
  *
  * R, D, T are commutative (abelian direct product Z/4Z × Z/3Z × Z/8Z = Z/96Z).
  * M is the non-trivial part: it acts via the Atlas label mirror τ (e₇ flip),
@@ -160,7 +160,7 @@ export function compose(g: TransformElement, h: TransformElement): TransformElem
   }
   // If no element matches, the composition is outside our parametric set.
   // This means the 192 parametric elements don't form a closed group.
-  throw new Error("Group composition failed — group may not be closed");
+  throw new Error("Group composition failed. group may not be closed");
 }
 
 /**
@@ -349,7 +349,7 @@ export function runTransformGroupVerification(): TransformGroupReport {
   // Test 4: Abelian subgroup is closed under composition
   {
     let closed = true;
-    // Abelian elements (m=0) compose by coordinate addition — always closed
+    // Abelian elements (m=0) compose by coordinate addition. always closed
     const abelianSamples: [number, number][] = [];
     for (let i = 0; i < 20; i++) {
       const ai = (i * 7) % 96; // only m=0 elements (first 96)

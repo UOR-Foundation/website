@@ -1,8 +1,8 @@
 /**
- * schema: namespace — unified barrel export.
+ * schema: namespace. unified barrel export.
  *
  * Consolidates: triad + jsonld
- * Kernel Space — triadic primitives and JSON-LD emission/validation.
+ * Kernel Space. triadic primitives and JSON-LD emission/validation.
  *
  * @namespace schema:
  * @version 2.0.0

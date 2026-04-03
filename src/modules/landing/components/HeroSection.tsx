@@ -8,14 +8,14 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
-      {/* Living prime number field — desktop only */}
+      {/* Living prime number field. desktop only */}
       {!isMobile && <PrimeGrid />}
 
       {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
         <div className="flex-[1]" />
 
-        {/* Galaxy orb — circular */}
+        {/* Galaxy orb. circular */}
         <div
           className="w-[min(75vw,320px)] h-[min(75vw,320px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
@@ -50,7 +50,7 @@ const HeroSection = () => {
 
         <div className="flex-[0.3]" />
 
-        {/* Stats bar — mobile */}
+        {/* Stats bar. mobile */}
         <div className="w-4/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-5 animate-fade-in-up opacity-0" style={{ animationDelay: "0.6s" }} />
         <div
           className="w-full flex justify-around px-2 pb-6 animate-fade-in-up opacity-0 pointer-events-none"
@@ -75,14 +75,14 @@ const HeroSection = () => {
         className="hidden md:flex absolute inset-0 items-center justify-end animate-fade-in opacity-0 pointer-events-none"
         style={{ animationDelay: "0.13s" }}
       >
-        {/* Volumetric glow — warm amber radiance from galaxy */}
+        {/* Volumetric glow. warm amber radiance from galaxy */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: "radial-gradient(ellipse 60% 50% at 70% 50%, hsla(38, 50%, 45%, 0.04), transparent 70%)",
           }}
         />
-        {/* Galactic plane — faint horizontal light band */}
+        {/* Galactic plane. faint horizontal light band */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -127,7 +127,7 @@ const HeroSection = () => {
         </div>
         <div className="flex-1" />
 
-        {/* Stats bar — desktop */}
+        {/* Stats bar. desktop */}
         <div className="w-3/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.7s" }} />
         <div
           className="w-full flex justify-center gap-10 lg:gap-14 pb-[clamp(2rem,3vh,3.5rem)] animate-fade-in-up opacity-0"

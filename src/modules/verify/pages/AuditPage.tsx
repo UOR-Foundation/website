@@ -60,7 +60,7 @@ const AuditPage = () => {
             System Audit
           </h1>
           <p className="text-muted-foreground mb-8 max-w-2xl">
-            Self-verification dashboard — every operation produces a canonical receipt,
+            Self-verification dashboard. every operation produces a canonical receipt,
             every entity earns a derivation, and every verified entity receives a certificate.
             The system is its own auditor.
           </p>

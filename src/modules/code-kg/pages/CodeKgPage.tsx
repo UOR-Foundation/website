@@ -1,5 +1,5 @@
 /**
- * Code-to-Knowledge-Graph — Interactive Visualization
+ * Code-to-Knowledge-Graph. Interactive Visualization
  * ════════════════════════════════════════════════════
  *
  * Self-reflective: parses the UOR framework's own module structure
@@ -449,8 +449,8 @@ export default function CodeKgPage() {
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               This implementation is <strong>self-reflective</strong>: it parses the UOR
               framework's own module structure, producing a knowledge graph of itself.
-              The system literally understands its own architecture — ring-core, identity,
-              hologram, trust, observer, consciousness — as a navigable graph.
+              The system literally understands its own architecture. ring-core, identity,
+              hologram, trust, observer, consciousness. as a navigable graph.
             </p>
           </InfoCard>
 
@@ -478,8 +478,8 @@ export default function CodeKgPage() {
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               The triple format is compatible with Bevel's graph model. If you run
               Bevel's JVM parser on this codebase, the resulting Neo4j graph would
-              contain the same structural relationships — files, functions, classes,
-              imports — that this client-side engine extracts. Same structure, two runtimes.
+              contain the same structural relationships. files, functions, classes,
+              imports. that this client-side engine extracts. Same structure, two runtimes.
             </p>
           </InfoCard>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Lens Inspector — Bidirectional Holographic Lens Playground
+ * Lens Inspector. Bidirectional Holographic Lens Playground
  * ══════════════════════════════════════════════════════════
  *
  * Paste any JSON object → dehydrate → refract through all modalities.
@@ -74,11 +74,11 @@ const MODALITIES: {
 }[] = [
   { key: "nquads", label: "N-Quads", icon: IconCode, description: "W3C URDNA2015 canonical form" },
   { key: "jsonld", label: "JSON-LD", icon: IconBraces, description: "Expanded JSON-LD document" },
-  { key: "jsonld-framed", label: "Framed", icon: IconBraces, description: "JSON-LD compacted via @frame — cleaner structure" },
+  { key: "jsonld-framed", label: "Framed", icon: IconBraces, description: "JSON-LD compacted via @frame. cleaner structure" },
   { key: "compact-json", label: "Compact JSON", icon: IconBraces, description: "Flattened, readable JSON" },
   { key: "turtle", label: "Turtle", icon: IconCode, description: "Terse RDF Triple Language" },
   { key: "rdf-xml", label: "RDF/XML", icon: IconFileCode, description: "W3C RDF/XML serialization" },
-  { key: "graphql-sdl", label: "GraphQL SDL", icon: IconSchema, description: "GraphQL Schema Definition Language — API integration" },
+  { key: "graphql-sdl", label: "GraphQL SDL", icon: IconSchema, description: "GraphQL Schema Definition Language. API integration" },
   { key: "hologram", label: "Hologram", icon: IconWorld, description: "All 25+ protocol projections" },
   { key: "identity", label: "Identity", icon: IconHash, description: "SingleProofResult passthrough" },
 ];
@@ -138,7 +138,7 @@ function IdentityCard({ proof }: { proof: SingleProofResult }) {
         <IconHash size={14} className="text-primary" />
         <span className="text-xs font-semibold text-foreground">Content-Addressed Identity</span>
         <span className="ml-auto text-[9px] font-mono text-muted-foreground">
-          morphism:Isometry — lossless
+          morphism:Isometry. lossless
         </span>
       </div>
       <div className="divide-y divide-border">
@@ -322,7 +322,7 @@ export default function LensInspectorPage() {
   return (
     <PageShell
       title="Lens Inspector"
-      subtitle="Bidirectional Holographic Lens — Universal Encoder-Decoder"
+      subtitle="Bidirectional Holographic Lens. Universal Encoder-Decoder"
       icon={<IconPrism size={18} />}
       backTo="/hologram-ui"
       badge="EOR"

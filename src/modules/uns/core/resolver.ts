@@ -1,7 +1,7 @@
 /**
- * UNS Core — Resolver API (Phase 1-B)
+ * UNS Core. Resolver API (Phase 1-B)
  *
- * The UNS resolution service — equivalent to Cloudflare DNS 1.1.1.1,
+ * The UNS resolution service. equivalent to Cloudflare DNS 1.1.1.1,
  * but mathematically auditable. Every resolution response includes a
  * proof:CoherenceProof that any client can verify independently using
  * only the ring substrate and the signer's public key.
@@ -14,7 +14,7 @@
  *
  * COHERENCE PROOF:
  *   Every resolution response proves consistency with the UOR ring:
- *     1. neg(bnot(42)) === succ(42) — ring critical identity (always true)
+ *     1. neg(bnot(42)) === succ(42). ring critical identity (always true)
  *     2. Dilithium-3 signature on the returned record is valid
  *     3. Recomputed canonical ID matches stored canonical ID
  *     4. First 4 bytes of record's SHA-256 as witness sample
@@ -22,8 +22,8 @@
  *   Any agent with packages/core can verify this proof locally.
  *   No trusted third party. No certificate authority. Pure math.
  *
- * @see RFC 8200 §4.6 — IPv6 Destination Options (lossless transport)
- * @see FIPS 204 — ML-DSA-65 (Dilithium-3) post-quantum signatures
+ * @see RFC 8200 §4.6. IPv6 Destination Options (lossless transport)
+ * @see FIPS 204. ML-DSA-65 (Dilithium-3) post-quantum signatures
  */
 
 import { neg, bnot, succ } from "./ring";
@@ -52,7 +52,7 @@ export interface CoherenceProof {
   "proof:witnessByteSample": string;
 }
 
-/** A full resolution result — the UNS equivalent of a DNS answer section. */
+/** A full resolution result. the UNS equivalent of a DNS answer section. */
 export interface ResolutionResult {
   "@context": "https://uor.foundation/contexts/uns-v1.jsonld";
   "@type": "uns:ResolutionResult";
@@ -64,7 +64,7 @@ export interface ResolutionResult {
   "proof:coherenceProof": CoherenceProof;
   "uns:resolvedAt": string;
   "uns:resolverCanonicalId": string;
-  /** P22: Epistemic grade — always 'A' for ring-arithmetic resolution. */
+  /** P22: Epistemic grade. always 'A' for ring-arithmetic resolution. */
   epistemic_grade: "A";
   epistemic_grade_label: string;
   "derivation:derivationId": string;
@@ -145,7 +145,7 @@ async function generateCoherenceProof(
   const recordCanonicalIdValid =
     recomputedIdentity["u:canonicalId"] === record["u:canonicalId"];
 
-  // 4. Witness byte sample — first 4 bytes of SHA-256 as hex
+  // 4. Witness byte sample. first 4 bytes of SHA-256 as hex
   const witnessByteSample = bytesToHex(
     recomputedIdentity.hashBytes.slice(0, 4)
   );
@@ -166,12 +166,12 @@ async function generateCoherenceProof(
 // ── UNS Resolver Service ────────────────────────────────────────────────────
 
 /**
- * The UNS Resolver — equivalent to Cloudflare DNS 1.1.1.1.
+ * The UNS Resolver. equivalent to Cloudflare DNS 1.1.1.1.
  *
  * Resolves .uor names to IPv6 content addresses with mathematical
  * coherence proofs. Backed by a Kademlia DHT for record storage.
  *
- * The resolver is itself content-addressed — its own identity is
+ * The resolver is itself content-addressed. its own identity is
  * a canonical ID, making it self-describing and verifiable.
  */
 export class UnsResolver {
@@ -260,7 +260,7 @@ export class UnsResolver {
       "uns:resolvedAt": new Date().toISOString(),
       "uns:resolverCanonicalId": this.resolverCanonicalId,
       epistemic_grade: "A",
-      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
       "derivation:derivationId": resolutionIdentity["u:canonicalId"],
     };
   }
@@ -283,7 +283,7 @@ export class UnsResolver {
   // ── GET /uns/record/{canonicalId}/verify ──────────────────────────────
 
   /**
-   * Verify a record's integrity — signature, expiry, revocation.
+   * Verify a record's integrity. signature, expiry, revocation.
    */
   async verifyRecord(
     canonicalId: string
@@ -389,7 +389,7 @@ export class UnsResolver {
   }
 
   /**
-   * Query all record IDs for a name — including revoked.
+   * Query all record IDs for a name. including revoked.
    * Uses the DHT's queryAllByName which bypasses the revocation filter.
    */
   private async queryAllRecordIds(name: string): Promise<string[]> {

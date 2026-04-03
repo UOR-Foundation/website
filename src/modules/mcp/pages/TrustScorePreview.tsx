@@ -20,7 +20,7 @@ const EXAMPLES = [
   },
   {
     title: "Grade A: Proven (Served from Cache)",
-    subtitle: "This identical computation was requested before. The stored proof was verified and the cached result returned — no recomputation needed.",
+    subtitle: "This identical computation was requested before. The stored proof was verified and the cached result returned. no recomputation needed.",
     grade: "A",
     icon: "🟢",
     label: "Mathematically Proven",
@@ -127,7 +127,7 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
               <td className="py-2 pr-4 text-muted-foreground font-medium w-32">Grade</td>
               <td className="py-2">
                 <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-sm font-semibold ${colors.badge}`}>
-                  {example.icon} {example.grade} — {example.label}
+                  {example.icon} {example.grade}. {example.label}
                 </span>
               </td>
             </tr>
@@ -174,7 +174,7 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
               <span className="text-muted-foreground shrink-0">{i + 1}.</span>
               <span className="text-foreground/90">
                 {s.claim}
-                <span className="text-muted-foreground"> — </span>
+                <span className="text-muted-foreground">. </span>
                 {s.url ? (
                   <a href={s.url} target="_blank" rel="noopener noreferrer" className={`underline underline-offset-2 ${colors.text} hover:opacity-80`}>
                     {s.source}
@@ -203,7 +203,7 @@ export default function TrustScorePreview() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
         <div className="text-center space-y-2 mb-10">
-          <h1 className="text-3xl font-bold">UOR PRISM Trust Score — Preview</h1>
+          <h1 className="text-3xl font-bold">UOR PRISM Trust Score. Preview</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             This is how the trust report appears at the bottom of every MCP response. Each grade level is shown below.
           </p>

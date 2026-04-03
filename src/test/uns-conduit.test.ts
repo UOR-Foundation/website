@@ -15,7 +15,7 @@ import type { TunnelInitMessage } from "@/modules/uns/trust/conduit";
 // @ts-ignore
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
 
-describe("UNS Conduit — Post-Quantum Encrypted Tunnel", () => {
+describe("UNS Conduit. Post-Quantum Encrypted Tunnel", () => {
   let clientKp: UnsKeypair;
 
   beforeAll(async () => {
@@ -190,7 +190,7 @@ describe("UNS Conduit — Post-Quantum Encrypted Tunnel", () => {
   });
 });
 
-// Helper for test 8 — re-export from conduit for base64url decode
+// Helper for test 8. re-export from conduit for base64url decode
 function fromBase64url(str: string): Uint8Array {
   const padded = str.replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(padded);

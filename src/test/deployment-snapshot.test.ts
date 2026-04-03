@@ -1,5 +1,5 @@
 /**
- * Deployment Snapshot — Unified Versioning Gate Tests
+ * Deployment Snapshot. Unified Versioning Gate Tests
  *
  * Verifies that code, dependencies, and data all go through the
  * same singleProofHash gate and compose into a single canonical ID.
@@ -30,7 +30,7 @@ function makeComponent(
   return { type, canonicalId: `urn:uor:derivation:sha256:${id}`, label };
 }
 
-describe("Deployment Snapshot — Unified Versioning Gate", () => {
+describe("Deployment Snapshot. Unified Versioning Gate", () => {
   // Test 1: createSnapshot produces a canonical ID from components
   it("createSnapshot produces a canonical ID binding all components", async () => {
     const snapshot = await createSnapshot({

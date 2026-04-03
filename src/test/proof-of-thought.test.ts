@@ -1,5 +1,5 @@
 /**
- * Proof-of-Thought Tests — Zero-Knowledge Geometric Verification
+ * Proof-of-Thought Tests. Zero-Knowledge Geometric Verification
  * ═══════════════════════════════════════════════════════════════
  *
  * Verifies the complete Proof-of-Thought pipeline:
@@ -237,7 +237,7 @@ describe("Proof Verification (O(1))", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part IV: ZK Properties — Content Blindness
+// Part IV: ZK Properties. Content Blindness
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("ZK Content Blindness", () => {

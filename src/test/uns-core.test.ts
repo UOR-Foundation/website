@@ -11,7 +11,7 @@ import {
 // Test 1: Critical identity holds for all 256 elements
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Ring R_8", () => {
+describe("UNS Core. Ring R_8", () => {
   it("1. verifyCriticalIdentity() returns true (256/256 elements)", () => {
     expect(verifyCriticalIdentity()).toBe(true);
   });
@@ -21,7 +21,7 @@ describe("UNS Core — Ring R_8", () => {
 // Tests 2–10: Canonical Identity Engine
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Canonical Identity Engine", () => {
+describe("UNS Core. Canonical Identity Engine", () => {
   const testObj = { hello: "world" };
 
   it("2. same object → same canonicalId on every call (determinism)", async () => {

@@ -1,5 +1,5 @@
 /**
- * EpistemicBadge — Inline proof annotation for neuro-symbolic responses.
+ * EpistemicBadge. Inline proof annotation for neuro-symbolic responses.
  *
  * By default, the response shows clean readable text. A toggle at the
  * bottom lets users reveal the full chain-of-thought with epistemic
@@ -7,7 +7,7 @@
  *
  * When the overall trust score is low (Grade C or D), a prominent but
  * warm advisory banner appears, explaining WHY trust is low and HOW
- * to improve it — making the system transparent and empowering.
+ * to improve it. making the system transparent and empowering.
  */
 
 import { useState } from "react";
@@ -70,7 +70,7 @@ function getSourceUrl(source: string): string | null {
   const s = source.trim();
   // Already a URL
   if (/^https?:\/\//i.test(s)) return s;
-  // Internal/generated sources — not linkable
+  // Internal/generated sources. not linkable
   if (/^(scaffold|llm-generated|ring-core|internal|cache|local)/i.test(s)) return null;
   if (s.length < 8) return null;
   // Real-sounding sources → Google Scholar search
@@ -125,13 +125,13 @@ function analyzeLowTrust(
   if (dCount > 0 && dCount === total) {
     reasons.push("None of the claims in this response could be verified against known sources.");
   } else if (dCount > 0) {
-    reasons.push(`${dCount} of ${total} claims are unverified — generated without supporting evidence.`);
+    reasons.push(`${dCount} of ${total} claims are unverified. generated without supporting evidence.`);
   }
   if (cCount > 0 && dCount === 0) {
     reasons.push(`${cCount} of ${total} claims are plausible but haven't been independently confirmed.`);
   }
   if (!converged) {
-    reasons.push("The reasoning engine didn't fully converge — the answer may still be shifting.");
+    reasons.push("The reasoning engine didn't fully converge. the answer may still be shifting.");
   }
   if (curvature > 0.5) {
     reasons.push("High divergence detected between the AI's output and the symbolic scaffold.");
@@ -152,7 +152,7 @@ function analyzeLowTrust(
   }
   steps.push("Use the chain of thought below to inspect each claim's source.");
   if (grade === "D") {
-    steps.push("Treat this response as a hypothesis — verify key points independently.");
+    steps.push("Treat this response as a hypothesis. verify key points independently.");
   }
 
   return { reasons, steps };
@@ -200,7 +200,7 @@ function ClaimTooltip({ claim, onClose }: { claim: AnnotatedClaim; onClose: () =
         <div className="flex items-center gap-2">
           <span className="text-[10px]" style={{ color: style.color }}>{style.icon}</span>
           <span className="text-xs font-medium" style={{ color: style.color }}>
-            Grade {claim.grade} — {style.label}
+            Grade {claim.grade}. {style.label}
           </span>
         </div>
         <button
@@ -262,7 +262,7 @@ function LowTrustAdvisory({
         fontFamily: P.font,
       }}
     >
-      {/* Summary bar — always visible */}
+      {/* Summary bar. always visible */}
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-200"
@@ -313,8 +313,8 @@ function LowTrustAdvisory({
           >
             {groundedCount} of {total} claims verified
             {isDGrade
-              ? " — please verify this information independently"
-              : " — some claims need further verification"}
+              ? ". please verify this information independently"
+              : ". some claims need further verification"}
           </span>
         </div>
 
@@ -561,7 +561,7 @@ export default function AnnotatedResponse({
 
   return (
     <div className="space-y-3" style={{ fontFamily: P.font }}>
-      {/* ── Low Trust Advisory — prominent when grade is C or D ──── */}
+      {/* ── Low Trust Advisory. prominent when grade is C or D ──── */}
       {lowTrust && (
         <LowTrustAdvisory
           grade={grade}
@@ -571,7 +571,7 @@ export default function AnnotatedResponse({
         />
       )}
 
-      {/* Response content — plain by default, annotated when toggled */}
+      {/* Response content. plain by default, annotated when toggled */}
       {showChainOfThought ? (
         <>
           <div
@@ -586,7 +586,7 @@ export default function AnnotatedResponse({
             ))}
           </div>
 
-          {/* Proof summary — minimal, warm, trustworthy */}
+          {/* Proof summary. minimal, warm, trustworthy */}
           <div
             className="flex items-center gap-4 text-[10px] tracking-wider pt-3 flex-wrap"
             style={{
@@ -623,7 +623,7 @@ export default function AnnotatedResponse({
         <PlainClaimsView claims={claims} />
       )}
 
-      {/* Toggle button — always visible at the bottom */}
+      {/* Toggle button. always visible at the bottom */}
       <button
         onClick={() => setShowChainOfThought((v) => !v)}
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 w-full justify-center group"

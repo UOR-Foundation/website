@@ -1,5 +1,5 @@
 /**
- * Phase 5 Test Suite — Certificate Hierarchy & Resolver State Machine
+ * Phase 5 Test Suite. Certificate Hierarchy & Resolver State Machine
  *
  * T5.1: TransformCertificate verifies a recorded transform
  * T5.2: IsometryCertificate verifies round-trip fidelity

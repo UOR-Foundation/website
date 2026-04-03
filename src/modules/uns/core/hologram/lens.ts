@@ -1,5 +1,5 @@
 /**
- * Holographic Lens — Composable Projection Circuits
+ * Holographic Lens. Composable Projection Circuits
  * ══════════════════════════════════════════════════
  *
  * A Lens is a content-addressed composition of pure functions.
@@ -13,7 +13,7 @@
  *
  * Pipeline-first design:
  *   Elements are ordered. Output of each feeds into the next.
- *   No wiring needed for the 90% case — just list your elements.
+ *   No wiring needed for the 90% case. just list your elements.
  *
  *   const lens = composeLens("my-pipeline", [hash, sign, project]);
  *   const ground = await grindLens(lens);   // → CID, DID, WebFinger…
@@ -25,11 +25,11 @@
  *
  * Morphism classification:
  *   Every lens declares its morphism type from the UOR hierarchy:
- *     • "transform" — general (may be lossy)
- *     • "isometry"  — preserves all information (invertible)
- *     • "embedding"  — lossy but with compression witness
+ *     • "transform". general (may be lossy)
+ *     • "isometry" . preserves all information (invertible)
+ *     • "embedding" . lossy but with compression witness
  *
- * A lens IS a hologram — its identity projects through all 25+ standards.
+ * A lens IS a hologram. its identity projects through all 25+ standards.
  *
  * @module uns/core/hologram/lens
  */
@@ -40,7 +40,7 @@ import { project, PROJECTIONS, type Hologram, type ProjectionInput } from "./ind
 // ── Types ───────────────────────────────────────────────────────────────────
 
 /**
- * A single lens element — one pure function.
+ * A single lens element. one pure function.
  *
  * In the linear (pipeline) case, focus receives the previous element's
  * output as a single value. In the DAG case, it receives a named record.
@@ -70,7 +70,7 @@ export interface LensWire {
 /** UOR morphism classification for the lens. */
 export type LensMorphism = "transform" | "isometry" | "embedding";
 
-/** The complete Holographic Lens — a content-addressed circuit. */
+/** The complete Holographic Lens. a content-addressed circuit. */
 export interface HolographicLens {
   readonly "@context": "https://uor.foundation/contexts/uor-v1.jsonld";
   readonly "@type": "hologram:Lens";
@@ -100,7 +100,7 @@ export interface FocusResult {
 // ── Refraction Types (Bidirectional Lens) ──────────────────────────────────
 
 /**
- * Supported rehydration modalities — the target "language" for refraction.
+ * Supported rehydration modalities. the target "language" for refraction.
  *
  * Each modality is a deterministic function from canonical form (N-Quads +
  * SingleProofResult) to a specific representation. The lens provides the
@@ -143,7 +143,7 @@ export interface RefractResult {
   readonly morphism: LensMorphism;
   /** Execution trace (element IDs in reverse order). */
   readonly trace: readonly string[];
-  /** CID of the lens used (same as focus — lens identity is fixed). */
+  /** CID of the lens used (same as focus. lens identity is fixed). */
   readonly lensCid: string;
   /** The SingleProofResult that was the source of the refraction. */
   readonly proof: SingleProofResult;
@@ -153,7 +153,7 @@ export interface RefractResult {
  * The result of dehydration: any object → canonical UOR form.
  *
  * Dehydration collapses any object into its canonical, content-addressed
- * representation. This is a morphism:Isometry — lossless, invertible.
+ * representation. This is a morphism:Isometry. lossless, invertible.
  */
 export interface DehydrationResult {
   /** The SingleProofResult containing all identity forms. */
@@ -164,7 +164,7 @@ export interface DehydrationResult {
   readonly original: unknown;
 }
 
-// ── Serializable Manifest (for hashing — strips functions) ─────────────────
+// ── Serializable Manifest (for hashing. strips functions) ─────────────────
 
 function toManifest(lens: HolographicLens) {
   return {
@@ -184,7 +184,7 @@ function toManifest(lens: HolographicLens) {
  * Create a LensElement from a registered hologram projection.
  *
  * The element accepts a ProjectionInput and returns the projection string.
- * This binds directly to the Hologram Projection Registry — zero boilerplate.
+ * This binds directly to the Hologram Projection Registry. zero boilerplate.
  *
  *   const didElement = fromProjection("did");
  *   const btcElement = fromProjection("bitcoin");
@@ -274,7 +274,7 @@ export function composeLens(
 }
 
 /**
- * Grind a lens — compute its permanent content-addressed identity.
+ * Grind a lens. compute its permanent content-addressed identity.
  *
  * "Grinding" is the optical term for shaping a lens to its final form.
  * After grinding, the lens projects through all 25+ hologram standards.
@@ -291,7 +291,7 @@ export async function grindLens(lens: HolographicLens): Promise<GroundLens> {
 }
 
 /**
- * Focus a lens — execute the circuit on input.
+ * Focus a lens. execute the circuit on input.
  *
  * Pipeline mode: input flows through each element sequentially.
  *   Element₁(input) → Element₂(result₁) → … → ElementN(resultN₋₁) → output
@@ -333,13 +333,13 @@ export async function focusLens(
 
       let elInput: unknown;
       if (incoming.length === 0) {
-        // Root element — receives the lens input
+        // Root element. receives the lens input
         elInput = input;
       } else if (incoming.length === 1) {
-        // Single wire — pass value directly
+        // Single wire. pass value directly
         elInput = bus.get(incoming[0].from);
       } else {
-        // Multiple wires — collect into a named record
+        // Multiple wires. collect into a named record
         const record: Record<string, unknown> = {};
         for (const w of incoming) {
           const portName = w.to.split(".")[1] ?? w.from.split(".")[0];
@@ -429,7 +429,7 @@ export function parallel(
   return composeLens(name, [fan], { morphism: "transform" });
 }
 
-// ── Refraction (Bidirectional Lens — Rehydration) ──────────────────────────
+// ── Refraction (Bidirectional Lens. Rehydration) ──────────────────────────
 
 // ── Helpers for RDF/XML and GraphQL SDL modalities ─────────────────────────
 
@@ -479,7 +479,7 @@ function inferGraphQLType(value: unknown): string {
 }
 
 /**
- * Standard rehydration targets — built-in refraction modalities.
+ * Standard rehydration targets. built-in refraction modalities.
  *
  * Each is a pure function: SingleProofResult → target representation.
  * These form the "spectral lines" of the EOR decoder: one canonical form,
@@ -491,7 +491,7 @@ const REFRACTION_TARGETS: Record<
 > = {
   /**
    * nquads: Raw URDNA2015 canonical N-Quads string.
-   * The most fundamental form — byte-identical on any W3C-compliant system.
+   * The most fundamental form. byte-identical on any W3C-compliant system.
    */
   nquads: async (proof) => proof.nquads,
 
@@ -617,7 +617,7 @@ const REFRACTION_TARGETS: Record<
     });
     const nodes = Array.isArray(expanded) ? expanded : [expanded];
     const sdlLines: string[] = [
-      "# GraphQL SDL — auto-generated from UOR canonical form",
+      "# GraphQL SDL. auto-generated from UOR canonical form",
       `# Source CID: ${proof.cid}`,
       "",
     ];
@@ -639,7 +639,7 @@ const REFRACTION_TARGETS: Record<
   },
 
   /**
-   * hologram: The full hologram — all 25+ protocol projections.
+   * hologram: The full hologram. all 25+ protocol projections.
    * Returns the complete Hologram object with every registered standard.
    */
   hologram: async (proof) => {
@@ -653,13 +653,13 @@ const REFRACTION_TARGETS: Record<
 
   /**
    * identity: SingleProofResult passthrough.
-   * Returns the canonical form itself — useful for piping into other lenses.
+   * Returns the canonical form itself. useful for piping into other lenses.
    */
   identity: async (proof) => proof,
 };
 
 /**
- * Refract a lens — execute the circuit in reverse (rehydration).
+ * Refract a lens. execute the circuit in reverse (rehydration).
  *
  * Given a canonical form (SingleProofResult) and a target modality,
  * this runs any bidirectional elements in reverse order and then
@@ -670,9 +670,9 @@ const REFRACTION_TARGETS: Record<
  * transform. This enables custom rehydration logic.
  *
  * The refraction is classified by the lens's morphism type:
- *   • "isometry"  — lossless round-trip guaranteed
- *   • "embedding" — lossy, with compression witness
- *   • "transform" — general, may be lossy
+ *   • "isometry" . lossless round-trip guaranteed
+ *   • "embedding". lossy, with compression witness
+ *   • "transform". general, may be lossy
  *
  * @param lens      The Holographic Lens to refract through.
  * @param proof     The SingleProofResult to rehydrate.
@@ -719,13 +719,13 @@ export async function refractLens(
  * This is the universal encoder: any JavaScript object → content-addressed
  * canonical representation with all identity forms (CID, DID, IPv6, Braille).
  *
- * Dehydration is always a morphism:Isometry — lossless and invertible
+ * Dehydration is always a morphism:Isometry. lossless and invertible
  * (given the canonical bytes, the original semantics can be reconstructed).
  *
  *   const { proof, hologram } = await dehydrate(myObj);
- *   // proof.nquads       — canonical N-Quads (source of truth)
- *   // proof.cid          — IPFS CIDv1
- *   // hologram           — all 25+ protocol projections
+ *   // proof.nquads      . canonical N-Quads (source of truth)
+ *   // proof.cid         . IPFS CIDv1
+ *   // hologram          . all 25+ protocol projections
  *
  * @param obj  Any JavaScript object (JSON-LD or plain).
  * @returns    DehydrationResult with proof, hologram, and original.

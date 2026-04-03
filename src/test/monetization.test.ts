@@ -25,10 +25,10 @@ const CONFIG: MonetizationConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// P7 Tests — 10/10
+// P7 Tests. 10/10
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Monetization — P7", () => {
+describe("Monetization. P7", () => {
   let kv: UnsKv;
   let engine: MonetizationEngine;
 

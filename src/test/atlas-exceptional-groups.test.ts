@@ -1,5 +1,5 @@
 /**
- * Phase 2: Exceptional Group Chain — Categorical Operations Verification
+ * Phase 2: Exceptional Group Chain. Categorical Operations Verification
  *
  * Tests verifying that all five exceptional Lie groups emerge from the Atlas
  * through categorical operations, with correct Cartan matrices, Dynkin diagrams,
@@ -22,7 +22,7 @@ import {
 // Part I: Cartan Matrix Verification (Exact Integer Arithmetic)
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Cartan Matrices — Exact Verification", () => {
+describe("Cartan Matrices. Exact Verification", () => {
   it("G₂: rank 2, det=1, triple bond, NOT simply-laced", () => {
     expect(CARTAN_G2.rank).toBe(2);
     expect(isValidCartan(CARTAN_G2)).toBe(true);
@@ -68,7 +68,7 @@ describe("Cartan Matrices — Exact Verification", () => {
 // Part II: Dynkin Diagrams
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Dynkin Diagrams — Structural Verification", () => {
+describe("Dynkin Diagrams. Structural Verification", () => {
   it("G₂: 1 bond, multiplicity 3 (triple bond), connected", () => {
     const d = toDynkinDiagram(CARTAN_G2, "G₂");
     expect(d.bonds.length).toBe(1);
@@ -114,7 +114,7 @@ describe("Dynkin Diagrams — Structural Verification", () => {
 // Part III: Group Constructions from Atlas
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Exceptional Groups — Categorical Construction", () => {
+describe("Exceptional Groups. Categorical Construction", () => {
   const atlas = getAtlas();
 
   it("G₂ from Product: 12 roots, rank 2, Weyl order 12", () => {
@@ -167,7 +167,7 @@ describe("Exceptional Groups — Categorical Construction", () => {
 // Part IV: Inclusion Chain
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Inclusion Chain — G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈", () => {
+describe("Inclusion Chain. G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈", () => {
   it("Root counts strictly increase: 12 < 48 < 72 < 126 < 240", () => {
     const chain = constructExceptionalChain();
     const roots = chain.groups.map(g => g.roots);
@@ -210,7 +210,7 @@ describe("Inclusion Chain — G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈", () => {
 // Part V: E₈ Root Structure ↔ R₈ Correspondence
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("E₈ Root Structure — R₈ Deep Correspondence", () => {
+describe("E₈ Root Structure. R₈ Deep Correspondence", () => {
   it("E₈ = 112 integer + 128 half-integer = 240 roots", () => {
     const analysis = analyzeE8RootStructure();
     expect(analysis.integerRoots).toBe(112);
@@ -256,7 +256,7 @@ describe("Full Exceptional Group Chain Report", () => {
   it("Generates complete verified report", () => {
     const chain = constructExceptionalChain();
 
-    console.log("\n═══ EXCEPTIONAL GROUP CHAIN — PHASE 2 REPORT ═══\n");
+    console.log("\n═══ EXCEPTIONAL GROUP CHAIN. PHASE 2 REPORT ═══\n");
     console.log("Inclusion chain: G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈\n");
 
     for (const g of chain.groups) {

@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::query
+ * UOR Foundation v2.0.0. bridge::query
  *
  * Information extraction queries over ring elements.
  *
@@ -10,7 +10,7 @@
 import type { MetricAxis } from "../enums";
 
 /**
- * Query — abstract base for all queries.
+ * Query. abstract base for all queries.
  */
 export interface Query {
   /** Human-readable query description. */
@@ -18,7 +18,7 @@ export interface Query {
 }
 
 /**
- * CoordinateQuery — queries by position in the ring.
+ * CoordinateQuery. queries by position in the ring.
  *
  * @disjoint MetricQuery, RepresentationQuery
  */
@@ -30,7 +30,7 @@ export interface CoordinateQuery extends Query {
 }
 
 /**
- * MetricQuery — queries by metric distance.
+ * MetricQuery. queries by metric distance.
  *
  * @disjoint CoordinateQuery, RepresentationQuery
  */
@@ -44,7 +44,7 @@ export interface MetricQuery extends Query {
 }
 
 /**
- * RepresentationQuery — queries by representation form.
+ * RepresentationQuery. queries by representation form.
  *
  * @disjoint CoordinateQuery, MetricQuery
  */

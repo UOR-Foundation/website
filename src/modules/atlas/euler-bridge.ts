@@ -1,5 +1,5 @@
 /**
- * Euler's Number Bridge — e connects Atlas, Quantum, and Thermodynamics
+ * Euler's Number Bridge. e connects Atlas, Quantum, and Thermodynamics
  * ═══════════════════════════════════════════════════════════════════════
  *
  * Euler's number e ≈ 2.71828 is the universal constant that ties together
@@ -22,7 +22,7 @@
  * 1. THE 96 VERTICES ARE 96 ROOTS OF UNITY
  *    Each Atlas vertex a ∈ (ℤ/360ℤ)* maps to a point on the unit circle:
  *      ζ_a = e^(2πi·a/360)
- *    These 96 points form a DISCRETE SUBGROUP of U(1) — exactly the
+ *    These 96 points form a DISCRETE SUBGROUP of U(1). exactly the
  *    phases available to quantum gates in the Atlas compilation.
  *
  * 2. GROUP EXPONENT 12 → 12th ROOTS OF UNITY
@@ -35,16 +35,16 @@
  *    e^(iπ) + 1 = 0 corresponds to the Atlas element a = 180.
  *    But 180 is NOT coprime to 360 (gcd(180,360) = 180).
  *    This means Euler's identity lives ON THE BOUNDARY of (ℤ/360ℤ)*,
- *    not inside it — it is the singular point where the group breaks.
+ *    not inside it. it is the singular point where the group breaks.
  *    The closest Atlas element is 179 (prime, coprime to 360), which
- *    sits at angle 179° ≈ π — a near-miss that encodes the "almost
+ *    sits at angle 179° ≈ π. a near-miss that encodes the "almost
  *    but not quite" nature of e^(iπ) = -1 in discrete geometry.
  *
  * 4. QUANTUM GATE PHASES
  *    Every quantum gate in the Atlas compilation pipeline is:
  *      R_z(θ_a) = e^(iπa/180) where a ∈ (ℤ/360ℤ)*
  *    The 96 available phases form a UNIVERSAL GATE SET for quantum
- *    computation on the Atlas topology — any unitary can be
+ *    computation on the Atlas topology. any unitary can be
  *    approximated to arbitrary precision by composing these gates
  *    (Solovay-Kitaev theorem applied to our discrete phase set).
  *
@@ -166,7 +166,7 @@ export interface EulerDiscovery {
  *   ζ_a = e^(2πi·a/360) = e^(iπa/180)
  *
  * Since the modulus is 360 (degrees in a circle), the clock value IS
- * the angle in degrees. This is not coincidence — it is the reason
+ * the angle in degrees. This is not coincidence. it is the reason
  * 360 was chosen as the circle division in antiquity.
  */
 export function buildPhaseMap(): PhasePoint[] {
@@ -372,7 +372,7 @@ export function buildPhaseGateSet(): AtlasPhaseGate[] {
  * R_z(θ₁) · R_z(θ₂) = R_z(θ₁ + θ₂)
  *
  * In the clock algebra: this is multiplication mod 360.
- * Wait — phase addition corresponds to MULTIPLICATION of the unitary,
+ * Wait. phase addition corresponds to MULTIPLICATION of the unitary,
  * but ADDITION of the angles. In (ℤ/360ℤ), angle addition is the
  * additive group, while clock algebra is the multiplicative group.
  *
@@ -417,7 +417,7 @@ export function composePhaseGates(
  *   - High β (low temperature): only lowest-energy vertex dominates → S → 0
  *   - β = 0: Z = 96, F = 0, S = ln(96)
  *
- * The maximum entropy S_max = ln(96) ≈ 4.564 is the "Atlas capacity" —
+ * The maximum entropy S_max = ln(96) ≈ 4.564 is the "Atlas capacity".
  * the information-theoretic channel capacity of the 96-vertex space.
  * This is directly related to the 96 quantum phase gates available.
  */
@@ -463,7 +463,7 @@ export function computePartition(beta: number): AtlasPartition {
  *   ln(360) = ln(2³×3²×5) ≈ 5.8861  (full clock capacity)
  *   ln(2) ≈ 0.6931  (1 bit)
  *
- * The ratio ln(96)/ln(2) ≈ 6.585 bits — slightly more than 6 bits
+ * The ratio ln(96)/ln(2) ≈ 6.585 bits. slightly more than 6 bits
  * but less than 7. This is the "fractional bit depth" of the Atlas.
  */
 export const ATLAS_CAPACITY = Math.log(96);
@@ -480,7 +480,7 @@ export const ATLAS_BITS = Math.log2(96); // ≈ 6.585 bits
  * In the discrete world: exhaustive search (≤12 steps since exponent = 12)
  *
  * This is the problem Shor's algorithm solves quantumly.
- * Our group is small enough that classical brute force suffices —
+ * Our group is small enough that classical brute force suffices.
  * demonstrating that quantum advantage = making large groups feel small.
  */
 export function discreteLog(
@@ -718,7 +718,7 @@ export function runEulerBridgeVerification(): {
   });
 
   // D14: The number e itself appears in the partition function
-  // At β=1: Z(1) = Σ e^(-a/360) — every term uses e
+  // At β=1: Z(1) = Σ e^(-a/360). every term uses e
   const unitBeta = computePartition(1.0);
   discoveries.push({
     name: "Euler's number e governs Atlas thermodynamics at every temperature",

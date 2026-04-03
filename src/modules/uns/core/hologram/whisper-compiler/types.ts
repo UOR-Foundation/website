@@ -1,5 +1,5 @@
 /**
- * Whisper Compiler — Type Definitions
+ * Whisper Compiler. Type Definitions
  * ════════════════════════════════════
  *
  * Types for the ONNX→Hologram compilation pipeline.
@@ -63,7 +63,7 @@ export interface OnnxTensor {
   name: string;
   dims: number[];
   dataType: number;
-  /** Raw bytes — zero-copy view into the original ONNX ArrayBuffer */
+  /** Raw bytes. zero-copy view into the original ONNX ArrayBuffer */
   rawData: Uint8Array;
   /** Total number of elements */
   elementCount: number;
@@ -136,7 +136,7 @@ export interface HologramComputeNode {
   params: Record<string, unknown>;
 }
 
-/** The complete compiled model — ready for Phase 2 WGSL dispatch */
+/** The complete compiled model. ready for Phase 2 WGSL dispatch */
 export interface HologramCompiledModel {
   /** Content-addressed ID of this manifest */
   manifestCid: string;

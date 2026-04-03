@@ -36,14 +36,14 @@ export interface GibbsEnsemble {
   temperature: LieAlgebraElement;
   /** Partition function Z(x) */
   partitionZ: number;
-  /** log Z(x) — the Massieu potential */
+  /** log Z(x). the Massieu potential */
   logZ: number;
   /** Gibbs probability weights for each "root" (normalized) */
   weights: number[];
 }
 
 export interface GeometricHeat {
-  /** Q(x) = ∫ Ψ(m) dλ_x(m) — the geometric heat / expectation */
+  /** Q(x) = ∫ Ψ(m) dλ_x(m). the geometric heat / expectation */
   Q: number[];
   /** The Fenchel-Legendre dual variable */
   dualQ: number[];
@@ -86,7 +86,7 @@ export interface SouriauState {
 }
 
 /**
- * Information Capacity Φ — Bekenstein-Hawking bound for the Atlas volume.
+ * Information Capacity Φ. Bekenstein-Hawking bound for the Atlas volume.
  *
  * The Bekenstein-Hawking entropy sets the maximum information content
  * of a bounded region:  S_BH = A / (4 l_P²)
@@ -95,7 +95,7 @@ export interface SouriauState {
  * defined by the Fisher-Rao metric: A = √det(g) × surface factor.
  *
  * The zero-point capacity Φ is the ratio of the Casimir entropy
- * to this geometric bound — if Φ ≤ 1, the Atlas saturates or
+ * to this geometric bound. if Φ ≤ 1, the Atlas saturates or
  * respects the holographic principle.
  */
 export interface InformationCapacity {
@@ -191,7 +191,7 @@ function computePartitionFunction(beta: LieAlgebraElement): { Z: number; logZ: n
 }
 
 /**
- * Compute the Geometric Heat Q(x) — the Fenchel-Legendre transform.
+ * Compute the Geometric Heat Q(x). the Fenchel-Legendre transform.
  *
  * Q: Ω_γ → g*,  Q(x) = ∫ Ψ(m) dλ_x(m) = -d(log Z)/dx
  *
@@ -390,7 +390,7 @@ export function computeOpCost(
   let nextCoeffs = [...state.beta.coeffs];
 
   if (opType === "unitary") {
-    // Isentropic rotation in Cartan algebra — preserves |β| and Z
+    // Isentropic rotation in Cartan algebra. preserves |β| and Z
     const temp = nextCoeffs[0];
     for (let i = 0; i < nextCoeffs.length - 1; i++) {
       nextCoeffs[i] = nextCoeffs[i + 1];
@@ -400,7 +400,7 @@ export function computeOpCost(
     // Landauer erasure: contracts temperature cone → entropy production
     nextCoeffs = nextCoeffs.map(c => c * 0.92);
   } else if (opType === "learning") {
-    // Cartan NN: geodesic flow toward equilibrium — negentropic
+    // Cartan NN: geodesic flow toward equilibrium. negentropic
     nextCoeffs = nextCoeffs.map(c => c * 1.04);
   }
 

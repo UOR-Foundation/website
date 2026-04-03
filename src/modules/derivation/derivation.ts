@@ -1,5 +1,5 @@
 /**
- * UOR Derivation Engine — auditable term-level computation records.
+ * UOR Derivation Engine. auditable term-level computation records.
  *
  * A Derivation binds { original term, canonical term, result, metrics }.
  * It is the foundational audit record of the UOR knowledge graph.
@@ -97,7 +97,7 @@ function evaluateTerm(t: Term, ring: UORRing): number {
   throw new Error(`Unexpected term kind`);
 }
 
-// SHA-256 — canonical single implementation
+// SHA-256. canonical single implementation
 import { sha256hex } from "@/lib/crypto";
 
 // ── derive ──────────────────────────────────────────────────────────────────

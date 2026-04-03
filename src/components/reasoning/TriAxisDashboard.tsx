@@ -1,5 +1,5 @@
 /**
- * TriAxisDashboard — Geometric Reasoning Dashboard
+ * TriAxisDashboard. Geometric Reasoning Dashboard
  *
  * Phase 6: Visualizes the three reasoning axes as dashboard panels.
  *

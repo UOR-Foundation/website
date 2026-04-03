@@ -1,5 +1,5 @@
 /**
- * Audio Module — Runtime Types
+ * Audio Module. Runtime Types
  * ═══════════════════════════════════════════════════════════════════
  *
  * Concrete data shapes for the audio: namespace runtime.

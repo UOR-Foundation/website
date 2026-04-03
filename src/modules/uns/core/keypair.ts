@@ -1,17 +1,17 @@
 /**
- * UNS Core — Post-Quantum Keypair & Signing (Dilithium-3 / ML-DSA-65)
+ * UNS Core. Post-Quantum Keypair & Signing (Dilithium-3 / ML-DSA-65)
  *
  * Implements CRYSTALS-Dilithium-3 (FIPS 204 ML-DSA-65) post-quantum
  * digital signatures for UNS record authentication.
  *
  * Every signed record carries a cert:signature block that any agent
- * can verify without a trusted third party — using only the signer's
+ * can verify without a trusted third party. using only the signer's
  * public key object (itself content-addressed via singleProofHash).
  *
  * Dependencies: @noble/post-quantum (audited, zero-dep PQC library)
  */
 
-// @ts-ignore — noble/post-quantum uses .js exports
+// @ts-ignore. noble/post-quantum uses .js exports
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
 import { singleProofHash } from "./identity";
 import { canonicalizeToNQuads } from "./canonicalize";
@@ -20,15 +20,15 @@ import { canonicalizeToNQuads } from "./canonicalize";
 
 /** A Dilithium-3 keypair with its content-addressed public key identity. */
 export interface UnsKeypair {
-  /** Algorithm identifier — always 'CRYSTALS-Dilithium-3'. */
+  /** Algorithm identifier. always 'CRYSTALS-Dilithium-3'. */
   algorithm: "CRYSTALS-Dilithium-3";
   /** Raw public key bytes (1952 bytes for ML-DSA-65). */
   publicKeyBytes: Uint8Array;
   /** Raw private key bytes (4000 bytes). NEVER serialize or transmit. */
   privateKeyBytes: Uint8Array;
-  /** Canonical ID of the public key object — used as signer identity. */
+  /** Canonical ID of the public key object. used as signer identity. */
   canonicalId: string;
-  /** JSON-LD public key object — storable, shareable, content-addressed. */
+  /** JSON-LD public key object. storable, shareable, content-addressed. */
   publicKeyObject: PublicKeyObject;
 }
 
@@ -69,7 +69,7 @@ function fromBase64url(str: string): Uint8Array {
   return bytes;
 }
 
-// ── Local Key Store (stub — replaced by DHT in production) ──────────────────
+// ── Local Key Store (stub. replaced by DHT in production) ──────────────────
 
 const keyStore = new Map<string, PublicKeyObject>();
 

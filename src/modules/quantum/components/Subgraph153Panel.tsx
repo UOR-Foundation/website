@@ -1,5 +1,5 @@
 /**
- * 153-Link Subgraph Panel — Fermionic Resonance Search
+ * 153-Link Subgraph Panel. Fermionic Resonance Search
  * ═════════════════════════════════════════════════════
  */
 
@@ -51,10 +51,10 @@ export default function Subgraph153Panel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[18px] font-mono tracking-wide text-[hsl(280,60%,65%)]">
-            153-Link Subgraph Search — Fermionic Resonance
+            153-Link Subgraph Search. Fermionic Resonance
           </h2>
           <p className="text-[11px] font-mono text-[hsl(210,10%,50%)] mt-0.5">
-            T(17) = 153 = 1³+5³+3³ — searching 22-vertex subgraphs of the 96-vertex Atlas
+            T(17) = 153 = 1³+5³+3³. searching 22-vertex subgraphs of the 96-vertex Atlas
           </p>
         </div>
         <div className={`text-[11px] font-mono px-3 py-1 rounded-md border ${
@@ -152,7 +152,7 @@ export default function Subgraph153Panel() {
       {result.resonances.length > 0 && (
         <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-5 space-y-4">
           <div className="text-[10px] font-mono text-[hsl(30,70%,55%)] uppercase">
-            4π Fermionic Resonance — {result.resonances.length} subgraph{result.resonances.length > 1 ? "s" : ""} analyzed
+            4π Fermionic Resonance. {result.resonances.length} subgraph{result.resonances.length > 1 ? "s" : ""} analyzed
           </div>
 
           {result.resonances.length > 1 && (
@@ -197,9 +197,9 @@ export default function Subgraph153Panel() {
                 {/* α⁻¹ derivation paths */}
                 <div className="space-y-1">
                   {[
-                    { label: "Path A — Σd²/(4Nσ²) × fermionic", value: r.alphaA, best: r.bestPath.startsWith("A") },
-                    { label: "Path B — E×4π/(N√(2c))", value: r.alphaB, best: r.bestPath.startsWith("B") },
-                    { label: "Path C — T(17) resonance", value: r.alphaC, best: r.bestPath.startsWith("C") },
+                    { label: "Path A. Σd²/(4Nσ²) × fermionic", value: r.alphaA, best: r.bestPath.startsWith("A") },
+                    { label: "Path B. E×4π/(N√(2c))", value: r.alphaB, best: r.bestPath.startsWith("B") },
+                    { label: "Path C. T(17) resonance", value: r.alphaC, best: r.bestPath.startsWith("C") },
                   ].map(p => {
                     const err = Math.abs(p.value - ALPHA_INV_MEASURED) / ALPHA_INV_MEASURED * 100;
                     return (
@@ -214,7 +214,7 @@ export default function Subgraph153Panel() {
                           {isFinite(p.value) ? p.value.toFixed(3) : "∞"}
                         </span>
                         <span className="text-[hsl(210,10%,40%)] w-16 text-right">
-                          {isFinite(p.value) ? `${err.toFixed(2)}%` : "—"}
+                          {isFinite(p.value) ? `${err.toFixed(2)}%` : ". "}
                         </span>
                       </div>
                     );
@@ -306,7 +306,7 @@ export default function Subgraph153Panel() {
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-mono text-[hsl(210,10%,45%)] uppercase">
-            Verification — {passedTests}/{result.tests.length}
+            Verification. {passedTests}/{result.tests.length}
           </div>
           <button
             onClick={() => setShowTests(!showTests)}

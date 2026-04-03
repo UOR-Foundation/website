@@ -1,5 +1,5 @@
 /**
- * UNS Compute — Content-Addressed Function Registry
+ * UNS Compute. Content-Addressed Function Registry
  *
  * Every deployed function has a canonical ID derived from its source bytes.
  * Two deployments of identical source → same canonical ID.
@@ -8,7 +8,7 @@
  * Silent code injection is cryptographically impossible: changing the
  * source changes the hash, which changes the canonical ID.
  *
- * @see derivation: namespace — UOR content addressing
+ * @see derivation: namespace. UOR content addressing
  */
 
 import { singleProofHash } from "../core/identity";
@@ -61,7 +61,7 @@ export async function deployFunction(
   const identity = await singleProofHash({ source: sourceBase64, language });
   const canonicalId = identity["u:canonicalId"];
 
-  // Step 3: Store (idempotent — same source = same ID)
+  // Step 3: Store (idempotent. same source = same ID)
   if (!registry.has(canonicalId)) {
     const fn: ComputeFunction = {
       canonicalId,

@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::resolver
+ * UOR Foundation v2.0.0. bridge::resolver
  *
  * Type → Partition resolution with state machine lifecycle.
  *
@@ -8,12 +8,12 @@
  */
 
 /**
- * ResolutionState — lifecycle state of a resolution process.
+ * ResolutionState. lifecycle state of a resolution process.
  */
 export type ResolutionState = "Unresolved" | "Partial" | "Resolved" | "Certified";
 
 /**
- * RefinementSuggestion — a suggested next step in resolution.
+ * RefinementSuggestion. a suggested next step in resolution.
  */
 export interface RefinementSuggestion {
   /** Description of the suggested refinement. */
@@ -25,7 +25,7 @@ export interface RefinementSuggestion {
 }
 
 /**
- * Resolver — abstract base for all resolvers.
+ * Resolver. abstract base for all resolvers.
  *
  * @disjoint DihedralFactorizationResolver, IterativeRefinementResolver
  */
@@ -39,7 +39,7 @@ export interface Resolver {
 }
 
 /**
- * DihedralFactorizationResolver — resolves via dihedral group factorization.
+ * DihedralFactorizationResolver. resolves via dihedral group factorization.
  * Uses neg/bnot decomposition to factorize ring elements.
  *
  * @disjoint IterativeRefinementResolver
@@ -50,7 +50,7 @@ export interface DihedralFactorizationResolver extends Resolver {
 }
 
 /**
- * IterativeRefinementResolver — resolves via successive constraint application.
+ * IterativeRefinementResolver. resolves via successive constraint application.
  * Each step pins additional fibers until closure.
  *
  * @disjoint DihedralFactorizationResolver

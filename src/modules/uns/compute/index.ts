@@ -1,5 +1,5 @@
 /**
- * UNS Compute — Content-Addressed Edge Functions & Agent Gateway
+ * UNS Compute. Content-Addressed Edge Functions & Agent Gateway
  *
  * Functions are content-addressed. Every execution produces a signed,
  * verifiable computation trace. Sandbox prevents escape.

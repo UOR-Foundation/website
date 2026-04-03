@@ -2,7 +2,7 @@
  * audio module barrel export.
  *
  * @namespace audio/
- * @version 3.0.0 — derivation chain upgrade
+ * @version 3.0.0. derivation chain upgrade
  */
 
 // Types
@@ -28,7 +28,7 @@ export { analyzeFrame, frameCurvature, frameCatastrophe } from "./frame-analyzer
 export { AudioEngine, getAudioEngine } from "./engine";
 export type { AudioEngineConfig } from "./engine";
 
-// Lenses (v2 — with derivation chains)
+// Lenses (v2. with derivation chains)
 export { HarmonicLens } from "./lenses/harmonic-lens";
 export type { HarmonicLensFrame } from "./lenses/harmonic-lens";
 export { CurvatureLens } from "./lenses/curvature-lens";

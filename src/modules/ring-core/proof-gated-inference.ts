@@ -1,12 +1,12 @@
 /**
- * UOR v2.0.0 — Proof-Gated Inference (PGI)
+ * UOR v2.0.0. Proof-Gated Inference (PGI)
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Decomposes queries into atomic claims, checks each against the proof store,
  * and only sends uncached "gaps" to the LLM. Cached claims replay instantly
  * via tensor-product composition with live fragments.
  *
- * Privacy guarantee: the LLM never sees the full query — only decontextualized
+ * Privacy guarantee: the LLM never sees the full query. only decontextualized
  * atomic fragments. Semantic assembly happens client-side via composeProofs().
  *
  * Architecture:
@@ -26,7 +26,7 @@ import type { SymbolicScaffold, ScaffoldConstraint, AnnotatedClaim, EpistemicGra
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-/** An atomic claim slot — the unit of proof-gated inference. */
+/** An atomic claim slot. the unit of proof-gated inference. */
 export interface ClaimSlot {
   /** Index in the scaffold constraint list. */
   readonly index: number;
@@ -40,9 +40,9 @@ export interface ClaimSlot {
 
 /** Result of batch proof lookup. */
 export interface ProofLookupResult {
-  /** Slots that had cache hits — replay instantly. */
+  /** Slots that had cache hits. replay instantly. */
   readonly hits: Array<ClaimSlot & { cachedOutput: string; proofId: string; grade: string }>;
-  /** Slots that missed — need LLM inference. */
+  /** Slots that missed. need LLM inference. */
   readonly misses: ClaimSlot[];
   /** Hit ratio [0, 1]. */
   readonly hitRatio: number;
@@ -93,7 +93,7 @@ export function decomposeToClaims(scaffold: SymbolicScaffold): ClaimSlot[] {
   });
 }
 
-/** FNV-1a 32-bit hash — fast, deterministic, good distribution. */
+/** FNV-1a 32-bit hash. fast, deterministic, good distribution. */
 function fnv1a(input: string): string {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
@@ -122,7 +122,7 @@ export async function batchLookupProofs(claims: ClaimSlot[]): Promise<ProofLooku
     .in("input_hash", hashes);
 
   if (error || !data) {
-    // On error, treat all as misses — graceful degradation
+    // On error, treat all as misses. graceful degradation
     return { hits: [], misses: [...claims], hitRatio: 0, tokensSaved: 0 };
   }
 
@@ -233,7 +233,7 @@ export function composeFragments(
 
 /**
  * Store individual claim-level proofs for future O(1) lookup.
- * Fire-and-forget — non-critical path.
+ * Fire-and-forget. non-critical path.
  */
 export async function storeClaims(
   claims: ClaimSlot[],

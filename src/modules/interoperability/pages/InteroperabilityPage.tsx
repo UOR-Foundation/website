@@ -1,5 +1,5 @@
 /**
- * /interoperability — Universal Interoperability Map
+ * /interoperability. Universal Interoperability Map
  *
  * 356+ projections across 12 canonical categories.
  * One hash. Every standard.
@@ -18,7 +18,7 @@ export default function InteroperabilityPage() {
   return (
     <Layout>
       <div className="min-h-screen">
-        {/* Hero — minimal, high-impact */}
+        {/* Hero. minimal, high-impact */}
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
           <div className="relative container pt-28 md:pt-52 pb-14 sm:pb-18">

@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — Barrel Export
+ * UOR Foundation v2.0.0. Barrel Export
  *
  * Single entry point for all interfaces, 5 enums, and named individuals.
  * Transcribed 1:1 from the Rust uor-foundation crate.

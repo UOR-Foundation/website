@@ -1,5 +1,5 @@
 /**
- * Atlas Observer Bridge — Phase 4
+ * Atlas Observer Bridge. Phase 4
  * ════════════════════════════════
  *
  * Context-driven morphism selector that connects the Observer Theory
@@ -8,9 +8,9 @@
  * Key insight: An observer's zone determines which categorical operation
  * is structurally appropriate for cross-modal translation:
  *
- *   COHERENCE → Embedding (E₈) — full structure preserved, lossless
- *   DRIFT     → Filtration (E₆) or Augmentation (E₇) — partial structure
- *   COLLAPSE  → Product (G₂) or Quotient (F₄) — minimal/compressed
+ *   COHERENCE → Embedding (E₈). full structure preserved, lossless
+ *   DRIFT     → Filtration (E₆) or Augmentation (E₇). partial structure
+ *   COLLAPSE  → Product (G₂) or Quotient (F₄). minimal/compressed
  *
  * The bridge ensures cross-modal translations are LOSSLESS within the
  * fidelity budget permitted by the observer's current coherence zone.
@@ -40,7 +40,7 @@ export interface MorphismSelection {
   operation: CategoricalOperation;
   /** Corresponding exceptional group */
   group: string;
-  /** Root count — structural capacity of the morphism */
+  /** Root count. structural capacity of the morphism */
   roots: number;
   /** Fidelity budget: fraction of structure preserved [0,1] */
   fidelityBudget: number;
@@ -167,7 +167,7 @@ export function selectMorphism(observer: ObserverState): MorphismSelection {
     op = "product";
     rationale =
       "Observer in COLLAPSE: G₂ product decomposition preserves only 12/256 " +
-      "structural elements — the irreducible boundary. This is the minimal " +
+      "structural elements. the irreducible boundary. This is the minimal " +
       "faithful representation, like G₂ as ∂E₈.";
   }
 
@@ -258,7 +258,7 @@ export function runObserverBridgeVerification(): ObserverBridgeReport {
     expected: "product", actual: m5.operation,
   });
 
-  // Test 6: Fidelity monotonicity — higher group = higher budget
+  // Test 6: Fidelity monotonicity. higher group = higher budget
   const ops: CategoricalOperation[] = ["product", "quotient", "filtration", "augmentation", "embedding"];
   let monotone = true;
   for (let i = 1; i < ops.length; i++) {

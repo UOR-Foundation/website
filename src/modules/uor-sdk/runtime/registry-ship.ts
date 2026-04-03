@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Registry Ship
+ * UOR SDK. Registry Ship
  *
  * Signs an app image + manifest, pushes to the UOR registry,
  * and creates a deployment snapshot binding code, image, and config.
@@ -12,8 +12,8 @@
  *   3. Create deployment snapshot (code + image + config)
  *   4. Return ship receipt with registry URL + snapshot ID
  *
- * @see uns/build/registry — image registry (push/pull/tag)
- * @see uns/build/snapshot — deployment snapshots
+ * @see uns/build/registry. image registry (push/pull/tag)
+ * @see uns/build/snapshot. deployment snapshots
  */
 
 import { pushImage, tagImage } from "@/modules/uns/build/registry";

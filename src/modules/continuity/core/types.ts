@@ -1,5 +1,5 @@
 /**
- * Continuity Infrastructure — Type Definitions
+ * Continuity Infrastructure. Type Definitions
  * ══════════════════════════════════════════════
  *
  * Canonical types for the agent memory continuity protocol.

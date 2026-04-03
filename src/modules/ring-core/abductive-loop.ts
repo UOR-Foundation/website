@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Abductive Loop Engine
+ * UOR v2.0.0. Abductive Loop Engine
  *
  * Wires neural inference into the geometric resolver, creating
  * a closed-loop D→I→A reasoning cycle:

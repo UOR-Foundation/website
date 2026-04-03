@@ -1,5 +1,5 @@
 /**
- * Unified Projection Tests — Identity + Coherence = One Concept
+ * Unified Projection Tests. Identity + Coherence = One Concept
  *
  * Verifies that the merged hologram carries both identity (protocol string)
  * and coherence (H-score/zone/Φ) in every projection result.
@@ -23,7 +23,7 @@ const TEST_INPUT: ProjectionInput = {
   hex: "2a".repeat(32),
 };
 
-describe("Unified Projection — Identity + Coherence Merge", () => {
+describe("Unified Projection. Identity + Coherence Merge", () => {
 
   // ── 1. Every projection carries both dimensions ───────────────────────
 

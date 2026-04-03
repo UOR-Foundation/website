@@ -1,9 +1,9 @@
 /**
- * Geometric Tick Tests — The 3-6-9 Triadic Verification
+ * Geometric Tick Tests. The 3-6-9 Triadic Verification
  * ═════════════════════════════════════════════════════════
  *
  * Tests the geometric tick system: units, coherence bridge,
- * and spectral feedback — all organized in the 3-6-9 pattern.
+ * and spectral feedback. all organized in the 3-6-9 pattern.
  */
 
 import { describe, it, expect } from "vitest";
@@ -43,7 +43,7 @@ import {
 } from "@/modules/qsvg";
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 3: STRUCTURE — Geometric Units
+// Phase 3: STRUCTURE. Geometric Units
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("Phase 3: Geometric Units (Structure)", () => {
@@ -128,7 +128,7 @@ describe("Phase 3: Geometric Units (Structure)", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 6: EVOLUTION — Coherence Bridge
+// Phase 6: EVOLUTION. Coherence Bridge
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("Phase 6: Coherence Bridge (Evolution)", () => {
@@ -218,7 +218,7 @@ describe("Phase 6: Coherence Bridge (Evolution)", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 9: COMPLETION — Spectral Feedback
+// Phase 9: COMPLETION. Spectral Feedback
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("Phase 9: Spectral Feedback (Completion)", () => {

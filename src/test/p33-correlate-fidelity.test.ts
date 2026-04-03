@@ -1,5 +1,5 @@
 /**
- * P33 Self-Verification Tests — uor_correlate Fidelity Engine
+ * P33 Self-Verification Tests. uor_correlate Fidelity Engine
  *
  * 16/16 tests covering:
  *   - Self-correlation fidelity = 1.0
@@ -25,7 +25,7 @@ import { UnsObjectStore } from "@/modules/uns/store/object-store";
 import { crossQuantumTransform } from "@/modules/morphism/cross-quantum";
 import { UnsClient, generateKeypair } from "@/modules/uns/sdk";
 
-describe("P33 — uor_correlate Fidelity Engine", () => {
+describe("P33. uor_correlate Fidelity Engine", () => {
   // ── Test 1: Self-correlation ──────────────────────────────────────────
   it("T1: correlate(id, id).fidelity === 1.0", async () => {
     const identity = await singleProofHash({ hello: "world" });

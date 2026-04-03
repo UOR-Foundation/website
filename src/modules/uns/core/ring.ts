@@ -1,5 +1,5 @@
 /**
- * UNS Core — Ring R_8 = Z/256Z
+ * UNS Core. Ring R_8 = Z/256Z
  *
  * The minimal algebraic substrate for the UOR identity engine.
  * Two primitive involutions (neg, bnot) and the critical identity:

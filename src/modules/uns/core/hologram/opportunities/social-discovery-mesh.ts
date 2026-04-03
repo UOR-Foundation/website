@@ -3,7 +3,7 @@
  * ═════════════════════════════════════
  *
  * Every UOR object is automatically discoverable via ActivityPub,
- * AT Protocol, WebFinger, Solid, OIDC, and DNS-SD — the social web
+ * AT Protocol, WebFinger, Solid, OIDC, and DNS-SD. the social web
  * becomes a resolution layer for content-addressed objects.
  *
  * @module uns/core/hologram/opportunities/social-discovery-mesh
@@ -46,13 +46,13 @@ const DISCOVERY_PROTOCOLS: ReadonlyArray<{
     protocol: "ActivityPub",
     projection: "activitypub",
     discoveryMethod: "HTTP GET on ActivityPub object URL",
-    resolutionPath: "Federated servers relay the object — any Mastodon/Pleroma instance can resolve",
+    resolutionPath: "Federated servers relay the object. any Mastodon/Pleroma instance can resolve",
   },
   {
     protocol: "AT Protocol (Bluesky)",
     projection: "atproto",
     discoveryMethod: "at:// URI resolved via AT Protocol PDS",
-    resolutionPath: "Bluesky PDS resolves at:// URI to record — decentralized social discovery",
+    resolutionPath: "Bluesky PDS resolves at:// URI to record. decentralized social discovery",
   },
   {
     protocol: "WebFinger",
@@ -108,7 +108,7 @@ const DISCOVERY_PROTOCOLS: ReadonlyArray<{
  * Build the social discovery mesh for a single identity.
  *
  * Every endpoint resolves the same hash through a different
- * social/discovery protocol — the mesh IS the proof that one
+ * social/discovery protocol. the mesh IS the proof that one
  * identity is universally discoverable.
  */
 export function buildSocialDiscoveryMesh(input: ProjectionInput): SocialDiscoveryMesh {

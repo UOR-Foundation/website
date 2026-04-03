@@ -1,5 +1,5 @@
 /**
- * Schema.org Functor — Unit Tests
+ * Schema.org Functor. Unit Tests
  */
 
 import { describe, it, expect } from "vitest";
@@ -77,7 +77,7 @@ describe("Schema.org → UOR Functor", () => {
     expect(thing.cid).not.toBe(person.cid);
   });
 
-  it("is deterministic — same type always produces same identity", async () => {
+  it("is deterministic. same type always produces same identity", async () => {
     const a = await addressType("Event");
     clearCache();
     const b = await addressType("Event");

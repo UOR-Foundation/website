@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Constraint Algebra
+ * UOR v2.0.0. Constraint Algebra
  *
  * 4 constraint types aligned to MetricAxis, plus composite AND/OR.
  * Each constraint is a pure predicate: (value) → boolean.
@@ -22,7 +22,7 @@ interface ConstraintData {
   satisfies: (value: bigint) => boolean;
 }
 
-// ── Residue: x ≡ r (mod m) — Vertical axis ────────────────────────────────
+// ── Residue: x ≡ r (mod m). Vertical axis ────────────────────────────────
 
 export function residueConstraint(m: number, r: number, id?: string): ConstraintData {
   return {
@@ -33,7 +33,7 @@ export function residueConstraint(m: number, r: number, id?: string): Constraint
   };
 }
 
-// ── Carry: binary carry pattern — Horizontal axis ──────────────────────────
+// ── Carry: binary carry pattern. Horizontal axis ──────────────────────────
 
 export function carryConstraint(pattern: string, id?: string): ConstraintData {
   const bits = [...pattern].map(Number);
@@ -53,7 +53,7 @@ export function carryConstraint(pattern: string, id?: string): ConstraintData {
   };
 }
 
-// ── Depth: factorization depth bounds — Diagonal axis ──────────────────────
+// ── Depth: factorization depth bounds. Diagonal axis ──────────────────────
 
 /** Count prime factors (with multiplicity) of n in standard integers. */
 function factorizationDepth(n: number): number {

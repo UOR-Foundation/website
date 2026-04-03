@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::cert
+ * UOR Foundation v2.0.0. bridge::cert
  *
  * Typed certificate hierarchy for kernel-produced attestations.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * Certificate — abstract base for all certificates.
+ * Certificate. abstract base for all certificates.
  *
  * @disjoint TransformCertificate, IsometryCertificate, InvolutionCertificate
  */
@@ -26,7 +26,7 @@ export interface Certificate {
 }
 
 /**
- * TransformCertificate — certifies a morphism:Transform.
+ * TransformCertificate. certifies a morphism:Transform.
  *
  * @disjoint IsometryCertificate, InvolutionCertificate
  */
@@ -40,7 +40,7 @@ export interface TransformCertificate extends Certificate {
 }
 
 /**
- * IsometryCertificate — certifies a morphism:Isometry (lossless).
+ * IsometryCertificate. certifies a morphism:Isometry (lossless).
  * Guarantees round-trip fidelity: project(embed(x)) = x.
  *
  * @disjoint TransformCertificate, InvolutionCertificate
@@ -55,7 +55,7 @@ export interface IsometryCertificate extends Certificate {
 }
 
 /**
- * InvolutionCertificate — certifies f∘f = id for an involution.
+ * InvolutionCertificate. certifies f∘f = id for an involution.
  *
  * @disjoint TransformCertificate, IsometryCertificate
  */

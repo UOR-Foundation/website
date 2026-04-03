@@ -1,11 +1,11 @@
 /**
  * Atlas–R₈ Bridge Verification Tests
  *
- * Phase 1: Anchoring — Computational proof that the UOR ring R₈ = Z/256Z
+ * Phase 1: Anchoring. Computational proof that the UOR ring R₈ = Z/256Z
  * corresponds to the Atlas of Resonance Classes (96-vertex initial object).
  *
  * Each test verifies a specific conjecture from docs/research/atlas-bridge-protocol.md.
- * Tests serve as certifying proofs — this is mathematics you can run.
+ * Tests serve as certifying proofs. this is mathematics you can run.
  */
 
 import { describe, it, expect } from "vitest";
@@ -31,7 +31,7 @@ import {
 // Part I: Atlas Construction Proofs
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Atlas Construction — Theorem Verification", () => {
+describe("Atlas Construction. Theorem Verification", () => {
   it("Theorem 1.1.1: Atlas has exactly 96 vertices", () => {
     const atlas = getAtlas();
     expect(atlas.vertices.length).toBe(96);
@@ -121,7 +121,7 @@ describe("Atlas Construction — Theorem Verification", () => {
 // Part II: R₈ Partition Verification
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("R₈ Partition — Canonical Cardinalities", () => {
+describe("R₈ Partition. Canonical Cardinalities", () => {
   it("R₈ partition: Ext=2, Unit=2, Irr=126, Red=126, Total=256", () => {
     const p = computeR8Partition();
     expect(p.exterior.length).toBe(2);
@@ -143,46 +143,46 @@ describe("R₈ Partition — Canonical Cardinalities", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Part III: Bridge Correspondences — Conjecture Verification
+// Part III: Bridge Correspondences. Conjecture Verification
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Atlas–R₈ Bridge — Conjecture Verification", () => {
-  it("Conjecture 1: Fiber Decomposition — 12,288 = 256 × 48", () => {
+describe("Atlas–R₈ Bridge. Conjecture Verification", () => {
+  it("Conjecture 1: Fiber Decomposition. 12,288 = 256 × 48", () => {
     const result = verifyFiberDecomposition();
     expect(result.holds).toBe(true);
   });
 
-  it("Conjecture 2: Unity-Exterior Correspondence — |unity| = |exterior| = 2", () => {
+  it("Conjecture 2: Unity-Exterior Correspondence. |unity| = |exterior| = 2", () => {
     const result = verifyUnityExteriorCorrespondence();
     expect(result.holds).toBe(true);
   });
 
-  it("Conjecture 3: Involution Correspondence — τ and bnot are fp-free involutions", () => {
+  it("Conjecture 3: Involution Correspondence. τ and bnot are fp-free involutions", () => {
     const result = verifyInvolutionCorrespondence();
     expect(result.holds).toBe(true);
   });
 
-  it("Conjecture 4: Irreducible-E₇ Correspondence — |Irr| = 126 = |E₇ roots|", () => {
+  it("Conjecture 4: Irreducible-E₇ Correspondence. |Irr| = 126 = |E₇ roots|", () => {
     const result = verifyIrreducibleE7Correspondence();
     expect(result.holds).toBe(true);
   });
 
-  it("Edge-Element Correspondence — |Atlas edges| = |R₈| = 256", () => {
+  it("Edge-Element Correspondence. |Atlas edges| = |R₈| = 256", () => {
     const result = verifyEdgeElementCorrespondence();
     expect(result.holds).toBe(true);
   });
 
-  it("Sign Class Structure — 8 classes of 12 (8 bits, G₂ roots)", () => {
+  it("Sign Class Structure. 8 classes of 12 (8 bits, G₂ roots)", () => {
     const result = verifySignClassStructure();
     expect(result.holds).toBe(true);
   });
 
-  it("Degree Distribution — 64 deg-5 + 32 deg-6", () => {
+  it("Degree Distribution. 64 deg-5 + 32 deg-6", () => {
     const result = verifyDegreeDistribution();
     expect(result.holds).toBe(true);
   });
 
-  it("Critical Identity ↔ Atlas Adjacency — neg(bnot(x)) = succ(x) ∀x", () => {
+  it("Critical Identity ↔ Atlas Adjacency. neg(bnot(x)) = succ(x) ∀x", () => {
     const result = verifyCriticalIdentityAtlasLink();
     expect(result.holds).toBe(true);
   });
@@ -192,7 +192,7 @@ describe("Atlas–R₈ Bridge — Conjecture Verification", () => {
 // Part IV: Exceptional Group Chain
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Exceptional Group Chain — R₈ Interpretations", () => {
+describe("Exceptional Group Chain. R₈ Interpretations", () => {
   it("G₂: 12 roots = 96/8 sign classes", () => {
     const chain = exceptionalGroupChain();
     const g2 = chain.find(g => g.group === "G₂")!;
@@ -291,7 +291,7 @@ describe("Deep Structural Probes", () => {
     // The boundary complex has 96 × 128 cells
     // 96 = Atlas vertices
     // 128 = the maximal zero divisor in R₈ (the second exterior element)
-    // This suggests each Atlas vertex spans 128 cells — exactly half the ring
+    // This suggests each Atlas vertex spans 128 cells. exactly half the ring
     const p = computeR8Partition();
     expect(p.exterior).toContain(128);
     expect(96 * 128).toBe(12288);

@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::trace
+ * UOR Foundation v2.0.0. bridge::trace
  *
  * Execution traces for computation auditing.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * ComputationStep — a single step in a computation trace.
+ * ComputationStep. a single step in a computation trace.
  */
 export interface ComputationStep {
   /** Step index. */
@@ -26,7 +26,7 @@ export interface ComputationStep {
 }
 
 /**
- * ComputationTrace — a complete execution trace.
+ * ComputationTrace. a complete execution trace.
  */
 export interface ComputationTrace {
   /** Trace identifier. */

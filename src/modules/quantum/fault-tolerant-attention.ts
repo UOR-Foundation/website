@@ -1,5 +1,5 @@
 /**
- * Fault-Tolerant Quantum Attention — Phase 25
+ * Fault-Tolerant Quantum Attention. Phase 25
  * ═════════════════════════════════════════════
  *
  * Wraps each quantum attention head circuit in the [[96,48,2]] geometric
@@ -529,7 +529,7 @@ function buildSyndromeCircuits(
 // ── Sign-Class Cross-Stabilizer Circuits ──────────────────────────────────
 
 /**
- * Build 8 sign-class syndrome circuits — one per sign class.
+ * Build 8 sign-class syndrome circuits. one per sign class.
  *
  * Each sign-class stabilizer SC_c is the product of Z⊗Z over all 6 mirror
  * pairs in class c. To extract its syndrome:
@@ -693,7 +693,7 @@ function buildRecoveryGates(
 export function emitFTQASM(ft: FTAttentionCircuit): string {
   const lines: string[] = [];
 
-  lines.push(`// Fault-Tolerant Quantum Attention — [[96,48,2]] Stabilizer Code`);
+  lines.push(`// Fault-Tolerant Quantum Attention. [[96,48,2]] Stabilizer Code`);
   lines.push(`// Model: ${ft.config.head.model}, Head ${ft.config.head.headIndex}`);
   lines.push(`// d_k=${ft.config.head.headDim}, bare qubits=${ft.overhead.bareQubits}`);
   lines.push(`// Encoded: ${ft.overhead.encodedQubits} physical qubits (${ft.overhead.qubitOverhead.toFixed(1)}× overhead)`);

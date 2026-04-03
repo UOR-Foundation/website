@@ -1,5 +1,5 @@
 /**
- * UNS Attribution Protocol — cert:AttributionCertificate
+ * UNS Attribution Protocol. cert:AttributionCertificate
  *
  * Cryptographic content provenance anchored to derivation:derivationId.
  * Every UNS object's origin is traceable through an attribution chain.
@@ -14,7 +14,7 @@
  *   - Machine-readable JSON-LD (for regulator/auditor consumption)
  *
  * @see .well-known/uor.json attribution_protocol
- * @see spec/src/namespaces/cert.rs — cert:AttributionCertificate
+ * @see spec/src/namespaces/cert.rs. cert:AttributionCertificate
  */
 
 import { singleProofHash } from "../core/identity";
@@ -55,7 +55,7 @@ export interface GdprExport {
   "@context": "https://uor.foundation/contexts/uns-v1.jsonld";
   "@type": "void:Dataset";
   "dc:subject": string;
-  "dc:rights": "GDPR Article 20 — Right to Data Portability";
+  "dc:rights": "GDPR Article 20. Right to Data Portability";
   "dc:date": string;
   objects: AttributionCertificate[];
   totalObjects: number;
@@ -73,7 +73,7 @@ export interface RoyaltyReport {
 // ── UnsAttribution ──────────────────────────────────────────────────────────
 
 /**
- * Attribution Protocol engine — registers, verifies, and exports
+ * Attribution Protocol engine. registers, verifies, and exports
  * cryptographic content provenance certificates.
  */
 export class UnsAttribution {
@@ -93,7 +93,7 @@ export class UnsAttribution {
    *
    * @param objectCanonicalId   Canonical ID of the attributed object.
    * @param creatorCanonicalId  Canonical ID of the creator identity.
-   * @param derivationId        Grade-A derivation:derivationId — REQUIRED.
+   * @param derivationId        Grade-A derivation:derivationId. REQUIRED.
    * @returns                   Signed AttributionCertificate.
    * @throws                    If derivationId is not a valid Grade-A pattern.
    */
@@ -194,7 +194,7 @@ export class UnsAttribution {
    * Export all data attributed to a given identity.
    * Returns a JSON-LD document suitable for regulatory submission.
    *
-   * Implements GDPR Article 20 — Right to Data Portability.
+   * Implements GDPR Article 20. Right to Data Portability.
    */
   async gdprExport(creatorCanonicalId: string): Promise<GdprExport> {
     const objectIds = this.creatorIndex.get(creatorCanonicalId) ?? [];
@@ -209,7 +209,7 @@ export class UnsAttribution {
       "@context": "https://uor.foundation/contexts/uns-v1.jsonld",
       "@type": "void:Dataset",
       "dc:subject": creatorCanonicalId,
-      "dc:rights": "GDPR Article 20 — Right to Data Portability",
+      "dc:rights": "GDPR Article 20. Right to Data Portability",
       "dc:date": new Date().toISOString(),
       objects: certificates,
       totalObjects: certificates.length,

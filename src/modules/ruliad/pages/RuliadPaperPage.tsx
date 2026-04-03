@@ -1,5 +1,5 @@
 /**
- * Ruliad–UOR Whitepaper — formal academic paper with PDF export.
+ * Ruliad–UOR Whitepaper. formal academic paper with PDF export.
  *
  * Presents the structural isomorphism between Wolfram's Ruliad
  * and the UOR framework as a typeset academic paper, with
@@ -103,7 +103,7 @@ export default function RuliadPaperPage() {
         </div>
       </header>
 
-      {/* Paper body — print-optimized */}
+      {/* Paper body. print-optimized */}
       <article className="max-w-4xl mx-auto px-6 sm:px-10 py-10 print:px-0 print:py-0 print:max-w-none text-foreground">
         {/* ── Title Block ─────────────────────────────────────────── */}
         <div className="text-center mb-10 print:mb-8">
@@ -125,8 +125,8 @@ export default function RuliadPaperPage() {
         <section className="mb-8">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Abstract</h2>
           <p className="text-sm leading-relaxed">
-            We establish a precise structural isomorphism between Stephen Wolfram's <em>Ruliad</em> — the
-            entangled limit of all possible computations — and the Universal Object Reference (UOR) framework.
+            We establish a precise structural isomorphism between Stephen Wolfram's <em>Ruliad</em>. the
+            entangled limit of all possible computations. and the Universal Object Reference (UOR) framework.
             We demonstrate that UOR's content-addressed identity system, hologram projection registry,
             multi-quantum ring engine, and observer framework collectively constitute a <em>computable
             coordinatization</em> of the Ruliad: a concrete, implementable system that makes every point in
@@ -144,7 +144,7 @@ export default function RuliadPaperPage() {
           <p className="text-sm leading-relaxed mb-3">
             In November 2021, Stephen Wolfram introduced the concept of the <em>Ruliad</em>: the unique,
             infinite object that results from following all possible computational rules in all possible
-            ways. The Ruliad is not a model of reality — it <em>is</em> the entangled limit of everything
+            ways. The Ruliad is not a model of reality. it <em>is</em> the entangled limit of everything
             computationally possible. Wolfram argues that physics, mathematics, and computation are all
             different "slices" of this single structure, sampled by observers embedded within it.
           </p>
@@ -162,7 +162,7 @@ export default function RuliadPaperPage() {
             <li>Morphisms between quantum levels implement rulial motion (§8).</li>
           </ol>
           <p className="text-sm leading-relaxed">
-            The correspondence is not metaphorical — it is structural and constructive. Each mapping is
+            The correspondence is not metaphorical. it is structural and constructive. Each mapping is
             accompanied by a proof referencing specific code paths in the UOR implementation.
           </p>
         </section>
@@ -288,7 +288,7 @@ export default function RuliadPaperPage() {
               via <Math>not(x) = x ⊕ 1</Math>). Arithmetic derives from the Critical Identity:
               <Math> succ = neg ∘ bnot</Math>, therefore <Math>add(x, y) = succ<sup>y</sup>(x)</Math>,
               and multiplication follows by repeated addition. This establishes UOR's ring as a
-              universal computational substrate — the algebraic realization of Wolfram's Principle
+              universal computational substrate. the algebraic realization of Wolfram's Principle
               of Computational Equivalence.
             </p>
           </Proof>
@@ -327,7 +327,7 @@ export default function RuliadPaperPage() {
               registry is closed under composition: if <Math>π_a</Math> and <Math>π_b</Math> exist,
               their composition <Math>π_b ∘ π_a</Math> can be registered as <Math>π_c</Math>. The
               <Math> whatIf()</Math> simulator computes the coherence gate with the candidate projection,
-              revealing emergent synergies before materialization — a ruliological instrument.
+              revealing emergent synergies before materialization. a ruliological instrument.
             </p>
           </Proof>
         </section>
@@ -349,7 +349,7 @@ export default function RuliadPaperPage() {
               URDNA2015 produces a canonical N-Quads representation that is invariant under: (a) JSON key
               ordering, (b) whitespace variations, (c) prefix expansion/compaction, (d) blank node
               relabeling. Since <Math>H = SHA-256 ∘ URDNA2015</Math>, identical semantic content always
-              produces identical hashes regardless of serialization path — the definition of causal invariance.
+              produces identical hashes regardless of serialization path. the definition of causal invariance.
             </p>
           </Proof>
 
@@ -357,7 +357,7 @@ export default function RuliadPaperPage() {
             <p>
               Content addressing implements multiway confluence: if two independent computational
               paths <Math>P_1, P_2</Math> produce objects <Math>A, B</Math> with <Math>H(A) = H(B)</Math>,
-              then <Math>A</Math> and <Math>B</Math> are identified — their histories merge.
+              then <Math>A</Math> and <Math>B</Math> are identified. their histories merge.
             </p>
           </Theorem>
 
@@ -366,7 +366,7 @@ export default function RuliadPaperPage() {
               By the collision resistance of SHA-256, <Math>H(A) = H(B) ⟹ URDNA2015(A) = URDNA2015(B)</Math>
               with overwhelming probability. Since URDNA2015 is a canonical form, semantic identity
               follows. Two agents, on different continents, at different times, using different systems,
-              who produce the same canonical content are <em>automatically</em> identified — structural
+              who produce the same canonical content are <em>automatically</em> identified. structural
               confluence without coordination.
             </p>
           </Proof>
@@ -385,7 +385,7 @@ export default function RuliadPaperPage() {
             <ul className="list-disc pl-6 mt-2 space-y-2">
               <li>
                 <strong>OIP</strong> (Observer Identity Protocol): Each observer has a unique identity
-                derived from its founding derivation — its position in the Ruliad.
+                derived from its founding derivation. its position in the Ruliad.
               </li>
               <li>
                 <strong>EDP</strong> (Epistemic Debt Protocol): The <Math>H-score</Math> (Hamming
@@ -393,7 +393,7 @@ export default function RuliadPaperPage() {
               </li>
               <li>
                 <strong>CAP</strong> (Convergence Alignment Protocol): Observers transition between
-                zones — COHERENCE (accurate sampling), DRIFT (degrading), COLLAPSE (unreliable) — mirroring
+                zones. COHERENCE (accurate sampling), DRIFT (degrading), COLLAPSE (unreliable). mirroring
                 their position's sampling fidelity in the Ruliad.
               </li>
             </ul>
@@ -412,7 +412,7 @@ export default function RuliadPaperPage() {
               The 6-step pipeline (type/context guard → field reduction → depth limiting → deterministic
               sort → canonical serialization → hash) ensures that no observer can process unbounded
               input. The depth limit of 16 is analogous to a finite computational horizon. Fields not
-              serializable (functions, circular references) are structurally excluded — the pipeline
+              serializable (functions, circular references) are structurally excluded. the pipeline
               IS the observer's bounded window on the Ruliad.
             </p>
           </Proof>
@@ -426,9 +426,9 @@ export default function RuliadPaperPage() {
             <p>Three canonical morphisms connect quantum levels:</p>
             <MathBlock>
               <div className="space-y-1">
-                <div>π: R_high → R_low &nbsp;&nbsp;(Projection — surjective, x mod M_low)</div>
-                <div>ι: R_low → R_high &nbsp;&nbsp;(Inclusion — injective, identity embedding)</div>
-                <div>id: R_n → R_n &nbsp;&nbsp;(Identity — bijective)</div>
+                <div>π: R_high → R_low &nbsp;&nbsp;(Projection. surjective, x mod M_low)</div>
+                <div>ι: R_low → R_high &nbsp;&nbsp;(Inclusion. injective, identity embedding)</div>
+                <div>id: R_n → R_n &nbsp;&nbsp;(Identity. bijective)</div>
               </div>
             </MathBlock>
           </Definition>
@@ -448,7 +448,7 @@ export default function RuliadPaperPage() {
               For Projection with <Math>op = neg</Math>: <Math>neg_b(x mod M_b) = (M_b − x mod M_b) mod M_b</Math>.
               Meanwhile, <Math>π(neg_a(x)) = (M_a − x) mod M_b</Math>. Since <Math>M_b | M_a</Math> (both are
               powers of 2), these are equal. The CommutativityWitness computes both paths for each morphism
-              application and certifies equality — this is structural verification of ring homomorphism, and
+              application and certifies equality. this is structural verification of ring homomorphism, and
               it constitutes the mathematical proof that <em>rulial motion preserves algebraic structure</em>.
             </p>
           </Proof>
@@ -493,7 +493,7 @@ export default function RuliadPaperPage() {
             We have established a comprehensive structural isomorphism between Wolfram's Ruliad and the
             UOR framework, mapping all {RULIAD_CORRESPONDENCE.length} core concepts to concrete implementations
             with constructive proofs. The correspondence reveals that UOR is not merely <em>inspired by</em>
-            the Ruliad — it is a <em>computable coordinatization</em> of it.
+            the Ruliad. it is a <em>computable coordinatization</em> of it.
           </p>
           <p className="text-sm leading-relaxed mb-3">
             The Critical Identity <Math>neg(bnot(x)) ≡ succ(x)</Math> serves as the algebraic anchor:
@@ -503,7 +503,7 @@ export default function RuliadPaperPage() {
             The morphism hierarchy implements rulial motion with certified structure preservation (Theorem 8).
           </p>
           <p className="text-sm leading-relaxed">
-            The Ruliad is the territory; UOR is the map — and this paper proves the map is faithful.
+            The Ruliad is the territory; UOR is the map. and this paper proves the map is faithful.
           </p>
         </section>
 

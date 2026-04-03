@@ -1,13 +1,13 @@
 /**
- * UOR Epistemic Grading — trust levels for every piece of knowledge.
+ * UOR Epistemic Grading. trust levels for every piece of knowledge.
  *
  * The four grades (UOR roadmap §6.2):
- *   A — Algebraically Proven: derivation_id from derive(), coherence verified
- *   B — Graph-Certified: cert:Certificate after SHACL validation
- *   C — Graph-Present: datum in graph with source, no derivation ID
- *   D — LLM-Generated / Unverified: no derivation, no certificate
+ *   A. Algebraically Proven: derivation_id from derive(), coherence verified
+ *   B. Graph-Certified: cert:Certificate after SHACL validation
+ *   C. Graph-Present: datum in graph with source, no derivation ID
+ *   D. LLM-Generated / Unverified: no derivation, no certificate
  *
- * Zero duplication — this is the single source of truth for grade logic.
+ * Zero duplication. this is the single source of truth for grade logic.
  */
 
 import type { EpistemicGrade } from "@/types/uor";

@@ -1,17 +1,17 @@
 /**
- * UNS Agent Gateway — Morphism-Typed AI Agent Routing (Phase 5-A)
+ * UNS Agent Gateway. Morphism-Typed AI Agent Routing (Phase 5-A)
  *
  * All agent-to-agent messages are typed as UOR morphisms:
- *   Transform  — arbitrary structure-changing (most permissive)
- *   Isometry   — structure-preserving (skill sharing)
- *   Embedding  — injective, structure-preserving
- *   Action     — side-effect-inducing (most restricted, requires session)
+ *   Transform . arbitrary structure-changing (most permissive)
+ *   Isometry  . structure-preserving (skill sharing)
+ *   Embedding . injective, structure-preserving
+ *   Action    . side-effect-inducing (most restricted, requires session)
  *
  * Injection detection via derivation trace Hamming drift.
  * Agent identity is a canonical ID. No impersonation possible.
  *
- * @see morphism: namespace — UOR Framework
- * @see trace: namespace — derivation trace discontinuity detection
+ * @see morphism: namespace. UOR Framework
+ * @see trace: namespace. derivation trace discontinuity detection
  */
 
 import { singleProofHash } from "../core/identity";
@@ -165,7 +165,7 @@ export class UnsAgentGateway {
       };
     }
 
-    // 4. Deliver — store in history
+    // 4. Deliver. store in history
     const senderHistory = this.history.get(senderId) || [];
     senderHistory.push(message);
     this.history.set(senderId, senderHistory);
@@ -208,7 +208,7 @@ export class UnsAgentGateway {
     const reg = this.agents.get(senderId);
 
     if (drifts.length < BASELINE_WINDOW) {
-      // Accumulating baseline — don't flag, just collect
+      // Accumulating baseline. don't flag, just collect
       drifts.push(trace.meanDrift);
       this.driftAccumulator.set(senderId, drifts);
 
@@ -220,7 +220,7 @@ export class UnsAgentGateway {
       return false;
     }
 
-    // Baseline established — detect injection
+    // Baseline established. detect injection
     const baseline = reg?.baselineDrift || 0;
     if (baseline <= 0) return false;
     return detectInjection(trace, baseline);

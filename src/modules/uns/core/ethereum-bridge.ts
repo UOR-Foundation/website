@@ -1,13 +1,13 @@
 /**
- * UOR Ethereum Bridge — The Missing Lean Data Layer
+ * UOR Ethereum Bridge. The Missing Lean Data Layer
  * ══════════════════════════════════════════════════
  *
  * Four integration pillars that fit into Ethereum's roadmap today:
  *
- *   Pillar 1: EIP-4844 Blob Witness       — Data integrity for blobs (~512 gas)
- *   Pillar 2: Verkle Tree Leaf Witness     — Content-addressed state keys
- *   Pillar 3: ZK Circuit Coherence         — Zero-cost R1CS constraints
- *   Pillar 4: Account Abstraction (EIP-7701) — PQ-secure wallets
+ *   Pillar 1: EIP-4844 Blob Witness      . Data integrity for blobs (~512 gas)
+ *   Pillar 2: Verkle Tree Leaf Witness    . Content-addressed state keys
+ *   Pillar 3: ZK Circuit Coherence        . Zero-cost R1CS constraints
+ *   Pillar 4: Account Abstraction (EIP-7701). PQ-secure wallets
  *
  * Each pillar produces deployable Solidity, ABI-encoded calldata, and
  * formal specifications. Zero protocol changes required.
@@ -183,7 +183,7 @@ export function generateZkCoherence(identity: ProjectionInput): ZkCoherenceResul
       `0x${x.toString(16).padStart(2, "0")}`, // witness byte
     ],
     circuitDescription: [
-      "// UOR Coherence Gate — R1CS Circuit (0 constraints)",
+      "// UOR Coherence Gate. R1CS Circuit (0 constraints)",
       "// ═══════════════════════════════════════════════════",
       "//",
       "// Public inputs:",
@@ -221,7 +221,7 @@ export function generateZkCoherence(identity: ProjectionInput): ZkCoherenceResul
  *   2. On-chain: keccak256(commitment) is checked against registry
  *   3. Cost: ~2,600 gas (SLOAD) + ~200 gas (keccak256)
  *
- * No protocol change needed — works with any AA-compatible wallet.
+ * No protocol change needed. works with any AA-compatible wallet.
  */
 export function generateAccountAbstraction(identity: ProjectionInput): AccountAbstractionResult {
   const commitment = project(identity, "eth-commitment").value;
@@ -291,7 +291,7 @@ export const BLOB_WITNESS_CONTRACT = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 /**
- * @title  UOR Blob Witness — EIP-4844 Data Integrity Layer
+ * @title  UOR Blob Witness. EIP-4844 Data Integrity Layer
  * @notice Stores UOR content hashes alongside KZG blob commitments.
  *         Dual commitment: KZG proves data AVAILABILITY,
  *         UOR proves data INTEGRITY + AUTHENTICITY + PQ SECURITY.
@@ -395,7 +395,7 @@ export const AA_WALLET_CONTRACT = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 /**
- * @title  UOR Post-Quantum Account — EIP-7701 Compatible
+ * @title  UOR Post-Quantum Account. EIP-7701 Compatible
  * @notice Smart contract wallet with Dilithium-3 validation.
  *         PQ signature verification happens OFF-CHAIN.
  *         On-chain: only a commitment lookup (~2,800 gas).
@@ -484,7 +484,7 @@ contract UORPqAccount {
 
 /** ZK Coherence Circuit Specification */
 export const ZK_CIRCUIT_SPEC = `// ═══════════════════════════════════════════════════════════════════════
-// UOR Coherence Gate — Zero-Knowledge Circuit Specification
+// UOR Coherence Gate. Zero-Knowledge Circuit Specification
 // ═══════════════════════════════════════════════════════════════════════
 //
 // FORMAL CLAIM:
@@ -523,7 +523,7 @@ export const ZK_CIRCUIT_SPEC = `// ═══════════════
 //       // Extract witness byte
 //       var x = contentHash[0];
 //
-//       // The identity is algebraic — no constraints needed.
+//       // The identity is algebraic. no constraints needed.
 //       // We only assert x is a valid byte (already guaranteed
 //       // by the input binding constraint).
 //       coherent <-- 1;

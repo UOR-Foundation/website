@@ -1,5 +1,5 @@
 /**
- * P25 — SHACL Validation Engine — 14 verification tests.
+ * P25. SHACL Validation Engine. 14 verification tests.
  *
  * Tests all 9 UOR SHACL shapes as runtime guards.
  */
@@ -10,7 +10,7 @@ import {
   shaclGuard,
 } from "@/modules/shacl/shacl-engine";
 
-describe("P25 — SHACL Validation Engine", () => {
+describe("P25. SHACL Validation Engine", () => {
   // Test 1: Valid UnsNameRecord → conforms: true
   it("1. Valid UnsNameRecord → conforms: true, violations: []", () => {
     const record = {

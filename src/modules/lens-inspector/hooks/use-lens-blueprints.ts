@@ -61,7 +61,7 @@ export function useSaveBlueprint() {
     mutationFn: async (blueprint: LensBlueprint) => {
       const ground = await grindBlueprint(blueprint);
 
-      // Get current user (optional — blueprints can be saved anonymously)
+      // Get current user (optional. blueprints can be saved anonymously)
       const { data: { user } } = await supabase.auth.getUser();
 
       const row = {

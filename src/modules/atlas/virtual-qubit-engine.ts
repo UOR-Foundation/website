@@ -1,5 +1,5 @@
 /**
- * Virtual Qubit Instantiation Engine — Phase 5
+ * Virtual Qubit Instantiation Engine. Phase 5
  * ══════════════════════════════════════════════
  *
  * Unifies four pillars of the Atlas into a working virtual qubit substrate:

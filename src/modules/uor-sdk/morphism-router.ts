@@ -1,17 +1,17 @@
 /**
- * UOR SDK — App Composition Layer / Morphism Router (P10)
+ * UOR SDK. App Composition Layer / Morphism Router (P10)
  *
  * Apps declare public morphism interfaces. Other apps call them via typed
  * morphism messages. Every call is certified and injection-scanned.
  *
  * Morphism type hierarchy:
- *   - morphism:Transform — permissive, general structure mapping
- *   - morphism:Isometry — structure-preserving (input/output schema must match)
- *   - morphism:Action — restricted, requires certificate
+ *   - morphism:Transform. permissive, general structure mapping
+ *   - morphism:Isometry. structure-preserving (input/output schema must match)
+ *   - morphism:Action. restricted, requires certificate
  *
- * @see morphism: namespace — typed inter-app communication
- * @see cert: namespace — relationship certificates
- * @see trace: namespace — call tracing
+ * @see morphism: namespace. typed inter-app communication
+ * @see cert: namespace. relationship certificates
+ * @see trace: namespace. call tracing
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -81,7 +81,7 @@ function checkInjection(payload: string): { drift: number; detected: boolean } {
   return { drift, detected: drift > 6 };
 }
 
-/** Simple handler registry for test/dev — maps appId:endpoint → handler. */
+/** Simple handler registry for test/dev. maps appId:endpoint → handler. */
 const handlers = new Map<string, (payload: unknown) => unknown>();
 
 // ── Morphism Router ────────────────────────────────────────────────────────

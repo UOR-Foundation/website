@@ -82,7 +82,7 @@ const EXAMPLE_OBJ = {
   name: "UOR Framework Whitepaper",
   author: "UOR Foundation",
   datePublished: "2025-01-15",
-  description: "The Universal Object Reference — a single canonical identity for every digital object.",
+  description: "The Universal Object Reference. a single canonical identity for every digital object.",
 };
 
 /* ── Main Component ──────────────────────────────────────────── */
@@ -184,7 +184,7 @@ function DemoPage() {
             />
             <div className="flex items-center justify-between mt-4">
               <p className="text-xs text-muted-foreground">
-                Any valid JSON. The object is canonicalized via <Ref label="URDNA2015" tip="W3C RDF Dataset Normalization — produces identical N-Quads regardless of key order, whitespace, or prefix expansion." /> then hashed with <Ref label="SHA-256" tip="The same hash function used by Bitcoin. One hash, two protocols, zero translation." />.
+                Any valid JSON. The object is canonicalized via <Ref label="URDNA2015" tip="W3C RDF Dataset Normalization. produces identical N-Quads regardless of key order, whitespace, or prefix expansion." /> then hashed with <Ref label="SHA-256" tip="The same hash function used by Bitcoin. One hash, two protocols, zero translation." />.
               </p>
               <button
                 onClick={run}
@@ -286,7 +286,7 @@ function DemoPage() {
                 <StepBadge n={3} label="Bitcoin Protocol Projections" />
                 <p className="text-sm text-muted-foreground mb-5">
                   The same SHA-256 hash from the certificate is projected into three Bitcoin protocol layers.
-                  All three are <span className="text-primary font-bold">lossless</span> — they preserve the full 256-bit identity.
+                  All three are <span className="text-primary font-bold">lossless</span>. they preserve the full 256-bit identity.
                 </p>
 
                 <div className="space-y-4">
@@ -344,7 +344,7 @@ function DemoPage() {
                 <StepBadge n={4} label="Lightning Settlement Flow" />
                 <p className="text-sm text-muted-foreground mb-6">
                   A Lightning HTLC is locked to the UOR payment hash. The only way to settle
-                  it is to reveal the <strong className="text-foreground">preimage</strong> — which IS the URDNA2015 canonical bytes
+                  it is to reveal the <strong className="text-foreground">preimage</strong>. which IS the URDNA2015 canonical bytes
                   of the original object. Content delivery = payment settlement.
                 </p>
 
@@ -462,7 +462,7 @@ function DemoPage() {
                         a <strong className="text-foreground">Nostr event ID</strong> (social relay indexing),
                         and a <strong className="text-foreground">Nostr note1...</strong> (human-readable reference).
                         Bitcoin's <code className="px-1 py-0.5 rounded bg-muted text-xs font-mono">OP_SHA256</code> performs
-                        single SHA-256 — identical to UOR's canonical hash. No adapter, no bridge, no wrapper.
+                        single SHA-256. identical to UOR's canonical hash. No adapter, no bridge, no wrapper.
                       </p>
                     </div>
                   </div>

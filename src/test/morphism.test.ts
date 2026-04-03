@@ -1,5 +1,5 @@
 /**
- * Tests for UOR Morphism module — transform and cross-quantum operations.
+ * Tests for UOR Morphism module. transform and cross-quantum operations.
  */
 import { describe, it, expect } from "vitest";
 import { applyTransform, type MappingRule } from "@/modules/morphism/transform";

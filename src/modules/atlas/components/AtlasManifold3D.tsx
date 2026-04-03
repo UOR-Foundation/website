@@ -1,5 +1,5 @@
 /**
- * AtlasManifold3D — Interactive 3D Visualization of the 96-Vertex Atlas
+ * AtlasManifold3D. Interactive 3D Visualization of the 96-Vertex Atlas
  * ═════════════════════════════════════════════════════════════════════════
  *
  * Renders the Atlas graph as a 3D manifold with:
@@ -83,14 +83,14 @@ function computeLayout(): VertexLayout {
 // ── Sign class colors ────────────────────────────────────────────────────
 
 const SIGN_CLASS_COLORS = [
-  new THREE.Color("hsl(38, 70%, 55%)"),   // 0 — gold
-  new THREE.Color("hsl(200, 60%, 55%)"),  // 1 — cyan
-  new THREE.Color("hsl(280, 55%, 55%)"),  // 2 — violet
-  new THREE.Color("hsl(130, 50%, 50%)"),  // 3 — green
-  new THREE.Color("hsl(350, 60%, 55%)"),  // 4 — rose
-  new THREE.Color("hsl(50, 65%, 55%)"),   // 5 — amber
-  new THREE.Color("hsl(170, 55%, 50%)"),  // 6 — teal
-  new THREE.Color("hsl(320, 50%, 55%)"),  // 7 — magenta
+  new THREE.Color("hsl(38, 70%, 55%)"),   // 0. gold
+  new THREE.Color("hsl(200, 60%, 55%)"),  // 1. cyan
+  new THREE.Color("hsl(280, 55%, 55%)"),  // 2. violet
+  new THREE.Color("hsl(130, 50%, 50%)"),  // 3. green
+  new THREE.Color("hsl(350, 60%, 55%)"),  // 4. rose
+  new THREE.Color("hsl(50, 65%, 55%)"),   // 5. amber
+  new THREE.Color("hsl(170, 55%, 50%)"),  // 6. teal
+  new THREE.Color("hsl(320, 50%, 55%)"),  // 7. magenta
 ];
 
 const FANO_LINE_COLORS = [

@@ -1,5 +1,5 @@
 /**
- * UNS Core — Public API Surface
+ * UNS Core. Public API Surface
  *
  * Phase 0-A: Ring, Address, Canonicalization, Identity Engine
  * Phase 0-B: Keypair (Dilithium-3), Name Records, Signed Mutable Pointers

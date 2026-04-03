@@ -96,7 +96,7 @@ const DerivationLabPage = () => {
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 4 — Derivation & Certificate Engine
+              Module 4. Derivation & Certificate Engine
             </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Derivation Lab</h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
@@ -276,7 +276,7 @@ const DerivationLabPage = () => {
                     Commutativity Test
                   </p>
                   <p>
-                    Try swapping operands A and B — the derivation ID must be identical
+                    Try swapping operands A and B. the derivation ID must be identical
                     because the canonical form sorts operands. For example,{" "}
                     <span className="font-mono">xor(0x55, 0xAA)</span> and{" "}
                     <span className="font-mono">xor(0xAA, 0x55)</span> produce the same

@@ -1,6 +1,6 @@
 /**
- * PageShell — Shared page layout with sticky header and breadcrumb.
- * Neutral shared primitive — no hologram-specific dependencies.
+ * PageShell. Shared page layout with sticky header and breadcrumb.
+ * Neutral shared primitive. no hologram-specific dependencies.
  */
 
 import { Link } from "react-router-dom";

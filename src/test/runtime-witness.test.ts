@@ -1,5 +1,5 @@
 /**
- * Runtime Witness (P8) — 10/10 Test Suite
+ * Runtime Witness (P8). 10/10 Test Suite
  */
 
 import { describe, it, expect } from "vitest";

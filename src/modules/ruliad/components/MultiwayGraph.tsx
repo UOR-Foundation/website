@@ -1,11 +1,11 @@
 /**
- * MultiwayGraph — animated SVG visualization of multiway branching & merging.
+ * MultiwayGraph. animated SVG visualization of multiway branching & merging.
  *
  * Shows how UOR projections branch from a single content-addressed identity
  * and how different computational paths merge when they produce the same hash
  * (multiway confluence via content addressing).
  *
- * Pure SVG — no external dependencies.
+ * Pure SVG. no external dependencies.
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -71,7 +71,7 @@ function buildMultiwayGraph(tick: number): { nodes: MWNode[]; edges: MWEdge[] } 
     birthTick: 0,
   });
 
-  // Generation 1: Branching — projections diverge from root
+  // Generation 1: Branching. projections diverge from root
   const maxBranches = Math.min(tick, PROJECTIONS.length);
   const gen1Nodes: MWNode[] = [];
   const gen1Width = 700;
@@ -138,7 +138,7 @@ function buildMultiwayGraph(tick: number): { nodes: MWNode[]; edges: MWEdge[] } 
 
   if (tick < maxBranches + 6) return { nodes, edges };
 
-  // Generation 3: MERGING — confluence! Different paths produce the same hash
+  // Generation 3: MERGING. confluence! Different paths produce the same hash
   const mergeTick = maxBranches + 6;
   const mergeGroups = [
     { sources: ["g2-0", "g2-2"], label: "≡ H₁", x: cx - 120 },
@@ -173,7 +173,7 @@ function buildMultiwayGraph(tick: number): { nodes: MWNode[]; edges: MWEdge[] } 
 
   if (tick < mergeTick + 5) return { nodes, edges };
 
-  // Generation 4: Final convergence — all paths reconverge to canonical identity
+  // Generation 4: Final convergence. all paths reconverge to canonical identity
   const convergeTick = mergeTick + 5;
   if (tick >= convergeTick) {
     const convergeId = "converge";

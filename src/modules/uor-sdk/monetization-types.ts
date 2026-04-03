@@ -1,13 +1,13 @@
 /**
- * UOR SDK — Monetization Types
+ * UOR SDK. Monetization Types
  *
  * Payment-provider agnostic type definitions for the monetization layer.
  * Designed so that fiat (Stripe), crypto, x402, or any future payment
  * provider can plug in without changing the core certificate-gated logic.
  *
- * @see cert: namespace — access certificates
- * @see morphism: namespace — gated endpoints
- * @see state: namespace — revenue accounting
+ * @see cert: namespace. access certificates
+ * @see morphism: namespace. gated endpoints
+ * @see state: namespace. revenue accounting
  */
 
 // ── Payment Models ──────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ export type Currency = "USD" | "EUR" | "GBP" | "BTC" | "ETH" | "USDC";
 
 /**
  * A payment proof is an opaque token from any payment provider.
- * The monetization layer doesn't interpret it — it just stores it
+ * The monetization layer doesn't interpret it. it just stores it
  * alongside the certificate for auditability.
  */
 export interface PaymentProof {
@@ -81,7 +81,7 @@ export const DEFAULT_REVENUE_SPLIT: RevenueSplit = {
 
 /**
  * A cert:TransformCertificate granting a user access to a gated morphism.
- * This IS the entitlement — stored in the user's Solid Pod.
+ * This IS the entitlement. stored in the user's Solid Pod.
  */
 export interface AccessCertificate {
   "@context": "https://uor.foundation/contexts/uor-v1.jsonld";

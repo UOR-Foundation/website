@@ -1,5 +1,5 @@
 /**
- * IngestionResults — Displays the parsed entities, relations, and UOR mappings
+ * IngestionResults. Displays the parsed entities, relations, and UOR mappings
  * after a successful repository ingestion.
  */
 

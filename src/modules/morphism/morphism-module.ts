@@ -1,5 +1,5 @@
 /**
- * Morphism — UorModule<TransformRecord> Implementation
+ * Morphism. UorModule<TransformRecord> Implementation
  * ═════════════════════════════════════════════════════
  *
  * The morphism gateway using the generic lifecycle base.

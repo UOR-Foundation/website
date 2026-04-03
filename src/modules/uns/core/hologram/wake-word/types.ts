@@ -1,5 +1,5 @@
 /**
- * WakeWordEngine — Pluggable Wake Word Detection Interface
+ * WakeWordEngine. Pluggable Wake Word Detection Interface
  * ════════════════════════════════════════════════════════
  *
  * Abstraction layer for wake word detection engines.

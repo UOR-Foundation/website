@@ -62,7 +62,7 @@ describe("epistemic grading", () => {
 
 // ── P22: Grade Engine Tests ─────────────────────────────────────────────────
 
-describe("P22 — Grade Engine", () => {
+describe("P22. Grade Engine", () => {
   // Test 1: assignGrade with derivationId → A
   it("1. assignGrade({ derivationId }) === 'A'", () => {
     expect(assignGrade({ derivationId: "urn:uor:derivation:sha256:abc123" })).toBe("A");
@@ -141,7 +141,7 @@ describe("P22 — Grade Engine", () => {
     expect(r1.derivationId).toBe(r2.derivationId);
   });
 
-  // Test: Priority — derivationId beats certificateId
+  // Test: Priority. derivationId beats certificateId
   it("derivationId takes precedence over certificateId", () => {
     const r = graded("x", { derivationId: "urn:...", certificateId: "cert:..." });
     expect(r.epistemic_grade).toBe("A");

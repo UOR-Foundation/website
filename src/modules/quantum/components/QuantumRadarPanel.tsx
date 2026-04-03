@@ -1,5 +1,5 @@
 /**
- * Quantum Radar Panel — Real-time Network Coherence Monitor
+ * Quantum Radar Panel. Real-time Network Coherence Monitor
  * ══════════════════════════════════════════════════════════
  */
 
@@ -245,7 +245,7 @@ function AlertsFeed({ alerts }: { alerts: RadarAlert[] }) {
   if (alerts.length === 0) {
     return (
       <div className="text-[10px] font-mono text-[hsl(160,50%,40%)] text-center py-3">
-        All systems nominal — no alerts
+        All systems nominal. no alerts
       </div>
     );
   }
@@ -319,7 +319,7 @@ export default function QuantumRadarPanel() {
             Quantum Radar
           </h2>
           <p className="text-[11px] font-mono text-[hsl(210,10%,50%)] mt-0.5">
-            Real-time network coherence monitor — 4-node mesh topology
+            Real-time network coherence monitor. 4-node mesh topology
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ export default function QuantumRadarPanel() {
         <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="text-[11px] font-mono text-[hsl(160,50%,55%)] uppercase">
-              Verification Suite — {verification.tests.filter(t => t.holds).length}/{verification.tests.length}
+              Verification Suite. {verification.tests.filter(t => t.holds).length}/{verification.tests.length}
             </div>
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
               verification.allPassed

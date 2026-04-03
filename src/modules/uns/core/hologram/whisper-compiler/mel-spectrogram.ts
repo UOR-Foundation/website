@@ -1,11 +1,11 @@
 /**
- * Whisper Mel Spectrogram — Audio Preprocessing
+ * Whisper Mel Spectrogram. Audio Preprocessing
  * ═══════════════════════════════════════════════
  *
  * Converts raw PCM audio (16kHz mono Float32) into an 80-channel
  * log-mel spectrogram matching OpenAI Whisper's feature extraction.
  *
- * Pure TypeScript — no external dependencies.
+ * Pure TypeScript. no external dependencies.
  * Matches: openai/whisper feature_extractor.py
  *
  * @module uns/core/hologram/whisper-compiler/mel-spectrogram
@@ -146,7 +146,7 @@ function buildMelFilterbank(): Float32Array[] {
   return filters;
 }
 
-// Cache the filterbank — it's constant
+// Cache the filterbank. it's constant
 let _cachedFilterbank: Float32Array[] | null = null;
 
 function getMelFilterbank(): Float32Array[] {

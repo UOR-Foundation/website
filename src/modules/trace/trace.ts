@@ -1,5 +1,5 @@
 /**
- * UOR Computation Trace Module — trace: namespace implementation.
+ * UOR Computation Trace Module. trace: namespace implementation.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  * Records step-by-step computation traces for audit and PROV-O compatibility.
@@ -97,7 +97,7 @@ export async function recordTrace(
       quantum,
     });
   } catch {
-    // Non-fatal — trace is still returned in-memory
+    // Non-fatal. trace is still returned in-memory
   }
 
   return trace;

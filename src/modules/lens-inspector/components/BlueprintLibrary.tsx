@@ -1,5 +1,5 @@
 /**
- * Blueprint Library Panel — Save, Load, and Share Lens Blueprints
+ * Blueprint Library Panel. Save, Load, and Share Lens Blueprints
  * ═══════════════════════════════════════════════════════════════
  *
  * The library panel for the Lens Inspector. Displays saved blueprints

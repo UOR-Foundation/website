@@ -175,7 +175,7 @@ export function findOptimalChain(
       const newSteps = [...current.steps, { generator: gen.elem, label: gen.label }];
 
       if (targetGates.has(nextGate.name)) {
-        // Found optimal chain — compose transforms
+        // Found optimal chain. compose transforms
         let composed = IDENTITY;
         const fullSteps: RewriteStep[] = [];
         let v = sourceVertex;

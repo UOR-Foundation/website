@@ -1,5 +1,5 @@
 /**
- * UOR State Module — state: namespace implementation.
+ * UOR State Module. state: namespace implementation.
  *
  * Computes state:Frame objects for any value in Z/(2^n)Z.
  * A state:Frame describes the lifecycle context of a value:
@@ -15,7 +15,7 @@
  *   - lib/uor-ring for classifyByte
  *   - identity for IRI computation
  *
- * Zero duplication — reuses existing ring operations.
+ * Zero duplication. reuses existing ring operations.
  */
 
 import { UORRing, fromBytes } from "@/modules/ring-core/ring";
@@ -148,10 +148,10 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
     "@type": "state:EntryCondition",
     "state:isStableEntry": isIdentity || isUnit,
     "state:reason": isIdentity
-      ? `x=0 is the additive identity — canonical entry point for ring R_${ring.bits}`
+      ? `x=0 is the additive identity. canonical entry point for ring R_${ring.bits}`
       : isUnit
-      ? `x=${x} is a ring unit (invertible) — stable coordination anchor`
-      : `x=${x} is not an identity or unit — not a preferred entry state`,
+      ? `x=${x} is a ring unit (invertible). stable coordination anchor`
+      : `x=${x} is not an identity or unit. not a preferred entry state`,
   };
 
   const exitCondition: ExitCondition = {
@@ -159,10 +159,10 @@ export function computeStateFrame(ring: UORRing, x: number): StateFrame {
     "state:isPhaseBoundary": isPhaseBoundary,
     "state:isExterior": component === "partition:ExteriorSet",
     "state:reason": isPhaseBoundary
-      ? `x=${x} = 2^${ring.bits - 1} is a phase boundary — operations change character near this value`
+      ? `x=${x} = 2^${ring.bits - 1} is a phase boundary. operations change character near this value`
       : component === "partition:ExteriorSet"
-      ? `x=${x} is an exterior element — exit condition satisfied`
-      : `x=${x} is interior — no exit condition triggered`,
+      ? `x=${x} is an exterior element. exit condition satisfied`
+      : `x=${x} is interior. no exit condition triggered`,
   };
 
   const transitions: StateTransition[] = UNARY_OPS.map((op) => {

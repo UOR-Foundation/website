@@ -86,7 +86,7 @@ function hexToCid(hex: string): string {
 
 /**
  * Full integrity pipeline: raw bytes → SHA-256 → projections.
- * Hashes the raw file, not a parsed representation — zero information loss.
+ * Hashes the raw file, not a parsed representation. zero information loss.
  */
 export async function verifySkillIntegrity(raw: string): Promise<SkillIntegrity> {
   const descriptor = parseSkillMd(raw);

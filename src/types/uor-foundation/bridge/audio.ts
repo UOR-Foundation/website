@@ -1,8 +1,8 @@
 /**
- * UOR Foundation v2.0.0 — bridge::audio
+ * UOR Foundation v2.0.0. bridge::audio
  *
  * Canonical audio types: content-addressed audio data as ring elements.
- * Music IS ring arithmetic — samples are datums, frames are triads,
+ * Music IS ring arithmetic. samples are datums, frames are triads,
  * tracks are derivation chains.
  *
  * @see Phase 1 of Hologram Audio Architecture
@@ -10,7 +10,7 @@
  */
 
 /**
- * AudioSampleFormat — bit depth and encoding of audio samples.
+ * AudioSampleFormat. bit depth and encoding of audio samples.
  */
 export interface AudioSampleFormat {
   /** Bits per sample (8, 16, 24, 32). Maps to UOR quantum level. */
@@ -24,7 +24,7 @@ export interface AudioSampleFormat {
 }
 
 /**
- * AudioDatum — a single audio sample as a UOR ring element.
+ * AudioDatum. a single audio sample as a UOR ring element.
  *
  * Every audio sample is a datum in Z/(2^n)Z where n = bitsPerSample.
  * The stratum (popcount) correlates with amplitude energy.
@@ -41,14 +41,14 @@ export interface AudioDatum {
   channel(): number;
   /** Sample index within the parent frame. */
   sampleIndex(): number;
-  /** Popcount / Hamming weight — correlates with energy. */
+  /** Popcount / Hamming weight. correlates with energy. */
   stratum(): number;
-  /** Bit positions set — reveals harmonic structure. */
+  /** Bit positions set. reveals harmonic structure. */
   spectrum(): number[];
 }
 
 /**
- * AudioFrame — a windowed collection of AudioDatums.
+ * AudioFrame. a windowed collection of AudioDatums.
  *
  * Analogous to a Triad: aggregates datum-level metrics across
  * a fixed window (typically 2048 or 4096 samples) for analysis.
@@ -65,22 +65,22 @@ export interface AudioFrame {
   offsetSeconds(): number;
   /** Content-addressed identifier (CID) of this frame's data. */
   frameCid(): string;
-  /** Aggregate stratum histogram — spectral energy distribution. */
+  /** Aggregate stratum histogram. spectral energy distribution. */
   stratumHistogram(): number[];
-  /** Mean stratum across all samples — average energy. */
+  /** Mean stratum across all samples. average energy. */
   meanStratum(): number;
   /** Peak amplitude (max absolute sample value). */
   peakAmplitude(): number;
   /** RMS energy level. */
   rmsEnergy(): number;
-  /** Zero-crossing rate — correlates with brightness/noisiness. */
+  /** Zero-crossing rate. correlates with brightness/noisiness. */
   zeroCrossingRate(): number;
-  /** Spectral centroid — perceived "brightness" (Hz). */
+  /** Spectral centroid. perceived "brightness" (Hz). */
   spectralCentroid(): number;
 }
 
 /**
- * AudioFeature — an extracted observable from audio analysis.
+ * AudioFeature. an extracted observable from audio analysis.
  *
  * Maps to UOR CascadeObservable: each feature is a measurable
  * property extracted through a specific lens projection.
@@ -105,7 +105,7 @@ export interface AudioFeature {
 }
 
 /**
- * AudioSegment — a content-addressed chunk of audio for streaming.
+ * AudioSegment. a content-addressed chunk of audio for streaming.
  *
  * HLS/DASH segment mapped to the UOR address space. Each segment
  * is independently verifiable and cacheable by its CID.
@@ -130,7 +130,7 @@ export interface AudioSegment {
 }
 
 /**
- * AudioTrack — a complete audio object with canonical identity.
+ * AudioTrack. a complete audio object with canonical identity.
  *
  * The top-level container: metadata + ordered segments + derivation chain.
  * Every track has a single UOR canonical identity derived from its content.
@@ -167,7 +167,7 @@ export interface AudioTrack {
 }
 
 /**
- * AudioLensProjection — result of projecting audio through a lens.
+ * AudioLensProjection. result of projecting audio through a lens.
  *
  * Captures the lens identity, input track, and extracted features
  * as a verifiable derivation.

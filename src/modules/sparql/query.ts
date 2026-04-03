@@ -1,5 +1,5 @@
 /**
- * UOR Query Namespace — Intent-Based Object Resolution
+ * UOR Query Namespace. Intent-Based Object Resolution
  *
  * Source: spec/src/namespaces/query.rs
  *
@@ -150,7 +150,7 @@ export class UnsQuery {
     const intentHash = intent["query:canonicalId"].split(":").pop() ?? "";
     const intentByte = parseInt(intentHash.slice(0, 2), 16) || 0;
 
-    // Strategy 1: Exact match — look for datum with matching value
+    // Strategy 1: Exact match. look for datum with matching value
     // Use the first byte of intent as the lookup key
     const exactDatum = this.graph.getDatum(intentByte);
     if (exactDatum) {

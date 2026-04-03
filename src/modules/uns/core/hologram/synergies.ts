@@ -1,14 +1,14 @@
 /**
- * UOR Hologram — Cross-Projection Synergy Engine
+ * UOR Hologram. Cross-Projection Synergy Engine
  * ════════════════════════════════════════════════
  *
  * Every external standard is a viewing angle of the same UOR identity.
- * But standards don't exist in isolation — they form CHAINS where the
+ * But standards don't exist in isolation. they form CHAINS where the
  * output of one projection feeds the input of another. These chains
  * are the connective tissue of global interoperability.
  *
  * This module discovers, verifies, and exposes all cross-projection
- * synergies — proving that one hash, projected through multiple
+ * synergies. proving that one hash, projected through multiple
  * standards, produces a fully interoperable identity mesh.
  *
  * Architecture:
@@ -92,7 +92,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "lifecycle", description: "SD-JWT holder presents via OpenID4VP", sharedComponent: "vp_token hash" },
       { type: "lifecycle", description: "OpenID4VP references Token Status List for revocation", sharedComponent: "status index" },
     ],
-    capability: "Any UOR object can be issued as a credential, selectively disclosed, presented to verifiers, and revoked — using one hash across four standards",
+    capability: "Any UOR object can be issued as a credential, selectively disclosed, presented to verifiers, and revoked. using one hash across four standards",
   },
 
   // ─── Chain 2: Biometric Trust Stack (WebAuthn + COSE + mDL) ─────────────
@@ -105,7 +105,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "COSE wraps mDL credential signatures", sharedComponent: "CBOR binary format" },
       { type: "stack", description: "mDL data elements compress via CBOR-LD", sharedComponent: "CBOR encoding" },
     ],
-    capability: "Biometric login (passkey) → cryptographic proof (COSE) → government ID (mDL) — all from one hash",
+    capability: "Biometric login (passkey) → cryptographic proof (COSE) → government ID (mDL). all from one hash",
   },
 
   // ─── Chain 3: AI Provenance Pipeline (Content → Model → Tool → Trace) ──
@@ -118,7 +118,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "ONNX model hash identifies the MCP tool's compute engine", sharedComponent: "model identity hash" },
       { type: "protocol", description: "MCP tool calls carry OpenTelemetry trace context", sharedComponent: "trace/span IDs from hash" },
     ],
-    capability: "Prove who created content, which model processed it, which tool executed it, and trace the entire pipeline — one hash, four layers",
+    capability: "Prove who created content, which model processed it, which tool executed it, and trace the entire pipeline. one hash, four layers",
   },
 
   // ─── Chain 4: Zero-Trust Event Security ─────────────────────────────────
@@ -131,7 +131,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "CloudEvents carry OpenTelemetry trace context headers", sharedComponent: "W3C Trace Context" },
       { type: "lifecycle", description: "Security events trigger Token Status List revocation", sharedComponent: "credential status index" },
     ],
-    capability: "A credential compromise (SSF) propagates as a CloudEvent, is traced via OpenTelemetry, and triggers real-time revocation — content-addressed security pipeline",
+    capability: "A credential compromise (SSF) propagates as a CloudEvent, is traced via OpenTelemetry, and triggers real-time revocation. content-addressed security pipeline",
   },
 
   // ─── Chain 5: DID Unification Layer ─────────────────────────────────────
@@ -160,13 +160,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "SCIM-provisioned user receives SD-JWT credentials", sharedComponent: "credential subject hash" },
       { type: "protocol", description: "WebFinger discovers OIDC configuration for the identity", sharedComponent: "acct: URI → OIDC issuer" },
     ],
-    capability: "One hash provisions an identity across all enterprise SaaS platforms — same user, same credential, zero reconciliation",
+    capability: "One hash provisions an identity across all enterprise SaaS platforms. same user, same credential, zero reconciliation",
   },
 
   // ─── Chain 7: Blockchain Settlement Triad ───────────────────────────────
   {
     name: "Blockchain Settlement Triad",
-    description: "Three-chain settlement: Bitcoin → Zcash → Ethereum — same hash, three ledgers",
+    description: "Three-chain settlement: Bitcoin → Zcash → Ethereum. same hash, three ledgers",
     projections: ["bitcoin", "zcash-transparent", "eth-commitment", "pq-bridge", "pq-envelope"],
     bridges: [
       { type: "hash", description: "Bitcoin and Zcash transparent use identical OP_RETURN scripts", sharedComponent: "6a24554f52{hash}" },
@@ -174,7 +174,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "PQ Bridge wraps all three with Dilithium-3 signatures", sharedComponent: "ML-DSA-65 signing target" },
       { type: "protocol", description: "PQ Envelope encodes the on-chain anchor structure", sharedComponent: "UOR protocol header" },
     ],
-    capability: "Anchor a UOR identity on Bitcoin, Zcash, AND Ethereum simultaneously with post-quantum security — one hash, three chains, one PQ signature",
+    capability: "Anchor a UOR identity on Bitcoin, Zcash, AND Ethereum simultaneously with post-quantum security. one hash, three chains, one PQ signature",
   },
 
   // ─── Chain 8: Social Federation Ring ────────────────────────────────────
@@ -185,11 +185,11 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     bridges: [
       { type: "protocol", description: "ActivityPub objects discovered via WebFinger", sharedComponent: "acct: URI" },
       { type: "protocol", description: "AT Protocol DID resolves to same identity as ActivityPub actor", sharedComponent: "did:uor:{cid}" },
-      { type: "hash", description: "Nostr event ID IS the raw SHA-256 hex — identical to UOR", sharedComponent: "SHA-256 hex (64 chars)" },
+      { type: "hash", description: "Nostr event ID IS the raw SHA-256 hex. identical to UOR", sharedComponent: "SHA-256 hex (64 chars)" },
       { type: "encoding", description: "Nostr note1 encoding wraps the same hash in bech32m", sharedComponent: "bech32m(SHA-256)" },
       { type: "hash", description: "ENS name and WebFinger both derived from same hash prefix", sharedComponent: "hex prefix discovery" },
     ],
-    capability: "One identity federated across Mastodon, Bluesky, Nostr, and ENS — same hash, four social networks, discoverable via WebFinger",
+    capability: "One identity federated across Mastodon, Bluesky, Nostr, and ENS. same hash, four social networks, discoverable via WebFinger",
   },
 
   // ─── Chain 9: Trust Infrastructure Stack (ToIP + FPP + TSP) ─────────────
@@ -204,7 +204,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "FPP VRCs form edges in the TRQP trust registry", sharedComponent: "trust graph node" },
       { type: "protocol", description: "TRQP queries resolve entities via content-addressed lookup", sharedComponent: "entity hash" },
     ],
-    capability: "Complete Trust over IP deployment: authenticated messaging (TSP) + personhood (PHC) + relationships (VRC) + registry (TRQP) — all from one hash",
+    capability: "Complete Trust over IP deployment: authenticated messaging (TSP) + personhood (PHC) + relationships (VRC) + registry (TRQP). all from one hash",
   },
 
   // ─── Chain 10: Privacy Container Stack ──────────────────────────────────
@@ -217,13 +217,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Gordian Envelope elision mirrors Zcash memo encryption", sharedComponent: "selective redaction" },
       { type: "encoding", description: "Both Gordian and COSE use CBOR binary encoding", sharedComponent: "CBOR structure" },
     ],
-    capability: "Three layers of privacy: choose what to reveal (SD-JWT), what to redact (Gordian), what to encrypt (Zcash) — all preserving the same content hash",
+    capability: "Three layers of privacy: choose what to reveal (SD-JWT), what to redact (Gordian), what to encrypt (Zcash). all preserving the same content hash",
   },
 
   // ─── Chain 11: Content-Gated Commerce ───────────────────────────────────
   {
     name: "Content-Gated Commerce",
-    description: "Content delivery IS payment settlement — preimage = canonical bytes",
+    description: "Content delivery IS payment settlement. preimage = canonical bytes",
     projections: ["bitcoin-hashlock", "lightning", "x402", "mcp-tool"],
     bridges: [
       { type: "hash", description: "Bitcoin HTLC preimage = UOR canonical bytes", sharedComponent: "SHA-256 preimage" },
@@ -231,7 +231,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "x402 payment requirement references the content hash", sharedComponent: "payment requirement hash" },
       { type: "protocol", description: "MCP tool output delivery reveals preimage, settling payment", sharedComponent: "content = preimage" },
     ],
-    capability: "An AI agent tool call (MCP) generates content whose delivery automatically settles a Lightning micropayment — content delivery IS payment",
+    capability: "An AI agent tool call (MCP) generates content whose delivery automatically settles a Lightning micropayment. content delivery IS payment",
   },
 
   // ─── Chain 12: Semantic Data Bridge ─────────────────────────────────────
@@ -255,11 +255,11 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     projections: ["scitt", "oci", "gs1", "c2pa", "cid"],
     bridges: [
       { type: "protocol", description: "SCITT transparency statements cover OCI container images", sharedComponent: "SHA-256 statement hash" },
-      { type: "hash", description: "OCI image digest IS sha256:{hex} — identical to UOR hex", sharedComponent: "sha256:{hex}" },
+      { type: "hash", description: "OCI image digest IS sha256:{hex}. identical to UOR hex", sharedComponent: "sha256:{hex}" },
       { type: "protocol", description: "GS1 Digital Link identifies the physical product the container serves", sharedComponent: "product identity hash" },
       { type: "protocol", description: "C2PA provenance manifest proves who built the software/product", sharedComponent: "SHA-256 assertion" },
     ],
-    capability: "Trace a product from code (OCI) to shelf (GS1) to provenance (C2PA) to transparency log (SCITT) — one hash anchoring the entire supply chain",
+    capability: "Trace a product from code (OCI) to shelf (GS1) to provenance (C2PA) to transparency log (SCITT). one hash anchoring the entire supply chain",
   },
 
   // ─── Chain 14: Agent Mesh Network ───────────────────────────────────────
@@ -288,13 +288,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "CloudEvents deliver CRDT state updates for collaboration", sharedComponent: "event payload hash" },
       { type: "protocol", description: "MLS group encryption secures all participants", sharedComponent: "group identity hash" },
     ],
-    capability: "Real-time collaboration: WebTransport stream → DIDComm encrypted message → CloudEvent notification → CRDT merge — all content-addressed",
+    capability: "Real-time collaboration: WebTransport stream → DIDComm encrypted message → CloudEvent notification → CRDT merge. all content-addressed",
   },
 
   // ─── Chain 16: Software Supply Chain Integrity ──────────────────────────
   {
     name: "Software Supply Chain Integrity",
-    description: "Source → Build → Container → Deploy → Observe — full DevSecOps pipeline",
+    description: "Source → Build → Container → Deploy → Observe. full DevSecOps pipeline",
     projections: ["python-module", "rust-crate", "go-module", "dockerfile", "oci", "scitt", "opentelemetry"],
     bridges: [
       { type: "stack", description: "Python/Rust/Go source modules hash their canonical AST", sharedComponent: "urn:uor:lang:*" },
@@ -304,7 +304,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "OCI image registered in SCITT transparency log", sharedComponent: "SCITT statement hash" },
       { type: "protocol", description: "Deployed service emits OpenTelemetry traces with content-addressed IDs", sharedComponent: "trace ID from hash" },
     ],
-    capability: "Every stage of software delivery — source, build, container, registry, deploy, observe — is content-addressed with one hash threading through",
+    capability: "Every stage of software delivery. source, build, container, registry, deploy, observe. is content-addressed with one hash threading through",
   },
 
   // ─── Chain 17: Cross-Language Code Provenance ──────────────────────────
@@ -313,13 +313,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
     description: "Code artifact → Knowledge Graph → ONNX model → AI tool output",
     projections: ["ts-module", "js-module", "code-kg", "code-kg-relation", "onnx", "mcp-tool"],
     bridges: [
-      { type: "stack", description: "TypeScript compiles to JavaScript — same semantic, two hashes", sharedComponent: "urn:uor:lang:* namespace" },
+      { type: "stack", description: "TypeScript compiles to JavaScript. same semantic, two hashes", sharedComponent: "urn:uor:lang:* namespace" },
       { type: "protocol", description: "JS/TS modules are entities in the Code Knowledge Graph", sharedComponent: "code entity hash" },
       { type: "protocol", description: "Code KG relations link code to the ONNX models it trains", sharedComponent: "code→model provenance" },
       { type: "protocol", description: "ONNX model hash identifies the MCP tool's compute engine", sharedComponent: "model identity hash" },
       { type: "protocol", description: "MCP tool output is content-addressed for verification", sharedComponent: "tool output hash" },
     ],
-    capability: "Trace from source code (TS/JS) through knowledge graph to trained model (ONNX) to AI tool output (MCP) — full code-to-inference provenance",
+    capability: "Trace from source code (TS/JS) through knowledge graph to trained model (ONNX) to AI tool output (MCP). full code-to-inference provenance",
   },
 
   // ─── Chain 18: JVM Ecosystem Pipeline ──────────────────────────────────
@@ -336,7 +336,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Kotlin Android → Groovy Gradle → Scala Spark all share JVM identity", sharedComponent: "JVM compilation target" },
       { type: "protocol", description: "Clojure REPL sessions produce content-addressed transcripts", sharedComponent: "session hash" },
     ],
-    capability: "Five JVM languages, one bytecode target, one container, one enterprise identity — the entire JVM ecosystem unified by content-addressing",
+    capability: "Five JVM languages, one bytecode target, one container, one enterprise identity. the entire JVM ecosystem unified by content-addressing",
   },
 
   // ─── Chain 19: Functional Verification Pipeline ────────────────────────
@@ -353,29 +353,29 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Formal specs link to implementations via shared hash", sharedComponent: "spec↔impl bridge" },
       { type: "protocol", description: "F# and OCaml share the ML core type system", sharedComponent: "ML type hash" },
     ],
-    capability: "Mathematical proof (Coq/Lean) → verified implementation (Haskell/OCaml) → production deployment (Erlang OTP) — formal verification pipeline",
+    capability: "Mathematical proof (Coq/Lean) → verified implementation (Haskell/OCaml) → production deployment (Erlang OTP). formal verification pipeline",
   },
 
   // ─── Chain 20: Web Platform Stack ──────────────────────────────────────
   {
     name: "Web Platform Stack",
-    description: "HTML → CSS → JS → WASM → WebGPU — complete browser rendering pipeline",
+    description: "HTML → CSS → JS → WASM → WebGPU. complete browser rendering pipeline",
     projections: ["html", "css", "js-module", "ts-module", "wasm", "wgsl", "svg"],
     bridges: [
       { type: "stack", description: "HTML documents embed CSS stylesheets and JS modules", sharedComponent: "subresource integrity hash" },
       { type: "stack", description: "CSS files are deterministic style declarations", sharedComponent: "stylesheet content hash" },
       { type: "stack", description: "JS modules execute in the browser runtime", sharedComponent: "module content hash" },
-      { type: "stack", description: "TS compiles to JS — same semantics, typed provenance", sharedComponent: "compilation target hash" },
+      { type: "stack", description: "TS compiles to JS. same semantics, typed provenance", sharedComponent: "compilation target hash" },
       { type: "stack", description: "WASM modules run alongside JS with content-addressed identity", sharedComponent: "WASM module hash" },
       { type: "stack", description: "WGSL shaders execute on WebGPU from content-addressed source", sharedComponent: "shader content hash" },
     ],
-    capability: "Every layer of the web platform — document, style, logic, compute, GPU — is content-addressed, enabling Subresource Integrity across the full stack",
+    capability: "Every layer of the web platform. document, style, logic, compute, GPU. is content-addressed, enabling Subresource Integrity across the full stack",
   },
 
   // ─── Chain 21: Data Serialization Interop ──────────────────────────────
   {
     name: "Data Serialization Interop",
-    description: "Schema → Serialize → Transport → Validate — universal data pipeline",
+    description: "Schema → Serialize → Transport → Validate. universal data pipeline",
     projections: ["protobuf", "avro", "flatbuffers", "msgpack", "cbor", "thrift", "capnproto", "json-schema"],
     bridges: [
       { type: "encoding", description: "Protobuf and Avro both use schema-first binary encoding", sharedComponent: "schema hash" },
@@ -402,13 +402,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "RAML extends REST API description with traits and overlays", sharedComponent: "API design hash" },
       { type: "protocol", description: "CloudEvents envelope carries API event payloads", sharedComponent: "event ID = content hash" },
     ],
-    capability: "Every API description language — REST, GraphQL, SOAP, Event-Driven — gets a content-addressed identity, enabling API provenance and versioning",
+    capability: "Every API description language. REST, GraphQL, SOAP, Event-Driven. gets a content-addressed identity, enabling API provenance and versioning",
   },
 
   // ─── Chain 23: Schema & Ontology Tower ─────────────────────────────────
   {
     name: "Schema & Ontology Tower",
-    description: "Ontology → Shape validation → Data binding — the semantic web's type system",
+    description: "Ontology → Shape validation → Data binding. the semantic web's type system",
     projections: ["owl", "rdfs", "shacl", "shex", "xsd", "sparql", "schema-org", "jsonld"],
     bridges: [
       { type: "protocol", description: "OWL ontologies define class hierarchies as content-addressed graphs", sharedComponent: "ontology hash" },
@@ -419,13 +419,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "SPARQL queries operate over content-addressed triples", sharedComponent: "query hash" },
       { type: "protocol", description: "Schema.org types are the web's shared vocabulary", sharedComponent: "structured data hash" },
     ],
-    capability: "The complete semantic web stack — ontology (OWL) → schema (RDFS) → validation (SHACL/ShEx) → query (SPARQL) — all content-addressed",
+    capability: "The complete semantic web stack. ontology (OWL) → schema (RDFS) → validation (SHACL/ShEx) → query (SPARQL). all content-addressed",
   },
 
   // ─── Chain 24: Scripting Ecosystem Bridge ──────────────────────────────
   {
     name: "Scripting Ecosystem Bridge",
-    description: "Dynamic languages → package managers → deployment — scripting supply chain",
+    description: "Dynamic languages → package managers → deployment. scripting supply chain",
     projections: ["ruby", "php", "perl", "lua", "bash", "powershell", "python-module"],
     bridges: [
       { type: "stack", description: "Ruby gems, PHP Composer, Perl CPAN all use content hashes", sharedComponent: "package content hash" },
@@ -435,7 +435,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "All scripting languages produce canonicalizable ASTs", sharedComponent: "AST content hash" },
       { type: "protocol", description: "Perl/Raku provide text processing pipelines", sharedComponent: "pipeline hash" },
     ],
-    capability: "Every major scripting language's package ecosystem gets content-addressed identity — Ruby gems, PHP packages, Perl modules, Python packages unified",
+    capability: "Every major scripting language's package ecosystem gets content-addressed identity. Ruby gems, PHP packages, Perl modules, Python packages unified",
   },
 
   // ─── Chain 25: GPU & Shader Pipeline ───────────────────────────────────
@@ -451,13 +451,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "GPU kernels train ONNX models with content-addressed weights", sharedComponent: "model training hash" },
       { type: "protocol", description: "ONNX operators map to specific GPU kernel implementations", sharedComponent: "operator implementation hash" },
     ],
-    capability: "Complete GPU pipeline — shader authoring → compute execution → ML training → model export — all content-addressed from source to weights",
+    capability: "Complete GPU pipeline. shader authoring → compute execution → ML training → model export. all content-addressed from source to weights",
   },
 
   // ─── Chain 26: Smart Contract Verification Chain ───────────────────────
   {
     name: "Smart Contract Verification Chain",
-    description: "Contract source → bytecode → on-chain → event log — blockchain audit trail",
+    description: "Contract source → bytecode → on-chain → event log. blockchain audit trail",
     projections: ["solidity", "vyper", "move", "cairo", "eth-commitment", "eth-calldata", "eth-log-topic"],
     bridges: [
       { type: "stack", description: "Solidity/Vyper compile to EVM bytecode", sharedComponent: "bytecode content hash" },
@@ -467,13 +467,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Event logs indexed by content-addressed topics", sharedComponent: "log topic hash" },
       { type: "protocol", description: "All four languages target content-addressed VMs", sharedComponent: "deployment hash" },
     ],
-    capability: "Smart contract source (Solidity/Vyper/Move/Cairo) → deployment → execution → event emission — complete on-chain audit trail",
+    capability: "Smart contract source (Solidity/Vyper/Move/Cairo) → deployment → execution → event emission. complete on-chain audit trail",
   },
 
   // ─── Chain 27: Hardware Description Pipeline ───────────────────────────
   {
     name: "Hardware Description Pipeline",
-    description: "RTL design → simulation → synthesis → FPGA/ASIC — hardware provenance",
+    description: "RTL design → simulation → synthesis → FPGA/ASIC. hardware provenance",
     projections: ["vhdl", "verilog", "systemverilog", "c-unit", "assembly", "cpp-unit"],
     bridges: [
       { type: "stack", description: "VHDL/Verilog/SystemVerilog define hardware at RTL level", sharedComponent: "RTL content hash" },
@@ -482,13 +482,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "Assembly maps to final silicon instruction sets", sharedComponent: "instruction content hash" },
       { type: "protocol", description: "Hardware descriptions produce deterministic synthesis outputs", sharedComponent: "synthesis artifact hash" },
     ],
-    capability: "Hardware IP from RTL (VHDL/Verilog) through HLS (C++) to instruction sets (ASM) — complete hardware provenance chain",
+    capability: "Hardware IP from RTL (VHDL/Verilog) through HLS (C++) to instruction sets (ASM). complete hardware provenance chain",
   },
 
   // ─── Chain 28: Document & Markup Pipeline ──────────────────────────────
   {
     name: "Document & Markup Pipeline",
-    description: "Authoring → Rendering → Publishing — content lifecycle",
+    description: "Authoring → Rendering → Publishing. content lifecycle",
     projections: ["markdown", "latex", "asciidoc", "rst", "xml", "html", "svg", "mermaid", "plantuml", "dot"],
     bridges: [
       { type: "stack", description: "Markdown/AsciiDoc/RST are authoring formats", sharedComponent: "source document hash" },
@@ -497,17 +497,17 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "HTML is the universal rendering target", sharedComponent: "rendered document hash" },
       { type: "stack", description: "SVG provides vector graphics within documents", sharedComponent: "graphic content hash" },
       { type: "protocol", description: "Mermaid/PlantUML/DOT are diagram-as-code formats", sharedComponent: "diagram source hash" },
-      { type: "protocol", description: "Diagrams render to SVG — same visual, content-addressed", sharedComponent: "rendered diagram hash" },
+      { type: "protocol", description: "Diagrams render to SVG. same visual, content-addressed", sharedComponent: "rendered diagram hash" },
       { type: "protocol", description: "RST documentation compiles to multiple output formats", sharedComponent: "doc source hash" },
       { type: "protocol", description: "All markup formats canonicalize to deterministic byte sequences", sharedComponent: "canonical markup hash" },
     ],
-    capability: "Every document format — Markdown, LaTeX, AsciiDoc, XML, HTML — and every diagram format — Mermaid, PlantUML, DOT — content-addressed",
+    capability: "Every document format. Markdown, LaTeX, AsciiDoc, XML, HTML. and every diagram format. Mermaid, PlantUML, DOT. content-addressed",
   },
 
   // ─── Chain 29: Configuration & IaC Pipeline ───────────────────────────
   {
     name: "Configuration & IaC Pipeline",
-    description: "Config → Infrastructure → Container → Deploy — infrastructure provenance",
+    description: "Config → Infrastructure → Container → Deploy. infrastructure provenance",
     projections: ["yaml", "toml", "ini", "dotenv", "hcl", "nix", "dockerfile", "makefile", "oci"],
     bridges: [
       { type: "stack", description: "YAML/TOML/INI/dotenv define application configuration", sharedComponent: "config content hash" },
@@ -516,16 +516,16 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "Dockerfiles build containers from content-addressed layers", sharedComponent: "build recipe hash" },
       { type: "stack", description: "Makefiles orchestrate build pipelines", sharedComponent: "build script hash" },
       { type: "hash", description: "All config flows into OCI container images", sharedComponent: "sha256:{hex}" },
-      { type: "protocol", description: "Nix closures are already content-addressed — native UOR alignment", sharedComponent: "store path hash" },
+      { type: "protocol", description: "Nix closures are already content-addressed. native UOR alignment", sharedComponent: "store path hash" },
       { type: "protocol", description: "HCL state files track infrastructure drift via hash comparison", sharedComponent: "state hash" },
     ],
-    capability: "Complete infrastructure pipeline — config (YAML/TOML) → IaC (Terraform/Nix) → build (Docker/Make) → deploy (OCI) — all content-addressed",
+    capability: "Complete infrastructure pipeline. config (YAML/TOML) → IaC (Terraform/Nix) → build (Docker/Make) → deploy (OCI). all content-addressed",
   },
 
   // ─── Chain 30: Legacy Mainframe Bridge ─────────────────────────────────
   {
     name: "Legacy Mainframe Bridge",
-    description: "COBOL → Java migration → Enterprise IAM — mainframe modernization",
+    description: "COBOL → Java migration → Enterprise IAM. mainframe modernization",
     projections: ["cobol-copybook", "cobol-program", "java-class", "sql-schema", "oidc"],
     bridges: [
       { type: "stack", description: "COBOL copybooks define shared data structures", sharedComponent: "data structure hash" },
@@ -549,13 +549,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Mobile apps use WebAuthn for biometric authentication", sharedComponent: "credential ID hash" },
       { type: "protocol", description: "Authenticated users hold mobile driver's licenses (mDL)", sharedComponent: "credential content hash" },
     ],
-    capability: "Mobile development (Swift/Kotlin/Dart) → biometric auth (WebAuthn) → government credentials (mDL) — mobile identity pipeline",
+    capability: "Mobile development (Swift/Kotlin/Dart) → biometric auth (WebAuthn) → government credentials (mDL). mobile identity pipeline",
   },
 
   // ─── Chain 32: Niche Language Provenance ───────────────────────────────
   {
     name: "Niche Language Provenance",
-    description: "Specialized languages with unique computational models — all content-addressed",
+    description: "Specialized languages with unique computational models. all content-addressed",
     projections: ["apl", "forth", "prolog", "smalltalk", "crystal", "pony", "raku", "tcl"],
     bridges: [
       { type: "stack", description: "APL's array operations produce deterministic results", sharedComponent: "array expression hash" },
@@ -566,13 +566,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Raku/Tcl provide text processing and scripting capabilities", sharedComponent: "script content hash" },
       { type: "protocol", description: "All niche languages share the urn:uor:lang:* namespace", sharedComponent: "universal language hash" },
     ],
-    capability: "Even niche and historical languages — APL, Forth, Prolog, Smalltalk — get content-addressed identity within the UOR framework",
+    capability: "Even niche and historical languages. APL, Forth, Prolog, Smalltalk. get content-addressed identity within the UOR framework",
   },
 
   // ─── Chain 33: Systems Language Triad ──────────────────────────────────
   {
     name: "Systems Language Triad",
-    description: "Next-gen systems languages → WASM → containers — modern systems stack",
+    description: "Next-gen systems languages → WASM → containers. modern systems stack",
     projections: ["zig", "nim", "d-lang", "ada", "fortran", "pascal", "rust-crate", "wasm", "oci"],
     bridges: [
       { type: "stack", description: "Zig/Nim/D provide modern systems alternatives to C/C++", sharedComponent: "systems code hash" },
@@ -584,13 +584,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Ada's certified code links to hardware verification", sharedComponent: "certification hash" },
       { type: "protocol", description: "Pascal bridges educational to production code", sharedComponent: "instructional code hash" },
     ],
-    capability: "Next-gen systems languages (Zig/Nim/D), safety-critical (Ada), scientific (Fortran) — all compile to WASM and deploy as content-addressed containers",
+    capability: "Next-gen systems languages (Zig/Nim/D), safety-critical (Ada), scientific (Fortran). all compile to WASM and deploy as content-addressed containers",
   },
 
   // ─── Chain 34: Scientific Data Pipeline ────────────────────────────────
   {
     name: "Scientific Data Pipeline",
-    description: "Data collection → analysis → visualization → publication — research pipeline",
+    description: "Data collection → analysis → visualization → publication. research pipeline",
     projections: ["r-lang", "julia", "matlab", "python-module", "stac", "croissant", "latex"],
     bridges: [
       { type: "stack", description: "R/Julia/MATLAB/Python are the scientific computing stack", sharedComponent: "computation content hash" },
@@ -600,7 +600,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Scientific reproducibility via content-addressed pipelines", sharedComponent: "pipeline hash" },
       { type: "protocol", description: "MATLAB/Julia numerical results are deterministic", sharedComponent: "numerical result hash" },
     ],
-    capability: "Scientific computing (R/Julia/MATLAB/Python) → data cataloging (STAC/Croissant) → publication (LaTeX) — reproducible research pipeline",
+    capability: "Scientific computing (R/Julia/MATLAB/Python) → data cataloging (STAC/Croissant) → publication (LaTeX). reproducible research pipeline",
   },
 
   // ─── Chain 35: Consciousness Framework Bridge ─────────────────────────
@@ -615,7 +615,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "OWL ontologies formalize consciousness categories", sharedComponent: "ontology hash" },
       { type: "protocol", description: "Schema.org structured data enables web discovery", sharedComponent: "structured data hash" },
     ],
-    capability: "Consciousness studies formalized as content-addressed knowledge objects within the semantic web — theories, categories, and implications discoverable via standard protocols",
+    capability: "Consciousness studies formalized as content-addressed knowledge objects within the semantic web. theories, categories, and implications discoverable via standard protocols",
   },
 
   // ─── Chain 36: Visual & UI Rendering Pipeline ─────────────────────────
@@ -630,13 +630,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "stack", description: "CSS styles the rendered components", sharedComponent: "stylesheet hash" },
       { type: "stack", description: "HTML assembles the final document", sharedComponent: "document hash" },
     ],
-    capability: "UI components (Tabler) → vector graphics (SVG) → styling (CSS) → document (HTML) — content-addressed rendering pipeline",
+    capability: "UI components (Tabler) → vector graphics (SVG) → styling (CSS) → document (HTML). content-addressed rendering pipeline",
   },
 
   // ─── Chain 37: Trust Protocol Extended Stack ──────────────────────────
   {
     name: "Trust Protocol Extended Stack",
-    description: "Trust spanning: VID → envelope → route → nested → key — full TSP coverage",
+    description: "Trust spanning: VID → envelope → route → nested → key. full TSP coverage",
     projections: ["tsp-vid", "tsp-envelope", "tsp-route", "tsp-nested", "tsp-key", "pq-bridge", "pq-witness"],
     bridges: [
       { type: "protocol", description: "TSP VID identifies parties in all envelopes", sharedComponent: "did:uor VID" },
@@ -646,7 +646,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "TSP keys provide cryptographic verification", sharedComponent: "key fingerprint hash" },
       { type: "protocol", description: "PQ Bridge wraps TSP with post-quantum signatures", sharedComponent: "ML-DSA-65 signing target" },
     ],
-    capability: "Complete Trust Spanning Protocol stack with post-quantum security and algebraic coherence witness — every TSP artifact content-addressed",
+    capability: "Complete Trust Spanning Protocol stack with post-quantum security and algebraic coherence witness. every TSP artifact content-addressed",
   },
 
   // ─── Chain 38: First Person Trust Graph ───────────────────────────────
@@ -663,7 +663,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "R-DIDs provide pairwise private channels", sharedComponent: "private channel hash" },
       { type: "protocol", description: "M-DIDs scope identity to communities", sharedComponent: "membership hash" },
     ],
-    capability: "Complete First Person Project trust infrastructure — personhood, relationships, endorsements, digital cards, trust graph — all content-addressed",
+    capability: "Complete First Person Project trust infrastructure. personhood, relationships, endorsements, digital cards, trust graph. all content-addressed",
   },
 
   // ─── Chain 39: Agent Discovery & Coordination ─────────────────────────
@@ -678,13 +678,13 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "MCP Context blocks tag provenance of agent inputs", sharedComponent: "context block hash" },
       { type: "protocol", description: "A2A Tasks coordinate multi-agent workflows", sharedComponent: "task content hash" },
     ],
-    capability: "Complete agent lifecycle — register (NANDA) → discover (AgentFacts) → resolve (Resolver) → contextualize (MCP) → coordinate (A2A) → verify skills (skill.md)",
+    capability: "Complete agent lifecycle. register (NANDA) → discover (AgentFacts) → resolve (Resolver) → contextualize (MCP) → coordinate (A2A) → verify skills (skill.md)",
   },
 
   // ─── Chain 40: Blockchain Extended Stack ──────────────────────────────
   {
     name: "Blockchain Extended Stack",
-    description: "EVM settlement: contract → calldata → event → commitment — full on-chain lifecycle",
+    description: "EVM settlement: contract → calldata → event → commitment. full on-chain lifecycle",
     projections: ["eth-commitment", "eth-calldata", "eth-log-topic", "erc8004", "pq-bridge", "pq-envelope", "pq-witness"],
     bridges: [
       { type: "hash", description: "Ethereum commitment is the content hash as bytes32", sharedComponent: "0x{hex}" },
@@ -694,7 +694,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "PQ Bridge signs all on-chain anchors with Dilithium-3", sharedComponent: "ML-DSA-65 target" },
       { type: "protocol", description: "PQ Witness proves algebraic coherence on-chain", sharedComponent: "coherence witness" },
     ],
-    capability: "Complete Ethereum PQ settlement — commitment → calldata → event log → agent identity — all with post-quantum security and coherence proof",
+    capability: "Complete Ethereum PQ settlement. commitment → calldata → event log → agent identity. all with post-quantum security and coherence proof",
   },
 
   // ─── Chain 41: Social Identity Extended ───────────────────────────────
@@ -710,7 +710,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "WebFinger discovers identity across protocols", sharedComponent: "acct: URI" },
       { type: "protocol", description: "OIDC authenticates across enterprise services", sharedComponent: "subject hash" },
     ],
-    capability: "One identity spanning vCard, OpenBadges, DNS-SD, ENS, WebFinger, and OIDC — personal, professional, and decentralized contexts unified",
+    capability: "One identity spanning vCard, OpenBadges, DNS-SD, ENS, WebFinger, and OIDC. personal, professional, and decentralized contexts unified",
   },
 
   // ─── Chain 42: Elixir/Erlang Distributed Systems ──────────────────────
@@ -724,7 +724,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Scheme/Lisp/Racket share the homoiconic code-as-data paradigm", sharedComponent: "S-expression hash" },
       { type: "protocol", description: "All five languages treat code as manipulable data structures", sharedComponent: "homoiconic hash" },
     ],
-    capability: "BEAM VM ecosystem (Elixir/Erlang) + Lisp family (Scheme/CL/Racket) — distributed systems and metaprogramming unified",
+    capability: "BEAM VM ecosystem (Elixir/Erlang) + Lisp family (Scheme/CL/Racket). distributed systems and metaprogramming unified",
   },
 
   // ─── Chain 43: Certificate Automation Pipeline (x509 + ACME) ──────────
@@ -738,7 +738,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "ACME-issued certificates authenticate OIDC token endpoints", sharedComponent: "TLS certificate chain hash" },
       { type: "protocol", description: "WebAuthn attestation certificates chain to the same X.509 root", sharedComponent: "attestation CA hash" },
     ],
-    capability: "Automated PKI: X.509 certificates issued via ACME, binding TLS identity to OIDC authentication and WebAuthn attestation — one hash across the entire certificate lifecycle",
+    capability: "Automated PKI: X.509 certificates issued via ACME, binding TLS identity to OIDC authentication and WebAuthn attestation. one hash across the entire certificate lifecycle",
   },
 
   // ─── Chain 44: RPC Pipeline (gRPC + Protobuf) ─────────────────────────
@@ -752,7 +752,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "gRPC service definitions generate OpenAPI gateway specs", sharedComponent: "service descriptor hash" },
       { type: "protocol", description: "gRPC server-sent events map to CloudEvents envelopes", sharedComponent: "event payload hash" },
     ],
-    capability: "Schema-first microservices: Protobuf IDL → gRPC transport → OpenTelemetry observability → OpenAPI documentation → CloudEvents streaming — all content-addressed",
+    capability: "Schema-first microservices: Protobuf IDL → gRPC transport → OpenTelemetry observability → OpenAPI documentation → CloudEvents streaming. all content-addressed",
   },
 
   // ─── Chain 45: Cloud-Native Stack (k8s + Helm + OCI) ──────────────────
@@ -767,7 +767,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "K8s services communicate via gRPC with content-addressed IDL", sharedComponent: "service mesh hash" },
       { type: "protocol", description: "All deployments emit OpenTelemetry traces for observability", sharedComponent: "trace ID from hash" },
     ],
-    capability: "Complete cloud-native pipeline: OCI image → Helm packaging → K8s deployment → gRPC service mesh → SCITT transparency — every artifact content-addressed",
+    capability: "Complete cloud-native pipeline: OCI image → Helm packaging → K8s deployment → gRPC service mesh → SCITT transparency. every artifact content-addressed",
   },
 
   // ─── Chain 46: Automotive Bus Stack (AUTOSAR + CAN + SOME/IP) ─────────
@@ -781,7 +781,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "SOME/IP service discovery advertises content-addressed ECU services", sharedComponent: "service offering hash" },
       { type: "protocol", description: "SCITT transparency logs audit OTA firmware updates", sharedComponent: "firmware statement hash" },
     ],
-    capability: "Automotive ECU lifecycle: AUTOSAR design → CAN bus communication → SOME/IP service discovery → SCITT-audited OTA updates — vehicle software integrity from design to deployment",
+    capability: "Automotive ECU lifecycle: AUTOSAR design → CAN bus communication → SOME/IP service discovery → SCITT-audited OTA updates. vehicle software integrity from design to deployment",
   },
 
   // ─── Chain 47: BIM-to-City Bridge (IFC + CityGML) ────────────────────
@@ -795,7 +795,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "GeoPackage raster tiles link to GeoTIFF terrain data", sharedComponent: "raster content hash" },
       { type: "protocol", description: "All BIM/GIS objects expressed as JSON-LD for semantic web integration", sharedComponent: "semantic object hash" },
     ],
-    capability: "Built environment digital twin: IFC building design → CityGML urban model → GeoPackage spatial storage → GeoTIFF terrain — all content-addressed for smart city infrastructure",
+    capability: "Built environment digital twin: IFC building design → CityGML urban model → GeoPackage spatial storage → GeoTIFF terrain. all content-addressed for smart city infrastructure",
   },
 
   // ─── Chain 48: Financial Reporting Pipeline (XBRL + ISO 20022) ────────
@@ -809,7 +809,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Both XBRL and ISO 20022 map to JSON-LD for semantic interoperability", sharedComponent: "financial ontology hash" },
       { type: "protocol", description: "SCITT transparency logs provide regulatory audit trails", sharedComponent: "compliance statement hash" },
     ],
-    capability: "End-to-end financial compliance: XBRL reporting → ISO 20022 payments → SCITT audit trail → X.509 signing — tamper-proof regulatory pipeline from filing to settlement",
+    capability: "End-to-end financial compliance: XBRL reporting → ISO 20022 payments → SCITT audit trail → X.509 signing. tamper-proof regulatory pipeline from filing to settlement",
   },
 
   // ─── Chain 49: IoT Device Mesh ────────────────────────────────────────
@@ -953,7 +953,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "encoding", description: "Pickle serializes Python objects", sharedComponent: "pickled object hash" },
       { type: "encoding", description: "Base64 provides text-safe binary encoding", sharedComponent: "base64 payload hash" },
     ],
-    capability: "Every binary encoding — BSON, Ion, Smile, UBJSON, Bencode, Pickle, ASN.1, Base64 — produces content-addressable output",
+    capability: "Every binary encoding. BSON, Ion, Smile, UBJSON, Bencode, Pickle, ASN.1, Base64. produces content-addressable output",
   },
 
   // ─── Chain 58: Document Publishing Pipeline ───────────────────────────
@@ -1008,7 +1008,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   // ─── Chain 61: Media Transcoding Pipeline ─────────────────────────────
   {
     name: "Media Transcoding Pipeline",
-    description: "Image → video → streaming — multimedia production to delivery",
+    description: "Image → video → streaming. multimedia production to delivery",
     projections: ["jpeg", "png", "webp", "avif", "tiff", "heif", "mp4", "webm", "mkv"],
     bridges: [
       { type: "encoding", description: "JPEG/PNG provide universal image interchange", sharedComponent: "image content hash" },
@@ -1020,7 +1020,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "Image formats embed as video key frames", sharedComponent: "frame content hash" },
       { type: "protocol", description: "Container formats reference content-addressed streams", sharedComponent: "stream manifest hash" },
     ],
-    capability: "Media pipeline: capture (JPEG/TIFF) → optimize (WebP/AVIF/HEIF) → video (MP4/WebM/MKV) — content identity preserved across conversions",
+    capability: "Media pipeline: capture (JPEG/TIFF) → optimize (WebP/AVIF/HEIF) → video (MP4/WebM/MKV). content identity preserved across conversions",
   },
 
   // ─── Chain 62: Video Streaming Distribution ───────────────────────────
@@ -1103,7 +1103,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
   // ─── Chain 67: Hardware EDA & Fabrication ─────────────────────────────
   {
     name: "Hardware EDA & Fabrication",
-    description: "Schematic → PCB → fabrication → verification — silicon lifecycle",
+    description: "Schematic → PCB → fabrication → verification. silicon lifecycle",
     projections: ["gerber", "gdsii", "spice", "lefdef", "liberty", "edif", "ipc2581"],
     bridges: [
       { type: "stack", description: "KiCad designs schematics and PCB layouts", sharedComponent: "schematic content hash" },
@@ -1316,7 +1316,7 @@ export const SYNERGY_CHAINS: readonly SynergyChain[] = [
       { type: "protocol", description: "GraphQL queries API type systems", sharedComponent: "operation document hash" },
       { type: "protocol", description: "XQuery queries XML document stores", sharedComponent: "xpath expression hash" },
     ],
-    capability: "Every query paradigm — relational (SQL), distributed (CQL), graph (Cypher), API (GraphQL), semantic (SPARQL), document (XQuery) — content-addressed",
+    capability: "Every query paradigm. relational (SQL), distributed (CQL), graph (Cypher), API (GraphQL), semantic (SPARQL), document (XQuery). content-addressed",
   },
 
   // ─── Chain 81: BIM & Smart City ───────────────────────────────────────

@@ -1,5 +1,5 @@
 /**
- * HarmonicLens — Ring-Native Spectral Analysis with Derivation Chains
+ * HarmonicLens. Ring-Native Spectral Analysis with Derivation Chains
  * ═══════════════════════════════════════════════════════════════════
  *
  * Projects audio through the stratum observable to reveal
@@ -209,7 +209,7 @@ export class HarmonicLens {
    * Called internally after every frame analysis.
    */
   private emitFeature(frame: HarmonicLensFrame): void {
-    // Emit 5 features per frame (throttled — only every 30th frame ≈ 1/sec)
+    // Emit 5 features per frame (throttled. only every 30th frame ≈ 1/sec)
     if (frame.frameIndex % 30 !== 0) return;
 
     const baseDerivation = frame.derivationId;
@@ -424,7 +424,7 @@ export class HarmonicLens {
 
   /**
    * Compute curvature between current and previous histogram.
-   * Maps to UOR CurvatureObservable — L2 norm of histogram delta.
+   * Maps to UOR CurvatureObservable. L2 norm of histogram delta.
    */
   private computeCurvature(histogram: number[]): number {
     if (!this.prevHistogram) return 0;
@@ -449,7 +449,7 @@ export class HarmonicLens {
 
   /**
    * Compute the SHA-256 of a frame's canonical representation.
-   * Async — use for persistence verification, not real-time rendering.
+   * Async. use for persistence verification, not real-time rendering.
    */
   async computeFrameSha256(frame: HarmonicLensFrame): Promise<string> {
     const canonical = JSON.stringify({

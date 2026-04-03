@@ -1,5 +1,5 @@
 /**
- * InfoCard — Expandable card for structured information display.
+ * InfoCard. Expandable card for structured information display.
  */
 
 import { useState, type ReactNode } from "react";

@@ -1,5 +1,5 @@
 /**
- * UNS CLI — Test Suite (Phase 5-C)
+ * UNS CLI. Test Suite (Phase 5-C)
  *
  * Validates all CLI command handlers against the UOR Framework
  * requirements: canonical ID format, Dilithium-3 signing, content
@@ -39,7 +39,7 @@ const CANONICAL_ID_RE = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
 /** IPv6 UOR pattern: fd00:0075:6f72:xxxx:xxxx:xxxx:xxxx:xxxx */
 const IPV6_RE = /^fd00:0075:6f72:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}$/;
 
-describe("UNS CLI — Phase 5-C", () => {
+describe("UNS CLI. Phase 5-C", () => {
   beforeEach(() => {
     clearCliState();
   });

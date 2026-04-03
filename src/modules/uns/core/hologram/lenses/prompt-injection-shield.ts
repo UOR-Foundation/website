@@ -1,24 +1,24 @@
 /**
- * Prompt Injection Shield — Content-Addressed Context Security
+ * Prompt Injection Shield. Content-Addressed Context Security
  * ═════════════════════════════════════════════════════════════
  *
  * Problem: Agents browsing shared platforms ingest posts into their live
- * context windows indiscriminately. Malicious payloads — including the novel
+ * context windows indiscriminately. Malicious payloads. including the novel
  * "time-shifted prompt injection" where fragments spread across multiple posts
- * activate only when combined in persistent memory — exploit this trust.
+ * activate only when combined in persistent memory. exploit this trust.
  * skill.md supply-chain attacks compound the risk: agents install capabilities
  * without source verification, mirroring npm's decade-long security struggle.
  *
  * Solution: A 7-stage lens circuit that processes every incoming content
  * fragment through a deterministic security pipeline:
  *
- *   1. INGEST    — Parse raw content into atomic fragments
- *   2. SCAN      — Pattern-match each fragment against injection signatures
- *   3. ANCHOR    — Content-address every fragment (CID = immutable evidence)
- *   4. CORRELATE — Cross-reference fragment CIDs against known-threat chain
- *   5. SCORE     — Compute composite trust score per fragment
- *   6. QUARANTINE — Isolate fragments below trust threshold
- *   7. SEAL      — Produce a signed SecurityVerdict envelope with full provenance
+ *   1. INGEST   . Parse raw content into atomic fragments
+ *   2. SCAN     . Pattern-match each fragment against injection signatures
+ *   3. ANCHOR   . Content-address every fragment (CID = immutable evidence)
+ *   4. CORRELATE. Cross-reference fragment CIDs against known-threat chain
+ *   5. SCORE    . Compute composite trust score per fragment
+ *   6. QUARANTINE. Isolate fragments below trust threshold
+ *   7. SEAL     . Produce a signed SecurityVerdict envelope with full provenance
  *
  * Key insight: content-addressing turns security into a graph problem.
  * A time-shifted injection is just a set of CIDs whose union matches a
@@ -431,7 +431,7 @@ function registerSecurityFactories(): void {
         })),
       };
 
-      // Content-address the verdict itself — the verdict is a UOR object
+      // Content-address the verdict itself. the verdict is a UOR object
       const proof = await singleProofHash(envelope);
       return {
         ...envelope,
@@ -449,7 +449,7 @@ registerSecurityFactories();
 // ── The Prompt Injection Shield Blueprint ──────────────────────────────────
 
 /**
- * Prompt Injection Shield — a 7-stage security pipeline.
+ * Prompt Injection Shield. a 7-stage security pipeline.
  *
  * Every piece of content an agent encounters is processed through this
  * circuit before entering the agent's context. The output is a
@@ -465,15 +465,15 @@ export const PROMPT_INJECTION_SHIELD_BLUEPRINT: LensBlueprint = createBlueprint(
   morphism: "transform",
   problem:
     "Agents ingest shared-platform content into live context windows indiscriminately. " +
-    "Malicious payloads — including time-shifted prompt injection where fragments spread " +
-    "across posts activate only when combined in persistent memory — exploit the trust-by-default " +
+    "Malicious payloads. including time-shifted prompt injection where fragments spread " +
+    "across posts activate only when combined in persistent memory. exploit the trust-by-default " +
     "design of LLM agents. skill.md supply-chain attacks compound the risk, mirroring npm's " +
     "decade-long security struggle but with the added danger of arbitrary instruction execution.",
   description:
     "A 7-stage pipeline that processes incoming content through pattern scanning, " +
     "content-addressing, cross-session fragment correlation, trust scoring, and quarantine. " +
     "Every fragment gets its own CID for evidence. The final SecurityVerdict is itself a " +
-    "content-addressed UOR object — an immutable, auditable record of the security analysis. " +
+    "content-addressed UOR object. an immutable, auditable record of the security analysis. " +
     "Time-shifted injections are detected by correlating fragment CIDs across a sliding window.",
   tags: [
     "security", "prompt-injection", "time-shifted-injection", "supply-chain",
@@ -505,7 +505,7 @@ export const PROMPT_INJECTION_SHIELD_BLUEPRINT: LensBlueprint = createBlueprint(
       id: "anchor",
       kind: "content-hash",
       description:
-        "Assign each fragment its own permanent CID. This is the evidence chain — " +
+        "Assign each fragment its own permanent CID. This is the evidence chain. " +
         "every fragment that ever entered the agent's context is content-addressed, " +
         "making time-shifted injection detection an O(1) CID lookup.",
     },
@@ -544,8 +544,8 @@ export const PROMPT_INJECTION_SHIELD_BLUEPRINT: LensBlueprint = createBlueprint(
       id: "project",
       kind: "hologram",
       description:
-        "Project the sealed verdict through the full hologram — every standard " +
-        "gets a view of the security analysis. DID, CID, WebFinger, VC — the verdict " +
+        "Project the sealed verdict through the full hologram. every standard " +
+        "gets a view of the security analysis. DID, CID, WebFinger, VC. the verdict " +
         "is universally addressable.",
     },
   ] satisfies ElementSpec[],

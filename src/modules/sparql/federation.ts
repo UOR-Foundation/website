@@ -1,5 +1,5 @@
 /**
- * SPARQL Federation — multi-endpoint query dispatcher.
+ * SPARQL Federation. multi-endpoint query dispatcher.
  *
  * Currently supports:
  *   1. Local Supabase store (default)
@@ -118,7 +118,7 @@ export async function federatedQuery(
             },
           });
         } else {
-          // API returned error — return empty result
+          // API returned error. return empty result
           results.push({
             endpoint,
             result: {
@@ -131,7 +131,7 @@ export async function federatedQuery(
           });
         }
       } catch {
-        // Network error — return empty result gracefully
+        // Network error. return empty result gracefully
         results.push({
           endpoint,
           result: {

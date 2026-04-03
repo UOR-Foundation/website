@@ -1,5 +1,5 @@
 /**
- * UOR Observer Theory — H-Score (Hamming Distance to Grade-A Graph).
+ * UOR Observer Theory. H-Score (Hamming Distance to Grade-A Graph).
  *
  * H(O) = min over all d ∈ Grade_A_Graph of: popcount(O XOR d)
  *
@@ -9,8 +9,8 @@
  * algebraically verified; higher values indicate increasing
  * epistemic debt.
  *
- * @see .well-known/uor.json observer_theory — H-score definition
- * @see spec/src/namespaces/state.rs — observer state model
+ * @see .well-known/uor.json observer_theory. H-score definition
+ * @see spec/src/namespaces/state.rs. observer state model
  */
 
 // ── popcount ────────────────────────────────────────────────────────────────

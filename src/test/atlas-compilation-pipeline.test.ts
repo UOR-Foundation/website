@@ -1,5 +1,5 @@
 /**
- * Atlas Compilation Pipeline — End-to-End Verification
+ * Atlas Compilation Pipeline. End-to-End Verification
  * ═════════════════════════════════════════════════════
  *
  * Proves that any AI model from the catalog decomposes into Atlas coordinates
@@ -18,7 +18,7 @@ import {
 // Part I: Single Model End-to-End
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("Single Model Pipeline — LLaMA-7B", () => {
+describe("Single Model Pipeline. LLaMA-7B", () => {
   let result: PipelineResult;
 
   it("runs the full pipeline without error", () => {
@@ -63,7 +63,7 @@ describe("Single Model Pipeline — LLaMA-7B", () => {
 
   it("all verification tests pass", () => {
     for (const t of result.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(result.allPassed).toBe(true);
   });
@@ -85,7 +85,7 @@ describe("Pipeline with ECC [[96,48,2]]", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Part III: Universal Invariant — d_k determines topology
+// Part III: Universal Invariant. d_k determines topology
 // ══════════════════════════════════════════════════════════════════════════════
 
 describe("Universal Invariant: d_k → qubit topology", () => {
@@ -199,7 +199,7 @@ describe("Qiskit Python Output", () => {
     const r = runPipeline({ modelName: "LLaMA-7B", maxHeads: 2, maxLayers: 2 });
     expect(r.tests.length).toBe(14);
     for (const t of r.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
   });
 });

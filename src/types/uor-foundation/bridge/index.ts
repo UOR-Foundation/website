@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — Bridge Space
+ * UOR Foundation v2.0.0. Bridge Space
  *
  * Kernel-computed verification, resolution, and observation.
  * @space Bridge

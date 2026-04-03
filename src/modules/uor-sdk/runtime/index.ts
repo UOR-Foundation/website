@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Runtime Module Barrel
+ * UOR SDK. Runtime Module Barrel
  *
  * Complete Build→Ship→Run pipeline for vibe-coded applications.
  *

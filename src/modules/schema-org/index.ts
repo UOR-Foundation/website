@@ -1,11 +1,11 @@
 /**
- * Schema.org × UOR Functor — Module Barrel Export
+ * Schema.org × UOR Functor. Module Barrel Export
  * ═══════════════════════════════════════════════
  *
  * F : SchemaOrg → UOR
  *
  * One functor. 806 types. Zero per-type code.
- * Every Schema.org object is already UOR-native — this module
+ * Every Schema.org object is already UOR-native. this module
  * makes that relationship explicit and computable.
  *
  * @module schema-org

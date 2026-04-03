@@ -240,7 +240,7 @@ export default function FoliationPanel() {
           {/* Leaf map visualization */}
           <div className="bg-[hsla(210,10%,8%,0.5)] border border-[hsla(210,15%,20%,0.3)] rounded-lg p-3">
             <div className="text-[8px] font-mono text-muted-foreground uppercase mb-2">
-              Symplectic Leaf Map — 12 domains × 5 operations (dashed = transverse dissipative flows)
+              Symplectic Leaf Map. 12 domains × 5 operations (dashed = transverse dissipative flows)
             </div>
             <LeafMap leaves={report.leaves} flows={report.flows} selected={selectedLeaf} onSelect={setSelectedLeaf} />
           </div>
@@ -364,7 +364,7 @@ export default function FoliationPanel() {
                   <span style={{ color: ok(inv.holds) }}>{inv.holds ? "✓" : "✗"}</span>
                   <div className="flex-1">
                     <span className="text-foreground">{inv.name}</span>
-                    <span className="text-muted-foreground ml-2">— {inv.evidence}</span>
+                    <span className="text-muted-foreground ml-2">. {inv.evidence}</span>
                   </div>
                 </div>
               ))}
@@ -375,8 +375,8 @@ export default function FoliationPanel() {
           <div className="bg-[hsla(210,10%,6%,0.4)] border border-[hsla(210,10%,15%,0.3)] rounded-lg p-3 text-[8px] font-mono text-muted-foreground leading-relaxed space-y-0.5">
             <div><span className="text-[hsl(38,70%,55%)]">GENERIC:</span> dF/dt = &#123;F, H&#125;<sub>Poisson</sub> + (F, S)<sub>metric</sub></div>
             <div><span className="text-[hsl(140,60%,55%)]">Degeneracy:</span> &#123;S, H&#125; = 0 (S is Casimir of Poisson) · (E, S) = 0 (E is null of metric)</div>
-            <div><span className="text-[hsl(180,60%,55%)]">Symplectic leaf:</span> Σ_C = &#123;x : C(x) = const&#125; — constant Casimir surfaces</div>
-            <div><span className="text-[hsl(280,50%,60%)]">Transverse flow:</span> dissipative metric flow ⊥ to leaves — Onsager reciprocal relations</div>
+            <div><span className="text-[hsl(180,60%,55%)]">Symplectic leaf:</span> Σ_C = &#123;x : C(x) = const&#125;. constant Casimir surfaces</div>
+            <div><span className="text-[hsl(280,50%,60%)]">Transverse flow:</span> dissipative metric flow ⊥ to leaves. Onsager reciprocal relations</div>
             <div><span className="text-muted-foreground">Öttinger & Grmela (1997), Barbaresco (2025), Morrison (1986)</span></div>
           </div>
         </>

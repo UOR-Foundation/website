@@ -2,11 +2,11 @@
  * Certificate Verification
  * ════════════════════════
  *
- * Three verification layers — all must pass:
+ * Three verification layers. all must pass:
  *
- *   1. CONTENT   — Re-hash canonical payload → compare CID
- *   2. BOUNDARY  — Re-enforce boundaries → compare boundary hash
- *   3. COHERENCE — Re-verify neg(bnot(x)) ≡ succ(x) on witness
+ *   1. CONTENT  . Re-hash canonical payload → compare CID
+ *   2. BOUNDARY . Re-enforce boundaries → compare boundary hash
+ *   3. COHERENCE. Re-verify neg(bnot(x)) ≡ succ(x) on witness
  *
  * Even a single bit difference will produce a different result.
  */

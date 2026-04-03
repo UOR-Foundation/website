@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Proof Persistence
+ * UOR v2.0.0. Proof Persistence
  *
  * Phase 7: Save and load reasoning proofs to the database
  * so they survive across sessions. Every neuro-symbolic
@@ -41,7 +41,7 @@ export interface PersistedProof {
 
 /**
  * Persist a neuro-symbolic reasoning result to the database.
- * Fire-and-forget safe — errors are logged, not thrown.
+ * Fire-and-forget safe. errors are logged, not thrown.
  */
 export async function saveReasoningProof(
   nsResult: NeuroSymbolicResult,

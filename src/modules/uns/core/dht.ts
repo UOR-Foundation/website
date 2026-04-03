@@ -1,8 +1,8 @@
 /**
- * UNS Core — Distributed Hash Table (Kademlia)
+ * UNS Core. Distributed Hash Table (Kademlia)
  *
  * The UNS DHT replaces traditional authoritative DNS nameservers.
- * Any node can store and serve records — authority is mathematical,
+ * Any node can store and serve records. authority is mathematical,
  * not institutional. Records are keyed by their canonical SHA-256 ID
  * and always Dilithium-3 verified before being returned.
  *
@@ -36,7 +36,7 @@ import type { SignedUnsRecord } from "./record";
 export interface DhtNodeConfig {
   /** Unique node identifier (used for multiaddr generation). */
   nodeId: string;
-  /** Port number (used for multiaddr display — no actual binding in-process). */
+  /** Port number (used for multiaddr display. no actual binding in-process). */
   port: number;
   /** Kademlia replication factor. Default: 20. */
   k?: number;
@@ -52,7 +52,7 @@ interface PeerRef {
 // ── Global Peer Registry (in-process transport) ─────────────────────────────
 
 /**
- * In-process peer registry — replaces libp2p's network transport.
+ * In-process peer registry. replaces libp2p's network transport.
  *
  * In production this would be replaced by libp2p TCP/QUIC connections.
  * Here, nodes register themselves and communicate via direct method calls.
@@ -115,7 +115,7 @@ function nodeIdToKey(nodeId: string): Uint8Array {
 /**
  * A Kademlia DHT node for UNS record storage.
  *
- * Equivalent to a Cloudflare authoritative DNS server — but authority
+ * Equivalent to a Cloudflare authoritative DNS server. but authority
  * is mathematical (content-addressed, signature-verified), not institutional.
  */
 export class UnsDht {
@@ -208,7 +208,7 @@ export class UnsDht {
    * Value = JSON-serialized signed record.
    *
    * The record is signature-verified BEFORE storage. Invalid signatures
-   * are rejected at the DHT layer — they never enter the store.
+   * are rejected at the DHT layer. they never enter the store.
    *
    * Replication: the record is forwarded to the k nearest peers
    * by XOR distance to the record's key.
@@ -221,7 +221,7 @@ export class UnsDht {
     canonicalId: string,
     record: SignedUnsRecord
   ): Promise<void> {
-    // Verify signature before storage — no unverified data enters the DHT
+    // Verify signature before storage. no unverified data enters the DHT
     const valid = await verifyRecord(record);
     if (!valid) {
       throw new Error(
@@ -269,7 +269,7 @@ export class UnsDht {
     try {
       const record = JSON.parse(json) as SignedUnsRecord;
       const valid = await verifyRecord(record);
-      if (!valid) return null; // Tampered record — reject
+      if (!valid) return null; // Tampered record. reject
       return record;
     } catch {
       return null;
@@ -338,7 +338,7 @@ export class UnsDht {
   }
 
   /**
-   * Accept a replica from a peer (no re-verification — already verified on put).
+   * Accept a replica from a peer (no re-verification. already verified on put).
    * Updates local store and name index.
    */
   private storeReplica(
@@ -396,7 +396,7 @@ export class UnsDht {
    * Query all record IDs for a name, INCLUDING revoked records.
    *
    * Unlike queryByName() which filters revoked records, this method
-   * returns all canonical IDs — used by the resolver to distinguish
+   * returns all canonical IDs. used by the resolver to distinguish
    * 404 (never existed) from 410 (all revoked).
    */
   async queryAllByName(name: string): Promise<string[]> {

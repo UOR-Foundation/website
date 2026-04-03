@@ -1,10 +1,10 @@
 /**
- * Pruning Gate — System Hygiene Analyzer
+ * Pruning Gate. System Hygiene Analyzer
  * ═══════════════════════════════════════
  *
  * The dual of the Coherence Gate. Where the Coherence Gate verifies that
  * everything that exists is correct, the Pruning Gate identifies what
- * should NOT exist — redundancy, bloat, unused paths, and complexity
+ * should NOT exist. redundancy, bloat, unused paths, and complexity
  * that has exceeded its informational value.
  *
  * Principle: Intelligence seeks simplicity. A system's quality is measured
@@ -23,8 +23,8 @@
  *
  * Design constraints:
  *   - Zero dependencies beyond the project's own module structure
- *   - Pure function — no side effects, no file I/O, no network
- *   - Runs in <50ms — no excuse not to run it on every commit
+ *   - Pure function. no side effects, no file I/O, no network
+ *   - Runs in <50ms. no excuse not to run it on every commit
  *   - This file itself must stay under 200 lines (eat your own cooking)
  *
  * @module uns/core/pruning-gate

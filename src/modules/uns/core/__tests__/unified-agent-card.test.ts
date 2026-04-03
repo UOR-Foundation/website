@@ -17,7 +17,7 @@ describe("Unified Agent Card", () => {
     expect(card.cid).toMatch(/^ba/); // CIDv1 (various codecs)
   });
 
-  it("is deterministic — same agent always produces same card", async () => {
+  it("is deterministic. same agent always produces same card", async () => {
     const a = await createUnifiedCard(AGENT);
     const b = await createUnifiedCard(AGENT);
     expect(a.hex).toBe(b.hex);

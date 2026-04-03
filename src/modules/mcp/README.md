@@ -6,9 +6,9 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that gives a
 
 When an LLM connects to this MCP server and uses its tools, every computation is:
 
-- **Content-addressed** — results have deterministic IRIs derived from their content
-- **Algebraically verified** — ring coherence is checked before any value is emitted
-- **Auditable** — every derivation produces a canonical receipt with SHA-256 derivation ID
+- **Content-addressed**. results have deterministic IRIs derived from their content
+- **Algebraically verified**. ring coherence is checked before any value is emitted
+- **Auditable**. every derivation produces a canonical receipt with SHA-256 derivation ID
 
 ## Connection URL
 
@@ -30,7 +30,7 @@ https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-mcp/mcp
 
 | URI | Description |
 |---|---|
-| `uor://llms.md` | Agent quick card — what UOR is and how to use it |
+| `uor://llms.md` | Agent quick card. what UOR is and how to use it |
 | `uor://openapi.json` | Full OpenAPI 3.1.0 specification |
 
 ## Connect from Claude Desktop

@@ -3,11 +3,11 @@
  * ══════════════════════
  *
  * Pipeline:
- *   1. SOURCE HASH    — SHA-256 of raw source (pre-boundary)
- *   2. BOUNDARY GATE  — Define exact object scope
- *   3. SINGLE PROOF   — URDNA2015 → SHA-256 → four identity forms
- *   4. COHERENCE GATE — Verify neg(bnot(x)) ≡ succ(x) on witness
- *   5. PACKAGE        — Self-verifying certificate
+ *   1. SOURCE HASH   . SHA-256 of raw source (pre-boundary)
+ *   2. BOUNDARY GATE . Define exact object scope
+ *   3. SINGLE PROOF  . URDNA2015 → SHA-256 → four identity forms
+ *   4. COHERENCE GATE. Verify neg(bnot(x)) ≡ succ(x) on witness
+ *   5. PACKAGE       . Self-verifying certificate
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -31,7 +31,7 @@ export async function generateCertificate(
 
   const coherence = deriveCoherenceWitness(proof.hashBytes);
   if (!coherence.holds) {
-    throw new Error("Algebraic coherence gate failed — system integrity error");
+    throw new Error("Algebraic coherence gate failed. system integrity error");
   }
 
   const now = new Date().toISOString();

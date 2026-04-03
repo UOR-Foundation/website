@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Full Test Suite (no skips)
+ * UOR SDK. Full Test Suite (no skips)
  *
  * All 13 tests run offline by mocking fetch for API-dependent tests.
  */
@@ -17,7 +17,7 @@ import { createUorClient } from "@/modules/uor-sdk/client";
 
 // ── Test 1: Local critical identity ─────────────────────────────────────────
 
-describe("UOR SDK — Local Ring Arithmetic", () => {
+describe("UOR SDK. Local Ring Arithmetic", () => {
   it("neg(bnot(x)) === succ(x) for all 256 elements of R_8", () => {
     for (let x = 0; x < 256; x++) {
       expect(neg(bnot(x))).toBe(succ(x));
@@ -39,9 +39,9 @@ describe("UOR SDK — Local Ring Arithmetic", () => {
   });
 });
 
-// ── Tests 2–9: API Client (mocked fetch — always runs) ─────────────────────
+// ── Tests 2–9: API Client (mocked fetch. always runs) ─────────────────────
 
-describe("UOR SDK — API Client (mocked)", () => {
+describe("UOR SDK. API Client (mocked)", () => {
   const client = createUorClient();
   let fetchSpy: ReturnType<typeof vi.spyOn>;
 
@@ -135,7 +135,7 @@ describe("UOR SDK — API Client (mocked)", () => {
 
 // ── Type system tests ───────────────────────────────────────────────────────
 
-describe("UOR SDK — Type System", () => {
+describe("UOR SDK. Type System", () => {
   it("UorApiError has correct shape", () => {
     const err = new UorApiError(404, "/test", "Not found");
     expect(err.status).toBe(404);

@@ -1,5 +1,5 @@
 /**
- * UNS CLI — Module Barrel Export (Phase 5-C)
+ * UNS CLI. Module Barrel Export (Phase 5-C)
  *
  * Re-exports all CLI command handlers for the `uns` command-line tool.
  * Each command follows the UOR Framework's canonical identity pipeline

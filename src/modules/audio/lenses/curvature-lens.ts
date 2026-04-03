@@ -1,5 +1,5 @@
 /**
- * CurvatureLens — Harmonic Tension Time-Series with Derivation Chains
+ * CurvatureLens. Harmonic Tension Time-Series with Derivation Chains
  * ═══════════════════════════════════════════════════════════════════
  *
  * Maps UOR CurvatureObservable to musical harmonic tension.
@@ -109,7 +109,7 @@ function deriveCatastropheId(
 }
 
 /**
- * The threshold proof ID is deterministic — it's derived from the
+ * The threshold proof ID is deterministic. it's derived from the
  * ring arithmetic constants, not from runtime data.
  */
 const THRESHOLD_PROOF_ID =

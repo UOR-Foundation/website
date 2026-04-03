@@ -1,13 +1,13 @@
 /// <reference types="@webgpu/types" />
 /**
- * HologramGpu — WebGPU Device Manager for the Hologram OS
+ * HologramGpu. WebGPU Device Manager for the Hologram OS
  * ═══════════════════════════════════════════════════════════
  *
  * The GPU is a virtual device (`/dev/gpu`) in the Hologram OS.
  * It provides two fundamental capabilities:
  *
- *   1. Compute — Run WGSL shaders as content-addressed Lens operations
- *   2. Render  — Project holographic identities as visual GPU output
+ *   1. Compute. Run WGSL shaders as content-addressed Lens operations
+ *   2. Render . Project holographic identities as visual GPU output
  *
  * Holographic Properties:
  *   - Every shader is content-addressed (WGSL source → SHA-256 → CID)
@@ -37,7 +37,7 @@ import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
 /** GPU device status. */
 export type GpuStatus = "uninitialized" | "initializing" | "ready" | "unavailable" | "lost";
 
-/** GPU device capabilities — content-addressable. */
+/** GPU device capabilities. content-addressable. */
 export interface GpuDeviceInfo {
   readonly "@type": "uor:GpuDevice";
   readonly status: GpuStatus;
@@ -85,7 +85,7 @@ export interface GpuBenchmarkResult {
   readonly device: GpuDeviceInfo;
 }
 
-/** A compiled compute pipeline — reusable across dispatches. */
+/** A compiled compute pipeline. reusable across dispatches. */
 interface CompiledPipeline {
   pipeline: GPUComputePipeline;
   bindGroupLayout: GPUBindGroupLayout;
@@ -94,9 +94,9 @@ interface CompiledPipeline {
 
 // ── WGSL Shader Library ─────────────────────────────────────────────────────
 
-/** Built-in WGSL shaders — each is a content-addressed compute kernel. */
+/** Built-in WGSL shaders. each is a content-addressed compute kernel. */
 export const WGSL_SHADERS = {
-  /** Matrix multiplication — the fundamental ML building block. */
+  /** Matrix multiplication. the fundamental ML building block. */
   matmul: /* wgsl */ `
     struct Dimensions {
       M: u32, N: u32, K: u32, _pad: u32,
@@ -120,7 +120,7 @@ export const WGSL_SHADERS = {
     }
   `,
 
-  /** Element-wise ReLU activation — neural network nonlinearity. */
+  /** Element-wise ReLU activation. neural network nonlinearity. */
   relu: /* wgsl */ `
     @group(0) @binding(0) var<storage, read> input: array<f32>;
     @group(0) @binding(1) var<storage, read_write> output: array<f32>;
@@ -133,7 +133,7 @@ export const WGSL_SHADERS = {
     }
   `,
 
-  /** Softmax (numerically stable) — for probability distributions. */
+  /** Softmax (numerically stable). for probability distributions. */
   softmax_exp: /* wgsl */ `
     @group(0) @binding(0) var<storage, read> input: array<f32>;
     @group(0) @binding(1) var<storage, read_write> output: array<f32>;
@@ -149,7 +149,7 @@ export const WGSL_SHADERS = {
     }
   `,
 
-  /** Vector addition — basic sanity check / bandwidth test. */
+  /** Vector addition. basic sanity check / bandwidth test. */
   vec_add: /* wgsl */ `
     @group(0) @binding(0) var<storage, read> a: array<f32>;
     @group(0) @binding(1) var<storage, read> b: array<f32>;
@@ -163,7 +163,7 @@ export const WGSL_SHADERS = {
     }
   `,
 
-  /** Hash-based identity visualization — maps 32 bytes to RGBA pixels. */
+  /** Hash-based identity visualization. maps 32 bytes to RGBA pixels. */
   identity_viz: /* wgsl */ `
     @group(0) @binding(0) var<storage, read> hash: array<u32>;
     @group(0) @binding(1) var<storage, read_write> pixels: array<u32>;
@@ -212,7 +212,7 @@ export class HologramGpu {
 
   /**
    * Initialize the GPU device.
-   * Safe to call multiple times — returns cached result.
+   * Safe to call multiple times. returns cached result.
    */
   async init(): Promise<GpuDeviceInfo> {
     if (this.deviceInfo && this.status === "ready") return this.deviceInfo;
@@ -321,7 +321,7 @@ export class HologramGpu {
   /**
    * Execute a WGSL compute shader.
    *
-   * The shader source is content-addressed — same source always
+   * The shader source is content-addressed. same source always
    * produces the same pipeline. Pipelines are cached by CID.
    *
    * @param shader     WGSL source code or built-in shader name
@@ -350,7 +350,7 @@ export class HologramGpu {
     });
 
     if (!this.isReady || !this.device) {
-      // CPU fallback — return zeros
+      // CPU fallback. return zeros
       return {
         shaderCid: shaderProof.cid,
         inputCid: inputProof.cid,
@@ -459,7 +459,7 @@ export class HologramGpu {
   // ── High-Level Operations ─────────────────────────────────────────────
 
   /**
-   * GPU matrix multiplication — the fundamental ML building block.
+   * GPU matrix multiplication. the fundamental ML building block.
    *
    * C = A × B where A is [M×K] and B is [K×N].
    * This is what makes in-browser LLM inference possible.
@@ -488,7 +488,7 @@ export class HologramGpu {
   }
 
   /**
-   * GPU ReLU activation — applies max(0, x) element-wise.
+   * GPU ReLU activation. applies max(0, x) element-wise.
    */
   async relu(input: Float32Array): Promise<Float32Array> {
     const r = await this.compute("relu", [input], input.byteLength, [Math.ceil(input.length / 256), 1, 1]);
@@ -496,7 +496,7 @@ export class HologramGpu {
   }
 
   /**
-   * GPU vector addition — basic bandwidth test.
+   * GPU vector addition. basic bandwidth test.
    */
   async vecAdd(a: Float32Array, b: Float32Array): Promise<GpuComputeResult> {
     return this.compute("vec_add", [a, b], a.byteLength, [Math.ceil(a.length / 256), 1, 1]);
@@ -648,7 +648,7 @@ export class HologramGpu {
 
 // ── Singleton ───────────────────────────────────────────────────────────────
 
-/** Global HologramGpu instance — one device per browser tab. */
+/** Global HologramGpu instance. one device per browser tab. */
 let _instance: HologramGpu | null = null;
 
 export function getHologramGpu(): HologramGpu {

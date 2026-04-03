@@ -17,8 +17,8 @@
  *   ReducibleSet:   126 (even, ∉ {0, 128})
  *   Total:          256 ✓
  *
- * @see spec/src/namespaces/partition.rs — ExteriorSet definition
- * @see src/lib/uor-ring.ts line 219-227 — classifyByte implementation
+ * @see spec/src/namespaces/partition.rs. ExteriorSet definition
+ * @see src/lib/uor-ring.ts line 219-227. classifyByte implementation
  */
 
 import { classifyByte } from "@/lib/uor-ring";
@@ -26,7 +26,7 @@ import type { ConformanceGroup } from "./conformance-types";
 import { result } from "./conformance-types";
 
 const FIX = "test2_partition.rs";
-const CIT = "spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2}";
+const CIT = "spec/src/namespaces/partition.rs. ExteriorSet = {0, m/2}";
 
 /** Canonical partition cardinalities for R_8 = Z/256Z. */
 export const CANONICAL_PARTITION = {

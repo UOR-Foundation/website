@@ -10,7 +10,7 @@ import {
   UnsNode,
 } from "@/modules/uns/mesh";
 
-describe("UNS Mesh — BGP Orbit Routing & Node Orchestrator", () => {
+describe("UNS Mesh. BGP Orbit Routing & Node Orchestrator", () => {
   let kp: UnsKeypair;
   let canonicalId: string;
   let canonicalId2: string;

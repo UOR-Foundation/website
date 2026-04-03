@@ -1,5 +1,5 @@
 /**
- * UNS Compute — Sandboxed Function Executor with Computation Traces
+ * UNS Compute. Sandboxed Function Executor with Computation Traces
  *
  * Executes content-addressed functions in an isolated sandbox.
  * Every invocation produces a trace:ComputationTrace signed with
@@ -10,8 +10,8 @@
  * No access to: globalThis, fetch, XMLHttpRequest, process, require,
  *               import, eval, setTimeout, setInterval.
  *
- * @see trace: namespace — UOR computation tracing
- * @see derivation: namespace — canonical identity
+ * @see trace: namespace. UOR computation tracing
+ * @see derivation: namespace. canonical identity
  */
 
 import { singleProofHash } from "../core/identity";
@@ -23,7 +23,7 @@ import { analyzePayloadFast } from "../shield/partition";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** Executor-specific trace — the audit record of a sandboxed invocation. */
+/** Executor-specific trace. the audit record of a sandboxed invocation. */
 export interface ExecutorTrace {
   "@type": "trace:ComputationTrace";
   "trace:functionCanonicalId": string;
@@ -47,7 +47,7 @@ export interface ExecutionResult {
   trace: ExecutorTrace & { "cert:signature": SignatureBlock };
   /** Error message if execution failed. */
   error?: string;
-  /** P22: Epistemic grade — 'A' for signed traced computations. */
+  /** P22: Epistemic grade. 'A' for signed traced computations. */
   epistemic_grade: "A";
   epistemic_grade_label: string;
   "derivation:derivationId": string;
@@ -55,7 +55,7 @@ export interface ExecutionResult {
 
 // ── Sandbox Execution ───────────────────────────────────────────────────────
 
-/** Allowed sandbox globals — pure ring arithmetic only. */
+/** Allowed sandbox globals. pure ring arithmetic only. */
 const SANDBOX_GLOBALS = { neg, bnot, succ };
 
 /**
@@ -76,7 +76,7 @@ function executeSandboxed(
   timeoutMs = 5000
 ): unknown {
   // Build a restricted function with explicit parameters only.
-  // The function body is the deployed source — it should use `input`, `neg`, `bnot`, `succ`.
+  // The function body is the deployed source. it should use `input`, `neg`, `bnot`, `succ`.
   //
   // Security hardening (2026-02-23):
   //   1. Shadow all dangerous globals including constructor chains
@@ -211,7 +211,7 @@ export async function invokeFunction(
     outputCanonicalId,
     trace: signedTrace,
     epistemic_grade: "A",
-    epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+    epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
     "derivation:derivationId": traceIdentity["u:canonicalId"],
   };
 
@@ -224,8 +224,8 @@ export async function invokeFunction(
  * Verify an execution result independently.
  *
  * Checks:
- *   1. Recompute inputCanonicalId from original input — must match trace
- *   2. Recompute outputCanonicalId from result.output — must match trace
+ *   1. Recompute inputCanonicalId from original input. must match trace
+ *   2. Recompute outputCanonicalId from result.output. must match trace
  *   3. Verify Dilithium-3 signature on trace
  *
  * All three must pass for the result to be considered valid.

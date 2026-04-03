@@ -1,5 +1,5 @@
 /**
- * QED Loop Corrections from Atlas Graph Invariants — Phase 12 (Lanczos Upgrade)
+ * QED Loop Corrections from Atlas Graph Invariants. Phase 12 (Lanczos Upgrade)
  * ═══════════════════════════════════════════════════════════════════════════════
  *
  * PROBLEM:
@@ -126,7 +126,7 @@ function projectOutConstant(v: Float64Array): void {
  * @param N - Matrix dimension
  * @param k - Number of Lanczos iterations (≤ N)
  * @param projectNull - If true, project out constant vector at each step
- * @returns { alpha, beta, Q } — tridiagonal coefficients and Lanczos vectors
+ * @returns { alpha, beta, Q }. tridiagonal coefficients and Lanczos vectors
  */
 function lanczosTridiag(
   M: Float64Array,
@@ -343,7 +343,7 @@ export interface LanczosSpectrum {
   spectralRatio: number;
   /** Number of Lanczos iterations used */
   iterations: number;
-  /** Fiedler vector (eigenvector of λ₁) — used for Cheeger */
+  /** Fiedler vector (eigenvector of λ₁). used for Cheeger */
   fiedlerVector: Float64Array;
 }
 
@@ -547,7 +547,7 @@ export function chromaticAnalysis(): {
   }
   const chromaticNumber = maxColor + 1;
 
-  // Independence number — greedy on sorted-by-degree
+  // Independence number. greedy on sorted-by-degree
   const independent = new Set<number>();
   const sortedByDeg = [...atlas.vertices].sort((a, b) => a.degree - b.degree);
   for (const v of sortedByDeg) {
@@ -833,7 +833,7 @@ export function runAlphaRefinement(): AlphaRefinement {
       "",
       "In QED, VP creates virtual e⁺e⁻ pairs that screen the bare charge.",
       "The Atlas analog: the spectral ratio λ_max/λ₁ measures the 'dynamic range'",
-      "of the graph's diffusion spectrum — equivalent to the UV/IR ratio in QFT.",
+      "of the graph's diffusion spectrum. equivalent to the UV/IR ratio in QFT.",
       `Screening fraction: δ₁ = ${(delta1 * 100).toFixed(4)}%`,
     ].join("\n"),
   });
@@ -866,7 +866,7 @@ export function runAlphaRefinement(): AlphaRefinement {
       `Fiedler-optimal cut ratio: ${cheeger.fiedlerCut.toFixed(4)}`,
       "",
       "In QED, vertex corrections modify the e-γ coupling at each vertex.",
-      "The Cheeger constant is the graph's isoperimetric ratio — the tightest",
+      "The Cheeger constant is the graph's isoperimetric ratio. the tightest",
       "bottleneck. It determines how efficiently information/charge transfers",
       "through the graph's internal structure.",
       `Vertex correction: δ₂ = ${(delta2 * 100).toFixed(4)}%`,
@@ -973,7 +973,7 @@ export function runAlphaRefinement(): AlphaRefinement {
   // ── δ₆: Spectral Gap Ratio (Running Coupling) ──────────────────────
   //
   // NEW: The ratio of consecutive Laplacian eigenvalues encodes the
-  // β-function of QED — how the coupling runs with energy.
+  // β-function of QED. how the coupling runs with energy.
   // β_QED = 2α²/(3π) at 1-loop.
   //
   // δ₆ = (α₀/π) × (1 - λ₁/λ₂) × ln(N/manifoldNodes)
@@ -998,7 +998,7 @@ export function runAlphaRefinement(): AlphaRefinement {
       `RG running scale: ln(96/22) = ${logRunning.toFixed(4)}`,
       "",
       "The consecutive eigenvalue ratio encodes how the effective coupling",
-      "changes across energy scales — the discrete analog of the QED β-function.",
+      "changes across energy scales. the discrete analog of the QED β-function.",
       "A ratio close to 1 means slow running; deviation drives the correction.",
       `Running coupling correction: δ₆ = ${(delta6 * 100).toFixed(4)}%`,
     ].join("\n"),

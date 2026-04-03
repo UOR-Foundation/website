@@ -1,5 +1,5 @@
 /**
- * Six UOR framework layers — serializable data for UOR certification.
+ * Six UOR framework layers. serializable data for UOR certification.
  * Icons are mapped at the component level by `iconKey`.
  */
 export interface NamespaceLinkData {

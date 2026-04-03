@@ -1,5 +1,5 @@
 /**
- * Continuity Engine — Client-side orchestration
+ * Continuity Engine. Client-side orchestration
  * ═══════════════════════════════════════════════
  *
  * Provides the hash-chain verification, memory management,

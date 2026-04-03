@@ -1,5 +1,5 @@
 /**
- * Model Fingerprint Card — Atlas Nutritional Label for LLMs
+ * Model Fingerprint Card. Atlas Nutritional Label for LLMs
  * ══════════════════════════════════════════════════════════
  */
 

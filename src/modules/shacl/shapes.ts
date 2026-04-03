@@ -1,5 +1,5 @@
 /**
- * UOR SHACL Shapes — TypeScript validation functions for UOR data shapes.
+ * UOR SHACL Shapes. TypeScript validation functions for UOR data shapes.
  *
  * Since we don't have a SHACL engine in-browser, each shape is a pure
  * validation function: (data) => { conforms, violations[] }.
@@ -10,7 +10,7 @@
  *   - CertificateShape: validates Certificate records
  *   - PartitionShape: validates partition results
  *
- * Zero duplication — delegates classification to existing modules.
+ * Zero duplication. delegates classification to existing modules.
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────

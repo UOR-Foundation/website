@@ -1,5 +1,5 @@
 /**
- * UOR 8-Stage Agent Resolution Cycle — unified pipeline orchestrator.
+ * UOR 8-Stage Agent Resolution Cycle. unified pipeline orchestrator.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  *
@@ -13,7 +13,7 @@
  *   7. Trace Recording (trace)
  *   8. Transform (morphism)
  *
- * Each stage delegates to existing modules — zero duplication.
+ * Each stage delegates to existing modules. zero duplication.
  * Produces a canonical receipt for the full cycle.
  */
 

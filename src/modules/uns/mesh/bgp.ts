@@ -1,11 +1,11 @@
 /**
- * UNS Mesh — BGP Content Orbit Routing (Phase 4-C)
+ * UNS Mesh. BGP Content Orbit Routing (Phase 4-C)
  *
  * Encodes UOR canonical IDs as BGP Extended Community attributes (RFC 4360)
  * and derives /64 orbit prefixes under fd00:0075:6f72::/48.
  *
  * Type:     0x0002  (Two-Octet AS Specific Extended Community)
- * Sub-Type: 0x55    ('U' in ASCII — UOR private sub-type)
+ * Sub-Type: 0x55    ('U' in ASCII. UOR private sub-type)
  * Value:    first 4 bytes of SHA-256 canonical hash as uint32 big-endian
  *
  * Full 8-byte community: [0x00][0x02][0x00][0x55][hash[0..3]]
@@ -66,9 +66,9 @@ export function canonicalIdToBgpCommunity(canonicalId: string): Uint8Array {
   const h = extractHashBytes(canonicalId);
   const community = new Uint8Array(8);
   community[0] = 0x00; // Type high
-  community[1] = 0x02; // Type low — Two-Octet AS Specific
+  community[1] = 0x02; // Type low. Two-Octet AS Specific
   community[2] = 0x00; // Sub-type high
-  community[3] = 0x55; // Sub-type low — 'U'
+  community[3] = 0x55; // Sub-type low. 'U'
   community[4] = h[0];
   community[5] = h[1];
   community[6] = h[2];

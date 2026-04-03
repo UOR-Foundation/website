@@ -3,7 +3,7 @@
  * ═══════════════════════════════════
  *
  * Publishes every high-value identity to Bitcoin + Zcash + IPFS
- * simultaneously — three independent trust anchors from one hash,
+ * simultaneously. three independent trust anchors from one hash,
  * verifiable by any.
  *
  * @module uns/core/hologram/opportunities/multi-ledger-anchor
@@ -28,13 +28,13 @@ export interface MultiLedgerAnchor {
   readonly threadHash: string;
   readonly anchors: readonly LedgerAnchorEntry[];
   readonly anchorCount: number;
-  /** Independent trust paths — each anchor is independently verifiable. */
+  /** Independent trust paths. each anchor is independently verifiable. */
   readonly trustPaths: number;
   /** Whether all three primary anchors (Bitcoin, Zcash, IPFS) are present. */
   readonly tripleAnchored: boolean;
 }
 
-/** Ledger configurations — which projections anchor on which ledgers. */
+/** Ledger configurations. which projections anchor on which ledgers. */
 const LEDGER_CONFIG: ReadonlyArray<{
   ledger: string;
   projection: string;
@@ -48,7 +48,7 @@ const LEDGER_CONFIG: ReadonlyArray<{
   {
     ledger: "Bitcoin (Hash Lock)",
     projection: "bitcoin-hashlock",
-    verificationMethod: "Reveal preimage to spend HTLC — preimage IS the content hash",
+    verificationMethod: "Reveal preimage to spend HTLC. preimage IS the content hash",
   },
   {
     ledger: "Lightning Network",
@@ -58,7 +58,7 @@ const LEDGER_CONFIG: ReadonlyArray<{
   {
     ledger: "Zcash (Transparent)",
     projection: "zcash-transparent",
-    verificationMethod: "Transparent output memo contains content hash — publicly auditable",
+    verificationMethod: "Transparent output memo contains content hash. publicly auditable",
   },
   {
     ledger: "Zcash (Shielded)",
@@ -68,19 +68,19 @@ const LEDGER_CONFIG: ReadonlyArray<{
   {
     ledger: "IPFS / CIDv1",
     projection: "cid",
-    verificationMethod: "CID IS the content address — fetch from any IPFS gateway, re-hash to verify",
+    verificationMethod: "CID IS the content address. fetch from any IPFS gateway, re-hash to verify",
   },
   {
     ledger: "Nostr",
     projection: "nostr",
-    verificationMethod: "NIP-33 event with content hash in d-tag — relay-independent verification",
+    verificationMethod: "NIP-33 event with content hash in d-tag. relay-independent verification",
   },
 ];
 
 /**
  * Build a multi-ledger anchor for a single identity.
  *
- * Each anchor is independently verifiable — compromise of any single
+ * Each anchor is independently verifiable. compromise of any single
  * ledger does not affect the others. The identity is the same hash
  * projected through different settlement mechanisms.
  */

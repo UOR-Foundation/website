@@ -151,7 +151,7 @@ describe("Cryptographic Clock: Atlas ↔ SHA-256 ↔ RSA", () => {
     it("all 14 tests pass", () => {
       const report = runCryptoClockVerification();
       for (const t of report.tests) {
-        expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+        expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
       }
       expect(report.allPassed).toBe(true);
       expect(report.tests.length).toBe(14);

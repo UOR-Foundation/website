@@ -1,5 +1,5 @@
 /**
- * Certified Developer-User Relationship (P6) — 10/10 Test Suite
+ * Certified Developer-User Relationship (P6). 10/10 Test Suite
  */
 
 import { describe, it, expect } from "vitest";

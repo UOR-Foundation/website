@@ -1,5 +1,5 @@
 /**
- * Cryptographic Clock — The Unity of Atlas, SHA-256, and RSA
+ * Cryptographic Clock. The Unity of Atlas, SHA-256, and RSA
  * ═══════════════════════════════════════════════════════════
  *
  * Three pillars of modern computation share one algebraic substrate:
@@ -10,7 +10,7 @@
  *
  * All three are modular arithmetic on finite groups.
  *
- * The connection is not metaphorical — it is structural:
+ * The connection is not metaphorical. it is structural:
  *
  *   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
  *   │  SHA-256      │    │  Atlas       │    │  RSA         │
@@ -31,7 +31,7 @@
  *   - Both use Euler's totient for group order
  *   - Both use modular exponentiation as the core operation
  *   - Both rely on the discrete logarithm being "hard" (or in our
- *     96-element case, trivially computable — demonstrating that
+ *     96-element case, trivially computable. demonstrating that
  *     quantum computers exploit exactly this finiteness)
  *
  * This module formalizes the trinity: Atlas ↔ SHA-256 ↔ RSA.
@@ -188,7 +188,7 @@ export function projectHashToAtlas(hashHex: string): HashProjection {
  *
  * This reduces a 256-bit hash to a single clock element by
  * multiplying all 32 byte-mapped clock elements together.
- * The result is always in (ℤ/360ℤ)* — one of 96 values.
+ * The result is always in (ℤ/360ℤ)*. one of 96 values.
  *
  * This is a one-way compression (not invertible), analogous to
  * how SHA-256 itself is a one-way compression of arbitrary data.
@@ -206,7 +206,7 @@ export function atlasFingerprint(hashHex: string): ClockElement {
  * Generate a mini RSA key pair using primes < 30.
  *
  * This demonstrates that RSA's algebraic structure is IDENTICAL
- * to the Atlas clock algebra — just at a different scale.
+ * to the Atlas clock algebra. just at a different scale.
  *
  * Both use:
  *   - Euler's totient φ(n) for group order
@@ -217,7 +217,7 @@ export function atlasFingerprint(hashHex: string): ClockElement {
  * In our 96-element group, the "discrete log problem" is trivial
  * (exhaustive search in ≤12 steps). This is EXACTLY what quantum
  * computers do to large RSA: Shor's algorithm reduces the problem
- * to period-finding on a finite cyclic group — which is what our
+ * to period-finding on a finite cyclic group. which is what our
  * Atlas clock IS.
  */
 export function generateClockRSA(p: number, q: number, e?: number): ClockRSAKeyPair {

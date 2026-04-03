@@ -1,5 +1,5 @@
 /**
- * UOR Code-to-Knowledge-Graph Bridge — derives UOR identity for code entities.
+ * UOR Code-to-Knowledge-Graph Bridge. derives UOR identity for code entities.
  *
  * Delegates to:
  *   - derivation engine for UOR derivation records

@@ -274,7 +274,7 @@ function BitcoinScriptPage() {
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Every UOR object projects into three Bitcoin protocol layers. Enter a SHA-256 hash
-              to inspect the OP_RETURN commitment, HTLC hash-lock, and Lightning payment hash —
+              to inspect the OP_RETURN commitment, HTLC hash-lock, and Lightning payment hash.
               opcode by opcode.
             </p>
           </div>

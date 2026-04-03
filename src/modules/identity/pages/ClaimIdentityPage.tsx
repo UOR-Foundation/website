@@ -1,5 +1,5 @@
 /**
- * Claim Identity Page — redirect landing for OAuth/magic-link callbacks.
+ * Claim Identity Page. redirect landing for OAuth/magic-link callbacks.
  * Opens the claim dialog automatically inside the page layout.
  */
 

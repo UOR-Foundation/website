@@ -1,5 +1,5 @@
 /**
- * UNS SDK — Integration Test Suite (Phase 5-D)
+ * UNS SDK. Integration Test Suite (Phase 5-D)
  *
  * 10 tests covering all UNS services via the UnsClient.
  */
@@ -15,7 +15,7 @@ import type { UnsKeypair } from "../modules/uns/core/keypair";
 const CANONICAL_RE = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
 const IPV6_RE = /^fd00:0075:6f72:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}:[0-9a-f]{4}$/;
 
-describe("UNS SDK — Phase 5-D Integration Tests", () => {
+describe("UNS SDK. Phase 5-D Integration Tests", () => {
   let keypair: UnsKeypair;
   let client: UnsClient;
 

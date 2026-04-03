@@ -1,5 +1,5 @@
 /**
- * TrustScoreBar — Persistent trust grade indicator for every AI response.
+ * TrustScoreBar. Persistent trust grade indicator for every AI response.
  *
  * Shows a single trust grade (A–D) on every response. Expandable to reveal:
  *   1. Chain of thought (per-claim grades + sources)
@@ -204,7 +204,7 @@ export default function TrustScoreBar({
 
   return (
     <div className="mt-2" style={{ fontFamily: P.font }}>
-      {/* ── Compact trust bar — always visible ──────────────────── */}
+      {/* ── Compact trust bar. always visible ──────────────────── */}
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all duration-200 group"
@@ -243,7 +243,7 @@ export default function TrustScoreBar({
         <span className="text-[13px] flex-1" style={{ color: P.textMuted }}>
           {hasClaims
             ? `${groundedCount}/${totalClaims} claims verified`
-            : isLow ? "Ungraded — tap to learn more" : "Trust score available"
+            : isLow ? "Ungraded. tap to learn more" : "Trust score available"
           }
         </span>
 

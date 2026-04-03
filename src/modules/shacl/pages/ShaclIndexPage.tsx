@@ -2,8 +2,8 @@ import Layout from "@/modules/core/components/Layout";
 import { Copy, ExternalLink, AlertTriangle } from "lucide-react";
 
 const SHAPES = [
-  { file: "datum-term-disjoint.ttl", name: "Datum/Term Disjointness", ref: "§3.2.2", invariant: "schema:Datum and schema:Term are owl:disjointWith — values and syntax strictly separated", gap: false },
-  { file: "succ-composition.ttl", name: "Succ Composition", ref: "§3.2.3", invariant: "op:succ must have op:composedOf [op:neg, op:bnot] — critical identity in ontology", gap: false },
+  { file: "datum-term-disjoint.ttl", name: "Datum/Term Disjointness", ref: "§3.2.2", invariant: "schema:Datum and schema:Term are owl:disjointWith. values and syntax strictly separated", gap: false },
+  { file: "succ-composition.ttl", name: "Succ Composition", ref: "§3.2.3", invariant: "op:succ must have op:composedOf [op:neg, op:bnot]. critical identity in ontology", gap: false },
   { file: "partition-cardinality.ttl", name: "Partition Cardinality", ref: "§4.1", invariant: "|Irr|+|Red|+|Unit|+|Ext| = 2ⁿ. At Q0, sum must equal 256", gap: true },
   { file: "cert-required-fields.ttl", name: "Certificate Required Fields", ref: "§3.3", invariant: "cert:Certificate must have cert:verified (boolean) and cert:quantum (integer)", gap: false },
   { file: "trace-certifiedby.ttl", name: "Trace CertifiedBy", ref: "§3.3", invariant: "trace:ComputationTrace must have trace:certifiedBy → cert:Certificate", gap: false },
@@ -66,7 +66,7 @@ export default function ShaclIndexPage() {
               <div>
                 <p className="text-sm font-medium text-foreground mb-1">Conformance Gap: partition-cardinality.ttl</p>
                 <p className="text-xs text-muted-foreground">
-                  Whitepaper §4.1 defines UnitSet as "multiplicatively invertible elements — in Rₙ, the odd integers."
+                  Whitepaper §4.1 defines UnitSet as "multiplicatively invertible elements. in Rₙ, the odd integers."
                   At Q0 (R₈), there are 128 odd integers (1, 3, 5, …, 255) that are units.
                   The current API returns unit cardinality = 2 (only 1 and 255). This shape flags the gap.
                 </p>

@@ -1,10 +1,10 @@
 /**
- * Wake Word Engine — Pluggable Detection System
+ * Wake Word Engine. Pluggable Detection System
  * ══════════════════════════════════════════════
  *
  * Auto-selects the best available wake word engine:
- *   1. Porcupine (if AccessKey available) — <20ms, ~1MB WASM
- *   2. Whisper VAD (sovereign fallback)   — ~2-3s, no API keys
+ *   1. Porcupine (if AccessKey available). <20ms, ~1MB WASM
+ *   2. Whisper VAD (sovereign fallback)  . ~2-3s, no API keys
  *
  * Usage:
  *   const engine = await createWakeWordEngine({ accessKey: "..." });
@@ -23,7 +23,7 @@ import { PorcupineWakeWordEngine, type PorcupineEngineConfig } from "./porcupine
 import { WhisperVadWakeWordEngine, type WhisperVadConfig } from "./whisper-vad-engine";
 
 export interface CreateWakeWordEngineOptions {
-  /** Picovoice AccessKey — if provided, Porcupine is used as primary */
+  /** Picovoice AccessKey. if provided, Porcupine is used as primary */
   accessKey?: string;
   /** Porcupine keyword config (only used if accessKey is provided) */
   porcupineKeywords?: PorcupineEngineConfig["keywords"];
@@ -76,6 +76,6 @@ export function createWakeWordEngine(
     });
   }
 
-  console.log("[WakeWord] Auto-selected: Whisper VAD (no access key — sovereign fallback)");
+  console.log("[WakeWord] Auto-selected: Whisper VAD (no access key. sovereign fallback)");
   return new WhisperVadWakeWordEngine(whisperConfig);
 }

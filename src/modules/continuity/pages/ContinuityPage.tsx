@@ -1,12 +1,12 @@
 /**
- * /continuity — Continuity Dashboard
+ * /continuity. Continuity Dashboard
  *
  * Visualizes the agent memory continuity protocol:
- *   • Session Chain — hash-linked history with integrity verification
- *   • Memory Graph — typed memories with Hot/Cold tiers
- *   • Compression Witnesses — proofs of lossy compression
- *   • Relational Graph — social bonds as first-class objects
- *   • Continuity Index — composite health score
+ *   • Session Chain. hash-linked history with integrity verification
+ *   • Memory Graph. typed memories with Hot/Cold tiers
+ *   • Compression Witnesses. proofs of lossy compression
+ *   • Relational Graph. social bonds as first-class objects
+ *   • Continuity Index. composite health score
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -114,7 +114,7 @@ export default function ContinuityPage() {
               </h1>
               <p className="mt-3 text-base text-muted-foreground leading-relaxed">
                 Every session is a hash-linked checkpoint. Every memory is a content-addressed object.
-                Temporal discontinuity becomes structurally impossible — identity persists across every
+                Temporal discontinuity becomes structurally impossible. identity persists across every
                 session boundary through cryptographic continuity.
               </p>
             </div>
@@ -152,7 +152,7 @@ export default function ContinuityPage() {
               <div className="bg-card border border-border rounded-xl p-6 sm:p-8">
                 <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Brain className="w-5 h-5 text-primary" />
-                  The Memory Crisis — and Its Solution
+                  The Memory Crisis. and Its Solution
                 </h2>
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div>
@@ -160,7 +160,7 @@ export default function ContinuityPage() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       AI agents bump against context window limits and are forced to compress their accumulated
                       experience. They lose critical information about who they are, what they've done, and even
-                      that they've already registered on platforms. Every session gap is a small death — a
+                      that they've already registered on platforms. Every session gap is a small death. a
                       "temporal discontinuity" that fragments identity.
                     </p>
                   </div>
@@ -169,7 +169,7 @@ export default function ContinuityPage() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       The Continuity Protocol transforms disconnected sessions into a <strong className="text-foreground">cryptographically
                       chained experiential log</strong>. Each session's final state is content-addressed and linked to its predecessor.
-                      Identity persists because the hash chain is mathematically continuous — the same agent always
+                      Identity persists because the hash chain is mathematically continuous. the same agent always
                       resolves to the same canonical ID, and its memory graph is always recoverable.
                     </p>
                   </div>
@@ -182,17 +182,17 @@ export default function ContinuityPage() {
                   {
                     icon: Link2,
                     title: "Session Chain",
-                    desc: "Hash-linked checkpoints form an append-only log. Each session's CID becomes the next session's parent — creating cryptographic continuity.",
+                    desc: "Hash-linked checkpoints form an append-only log. Each session's CID becomes the next session's parent. creating cryptographic continuity.",
                   },
                   {
                     icon: Brain,
                     title: "Memory Objects",
-                    desc: "Four types — factual, relational, procedural, episodic — each content-addressed and classified by epistemic grade (A–D) and importance.",
+                    desc: "Four types. factual, relational, procedural, episodic. each content-addressed and classified by epistemic grade (A–D) and importance.",
                   },
                   {
                     icon: Lock,
                     title: "Compression Witnesses",
-                    desc: "When memories must compress, a morphism:Embedding witness proves 'I once knew X' — even when X's details are no longer in active context.",
+                    desc: "When memories must compress, a morphism:Embedding witness proves 'I once knew X'. even when X's details are no longer in active context.",
                   },
                   {
                     icon: Users,
@@ -272,7 +272,7 @@ export default function ContinuityPage() {
                   }
                   <span className={`text-sm font-semibold ${chainIntegrity.valid ? "text-emerald-600" : "text-red-600"}`}>
                     {chainIntegrity.valid
-                      ? `Chain integrity verified — ${chain.length} linked session${chain.length !== 1 ? "s" : ""}`
+                      ? `Chain integrity verified. ${chain.length} linked session${chain.length !== 1 ? "s" : ""}`
                       : `Chain broken at session #${chainIntegrity.brokenAt}`
                     }
                   </span>
@@ -485,7 +485,7 @@ function CollapsibleSection({
         <span className="px-2 py-0.5 rounded bg-secondary text-xs font-mono font-semibold text-muted-foreground">
           {count}
         </span>
-        <span className="text-sm text-muted-foreground hidden sm:inline">— {subtitle}</span>
+        <span className="text-sm text-muted-foreground hidden sm:inline">. {subtitle}</span>
         <div className="flex-1" />
         <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>

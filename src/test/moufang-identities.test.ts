@@ -1,5 +1,5 @@
 /**
- * Moufang Identity Verification — Test Suite
+ * Moufang Identity Verification. Test Suite
  * ════════════════════════════════════════════
  */
 
@@ -100,7 +100,7 @@ describe("Sedenion Moufang Violations", () => {
     const octChecks = result.checks.filter(c =>
       c.indices.every(i => i < 8)
     );
-    // Some may fail — this is the algebraic reality
+    // Some may fail. this is the algebraic reality
     const failCount = octChecks.filter(c => !c.holds).length;
     expect(failCount).toBeGreaterThanOrEqual(0); // may or may not fail
   });

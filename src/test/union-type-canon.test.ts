@@ -14,7 +14,7 @@ import {
 } from "@/modules/morphism/union-type-canon";
 import { singleProofHash } from "@/lib/uor-canonical";
 
-describe("Union Type Canonicalization — R2 compliance", () => {
+describe("Union Type Canonicalization. R2 compliance", () => {
   // ── Rule 1: Literal Coercion ────────────────────────────────────────────
 
   describe("Rule 1: Literal coercion", () => {
@@ -127,7 +127,7 @@ describe("Union Type Canonicalization — R2 compliance", () => {
 
   // ── Combined coercion via property name ─────────────────────────────────
 
-  describe("coerceUnionValue — combined property-aware coercion", () => {
+  describe("coerceUnionValue. combined property-aware coercion", () => {
     it("coerces schema:startDate string value", () => {
       const result = coerceUnionValue("2026-02-22", "schema:startDate");
       expect(result.coerced).toBe(true);

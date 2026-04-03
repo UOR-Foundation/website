@@ -1,5 +1,5 @@
 /**
- * 153-Link Subgraph Search — Deriving the Fermionic Resonance Structure
+ * 153-Link Subgraph Search. Deriving the Fermionic Resonance Structure
  * ═══════════════════════════════════════════════════════════════════════
  *
  * THESIS:
@@ -19,7 +19,7 @@
  *   where resonanceFactor encodes the 4π fermionic path integral
  *   (a fermion requires 720° = 4π to return to its original state).
  *
- * APPROACH (Phase 12c — Intensified Search):
+ * APPROACH (Phase 12c. Intensified Search):
  *   1. Stratified sampling: pick vertices respecting the 8+12+2 partition
  *   2. Greedy edge-targeted search with local optimization
  *   3. Parallel stochastic hill-climbing (many independent walkers)
@@ -48,7 +48,7 @@ export const MAX_EDGES_22 = (TARGET_VERTICES * (TARGET_VERTICES - 1)) / 2;
 /** Target density: 153/231 ≈ 0.6623 */
 export const TARGET_DENSITY = TARGET_EDGES / MAX_EDGES_22;
 
-/** Fermionic rotation: 4π (720°) — fermions require double cover */
+/** Fermionic rotation: 4π (720°). fermions require double cover */
 export const FERMIONIC_4PI = 4 * Math.PI;
 
 /** α⁻¹ (NIST 2018 CODATA) */
@@ -371,7 +371,7 @@ interface SAStats {
  * where ΔE = |newEdges - 153| - |currentEdges - 153|.
  *
  * Reheat strategy: After the first cooldown, the system is reheated to
- * T₀/2, then T₀/4, etc. — progressively narrowing the search basin
+ * T₀/2, then T₀/4, etc.. progressively narrowing the search basin
  * around the best-found configuration.
  */
 function simulatedAnnealing(
@@ -484,7 +484,7 @@ interface GAStats {
  *
  * Operators:
  *   Selection: Tournament selection (k=3)
- *   Crossover: Uniform crossover — take intersection of parents,
+ *   Crossover: Uniform crossover. take intersection of parents,
  *              then fill remaining slots randomly from the union
  *   Mutation:  Swap a random vertex for a random non-member
  *   Elitism:   Top 10% survive unchanged
@@ -674,9 +674,9 @@ interface HybridStats {
  *
  * Phase 1 (upstream): GA produces diverse high-fitness individuals.
  * Phase 2 (this function): Each seed undergoes deep SA refinement with:
- *   - Very low initial temperature (T₀ = 2.0) — exploit, don't explore
+ *   - Very low initial temperature (T₀ = 2.0). exploit, don't explore
  *   - Ultra-slow cooling: τ = 0.0005 (vs 0.003 in normal SA)
- *   - Long run: 8000 steps per seed (no reheats — monotonic cooldown)
+ *   - Long run: 8000 steps per seed (no reheats. monotonic cooldown)
  *   - Greedy finisher: last 20% of steps are deterministic (T→0)
  *
  * This converges the GA's approximate solutions toward the exact 153 basin.
@@ -710,7 +710,7 @@ function hybridRefinement(
         ? T0 * Math.exp(-coolingRate * step)
         : 0; // greedy finisher
 
-      // Propose swap — try multiple candidates when close to target
+      // Propose swap. try multiple candidates when close to target
       const removeIdx = Math.floor(Math.random() * TARGET_VERTICES);
       const currentSet = new Set(current);
       const numCandidates = bestDist <= 2 ? 30 : bestDist <= 5 ? 15 : 5;

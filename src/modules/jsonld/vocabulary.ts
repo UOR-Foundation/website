@@ -1,5 +1,5 @@
 /**
- * UOR Formal W3C Vocabulary — RDFS/OWL ontology for the UOR Framework.
+ * UOR Formal W3C Vocabulary. RDFS/OWL ontology for the UOR Framework.
  *
  * Emits the complete UOR class hierarchy and property declarations using
  * standard W3C ontology vocabulary (rdfs:Class, rdfs:subClassOf, owl:inverseOf,
@@ -52,7 +52,7 @@ function emitClasses(): VocabularyNode[] {
         "An element of the quotient ring Z/(2^n)Z, identified by its canonical Braille glyph encoding.",
     },
 
-    // ── Triad — atomic triadic coordinate ─────────────────────────────
+    // ── Triad. atomic triadic coordinate ─────────────────────────────
     {
       "@id": "schema:Triad",
       "@type": ["rdfs:Class", "owl:Class"],
@@ -62,7 +62,7 @@ function emitClasses(): VocabularyNode[] {
         "The atomic triadic coordinate Triad(datum, stratum, spectrum). Encodes positional structure of a ring element.",
     },
 
-    // ── Term — unevaluated syntax object ──────────────────────────────
+    // ── Term. unevaluated syntax object ──────────────────────────────
     {
       "@id": "schema:Term",
       "@type": ["rdfs:Class", "owl:Class"],
@@ -73,7 +73,7 @@ function emitClasses(): VocabularyNode[] {
       "owl:disjointWith": "schema:Datum",
     },
 
-    // ── Ring — the algebraic structure itself ─────────────────────────
+    // ── Ring. the algebraic structure itself ─────────────────────────
     {
       "@id": "schema:Ring",
       "@type": ["rdfs:Class", "owl:Class"],
@@ -231,7 +231,7 @@ function emitClasses(): VocabularyNode[] {
       "rdfs:subClassOf": "partition:Set",
       "rdfs:label": "Exterior Set",
       "rdfs:comment":
-        "The zero element — the additive identity of the ring.",
+        "The zero element. the additive identity of the ring.",
       "owl:disjointWith": [
         "partition:UnitSet",
         "partition:IrreducibleSet",
@@ -439,7 +439,7 @@ function emitClasses(): VocabularyNode[] {
         "Formal declaration of compliance with Berners-Lee's Four Rules of Linked Data.",
     },
 
-    // ── Address — content-addressable identifier ──────────────────────
+    // ── Address. content-addressable identifier ──────────────────────
     {
       "@id": "u:Address",
       "@type": ["rdfs:Class", "owl:Class"],
@@ -449,7 +449,7 @@ function emitClasses(): VocabularyNode[] {
         "A content-addressable identifier for a UOR ring element. " +
         "The canonical IRI pattern for a datum with byte value v is: " +
         "https://uor.foundation/u/U<HEX> where <HEX> is the uppercase " +
-        "hexadecimal encoding of (0x2800 + v) — the Unicode codepoint in the " +
+        "hexadecimal encoding of (0x2800 + v). the Unicode codepoint in the " +
         "Braille block. Example: datum 0x55 → https://uor.foundation/u/U2855. " +
         "The Braille glyph u:glyph property provides the human-readable " +
         "encoding; the IRI itself encodes the address directly.",
@@ -674,7 +674,7 @@ function emitProperties(): VocabularyNode[] {
         "<hex64> is the lowercase hex encoding of the SHA-256 digest of the " +
         "canonical serialisation of the derivation's canonical term. " +
         "Two derivations with identical canonical terms MUST produce identical " +
-        "derivationId values — this is the foundational trust anchor for Grade A " +
+        "derivationId values. this is the foundational trust anchor for Grade A " +
         "epistemic certainty and cross-agent consensus.",
       "rdfs:domain": "derivation:Record",
       "rdfs:range": "xsd:string",
@@ -796,7 +796,7 @@ function emitProperties(): VocabularyNode[] {
       "@id": "skos:exactMatch",
       "@type": ["rdf:Property", "owl:ObjectProperty", "owl:SymmetricProperty"],
       "rdfs:label": "Exact Match",
-      "rdfs:comment": "SKOS: derivation_id equality — two derivations producing the same canonical form.",
+      "rdfs:comment": "SKOS: derivation_id equality. two derivations producing the same canonical form.",
       "rdfs:domain": "derivation:Record",
       "rdfs:range": "derivation:Record",
     },
@@ -804,7 +804,7 @@ function emitProperties(): VocabularyNode[] {
       "@id": "skos:broader",
       "@type": ["rdf:Property", "owl:ObjectProperty"],
       "rdfs:label": "Broader",
-      "rdfs:comment": "SKOS: stratum hierarchy — lower stratum = broader concept in the ring's information-theoretic ordering.",
+      "rdfs:comment": "SKOS: stratum hierarchy. lower stratum = broader concept in the ring's information-theoretic ordering.",
       "rdfs:domain": "schema:Datum",
       "rdfs:range": "schema:Datum",
     },
@@ -812,7 +812,7 @@ function emitProperties(): VocabularyNode[] {
       "@id": "skos:narrower",
       "@type": ["rdf:Property", "owl:ObjectProperty"],
       "rdfs:label": "Narrower",
-      "rdfs:comment": "SKOS: stratum hierarchy — higher stratum = narrower (more specific) concept.",
+      "rdfs:comment": "SKOS: stratum hierarchy. higher stratum = narrower (more specific) concept.",
       "rdfs:domain": "schema:Datum",
       "rdfs:range": "schema:Datum",
       "owl:inverseOf": "skos:broader",

@@ -14,13 +14,13 @@ function mulberry32(seed: number) {
 const ROTATION_SPEED = 0.000012;
 const PULSE_SPEED = 0.0004;
 
-// Scroll phases — gentler, slower reveal
+// Scroll phases. gentler, slower reveal
 const SCROLL_STARS_START = 0.05;
 const SCROLL_STARS_FULL = 0.35;
 const SCROLL_CONST_START = 0.30;
 const SCROLL_CONST_FULL = 0.85;
 
-// Star colors — cool whites and silvers
+// Star colors. cool whites and silvers
 const STAR_HUES = [
   "220, 15%, 88%",
   "210, 25%, 80%",
@@ -84,7 +84,7 @@ interface ConstellationDef {
 }
 
 const constellationDefs: ConstellationDef[] = [
-  // ── Orion (top-right) — the Hunter, most recognizable
+  // ── Orion (top-right). the Hunter, most recognizable
   {
     name: "Orion",
     cx: 0.78, cy: 0.28,
@@ -108,7 +108,7 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 0, breathePhase: 0,
     isFocalCluster: true,
   },
-  // ── Cassiopeia (upper-left) — the W shape
+  // ── Cassiopeia (upper-left). the W shape
   {
     name: "Cassiopeia",
     cx: 0.18, cy: 0.18,
@@ -141,7 +141,7 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 2, breathePhase: 3.0,
     isFocalCluster: true,
   },
-  // ── Scorpius (bottom-right) — the curved tail
+  // ── Scorpius (bottom-right). the curved tail
   {
     name: "Scorpius",
     cx: 0.73, cy: 0.72,
@@ -164,7 +164,7 @@ const constellationDefs: ConstellationDef[] = [
     hueIdx: 3, breathePhase: 4.5,
     isFocalCluster: true,
   },
-  // ── Lyra (top-center) — small parallelogram + Vega
+  // ── Lyra (top-center). small parallelogram + Vega
   {
     name: "Lyra",
     cx: 0.48, cy: 0.14,
@@ -281,7 +281,7 @@ const PrimeConstellationBg = () => {
       const sy = ry * h;
       if (sx < -10 || sx > w + 10 || sy < -10 || sy > h + 10) continue;
 
-      // More subtle alpha — peak at 0.45 instead of 0.65
+      // More subtle alpha. peak at 0.45 instead of 0.65
       const alpha = localT * twinkle * 0.45;
       const r = star.size * localT * 1.1;
       const hue = STAR_HUES[star.hueIdx];
@@ -302,7 +302,7 @@ const PrimeConstellationBg = () => {
       ctx.fill();
     }
 
-    // ── Phase 2: Constellations — subtle, recognizable ──
+    // ── Phase 2: Constellations. subtle, recognizable ──
     if (tConst > 0.01) {
       for (let ci = 0; ci < constellationDefs.length; ci++) {
         const c = constellationDefs[ci];
@@ -324,7 +324,7 @@ const PrimeConstellationBg = () => {
           };
         });
 
-        // Draw connecting lines — very subtle, no traveling pulse
+        // Draw connecting lines. very subtle, no traveling pulse
         for (let li = 0; li < c.lines.length; li++) {
           const [a, b] = c.lines[li];
           const lineDelay = li * 0.08;
@@ -336,7 +336,7 @@ const PrimeConstellationBg = () => {
           const bx = ax + (starPositions[b].x - ax) * lineT;
           const by = ay + (starPositions[b].y - ay) * lineT;
 
-          // Much more subtle line alpha — peak ~0.12
+          // Much more subtle line alpha. peak ~0.12
           const lineAlpha = cT * 0.12 * breathe;
 
           ctx.strokeStyle = `hsla(${baseHue}, ${lineAlpha})`;
@@ -347,7 +347,7 @@ const PrimeConstellationBg = () => {
           ctx.stroke();
         }
 
-        // Draw constellation stars — gentler glow
+        // Draw constellation stars. gentler glow
         for (const star of starPositions) {
           const starAlpha = cT * 0.5 * star.brightness * breathe;
           const starR = 1.2 * star.brightness * breathe;

@@ -15,7 +15,7 @@ function primesUpTo(n: number): number[] {
 
 const PRIMES = primesUpTo(2000);
 const PRIME_TEXT = PRIMES.join("  ");
-const DRIFT_SPEED = 0.2; // px per frame — meditative
+const DRIFT_SPEED = 0.2; // px per frame. meditative
 const LINE_HEIGHT = 28;
 const FONT = '10px ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace';
 const TEXT_COLOR = "hsla(38, 65%, 55%, 0.04)";

@@ -1,11 +1,11 @@
 /**
- * Interactive Knowledge Graph — Force-directed visualization
+ * Interactive Knowledge Graph. Force-directed visualization
  * ════════════════════════════════════════════════════════════
  *
  * UOR sits at the center. 12 canonical categories orbit it.
  * Click a category to expand its projections.
  * Synergy chain edges connect standards across categories.
- * Every node links back to UOR — confirming canonical encoding.
+ * Every node links back to UOR. confirming canonical encoding.
  *
  * Key thesis: Everything is an object addressable by its attributes.
  * UOR is THE interoperability layer connecting all standards.
@@ -84,7 +84,7 @@ export function KnowledgeGraph() {
     const links: GraphLink[] = [];
     const nodeSet = new Set<string>();
 
-    // UOR center — large hub
+    // UOR center. large hub
     nodes.push({
       id: "uor",
       label: "UOR",
@@ -298,7 +298,7 @@ export function KnowledgeGraph() {
             Universal Knowledge Graph
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            UOR is the interoperability layer — every standard is a projection of one canonical identity.
+            UOR is the interoperability layer. every standard is a projection of one canonical identity.
             <br className="hidden sm:block" />
             <span className="text-foreground/70 font-medium">Click a category</span> to expand ·{" "}
             <span className="text-foreground/70 font-medium">Click any node</span> to trace its path back to UOR
@@ -476,11 +476,11 @@ export function KnowledgeGraph() {
           </g>
         </svg>
 
-        {/* ── Legend — high contrast, readable ─────────────────── */}
+        {/* ── Legend. high contrast, readable ─────────────────── */}
         <div className="absolute bottom-4 left-4 bg-card border border-border rounded-xl px-4 py-3 space-y-2 shadow-lg">
           <div className="text-xs font-bold text-foreground uppercase tracking-wider mb-1">Legend</div>
           {[
-            { color: UOR_COLOR, label: "UOR — Canonical Hub", size: "w-4 h-4" },
+            { color: UOR_COLOR, label: "UOR. Canonical Hub", size: "w-4 h-4" },
             { color: "hsl(var(--primary))", label: "Category Domain", size: "w-3.5 h-3.5" },
             { color: "hsl(var(--muted-foreground))", label: "Standard / Projection", size: "w-3 h-3" },
           ].map(item => (
@@ -532,7 +532,7 @@ export function KnowledgeGraph() {
             </button>
           </div>
 
-          {/* ── Canonical Path to UOR — always visible ──────────── */}
+          {/* ── Canonical Path to UOR. always visible ──────────── */}
           <div className="mb-5 bg-card border border-border rounded-xl p-4 sm:p-5">
             <div className="text-sm font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
               <Link2 className="w-4 h-4 text-primary" />
@@ -581,7 +581,7 @@ export function KnowledgeGraph() {
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Every standard, framework, and protocol in this map is a <strong className="text-foreground">deterministic projection</strong> of a single UOR canonical identity.
-                  UOR treats everything as an object addressable by its intrinsic attributes — not by location — unlocking complete interoperability across all systems.
+                  UOR treats everything as an object addressable by its intrinsic attributes. not by location. unlocking complete interoperability across all systems.
                 </p>
               </div>
             )}
@@ -594,14 +594,14 @@ export function KnowledgeGraph() {
                     <strong>{selectedNode.label}</strong> is a {selectedNode.fidelity === "lossless" ? "lossless" : "lossy"} projection of its UOR canonical hash.
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    This means <strong className="text-foreground">{selectedNode.label}</strong>'s identity is derived from its content attributes — not from any registry, server, or namespace.
+                    This means <strong className="text-foreground">{selectedNode.label}</strong>'s identity is derived from its content attributes. not from any registry, server, or namespace.
                     Any system that computes the same canonical encoding will arrive at the same UOR identity, enabling <strong className="text-foreground">trustless verification</strong> and seamless cross-protocol interoperability.
                   </p>
                   {cat && (
                     <div className="bg-secondary/50 border border-border rounded-lg p-3">
                       <div className="text-xs font-bold text-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <Info className="w-3.5 h-3.5 text-primary" />
-                        {cat.label} — UOR Expression
+                        {cat.label}. UOR Expression
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {cat.uorExpression}

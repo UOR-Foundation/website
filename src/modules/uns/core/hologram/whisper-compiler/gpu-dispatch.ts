@@ -1,5 +1,5 @@
 /**
- * GPU Dispatch Layer — Whisper Inference Acceleration
+ * GPU Dispatch Layer. Whisper Inference Acceleration
  * ════════════════════════════════════════════════════
  *
  * Routes tensor operations to HologramGpu WGSL kernels when WebGPU
@@ -8,7 +8,7 @@
  *
  * Design:
  *   - All functions have identical signatures to CPU counterparts
- *   - GPU init is lazy — first call initialises vGPU if available
+ *   - GPU init is lazy. first call initialises vGPU if available
  *   - Buffer reuse minimised for correctness; GPU handles parallelism
  *   - Every dispatch is content-addressed through HologramGpu
  *
@@ -82,7 +82,7 @@ const KV_CACHE_D_HEAD = 64;
 
 export function createKvCache(nHeads: number, maxPositions = KV_CACHE_MAX_POSITIONS, dHead = KV_CACHE_D_HEAD): KvCache {
   return {
-    // Pre-allocate full capacity — zero-copy appends via subarray views
+    // Pre-allocate full capacity. zero-copy appends via subarray views
     k: Array.from({ length: nHeads }, () => new Float32Array(maxPositions * dHead)),
     v: Array.from({ length: nHeads }, () => new Float32Array(maxPositions * dHead)),
     len: 0,
@@ -91,7 +91,7 @@ export function createKvCache(nHeads: number, maxPositions = KV_CACHE_MAX_POSITI
   };
 }
 
-/** Append new K/V rows to existing cache — zero-copy when within capacity */
+/** Append new K/V rows to existing cache. zero-copy when within capacity */
 function appendKv(cache: KvCache, headIdx: number, newK: Float32Array, newV: Float32Array, dHead: number, newLen: number): void {
   const writeOffset = cache.len * dHead;
 
@@ -426,8 +426,8 @@ export class GpuDispatch {
   }
 
   // ── Batched Multi-Head Fused Attention (single GPU dispatch for ALL heads) ──
-  // Q/K/V layout: [nHeads, seqLen, dk] — interleaved by head.
-  // Grid: (qLen, nHeads, 1) — one workgroup per (query_row, head).
+  // Q/K/V layout: [nHeads, seqLen, dk]. interleaved by head.
+  // Grid: (qLen, nHeads, 1). one workgroup per (query_row, head).
   // Eliminates nHeads sequential dispatches → 1 dispatch.
 
   async batchedFusedAttention(
@@ -478,7 +478,7 @@ export class GpuDispatch {
     input: Float32Array, weight: Float32Array, bias: Float32Array | null,
     N: number, K: number, M: number,
   ): Promise<Float32Array> {
-    // Cache the transposed weight matrix — same weights are reused
+    // Cache the transposed weight matrix. same weights are reused
     // hundreds of times across decoder steps. WeakMap ensures GC
     // when the weight array is released on engine.dispose().
     let wT = this._transposeCache.get(weight);
@@ -611,7 +611,7 @@ export class GpuDispatch {
         uniforms,
       );
 
-      // Log-mel normalization (tiny — keep on CPU)
+      // Log-mel normalization (tiny. keep on CPU)
       const mel = result.output;
       for (let i = 0; i < mel.length; i++) mel[i] = Math.log10(Math.max(mel[i], 1e-10));
       let maxVal = -Infinity;
@@ -791,7 +791,7 @@ export class GpuDispatch {
   }
 
   /**
-   * GPU-accelerated multi-head attention — single batched dispatch for all heads.
+   * GPU-accelerated multi-head attention. single batched dispatch for all heads.
    * Q/K/V are interleaved into [nHeads, seqLen, dHead] and dispatched once.
    */
   async multiHeadAttention(
@@ -844,7 +844,7 @@ export class GpuDispatch {
   }
 
   /**
-   * GPU-accelerated cross-attention — single batched dispatch for all heads.
+   * GPU-accelerated cross-attention. single batched dispatch for all heads.
    * Queries from decoder, keys/values from encoder.
    */
   async crossAttention(
@@ -899,7 +899,7 @@ export class GpuDispatch {
   // Reduces per-step complexity from O(T² · D) to O(T · D).
 
   /**
-   * Incremental self-attention with KV-cache — single batched dispatch.
+   * Incremental self-attention with KV-cache. single batched dispatch.
    * `input` is [newLen, dModel] (typically newLen=1 for autoregressive).
    * `cache` accumulates K/V across steps.
    */
@@ -969,7 +969,7 @@ export class GpuDispatch {
   }
 
   /**
-   * Cached cross-attention — single batched dispatch for all heads.
+   * Cached cross-attention. single batched dispatch for all heads.
    * K/V from encoder are computed once and stored in cache.
    */
   async cachedCrossAttention(

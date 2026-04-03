@@ -1,12 +1,12 @@
 /**
- * Q-Linux Kernel Specification — Phase 14
+ * Q-Linux Kernel Specification. Phase 14
  * ════════════════════════════════════════
  *
  * Quantum process scheduling using the Hologram dehydrate/rehydrate pattern.
  * Quantum states are content-addressed objects that can be:
- *   1. Frozen (dehydrated) — state → canonical bytes → CID
- *   2. Teleported — CID routed across mesh nodes via IPv6
- *   3. Resumed (rehydrated) — CID → canonical bytes → state
+ *   1. Frozen (dehydrated). state → canonical bytes → CID
+ *   2. Teleported. CID routed across mesh nodes via IPv6
+ *   3. Resumed (rehydrated). CID → canonical bytes → state
  *
  * Architecture maps POSIX onto quantum:
  *   ┌────────────────┬──────────────────────────────────────────────┐
@@ -256,7 +256,7 @@ export class QLinuxKernel {
     if (nodes) nodes.forEach(n => this.meshNodes.set(n.nodeId, n));
   }
 
-  /** qexec — spawn a new quantum process */
+  /** qexec. spawn a new quantum process */
   qexec(numQubits = 1, meshNode?: string): QuantumProcess {
     const pid = qpid();
     const node = meshNode ?? this.leastLoadedNode();
@@ -278,7 +278,7 @@ export class QLinuxKernel {
     return proc;
   }
 
-  /** qfork — clone a process and entangle with parent via Bell pair */
+  /** qfork. clone a process and entangle with parent via Bell pair */
   qfork(parentPid: string): QuantumProcess | null {
     const parent = this.processes.get(parentPid);
     if (!parent || parent.status === "halted" || parent.status === "measured") return null;
@@ -306,7 +306,7 @@ export class QLinuxKernel {
     return childProc;
   }
 
-  /** qfreeze — dehydrate a quantum process (measure-free state serialization) */
+  /** qfreeze. dehydrate a quantum process (measure-free state serialization) */
   async qfreeze(pid: string): Promise<DehydratedQuantumState | null> {
     const proc = this.processes.get(pid);
     if (!proc || proc.status === "halted" || proc.status === "measured") return null;
@@ -332,7 +332,7 @@ export class QLinuxKernel {
     return frozen;
   }
 
-  /** qresume — rehydrate a frozen quantum state from its CID */
+  /** qresume. rehydrate a frozen quantum state from its CID */
   qresume(frozen: DehydratedQuantumState, targetNode?: string): QuantumProcess {
     const sv = deserializeStateVector(frozen.canonicalBytes);
     const node = targetNode ?? frozen.sourceNode;
@@ -355,7 +355,7 @@ export class QLinuxKernel {
     return proc;
   }
 
-  /** qteleport — freeze → route to target node → resume */
+  /** qteleport. freeze → route to target node → resume */
   async qteleport(pid: string, targetNode: string): Promise<TeleportRecord | null> {
     const proc = this.processes.get(pid);
     if (!proc) return null;
@@ -393,7 +393,7 @@ export class QLinuxKernel {
     return record;
   }
 
-  /** qmeasure — collapse a quantum process to a classical outcome */
+  /** qmeasure. collapse a quantum process to a classical outcome */
   qmeasure(pid: string): { outcome: string; probability: number } | null {
     const proc = this.processes.get(pid);
     if (!proc || proc.status === "halted" || proc.status === "frozen") return null;
@@ -428,7 +428,7 @@ export class QLinuxKernel {
     return { outcome, probability: prob };
   }
 
-  /** qentangle — create a Bell pair between two processes */
+  /** qentangle. create a Bell pair between two processes */
   qentangle(pidA: string, pidB: string): boolean {
     const a = this.processes.get(pidA);
     const b = this.processes.get(pidB);
@@ -447,7 +447,7 @@ export class QLinuxKernel {
     return true;
   }
 
-  /** qbarrier — return true when all quantum processes are idle or frozen */
+  /** qbarrier. return true when all quantum processes are idle or frozen */
   qbarrier(): boolean {
     for (const proc of this.processes.values()) {
       if (proc.status === "teleporting") return false;
@@ -455,12 +455,12 @@ export class QLinuxKernel {
     return true;
   }
 
-  /** qsched — set the scheduling policy */
+  /** qsched. set the scheduling policy */
   qsched(policy: SchedulingPolicy): void {
     this.policy = policy;
   }
 
-  /** qkill — terminate a quantum process */
+  /** qkill. terminate a quantum process */
   qkill(pid: string): boolean {
     const proc = this.processes.get(pid);
     if (!proc) return false;

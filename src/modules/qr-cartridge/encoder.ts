@@ -1,5 +1,5 @@
 /**
- * QR Cartridge — Encoder
+ * QR Cartridge. Encoder
  *
  * Converts a UorCanonicalIdentity into an ISO/IEC 18004 compliant QR code.
  *
@@ -10,7 +10,7 @@
  *
  *   Format: https://uor.foundation/u/{glyph}#sha256={hex64}
  *
- *   - The path segment ({glyph}) is the Braille bijection — visual identity
+ *   - The path segment ({glyph}) is the Braille bijection. visual identity
  *   - The fragment (#sha256={hex64}) carries the full lossless hash
  *   - Standard scanners navigate to the URL; UOR clients parse the fragment
  *
@@ -46,7 +46,7 @@ export function buildQrPayload(identity: UorCanonicalIdentity): CartridgeQrPaylo
   const glyph = identity["u:glyph"];
   const hashHex = bytesToHex(identity.hashBytes);
 
-  // The URL IS the complete identity — path + fragment = lossless
+  // The URL IS the complete identity. path + fragment = lossless
   const httpFallback = `${CARTRIDGE_BASE_URL}${encodeURIComponent(glyph)}`;
   const combined = `${httpFallback}#sha256=${hashHex}`;
 
@@ -89,7 +89,7 @@ export async function encodeCartridgeQR(
 /**
  * Generate a QR code as an SVG string from a canonical identity.
  *
- * SVG output is resolution-independent — ideal for print and high-DPI.
+ * SVG output is resolution-independent. ideal for print and high-DPI.
  *
  * @param identity  The UOR canonical identity to encode.
  * @param config    Optional QR rendering config.

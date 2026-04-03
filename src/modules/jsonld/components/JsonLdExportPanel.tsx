@@ -47,7 +47,7 @@ export function JsonLdExportPanel({ ring }: { ring: UORRing }) {
     <div className="rounded-lg border border-border bg-card p-5">
       <h3 className="text-sm font-semibold mb-3">JSON-LD Export (W3C 1.1)</h3>
       <p className="text-xs text-muted-foreground mb-4">
-        Emit a complete JSON-LD document for Q{ring.quantum} — loadable by any standard
+        Emit a complete JSON-LD document for Q{ring.quantum}. loadable by any standard
         triplestore (Oxigraph, Jena, GraphDB).
       </p>
 

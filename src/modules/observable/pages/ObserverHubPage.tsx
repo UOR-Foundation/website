@@ -1,5 +1,5 @@
 /**
- * Observer Hub — Unified Navigation for Self-Reflective Observation
+ * Observer Hub. Unified Navigation for Self-Reflective Observation
  * ═════════════════════════════════════════════════════════════════
  *
  * Links to all three observer views with live zone badges
@@ -86,9 +86,9 @@ const VIEWS: ViewDef[] = [
 
 export default function ObserverHubPage() {
   const [statuses, setStatuses] = useState<Record<string, ViewStatus>>({
-    "meta-observer": { zone: "COHERENCE", label: "Idle", metric: "—" },
-    "multi-scale": { zone: "COHERENCE", label: "Idle", metric: "—" },
-    "stream-projection": { zone: "COHERENCE", label: "Idle", metric: "—" },
+    "meta-observer": { zone: "COHERENCE", label: "Idle", metric: ". " },
+    "multi-scale": { zone: "COHERENCE", label: "Idle", metric: ". " },
+    "stream-projection": { zone: "COHERENCE", label: "Idle", metric: ". " },
   });
   const [systemEventCount, setSystemEventCount] = useState(0);
   const [probeRunning, setProbeRunning] = useState(false);
@@ -196,7 +196,7 @@ export default function ObserverHubPage() {
   return (
     <PageShell
       title="Observer Hub"
-      subtitle="Self-reflective observation — the system watching itself"
+      subtitle="Self-reflective observation. the system watching itself"
     >
       <div className="space-y-8">
         {/* ── Probe Control ──────────────────────────────────────────── */}

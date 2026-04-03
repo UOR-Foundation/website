@@ -1,5 +1,5 @@
 /**
- * UOR Observer Theory — Observer Class with Coherence Zones & Protocols.
+ * UOR Observer Theory. Observer Class with Coherence Zones & Protocols.
  *
  * Implements the three-zone coherence model and three remediation protocols:
  *   - OIP (Observer Integration Protocol): COHERENCE → DRIFT transition
@@ -12,7 +12,7 @@
  *   COLLAPSE:  H > threshold_high
  *
  * @see .well-known/uor.json observer_theory
- * @see spec/src/namespaces/state.rs — observer state model
+ * @see spec/src/namespaces/state.rs. observer state model
  */
 
 import { hScoreMultiByte } from "./h-score";
@@ -69,7 +69,7 @@ export interface ObserverProfile {
   observationCount: number;
   remediationHistory: RemediationRecord[];
   convergenceAchieved: boolean;
-  /** God Conjecture integration metrics — the "absorber function" */
+  /** God Conjecture integration metrics. the "absorber function" */
   integration: IntegrationMetrics;
 }
 
@@ -101,7 +101,7 @@ export function assignZone(
 // ── UnsObserver ─────────────────────────────────────────────────────────────
 
 /**
- * Observer Theory engine — tracks agent coherence with the Grade-A graph.
+ * Observer Theory engine. tracks agent coherence with the Grade-A graph.
  *
  * Monitors agents via H-score, assigns coherence zones, and dispatches
  * remediation protocols (OIP, EDP, CAP) on zone transitions.
@@ -131,7 +131,7 @@ export class UnsObserver {
   ): ObserverProfile {
     const now = new Date().toISOString();
     // Compute Tzimtzum depth: how restricted this observer's graph is
-    // τ = log2(256 / graphSize) — full graph = 0, single element = 8
+    // τ = log2(256 / graphSize). full graph = 0, single element = 8
     const graphSize = this.gradeAGraph.length;
     const tzimtzumDepth = graphSize > 0 ? Math.log2(256 / graphSize) : 8;
 
@@ -246,13 +246,13 @@ export class UnsObserver {
     profile.remediationHistory.push({
       protocol: "OIP",
       at: new Date().toISOString(),
-      result: "cert:TransformCertificate issued — re-derive from Grade-A graph",
+      result: "cert:TransformCertificate issued. re-derive from Grade-A graph",
     });
 
     return {
       protocol: "OIP",
       issued: true,
-      reason: `H-score=${profile.hScore}, zone=${profile.zone} — re-derivation requested`,
+      reason: `H-score=${profile.hScore}, zone=${profile.zone}. re-derivation requested`,
     };
   }
 
@@ -319,7 +319,7 @@ export class UnsObserver {
     profile.remediationHistory.push({
       protocol: "CAP",
       at: new Date().toISOString(),
-      result: "Agent quarantined — requires Grade-A re-derivation for re-admission",
+      result: "Agent quarantined. requires Grade-A re-derivation for re-admission",
     });
 
     profile.convergenceAchieved = false;
@@ -327,7 +327,7 @@ export class UnsObserver {
     return {
       protocol: "CAP",
       quarantined: true,
-      reason: `H-score=${profile.hScore} — agent quarantined, fresh registration required`,
+      reason: `H-score=${profile.hScore}. agent quarantined, fresh registration required`,
     };
   }
 

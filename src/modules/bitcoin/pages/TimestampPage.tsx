@@ -137,7 +137,7 @@ function TimestampPage() {
         const parsed = JSON.parse(jsonInput);
         const subject = parsed["@type"] || parsed.type || "UOR Object";
         const cert = await generateCertificate(subject, parsed);
-        // Extract the hex from the CID — use the sourceHash which is already hex
+        // Extract the hex from the CID. use the sourceHash which is already hex
         hash = cert["cert:sourceHash"];
         setCertHash(hash);
       }
@@ -172,7 +172,7 @@ function TimestampPage() {
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Anchor any UOR object to the Bitcoin blockchain. Generate a complete raw transaction
-              template with an OP_RETURN output carrying the object's SHA-256 canonical identity —
+              template with an OP_RETURN output carrying the object's SHA-256 canonical identity.
               an immutable, globally-timestamped proof of existence.
             </p>
           </div>
@@ -329,7 +329,7 @@ function TimestampPage() {
                   <div>
                     <h3 className="font-display text-lg font-bold text-foreground">Transaction Template</h3>
                     <p className="text-xs text-muted-foreground">
-                      {txResult.isTemplate ? "Template — replace placeholders before broadcast" : "Ready for signing"}
+                      {txResult.isTemplate ? "Template. replace placeholders before broadcast" : "Ready for signing"}
                     </p>
                   </div>
                 </div>
@@ -443,7 +443,7 @@ function TimestampPage() {
                       Once broadcast and confirmed, this transaction creates an{" "}
                       <strong className="text-foreground">immutable, globally-timestamped</strong> proof
                       that this UOR object existed at a specific moment in time. The Bitcoin blockchain
-                      provides the timestamp — no trusted third party, no centralized authority. Anyone
+                      provides the timestamp. no trusted third party, no centralized authority. Anyone
                       can independently verify the OP_RETURN output contains the object's SHA-256 identity
                       and reconstruct the full verification chain:{" "}
                       <code className="font-mono text-xs px-1 py-0.5 rounded bg-muted">

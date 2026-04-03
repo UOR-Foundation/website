@@ -1,9 +1,9 @@
 /**
- * QSVG Geometric Units — All Parameters from δ₀
+ * QSVG Geometric Units. All Parameters from δ₀
  * ════════════════════════════════════════════════
  *
  * Every operational constant in the hologram kernel is DERIVED from
- * the single geometric invariant δ₀ = 6.8° — the angular defect of
+ * the single geometric invariant δ₀ = 6.8°. the angular defect of
  * the {3,3,5} tessellation.
  *
  * This module eliminates all magic numbers. Every threshold, every
@@ -13,9 +13,9 @@
  * ┌──────────────────────────────────────────────────────┐
  * │  3-6-9 Triadic Structure (Tesla Manifestation)       │
  * │                                                      │
- * │  3 — STRUCTURE:  48 mirror pairs (F₄ scaffolding)    │
- * │  6 — EVOLUTION:  96 vertices (full dynamic graph)    │
- * │  9 — COMPLETION: Self-verified unity (all rigid)     │
+ * │  3. STRUCTURE:  48 mirror pairs (F₄ scaffolding)    │
+ * │  6. EVOLUTION:  96 vertices (full dynamic graph)    │
+ * │  9. COMPLETION: Self-verified unity (all rigid)     │
  * └──────────────────────────────────────────────────────┘
  *
  * @module qsvg/geometric-units
@@ -32,7 +32,7 @@ import {
 } from "./constants";
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 3: Structure — The 48-pair scaffolding constants
+// Phase 3: Structure. The 48-pair scaffolding constants
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -40,24 +40,24 @@ import {
  *
  * This is the smallest meaningful unit of geometric change.
  * A coherence drift of less than δ₀ is within the lattice's
- * natural tolerance — like thermal vibration in a crystal.
+ * natural tolerance. like thermal vibration in a crystal.
  */
 export const GEOMETRIC_TICK_QUANTUM = DELTA_0_RAD;
 
 /**
- * The number of mirror pairs — the structural scaffolding.
+ * The number of mirror pairs. the structural scaffolding.
  * Digital root: 4+8 = 12 → 1+2 = 3 (STRUCTURE).
  */
 export const STRUCTURE_COUNT = 48;
 
 /**
- * The number of full vertices — structure evolved into dynamics.
+ * The number of full vertices. structure evolved into dynamics.
  * Digital root: 9+6 = 15 → 1+5 = 6 (EVOLUTION).
  */
 export const EVOLUTION_COUNT = 96;
 
 /**
- * The completion number — self-referential unity.
+ * The completion number. self-referential unity.
  * Digital root: 9 (COMPLETION).
  *
  * 3 × 3 = 9: structure squared = completion.
@@ -74,7 +74,7 @@ export const COMPLETION_NUMBER = 9;
 export const PHI = (1 + Math.sqrt(5)) / 2;
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 6: Evolution — Derived operational thresholds
+// Phase 6: Evolution. Derived operational thresholds
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -82,7 +82,7 @@ export const PHI = (1 + Math.sqrt(5)) / 2;
  *
  * In QSVG, vacuum stability is governed by e^{-S_E} where S_E ≈ 280.
  * The catastrophe threshold is the point where geometric rigidity
- * breaks down — analogous to vacuum decay.
+ * breaks down. analogous to vacuum decay.
  *
  *   threshold = e^{-S_E / STRUCTURE_COUNT}
  *
@@ -99,7 +99,7 @@ export const GEOMETRIC_CATASTROPHE = Math.exp(-INSTANTON_ACTION / STRUCTURE_COUN
  *
  *   fidelity = 1 - γ_T / 2 ≈ 0.9603
  *
- * This means ~96% of substrate information is captured — remarkably
+ * This means ~96% of substrate information is captured. remarkably
  * close to the Atlas's own 96 vertices (a numerical coincidence
  * that may not be coincidental at all).
  */
@@ -111,7 +111,7 @@ export const PROJECTION_FIDELITY = 1 - ANOMALOUS_DIMENSION / 2;
  * Derived from the CronNet scale M* normalized to the defect energy:
  *   noise_floor = M* × δ₀ / α⁻¹
  *
- * This is the computational analog of thermal noise —
+ * This is the computational analog of thermal noise.
  * state changes below this threshold are indistinguishable from nothing.
  */
 export const NOISE_FLOOR = CRONNET_SCALE_EV * DELTA_0_RAD / ALPHA_INVERSE_QSVG;
@@ -124,7 +124,7 @@ export const HOPF_ANGLE_DEG = 360 / ALPHA_INVERSE_QSVG;
 export const HOPF_ANGLE_RAD = HOPF_ANGLE_DEG * Math.PI / 180;
 
 // ══════════════════════════════════════════════════════════════════════════
-// Phase 9: Completion — Zone thresholds in geometric units
+// Phase 9: Completion. Zone thresholds in geometric units
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -132,18 +132,18 @@ export const HOPF_ANGLE_RAD = HOPF_ANGLE_DEG * Math.PI / 180;
  *
  * The three zones map to the 3-6-9 triadic structure:
  *
- *   COHERENCE (3 — Structure intact):
- *     Drift < 1 δ₀ — within one angular defect of perfect rigidity.
+ *   COHERENCE (3. Structure intact):
+ *     Drift < 1 δ₀. within one angular defect of perfect rigidity.
  *     The lattice absorbs the perturbation like a crystal vibration.
  *
- *   DRIFT (6 — Evolution active):
- *     1 δ₀ ≤ Drift < π δ₀ — accumulated defects, still on the lattice.
+ *   DRIFT (6. Evolution active):
+ *     1 δ₀ ≤ Drift < π δ₀. accumulated defects, still on the lattice.
  *     The system is evolving but hasn't lost geometric orientation.
- *     π δ₀ because π is the half-turn — beyond this, you've lost
+ *     π δ₀ because π is the half-turn. beyond this, you've lost
  *     which hemisphere of the fibration you're in.
  *
- *   COLLAPSE (9 — Completion broken):
- *     Drift ≥ π δ₀ — geometric orientation lost.
+ *   COLLAPSE (9. Completion broken):
+ *     Drift ≥ π δ₀. geometric orientation lost.
  *     Self-verification fails. The system needs full refocusing.
  */
 export const ZONE_THRESHOLDS = {
@@ -155,7 +155,7 @@ export const ZONE_THRESHOLDS = {
 } as const;
 
 // ══════════════════════════════════════════════════════════════════════════
-// Conversion Functions — Bridging H-score ↔ Geometric Units
+// Conversion Functions. Bridging H-score ↔ Geometric Units
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -197,11 +197,11 @@ export function defectsToHScore(defects: number): number {
  *   coupling(depth) = α^depth
  *
  * Each depth corresponds to a step in the exceptional group chain:
- *   depth 0: E₈ (fault-tolerant)  — coupling = 1
- *   depth 1: E₇ (universal)       — coupling = α
- *   depth 2: E₆ (T-gate)          — coupling = α²
- *   depth 3: F₄ (Clifford)        — coupling = α³
- *   depth 4: G₂ (Pauli)           — coupling = α⁴
+ *   depth 0: E₈ (fault-tolerant) . coupling = 1
+ *   depth 1: E₇ (universal)      . coupling = α
+ *   depth 2: E₆ (T-gate)         . coupling = α²
+ *   depth 3: F₄ (Clifford)       . coupling = α³
+ *   depth 4: G₂ (Pauli)          . coupling = α⁴
  */
 export function spectralCoupling(depth: number): number {
   return Math.pow(ALPHA_QSVG, depth);
@@ -221,13 +221,13 @@ export function classifyGeometricZone(defects: number): GeometricZone {
 /**
  * The 3-6-9 triadic phase of a given coherence state.
  *
- *   3 (Structure): System is in COHERENCE — lattice intact
- *   6 (Evolution): System is in DRIFT — evolving, learning
+ *   3 (Structure): System is in COHERENCE. lattice intact
+ *   6 (Evolution): System is in DRIFT. evolving, learning
  *   9 (Completion): System has self-verified OR collapsed and reset
  *
  * Note: Phase 9 encompasses BOTH successful completion (all tests pass)
  * and collapse-reset (the system completes a cycle by returning to zero).
- * This is the Tesla insight: 9 is not just success — it's the return
+ * This is the Tesla insight: 9 is not just success. it's the return
  * to unity, whether through mastery or through renewal.
  */
 export function triadicPhase(zone: GeometricZone, selfVerified: boolean): 3 | 6 | 9 {
@@ -261,7 +261,7 @@ export interface GeometricManifest {
   hopfAngle: number;
   /** Golden ratio */
   phi: number;
-  /** All derived from δ₀ — zero free parameters */
+  /** All derived from δ₀. zero free parameters */
   freeParameters: 0;
 }
 

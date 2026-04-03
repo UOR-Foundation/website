@@ -1,5 +1,5 @@
 /**
- * StatCard — Stat widget for metrics display.
+ * StatCard. Stat widget for metrics display.
  */
 
 import type { ReactNode } from "react";

@@ -1,5 +1,5 @@
 /**
- * UNS Build — Compose (Multi-Service Orchestration)
+ * UNS Build. Compose (Multi-Service Orchestration)
  *
  * The UOR equivalent of Docker Compose. Defines multiple services,
  * their dependencies, networking, volumes, and environment in a
@@ -10,11 +10,11 @@
  * backwards compatibility.
  *
  * Every composed application receives a canonical ID derived from
- * its service graph — identical configurations always produce
+ * its service graph. identical configurations always produce
  * identical canonical IDs.
  *
- * @see build: namespace — UOR build system
- * @see compute: namespace — content-addressed functions
+ * @see build: namespace. UOR build system
+ * @see compute: namespace. content-addressed functions
  */
 
 import { singleProofHash } from "../core/identity";
@@ -26,7 +26,7 @@ import type { UorImage } from "./uorfile";
 export interface ComposeService {
   /** Service name (e.g., "web", "api", "db"). */
   name: string;
-  /** Image reference — UOR canonical ID, Docker ref, or build context. */
+  /** Image reference. UOR canonical ID, Docker ref, or build context. */
   image?: string;
   /** Build context (path or inline Uorfile/Dockerfile). */
   build?: ComposeBuildConfig;
@@ -292,7 +292,7 @@ function parseService(name: string, def: Record<string, unknown>): ComposeServic
 const runningApps = new Map<string, ComposeApp>();
 
 /**
- * `uor compose up` — Start all services defined in a compose spec.
+ * `uor compose up`. Start all services defined in a compose spec.
  *
  * Pipeline:
  *   1. Topological sort services by depends_on
@@ -359,7 +359,7 @@ export async function composeUp(
 }
 
 /**
- * `uor compose down` — Stop all services in a compose app.
+ * `uor compose down`. Stop all services in a compose app.
  */
 export async function composeDown(projectName: string): Promise<boolean> {
   const app = runningApps.get(projectName);
@@ -375,7 +375,7 @@ export async function composeDown(projectName: string): Promise<boolean> {
 }
 
 /**
- * `uor compose ps` — List services and their status.
+ * `uor compose ps`. List services and their status.
  */
 export function composePs(projectName: string): ComposeServiceStatus[] {
   const app = runningApps.get(projectName);
@@ -384,7 +384,7 @@ export function composePs(projectName: string): ComposeServiceStatus[] {
 }
 
 /**
- * `uor compose scale <service>=<replicas>` — Scale a service.
+ * `uor compose scale <service>=<replicas>`. Scale a service.
  */
 export function composeScale(
   projectName: string,
@@ -432,7 +432,7 @@ function topologicalSort(services: Map<string, ComposeService>): ComposeService[
 
   function visit(name: string): void {
     if (visited.has(name)) return;
-    if (visiting.has(name)) return; // Circular dependency — skip
+    if (visiting.has(name)) return; // Circular dependency. skip
 
     visiting.add(name);
     const svc = services.get(name);

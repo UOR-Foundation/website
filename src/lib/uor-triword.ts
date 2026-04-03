@@ -1,5 +1,5 @@
 /**
- * UOR Triword Encoding — Human-Readable Canonical Coordinates
+ * UOR Triword Encoding. Human-Readable Canonical Coordinates
  * ═══════════════════════════════════════════════════════════════
  *
  * WHAT THIS MODULE DOES
@@ -10,12 +10,12 @@
  *
  * WHY THREE WORDS
  * ───────────────
- * The UOR framework is built on triality — every object in the
+ * The UOR framework is built on triality. every object in the
  * universe is fully described by exactly three coordinates:
  *
- *   1. Observer   — the entity, the subject, the "who"
- *   2. Observable — the property, the quality, the "what"
- *   3. Context    — the frame, the setting, the "where"
+ *   1. Observer  . the entity, the subject, the "who"
+ *   2. Observable. the property, the quality, the "what"
+ *   3. Context   . the frame, the setting, the "where"
  *
  * Each word in the triword maps to one of these dimensions.
  * The three words ARE the three coordinates of the object,
@@ -31,14 +31,14 @@
  *      Byte 2 → Context word    (256 nouns: frames, places)
  * 4. Result: "observer.observable.context"
  *
- * This gives 256³ = 16,777,216 unique triwords — more than enough
+ * This gives 256³ = 16,777,216 unique triwords. more than enough
  * for practical disambiguation. The full canonical ID remains the
  * authoritative, collision-free reference.
  *
  * FIRST-PRINCIPLES DERIVATION
  * ───────────────────────────
  * The wordlists are NOT arbitrary. They are derived from a
- * Genesis Object — a canonical JSON-LD document that defines
+ * Genesis Object. a canonical JSON-LD document that defines
  * the selection criteria for each dimension. The Genesis Object
  * is itself content-addressed, creating a self-referential
  * bootstrap: the triword system's identity is derived from
@@ -61,17 +61,17 @@
  *
  * UOR COMPLIANCE
  * ──────────────
- * ✓ Content-addressed — wordlists have a canonical ID
- * ✓ Self-verifying — integrity checked on every load
- * ✓ Triality-aligned — three dimensions map to framework primitives
- * ✓ Deterministic — same hash always produces the same triword
- * ✓ Reversible — triword → hash prefix → lookup
- * ✓ URDNA2015 — genesis object canonicalized via standard pipeline
+ * ✓ Content-addressed. wordlists have a canonical ID
+ * ✓ Self-verifying. integrity checked on every load
+ * ✓ Triality-aligned. three dimensions map to framework primitives
+ * ✓ Deterministic. same hash always produces the same triword
+ * ✓ Reversible. triword → hash prefix → lookup
+ * ✓ URDNA2015. genesis object canonicalized via standard pipeline
  *
  * @module uor-triword
  * @version 2.0.0
- * @see UOR Triality — Observer / Observable / Context
- * @see UOR Content Registry — self-certification
+ * @see UOR Triality. Observer / Observable / Context
+ * @see UOR Content Registry. self-certification
  */
 
 // ── Genesis Object ──────────────────────────────────────────────────────────
@@ -93,13 +93,13 @@ export const TRIWORD_GENESIS = {
     "Each word corresponds to one of three fundamental dimensions: " +
     "Observer (entity), Observable (quality), Context (realm). " +
     "The vocabulary is curated to evoke a sense of wholeness and " +
-    "connectedness across all ecosystems — earth, sea, forest, sky, " +
-    "space, and humanity — embedding the feeling of unity with self, " +
+    "connectedness across all ecosystems. earth, sea, forest, sky, " +
+    "space, and humanity. embedding the feeling of unity with self, " +
     "planet, nature, and cosmos. Words are simple, memorable, and " +
     "phonetically distinct for use as shareable addresses.",
   "uor:genesis": {
     "uor:description":
-      "The coordinate origin [0,0,0] resolves to Theos · Logos · Sophia — " +
+      "The coordinate origin [0,0,0] resolves to Theos · Logos · Sophia. " +
       "the philosophical seed from which all addresses radiate outward.",
     "uor:observer_0": "theos",
     "uor:observable_0": "logos",
@@ -108,7 +108,7 @@ export const TRIWORD_GENESIS = {
   "uor:triality": {
     "uor:observer": {
       "uor:description":
-        "Beings and forces across all ecosystems — creatures of land, sea, " +
+        "Beings and forces across all ecosystems. creatures of land, sea, " +
         "and sky; plants, minerals, and cosmic entities; human archetypes " +
         "and natural forces. The living, breathing 'who' of every object.",
       "uor:cardinality": 256,
@@ -117,7 +117,7 @@ export const TRIWORD_GENESIS = {
     },
     "uor:observable": {
       "uor:description":
-        "Qualities of connection — how things feel, move, and relate. " +
+        "Qualities of connection. how things feel, move, and relate. " +
         "Textures, temperatures, light states, and elemental properties " +
         "that evoke harmony, equilibrium, and the sensory experience of nature.",
       "uor:cardinality": 256,
@@ -126,7 +126,7 @@ export const TRIWORD_GENESIS = {
     },
     "uor:context": {
       "uor:description":
-        "Realms and habitats spanning every ecosystem — terrestrial " +
+        "Realms and habitats spanning every ecosystem. terrestrial " +
         "landscapes, ocean depths, forest canopies, atmospheric heights, " +
         "and cosmic expanses. The grounded, spatial 'where' of every observation.",
       "uor:cardinality": 256,
@@ -156,9 +156,9 @@ export const TRIWORD_GENESIS = {
   ],
 } as const;
 
-// ── Wordlists — Triality-Aligned Dimensions ─────────────────────────────────
+// ── Wordlists. Triality-Aligned Dimensions ─────────────────────────────────
 //
-// OBSERVER (Dimension 1) — 256 nouns
+// OBSERVER (Dimension 1). 256 nouns
 // Beings and forces across all ecosystems: creatures of land, sea, and sky;
 // plants and minerals; cosmic entities; human archetypes and natural forces.
 // Index 0 = "theos" (genesis kernel). Remaining 255 sorted alphabetically.
@@ -199,7 +199,7 @@ const OBSERVERS: readonly string[] = [
 ] as const;
 
 //
-// OBSERVABLE (Dimension 2) — 256 adjectives
+// OBSERVABLE (Dimension 2). 256 adjectives
 // Qualities of connection: textures, temperatures, light states, movements,
 // and elemental properties that evoke harmony, equilibrium, and the sensory
 // experience of nature. Index 0 = "logos" (genesis kernel).
@@ -240,7 +240,7 @@ const OBSERVABLES: readonly string[] = [
 ] as const;
 
 //
-// CONTEXT (Dimension 3) — 256 nouns
+// CONTEXT (Dimension 3). 256 nouns
 // Realms and habitats spanning every ecosystem: terrestrial landscapes,
 // ocean depths, forest canopies, atmospheric heights, and cosmic expanses.
 // Index 0 = "sophia" (genesis kernel).
@@ -297,7 +297,7 @@ let genesisDerivationId: string | null = null;
  * the wordlists and selection criteria), producing a derivation ID
  * that anchors the entire encoding system.
  *
- * This function is idempotent — safe to call multiple times.
+ * This function is idempotent. safe to call multiple times.
  *
  * @returns The genesis derivation ID
  */
@@ -355,7 +355,7 @@ export async function initTriwordGenesis(): Promise<string> {
     return genesisDerivationId;
   } catch (err) {
     console.error("[UOR Triword] Genesis verification failed:", err);
-    // Still allow encoding to work — the wordlists are correct even
+    // Still allow encoding to work. the wordlists are correct even
     // if the canonicalization library isn't available
     genesisVerified = true;
     genesisDerivationId = "unverified";
@@ -446,7 +446,7 @@ function extractTriwordBytes(canonicalId: string): [number, number, number] {
  *   Byte 1 → Observable dimension
  *   Byte 2 → Context dimension
  *
- * @param canonicalId — CID, derivation ID, or hex hash
+ * @param canonicalId. CID, derivation ID, or hex hash
  * @returns Dot-separated triword: "observer.observable.context"
  */
 export function canonicalToTriword(canonicalId: string): string {
@@ -465,7 +465,7 @@ export function canonicalToTriword(canonicalId: string): string {
  * Reverse lookup: finds the index of each word in its dimension
  * and reconstructs the first 3 bytes (6 hex chars) of the hash.
  *
- * @param triword — Dot-separated "observer.observable.context"
+ * @param triword. Dot-separated "observer.observable.context"
  * @returns 6-character hex prefix, or null if any word is invalid
  *
  * @example
@@ -493,7 +493,7 @@ export function triwordToPrefix(triword: string): string | null {
 /**
  * Validate whether a string is a valid triword.
  *
- * @param triword — String to validate
+ * @param triword. String to validate
  * @returns true if all three words exist in their respective dimensions
  */
 export function isValidTriword(triword: string): boolean {
@@ -562,7 +562,7 @@ export function triwordSpace(): number {
  *
  * Useful for UI autocomplete, validation, and documentation.
  *
- * @param dimension — "observer", "observable", or "context"
+ * @param dimension. "observer", "observable", or "context"
  * @returns Read-only array of words for that dimension
  */
 export function getWordlist(

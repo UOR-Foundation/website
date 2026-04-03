@@ -1,5 +1,5 @@
 /**
- * UOR Entity Deduplication — groups entities by derivation identity.
+ * UOR Entity Deduplication. groups entities by derivation identity.
  *
  * Two entities with the same derivation_id are provably the same concept.
  * This replaces owl:sameAs assertions with computable equality.

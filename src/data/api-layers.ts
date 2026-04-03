@@ -1,5 +1,5 @@
 /**
- * API layer and endpoint data — serializable for UOR certification.
+ * API layer and endpoint data. serializable for UOR certification.
  * Icons are mapped at the component level by iconKey.
  */
 import type { Endpoint, V2Stub, DiscoveryEndpoint } from "@/modules/api-explorer/types";

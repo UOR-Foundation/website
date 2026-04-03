@@ -1,5 +1,5 @@
 /**
- * UNS Shield — Ring-Arithmetic Partition Analysis Engine
+ * UNS Shield. Ring-Arithmetic Partition Analysis Engine
  *
  * Classifies network traffic using the UOR ring R_8 = Z/256Z partition
  * structure. Every byte belongs to exactly one of four algebraic classes:
@@ -9,7 +9,7 @@
  *   IRREDUCIBLE b is odd, b ∉ {1, 255}          (126 values)
  *   REDUCIBLE   b is even, b ∉ {0, 128}         (126 values)
  *
- * CANONICAL SOURCE: spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2}
+ * CANONICAL SOURCE: spec/src/namespaces/partition.rs. ExteriorSet = {0, m/2}
  *   128 is exterior because it is the unique fixed point of negation
  *   (neg(128) = 128) and the maximal zero divisor (128 × 2 ≡ 0 mod 256).
  *   It generates the unique maximal ideal ⟨128⟩ = {0, 128} in Z/256Z.
@@ -18,8 +18,8 @@
  * Flood traffic (null bytes, repeated patterns) has near-zero density.
  * This enables sub-microsecond DDoS classification at the byte level.
  *
- * @see spec/src/namespaces/partition.rs — ExteriorSet definition
- * @see src/lib/uor-ring.ts classifyByte — canonical classification logic
+ * @see spec/src/namespaces/partition.rs. ExteriorSet definition
+ * @see src/lib/uor-ring.ts classifyByte. canonical classification logic
  */
 
 import { CATASTROPHE_THRESHOLD } from "@/modules/observable/geometry";
@@ -58,7 +58,7 @@ export interface PartitionResult {
   holonomyOfPayloadPath: number;
 }
 
-/** Lightweight analysis result (fast path — no per-byte array). */
+/** Lightweight analysis result (fast path. no per-byte array). */
 export interface PartitionResultFast {
   density: number;
   action: ShieldAction;
@@ -83,7 +83,7 @@ const BYTE_CLASS: PartitionClass[] = new Array(256);
 
 for (let b = 0; b < 256; b++) {
   if (b === 0 || b === 128) {
-    // spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2}
+    // spec/src/namespaces/partition.rs. ExteriorSet = {0, m/2}
     BYTE_CLASS[b] = "EXTERIOR";
   } else if (b === 1 || b === 255) {
     BYTE_CLASS[b] = "UNIT";
@@ -100,12 +100,12 @@ for (let b = 0; b < 256; b++) {
  * Map density to shield action.
  *
  * BLOCK threshold is ring-derived from CATASTROPHE_THRESHOLD = 4/256 = 0.015625.
- * Source: observable:CatastropheThreshold — (UnitSet + ExteriorSet) / 256.
+ * Source: observable:CatastropheThreshold. (UnitSet + ExteriorSet) / 256.
  *
  *   density >= 0.40                      → PASS       (typical HTTPS: 0.40–0.65)
- *   density >= 0.25                      → WARN       (low entropy — possible bot)
+ *   density >= 0.25                      → WARN       (low entropy. possible bot)
  *   density >  CATASTROPHE_THRESHOLD     → CHALLENGE  (ring PoW required)
- *   density <= CATASTROPHE_THRESHOLD     → BLOCK      (structural collapse — flood/spam)
+ *   density <= CATASTROPHE_THRESHOLD     → BLOCK      (structural collapse. flood/spam)
  */
 function densityToAction(density: number): ShieldAction {
   if (density >= 0.40) return "PASS";
@@ -238,7 +238,7 @@ export function analyzePayload(payload: Uint8Array): PartitionResult {
 }
 
 /**
- * Fast-path partition analysis — density and action only.
+ * Fast-path partition analysis. density and action only.
  *
  * Skips per-byte array allocation for maximum throughput.
  * Produces identical density and action values as analyzePayload().

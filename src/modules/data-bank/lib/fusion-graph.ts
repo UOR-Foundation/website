@@ -1,5 +1,5 @@
 /**
- * Universal Fusion Graph — Holographic Surface Assembler
+ * Universal Fusion Graph. Holographic Surface Assembler
  * ══════════════════════════════════════════════════════════
  *
  * Implements the graph union operation that merges multi-modal data
@@ -10,7 +10,7 @@
  * The holographic principle: N-dimensional multi-modal experience
  * projected losslessly onto a finite 256-bit canonical surface.
  * Each modality is a "projection operator" that maps domain objects
- * into CompressibleTriple[] — the universal intermediate form.
+ * into CompressibleTriple[]. the universal intermediate form.
  * The fusion graph is their union, compressed to approach the
  * Shannon entropy bound.
  *

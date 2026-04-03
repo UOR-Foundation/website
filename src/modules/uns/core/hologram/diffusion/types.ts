@@ -1,9 +1,9 @@
 /**
- * Hologram Diffusion Engine — Type Definitions
+ * Hologram Diffusion Engine. Type Definitions
  * ══════════════════════════════════════════════
  *
  * Types for the sovereign, browser-native Stable Diffusion 1.5 pipeline.
- * Runs entirely via ONNX Runtime Web + WebGPU — zero server dependency.
+ * Runs entirely via ONNX Runtime Web + WebGPU. zero server dependency.
  *
  * @module uns/core/hologram/diffusion/types
  */
@@ -26,7 +26,7 @@ export interface DiffusionConfig {
   seed: number | null;
   /** ONNX Runtime execution provider */
   executionProvider: "webgpu" | "wasm" | "cpu";
-  /** Weight precision — fp16 halves download size (~2GB vs ~4.1GB) */
+  /** Weight precision. fp16 halves download size (~2GB vs ~4.1GB) */
   precision: DiffusionPrecision;
 }
 
@@ -124,7 +124,7 @@ export const SD15_ONNX_FP32_MANIFEST: ModelFileManifest = {
   totalSizeMB: 4100,
 };
 
-/** File manifest for fp16 variant (nmkd) — ~2GB, halved download */
+/** File manifest for fp16 variant (nmkd). ~2GB, halved download */
 export const SD15_ONNX_FP16_MANIFEST: ModelFileManifest = {
   modelId: "nmkd/stable-diffusion-1.5-onnx-fp16",
   files: {
@@ -138,7 +138,7 @@ export const SD15_ONNX_FP16_MANIFEST: ModelFileManifest = {
   totalSizeMB: 2050,
 };
 
-/** Convenience alias — default to fp16 for smaller downloads */
+/** Convenience alias. default to fp16 for smaller downloads */
 export const SD15_ONNX_MANIFEST = SD15_ONNX_FP16_MANIFEST;
 
 /** Get manifest by precision */

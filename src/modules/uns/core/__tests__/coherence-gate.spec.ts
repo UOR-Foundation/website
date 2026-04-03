@@ -56,7 +56,7 @@ describe("Coherence Gate", () => {
     expect(pairs).toContain("skill-md→onnx");
   });
 
-  it("is pure — calling twice returns identical structure", () => {
+  it("is pure. calling twice returns identical structure", () => {
     const a = coherenceGate();
     const b = coherenceGate();
     expect(a.totalProjections).toBe(b.totalProjections);

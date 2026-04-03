@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — kernel::schema
+ * UOR Foundation v2.0.0. kernel::schema
  *
  * Ring elements, term language, and ring container.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * Term — the base of the term language (abstract).
+ * Term. the base of the term language (abstract).
  * All schema types are terms.
  */
 export interface Term {
@@ -17,7 +17,7 @@ export interface Term {
 }
 
 /**
- * Datum — a concrete ring element in Z/(2^n)Z.
+ * Datum. a concrete ring element in Z/(2^n)Z.
  * The fundamental data unit of the UOR framework.
  *
  * @disjoint Literal, Application, Ring
@@ -44,7 +44,7 @@ export interface Datum extends Term {
 }
 
 /**
- * Triad — the canonical decomposition of a datum.
+ * Triad. the canonical decomposition of a datum.
  * (datum, stratum, spectrum) triple.
  *
  * @disjoint Datum, Literal, Application
@@ -61,7 +61,7 @@ export interface Triad {
 }
 
 /**
- * Literal — an irreducible term (leaf in the term tree).
+ * Literal. an irreducible term (leaf in the term tree).
  *
  * @disjoint Datum, Triad, Application
  */
@@ -71,7 +71,7 @@ export interface Literal extends Term {
 }
 
 /**
- * Application — a function application term (f applied to args).
+ * Application. a function application term (f applied to args).
  *
  * @disjoint Datum, Triad, Literal
  */
@@ -83,7 +83,7 @@ export interface Application extends Term {
 }
 
 /**
- * Ring — the ring container Z/(2^n)Z.
+ * Ring. the ring container Z/(2^n)Z.
  * Houses all datums and operations for a given quantum level.
  *
  * @disjoint Datum, Triad, Literal, Application
@@ -105,14 +105,14 @@ export interface Ring {
 
 // ── Named Individuals ──────────────────────────────────────────────────────
 
-/** pi1 — the ring generator (value = 1). */
+/** pi1. the ring generator (value = 1). */
 export const PI1 = {
   "@id": "schema:pi1",
   value: 1,
   label: "Ring generator",
 } as const;
 
-/** zero — the additive identity (value = 0). */
+/** zero. the additive identity (value = 0). */
 export const ZERO = {
   "@id": "schema:zero",
   value: 0,

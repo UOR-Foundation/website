@@ -1,5 +1,5 @@
 /**
- * vShell — The Hologram OS Shell (Compound Operation)
+ * vShell. The Hologram OS Shell (Compound Operation)
  * ════════════════════════════════════════════════════
  *
  * A stateful REPL session over the HologramEngine that:
@@ -7,7 +7,7 @@
  *   2. Dispatches to the Virtual I/O syscall layer
  *   3. Returns structured ShellResult objects for UI projection
  *
- * The shell is itself a UOR object — its state (command history,
+ * The shell is itself a UOR object. its state (command history,
  * selected PID, environment) is deterministic and serializable.
  *
  * Design: ZERO new primitives. Every command delegates to an existing
@@ -88,7 +88,7 @@ export interface ShellEffects {
   persistedCount?: number;
   /** GPU benchmark result. */
   gpuBenchmark?: GpuBenchmarkResult;
-  /** Streaming text callback — set by commands that produce incremental output. */
+  /** Streaming text callback. set by commands that produce incremental output. */
   onStreamToken?: (token: string) => void;
 }
 
@@ -151,7 +151,7 @@ function resolvePid(engine: HologramEngine, partial: string): string {
 // ── vShell Class ──────────────────────────────────────────────────────────
 
 /**
- * vShell — A REPL session over the HologramEngine.
+ * vShell. A REPL session over the HologramEngine.
  *
  * Usage:
  *   const shell = new VShell(engine);
@@ -322,9 +322,9 @@ export class VShell {
    * Execute a command string with pipe and redirect support.
    *
    * Supports:
-   *   cmd1 | cmd2 | cmd3    — pipe output of one command into the next
-   *   cmd > /dev/null        — discard output
-   *   cmd >> /dev/clipboard  — append to clipboard (future)
+   *   cmd1 | cmd2 | cmd3   . pipe output of one command into the next
+   *   cmd > /dev/null       . discard output
+   *   cmd >> /dev/clipboard . append to clipboard (future)
    *
    * Filter commands (grep, head, tail, wc, sort, uniq, cat) can only
    * appear in pipeline positions after the first command.
@@ -495,7 +495,7 @@ export class VShell {
         // Filter commands used standalone (with no pipe input)
         case "grep": case "head": case "tail": case "wc":
         case "sort": case "uniq": case "cat":
-          info(`'${op}' is a filter — use it after a pipe: cmd | ${op}`);
+          info(`'${op}' is a filter. use it after a pipe: cmd | ${op}`);
           break;
 
         default:
@@ -871,7 +871,7 @@ export class VShell {
       case "bench": {
         info("Running GPU benchmark…");
         await gpu.init();
-        if (!gpu.isReady) { err("GPU unavailable — cannot benchmark."); return; }
+        if (!gpu.isReady) { err("GPU unavailable. cannot benchmark."); return; }
         const bench = await gpu.benchmark();
         out("── GPU Benchmark Results ─────────────────────");
         out(`  MatMul (128×128): ${bench.matmulGflops} GFLOPS`);
@@ -906,7 +906,7 @@ export class VShell {
         const result = await gpu.relu(input);
         const ms = Math.round((performance.now() - start) * 100) / 100;
         const negCount = Array.from(result).filter(v => v === 0).length;
-        out(`✓ ReLU: ${ms} ms — ${negCount}/${len} values clamped to 0`);
+        out(`✓ ReLU: ${ms} ms. ${negCount}/${len} values clamped to 0`);
         break;
       }
 
@@ -938,7 +938,7 @@ export class VShell {
         out(`  Tables:       ${engineInfo.tableCount} × ${engineInfo.tableSize} bytes`);
         out(`  Cache:        ${engineInfo.cacheSizeBytes} bytes (${(engineInfo.cacheSizeBytes / 256).toFixed(0)} cache lines)`);
         out(`  GPU:          ${engineInfo.gpuAvailable ? "available" : "CPU fallback"}`);
-        out(`  Identity:     neg∘bnot = succ — ${engineInfo.criticalIdentityHolds ? "✓ HOLDS" : "✗ FAILED"}`);
+        out(`  Identity:     neg∘bnot = succ. ${engineInfo.criticalIdentityHolds ? "✓ HOLDS" : "✗ FAILED"}`);
         out("──────────────────────────────────────────────");
         break;
       }
@@ -1025,7 +1025,7 @@ export class VShell {
           out(`  CID:        ${result.cid.slice(0, 40)}…`);
           out(`  Bijection:  ${bijection ? "yes" : "no"}`);
           out(`  Sample:     [0]→${result.table[0]}, [42]→${result.table[42]}, [255]→${result.table[255]}`);
-          out(`  Registered as '${name}' — use with: gpu lut apply ${name}`);
+          out(`  Registered as '${name}'. use with: gpu lut apply ${name}`);
         } catch (e) {
           err(e instanceof Error ? e.message : String(e));
         }
@@ -1049,7 +1049,7 @@ export class VShell {
 
           const speedup = cpuResult.timeMs > 0 && gpuResult.timeMs > 0
             ? (cpuResult.timeMs / gpuResult.timeMs).toFixed(1) + "×"
-            : "—";
+            : ". ";
 
           out(
             `  ${(size / 1024).toFixed(0).padStart(6)}KB` +
@@ -1102,14 +1102,14 @@ export class VShell {
   // ── AI Commands ──────────────────────────────────────────────────────
 
   /**
-   * ai <subcommand> — In-browser ONNX model inference via Transformers.js.
+   * ai <subcommand>. In-browser ONNX model inference via Transformers.js.
    *
    * Subcommands:
-   *   load [model-id]  — Download & register a HuggingFace ONNX model
-   *   run <prompt>     — Generate with active model
-   *   models           — List recommended & registered models
-   *   info             — Show active model & device info
-   *   unload           — Release model from memory
+   *   load [model-id] . Download & register a HuggingFace ONNX model
+   *   run <prompt>    . Generate with active model
+   *   models          . List recommended & registered models
+   *   info            . Show active model & device info
+   *   unload          . Release model from memory
    */
   private async cmdAi(
     args: string[],
@@ -1128,7 +1128,7 @@ export class VShell {
           return;
         }
 
-        // Find model — use arg or default to first recommended
+        // Find model. use arg or default to first recommended
         const modelArg = args.slice(1).join(" ").trim();
         let modelId: string;
         let task: AiTask = "text-generation";

@@ -1,5 +1,5 @@
 /**
- * QR Cartridge — Module Public API
+ * QR Cartridge. Module Public API
  *
  * Barrel export for the qr-cartridge module.
  * All public types and functions are re-exported here.

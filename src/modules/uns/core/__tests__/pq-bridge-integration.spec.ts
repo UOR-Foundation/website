@@ -1,5 +1,5 @@
 /**
- * PQ Bridge — Full Round-Trip Integration Test
+ * PQ Bridge. Full Round-Trip Integration Test
  * ═════════════════════════════════════════════
  *
  * Verifies the complete pipeline end-to-end:
@@ -51,7 +51,7 @@ const REALISTIC_ID: ProjectionInput = {
   hex: Array.from(REALISTIC_HASH).map(b => b.toString(16).padStart(2, "0")).join(""),
 };
 
-describe("PQ Bridge — Full Round-Trip Integration", () => {
+describe("PQ Bridge. Full Round-Trip Integration", () => {
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. Cross-projection checksum consistency
@@ -399,7 +399,7 @@ describe("PQ Bridge — Full Round-Trip Integration", () => {
       witnessHex === REALISTIC_ID.hex;
 
     console.log("\n╔═══════════════════════════════════════════════════════════╗");
-    console.log("║   PQ BRIDGE — FULL ROUND-TRIP INTEGRATION VERIFICATION   ║");
+    console.log("║   PQ BRIDGE. FULL ROUND-TRIP INTEGRATION VERIFICATION   ║");
     console.log("╠═══════════════════════════════════════════════════════════╣");
     console.log(`║ Pipeline time:       ${pipelineMs.toFixed(1).padStart(8)} ms                       ║`);
     console.log(`║ Signature bytes:      ${envelope.signature.length.toString().padStart(7)}                            ║`);

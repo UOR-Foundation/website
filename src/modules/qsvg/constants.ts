@@ -1,9 +1,9 @@
 /**
- * QSVG — Quantum Self-Verification Geometry: Foundational Constants
+ * QSVG. Quantum Self-Verification Geometry: Foundational Constants
  * ══════════════════════════════════════════════════════════════════
  *
  * The three geometric invariants of QSVG, all derived from the {3,3,5}
- * tessellation of hyperbolic space H³. These are NOT free parameters —
+ * tessellation of hyperbolic space H³. These are NOT free parameters.
  * they are geometric consequences of how regular tetrahedra tile H³.
  *
  * Source: Luis Morató de Dalmases, "QSVG: Physical Theory", March 2026.

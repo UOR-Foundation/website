@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Neuro-Symbolic Co-Reasoning Engine
+ * UOR v2.0.0. Neuro-Symbolic Co-Reasoning Engine
  *
  * Implements Option C: Interleaved Co-Reasoning.
  *
@@ -20,10 +20,10 @@
  *   └───────────────────────────────────────────────┘
  *
  * Every claim in the final output is tagged with an epistemic grade:
- *   A — Algebraically proven (ring-derived)
- *   B — Constraint-consistent (scaffold-verified)
- *   C — Plausible (low curvature, not verified)
- *   D — LLM-generated (unverified)
+ *   A. Algebraically proven (ring-derived)
+ *   B. Constraint-consistent (scaffold-verified)
+ *   C. Plausible (low curvature, not verified)
+ *   D. LLM-generated (unverified)
  *
  * @module ring-core/neuro-symbolic
  */
@@ -123,7 +123,7 @@ export interface NeuroSymbolicResult {
 
 /**
  * Analyze a user query and build a symbolic reasoning scaffold.
- * This is the deductive phase — extracting constraints from the query structure.
+ * This is the deductive phase. extracting constraints from the query structure.
  */
 export function buildScaffold(query: string, quantum: number = 0): SymbolicScaffold {
   // Extract meaningful terms (skip stop words)
@@ -335,7 +335,7 @@ function gradeSentence(
 ): { grade: EpistemicGrade; source: string; curv: number } {
   const lower = sentence.toLowerCase();
 
-  // Check term coverage — how many scaffold terms appear
+  // Check term coverage. how many scaffold terms appear
   const termsPresent = scaffold.termMap.filter(t => lower.includes(t.term));
   const termCoverage = scaffold.termMap.length > 0
     ? termsPresent.length / scaffold.termMap.length
@@ -362,7 +362,7 @@ function gradeSentence(
   // Check for hedging/uncertainty markers (epistemic signals without inline brackets)
   const hasEpistemicSignal = /\b(because|since|according to|research shows|studies suggest|evidence indicates|historically|in practice)\b/i.test(sentence);
 
-  // Grade assignment — no longer depends on {source:} markers
+  // Grade assignment. no longer depends on {source:} markers
   if (hasEpistemicSignal && constraintCoverage > 0.3 && termCoverage > 0.3) {
     return {
       grade: "A",
@@ -440,7 +440,7 @@ export function buildRefinementPrompt(
   iteration: number,
 ): string {
   return (
-    `[REFINEMENT — iteration ${iteration + 1}]\n` +
+    `[REFINEMENT. iteration ${iteration + 1}]\n` +
     `The previous response had curvature ${(curvature * 100).toFixed(1)}% ` +
     `(threshold: ${(CONVERGENCE_EPSILON * 100).toFixed(1)}%).\n\n` +
     `Issues detected (${violations.length}):\n` +
@@ -499,7 +499,7 @@ export function processResponse(
       try {
         proof = certifyProof(proof, true, report.overallCurvature < CONVERGENCE_EPSILON);
       } catch {
-        // Certification may fail if proof is incomplete — that's OK
+        // Certification may fail if proof is incomplete. that's OK
       }
     }
 
@@ -519,7 +519,7 @@ export function processResponse(
     };
   }
 
-  // Not converged — build refinement prompt
+  // Not converged. build refinement prompt
   return {
     report,
     refinementPrompt: buildRefinementPrompt(

@@ -53,7 +53,7 @@ describe("COBOL Hologram Projections", () => {
   it("COBOL shares identity with all other lossless projections", () => {
     const copybook = project(MOCK_INPUT, "cobol-copybook").value;
     const program = project(MOCK_INPUT, "cobol-program").value;
-    // Both embed the full hex — same canonical identity
+    // Both embed the full hex. same canonical identity
     expect(copybook).toContain(MOCK_INPUT.hex);
     expect(program).toContain(MOCK_INPUT.hex);
   });

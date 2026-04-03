@@ -1,5 +1,5 @@
 /**
- * Triality Coordinate System — Sigmatics (h₂, d, ℓ) Decomposition
+ * Triality Coordinate System. Sigmatics (h₂, d, ℓ) Decomposition
  * ══════════════════════════════════════════════════════════════════
  *
  * Every Atlas vertex index v ∈ [0, 95] decomposes uniquely as:
@@ -507,7 +507,7 @@ export function runTrialityVerification(): TrialityReport {
     });
   }
 
-  // Test 12: Mirror τ preserves quadrant (h₂) — since τ flips e₇ within
+  // Test 12: Mirror τ preserves quadrant (h₂). since τ flips e₇ within
   // a 12-element (e₁,e₂,e₃) block, and each quadrant spans two such blocks,
   // τ stays within the same quadrant.
   {

@@ -1,5 +1,5 @@
 /**
- * Multi-Scale Observer — Interactive Zoom Visualization
+ * Multi-Scale Observer. Interactive Zoom Visualization
  * ═════════════════════════════════════════════════════════
  *
  * A holographic zoom lens: navigate from individual bytes (L0)
@@ -154,7 +154,7 @@ export default function MultiScalePage() {
   return (
     <PageShell
       title="Multi-Scale Observer"
-      subtitle="Holographic Zoom — Same pattern at every scale"
+      subtitle="Holographic Zoom. Same pattern at every scale"
       icon={<IconEye size={18} />}
       badge="Self-Reflective"
       actions={
@@ -190,7 +190,7 @@ export default function MultiScalePage() {
 
       {mso && crossScale ? (
         <>
-          {/* Scale Navigator — the zoom ladder */}
+          {/* Scale Navigator. the zoom ladder */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm flex items-center gap-2">

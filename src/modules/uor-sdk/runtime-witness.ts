@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Runtime Witness (P8)
+ * UOR SDK. Runtime Witness (P8)
  *
  * Every invocation of a deployed app produces an auditable execution trace
  * stored on IPFS. The trace proves what the app did, when it ran, what its
@@ -9,9 +9,9 @@
  * without requiring code changes. It instruments request/response cycles
  * producing trace:ExecutionTrace records linked to the app's canonical ID.
  *
- * @see trace: namespace — execution tracing
- * @see derivation: namespace — canonical identity
- * @see observable: namespace — runtime monitoring
+ * @see trace: namespace. execution tracing
+ * @see derivation: namespace. canonical identity
+ * @see observable: namespace. runtime monitoring
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

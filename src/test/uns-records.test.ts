@@ -39,10 +39,10 @@ function makeOpts(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 0-B Tests — 10/10
+// Phase 0-B Tests. 10/10
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Phase 0-B: Records + PQC Signing", () => {
+describe("UNS Core. Phase 0-B: Records + PQC Signing", () => {
   beforeEach(() => {
     clearRecordStore();
   });

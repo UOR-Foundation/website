@@ -1,5 +1,5 @@
 /**
- * UNS Core — Name Index
+ * UNS Core. Name Index
  *
  * In-memory secondary index mapping uns:name → Set<canonicalId>.
  *
@@ -7,7 +7,7 @@
  * DHT keyspace scan. In production this would be backed by LevelDB
  * for restart persistence; here we use a Map for portability.
  *
- * The index is local to each node — not replicated across the DHT.
+ * The index is local to each node. not replicated across the DHT.
  * Each node builds its own index from records it stores or receives.
  */
 

@@ -1,5 +1,5 @@
 /**
- * UOR Trace Module — trace: namespace barrel export.
+ * UOR Trace Module. trace: namespace barrel export.
  */
 
 export { recordTrace, getTrace, getRecentTraces } from "./trace";

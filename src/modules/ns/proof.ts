@@ -1,8 +1,8 @@
 /**
- * proof: namespace — unified barrel export.
+ * proof: namespace. unified barrel export.
  *
  * Consolidates: verify + epistemic + shacl
- * Bridge Space — verification lifecycle, epistemic grading, and shape validation.
+ * Bridge Space. verification lifecycle, epistemic grading, and shape validation.
  *
  * @namespace proof:
  * @version 2.0.0

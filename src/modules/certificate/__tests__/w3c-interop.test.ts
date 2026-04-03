@@ -142,12 +142,12 @@ describe("W3C Interoperability", () => {
 
       expect(doc.service.length).toBeGreaterThanOrEqual(3);
       const types = doc.service.map(s => s.type);
-      // IPv6 — ULA content-addressed routing (fd00:0075:6f72::/48)
+      // IPv6. ULA content-addressed routing (fd00:0075:6f72::/48)
       expect(types).toContain("UorContentAddress");
       const ipv6Service = doc.service.find(s => s.type === "UorContentAddress")!;
       expect(ipv6Service.serviceEndpoint).toMatch(/^ipv6:\/\/fd00:0075:6f72:/);
       expect(ipv6Service.id).toMatch(/#ipv6$/);
-      // Glyph — Braille bijection address
+      // Glyph. Braille bijection address
       expect(types).toContain("UorBrailleAddress");
       const glyphService = doc.service.find(s => s.type === "UorBrailleAddress")!;
       expect(glyphService.serviceEndpoint).toMatch(/^urn:uor:address:[\u2800-\u28FF]+$/);
@@ -155,62 +155,62 @@ describe("W3C Interoperability", () => {
       expect(types).toContain("ActivityPubObject");
       const apService = doc.service.find(s => s.type === "ActivityPubObject")!;
       expect(apService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/ap\/objects\/[0-9a-f]{64}$/);
-      // AT Protocol — Bluesky-compatible AT URI
+      // AT Protocol. Bluesky-compatible AT URI
       expect(types).toContain("AtProtocolRecord");
       const atService = doc.service.find(s => s.type === "AtProtocolRecord")!;
       expect(atService.serviceEndpoint).toMatch(/^at:\/\/did:uor:.+\/app\.uor\.object\//);
       expect(atService.id).toMatch(/#atproto$/);
-      // OpenID Connect — OIDC subject claim
+      // OpenID Connect. OIDC subject claim
       expect(types).toContain("OpenIdConnectSubject");
       const oidcService = doc.service.find(s => s.type === "OpenIdConnectSubject")!;
       expect(oidcService.serviceEndpoint).toMatch(/^urn:uor:oidc:[0-9a-f]{64}$/);
       expect(oidcService.id).toMatch(/#oidc$/);
-      // DNS-SD / mDNS — local network discovery
+      // DNS-SD / mDNS. local network discovery
       expect(types).toContain("DnsServiceDiscovery");
       const dnssdService = doc.service.find(s => s.type === "DnsServiceDiscovery")!;
       expect(dnssdService.serviceEndpoint).toMatch(/^_uor-[0-9a-f]{12}\._tcp\.local$/);
       expect(dnssdService.id).toMatch(/#dnssd$/);
-      // GS1 Digital Link — supply chain identity
+      // GS1 Digital Link. supply chain identity
       expect(types).toContain("GS1DigitalLink");
       const gs1Service = doc.service.find(s => s.type === "GS1DigitalLink")!;
       expect(gs1Service.serviceEndpoint).toMatch(/^https:\/\/id\.gs1\.org\/8004\/[0-9a-f]{30}$/);
       expect(gs1Service.id).toMatch(/#gs1$/);
-      // Open Badges 3.0 — education credentials
+      // Open Badges 3.0. education credentials
       expect(types).toContain("OpenBadgeCredential");
       const obService = doc.service.find(s => s.type === "OpenBadgeCredential")!;
       expect(obService.serviceEndpoint).toMatch(/^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       expect(obService.id).toMatch(/#openbadges$/);
-      // OCI — container image digest
+      // OCI. container image digest
       expect(types).toContain("OciImageDigest");
       const ociService = doc.service.find(s => s.type === "OciImageDigest")!;
       expect(ociService.serviceEndpoint).toMatch(/^sha256:[0-9a-f]{64}$/);
       expect(ociService.id).toMatch(/#oci$/);
-      // CRDT / Automerge — offline-first collaboration
+      // CRDT / Automerge. offline-first collaboration
       expect(types).toContain("CrdtDocumentId");
       const crdtService = doc.service.find(s => s.type === "CrdtDocumentId")!;
       expect(crdtService.serviceEndpoint).toMatch(/^crdt:automerge:[0-9a-f]{64}$/);
       expect(crdtService.id).toMatch(/#crdt$/);
-      // STAC — geospatial catalog item
+      // STAC. geospatial catalog item
       expect(types).toContain("StacCatalogItem");
       const stacService = doc.service.find(s => s.type === "StacCatalogItem")!;
       expect(stacService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/stac\/items\/[0-9a-f]{64}$/);
       expect(stacService.id).toMatch(/#stac$/);
-      // Croissant — ML dataset metadata
+      // Croissant. ML dataset metadata
       expect(types).toContain("CroissantDataset");
       const croissantService = doc.service.find(s => s.type === "CroissantDataset")!;
       expect(croissantService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/croissant\/[0-9a-f]{64}$/);
       expect(croissantService.id).toMatch(/#croissant$/);
-      // MLS — end-to-end encrypted group messaging
+      // MLS. end-to-end encrypted group messaging
       expect(types).toContain("MlsGroupId");
       const mlsService = doc.service.find(s => s.type === "MlsGroupId")!;
       expect(mlsService.serviceEndpoint).toMatch(/^urn:ietf:params:mls:group:[0-9a-f]{64}$/);
       expect(mlsService.id).toMatch(/#mls$/);
-      // SCITT — supply chain integrity, transparency and trust
+      // SCITT. supply chain integrity, transparency and trust
       expect(types).toContain("ScittStatement");
       const scittService = doc.service.find(s => s.type === "ScittStatement")!;
       expect(scittService.serviceEndpoint).toMatch(/^urn:ietf:params:scitt:statement:sha256:[0-9a-f]{64}$/);
       expect(scittService.id).toMatch(/#scitt$/);
-      // Solid — W3C WebID for personal data pods
+      // Solid. W3C WebID for personal data pods
       expect(types).toContain("SolidWebID");
       const solidService = doc.service.find(s => s.type === "SolidWebID")!;
       expect(solidService.serviceEndpoint).toMatch(/^https:\/\/uor\.foundation\/profile\/[0-9a-f]{64}#me$/);

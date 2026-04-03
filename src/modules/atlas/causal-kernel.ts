@@ -1,5 +1,5 @@
 /**
- * Causal Kernel — Phase 26
+ * Causal Kernel. Phase 26
  * ════════════════════════
  *
  * Implements the Causal Accumulation Law on the Atlas lattice.
@@ -386,7 +386,7 @@ export function buildCausalEdges(
       weight: link.weight,
     });
 
-    // Backward edge (conjugate propagator — time reversal)
+    // Backward edge (conjugate propagator. time reversal)
     edges.push({
       from: toIdx,
       to: fromIdx,
@@ -518,7 +518,7 @@ function enumeratePaths(
     }
   }
 
-  // Pruning threshold scales as α^maxDepth — anything below the
+  // Pruning threshold scales as α^maxDepth. anything below the
   // deepest meaningful contribution is discarded early.
   const pruningThreshold = Math.pow(alpha, maxDepth + 1);
 
@@ -551,7 +551,7 @@ function enumeratePaths(
     if (!neighbors) continue;
 
     for (const edge of neighbors) {
-      // No revisiting (bitmask check — fast)
+      // No revisiting (bitmask check. fast)
       if (state.visited & (1 << edge.to)) continue;
 
       // Normalized coupling: α per hop × normalized weight

@@ -57,7 +57,7 @@ const UorVerification = () => {
 
     setResults(output);
 
-    // Content certificates — with real re-hash verification
+    // Content certificates. with real re-hash verification
     if (isContentRegistryInitialized()) {
       const certs = getAllContentCertificates();
       const contentVerified = await verifyAllContentCertificates();

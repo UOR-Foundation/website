@@ -4,7 +4,7 @@
  *
  * Verifies that all 15 synergy chains produce consistent, interoperable
  * outputs from the same canonical identity. This is the connective tissue
- * test — proving that UOR's holographic principle creates actual
+ * test. proving that UOR's holographic principle creates actual
  * functional interoperability across 145+ standards.
  *
  * @file src/test/synergy-chains.test.ts
@@ -36,7 +36,7 @@ const setup = async () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T0 — STRUCTURAL INTEGRITY
+// T0. STRUCTURAL INTEGRITY
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("T0: Synergy Structure", () => {
@@ -71,10 +71,10 @@ describe("T0: Synergy Structure", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1 — CHAIN VERIFICATION (every chain produces valid output)
+// T1. CHAIN VERIFICATION (every chain produces valid output)
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("T1: Chain Verification — All 15 Chains", () => {
+describe("T1: Chain Verification. All 15 Chains", () => {
   it("Chain 1: Identity Triangle (vc → sd-jwt → openid4vp → token-status-list)", async () => {
     await setup();
     const vc = project(testInput, "vc");
@@ -133,7 +133,7 @@ describe("T1: Chain Verification — All 15 Chains", () => {
     expect(tsl.value).toContain(testInput.hex);
   });
 
-  it("Chain 5: DID Unification Layer — did and tsp-vid produce IDENTICAL output", async () => {
+  it("Chain 5: DID Unification Layer. did and tsp-vid produce IDENTICAL output", async () => {
     await setup();
     const did = project(testInput, "did");
     const tspVid = project(testInput, "tsp-vid");
@@ -164,7 +164,7 @@ describe("T1: Chain Verification — All 15 Chains", () => {
     expect(wf.value).toMatch(/^acct:/);
   });
 
-  it("Chain 7: Blockchain Settlement — Bitcoin and Zcash produce IDENTICAL scripts", async () => {
+  it("Chain 7: Blockchain Settlement. Bitcoin and Zcash produce IDENTICAL scripts", async () => {
     await setup();
     const btc = project(testInput, "bitcoin");
     const zec = project(testInput, "zcash-transparent");
@@ -178,10 +178,10 @@ describe("T1: Chain Verification — All 15 Chains", () => {
     expect(pq.value).toContain(testInput.hex);
   });
 
-  it("Chain 8: Social Federation — Nostr event ID IS the raw hex", async () => {
+  it("Chain 8: Social Federation. Nostr event ID IS the raw hex", async () => {
     await setup();
     const nostr = project(testInput, "nostr");
-    // Nostr event ID is EXACTLY the SHA-256 hex — zero translation
+    // Nostr event ID is EXACTLY the SHA-256 hex. zero translation
     expect(nostr.value).toBe(testInput.hex);
     const ap = project(testInput, "activitypub");
     expect(ap.value).toContain(testInput.hex);
@@ -249,7 +249,7 @@ describe("T1: Chain Verification — All 15 Chains", () => {
     const c2pa = project(testInput, "c2pa");
     const cid = project(testInput, "cid");
     expect(scitt.value).toContain(testInput.hex);
-    // OCI digest IS sha256:{hex} — the most direct projection
+    // OCI digest IS sha256:{hex}. the most direct projection
     expect(oci.value).toBe(`sha256:${testInput.hex}`);
     expect(c2pa.value).toContain(testInput.hex);
     expect(cid.value).toBe(testInput.cid);
@@ -287,7 +287,7 @@ describe("T1: Chain Verification — All 15 Chains", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T2 — CROSS-PROJECTION IDENTITY INVARIANTS
+// T2. CROSS-PROJECTION IDENTITY INVARIANTS
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("T2: Identity Invariants Across Projections", () => {
@@ -337,7 +337,7 @@ describe("T2: Identity Invariants Across Projections", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T3 — SYNERGY ANALYSIS ENGINE
+// T3. SYNERGY ANALYSIS ENGINE
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("T3: Synergy Analysis Engine", () => {
@@ -387,7 +387,7 @@ describe("T3: Synergy Analysis Engine", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T4 — NEW TIER 16 PROJECTIONS (individual verification)
+// T4. NEW TIER 16 PROJECTIONS (individual verification)
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("T4: Tier 16 Projection Output Verification", () => {

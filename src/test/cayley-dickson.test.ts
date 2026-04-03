@@ -1,5 +1,5 @@
 /**
- * Cayley-Dickson ↔ Atlas Correspondence — Verification Suite
+ * Cayley-Dickson ↔ Atlas Correspondence. Verification Suite
  * ═══════════════════════════════════════════════════════════
  *
  * Proves the Cayley-Dickson doubling tower (R→C→H→O→S) maps to
@@ -18,7 +18,7 @@ import {
 // Part I: Individual Algebra Construction
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Cayley-Dickson Algebras — Construction", () => {
+describe("Cayley-Dickson Algebras. Construction", () => {
   it("R: dim=1, commutative, associative, division", () => {
     const r = constructAlgebra(0);
     expect(r.dim).toBe(1);
@@ -109,7 +109,7 @@ describe("Complete Cayley-Dickson Tower", () => {
   it("all 14 internal verification tests pass", () => {
     const tower = buildTower();
     for (const t of tower.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(tower.allPassed).toBe(true);
     expect(tower.tests.length).toBe(14);
@@ -133,7 +133,7 @@ describe("Complete Cayley-Dickson Tower", () => {
 // Part IV: Fano Plane
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Octonionic Multiplication", () => {
+describe("Fano Plane. Octonionic Multiplication", () => {
   it("has 7 points and 7 lines", () => {
     const fp = fanoPlane();
     expect(fp.points.length).toBe(7);

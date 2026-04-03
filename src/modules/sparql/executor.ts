@@ -1,5 +1,5 @@
 /**
- * SPARQL Executor — translates parsed SPARQL AST into Supabase queries
+ * SPARQL Executor. translates parsed SPARQL AST into Supabase queries
  * against the uor_triples table.
  *
  * Every result row is enriched with an epistemic grade:
@@ -83,7 +83,7 @@ export async function executeSparql(query: string): Promise<SparqlResult> {
   const start = performance.now();
   const parsed = parseSparql(query);
 
-  // Build Supabase query — use `any` to avoid deep type instantiation from chained .eq()
+  // Build Supabase query. use `any` to avoid deep type instantiation from chained .eq()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let q: any = supabase.from("uor_triples").select("*", { count: "exact" });
 

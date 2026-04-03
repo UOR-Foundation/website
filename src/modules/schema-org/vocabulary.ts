@@ -1,5 +1,5 @@
 /**
- * Schema.org Vocabulary — Embedded Core Type Hierarchy
+ * Schema.org Vocabulary. Embedded Core Type Hierarchy
  * ════════════════════════════════════════════════════
  *
  * Embeds the complete Schema.org type hierarchy (806 types) as a static

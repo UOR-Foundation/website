@@ -2,7 +2,7 @@
  * Context Synchronization Validation
  *
  * Ensures the THREE representations of the UOR JSON-LD context remain
- * synchronized — any drift breaks deterministic URDNA2015 canonicalization.
+ * synchronized. any drift breaks deterministic URDNA2015 canonicalization.
  *
  *   public/contexts/uor-v1.jsonld     ← Published (external consumers)
  *         ↕ EXACT MIRROR
@@ -42,7 +42,7 @@ const REQUIRED_UOR_NAMESPACES = [
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-describe("Context synchronization — published uor-v1.jsonld", () => {
+describe("Context synchronization. published uor-v1.jsonld", () => {
   const published = loadPublishedContext();
 
   it("contains all 9 W3C namespace prefixes", () => {
@@ -88,7 +88,7 @@ describe("Context synchronization — published uor-v1.jsonld", () => {
   });
 });
 
-describe("Context synchronization — emitContext() vs published", () => {
+describe("Context synchronization. emitContext() vs published", () => {
   const published = loadPublishedContext();
   const emitted = emitContext();
 
@@ -122,7 +122,7 @@ describe("Context synchronization — emitContext() vs published", () => {
   });
 });
 
-describe("Context synchronization — namespace URI consistency", () => {
+describe("Context synchronization. namespace URI consistency", () => {
   const published = loadPublishedContext();
   const emitted = emitContext();
 

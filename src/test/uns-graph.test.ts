@@ -1,5 +1,5 @@
 /**
- * P24 — UNS SPARQL Knowledge Graph + Named Graphs + VoID Descriptor tests.
+ * P24. UNS SPARQL Knowledge Graph + Named Graphs + VoID Descriptor tests.
  *
  * 12 verification tests covering:
  *   - Ontology graph loading
@@ -14,7 +14,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
 import { generateVoID, CANONICAL_QUERIES } from "@/modules/kg-store/void-descriptor";
 
-describe("P24 — UNS SPARQL Knowledge Graph", () => {
+describe("P24. UNS SPARQL Knowledge Graph", () => {
   let graph: UnsGraph;
 
   beforeAll(() => {

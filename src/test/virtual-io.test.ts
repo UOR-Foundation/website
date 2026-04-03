@@ -1,5 +1,5 @@
 /**
- * Phase 4 Validation Tests — Virtual I/O Layer
+ * Phase 4 Validation Tests. Virtual I/O Layer
  * ═════════════════════════════════════════════
  *
  * Verifies that every POSIX syscall maps correctly to its UOR primitive,
@@ -59,7 +59,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vExec (exec syscall) ─────────────────────────────────────────────
 
-  describe("vExec — exec()", () => {
+  describe("vExec. exec()", () => {
     it("spawns a process and returns a valid PID", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("exec-test");
@@ -80,7 +80,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vForkBlueprint (fork syscall) ────────────────────────────────────
 
-  describe("vForkBlueprint — fork()", () => {
+  describe("vForkBlueprint. fork()", () => {
     it("creates a child process with different PID", async () => {
       const engine = new HologramEngine();
       const parentBp = makeBlueprint("parent");
@@ -102,7 +102,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vForkExec (fork+exec compound) ──────────────────────────────────
 
-  describe("vForkExec — fork()+exec()", () => {
+  describe("vForkExec. fork()+exec()", () => {
     it("forks and spawns in one call", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("forkexec-parent");
@@ -112,9 +112,9 @@ describe("Phase 4: Virtual I/O Layer", () => {
     });
   });
 
-  // ── vRead (read syscall — refraction) ───────────────────────────────
+  // ── vRead (read syscall. refraction) ───────────────────────────────
 
-  describe("vRead — read(fd)", () => {
+  describe("vRead. read(fd)", () => {
     it("reads process identity in 'identity' modality", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("read-test");
@@ -146,9 +146,9 @@ describe("Phase 4: Virtual I/O Layer", () => {
     });
   });
 
-  // ── vWrite (write syscall — focus/dehydration) ──────────────────────
+  // ── vWrite (write syscall. focus/dehydration) ──────────────────────
 
-  describe("vWrite — write(fd, data)", () => {
+  describe("vWrite. write(fd, data)", () => {
     it("writes data through the lens pipeline", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("write-test");
@@ -159,9 +159,9 @@ describe("Phase 4: Virtual I/O Layer", () => {
     });
   });
 
-  // ── vMmap (mmap syscall — projection) ───────────────────────────────
+  // ── vMmap (mmap syscall. projection) ───────────────────────────────
 
-  describe("vMmap — mmap()", () => {
+  describe("vMmap. mmap()", () => {
     it("maps process identity to DID projection", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("mmap-did");
@@ -194,7 +194,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vMmapAll (map all projections) ──────────────────────────────────
 
-  describe("vMmapAll — mmap all projections", () => {
+  describe("vMmapAll. mmap all projections", () => {
     it("returns all registered projections", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("mmap-all");
@@ -214,9 +214,9 @@ describe("Phase 4: Virtual I/O Layer", () => {
     });
   });
 
-  // ── vIoctl (ioctl — interaction/tick) ───────────────────────────────
+  // ── vIoctl (ioctl. interaction/tick) ───────────────────────────────
 
-  describe("vIoctl — ioctl(fd, request)", () => {
+  describe("vIoctl. ioctl(fd, request)", () => {
     it("sends VERIFIED interaction and evolves PolyTree", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("ioctl-test");
@@ -240,7 +240,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vKill + vWait (kill + waitpid) ──────────────────────────────────
 
-  describe("vKill + vWait — kill() + waitpid()", () => {
+  describe("vKill + vWait. kill() + waitpid()", () => {
     it("kills a process", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("kill-test");
@@ -273,7 +273,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vSuspend + vResume (hibernate/wake) ─────────────────────────────
 
-  describe("vSuspend + vResume — suspend/resume", () => {
+  describe("vSuspend + vResume. suspend/resume", () => {
     it("suspends and resumes a process losslessly", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("suspend-test");
@@ -298,7 +298,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vPipe (pipe syscall) ────────────────────────────────────────────
 
-  describe("vPipe — pipe(fd[2])", () => {
+  describe("vPipe. pipe(fd[2])", () => {
     it("creates a pipe with read and write ends", () => {
       const pipe = vPipe(
         "writer-pid",
@@ -355,7 +355,7 @@ describe("Phase 4: Virtual I/O Layer", () => {
 
   // ── vStat + vPs (process introspection) ─────────────────────────────
 
-  describe("vStat + vPs — process introspection", () => {
+  describe("vStat + vPs. process introspection", () => {
     it("vStat returns process metadata", async () => {
       const engine = new HologramEngine();
       const bp = makeBlueprint("stat-test");

@@ -3,7 +3,7 @@
  * ══════════════════════════════════════
  *
  * Any projection (DID, VC, ONNX model, skill.md, AgentCard) can be
- * notarized on Bitcoin with zero additional code — the settlement
+ * notarized on Bitcoin with zero additional code. the settlement
  * bridge is structural.
  *
  * @module uns/core/hologram/opportunities/universal-notarization
@@ -35,7 +35,7 @@ export interface UniversalNotarization {
   readonly lightningAnchor: HologramProjection | null;
   readonly notarizations: readonly NotarizationRecord[];
   readonly notarizationCount: number;
-  /** Every notarization shares this OP_RETURN — structural proof. */
+  /** Every notarization shares this OP_RETURN. structural proof. */
   readonly sharedOpReturn: string;
 }
 
@@ -71,7 +71,7 @@ export function buildUniversalNotarization(
       lightningHash: lightning?.value ?? null,
       verificationProof:
         `${name} value "${resolved.value.slice(0, 32)}..." and Bitcoin OP_RETURN ` +
-        `"${btc.value.slice(0, 32)}..." share the same 256-bit hash ${input.hex.slice(0, 16)}... — ` +
+        `"${btc.value.slice(0, 32)}..." share the same 256-bit hash ${input.hex.slice(0, 16)}.... ` +
         `notarization is structural, not asserted`,
     });
   }

@@ -13,7 +13,7 @@ const CLIENT_RULES: Record<string, { url: string; filename: string; installPath:
     instructions: [
       "Download the rule file below.",
       "Save it to <code>.cursor/rules/uor-trust-stamp.mdc</code> in your project.",
-      "Every response will now include a trust score — Grade D for unverified answers, Grade A–B for proven computations.",
+      "Every response will now include a trust score. Grade D for unverified answers, Grade A–B for proven computations.",
     ],
   },
   "Windsurf": {
@@ -41,7 +41,7 @@ const CLIENT_RULES: Record<string, { url: string; filename: string; installPath:
     filename: "uor-trust-stamp.mdc",
     installPath: "Loaded automatically via MCP instructions",
     instructions: [
-      "Claude Desktop reads the MCP server instructions automatically — <strong>no extra file needed</strong>.",
+      "Claude Desktop reads the MCP server instructions automatically. <strong>no extra file needed</strong>.",
       "If you don't see trust stamps, restart Claude Desktop after adding the UOR MCP server.",
       "Every response will include a trust score as long as the UOR MCP server is connected.",
     ],
@@ -56,7 +56,7 @@ const VALUE_STATEMENTS: Record<string, string> = {
 };
 
 const TROUBLESHOOTING = [
-  "Restart your client after saving the config — tools won't appear until you do.",
+  "Restart your client after saving the config. tools won't appear until you do.",
   "Make sure the URL starts with https:// and has no trailing spaces.",
   "If tools still don't load, check your client's MCP log for connection errors.",
 ];
@@ -141,7 +141,7 @@ const SetupGuide = () => {
               )}
             </div>
 
-            {/* ── Trust Stamp — automatic ── */}
+            {/* ── Trust Stamp. automatic ── */}
             <div className="border-t border-border pt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-primary" />
@@ -214,7 +214,7 @@ const SetupGuide = () => {
             )}
 
 
-            {/* ── Trust Stamp — automatic ── */}
+            {/* ── Trust Stamp. automatic ── */}
             <div className="border-t border-border pt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-primary" />
@@ -271,7 +271,7 @@ const SetupGuide = () => {
             <code className="bg-muted px-1 py-0.5 rounded font-mono text-xs text-foreground">
               42
             </code>
-            {" "}— plus a permanent ID and a proof trail. Anyone can verify this result independently, on any machine, without trusting the AI that produced it.
+            {" "}. plus a permanent ID and a proof trail. Anyone can verify this result independently, on any machine, without trusting the AI that produced it.
           </p>
         </div>
 

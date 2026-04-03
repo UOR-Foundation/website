@@ -1,5 +1,5 @@
 /**
- * UNS Mesh — Node Orchestrator (Phase 4-C)
+ * UNS Mesh. Node Orchestrator (Phase 4-C)
  *
  * A UnsNode is a single process that boots the entire UNS stack:
  * resolver, shield, compute, store, kv, cache, ledger, trust.
@@ -112,7 +112,7 @@ export class UnsNode {
     return this._canonicalId;
   }
 
-  /** Health check — equivalent to GET /health. */
+  /** Health check. equivalent to GET /health. */
   health(): HealthResponse {
     return {
       status: this._running ? "ok" : "error",

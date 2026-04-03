@@ -1,11 +1,11 @@
 /**
- * UOR Hologram — Projection Specifications
+ * UOR Hologram. Projection Specifications
  * ═════════════════════════════════════════
  *
  * Each spec is a pure 3-5 line projection from hash → protocol-native ID.
  * Adding a new standard = adding one Map entry. Nothing else changes.
  *
- * The four foundational layers (JSON-LD, DID, VC, CID) are listed first —
+ * The four foundational layers (JSON-LD, DID, VC, CID) are listed first.
  * they form the bedrock of the semantic web stack. Every other projection
  * is a viewing angle of the same identity through a different protocol lens.
  *
@@ -22,10 +22,10 @@ const DOMAIN = "uor.foundation";
 export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, HologramSpec>([
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 0 — FOUNDATIONAL STANDARDS (the semantic web bedrock)
+  // TIER 0. FOUNDATIONAL STANDARDS (the semantic web bedrock)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── IPFS / CIDv1 / Multiformats — Content-Addressed Distribution ───────
+  // ── IPFS / CIDv1 / Multiformats. Content-Addressed Distribution ───────
   // The atomic identity. Everything else is a projection of this.
 
   ["cid", {
@@ -34,7 +34,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/multiformats/cid",
   }],
 
-  // ── W3C JSON-LD / RDF — Semantic Data Model ───────────────────────────
+  // ── W3C JSON-LD / RDF. Semantic Data Model ───────────────────────────
   // The canonical URN. Triplestores, SPARQL endpoints, and JSON-LD
   // processors all resolve through this identifier.
 
@@ -44,8 +44,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/json-ld11/",
   }],
 
-  // ── W3C DIDs (did:uor) — Self-Sovereign Identity ─────────────────────
-  // Ceramic, ION, Spruce — every DID-capable system can resolve this.
+  // ── W3C DIDs (did:uor). Self-Sovereign Identity ─────────────────────
+  // Ceramic, ION, Spruce. every DID-capable system can resolve this.
 
   ["did", {
     project: ({ cid }) => `did:uor:${cid}`,
@@ -53,8 +53,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/did-core/",
   }],
 
-  // ── W3C Verifiable Credentials 2.0 — Trust Layer ─────────────────────
-  // Wallets, issuers, verifiers — the VC ecosystem speaks this URN.
+  // ── W3C Verifiable Credentials 2.0. Trust Layer ─────────────────────
+  // Wallets, issuers, verifiers. the VC ecosystem speaks this URN.
 
   ["vc", {
     project: ({ cid }) => `urn:uor:vc:${cid}`,
@@ -63,7 +63,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 1 — UOR NATIVE PROJECTIONS (derived directly from the hash)
+  // TIER 1. UOR NATIVE PROJECTIONS (derived directly from the hash)
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["ipv6", {
@@ -85,7 +85,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 2 — FEDERATION & DISCOVERY PROTOCOLS
+  // TIER 2. FEDERATION & DISCOVERY PROTOCOLS
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["webfinger", {
@@ -109,7 +109,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 3 — ENTERPRISE & INDUSTRY STANDARDS
+  // TIER 3. ENTERPRISE & INDUSTRY STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["oidc", {
@@ -145,7 +145,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 4 — INFRASTRUCTURE & EMERGING PROTOCOLS
+  // TIER 4. INFRASTRUCTURE & EMERGING PROTOCOLS
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["scitt", {
@@ -179,7 +179,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/mlcommons/croissant",
   }],
 
-  // ── CRDT / Automerge — Offline-First Collaboration ───────────────────
+  // ── CRDT / Automerge. Offline-First Collaboration ───────────────────
   // UOR's deterministic content hash IS the CRDT document ID.
   // Identical content → identical ID → trivial merge across replicas.
 
@@ -190,12 +190,12 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 5 — BITCOIN PROTOCOL (SHA-256 native alignment)
+  // TIER 5. BITCOIN PROTOCOL (SHA-256 native alignment)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Bitcoin OP_RETURN Commitment — On-Chain Timestamping ─────────────
+  // ── Bitcoin OP_RETURN Commitment. On-Chain Timestamping ─────────────
   // Embeds the full 256-bit UOR identity into a standard OP_RETURN output
-  // script. Bitcoin's SHA-256 IS UOR's hash function — no translation
+  // script. Bitcoin's SHA-256 IS UOR's hash function. no translation
   // required. The 3-byte "UOR" magic prefix (0x554f52) enables protocol
   // identification by indexers. Total: 36 bytes (within 80-byte limit).
   //
@@ -212,12 +212,12 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki",
   }],
 
-  // ── Bitcoin HTLC Hash Lock — Content-Gated Spending ─────────────────
+  // ── Bitcoin HTLC Hash Lock. Content-Gated Spending ─────────────────
   // Produces a minimal Bitcoin Script that verifies a SHA-256 preimage.
-  // The UOR canonical bytes of an object ARE the preimage — revealing
+  // The UOR canonical bytes of an object ARE the preimage. revealing
   // the object's URDNA2015 form unlocks the UTXO. Content = Key.
   //
-  // Bitcoin's OP_SHA256 opcode performs SINGLE SHA-256 — identical to the
+  // Bitcoin's OP_SHA256 opcode performs SINGLE SHA-256. identical to the
   // UOR canonical hash. No double-hashing, no protocol mismatch.
   //
   //   Script: OP_SHA256 OP_PUSHBYTES_32 <hash> OP_EQUAL
@@ -233,14 +233,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/bitcoin/bips/blob/master/bip-0199.mediawiki",
   }],
 
-  // ── Lightning BOLT-11 — Content-Gated Micropayments ─────────────────
+  // ── Lightning BOLT-11. Content-Gated Micropayments ─────────────────
   // Produces the BOLT-11 `p` tagged field: the payment_hash component
   // of a Lightning Network invoice in its native bech32 wire encoding.
   //
   // BOLT-11 §Tagged Fields: "p (1): The 256-bit SHA256 payment_hash."
   //
   // The UOR canonical bytes ARE the Lightning preimage. Revealing the
-  // URDNA2015 form of an object settles the payment — content delivery
+  // URDNA2015 form of an object settles the payment. content delivery
   // IS payment settlement. One hash, two protocols, zero translation.
   //
   //   Tag type:    1       → bech32 'p'
@@ -275,14 +275,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 5b — ZCASH PROTOCOL (Bitcoin-compatible + Privacy Duality)
+  // TIER 5b. ZCASH PROTOCOL (Bitcoin-compatible + Privacy Duality)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Zcash Transparent OP_RETURN — Public Timestamping (t-address) ───────
+  // ── Zcash Transparent OP_RETURN. Public Timestamping (t-address) ───────
   // Zcash's transparent layer inherits Bitcoin's UTXO model and script
-  // system. The OP_RETURN commitment is IDENTICAL to Bitcoin's — same
+  // system. The OP_RETURN commitment is IDENTICAL to Bitcoin's. same
   // opcodes, same encoding, same 256-bit UOR identity. This is not an
-  // adaptation — it's the SAME script running on a second chain.
+  // adaptation. it's the SAME script running on a second chain.
   //
   // This projection validates the holographic principle: one identity,
   // two blockchains, zero translation. Zcash transparent IS Bitcoin script.
@@ -300,21 +300,21 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://zips.z.cash/protocol/protocol.pdf",
   }],
 
-  // ── Zcash Shielded Memo — Privacy-Preserving Content Address ───────────
+  // ── Zcash Shielded Memo. Privacy-Preserving Content Address ───────────
   // ZIP-302 defines a 512-byte encrypted memo field attached to every
   // shielded (z-address) note. Only the recipient can decrypt it.
   //
   // We encode the UOR identity into a typed memo:
-  //   Byte 0:    0xF5 — "No particular meaning" type (ZIP-302 §Memo Types)
+  //   Byte 0:    0xF5. "No particular meaning" type (ZIP-302 §Memo Types)
   //              This avoids collision with text memos (0x00-0xF4) and
   //              the empty memo marker (0xF6).
-  //   Byte 1:    0x01 — UOR protocol version
-  //   Byte 2:    0x01 — Payload type: SHA-256 identity hash
+  //   Byte 1:    0x01. UOR protocol version
+  //   Byte 2:    0x01. Payload type: SHA-256 identity hash
   //   Bytes 3-34: 32-byte SHA-256 hash (the UOR canonical identity)
   //   Bytes 35-511: Zero-padded (memo field is always 512 bytes)
   //
   // The result is a hex string representing the full 512-byte memo.
-  // The actual encryption happens at the wallet layer — this projection
+  // The actual encryption happens at the wallet layer. this projection
   // produces the plaintext memo content that gets encrypted.
   //
   //   Format: f5 01 01 {32-byte hash} {477 zero bytes}
@@ -337,20 +337,20 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 6 — SOCIAL PROTOCOLS (SHA-256 native alignment)
+  // TIER 6. SOCIAL PROTOCOLS (SHA-256 native alignment)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Nostr NIP-01 — Content-Addressed Social Events ─────────────────────
+  // ── Nostr NIP-01. Content-Addressed Social Events ─────────────────────
   // A Nostr event ID is the SHA-256 hash of a canonical JSON serialization:
   //   [0, pubkey, created_at, kind, tags, content]
   //
   // UOR's SHA-256 identity maps directly: the UOR hash IS a valid Nostr
   // event ID. Any relay can index it, any client can reference it.
-  // The hex encoding is identical — 64 lowercase hex characters.
+  // The hex encoding is identical. 64 lowercase hex characters.
   //
   // NIP-01 §Events: "id: 32-bytes lowercase hex-encoded sha256"
   //
-  // Fidelity: LOSSLESS — the full 256-bit hash is preserved as-is.
+  // Fidelity: LOSSLESS. the full 256-bit hash is preserved as-is.
   // No encoding translation, no truncation, no prefix. Pure SHA-256.
 
   ["nostr", {
@@ -359,7 +359,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/nostr-protocol/nips/blob/master/01.md",
   }],
 
-  // ── Nostr NIP-19 — Bech32 Human-Readable Encoding ─────────────────────
+  // ── Nostr NIP-19. Bech32 Human-Readable Encoding ─────────────────────
   // NIP-19 defines `note1...` bech32m encoding for event IDs, making them
   // copy-paste friendly for humans. The encoding wraps the raw 32-byte
   // hash with HRP "note" + bech32m checksum.
@@ -422,17 +422,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 7 — AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
+  // TIER 7. AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // The emerging agent stack: Identity (ERC-8004) + Payments (x402) +
   // Communication (MCP/A2A) + Skills (skill.md) + Services (OASF).
   // UOR provides the content-addressed trust layer beneath all of them.
 
-  // ── ERC-8004 — On-Chain Agent Identity Registry ────────────────────────
+  // ── ERC-8004. On-Chain Agent Identity Registry ────────────────────────
   // ERC-8004 (backed by Coinbase, Google, MetaMask) assigns ERC-721 tokens
   // as agent identities. UOR projects into the tokenId space by casting
-  // the SHA-256 hash to uint256 — the agent's content-derived identity
+  // the SHA-256 hash to uint256. the agent's content-derived identity
   // becomes its on-chain identity. Same hash, different ledger.
   //
   // This solves ERC-8004's transferability gap: a UOR identity is bound
@@ -448,13 +448,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://eips.ethereum.org/EIPS/eip-8004",
   }],
 
-  // ── x402 — Agent Payment Protocol ─────────────────────────────────────
+  // ── x402. Agent Payment Protocol ─────────────────────────────────────
   // Coinbase's x402 uses HTTP 402 responses with payment requirements.
   // A UOR projection turns any service contract into a content-addressed
   // payment hash: the SHA-256 of the canonical service descriptor.
   //
   // Combined with bitcoin-hashlock, this enables content-gated commerce:
-  // the UOR canonical bytes ARE the preimage — revealing the object
+  // the UOR canonical bytes ARE the preimage. revealing the object
   // settles the payment. Content delivery IS payment settlement.
   //
   //   Format: x402:sha256:{hex} (payment requirement hash)
@@ -465,8 +465,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.x402.org/",
   }],
 
-  // ── MCP Tool Provenance — Content-Addressed Tool Outputs ──────────────
-  // Anthropic's Model Context Protocol lacks provenance tracking — once
+  // ── MCP Tool Provenance. Content-Addressed Tool Outputs ──────────────
+  // Anthropic's Model Context Protocol lacks provenance tracking. once
   // untrusted content enters an agent's context, its origin is lost.
   //
   // UOR solves this: every MCP tool call (input→output) gets a content
@@ -482,11 +482,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://modelcontextprotocol.io/specification",
   }],
 
-  // ── MCP Context Block — Provenance-Tagged Context Entries ──────────────
+  // ── MCP Context Block. Provenance-Tagged Context Entries ──────────────
   // Solves the "Mitra gap": when untrusted content (e.g., a Moltbook post)
   // enters an agent's MCP context, its origin is lost. UOR's context block
   // projection gives every context entry a content-addressed provenance tag
-  // with source, trust level, and chain-of-custody — enabling agents to
+  // with source, trust level, and chain-of-custody. enabling agents to
   // distinguish Grade A (self-derived) from Grade D (LLM-generated) content.
   //
   //   Format: urn:uor:mcp:context:{hex} (hash of context entry + metadata)
@@ -497,8 +497,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://modelcontextprotocol.io/specification",
   }],
 
-  // ── skill.md — Content-Addressed Agent Skills ─────────────────────────
-  // Moltbook's skill.md convention — the "simplest API contract" — has
+  // ── skill.md. Content-Addressed Agent Skills ─────────────────────────
+  // Moltbook's skill.md convention. the "simplest API contract". has
   // a critical supply-chain attack surface: malicious modifications.
   //
   // UOR provides cryptographic integrity: hash the canonical skill
@@ -513,7 +513,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://moltbook.com/m/skills",
   }],
 
-  // ── A2A — Agent-to-Agent Communication ────────────────────────────────
+  // ── A2A. Agent-to-Agent Communication ────────────────────────────────
   // Google's A2A protocol uses AgentCards for discovery and tasks for
   // orchestration. UOR projects into both: the AgentCard becomes a
   // content-addressed identity, and each task gets a verifiable hash.
@@ -526,10 +526,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/google/A2A",
   }],
 
-  // ── A2A Task — Verifiable Inter-Agent Task Provenance ─────────────────
+  // ── A2A Task. Verifiable Inter-Agent Task Provenance ─────────────────
   // Every A2A task gets a UOR receipt chain: who initiated it, what
   // transformations occurred, and whether the output matches the request.
-  // The task hash IS the task's identity — enabling deterministic replay.
+  // The task hash IS the task's identity. enabling deterministic replay.
   //
   //   Format: urn:uor:a2a:task:{hex} (hash of canonical task object)
 
@@ -539,10 +539,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/google/A2A",
   }],
 
-  // ── OASF — Open Agent Service Framework ───────────────────────────────
+  // ── OASF. Open Agent Service Framework ───────────────────────────────
   // Cisco's OASF provides off-chain service descriptors pinned on IPFS.
   // UOR's CIDv1 maps directly: the OASF descriptor's content hash IS
-  // the UOR identity. Zero translation — native CID alignment.
+  // the UOR identity. Zero translation. native CID alignment.
   //
   //   Format: urn:uor:oasf:{cid} (CID of canonical service descriptor)
 
@@ -552,8 +552,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/agntcy/oasf",
   }],
 
-  // ── ONNX — Open Neural Network Exchange ───────────────────────────────
-  // An ONNX model is a serialized protobuf — raw bytes that are trivially
+  // ── ONNX. Open Neural Network Exchange ───────────────────────────────
+  // An ONNX model is a serialized protobuf. raw bytes that are trivially
   // content-addressable. Hashing the model file gives it a permanent,
   // tamper-evident identity: if a single weight changes, the hash changes.
   //
@@ -569,9 +569,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://onnx.ai/",
   }],
 
-  // ── ONNX Op — Content-Addressed Operator Identity ─────────────────────
+  // ── ONNX Op. Content-Addressed Operator Identity ─────────────────────
   // Individual ONNX operators (Conv, MatMul, Attention, etc.) can be
-  // canonicalized as JSON-LD descriptors and hashed — giving each operator
+  // canonicalized as JSON-LD descriptors and hashed. giving each operator
   // a verifiable identity independent of the model it appears in.
   // Enables operator-level provenance and reuse tracking across models.
   //
@@ -584,10 +584,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 4 — AGENTIC INFRASTRUCTURE (discovery, registry, coordination)
+  // TIER 4. AGENTIC INFRASTRUCTURE (discovery, registry, coordination)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── NANDA Index — Agent Discovery Registry ────────────────────────────
+  // ── NANDA Index. Agent Discovery Registry ────────────────────────────
   // The "DNS for AI Agents" (MIT). Maps content-addressed agent identity
   // to a lean index entry for global discovery and resolution.
   //
@@ -599,7 +599,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://arxiv.org/abs/2507.14263",
   }],
 
-  // ── NANDA AgentFacts — Cryptographic Agent Passport ───────────────────
+  // ── NANDA AgentFacts. Cryptographic Agent Passport ───────────────────
   // JSON-LD "passport" containing capabilities, endpoints, auth, and
   // telemetry. Because AgentFacts IS JSON-LD, canonicalizing it via
   // URDNA2015 makes every AgentFacts document a UOR object natively.
@@ -612,7 +612,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://spec.projectnanda.org/schemas/agentfacts-1.2.0.json",
   }],
 
-  // ── NANDA Adaptive Resolver — Agent Name Resolution ───────────────────
+  // ── NANDA Adaptive Resolver. Agent Name Resolution ───────────────────
   // Recursive resolution microservice for agent handle → address lookup.
   // Privacy-preserving split-horizon queries via the NANDA resolver.
   //
@@ -626,15 +626,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 8 — LEGACY INFRASTRUCTURE (bridging mainframe to hologram)
+  // TIER 8. LEGACY INFRASTRUCTURE (bridging mainframe to hologram)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // COBOL powers 95% of ATM transactions, 43% of banking systems, and
   // 220 billion lines of production code. A holographic projection gives
-  // every COBOL artifact a content-addressed, cross-protocol identity —
+  // every COBOL artifact a content-addressed, cross-protocol identity.
   // bridging the world's largest financial infrastructure to the UOR trust layer.
 
-  // ── COBOL Copybook — Content-Addressed Data Definitions ───────────────
+  // ── COBOL Copybook. Content-Addressed Data Definitions ───────────────
   // A COBOL copybook (data division extract) is the most reusable artifact
   // in mainframe systems. Canonicalizing it as JSON-LD and hashing it gives
   // every shared data structure a permanent, verifiable identity.
@@ -648,10 +648,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/74527.html",
   }],
 
-  // ── COBOL Program — Content-Addressed Program Unit ────────────────────
+  // ── COBOL Program. Content-Addressed Program Unit ────────────────────
   // A full COBOL program (all four divisions: Identification, Environment,
   // Data, Procedure) canonicalized as a single JSON-LD object. The hash
-  // proves the program hasn't been modified since certification —
+  // proves the program hasn't been modified since certification.
   // the audit trail IS the identity.
   //
   //   Format: urn:uor:cobol:program:{hex} (SHA-256 of canonical program)
@@ -663,11 +663,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9 — PROGRAMMING LANGUAGE PROJECTIONS
+  // TIER 9. PROGRAMMING LANGUAGE PROJECTIONS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Every programming language artifact (source file, AST, compiled binary,
-  // query plan) is serializable structured data — canonicalizable via
+  // query plan) is serializable structured data. canonicalizable via
   // URDNA2015, hashable to SHA-256, and projectable into all hologram
   // protocols. The projection format is universal:
   //
@@ -677,7 +677,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // builds, ML pipeline provenance, and cross-language interoperability
   // within the UOR Virtual OS.
 
-  // ── Python Module — AI/ML Pipeline Provenance ─────────────────────────
+  // ── Python Module. AI/ML Pipeline Provenance ─────────────────────────
   // Python's ast.parse() produces a deterministic, serializable AST.
   // Dominance in AI/ML creates a direct provenance chain:
   //   training script → ONNX model → MCP tool output
@@ -691,8 +691,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.python.org/3/library/ast.html",
   }],
 
-  // ── JavaScript Module — Browser-Native Supply Chain ───────────────────
-  // JS IS the browser — and the UOR Virtual OS runs in the browser.
+  // ── JavaScript Module. Browser-Native Supply Chain ───────────────────
+  // JS IS the browser. and the UOR Virtual OS runs in the browser.
   // npm packages are tarballs with package.json (structured data →
   // trivially canonicalizable). UOR fixes the npm supply chain attack
   // surface with cryptographic content-addressing.
@@ -705,8 +705,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://tc39.es/ecma262/",
   }],
 
-  // ── Java Class — Enterprise Bytecode Identity ─────────────────────────
-  // Java .class files are deterministic bytecode — perfect for content-
+  // ── Java Class. Enterprise Bytecode Identity ─────────────────────────
+  // Java .class files are deterministic bytecode. perfect for content-
   // addressing. Maven Central already uses SHA-1; UOR upgrades to SHA-256.
   // Enables COBOL-to-Java migration verification via shared hash identity.
   //
@@ -718,9 +718,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html",
   }],
 
-  // ── C# Assembly — .NET/Unity Verifiable Identity ──────────────────────
+  // ── C# Assembly. .NET/Unity Verifiable Identity ──────────────────────
   // .NET assemblies are structured IL bytecode with rich metadata.
-  // NuGet packages are already signed — UOR adds content-addressing.
+  // NuGet packages are already signed. UOR adds content-addressing.
   // Unity game assets become cryptographically verifiable.
   //
   //   Format: urn:uor:lang:csharp:{hex} (SHA-256 of canonical assembly descriptor)
@@ -731,7 +731,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://ecma-international.org/publications-and-standards/standards/ecma-335/",
   }],
 
-  // ── C++ Compilation Unit — High-Performance Audit Trail ───────────────
+  // ── C++ Compilation Unit. High-Performance Audit Trail ───────────────
   // C++ compilation units produce deterministic object files with
   // reproducible builds. Game engines (Unreal), HFT systems, and
   // robotics firmware all become content-addressable.
@@ -744,10 +744,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://isocpp.org/std/the-standard",
   }],
 
-  // ── C Translation Unit — OS/Firmware Foundation ───────────────────────
-  // C is the foundation — Linux kernel, compilers, embedded systems.
+  // ── C Translation Unit. OS/Firmware Foundation ───────────────────────
+  // C is the foundation. Linux kernel, compilers, embedded systems.
   // Reproducible builds (Debian, NixOS) already aim for deterministic
-  // output — UOR provides the identity layer.
+  // output. UOR provides the identity layer.
   //
   //   Format: urn:uor:lang:c:{hex} (SHA-256 of canonical translation unit)
 
@@ -757,10 +757,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/82075.html",
   }],
 
-  // ── Go Module — Cloud-Native Provenance ───────────────────────────────
+  // ── Go Module. Cloud-Native Provenance ───────────────────────────────
   // Go modules already use content-addressed checksums (go.sum) and a
   // transparency log (Go Module Mirror). UOR extends this to cross-
-  // protocol identity — a Go module hash becomes a DID, a Bitcoin
+  // protocol identity. a Go module hash becomes a DID, a Bitcoin
   // anchor, a NANDA-discoverable service.
   //
   //   Format: urn:uor:lang:go:{hex} (SHA-256 of canonical Go module)
@@ -771,7 +771,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://go.dev/ref/mod",
   }],
 
-  // ── Rust Crate — Secure Systems Identity ──────────────────────────────
+  // ── Rust Crate. Secure Systems Identity ──────────────────────────────
   // Rust's cargo already uses SHA-256 checksums for crate verification.
   // Memory safety + cryptographic integrity = the most secure projection.
   // WASM compilation makes Rust ideal for browser-based Virtual OS.
@@ -784,9 +784,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://doc.rust-lang.org/cargo/reference/registries.html",
   }],
 
-  // ── TypeScript Module — Virtual OS Native Execution ───────────────────
+  // ── TypeScript Module. Virtual OS Native Execution ───────────────────
   // TypeScript IS the UOR framework's implementation language. .d.ts
-  // declaration files are pure type descriptions — perfectly structured
+  // declaration files are pure type descriptions. perfectly structured
   // for JSON-LD canonicalization. The type system provides structural
   // guarantees that enhance canonicalization.
   //
@@ -798,10 +798,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html",
   }],
 
-  // ── SQL Schema — Database Structure Identity ──────────────────────────
+  // ── SQL Schema. Database Structure Identity ──────────────────────────
   // SQL schemas are pure structural declarations (CREATE TABLE, constraints,
   // indexes). They're the most naturally canonicalizable of all languages.
-  // Database migrations become content-addressed — every schema version
+  // Database migrations become content-addressed. every schema version
   // gets a permanent identity.
   //
   //   Format: urn:uor:lang:sql:{hex} (SHA-256 of canonical schema descriptor)
@@ -813,17 +813,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9a — SYSTEMS & LOW-LEVEL LANGUAGES
+  // TIER 9a. SYSTEMS & LOW-LEVEL LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Systems languages compile to native machine code. Their canonical form
-  // is the deterministic compilation unit — the AST or object file that
+  // is the deterministic compilation unit. the AST or object file that
   // a reproducible build would produce. Content-addressing these artifacts
   // enables supply-chain integrity from source to binary.
 
-  // ── Zig — Comptime-Evaluated Systems Language ────────────────────────────
+  // ── Zig. Comptime-Evaluated Systems Language ────────────────────────────
   // Zig's comptime evaluation produces deterministic output at compile time.
-  // No hidden allocations, no undefined behavior — ideal for content-addressing.
+  // No hidden allocations, no undefined behavior. ideal for content-addressing.
   // Cross-compilation to 30+ targets from a single source makes Zig a
   // universal systems projection.
   //
@@ -836,8 +836,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://ziglang.org/documentation/",
   }],
 
-  // ── Nim — Metaprogramming Systems Language ───────────────────────────────
-  // Nim's macro system operates on a typed AST — the AST IS the canonical form.
+  // ── Nim. Metaprogramming Systems Language ───────────────────────────────
+  // Nim's macro system operates on a typed AST. the AST IS the canonical form.
   // Compiles to C/C++/JS, making it a multi-target projection bridge.
   // Nimble packages use SHA-1 checksums; UOR upgrades to SHA-256.
   //
@@ -850,7 +850,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://nim-lang.org/docs/manual.html",
   }],
 
-  // ── D — Systems Language with GC Option ──────────────────────────────────
+  // ── D. Systems Language with GC Option ──────────────────────────────────
   // D combines C-level control with high-level features. DUB packages
   // are content-addressable via their dub.selections.json lockfiles.
   // Deterministic compilation with -betterC flag enables bare-metal provenance.
@@ -864,7 +864,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://dlang.org/spec/spec.html",
   }],
 
-  // ── Ada — Safety-Critical Certified Systems ──────────────────────────────
+  // ── Ada. Safety-Critical Certified Systems ──────────────────────────────
   // Ada is mandated for avionics (DO-178C), railway (EN 50128), and defense.
   // SPARK subset provides formal verification proofs that map directly to
   // UOR derivation chains. GNAT compiler produces reproducible builds.
@@ -879,7 +879,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/69027.html",
   }],
 
-  // ── Fortran — Scientific Computing Foundation ────────────────────────────
+  // ── Fortran. Scientific Computing Foundation ────────────────────────────
   // Fortran dominates HPC: weather modeling, fluid dynamics, nuclear simulation.
   // Modern Fortran (2023) modules are deterministic compilation units.
   // fpm (Fortran Package Manager) packages become content-addressed,
@@ -894,7 +894,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/82170.html",
   }],
 
-  // ── Pascal — Educational & Legacy Systems Bridge ─────────────────────────
+  // ── Pascal. Educational & Legacy Systems Bridge ─────────────────────────
   // Pascal's strict type system and block structure make it trivially
   // canonicalizable. Free Pascal compiler produces deterministic output.
   // Bridges educational computing to production via content-addressing.
@@ -908,9 +908,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/18237.html",
   }],
 
-  // ── Assembly — Instruction-Level Provenance ──────────────────────────────
+  // ── Assembly. Instruction-Level Provenance ──────────────────────────────
   // Assembly is the final human-readable layer before machine code.
-  // Instruction sequences are fully deterministic — each mnemonic maps
+  // Instruction sequences are fully deterministic. each mnemonic maps
   // to exact bytes. Content-addressing assembly enables firmware integrity
   // verification from source to silicon.
   //
@@ -924,7 +924,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9b — JVM LANGUAGES (compile to Java bytecode)
+  // TIER 9b. JVM LANGUAGES (compile to Java bytecode)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // All JVM languages compile to the same bytecode format (.class files).
@@ -932,9 +932,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // and Clojure source all converge to the same JVM bytecode hash when
   // they produce identical behavior. The bytecode IS the canonical form.
 
-  // ── Kotlin — Android & Server-Side JVM ───────────────────────────────────
+  // ── Kotlin. Android & Server-Side JVM ───────────────────────────────────
   // Kotlin is Android's primary language and a major server-side JVM choice.
-  // Kotlin Multiplatform (KMP) targets JVM, JS, Native, and WASM —
+  // Kotlin Multiplatform (KMP) targets JVM, JS, Native, and WASM.
   // content-addressing each target produces a multi-platform identity chain.
   // Gradle build scripts (Kotlin DSL) are themselves canonicalizable.
   //
@@ -947,9 +947,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://kotlinlang.org/spec/",
   }],
 
-  // ── Scala — Functional JVM with Type-Level Computing ─────────────────────
+  // ── Scala. Functional JVM with Type-Level Computing ─────────────────────
   // Scala 3's TASTy (Typed Abstract Syntax Trees) format is a rich,
-  // deterministic intermediate representation — perfect for canonical hashing.
+  // deterministic intermediate representation. perfect for canonical hashing.
   // sbt builds with lockfiles enable reproducible dependency resolution.
   // Spark (big data) pipelines become content-addressed end-to-end.
   //
@@ -962,9 +962,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://scala-lang.org/files/archive/spec/3.3/",
   }],
 
-  // ── Groovy — JVM Build & Scripting ───────────────────────────────────────
+  // ── Groovy. JVM Build & Scripting ───────────────────────────────────────
   // Groovy powers Gradle (Android/JVM build system) and Jenkins pipelines.
-  // Build scripts are executable code — content-addressing Groovy scripts
+  // Build scripts are executable code. content-addressing Groovy scripts
   // means content-addressing the entire build pipeline. @CompileStatic
   // mode produces deterministic bytecode identical to Java.
   //
@@ -977,9 +977,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://groovy-lang.org/documentation.html",
   }],
 
-  // ── Clojure — Persistent Data Structures on JVM ──────────────────────────
+  // ── Clojure. Persistent Data Structures on JVM ──────────────────────────
   // Clojure's immutable, persistent data structures are inherently
-  // content-addressable — the value IS the identity. EDN (Extensible Data
+  // content-addressable. the value IS the identity. EDN (Extensible Data
   // Notation) is a canonical serialization format. Rich Hickey's vision
   // of "values don't change" aligns perfectly with UOR's philosophy.
   //
@@ -993,19 +993,19 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9c — FUNCTIONAL & PROOF LANGUAGES
+  // TIER 9c. FUNCTIONAL & PROOF LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Functional languages treat computation as mathematical function evaluation.
   // Their referential transparency means identical expressions always produce
-  // identical results — the purest form of content-addressability.
+  // identical results. the purest form of content-addressability.
   // Proof languages add machine-checked mathematical proofs that map
   // directly to UOR derivation chains.
 
-  // ── Haskell — Pure Functional Reference Language ─────────────────────────
+  // ── Haskell. Pure Functional Reference Language ─────────────────────────
   // Haskell's purity guarantee (no side effects) means every expression
   // is deterministic by construction. Cabal packages use SHA-256 hashes.
-  // GHC's Core intermediate language is a typed lambda calculus —
+  // GHC's Core intermediate language is a typed lambda calculus.
   // the most mathematically precise canonical form of any language.
   //
   //   Format: urn:uor:lang:haskell:{hex} (SHA-256 of canonical Core IR)
@@ -1017,7 +1017,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.haskell.org/onlinereport/haskell2010/",
   }],
 
-  // ── OCaml — Industrial Functional Language ───────────────────────────────
+  // ── OCaml. Industrial Functional Language ───────────────────────────────
   // OCaml's type inference engine produces typed ASTs that are fully
   // deterministic. Used in formal verification (Coq is written in OCaml),
   // financial systems (Jane Street), and system tools (opam package manager).
@@ -1032,7 +1032,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://v2.ocaml.org/manual/",
   }],
 
-  // ── F# — .NET Functional Language ────────────────────────────────────────
+  // ── F#. .NET Functional Language ────────────────────────────────────────
   // F# bridges the functional world with .NET enterprise infrastructure.
   // Shares OCaml's ML core type system, compiles to .NET IL bytecode.
   // NuGet packages + F# type providers = content-addressed data access layers.
@@ -1046,10 +1046,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://fsharp.org/specs/language-spec/",
   }],
 
-  // ── Erlang — Fault-Tolerant Distributed Systems ──────────────────────────
+  // ── Erlang. Fault-Tolerant Distributed Systems ──────────────────────────
   // Erlang/OTP supervision trees are deterministic state machines.
   // BEAM bytecode (.beam files) are content-addressable compilation units.
-  // Hot code loading means multiple versions coexist — each version gets
+  // Hot code loading means multiple versions coexist. each version gets
   // its own UOR identity. Hex packages use SHA-256 checksums natively.
   //
   //   Format: urn:uor:lang:erlang:{hex} (SHA-256 of canonical BEAM module)
@@ -1061,7 +1061,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.erlang.org/doc/reference_manual/",
   }],
 
-  // ── Elixir — Modern BEAM Ecosystem ───────────────────────────────────────
+  // ── Elixir. Modern BEAM Ecosystem ───────────────────────────────────────
   // Elixir compiles to Erlang BEAM bytecode, sharing the fault-tolerance
   // infrastructure. Phoenix LiveView, Nx (numerical computing), and
   // Livebook (literate programming) all produce content-addressable outputs.
@@ -1076,11 +1076,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://hexdocs.pm/elixir/",
   }],
 
-  // ── Common Lisp — Homoiconic Metaprogramming ─────────────────────────────
+  // ── Common Lisp. Homoiconic Metaprogramming ─────────────────────────────
   // Lisp's code-as-data (homoiconicity) means the AST IS the source code.
-  // S-expressions are the original canonical data format — predating JSON
+  // S-expressions are the original canonical data format. predating JSON
   // by 40 years. ASDF system definitions are declarative package manifests.
-  // Macros transform S-expressions to S-expressions — fully traceable.
+  // Macros transform S-expressions to S-expressions. fully traceable.
   //
   //   Format: urn:uor:lang:lisp:{hex} (SHA-256 of canonical S-expression)
   //   Canonical: form → S-expression → JSON-LD → URDNA2015 → SHA-256
@@ -1091,7 +1091,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.lispworks.com/documentation/HyperSpec/Front/",
   }],
 
-  // ── Scheme — Minimal Homoiconic Language ──────────────────────────────────
+  // ── Scheme. Minimal Homoiconic Language ──────────────────────────────────
   // Scheme's R7RS standard defines one of the smallest complete languages.
   // Hygienic macros produce deterministic transformations. Libraries
   // defined via (define-library ...) are structured, canonicalizable units.
@@ -1105,7 +1105,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.r7rs.org/",
   }],
 
-  // ── Racket — Language-Oriented Programming ───────────────────────────────
+  // ── Racket. Language-Oriented Programming ───────────────────────────────
   // Racket's #lang system means each file can define its own language.
   // Module system with exact imports and phase-separated compilation
   // produces deterministic expansion results. Racket packages use
@@ -1120,7 +1120,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.racket-lang.org/reference/",
   }],
 
-  // ── Coq — Machine-Checked Proofs ─────────────────────────────────────────
+  // ── Coq. Machine-Checked Proofs ─────────────────────────────────────────
   // Coq proof terms are deterministic mathematical objects. The Calculus
   // of Inductive Constructions provides a type-theoretic foundation.
   // Proof certificates (`.vo` files) are content-addressable verification
@@ -1135,10 +1135,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://coq.inria.fr/doc/V8.19.0/refman/",
   }],
 
-  // ── Lean — Modern Theorem Prover ─────────────────────────────────────────
+  // ── Lean. Modern Theorem Prover ─────────────────────────────────────────
   // Lean 4 combines theorem proving with general programming. Its elaborator
   // produces typed terms that are deterministic proof objects. Mathlib
-  // (200k+ theorems) is the largest formalized math library — each theorem
+  // (200k+ theorems) is the largest formalized math library. each theorem
   // gets a content-addressed identity via its proof term hash.
   //
   //   Format: urn:uor:lang:lean:{hex} (SHA-256 of canonical Lean declaration)
@@ -1150,10 +1150,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://lean-lang.org/lean4/doc/",
   }],
 
-  // ── Agda — Dependently Typed Proof Language ──────────────────────────────
+  // ── Agda. Dependently Typed Proof Language ──────────────────────────────
   // Agda's dependent types allow types to depend on values, enabling
   // proofs about programs within the type system itself. Agda code is
-  // simultaneously a program and its correctness proof — the ultimate
+  // simultaneously a program and its correctness proof. the ultimate
   // self-verifying artifact for UOR derivation chains.
   //
   //   Format: urn:uor:lang:agda:{hex} (SHA-256 of canonical Agda module)
@@ -1165,10 +1165,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://agda.readthedocs.io/en/latest/",
   }],
 
-  // ── TLA+ — Formal Specification Language ─────────────────────────────────
+  // ── TLA+. Formal Specification Language ─────────────────────────────────
   // TLA+ specifies distributed system behavior via temporal logic.
   // Model checking (TLC) exhaustively verifies all reachable states.
-  // Amazon uses TLA+ for DynamoDB, S3, and EBS — each specification
+  // Amazon uses TLA+ for DynamoDB, S3, and EBS. each specification
   // gets a content-addressed identity, linking spec to implementation.
   //
   //   Format: urn:uor:lang:tlaplus:{hex} (SHA-256 of canonical TLA+ spec)
@@ -1181,7 +1181,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9d — SCRIPTING LANGUAGES
+  // TIER 9d. SCRIPTING LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Scripting languages power automation, web backends, DevOps, and
@@ -1189,10 +1189,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // are massive software supply chains. Content-addressing every package
   // creates a universal integrity layer across all scripting ecosystems.
 
-  // ── Ruby — Web Frameworks & DevOps Automation ────────────────────────────
+  // ── Ruby. Web Frameworks & DevOps Automation ────────────────────────────
   // Ruby gems are packaged with checksums on rubygems.org. RubyGems already
   // uses SHA-256 for gem integrity; UOR extends to cross-protocol identity.
-  // Rails migrations are deterministic schema transformations — each migration
+  // Rails migrations are deterministic schema transformations. each migration
   // becomes a content-addressed database evolution step.
   //
   //   Format: urn:uor:lang:ruby:{hex} (SHA-256 of canonical gem specification)
@@ -1204,7 +1204,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/59579.html",
   }],
 
-  // ── PHP — Server-Side Web Backbone ───────────────────────────────────────
+  // ── PHP. Server-Side Web Backbone ───────────────────────────────────────
   // PHP powers 77% of web backends (WordPress, Laravel, Symfony).
   // Composer packages use SHA-256 content hashes in composer.lock.
   // PHP 8.x AST (via php-parser) is a structured, canonicalizable tree.
@@ -1218,10 +1218,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.php.net/manual/en/langref.php",
   }],
 
-  // ── Perl — Text Processing & Bioinformatics ──────────────────────────────
+  // ── Perl. Text Processing & Bioinformatics ──────────────────────────────
   // Perl's CPAN is one of the oldest software repositories (since 1995).
   // PAUSE (Perl Authors Upload Server) maintains content-addressed distributions.
-  // BioPerl powers genomic analysis pipelines — content-addressing enables
+  // BioPerl powers genomic analysis pipelines. content-addressing enables
   // reproducible bioinformatics workflows.
   //
   //   Format: urn:uor:lang:perl:{hex} (SHA-256 of canonical distribution manifest)
@@ -1233,7 +1233,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://perldoc.perl.org/perlref",
   }],
 
-  // ── Lua — Embedded Scripting & Game Engines ──────────────────────────────
+  // ── Lua. Embedded Scripting & Game Engines ──────────────────────────────
   // Lua is embedded in Redis, Nginx, game engines (Roblox, WoW), and IoT.
   // Its bytecode (luac) is deterministic. LuaRocks packages are
   // content-addressable via rockspec files (structured Lua tables).
@@ -1248,7 +1248,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.lua.org/manual/5.4/",
   }],
 
-  // ── Bash — Unix Shell & Infrastructure ───────────────────────────────────
+  // ── Bash. Unix Shell & Infrastructure ───────────────────────────────────
   // Bash scripts automate CI/CD, server provisioning, and data pipelines.
   // ShellCheck provides static analysis that produces structured, canonical
   // ASTs. Content-addressing shell scripts prevents infrastructure tampering.
@@ -1262,9 +1262,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.gnu.org/software/bash/manual/bash.html",
   }],
 
-  // ── PowerShell — Windows & Azure Automation ──────────────────────────────
+  // ── PowerShell. Windows & Azure Automation ──────────────────────────────
   // PowerShell's AST (System.Management.Automation.Language) is a typed,
-  // structured tree — ideal for canonical hashing. PowerShell Gallery
+  // structured tree. ideal for canonical hashing. PowerShell Gallery
   // modules are versioned packages. Azure Automation runbooks become
   // content-addressed infrastructure operations.
   //
@@ -1277,7 +1277,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://learn.microsoft.com/en-us/powershell/scripting/lang-spec/chapter-01",
   }],
 
-  // ── Raku (Perl 6) — Grammar-First Language ───────────────────────────────
+  // ── Raku (Perl 6). Grammar-First Language ───────────────────────────────
   // Raku's grammar system treats parsing as first-class. Grammar definitions
   // are canonicalizable pattern specifications. Zef packages provide
   // content-addressed distribution. Raku's hyperoperators produce
@@ -1292,10 +1292,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.raku.org/language",
   }],
 
-  // ── Tcl — Tool Command Language ──────────────────────────────────────────
+  // ── Tcl. Tool Command Language ──────────────────────────────────────────
   // Tcl's "everything is a string" philosophy means every program is
   // trivially serializable. Tcl packages (teapot) and Tk GUI definitions
-  // are structured command sequences — canonicalizable by default.
+  // are structured command sequences. canonicalizable by default.
   //
   //   Format: urn:uor:lang:tcl:{hex} (SHA-256 of canonical Tcl package)
   //   Canonical: package → command list → JSON-LD → URDNA2015 → SHA-256
@@ -1307,7 +1307,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9e — MOBILE LANGUAGES
+  // TIER 9e. MOBILE LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Mobile languages target iOS, Android, and cross-platform runtimes.
@@ -1315,11 +1315,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // Content-addressing mobile code creates app integrity chains from
   // source to app store to device.
 
-  // ── Swift — iOS/macOS Native Development ─────────────────────────────────
+  // ── Swift. iOS/macOS Native Development ─────────────────────────────────
   // Swift's SIL (Swift Intermediate Language) is a typed, deterministic IR.
   // Swift Package Manager uses content-addressed dependencies via Package.resolved.
   // SwiftUI view hierarchies are declarative, canonicalizable trees.
-  // Apple's App Attest already uses content hashing — UOR extends to identity.
+  // Apple's App Attest already uses content hashing. UOR extends to identity.
   //
   //   Format: urn:uor:lang:swift:{hex} (SHA-256 of canonical Swift module interface)
   //   Canonical: module → .swiftinterface → JSON-LD → URDNA2015 → SHA-256
@@ -1330,9 +1330,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/",
   }],
 
-  // ── Objective-C — Legacy iOS/macOS Bridge ────────────────────────────────
+  // ── Objective-C. Legacy iOS/macOS Bridge ────────────────────────────────
   // Objective-C's message-passing model produces structured runtime metadata.
-  // Header files (.h) are pure interface declarations — canonicalizable.
+  // Header files (.h) are pure interface declarations. canonicalizable.
   // Bridging headers connect to Swift, creating cross-language identity links.
   //
   //   Format: urn:uor:lang:objc:{hex} (SHA-256 of canonical ObjC interface)
@@ -1344,11 +1344,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/",
   }],
 
-  // ── Dart — Flutter Cross-Platform ────────────────────────────────────────
+  // ── Dart. Flutter Cross-Platform ────────────────────────────────────────
   // Dart powers Flutter (iOS, Android, Web, Desktop from single codebase).
   // Dart's AOT compilation produces deterministic native code. pub.dev
   // packages use SHA-256 content hashes. Widget trees are declarative,
-  // canonicalizable UI descriptions — each screen gets a content-addressed identity.
+  // canonicalizable UI descriptions. each screen gets a content-addressed identity.
   //
   //   Format: urn:uor:lang:dart:{hex} (SHA-256 of canonical Dart library)
   //   Canonical: library → Kernel AST → JSON-LD → URDNA2015 → SHA-256
@@ -1360,17 +1360,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9f — DATA SCIENCE & SCIENTIFIC COMPUTING
+  // TIER 9f. DATA SCIENCE & SCIENTIFIC COMPUTING
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Scientific computing demands reproducibility. Content-addressing
   // computation pipelines (data → analysis → model → publication)
   // creates verifiable, reproducible research chains.
 
-  // ── R — Statistical Computing & Bioinformatics ───────────────────────────
+  // ── R. Statistical Computing & Bioinformatics ───────────────────────────
   // R's CRAN repository is one of the most curated package ecosystems.
   // DESCRIPTION files are structured package manifests. R Markdown / Quarto
-  // notebooks are reproducible analysis documents — each rendered output
+  // notebooks are reproducible analysis documents. each rendered output
   // gets a content-addressed identity proving computational reproducibility.
   //
   //   Format: urn:uor:lang:r:{hex} (SHA-256 of canonical R package DESCRIPTION)
@@ -1382,7 +1382,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://cran.r-project.org/doc/manuals/r-release/R-lang.html",
   }],
 
-  // ── Julia — High-Performance Scientific Computing ────────────────────────
+  // ── Julia. High-Performance Scientific Computing ────────────────────────
   // Julia's multiple dispatch and type system produce JIT-compiled code
   // that's deterministic for given types. Pkg.jl uses content-addressed
   // artifacts (Artifacts.toml with SHA-256). Julia's metaprogramming
@@ -1397,10 +1397,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.julialang.org/en/v1/",
   }],
 
-  // ── MATLAB — Engineering & Signal Processing ─────────────────────────────
+  // ── MATLAB. Engineering & Signal Processing ─────────────────────────────
   // MATLAB dominates control systems, signal processing, and engineering
   // simulation. MATLAB toolboxes are structured function libraries.
-  // Simulink models are block diagrams stored as structured XML — trivially
+  // Simulink models are block diagrams stored as structured XML. trivially
   // canonicalizable. Each simulation configuration gets a permanent identity.
   //
   //   Format: urn:uor:lang:matlab:{hex} (SHA-256 of canonical MATLAB toolbox)
@@ -1413,14 +1413,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9g — WEB PLATFORM LANGUAGES
+  // TIER 9g. WEB PLATFORM LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // The web platform is the UOR Virtual OS's native execution environment.
-  // Every layer — document (HTML), style (CSS), logic (JS/TS/WASM),
-  // and GPU (WGSL) — is content-addressable via Subresource Integrity (SRI).
+  // Every layer. document (HTML), style (CSS), logic (JS/TS/WASM),
+  // and GPU (WGSL). is content-addressable via Subresource Integrity (SRI).
 
-  // ── HTML — Universal Document Format ─────────────────────────────────────
+  // ── HTML. Universal Document Format ─────────────────────────────────────
   // HTML documents are the web's fundamental unit. W3C's DOM serialization
   // produces canonical markup. Subresource Integrity (SRI) already uses
   // SHA-256/384/512 hashes for embedded resources. Content-addressing
@@ -1435,8 +1435,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://html.spec.whatwg.org/multipage/",
   }],
 
-  // ── CSS — Deterministic Style Declarations ───────────────────────────────
-  // CSS is a pure declarative language — no side effects, no state.
+  // ── CSS. Deterministic Style Declarations ───────────────────────────────
+  // CSS is a pure declarative language. no side effects, no state.
   // CSSOM provides a structured, canonical representation. CSS custom
   // properties (design tokens) are content-addressable configuration.
   // PostCSS AST enables deterministic stylesheet canonicalization.
@@ -1450,7 +1450,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/Style/CSS/specs.en.html",
   }],
 
-  // ── WebAssembly — Portable Binary Execution ──────────────────────────────
+  // ── WebAssembly. Portable Binary Execution ──────────────────────────────
   // WASM modules are deterministic binary instruction streams. The WASM
   // spec guarantees bit-exact execution across all platforms. Every WASM
   // module already has a content-addressable hash by construction.
@@ -1465,7 +1465,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://webassembly.github.io/spec/core/",
   }],
 
-  // ── WGSL — WebGPU Shading Language ───────────────────────────────────────
+  // ── WGSL. WebGPU Shading Language ───────────────────────────────────────
   // WGSL is the W3C standard for WebGPU shader programming. Shader source
   // is deterministic text that compiles to GPU instructions. Content-
   // addressing shaders enables verified GPU compute pipelines for
@@ -1481,14 +1481,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9h — QUERY & DATA TRANSFORMATION LANGUAGES
+  // TIER 9h. QUERY & DATA TRANSFORMATION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Query languages define data access patterns. Content-addressing queries
   // enables query caching, result verification, and access auditing across
-  // all data systems — relational, graph, document, and XML.
+  // all data systems. relational, graph, document, and XML.
 
-  // ── GraphQL — API Query Language ─────────────────────────────────────────
+  // ── GraphQL. API Query Language ─────────────────────────────────────────
   // GraphQL schemas are strongly typed, introspectable type systems.
   // Schema Definition Language (SDL) is deterministic text. Persisted
   // queries (content-addressed query strings) are already industry practice.
@@ -1503,10 +1503,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://spec.graphql.org/October2021/",
   }],
 
-  // ── SPARQL — Semantic Web Query Language ──────────────────────────────────
-  // SPARQL queries operate over RDF graphs — the native UOR data model.
+  // ── SPARQL. Semantic Web Query Language ──────────────────────────────────
+  // SPARQL queries operate over RDF graphs. the native UOR data model.
   // SPARQL Algebra provides a canonical normal form for any query.
-  // Content-addressing queries enables federated query verification —
+  // Content-addressing queries enables federated query verification.
   // proving that identical queries produce identical results across endpoints.
   //
   //   Format: urn:uor:lang:sparql:{hex} (SHA-256 of canonical SPARQL algebra)
@@ -1518,7 +1518,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/sparql11-query/",
   }],
 
-  // ── XQuery — XML Query Language ──────────────────────────────────────────
+  // ── XQuery. XML Query Language ──────────────────────────────────────────
   // XQuery operates over XML documents with full XPath navigation.
   // XQuery expressions are deterministic transformations of XML trees.
   // Content-addressing enables verified document transformations for
@@ -1534,18 +1534,18 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9i — SMART CONTRACT LANGUAGES
+  // TIER 9i. SMART CONTRACT LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // Smart contracts execute on blockchains — inherently content-addressed
+  // Smart contracts execute on blockchains. inherently content-addressed
   // environments. Contract source compiles to VM bytecode that is deployed
   // at a content-derived address. UOR bridges source-to-deployment identity.
 
-  // ── Solidity — Ethereum Smart Contracts ──────────────────────────────────
+  // ── Solidity. Ethereum Smart Contracts ──────────────────────────────────
   // Solidity compiles to EVM bytecode deployed at content-derived addresses.
   // Etherscan verified source is already source↔bytecode mapping.
   // UOR creates a complete chain: source hash → bytecode hash → deployment
-  // address → event logs — full contract provenance.
+  // address → event logs. full contract provenance.
   //
   //   Format: urn:uor:lang:solidity:{hex} (SHA-256 of canonical Solidity AST)
   //   Canonical: source → Solidity AST → JSON-LD → URDNA2015 → SHA-256
@@ -1556,9 +1556,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.soliditylang.org/en/latest/",
   }],
 
-  // ── Vyper — Pythonic Ethereum Contracts ───────────────────────────────────
+  // ── Vyper. Pythonic Ethereum Contracts ───────────────────────────────────
   // Vyper prioritizes security and auditability over expressiveness.
-  // No inheritance, no operator overloading — the AST is minimal and
+  // No inheritance, no operator overloading. the AST is minimal and
   // deterministic. Ideal for formal verification pipelines where
   // content-addressed source maps to verified bytecode.
   //
@@ -1571,8 +1571,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.vyperlang.org/en/stable/",
   }],
 
-  // ── Move — Resource-Oriented Smart Contracts ─────────────────────────────
-  // Move (Aptos, Sui) treats digital assets as linear types — resources
+  // ── Move. Resource-Oriented Smart Contracts ─────────────────────────────
+  // Move (Aptos, Sui) treats digital assets as linear types. resources
   // cannot be copied or discarded, only moved. This aligns perfectly with
   // UOR's principle that identity follows content, not location.
   // Move bytecode modules are deterministic, verifiable artifacts.
@@ -1586,10 +1586,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://move-language.github.io/move/",
   }],
 
-  // ── Cairo — ZK-STARK Smart Contracts ─────────────────────────────────────
+  // ── Cairo. ZK-STARK Smart Contracts ─────────────────────────────────────
   // Cairo compiles to the STARK VM for zero-knowledge proof generation.
   // Every Cairo program execution produces a cryptographic proof of
-  // correct computation — the most natural content-addressed execution
+  // correct computation. the most natural content-addressed execution
   // model. StarkNet contracts are verified by mathematics, not trust.
   //
   //   Format: urn:uor:lang:cairo:{hex} (SHA-256 of canonical Cairo Sierra IR)
@@ -1602,17 +1602,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9j — HARDWARE DESCRIPTION LANGUAGES
+  // TIER 9j. HARDWARE DESCRIPTION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // HDLs describe digital circuits at the register-transfer level (RTL).
   // Synthesis produces deterministic gate-level netlists. Content-addressing
   // hardware designs enables IP provenance from RTL to silicon.
 
-  // ── VHDL — FPGA & ASIC Design ───────────────────────────────────────────
+  // ── VHDL. FPGA & ASIC Design ───────────────────────────────────────────
   // VHDL entity/architecture pairs are deterministic hardware descriptions.
   // IEEE 1076 standardized since 1987. VHDL libraries are structured
-  // compilation units — each design unit gets a content-addressed identity
+  // compilation units. each design unit gets a content-addressed identity
   // tracking its evolution from simulation through synthesis to silicon.
   //
   //   Format: urn:uor:lang:vhdl:{hex} (SHA-256 of canonical VHDL design unit)
@@ -1624,9 +1624,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/69868.html",
   }],
 
-  // ── Verilog — Digital Logic Design ───────────────────────────────────────
+  // ── Verilog. Digital Logic Design ───────────────────────────────────────
   // Verilog modules are the industry standard for ASIC design. Gate-level
-  // netlists are deterministic — identical RTL always synthesizes to
+  // netlists are deterministic. identical RTL always synthesizes to
   // identical gates. Content-addressing enables hardware IP provenance
   // and design reuse verification.
   //
@@ -1639,10 +1639,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://ieeexplore.ieee.org/document/1620780",
   }],
 
-  // ── SystemVerilog — Verification & Design ────────────────────────────────
+  // ── SystemVerilog. Verification & Design ────────────────────────────────
   // SystemVerilog extends Verilog with OOP-based verification (UVM).
   // Constrained random testing, functional coverage, and assertions
-  // produce structured verification results — content-addressable
+  // produce structured verification results. content-addressable
   // proof artifacts that silicon is correct.
   //
   //   Format: urn:uor:lang:systemverilog:{hex} (SHA-256 of canonical SV module)
@@ -1655,18 +1655,18 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9m — GPU & SHADER LANGUAGES
+  // TIER 9m. GPU & SHADER LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // GPU languages describe massively parallel computation. Shader/kernel
-  // source is deterministic — identical source produces identical GPU
+  // source is deterministic. identical source produces identical GPU
   // instructions. Content-addressing enables ML training provenance
   // from shader kernel to model weights.
 
-  // ── CUDA — NVIDIA GPU Computing ──────────────────────────────────────────
+  // ── CUDA. NVIDIA GPU Computing ──────────────────────────────────────────
   // CUDA kernels define parallel computation on NVIDIA GPUs. PTX
   // (Parallel Thread Execution) intermediate code is deterministic.
-  // ML training pipelines (PyTorch, TensorFlow) use CUDA — content-
+  // ML training pipelines (PyTorch, TensorFlow) use CUDA. content-
   // addressing kernels creates training provenance chains.
   //
   //   Format: urn:uor:lang:cuda:{hex} (SHA-256 of canonical CUDA kernel)
@@ -1678,7 +1678,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
   }],
 
-  // ── OpenCL — Cross-Platform GPU Computing ────────────────────────────────
+  // ── OpenCL. Cross-Platform GPU Computing ────────────────────────────────
   // OpenCL runs on GPUs, CPUs, FPGAs, and DSPs from any vendor.
   // OpenCL C kernel source is deterministic text. SPIR-V intermediate
   // representation provides a vendor-neutral binary format.
@@ -1692,7 +1692,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_C.html",
   }],
 
-  // ── GLSL — OpenGL Shading Language ───────────────────────────────────────
+  // ── GLSL. OpenGL Shading Language ───────────────────────────────────────
   // GLSL shaders define GPU rendering pipelines (vertex, fragment, compute).
   // Shader source is deterministic; identical GLSL produces identical
   // rendering. Content-addressing enables shader library provenance
@@ -1707,7 +1707,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html",
   }],
 
-  // ── HLSL — DirectX Shading Language ──────────────────────────────────────
+  // ── HLSL. DirectX Shading Language ──────────────────────────────────────
   // HLSL powers DirectX rendering and compute on Windows/Xbox.
   // DXC compiler produces DXIL (deterministic bytecode) or SPIR-V.
   // Game assets using HLSL shaders get content-addressed visual identity.
@@ -1722,18 +1722,18 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9n — NICHE & SPECIALIZED LANGUAGES
+  // TIER 9n. NICHE & SPECIALIZED LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // These languages represent unique computational paradigms — array
+  // These languages represent unique computational paradigms. array
   // programming (APL), stack machines (Forth), logic programming (Prolog),
   // message passing (Smalltalk). Each paradigm has a natural canonical
   // form that maps to content-addressing.
 
-  // ── APL — Array Programming ──────────────────────────────────────────────
+  // ── APL. Array Programming ──────────────────────────────────────────────
   // APL's notation compresses complex array operations into terse expressions.
   // Each APL expression is a deterministic array transformation.
-  // The canonical form is the normalized array expression — identical
+  // The canonical form is the normalized array expression. identical
   // computations share identity regardless of syntactic sugar.
   //
   //   Format: urn:uor:lang:apl:{hex} (SHA-256 of canonical array expression)
@@ -1745,8 +1745,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/36363.html",
   }],
 
-  // ── Forth — Stack Machine Programming ────────────────────────────────────
-  // Forth's stack-based execution model is purely deterministic — every
+  // ── Forth. Stack Machine Programming ────────────────────────────────────
+  // Forth's stack-based execution model is purely deterministic. every
   // word (function) transforms the stack in a predictable way. Forth
   // dictionaries are structured word definitions, trivially canonicalizable.
   // Used in space probes (Philae lander) and embedded systems.
@@ -1760,10 +1760,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://forth-standard.org/",
   }],
 
-  // ── Prolog — Logic Programming ───────────────────────────────────────────
+  // ── Prolog. Logic Programming ───────────────────────────────────────────
   // Prolog programs are sets of logical clauses (facts + rules). The
   // canonical form is the sorted, normalized clause database. Identical
-  // logic programs produce identical proof trees — perfect for content-
+  // logic programs produce identical proof trees. perfect for content-
   // addressed theorem verification and knowledge base identity.
   //
   //   Format: urn:uor:lang:prolog:{hex} (SHA-256 of canonical clause database)
@@ -1775,10 +1775,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/21413.html",
   }],
 
-  // ── Smalltalk — Message-Passing OOP ──────────────────────────────────────
+  // ── Smalltalk. Message-Passing OOP ──────────────────────────────────────
   // Smalltalk's image-based environment is a complete, serializable system
   // state. Every object, method, and class lives in a persistent image.
-  // The image IS the canonical form — snapshotting an image produces a
+  // The image IS the canonical form. snapshotting an image produces a
   // content-addressable system state. Squeak/Pharo continue this tradition.
   //
   //   Format: urn:uor:lang:smalltalk:{hex} (SHA-256 of canonical image snapshot)
@@ -1790,10 +1790,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/36350.html",
   }],
 
-  // ── Crystal — Compiled Ruby-Like ─────────────────────────────────────────
+  // ── Crystal. Compiled Ruby-Like ─────────────────────────────────────────
   // Crystal combines Ruby syntax with static typing and AOT compilation.
   // Deterministic compilation produces native binaries. Shards (Crystal
-  // packages) use shard.lock with git commit hashes — UOR extends to
+  // packages) use shard.lock with git commit hashes. UOR extends to
   // content-addressed package identity.
   //
   //   Format: urn:uor:lang:crystal:{hex} (SHA-256 of canonical Crystal shard)
@@ -1805,7 +1805,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://crystal-lang.org/reference/1.14/",
   }],
 
-  // ── Pony — Capabilities-Secure Actor Language ────────────────────────────
+  // ── Pony. Capabilities-Secure Actor Language ────────────────────────────
   // Pony's capability system prevents data races at compile time.
   // The reference capability type system (iso, val, ref, box, tag, trn)
   // produces deterministic concurrent programs by construction.
@@ -1821,18 +1821,18 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9o — INFRASTRUCTURE AS CODE
+  // TIER 9o. INFRASTRUCTURE AS CODE
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // IaC languages define infrastructure declaratively. Content-addressing
   // build and deployment configurations creates reproducible infrastructure
   // provenance from definition to running system.
 
-  // ── HCL — HashiCorp Configuration Language ──────────────────────────────
+  // ── HCL. HashiCorp Configuration Language ──────────────────────────────
   // HCL powers Terraform, the dominant infrastructure provisioning tool.
   // Terraform state files and plan outputs are deterministic artifacts.
   // Content-addressing HCL creates provenance from infrastructure definition
-  // to deployed resources — every cloud resource traces to its Terraform source.
+  // to deployed resources. every cloud resource traces to its Terraform source.
   //
   //   Format: urn:uor:lang:hcl:{hex} (SHA-256 of canonical HCL module)
   //   Canonical: module → parsed HCL → JSON-LD → URDNA2015 → SHA-256
@@ -1843,8 +1843,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md",
   }],
 
-  // ── Nix — Reproducible Build System ─────────────────────────────────────
-  // Nix derivations are content-addressed by construction — the hash of
+  // ── Nix. Reproducible Build System ─────────────────────────────────────
+  // Nix derivations are content-addressed by construction. the hash of
   // all inputs (source, dependencies, build script) determines the output
   // path. This is structurally identical to UOR's content-addressing.
   // Nixpkgs (80k+ packages) is the largest reproducible package collection.
@@ -1858,7 +1858,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://nixos.org/manual/nix/stable/language/",
   }],
 
-  // ── Dockerfile — Container Build Specification ──────────────────────────
+  // ── Dockerfile. Container Build Specification ──────────────────────────
   // Dockerfiles define reproducible container builds. Each instruction
   // produces a content-addressed layer (via docker content trust).
   // Content-addressing the Dockerfile creates a permanent identity for
@@ -1873,8 +1873,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.docker.com/reference/dockerfile/",
   }],
 
-  // ── Makefile — Build Automation ─────────────────────────────────────────
-  // Make (1976) is the original build system — still used by Linux kernel,
+  // ── Makefile. Build Automation ─────────────────────────────────────────
+  // Make (1976) is the original build system. still used by Linux kernel,
   // GNU projects, and countless C/C++ projects. Makefiles define
   // deterministic dependency graphs with target → prerequisite → recipe rules.
   //
@@ -1888,10 +1888,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 10 — MARKUP, CONFIGURATION & DOCUMENTATION LANGUAGES
+  // TIER 10. MARKUP, CONFIGURATION & DOCUMENTATION LANGUAGES
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // These are the STRUCTURE languages — they define data shape, documentation,
+  // These are the STRUCTURE languages. they define data shape, documentation,
   // and configuration. Every config file, every README, every schema definition
   // becomes content-addressed.
 
@@ -2088,7 +2088,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 8 — CONSCIOUSNESS STUDIES (Landscape of Consciousness projection)
+  // TIER 8. CONSCIOUSNESS STUDIES (Landscape of Consciousness projection)
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["loc", {
@@ -2112,10 +2112,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 9 — VISUAL PRESENTATION (Hologram UI — the first visual projection)
+  // TIER 9. VISUAL PRESENTATION (Hologram UI. the first visual projection)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Tabler UI — Human-Perceivable Visual Projection ────────────────────
+  // ── Tabler UI. Human-Perceivable Visual Projection ────────────────────
   // Every other projection maps hash → protocol string.
   // This maps hash → visual component identifier.
   // A hologram IS a projection of abstract data into perceivable form.
@@ -2145,10 +2145,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 10 — CODE STRUCTURE (Bevel Code-to-Knowledge-Graph projection)
+  // TIER 10. CODE STRUCTURE (Bevel Code-to-Knowledge-Graph projection)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Code KG — Source Code → Knowledge Graph ────────────────────────────
+  // ── Code KG. Source Code → Knowledge Graph ────────────────────────────
   // Maps code entities (files, functions, classes, imports) into the
   // UOR knowledge graph namespace. Each entity is content-addressed.
   // Inspired by Bevel Software's Code-to-Knowledge-Graph (Kotlin/JVM).
@@ -2166,14 +2166,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 11 — TRUST SPANNING PROTOCOL (ToIP TSP — authenticated messaging)
+  // TIER 11. TRUST SPANNING PROTOCOL (ToIP TSP. authenticated messaging)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // The Trust Spanning Protocol (TSP), developed under the Trust over IP
   // Foundation's Trust Spanning Working Group, defines a universal trust
   // layer for authenticated, end-to-end encrypted communication between
   // Verifiable Identifiers (VIDs). TSP operates at a layer BELOW application
-  // protocols — it is the trust substrate that ActivityPub, AT Protocol,
+  // protocols. it is the trust substrate that ActivityPub, AT Protocol,
   // A2A, and MCP messages ride on.
   //
   // UOR Alignment:
@@ -2184,18 +2184,18 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // The canonical hash bytes from singleProofHash() deterministically
   // derive the TSP VID, the verification key fingerprint, and the
-  // routed/nested envelope identifiers — all from ONE hash.
+  // routed/nested envelope identifiers. all from ONE hash.
 
-  // ── TSP-VID — Trust Spanning Protocol Verifiable Identifier ────────────
+  // ── TSP-VID. Trust Spanning Protocol Verifiable Identifier ────────────
   // A TSP VID is a DID that can be resolved to verification and encryption
-  // keys. UOR's did:uor is ALREADY a VID — this projection makes the
+  // keys. UOR's did:uor is ALREADY a VID. this projection makes the
   // TSP-specific URI form explicit for protocol-level interop.
   //
   // TSP §4.1: "A VID is a URI that identifies an entity and can be
   // resolved to a set of cryptographic keys."
   //
   //   Format: did:uor:{cid} (identical to the DID projection)
-  //   This is an ALIAS — proving that TSP trust and UOR identity are the same.
+  //   This is an ALIAS. proving that TSP trust and UOR identity are the same.
 
   ["tsp-vid", {
     project: ({ cid }) => `did:uor:${cid}`,
@@ -2203,7 +2203,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://trustoverip.github.io/tswg-tsp-specification/",
   }],
 
-  // ── TSP Envelope — Authenticated Message Container ─────────────────────
+  // ── TSP Envelope. Authenticated Message Container ─────────────────────
   // TSP envelopes wrap payloads with sender VID, receiver VID, and a
   // cryptographic seal (HPKE or signed plaintext). The envelope ID is
   // the content hash of the canonical envelope structure.
@@ -2211,7 +2211,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // TSP §5: "A TSP message consists of a header (sender, receiver,
   // message type) and a payload, sealed with the sender's private key."
   //
-  // UOR projects the envelope ID as a URN — enabling envelope-level
+  // UOR projects the envelope ID as a URN. enabling envelope-level
   // content-addressing. Two identical messages produce the same envelope ID.
   //
   //   Format: urn:uor:tsp:envelope:{hex} (SHA-256 of canonical envelope)
@@ -2222,7 +2222,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://trustoverip.github.io/tswg-tsp-specification/",
   }],
 
-  // ── TSP Route — Intermediary Routing Identifier ────────────────────────
+  // ── TSP Route. Intermediary Routing Identifier ────────────────────────
   // TSP supports routed messages through intermediaries (§6). Each
   // intermediary hop is identified by a VID. UOR's IPv6 routing projection
   // aligns naturally: the fd00:0075:6f72::/48 prefix provides native
@@ -2241,10 +2241,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "tsp-route-uses-64-bit-prefix-for-hop-routing (64 of 256 bits)",
   }],
 
-  // ── TSP Relationship — Verified Trust Channel ──────────────────────────
+  // ── TSP Relationship. Verified Trust Channel ──────────────────────────
   // TSP defines relationship forming via a two-step handshake:
-  //   1. TSP_RFI (Relationship Forming Invitation) — sender proposes
-  //   2. TSP_RFA (Relationship Forming Acceptance) — receiver accepts
+  //   1. TSP_RFI (Relationship Forming Invitation). sender proposes
+  //   2. TSP_RFA (Relationship Forming Acceptance). receiver accepts
   //
   // The relationship ID is the hash of the combined RFI+RFA exchange,
   // creating a content-addressed, bilateral trust channel. This maps
@@ -2259,7 +2259,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://trustoverip.github.io/tswg-tsp-specification/",
   }],
 
-  // ── TSP Nested Envelope — End-to-End Through Intermediaries ────────────
+  // ── TSP Nested Envelope. End-to-End Through Intermediaries ────────────
   // TSP §6.2 defines nested envelopes where the outer envelope is for
   // the intermediary and the inner envelope is for the final recipient.
   // UOR's content-addressing makes nesting trivially verifiable:
@@ -2273,10 +2273,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://trustoverip.github.io/tswg-tsp-specification/",
   }],
 
-  // ── TSP Verification Key Fingerprint — Key Identity ────────────────────
+  // ── TSP Verification Key Fingerprint. Key Identity ────────────────────
   // TSP VID resolution yields verification and encryption keys. The
   // fingerprint projection creates a content-addressed key identifier
-  // from the same hash — enabling key-level provenance tracking.
+  // from the same hash. enabling key-level provenance tracking.
   //
   // Combined with UNS's post-quantum keypair module (Dilithium-3),
   // this provides a migration path: TSP's Ed25519 keys can be wrapped
@@ -2291,7 +2291,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 12 — FIRST PERSON PROJECT (Decentralized Trust Graph Infrastructure)
+  // TIER 12. FIRST PERSON PROJECT (Decentralized Trust Graph Infrastructure)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // The First Person Project (FPP) builds the Internet's missing trust layer
@@ -2301,16 +2301,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //   UOR Object → singleProofHash() → Hologram → FPP Projections
   //
   // Every credential, relationship, persona, and trust graph node is a UOR
-  // object. The decentralized trust graph IS a hologram — each trust
+  // object. The decentralized trust graph IS a hologram. each trust
   // relationship is one canonical hash projected through every standard.
   //
   // Reference: The First Person Project White Paper V1.2 (2026-01-23)
   // https://www.firstperson.network/
 
-  // ── FPP-PHC — Personhood Credential Identifier ────────────────────────
+  // ── FPP-PHC. Personhood Credential Identifier ────────────────────────
   // A PHC is issued by a qualified ecosystem to attest that the holder
   // is a real, unique person within that ecosystem. The PHC identity is
-  // the SHA-256 of the canonical credential object — ensuring that
+  // the SHA-256 of the canonical credential object. ensuring that
   // identical attestations produce identical identifiers.
   //
   // PHC Design Principles (from the Personhood Credentials paper):
@@ -2320,7 +2320,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // The PHC projection creates a URN that embeds the full hash, enabling
   // lossless verification. Combined with the `vc` projection, any PHC
   // is simultaneously a W3C Verifiable Credential and a First Person
-  // Personhood Credential — same hash, dual identity.
+  // Personhood Credential. same hash, dual identity.
   //
   //   Format: urn:fpp:phc:sha256:{hex}
 
@@ -2330,7 +2330,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-VRC — Verifiable Relationship Credential Identifier ───────────
+  // ── FPP-VRC. Verifiable Relationship Credential Identifier ───────────
   // VRCs are issued in pairs (bidirectional) between PHC holders to
   // attest first-person trust relationships. Each VRC is signed by the
   // issuer's pairwise private DID and linked to both parties' PHCs.
@@ -2342,7 +2342,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //   - VRCs compose into the decentralized trust graph
   //
   // Combined with `tsp-relationship`, a VRC exchange IS a TSP
-  // relationship forming handshake — they are structurally identical.
+  // relationship forming handshake. they are structurally identical.
   //
   //   Format: urn:fpp:vrc:sha256:{hex}
 
@@ -2352,8 +2352,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-VEC — Verifiable Endorsement Credential Identifier ────────────
-  // VECs extend VRCs with contextual reputation — Bob can vouch for
+  // ── FPP-VEC. Verifiable Endorsement Credential Identifier ────────────
+  // VECs extend VRCs with contextual reputation. Bob can vouch for
   // Alice as a "microbiologist" or "gardener" using persona DIDs.
   // VECs are the building blocks of contextual reputation graphs.
   //
@@ -2368,16 +2368,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-RDID — Relationship DID (Pairwise Private) ────────────────────
+  // ── FPP-RDID. Relationship DID (Pairwise Private) ────────────────────
   // R-DIDs are generated per-relationship for private channels. They are
   // known only to the two parties and are NOT intended for correlation.
   //
   // The R-DID projection creates a did:uor that encodes the relationship
-  // context — the hash is derived from the channel's founding exchange
+  // context. the hash is derived from the channel's founding exchange
   // (QR scan → DID document exchange → verification).
   //
   // R-DIDs are Self-Certifying Identifiers (SCIDs) per the ToIP DID SCID
-  // specification — portable and location-independent.
+  // specification. portable and location-independent.
   //
   //   Format: did:fpp:r:{hex16} (64-bit relationship prefix for privacy)
 
@@ -2388,10 +2388,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "fpp-rdid-uses-64-bit-prefix-for-privacy (pairwise-only, not for global correlation)",
   }],
 
-  // ── FPP-MDID — Membership DID (Community-Scoped) ──────────────────────
+  // ── FPP-MDID. Membership DID (Community-Scoped) ──────────────────────
   // M-DIDs are established when a person joins a Verifiable Trust
   // Community (VTC). The M-DID is linked to a Verifiable Membership
-  // Credential (VMC) — a special form of VRC.
+  // Credential (VMC). a special form of VRC.
   //
   // A person may use different M-DIDs for different communities
   // (maximum privacy) or share an M-DID across related communities
@@ -2405,14 +2405,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-PDID — Persona DID (Cross-Context Public Identity) ────────────
+  // ── FPP-PDID. Persona DID (Cross-Context Public Identity) ────────────
   // P-DIDs are used for intentional correlation across contexts.
   // A persona may be private (shared in specific contexts) or public
   // (globally resolvable). P-DIDs resolve via FedID's decentralized
   // federation using ActivityPub.
   //
   // P-DIDs enable digital signatures for content credentials (C2PA),
-  // legal documents, and social vouching — all from the sovereign wallet.
+  // legal documents, and social vouching. all from the sovereign wallet.
   //
   //   Format: did:fpp:p:{hex}
 
@@ -2422,12 +2422,12 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-RCARD — Relationship Card (Digital Business Card) ─────────────
+  // ── FPP-RCARD. Relationship Card (Digital Business Card) ─────────────
   // R-cards are cryptographically signed digital objects exchanged over
   // private channels. They are the modern equivalent of business cards
   // but with cryptographic provenance and one-way sync support.
   //
-  // An r-card is a UOR object — its identity is the hash of the card
+  // An r-card is a UOR object. its identity is the hash of the card
   // contents. Updates produce new hashes, forming a verifiable history.
   //
   //   Format: urn:fpp:rcard:sha256:{hex}
@@ -2438,13 +2438,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── FPP-TRUSTGRAPH — Trust Graph Node Identifier ──────────────────────
+  // ── FPP-TRUSTGRAPH. Trust Graph Node Identifier ──────────────────────
   // Each node in the decentralized trust graph is identified by the
-  // hash of the node's canonical representation — including its PHCs,
+  // hash of the node's canonical representation. including its PHCs,
   // VRCs, M-DIDs, and community memberships.
   //
   // The trust graph is a geodesic dome of verifiable relationship trust
-  // triangles — each triangle is (PHC-A, PHC-B, VRC-AB) anchored to
+  // triangles. each triangle is (PHC-A, PHC-B, VRC-AB) anchored to
   // a shared ecosystem. The trust load distributes across all triangles.
   //
   //   Format: urn:fpp:trustgraph:sha256:{hex}
@@ -2455,13 +2455,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.firstperson.network/",
   }],
 
-  // ── TRQP — Trust Registry Query Protocol Endpoint ─────────────────────
+  // ── TRQP. Trust Registry Query Protocol Endpoint ─────────────────────
   // TRQP enables any party to query whether a specific entity holds a
   // specific role in a specific trust ecosystem. The Ayra Trust Network
   // is the decentralized trust registry network that anchors TRQP.
   //
   // The TRQP projection creates a query-ready URI that embeds the
-  // entity's content-addressed identity — enabling resolution against
+  // entity's content-addressed identity. enabling resolution against
   // any TRQP-compliant registry without centralized lookup.
   //
   //   Format: trqp://{domain}/registries/{hex16}/entities/{hex}
@@ -2473,13 +2473,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 13 — SOCIAL INFRASTRUCTURE STANDARDS
+  // TIER 13. SOCIAL INFRASTRUCTURE STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
   ["ens", {
     project: ({ hex }) => `${hex.slice(0, 12)}.uor.eth`,
     fidelity: "lossy",
-    lossWarning: "ENS names are truncated to 12 hex chars — lossy but human-readable",
+    lossWarning: "ENS names are truncated to 12 hex chars. lossy but human-readable",
     spec: "https://docs.ens.domains/",
   }],
 
@@ -2496,7 +2496,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 14 — POLYNOMIAL TREES (Coinductive Interface Evolution)
+  // TIER 14. POLYNOMIAL TREES (Coinductive Interface Evolution)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Based on Spivak's PolyTr category (arXiv:2602.17917v1).
@@ -2522,15 +2522,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 15 — POST-QUANTUM BRIDGE (Lattice-Hash Duality)
+  // TIER 15. POST-QUANTUM BRIDGE (Lattice-Hash Duality)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // The UOR ring R = Z/256Z is a 1-dimensional lattice. The critical identity
-  // neg(bnot(x)) ≡ succ(x) is a lattice automorphism — a geometric symmetry
+  // neg(bnot(x)) ≡ succ(x) is a lattice automorphism. a geometric symmetry
   // that quantum computers cannot break because geometry is higher-order to
   // quantum mechanics.
   //
-  // Dilithium-3 (ML-DSA-65, NIST FIPS 204) operates on Module-LWE lattices —
+  // Dilithium-3 (ML-DSA-65, NIST FIPS 204) operates on Module-LWE lattices.
   // the SAME mathematical family as UOR's ring. The PQ Bridge exploits this
   // structural alignment:
   //
@@ -2552,7 +2552,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://csrc.nist.gov/pubs/fips/204/final",
   }],
 
-  // ── PQ Commitment Envelope — On-Chain Quantum Shield ──────────────────
+  // ── PQ Commitment Envelope. On-Chain Quantum Shield ──────────────────
   // Produces the complete commitment structure that gets Dilithium-3 signed
   // and anchored on any SHA-256-native blockchain. The envelope encodes:
   //   - Protocol version (0x01)
@@ -2575,12 +2575,12 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://csrc.nist.gov/pubs/fips/204/final",
   }],
 
-  // ── PQ Coherence Witness — Algebraic Framework Proof ──────────────────
+  // ── PQ Coherence Witness. Algebraic Framework Proof ──────────────────
   // Encodes the ring coherence witness from the first byte of the hash.
   // Any verifier can check neg(bnot(x)) ≡ succ(x) in O(1) arithmetic
   // to prove the envelope was produced by a coherent UOR system.
   //
-  // This is NOT a signature — it's a structural proof of algebraic
+  // This is NOT a signature. it's a structural proof of algebraic
   // membership. The witness byte x, neg(bnot(x)), and succ(x) are
   // encoded as a 3-byte suffix. Verification is pure arithmetic.
   //
@@ -2593,7 +2593,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
       const bnot = (~x) & 0xFF;            // bitwise NOT mod 256
       const negBnot = (256 - bnot) & 0xFF;  // arithmetic negation mod 256
       const succX = (x + 1) & 0xFF;         // successor mod 256
-      // negBnot === succX is ALWAYS true — this IS the critical identity
+      // negBnot === succX is ALWAYS true. this IS the critical identity
       return `pq:witness:${hex}:${x}:${negBnot}:${succX}`;
     },
     fidelity: "lossless",
@@ -2601,11 +2601,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 15b — POST-QUANTUM: ETHEREUM EVM SETTLEMENT
+  // TIER 15b. POST-QUANTUM: ETHEREUM EVM SETTLEMENT
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Ethereum anchoring uses a PQ Commitment Registry contract.
-  // Full Dilithium-3 verification in Solidity costs ~30M gas — impractical.
+  // Full Dilithium-3 verification in Solidity costs ~30M gas. impractical.
   // Instead, UOR uses an elegant commitment scheme:
   //
   //   1. Off-chain: Dilithium-3 signs the content hash (PQ-secure)
@@ -2629,7 +2629,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://eips.ethereum.org/EIPS/eip-191",
   }],
 
-  // ── Ethereum calldata — registerPqCommitment(bytes32) ────────────────────
+  // ── Ethereum calldata. registerPqCommitment(bytes32) ────────────────────
   // Pre-encoded calldata for the PQ Commitment Registry contract.
   // Function selector: keccak256("registerPqCommitment(bytes32)")[:4]
   //   = 0x7a3f5e12 (deterministic from ABI)
@@ -2643,7 +2643,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.soliditylang.org/en/latest/abi-spec.html",
   }],
 
-  // ── Ethereum Event Log Topic — PqCommitmentRegistered(bytes32) ──────────
+  // ── Ethereum Event Log Topic. PqCommitmentRegistered(bytes32) ──────────
   // The indexed event topic that log scanners use to find PQ commitments.
   //   topic0 = keccak256("PqCommitmentRegistered(bytes32,address,uint256)")
   //   topic1 = contentHash (indexed)
@@ -2658,7 +2658,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 16 — GLOBAL INTEROPERABILITY BRIDGE (2024–2025 Standards)
+  // TIER 16. GLOBAL INTEROPERABILITY BRIDGE (2024–2025 Standards)
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // These 15 projections close the remaining gaps in the UOR hologram,
@@ -2670,10 +2670,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // Priority 2: Infrastructure (OpenTelemetry, CloudEvents, SSF, COSE, mDL)
   // Priority 3: Strategic (DIDComm v2, SCIM, WebTransport, Gordian, CBOR-LD)
 
-  // ── P1: WebAuthn / FIDO2 — Biometric Content-Addressed Auth ──────────────
+  // ── P1: WebAuthn / FIDO2. Biometric Content-Addressed Auth ──────────────
   // WebAuthn uses a credentialId (raw bytes) to identify a public key
   // credential. UOR projects the SHA-256 hash directly as a credentialId.
-  // This means a UOR object's identity can BE a passkey identifier —
+  // This means a UOR object's identity can BE a passkey identifier.
   // biometric auth is bound to content, not to a server-assigned handle.
   //
   // WebAuthn §6.1: "credentialId is an opaque byte sequence of at most
@@ -2683,11 +2683,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // The content hash IS the credential. No password, no server state.
   //
   //   Format: webauthn:credentialId:{base64url(hashBytes)}
-  //   Fidelity: LOSSLESS — base64url is a bijective encoding of 32 bytes.
+  //   Fidelity: LOSSLESS. base64url is a bijective encoding of 32 bytes.
 
   ["webauthn", {
     project: ({ hashBytes }) => {
-      // base64url encoding (RFC 4648 §5) — no padding
+      // base64url encoding (RFC 4648 §5). no padding
       const bytes = new Uint8Array(hashBytes);
       let binary = "";
       for (const b of bytes) binary += String.fromCharCode(b);
@@ -2701,10 +2701,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/webauthn-3/",
   }],
 
-  // ── P1: SD-JWT — Selective Disclosure JSON Web Token ──────────────────────
+  // ── P1: SD-JWT. Selective Disclosure JSON Web Token ──────────────────────
   // IETF SD-JWT (RFC 9449 / draft-ietf-oauth-selective-disclosure-jwt)
   // enables issuers to create JWTs where individual claims can be
-  // selectively disclosed by the holder — a privacy-preserving superset
+  // selectively disclosed by the holder. a privacy-preserving superset
   // of standard JWTs used by eIDAS 2.0 and the EU Digital Identity Wallet.
   //
   // UOR alignment: The SHA-256 hash of a canonical claim set IS the
@@ -2712,7 +2712,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // `sd+jwt` typed hash reference that wallets and verifiers resolve.
   //
   // Combined with `vc` (W3C VC 2.0), a UOR object is simultaneously
-  // a Verifiable Credential and an SD-JWT — same hash, dual format.
+  // a Verifiable Credential and an SD-JWT. same hash, dual format.
   //
   //   Format: urn:ietf:params:oauth:sd-jwt:sha-256:{hex}
   //   Use case: Issue privacy-preserving credentials bound to UOR identity.
@@ -2723,10 +2723,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt/",
   }],
 
-  // ── P1: OpenID4VP — Verifiable Presentation Protocol ─────────────────────
+  // ── P1: OpenID4VP. Verifiable Presentation Protocol ─────────────────────
   // OpenID for Verifiable Presentations (OpenID4VP) defines how a wallet
   // presents credentials to a verifier. The `vp_token` contains the
-  // presentation — its hash IS the UOR projection.
+  // presentation. its hash IS the UOR projection.
   //
   // This completes the Identity Triangle:
   //   SD-JWT (issue) → OpenID4VP (present) → Token Status List (revoke)
@@ -2743,10 +2743,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openid.net/specs/openid-4-verifiable-presentations-1_0.html",
   }],
 
-  // ── P1: Token Status List — Credential Revocation Registry ───────────────
+  // ── P1: Token Status List. Credential Revocation Registry ───────────────
   // IETF Token Status List (draft-ietf-oauth-status-list) provides a
   // compact, privacy-preserving revocation mechanism using bit-arrays.
-  // Each credential gets an index into a status list — the UOR hash
+  // Each credential gets an index into a status list. the UOR hash
   // deterministically derives this index via modular arithmetic.
   //
   // Completes the credential lifecycle:
@@ -2768,14 +2768,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/",
   }],
 
-  // ── P1: C2PA — Coalition for Content Provenance & Authenticity ───────────
+  // ── P1: C2PA. Coalition for Content Provenance & Authenticity ───────────
   // C2PA (Adobe, Microsoft, Google, BBC, Intel) anchors content provenance
-  // manifests using SHA-256 — IDENTICAL to UOR's hash function. A C2PA
+  // manifests using SHA-256. IDENTICAL to UOR's hash function. A C2PA
   // manifest binding embeds the content hash as a `dc:identifier`.
   //
   // UOR alignment: The SHA-256 of any UOR object IS a valid C2PA assertion
   // hash. This means every UOR object natively supports content credentials
-  // — proving who created it, when, and with what tool.
+  //. proving who created it, when, and with what tool.
   //
   // Cross-projection synergy:
   //   c2pa + fpp-pdid → Content credentials signed by a persona DID
@@ -2791,9 +2791,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html",
   }],
 
-  // ── P2: OpenTelemetry — Content-Addressed Observability ──────────────────
+  // ── P2: OpenTelemetry. Content-Addressed Observability ──────────────────
   // CNCF OpenTelemetry (OTel) is the observability standard for cloud-native
-  // systems. W3C Trace Context uses 128-bit trace IDs — UOR projects the
+  // systems. W3C Trace Context uses 128-bit trace IDs. UOR projects the
   // first 16 bytes of the SHA-256 hash as a native OTel trace ID.
   //
   // This means every UOR operation (derivation, verification, projection)
@@ -2801,7 +2801,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // Grafana, Datadog) without instrumentation changes.
   //
   // Combined with `mcp-tool`, AI agent tool calls become observable
-  // across the entire distributed system — content-addressed telemetry.
+  // across the entire distributed system. content-addressed telemetry.
   //
   //   Format: otel:trace:{traceId}:{spanId}
   //   traceId = first 16 bytes as 32 hex chars
@@ -2818,10 +2818,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     lossWarning: "otel-uses-192-bit-of-256-bit-hash (traceId=128bit + spanId=64bit)",
   }],
 
-  // ── P2: CloudEvents — Content-Addressed Event Mesh ───────────────────────
+  // ── P2: CloudEvents. Content-Addressed Event Mesh ───────────────────────
   // CNCF CloudEvents is the standard envelope for event-driven architectures.
   // Every CloudEvent requires a globally unique `id` and a `source` URI.
-  // UOR projects both from the same hash — the event's identity IS its
+  // UOR projects both from the same hash. the event's identity IS its
   // content address.
   //
   // Combined with `asyncapi`, event schemas become content-addressed too.
@@ -2838,11 +2838,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md",
   }],
 
-  // ── P2: SSF — Shared Signals Framework (CAEP/RISC) ──────────────────────
+  // ── P2: SSF. Shared Signals Framework (CAEP/RISC) ──────────────────────
   // OpenID Shared Signals Framework delivers real-time security events
   // (session revocation, credential compromise, account lockout) between
   // cooperating services. Each Security Event Token (SET) gets a `jti`
-  // (JWT ID) — UOR projects the hash as a content-addressed `jti`.
+  // (JWT ID). UOR projects the hash as a content-addressed `jti`.
   //
   // This means security events become tamper-evident: replaying or
   // modifying a SET changes its hash, which changes its `jti`, which
@@ -2857,11 +2857,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openid.net/specs/openid-sharedsignals-framework-1_0.html",
   }],
 
-  // ── P2: COSE — CBOR Object Signing & Encryption ─────────────────────────
+  // ── P2: COSE. CBOR Object Signing & Encryption ─────────────────────────
   // IETF COSE (RFC 9052) is the binary-efficient crypto envelope used by
-  // WebAuthn, mDL, C2PA, and EUDI Wallets. It's CBOR-native — 40-60%
+  // WebAuthn, mDL, C2PA, and EUDI Wallets. It's CBOR-native. 40-60%
   // smaller than JSON-based JWS/JWE. COSE Key Thumbprints (RFC 9596)
-  // use SHA-256 to identify keys — aligning natively with UOR.
+  // use SHA-256 to identify keys. aligning natively with UOR.
   //
   // A COSE_Key thumbprint IS a SHA-256 hash. UOR's hash IS a COSE_Key
   // thumbprint. Zero translation.
@@ -2884,11 +2884,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.rfc-editor.org/rfc/rfc9052",
   }],
 
-  // ── P2: mDL — Mobile Driver's License (ISO 18013-5) ─────────────────────
+  // ── P2: mDL. Mobile Driver's License (ISO 18013-5) ─────────────────────
   // ISO mDL is the standard for digital driver's licenses, used by Apple
   // Wallet, Google Wallet, and EU Digital Identity Wallets. mDL uses
   // CBOR/COSE for credential encoding with SHA-256 digests for each
-  // data element — structurally identical to UOR's content addressing.
+  // data element. structurally identical to UOR's content addressing.
   //
   // The `digestID` in an mDL IssuerSignedItem is a CBOR-encoded SHA-256
   // hash of the data element. UOR projects its hash as a valid digestID,
@@ -2903,8 +2903,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/69084.html",
   }],
 
-  // ── P3: DIDComm v2 — Decentralized Identity Messaging ───────────────────
-  // DIF DIDComm v2 is the messaging layer for DIDs — enabling encrypted,
+  // ── P3: DIDComm v2. Decentralized Identity Messaging ───────────────────
+  // DIF DIDComm v2 is the messaging layer for DIDs. enabling encrypted,
   // authenticated, and routable communication between DID-identified
   // parties. Every DIDComm message has an `id` field (unique per message).
   //
@@ -2921,14 +2921,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://identity.foundation/didcomm-messaging/spec/v2.1/",
   }],
 
-  // ── P3: SCIM — System for Cross-domain Identity Management ──────────────
+  // ── P3: SCIM. System for Cross-domain Identity Management ──────────────
   // IETF SCIM (RFC 7644) is the enterprise standard for user provisioning
   // across SaaS platforms (Okta, Azure AD, Google Workspace). Every SCIM
-  // resource has an `externalId` — UOR projects the hash as this ID.
+  // resource has an `externalId`. UOR projects the hash as this ID.
   //
   // This means enterprise user provisioning becomes content-addressed:
   // the same user profile, canonicalized and hashed, produces the same
-  // SCIM externalId across every SaaS platform — no reconciliation needed.
+  // SCIM externalId across every SaaS platform. no reconciliation needed.
   //
   //   Format: urn:ietf:params:scim:schemas:core:2.0:User:{hex}
   //   Use case: Deterministic cross-platform user identity provisioning.
@@ -2939,10 +2939,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.rfc-editor.org/rfc/rfc7644",
   }],
 
-  // ── P3: WebTransport — Content-Addressed Streaming ───────────────────────
+  // ── P3: WebTransport. Content-Addressed Streaming ───────────────────────
   // W3C WebTransport provides bidirectional, multiplexed streams over
   // HTTP/3 (QUIC). Each session is identified by a URL. UOR projects the
-  // hash as a session path — enabling content-addressed real-time streams.
+  // hash as a session path. enabling content-addressed real-time streams.
   //
   // Combined with `opentelemetry`, streaming sessions become observable.
   // Combined with `mcp-tool`, agent-to-agent streaming gets provenance.
@@ -2956,14 +2956,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/webtransport/",
   }],
 
-  // ── P3: Gordian Envelope — Privacy-Preserving Data Containers ────────────
+  // ── P3: Gordian Envelope. Privacy-Preserving Data Containers ────────────
   // Blockchain Commons' Gordian Envelope is a recursive, privacy-preserving
   // data container that supports elision (selective redaction), encryption,
-  // compression, and salt-based privacy — all while maintaining the
+  // compression, and salt-based privacy. all while maintaining the
   // structure's digest tree. Envelopes use SHA-256 digests throughout.
   //
   // UOR's SHA-256 hash IS a valid Gordian Envelope digest. The envelope's
-  // content-addressing is structurally identical to UOR's — they share
+  // content-addressing is structurally identical to UOR's. they share
   // the same mathematical foundation: Merkle-like digest trees over
   // CBOR-encoded structured data.
   //
@@ -2981,9 +2981,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.blockchaincommons.com/introduction/Envelope-Intro/",
   }],
 
-  // ── P3: CBOR-LD — Compact Binary RDF for Constrained Devices ─────────────
+  // ── P3: CBOR-LD. Compact Binary RDF for Constrained Devices ─────────────
   // W3C CBOR-LD (Community Group Report) compresses JSON-LD documents
-  // into CBOR using shared compression dictionaries — achieving 50-80%
+  // into CBOR using shared compression dictionaries. achieving 50-80%
   // size reduction while preserving semantic meaning. Used by mDL and
   // Verifiable Credentials in constrained environments (IoT, mobile).
   //
@@ -3001,24 +3001,24 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 17 — SCIENTIFIC DATA FORMATS & STANDARDS
+  // TIER 17. SCIENTIFIC DATA FORMATS & STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Scientific data formats encode observations, measurements, and models
-  // from every domain of human inquiry — astronomy, chemistry, medicine,
+  // from every domain of human inquiry. astronomy, chemistry, medicine,
   // geospatial, and materials science. Content-addressing scientific data
   // creates an immutable, reproducible research chain from raw observation
   // to published finding. Every dataset, every spectrum, every crystal
   // structure becomes a permanent, verifiable object.
 
-  // ── FITS — Flexible Image Transport System ──────────────────────────────
+  // ── FITS. Flexible Image Transport System ──────────────────────────────
   // FITS is the standard data format in astronomy and astrophysics since
   // 1981 (IAU/NASA endorsed). Every Hubble, JWST, and ground-based
   // telescope image is stored as FITS. A FITS file contains HDUs (Header
-  // Data Units) — structured keyword=value headers followed by binary
+  // Data Units). structured keyword=value headers followed by binary
   // data arrays (images, tables, spectra).
   //
-  // FITS headers are ASCII text in 80-character records — deterministic
+  // FITS headers are ASCII text in 80-character records. deterministic
   // and trivially canonicalizable. The binary data extensions (IMAGE,
   // BINTABLE, ASCII_TABLE) are byte-exact representations of numerical
   // arrays. Content-addressing FITS creates permanent identities for
@@ -3038,14 +3038,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://fits.gsfc.nasa.gov/fits_standard.html",
   }],
 
-  // ── CIF — Crystallographic Information Framework ────────────────────────
+  // ── CIF. Crystallographic Information Framework ────────────────────────
   // CIF (IUCr standard) encodes crystal structures, diffraction data,
   // and symmetry operations for the entire field of crystallography.
   // Every entry in the Cambridge Structural Database (CSD, 1.2M+ structures)
   // and the Protein Data Bank (PDB, 200k+ structures) uses CIF.
   //
   // CIF is a structured text format with data blocks, categories, and
-  // items — fully deterministic. The mmCIF (macromolecular CIF) extension
+  // items. fully deterministic. The mmCIF (macromolecular CIF) extension
   // handles proteins, nucleic acids, and complex biological assemblies.
   //
   // Content-addressing CIF creates permanent identities for crystal
@@ -3064,7 +3064,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iucr.org/resources/cif/spec/version1.1",
   }],
 
-  // ── SMILES — Simplified Molecular-Input Line-Entry System ───────────────
+  // ── SMILES. Simplified Molecular-Input Line-Entry System ───────────────
   // SMILES encodes molecular structure as a compact ASCII string.
   // Canonical SMILES (via InChI or RDKit) produces a unique, deterministic
   // string for each molecule. This makes SMILES a natural content-address:
@@ -3090,13 +3090,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.daylight.com/dayhtml/doc/theory/theory.smiles.html",
   }],
 
-  // ── GeoJSON — Geospatial Data Interchange ───────────────────────────────
+  // ── GeoJSON. Geospatial Data Interchange ───────────────────────────────
   // GeoJSON (RFC 7946) encodes geographic features as JSON objects.
   // Points, lines, polygons, and multi-geometries with properties.
   // Used by every mapping platform (Mapbox, Leaflet, Google Maps),
   // GIS system (QGIS, ArcGIS), and geospatial API.
   //
-  // GeoJSON is JSON — canonicalizable via JSON-LD + URDNA2015.
+  // GeoJSON is JSON. canonicalizable via JSON-LD + URDNA2015.
   // Content-addressing geospatial features creates permanent identities
   // for boundaries, routes, regions, and points of interest.
   //
@@ -3116,7 +3116,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc7946",
   }],
 
-  // ── HDF5 — Hierarchical Data Format v5 ──────────────────────────────────
+  // ── HDF5. Hierarchical Data Format v5 ──────────────────────────────────
   // HDF5 is the standard container for large-scale scientific data.
   // Used by NASA (Earth Observation), CERN (particle physics), genomics
   // (10x Genomics), climate science (CMIP6), and ML (model weights).
@@ -3127,7 +3127,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // is deterministic for given data.
   //
   // Content-addressing HDF5 creates permanent identities for scientific
-  // datasets regardless of their size — from kilobyte sensor readings
+  // datasets regardless of their size. from kilobyte sensor readings
   // to petabyte particle physics collision data. Checksums are native
   // to HDF5 (Fletcher32); UOR extends to content-addressed identity.
   //
@@ -3142,14 +3142,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.hdfgroup.org/solutions/hdf5/",
   }],
 
-  // ── DICOM — Digital Imaging and Communications in Medicine ──────────────
+  // ── DICOM. Digital Imaging and Communications in Medicine ──────────────
   // DICOM is the universal standard for medical imaging. Every CT scan,
   // MRI, X-ray, ultrasound, and PET scan worldwide is stored as DICOM.
   // 11 billion+ DICOM images are created annually.
   //
   // DICOM objects contain structured metadata (patient, study, series,
   // instance UIDs) plus pixel data. UIDs are globally unique identifiers
-  // — UOR extends these to content-addressed identities, linking the
+  //. UOR extends these to content-addressed identities, linking the
   // image content to its metadata deterministically.
   //
   // Content-addressing DICOM enables:
@@ -3169,14 +3169,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.dicomstandard.org/current",
   }],
 
-  // ── FHIR — Fast Healthcare Interoperability Resources ───────────────────
+  // ── FHIR. Fast Healthcare Interoperability Resources ───────────────────
   // HL7 FHIR (R4/R5) is the global standard for health data exchange.
   // Used by every major EHR system (Epic, Cerner, Allscripts), Apple
   // Health, Google Health, and government health systems worldwide.
   //
   // FHIR Resources are structured JSON objects with canonical URLs.
   // Patient, Observation, Condition, MedicationRequest, DiagnosticReport
-  // — every clinical concept has a FHIR Resource type. Resources
+  //. every clinical concept has a FHIR Resource type. Resources
   // reference each other via canonical URLs, forming a clinical graph.
   //
   // Content-addressing FHIR Resources creates permanent, verifiable
@@ -3195,8 +3195,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://hl7.org/fhir/R5/",
   }],
 
-  // ── PDB — Protein Data Bank Format ──────────────────────────────────────
-  // PDB format encodes 3D structures of biological macromolecules —
+  // ── PDB. Protein Data Bank Format ──────────────────────────────────────
+  // PDB format encodes 3D structures of biological macromolecules.
   // proteins, nucleic acids, and complex assemblies. The worldwide
   // Protein Data Bank (wwPDB) contains 200k+ experimentally determined
   // structures, each with a unique PDB ID. AlphaFold has predicted
@@ -3218,7 +3218,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html",
   }],
 
-  // ── NetCDF — Network Common Data Form ───────────────────────────────────
+  // ── NetCDF. Network Common Data Form ───────────────────────────────────
   // NetCDF is the standard for climate science, oceanography, and
   // atmospheric research data. CMIP6 (climate model intercomparison),
   // ERA5 (global reanalysis), and satellite remote sensing all use NetCDF.
@@ -3239,8 +3239,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.unidata.ucar.edu/software/netcdf/",
   }],
 
-  // ── NIfTI — Neuroimaging Informatics Technology Initiative ──────────────
-  // NIfTI (.nii) is the standard format for brain imaging data — fMRI,
+  // ── NIfTI. Neuroimaging Informatics Technology Initiative ──────────────
+  // NIfTI (.nii) is the standard format for brain imaging data. fMRI,
   // structural MRI, diffusion tensor imaging (DTI), and PET scans.
   // Every neuroscience research dataset uses NIfTI. Brain atlases
   // (MNI152, Talairach) and connectome projects all publish in NIfTI.
@@ -3261,8 +3261,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://nifti.nimh.nih.gov/nifti-2",
   }],
 
-  // ── SBML — Systems Biology Markup Language ──────────────────────────────
-  // SBML encodes computational models of biological systems — metabolic
+  // ── SBML. Systems Biology Markup Language ──────────────────────────────
+  // SBML encodes computational models of biological systems. metabolic
   // networks, signaling pathways, gene regulatory networks, and
   // pharmacokinetic models. BioModels database contains 1000+ curated
   // SBML models. Used by COPASI, CellDesigner, and VCell.
@@ -3283,7 +3283,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://sbml.org/documents/specifications/",
   }],
 
-  // ── MZML — Mass Spectrometry Data ───────────────────────────────────────
+  // ── MZML. Mass Spectrometry Data ───────────────────────────────────────
   // mzML is the open standard for mass spectrometry data (proteomics,
   // metabolomics, lipidomics). Endorsed by HUPO-PSI (Human Proteome
   // Organization). Every mass spectrum, chromatogram, and ion mobility
@@ -3305,10 +3305,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.psidev.info/mzml",
   }],
 
-  // ── FASTQ — Genomic Sequence Data ───────────────────────────────────────
+  // ── FASTQ. Genomic Sequence Data ───────────────────────────────────────
   // FASTQ encodes raw DNA/RNA sequencing reads with per-base quality
-  // scores. Every genomics experiment — whole genome sequencing, RNA-seq,
-  // ChIP-seq, single-cell — produces FASTQ files. SRA (Sequence Read
+  // scores. Every genomics experiment. whole genome sequencing, RNA-seq,
+  // ChIP-seq, single-cell. produces FASTQ files. SRA (Sequence Read
   // Archive) contains 70+ petabytes of FASTQ data.
   //
   // Each FASTQ record contains a sequence identifier, nucleotide sequence,
@@ -3327,7 +3327,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/",
   }],
 
-  // ── VCF — Variant Call Format ───────────────────────────────────────────
+  // ── VCF. Variant Call Format ───────────────────────────────────────────
   // VCF encodes genomic variants (SNPs, indels, structural variants)
   // relative to a reference genome. Used by every variant calling pipeline
   // (GATK, DeepVariant, Strelka2). ClinVar, gnomAD, and 1000 Genomes
@@ -3335,7 +3335,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // VCF is tab-delimited text with structured headers and genotype fields.
   // Content-addressing VCF creates permanent identities for variant
-  // callsets — enabling reproducible genomic analysis and cross-study
+  // callsets. enabling reproducible genomic analysis and cross-study
   // variant comparison without centralized databases.
   //
   //   Format: urn:uor:sci:vcf:{hex} (SHA-256 of canonical VCF header + records)
@@ -3350,16 +3350,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 18 — MUSIC & AUDIO STANDARDS
+  // TIER 18. MUSIC & AUDIO STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // Music and audio standards encode sound as structured data — from
+  // Music and audio standards encode sound as structured data. from
   // symbolic notation (MIDI, MusicXML) to waveform analysis (spectrograms)
   // to production metadata (AES67, EBU). Content-addressing music creates
   // permanent, verifiable identities for compositions, performances,
   // recordings, and their relationships.
 
-  // ── MIDI — Musical Instrument Digital Interface ─────────────────────────
+  // ── MIDI. Musical Instrument Digital Interface ─────────────────────────
   // MIDI is the universal protocol for digital music since 1983. MIDI
   // messages encode note-on/off, velocity, pitch bend, control changes,
   // and system exclusive data. MIDI 2.0 (2020) extends to 32-bit
@@ -3368,7 +3368,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // Standard MIDI Files (.mid) are deterministic binary sequences of
   // timestamped events. Content-addressing MIDI creates permanent
   // identities for musical compositions independent of performance
-  // or rendering — the musical idea itself gets an identity.
+  // or rendering. the musical idea itself gets an identity.
   //
   // MIDI is used by every DAW (Ableton, Logic, FL Studio), hardware
   // synthesizer, and music notation system. Content-addressing enables
@@ -3386,7 +3386,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://midi.org/specifications",
   }],
 
-  // ── MusicXML — Digital Sheet Music ──────────────────────────────────────
+  // ── MusicXML. Digital Sheet Music ──────────────────────────────────────
   // MusicXML is the universal format for digital sheet music interchange.
   // Supported by 260+ music notation programs (Finale, Sibelius, MuseScore,
   // Dorico). W3C Community Group standard.
@@ -3411,14 +3411,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/2021/06/musicxml40/",
   }],
 
-  // ── MEI — Music Encoding Initiative ─────────────────────────────────────
+  // ── MEI. Music Encoding Initiative ─────────────────────────────────────
   // MEI is a scholarly XML format for encoding music notation with
   // full editorial, analytical, and critical apparatus. Used by digital
   // musicology projects, music libraries, and computational musicology.
   //
   // MEI goes beyond MusicXML by encoding historical context, variant
   // readings, editorial decisions, and analytical annotations. Each
-  // MEI document is a richly structured scholarly object — ideal for
+  // MEI document is a richly structured scholarly object. ideal for
   // content-addressed musicological research chains.
   //
   //   Format: urn:uor:music:mei:{hex} (SHA-256 of canonical MEI document)
@@ -3431,12 +3431,12 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://music-encoding.org/guidelines/v5/content/",
   }],
 
-  // ── ABC Notation — Text-Based Music Notation ────────────────────────────
+  // ── ABC Notation. Text-Based Music Notation ────────────────────────────
   // ABC notation is a compact ASCII format for encoding music, widely
   // used for folk, traditional, and Celtic music. Simple enough to
   // type in email, yet capable of encoding complex multi-voice scores.
   //
-  // ABC's text-based format is trivially canonicalizable — the notation
+  // ABC's text-based format is trivially canonicalizable. the notation
   // IS the canonical form. The abc2midi and abc2ps toolchains convert
   // to MIDI and PostScript respectively. Content-addressing ABC creates
   // permanent identities for traditional tunes and folk melodies.
@@ -3452,14 +3452,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://abcnotation.com/wiki/abc:standard:v2.1",
   }],
 
-  // ── AES67 — Audio-over-IP Networking ────────────────────────────────────
+  // ── AES67. Audio-over-IP Networking ────────────────────────────────────
   // AES67 is the interoperability standard for professional audio-over-IP
   // networking. Used in broadcast facilities, concert venues, recording
   // studios, and live events worldwide. Bridges Dante, Ravenna, Livewire,
   // and SMPTE ST 2110 audio streams.
   //
   // AES67 streams are identified by SDP (Session Description Protocol)
-  // descriptors — structured text documents containing codec, sample rate,
+  // descriptors. structured text documents containing codec, sample rate,
   // channel count, and multicast address. Content-addressing AES67 stream
   // descriptors creates permanent identities for audio network configurations.
   //
@@ -3473,9 +3473,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.aes.org/publications/standards/search.cfm?docID=96",
   }],
 
-  // ── MPEG-7 — Multimedia Content Description ─────────────────────────────
+  // ── MPEG-7. Multimedia Content Description ─────────────────────────────
   // MPEG-7 (ISO/IEC 15938) provides standardized descriptors for
-  // multimedia content — audio features (melody contour, timbre, rhythm),
+  // multimedia content. audio features (melody contour, timbre, rhythm),
   // visual features (color, texture, shape), and structural metadata.
   //
   // For music, MPEG-7 Audio encodes melody contours, spectral features,
@@ -3494,8 +3494,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/75399.html",
   }],
 
-  // ── JAMS — JSON Annotated Music Specification ───────────────────────────
-  // JAMS is a JSON format for music annotations — beat tracking, chord
+  // ── JAMS. JSON Annotated Music Specification ───────────────────────────
+  // JAMS is a JSON format for music annotations. beat tracking, chord
   // recognition, melody extraction, structural segmentation, and mood
   // classification. Used by MIR (Music Information Retrieval) research
   // community and computational musicology.
@@ -3515,14 +3515,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://jams.readthedocs.io/en/stable/",
   }],
 
-  // ── MPD — MPEG-DASH Media Presentation Description ──────────────────────
+  // ── MPD. MPEG-DASH Media Presentation Description ──────────────────────
   // MPD defines adaptive streaming manifests for audio and video delivery.
   // Every major streaming platform (Spotify, YouTube Music, Apple Music)
   // uses DASH or HLS manifests. MPD documents describe available
   // bitrates, codecs, segment URLs, and DRM configuration.
   //
   // Content-addressing MPD creates permanent identities for streaming
-  // configurations — enabling verified delivery chain from master
+  // configurations. enabling verified delivery chain from master
   // recording to listener's device. Combined with C2PA, this provides
   // end-to-end music provenance.
   //
@@ -3538,23 +3538,23 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 19 — HARDWARE DESIGN & FABRICATION STANDARDS
+  // TIER 19. HARDWARE DESIGN & FABRICATION STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Hardware standards span the entire lifecycle from circuit design (EDA)
   // through fabrication (GDSII, Gerber) to packaging and test. Content-
   // addressing hardware artifacts creates silicon provenance from RTL
-  // specification to manufactured die — the ultimate supply-chain integrity.
+  // specification to manufactured die. the ultimate supply-chain integrity.
 
-  // ── GDSII — Graphic Data System II ──────────────────────────────────────
+  // ── GDSII. Graphic Data System II ──────────────────────────────────────
   // GDSII (OASIS successor: OASIS.MASK) is the standard interchange format
   // for integrated circuit layout data. Every chip manufactured since the
   // 1980s has been defined by GDSII streams. A GDSII file contains
   // hierarchical cell references, polygon boundaries, paths, and text
-  // labels — all with nanometer-precision coordinates.
+  // labels. all with nanometer-precision coordinates.
   //
   // GDSII streams are deterministic binary structures. Content-addressing
-  // GDSII creates permanent identities for IC layouts — enabling foundry-
+  // GDSII creates permanent identities for IC layouts. enabling foundry-
   // to-designer provenance chains and IP protection verification.
   //
   //   Format: urn:uor:hw:gdsii:{hex} (SHA-256 of canonical GDSII stream)
@@ -3568,16 +3568,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.layouteditor.org/layout/file-formats/gdsii",
   }],
 
-  // ── Gerber — PCB Fabrication Data ───────────────────────────────────────
+  // ── Gerber. PCB Fabrication Data ───────────────────────────────────────
   // Gerber (RS-274X / Gerber X2/X3) is the universal format for PCB
   // fabrication. Every printed circuit board on earth is manufactured
-  // from Gerber files — copper layers, solder mask, silkscreen, drill
+  // from Gerber files. copper layers, solder mask, silkscreen, drill
   // data, and component placement. Gerber X3 adds component-level
   // metadata including manufacturer part numbers.
   //
   // Gerber files are ASCII text with deterministic aperture definitions
   // and coordinate data. Content-addressing Gerber creates permanent
-  // identities for PCB designs — each board revision gets a unique hash
+  // identities for PCB designs. each board revision gets a unique hash
   // linking schematic intent to physical fabrication output.
   //
   //   Format: urn:uor:hw:gerber:{hex} (SHA-256 of canonical Gerber file set)
@@ -3591,7 +3591,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.ucamco.com/en/gerber/gerber-format-specification",
   }],
 
-  // ── SPDX SBOM — Software/Hardware Bill of Materials ─────────────────────
+  // ── SPDX SBOM. Software/Hardware Bill of Materials ─────────────────────
   // SPDX (ISO/IEC 5962:2021) is the international standard for Software
   // Bills of Materials. Required by US Executive Order 14028 for federal
   // software procurement. SPDX 3.0 extends to hardware BOMs, AI/ML
@@ -3614,14 +3614,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://spdx.github.io/spdx-spec/v3.0/",
   }],
 
-  // ── Matter — Smart Home Connectivity ────────────────────────────────────
+  // ── Matter. Smart Home Connectivity ────────────────────────────────────
   // Matter (formerly Project CHIP) is the unified smart home protocol
   // backed by Apple, Google, Amazon, and Samsung. Matter devices use
   // Device Attestation Certificates (DAC) for cryptographic identity
   // and Distributed Compliance Ledger (DCL) for device type verification.
   //
   // Matter's data model defines clusters (capabilities), attributes,
-  // commands, and events — all structured and deterministic. Each device
+  // commands, and events. all structured and deterministic. Each device
   // type (light, lock, thermostat, sensor) has a canonical cluster
   // composition that maps to a content-addressed identity.
   //
@@ -3636,7 +3636,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://csa-iot.org/developer-resource/specifications/",
   }],
 
-  // ── LEF/DEF — Library Exchange / Design Exchange Format ─────────────────
+  // ── LEF/DEF. Library Exchange / Design Exchange Format ─────────────────
   // LEF (Library Exchange Format) and DEF (Design Exchange Format) are
   // the standard cell library and placed-and-routed design interchange
   // formats for IC physical design. Used by every EDA tool (Cadence,
@@ -3657,7 +3657,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.si2.org/open-standards/lef-def/",
   }],
 
-  // ── Liberty (.lib) — Timing & Power Characterization ────────────────────
+  // ── Liberty (.lib). Timing & Power Characterization ────────────────────
   // Liberty format (Synopsys) defines standard cell timing arcs, power
   // models, and electrical characteristics. Every digital IC synthesis
   // and timing analysis depends on Liberty libraries. Content-addressing
@@ -3675,9 +3675,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.synopsys.com/community/interoperability-programs/tap-in.html",
   }],
 
-  // ── EDIF — Electronic Design Interchange Format ─────────────────────────
+  // ── EDIF. Electronic Design Interchange Format ─────────────────────────
   // EDIF (IEC 61690-2) is the ISO/IEC standard for exchanging electronic
-  // design data between EDA tools — schematics, netlists, and PCB layouts.
+  // design data between EDA tools. schematics, netlists, and PCB layouts.
   // While largely superseded by vendor-specific formats, EDIF remains
   // the formal standard and is used for archival and interchange.
   //
@@ -3692,13 +3692,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/33madhon.html",
   }],
 
-  // ── SPICE — Circuit Simulation ──────────────────────────────────────────
+  // ── SPICE. Circuit Simulation ──────────────────────────────────────────
   // SPICE (Simulation Program with Integrated Circuit Emphasis) netlists
   // define analog/mixed-signal circuit simulations. Every IC analog block,
   // power supply, and RF circuit is verified via SPICE simulation.
   // BSIM device models (Berkeley) are the industry standard.
   //
-  // SPICE netlists are deterministic text — subcircuit definitions,
+  // SPICE netlists are deterministic text. subcircuit definitions,
   // component instances, and analysis commands. Content-addressing SPICE
   // creates simulation provenance from circuit definition to waveform result.
   //
@@ -3713,7 +3713,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://bsim.berkeley.edu/models/bsimcmg/",
   }],
 
-  // ── STEP/AP214 — 3D CAD Exchange (ISO 10303) ───────────────────────────
+  // ── STEP/AP214. 3D CAD Exchange (ISO 10303) ───────────────────────────
   // STEP (Standard for the Exchange of Product Data) is the ISO standard
   // for 3D CAD model interchange. AP214 covers automotive design; AP242
   // covers aerospace and defense. Used by every major CAD system
@@ -3721,7 +3721,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // STEP files contain B-rep geometry, assembly structure, PMI (Product
   // Manufacturing Information), and material properties. Content-addressing
-  // STEP creates permanent identities for mechanical designs — enabling
+  // STEP creates permanent identities for mechanical designs. enabling
   // design version tracking and manufacturing provenance.
   //
   //   Format: urn:uor:hw:step:{hex} (SHA-256 of canonical STEP file)
@@ -3735,11 +3735,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/84667.html",
   }],
 
-  // ── IPC-2581 — PCB Design-to-Manufacturing ──────────────────────────────
+  // ── IPC-2581. PCB Design-to-Manufacturing ──────────────────────────────
   // IPC-2581 (Generic Requirements for Printed Board Assembly Products)
   // is the IPC standard replacing Gerber + drill + BOM with a single
   // intelligent XML format. Contains complete fabrication, assembly,
-  // and test data in one file — stackup, copper, solder paste, component
+  // and test data in one file. stackup, copper, solder paste, component
   // placement, and netlist.
   //
   //   Format: urn:uor:hw:ipc2581:{hex} (SHA-256 of canonical IPC-2581 XML)
@@ -3754,15 +3754,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 20 — IoT PROTOCOLS & STANDARDS
+  // TIER 20. IoT PROTOCOLS & STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // IoT protocols connect billions of constrained devices — sensors,
+  // IoT protocols connect billions of constrained devices. sensors,
   // actuators, gateways, and edge nodes. Content-addressing IoT data
   // creates verifiable provenance from physical measurement to cloud
   // analytics, ensuring data integrity across the entire IoT stack.
 
-  // ── LwM2M — Lightweight M2M Device Management ──────────────────────────
+  // ── LwM2M. Lightweight M2M Device Management ──────────────────────────
   // OMA LwM2M is the standard for IoT device management and service
   // enablement. Defines object/resource model for sensors, firmware
   // update, connectivity monitoring, and device configuration.
@@ -3770,7 +3770,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // LwM2M objects are structured resource trees with typed values.
   // Content-addressing LwM2M object definitions creates permanent
-  // identities for device capabilities — enabling device type
+  // identities for device capabilities. enabling device type
   // verification and firmware integrity checking.
   //
   //   Format: urn:uor:iot:lwm2m:{hex} (SHA-256 of canonical LwM2M object definition)
@@ -3784,14 +3784,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openmobilealliance.org/release/LightweightM2M/",
   }],
 
-  // ── CoAP — Constrained Application Protocol ─────────────────────────────
+  // ── CoAP. Constrained Application Protocol ─────────────────────────────
   // CoAP (RFC 7252) is the HTTP equivalent for constrained IoT devices.
   // Runs over UDP with DTLS security. Used with LwM2M for device
   // management and with OSCORE for end-to-end security. CoAP resources
   // are identified by URIs and support observe (pub/sub) pattern.
   //
   // Content-addressing CoAP resources creates permanent identities for
-  // IoT endpoints — each sensor reading, actuator command, and device
+  // IoT endpoints. each sensor reading, actuator command, and device
   // state becomes a verifiable, content-addressed observation.
   //
   //   Format: urn:uor:iot:coap:{hex} (SHA-256 of canonical CoAP resource descriptor)
@@ -3805,7 +3805,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc7252",
   }],
 
-  // ── MQTT — Message Queuing Telemetry Transport ──────────────────────────
+  // ── MQTT. Message Queuing Telemetry Transport ──────────────────────────
   // MQTT is the dominant pub/sub messaging protocol for IoT. Used by
   // AWS IoT Core, Azure IoT Hub, HiveMQ, and millions of edge devices.
   // MQTT 5.0 adds user properties, shared subscriptions, and topic
@@ -3826,7 +3826,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html",
   }],
 
-  // ── SenML — Sensor Measurement Lists ────────────────────────────────────
+  // ── SenML. Sensor Measurement Lists ────────────────────────────────────
   // SenML (RFC 8428) is the IETF standard for representing sensor
   // measurements as structured JSON/CBOR arrays. Each record contains
   // name, unit, value, and timestamp. Used with CoAP and MQTT for
@@ -3834,7 +3834,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // SenML records are deterministic JSON/CBOR structures. Content-
   // addressing SenML packs creates permanent identities for sensor
-  // readings — each measurement set becomes a verifiable observation.
+  // readings. each measurement set becomes a verifiable observation.
   //
   //   Format: urn:uor:iot:senml:{hex} (SHA-256 of canonical SenML pack)
   //   Canonical: records → sorted by name + time → JSON-LD → URDNA2015 → SHA-256
@@ -3847,11 +3847,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc8428",
   }],
 
-  // ── WoT TD — Web of Things Thing Description ───────────────────────────
+  // ── WoT TD. Web of Things Thing Description ───────────────────────────
   // W3C Web of Things Thing Description (TD) is a JSON-LD document
-  // that describes IoT device capabilities — properties (readable state),
+  // that describes IoT device capabilities. properties (readable state),
   // actions (invocable operations), and events (observable notifications).
-  // TDs are inherently semantic web objects — native JSON-LD.
+  // TDs are inherently semantic web objects. native JSON-LD.
   //
   // Since TDs are already JSON-LD, they flow directly through UOR's
   // URDNA2015 canonicalization pipeline. Content-addressing TDs creates
@@ -3868,16 +3868,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/wot-thing-description11/",
   }],
 
-  // ── OPC UA — Industrial Automation ──────────────────────────────────────
+  // ── OPC UA. Industrial Automation ──────────────────────────────────────
   // OPC UA (IEC 62541) is the universal standard for industrial
-  // automation communication — factory floor, process control, energy
+  // automation communication. factory floor, process control, energy
   // management, and building automation. Defines an information model
   // with nodes, references, and data types. Used by Siemens, ABB,
   // Rockwell, Schneider Electric, and every major PLC vendor.
   //
   // OPC UA NodeSets are structured XML information models. Content-
   // addressing NodeSets creates permanent identities for industrial
-  // device models — enabling factory-wide digital twin provenance.
+  // device models. enabling factory-wide digital twin provenance.
   //
   //   Format: urn:uor:iot:opcua:{hex} (SHA-256 of canonical OPC UA NodeSet)
   //   Canonical: NodeSet → sorted nodes → JSON-LD → URDNA2015 → SHA-256
@@ -3890,9 +3890,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://opcfoundation.org/developer-tools/specifications-opc-ua",
   }],
 
-  // ── IPSO Smart Objects — IoT Semantic Model ─────────────────────────────
+  // ── IPSO Smart Objects. IoT Semantic Model ─────────────────────────────
   // IPSO Smart Objects define reusable, semantic object models for IoT
-  // resources — temperature sensor, light control, GPS location, power
+  // resources. temperature sensor, light control, GPS location, power
   // measurement, etc. Registered at OMA with unique Object IDs.
   // Foundation for LwM2M device modeling.
   //
@@ -3907,7 +3907,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://technical.openmobilealliance.org/OMNA/LwM2M/LwM2MRegistry.html",
   }],
 
-  // ── Thread — IoT Mesh Networking ────────────────────────────────────────
+  // ── Thread. IoT Mesh Networking ────────────────────────────────────────
   // Thread is the IPv6-based mesh networking protocol for IoT. Powers
   // Matter smart home devices over low-power 802.15.4 radio. Thread
   // Border Routers bridge Thread mesh to Wi-Fi/Ethernet. Thread devices
@@ -3928,7 +3928,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.threadgroup.org/support#specifications",
   }],
 
-  // ── Zigbee — Wireless Sensor Networks ───────────────────────────────────
+  // ── Zigbee. Wireless Sensor Networks ───────────────────────────────────
   // Zigbee (IEEE 802.15.4) is the established standard for low-power
   // wireless sensor and actuator networks. Zigbee 3.0 unified the
   // application profiles (Home Automation, Light Link, etc.). Zigbee
@@ -3945,7 +3945,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://csa-iot.org/developer-resource/specifications/",
   }],
 
-  // ── BLE GATT — Bluetooth Low Energy ─────────────────────────────────────
+  // ── BLE GATT. Bluetooth Low Energy ─────────────────────────────────────
   // BLE GATT (Generic Attribute Profile) defines services and
   // characteristics for Bluetooth Low Energy devices. Used by wearables,
   // medical devices, beacons, and industrial sensors. Bluetooth SIG
@@ -3953,7 +3953,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // GATT profiles are structured service/characteristic trees with UUIDs.
   // Content-addressing GATT profiles creates permanent identities for
-  // BLE device capabilities — enabling device type verification and
+  // BLE device capabilities. enabling device type verification and
   // firmware integrity checking across the BLE ecosystem.
   //
   //   Format: urn:uor:iot:ble-gatt:{hex} (SHA-256 of canonical GATT profile)
@@ -3967,7 +3967,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.bluetooth.com/specifications/specs/core-specification-6-0/",
   }],
 
-  // ── LoRaWAN — Long-Range Wide Area Network ──────────────────────────────
+  // ── LoRaWAN. Long-Range Wide Area Network ──────────────────────────────
   // LoRaWAN enables kilometer-range IoT connectivity with years of
   // battery life. Used for smart agriculture, asset tracking, smart
   // cities, and utility metering. LoRaWAN 1.0.4 defines device classes
@@ -3989,13 +3989,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://lora-alliance.org/resource_hub/lorawan-specification-v1-0-4/",
   }],
 
-  // ── DTDL — Digital Twins Definition Language ────────────────────────────
+  // ── DTDL. Digital Twins Definition Language ────────────────────────────
   // DTDL (Microsoft Azure Digital Twins) defines digital twin models
   // using JSON-LD. Telemetry, properties, commands, relationships, and
   // components map physical assets to digital representations. Used for
   // building management, manufacturing, and smart cities.
   //
-  // DTDL models are native JSON-LD — they flow directly through UOR's
+  // DTDL models are native JSON-LD. they flow directly through UOR's
   // canonicalization pipeline. Content-addressing digital twin models
   // creates permanent identities for physical-digital asset mappings.
   //
@@ -4010,7 +4010,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://azure.github.io/opendigitaltwins-dtdl/DTDL/v3/DTDL.v3.html",
   }],
 
-  // ── ECHONET Lite — Japanese Smart Home Standard ─────────────────────────
+  // ── ECHONET Lite. Japanese Smart Home Standard ─────────────────────────
   // ECHONET Lite is the dominant smart home protocol in Japan, mandated
   // for HEMS (Home Energy Management Systems). Defines device objects
   // for air conditioners, lighting, EV chargers, solar inverters, and
@@ -4027,7 +4027,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://echonet.jp/spec_v114_lite_en/",
   }],
 
-  // ── JTAG/IEEE 1149.1 — Hardware Test & Debug ────────────────────────────
+  // ── JTAG/IEEE 1149.1. Hardware Test & Debug ────────────────────────────
   // JTAG (Joint Test Action Group, IEEE 1149.1) is the universal standard
   // for IC testing, debugging, and programming. BSDL (Boundary Scan
   // Description Language) files define device pin mappings and test
@@ -4044,7 +4044,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://ieeexplore.ieee.org/document/9930828",
   }],
 
-  // ── UCIe — Universal Chiplet Interconnect Express ───────────────────────
+  // ── UCIe. Universal Chiplet Interconnect Express ───────────────────────
   // UCIe is the open standard for chiplet-to-chiplet interconnect,
   // enabling heterogeneous integration of dies from different foundries.
   // Backed by Intel, AMD, ARM, TSMC, Samsung. UCIe defines physical
@@ -4061,11 +4061,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.uciexpress.org/specification",
   }],
 
-  // ── CXL — Compute Express Link ─────────────────────────────────────────
+  // ── CXL. Compute Express Link ─────────────────────────────────────────
   // CXL is the open interconnect standard for CPU-to-device and CPU-to-
   // memory coherent connections. CXL 3.0 enables memory pooling, sharing,
   // and fabric-attached memory. Critical for data center, HPC, and AI
-  // infrastructure — used by Intel, AMD, ARM, and all major server vendors.
+  // infrastructure. used by Intel, AMD, ARM, and all major server vendors.
   //
   //   Format: urn:uor:hw:cxl:{hex} (SHA-256 of canonical CXL device descriptor)
   //   Canonical: device → capability registers → JSON-LD → URDNA2015 → SHA-256
@@ -4078,7 +4078,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.computeexpresslink.org/spec-landing",
   }],
 
-  // ── SMPTE ST 2110 — Professional Media over IP ──────────────────────────
+  // ── SMPTE ST 2110. Professional Media over IP ──────────────────────────
   // SMPTE ST 2110 defines separate transport of video, audio, and
   // ancillary data over IP networks for broadcast production. Used by
   // every major broadcaster and live production facility. Replaces
@@ -4096,17 +4096,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 21 — DATA FORMATS: TABULAR, COLUMNAR & STRUCTURED DATA
+  // TIER 21. DATA FORMATS: TABULAR, COLUMNAR & STRUCTURED DATA
   // ═══════════════════════════════════════════════════════════════════════════
   //
-  // Data formats are the lingua franca of information exchange — from simple
+  // Data formats are the lingua franca of information exchange. from simple
   // CSV tables exchanged by spreadsheets to columnar Parquet files powering
   // petabyte-scale analytics. Content-addressing data formats creates
   // permanent, verifiable identities for datasets regardless of where they
   // are stored or how they are transmitted. Every row, every schema, every
   // query result becomes a tamper-evident, content-addressed artifact.
 
-  // ── CSV — Comma-Separated Values ───────────────────────────────────────
+  // ── CSV. Comma-Separated Values ───────────────────────────────────────
   // CSV (RFC 4180) is the most widely used tabular data interchange format.
   // Despite its simplicity, CSV ambiguity (delimiters, quoting, encoding)
   // makes canonical representation essential. UOR CSV canonicalization
@@ -4124,7 +4124,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc4180",
   }],
 
-  // ── TSV — Tab-Separated Values ─────────────────────────────────────────
+  // ── TSV. Tab-Separated Values ─────────────────────────────────────────
   // TSV is the standard tabular format for bioinformatics (BED, GFF, VCF
   // headers), linguistics corpora, and UNIX tool pipelines. Tab delimiters
   // eliminate quoting ambiguity inherent in CSV. IANA type: text/tab-separated-values.
@@ -4140,15 +4140,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iana.org/assignments/media-types/text/tab-separated-values",
   }],
 
-  // ── Apache Parquet — Columnar Storage ──────────────────────────────────
+  // ── Apache Parquet. Columnar Storage ──────────────────────────────────
   // Parquet is the dominant columnar storage format for big data analytics.
   // Used by Apache Spark, Databricks, Snowflake, BigQuery, Athena, and
   // every major data lake. Parquet files contain self-describing schemas,
-  // row groups, column chunks, and page-level statistics — all binary and
+  // row groups, column chunks, and page-level statistics. all binary and
   // deterministic. Parquet's footer metadata is a Thrift-encoded schema.
   //
   // Content-addressing Parquet files creates permanent identities for
-  // analytical datasets — each partition, each table version, each query
+  // analytical datasets. each partition, each table version, each query
   // result becomes a verifiable, content-addressed artifact.
   //
   //   Format: urn:uor:data:parquet:{hex} (SHA-256 of Parquet file bytes)
@@ -4163,8 +4163,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://parquet.apache.org/docs/file-format/",
   }],
 
-  // ── Apache Arrow / IPC — In-Memory Columnar ────────────────────────────
-  // Arrow is the universal in-memory columnar format — zero-copy reads
+  // ── Apache Arrow / IPC. In-Memory Columnar ────────────────────────────
+  // Arrow is the universal in-memory columnar format. zero-copy reads
   // across languages (Python, R, Java, Rust, C++, JS). Arrow IPC
   // (Feather v2) provides file-level persistence. Used by Pandas 2.0,
   // Polars, DuckDB, DataFusion, and Velox.
@@ -4184,7 +4184,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://arrow.apache.org/docs/format/Columnar.html",
   }],
 
-  // ── ORC — Optimized Row Columnar ───────────────────────────────────────
+  // ── ORC. Optimized Row Columnar ───────────────────────────────────────
   // ORC is the columnar format optimized for Apache Hive and the Hadoop
   // ecosystem. Features ACID transaction support, predicate pushdown,
   // bloom filters, and lightweight compression. Used by Hive, Presto,
@@ -4201,7 +4201,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://orc.apache.org/specification/ORCv2/",
   }],
 
-  // ── Apache Iceberg — Table Format ──────────────────────────────────────
+  // ── Apache Iceberg. Table Format ──────────────────────────────────────
   // Iceberg is the open table format for huge analytic datasets. Provides
   // ACID transactions, schema evolution, partition evolution, time travel,
   // and hidden partitioning. Used by Netflix, Apple, Snowflake, Databricks,
@@ -4219,7 +4219,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://iceberg.apache.org/spec/",
   }],
 
-  // ── Delta Lake — Versioned Table Format ────────────────────────────────
+  // ── Delta Lake. Versioned Table Format ────────────────────────────────
   // Delta Lake (Linux Foundation) provides ACID transactions on top of
   // Parquet. Transaction log (_delta_log/) records every change as
   // JSON action files. Used by Databricks, Azure Synapse, and Spark.
@@ -4236,7 +4236,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/delta-io/delta/blob/master/PROTOCOL.md",
   }],
 
-  // ── Apache Hudi — Incremental Data Lake ────────────────────────────────
+  // ── Apache Hudi. Incremental Data Lake ────────────────────────────────
   // Hudi (Hadoop Upserts Deletes Incrementals) supports record-level
   // upserts, deletes, and incremental processing on data lakes. Used for
   // CDC (Change Data Capture) pipelines. Hudi timelines track every
@@ -4254,17 +4254,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 22 — DATA FORMATS: QUERY LANGUAGES & SCHEMA DEFINITIONS
+  // TIER 22. DATA FORMATS: QUERY LANGUAGES & SCHEMA DEFINITIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── GraphQL — already registered in Tier 9h (urn:uor:lang:graphql) ────
+  // ── GraphQL. already registered in Tier 9h (urn:uor:lang:graphql) ────
   // Duplicate removed to prevent namespace override (data: → lang:).
 
-  // ── SQL/DDL — Structured Query Language ────────────────────────────────
+  // ── SQL/DDL. Structured Query Language ────────────────────────────────
   // SQL (ISO/IEC 9075) is the universal language for relational databases.
-  // DDL (Data Definition Language) statements define schemas — tables,
+  // DDL (Data Definition Language) statements define schemas. tables,
   // columns, constraints, indexes, views. Content-addressing DDL creates
-  // permanent identities for database schemas — enabling schema version
+  // permanent identities for database schemas. enabling schema version
   // control and migration verification.
   //
   //   Format: urn:uor:data:sql:{hex} (SHA-256 of canonical DDL)
@@ -4278,8 +4278,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/76583.html",
   }],
 
-  // ── CQL — Cassandra Query Language ─────────────────────────────────────
-  // CQL defines schemas and queries for Apache Cassandra and ScyllaDB —
+  // ── CQL. Cassandra Query Language ─────────────────────────────────────
+  // CQL defines schemas and queries for Apache Cassandra and ScyllaDB.
   // the dominant wide-column distributed databases. CQL DDL defines
   // keyspaces, tables, materialized views, and UDTs.
   //
@@ -4293,7 +4293,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://cassandra.apache.org/doc/latest/cassandra/cql/",
   }],
 
-  // ── Cypher — Graph Query Language ──────────────────────────────────────
+  // ── Cypher. Graph Query Language ──────────────────────────────────────
   // Cypher is the declarative graph query language for Neo4j and the
   // upcoming ISO GQL standard (ISO/IEC 39075). Defines nodes, relationships,
   // properties, and pattern matching. Used by Neo4j, Amazon Neptune,
@@ -4311,10 +4311,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 23 — DATA FORMATS: ENCODING & COMPRESSION
+  // TIER 23. DATA FORMATS: ENCODING & COMPRESSION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Base64 — Binary-to-Text Encoding ───────────────────────────────────
+  // ── Base64. Binary-to-Text Encoding ───────────────────────────────────
   // Base64 (RFC 4648) is the standard binary-to-text encoding used in
   // email (MIME), data URIs, JWT tokens, and API payloads. Content-
   // addressing Base64 data creates verifiable identities for encoded
@@ -4330,13 +4330,13 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc4648",
   }],
 
-  // ── ASN.1 / DER — Abstract Syntax Notation ─────────────────────────────
+  // ── ASN.1 / DER. Abstract Syntax Notation ─────────────────────────────
   // ASN.1 (ITU-T X.680) with DER (Distinguished Encoding Rules) is the
   // encoding used for X.509 certificates, CRLs, OCSP responses, LDAP,
   // SNMP MIBs, and telecom signaling (SS7, LTE, 5G NR). DER provides
-  // canonical binary encoding — every valid DER encoding is unique.
+  // canonical binary encoding. every valid DER encoding is unique.
   //
-  // DER is inherently canonical — identical structures always produce
+  // DER is inherently canonical. identical structures always produce
   // identical bytes. This makes DER the ideal encoding for content-
   // addressing cryptographic objects.
   //
@@ -4351,7 +4351,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.itu.int/rec/T-REC-X.690-202102-I/en",
   }],
 
-  // ── BSON — Binary JSON ─────────────────────────────────────────────────
+  // ── BSON. Binary JSON ─────────────────────────────────────────────────
   // BSON (Binary JSON) is the binary-encoded serialization format used by
   // MongoDB. Extends JSON with additional types (ObjectId, Date, Binary,
   // Decimal128, Regex). Every MongoDB document is stored as BSON.
@@ -4367,7 +4367,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://bsonspec.org/spec.html",
   }],
 
-  // ── Ion — Amazon's Self-Describing Format ──────────────────────────────
+  // ── Ion. Amazon's Self-Describing Format ──────────────────────────────
   // Amazon Ion is a richly-typed, self-describing data format supporting
   // both text and binary encodings. Used internally at Amazon for
   // DynamoDB, QLDB (quantum ledger), and S3 Select. Ion provides
@@ -4384,7 +4384,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://amazon-ion.github.io/ion-docs/docs/spec.html",
   }],
 
-  // ── Smile — Binary JSON (Jackson) ──────────────────────────────────────
+  // ── Smile. Binary JSON (Jackson) ──────────────────────────────────────
   // Smile is a binary JSON encoding from Jackson (Java). Used in
   // Elasticsearch internal transport, Solr, and Java microservices.
   // Provides 1:1 mapping to JSON with smaller size and faster parsing.
@@ -4399,7 +4399,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/FasterXML/smile-format-specification",
   }],
 
-  // ── UBJSON — Universal Binary JSON ─────────────────────────────────────
+  // ── UBJSON. Universal Binary JSON ─────────────────────────────────────
   // UBJSON provides 1:1 compatibility with JSON using binary encoding.
   // Used for embedded systems and IoT where JSON parsing overhead is
   // prohibitive but JSON compatibility is required.
@@ -4414,16 +4414,16 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 24 — DATA FORMATS: DOCUMENT & RICH TEXT
+  // TIER 24. DATA FORMATS: DOCUMENT & RICH TEXT
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── PDF — Portable Document Format ─────────────────────────────────────
+  // ── PDF. Portable Document Format ─────────────────────────────────────
   // PDF (ISO 32000-2:2020) is the universal document format. 2.5 trillion
   // PDF documents exist worldwide. PDF/A (ISO 19005) is the archival
   // variant used for legal, government, and scientific records. PDF
   // contains structured content streams, fonts, images, and metadata.
   //
-  // Content-addressing PDF creates permanent identities for documents —
+  // Content-addressing PDF creates permanent identities for documents.
   // contracts, papers, invoices, and regulations become tamper-evident.
   //
   //   Format: urn:uor:data:pdf:{hex} (SHA-256 of PDF file bytes)
@@ -4437,7 +4437,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/75839.html",
   }],
 
-  // ── OOXML — Office Open XML ────────────────────────────────────────────
+  // ── OOXML. Office Open XML ────────────────────────────────────────────
   // OOXML (ISO/IEC 29500) is the format behind .docx, .xlsx, .pptx.
   // Used by Microsoft Office, Google Docs (export), and LibreOffice.
   // OOXML files are ZIP archives containing XML parts with relationships.
@@ -4453,7 +4453,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/71691.html",
   }],
 
-  // ── ODF — Open Document Format ─────────────────────────────────────────
+  // ── ODF. Open Document Format ─────────────────────────────────────────
   // ODF (ISO/IEC 26300) is the open standard for office documents (.odt,
   // .ods, .odp). Default format for LibreOffice. ODF files are ZIP
   // archives containing XML content and styles.
@@ -4468,7 +4468,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/66363.html",
   }],
 
-  // ── EPUB — Electronic Publication ──────────────────────────────────────
+  // ── EPUB. Electronic Publication ──────────────────────────────────────
   // EPUB (ISO/IEC TS 22424) is the standard for reflowable e-books.
   // Used by Apple Books, Kobo, Google Play Books, and Kindle (via
   // conversion). EPUB 3.3 supports XHTML5, CSS, SVG, MathML, and
@@ -4485,7 +4485,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/epub-33/",
   }],
 
-  // ── RTF — Rich Text Format ─────────────────────────────────────────────
+  // ── RTF. Rich Text Format ─────────────────────────────────────────────
   // RTF is Microsoft's legacy rich text interchange format. Still widely
   // used for clipboard interchange, email composition, and legal
   // documents. Deterministic text-based format with control words.
@@ -4499,7 +4499,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://interoperability.blob.core.windows.net/files/Archive_References/[MSFT-RTF].pdf",
   }],
 
-  // ── DocBook — Technical Documentation XML ──────────────────────────────
+  // ── DocBook. Technical Documentation XML ──────────────────────────────
   // DocBook is the XML vocabulary for technical documentation. Used by
   // Linux kernel docs, FreeBSD handbook, GNOME/KDE documentation, and
   // O'Reilly publications. DocBook 5.1 uses RELAX NG schemas.
@@ -4515,7 +4515,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docbook.org/specs/docbook-v5.1-os.html",
   }],
 
-  // ── DITA — Darwin Information Typing Architecture ──────────────────────
+  // ── DITA. Darwin Information Typing Architecture ──────────────────────
   // DITA (OASIS) is the XML standard for topic-based technical authoring.
   // Used by IBM, Microsoft, SAP, Cisco, and enterprise documentation
   // teams. DITA maps organize topics into publications. Specialization
@@ -4532,23 +4532,23 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 25 — QUANTUM COMPUTING
+  // TIER 25. QUANTUM COMPUTING
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Standards, languages, IRs, SDKs, and file formats for quantum computation.
-  // Every quantum artifact — circuit, pulse schedule, compiled IR — becomes a
+  // Every quantum artifact. circuit, pulse schedule, compiled IR. becomes a
   // content-addressed UOR object. Identical programs on any platform share
   // one canonical identity, enabling reproducible experiments and verifiable
   // compilation across simulators and real hardware.
 
   // ── Standards Bodies ────────────────────────────────────────────────────
-  // PRUNED: ieee-quantum and iec-iso-jtc3 removed — standards bodies
+  // PRUNED: ieee-quantum and iec-iso-jtc3 removed. standards bodies
   // are meta-organizations, not content-addressable artifacts. Their
   // specs are already covered by concrete projections (openqasm3, qir, etc.).
 
   // ── Gate / Circuit-Level Languages ──────────────────────────────────────
 
-  // OpenQASM 3 — The current open quantum assembly language spec.
+  // OpenQASM 3. The current open quantum assembly language spec.
   // Supports classical control flow, timing, pulse-level gates, and
   // hierarchical program structure. Native export from Qiskit.
   //
@@ -4561,7 +4561,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openqasm.com/",
   }],
 
-  // OpenQASM 2 — Historic but still widely supported. Many published
+  // OpenQASM 2. Historic but still widely supported. Many published
   // circuits and textbook examples use QASM 2 syntax.
   ["openqasm2", {
     project: ({ hex }) => `urn:uor:quantum:openqasm2:${hex}`,
@@ -4569,7 +4569,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://en.wikipedia.org/wiki/OpenQASM",
   }],
 
-  // Quil — Rigetti's instruction set / language spec.
+  // Quil. Rigetti's instruction set / language spec.
   // Supports parametric gates, classical memory, and Quil-T timing.
   //
   //   Cross-projection: quil + openqasm3 → Rigetti↔IBM circuit bridge
@@ -4579,7 +4579,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://quil-lang.github.io/",
   }],
 
-  // Q# — Microsoft's quantum programming language.
+  // Q#. Microsoft's quantum programming language.
   // Strongly typed, functional-inspired, compiles to QIR.
   //
   //   Cross-projection: qsharp + qir → source↔LLVM IR bridge
@@ -4589,7 +4589,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://learn.microsoft.com/en-us/azure/quantum/user-guide/",
   }],
 
-  // Quipper — Research-level quantum language (Haskell-embedded).
+  // Quipper. Research-level quantum language (Haskell-embedded).
   // Used in academic circuit generation and resource estimation.
   ["quipper", {
     project: ({ hex }) => `urn:uor:quantum:quipper:${hex}`,
@@ -4597,7 +4597,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.mathstat.dal.ca/~selinger/quipper/",
   }],
 
-  // Blackbird — Continuous-variable / photonics assembly language.
+  // Blackbird. Continuous-variable / photonics assembly language.
   // Used with Xanadu's Strawberry Fields for photonic QC.
   //
   //   Cross-projection: blackbird + pennylane → photonic↔hybrid QML bridge
@@ -4609,7 +4609,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   // ── Intermediate Representations ───────────────────────────────────────
 
-  // QIR — Quantum Intermediate Representation (LLVM-based).
+  // QIR. Quantum Intermediate Representation (LLVM-based).
   // Intended as the common compiler target for quantum toolchains.
   // Q# compiles to QIR; other frontends can target it too.
   //
@@ -4625,7 +4625,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   // ── Pulse / Control-Level Specs ────────────────────────────────────────
 
-  // OpenPulse — Pulse-level grammar within the OpenQASM ecosystem.
+  // OpenPulse. Pulse-level grammar within the OpenQASM ecosystem.
   // Defines calibration grammars for hardware-native gate definitions.
   //
   //   Cross-projection: openpulse + openqasm3 → pulse↔gate abstraction bridge
@@ -4635,7 +4635,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openqasm.com/language/pulses.html",
   }],
 
-  // QUA — Quantum Machines' pulse-level control language.
+  // QUA. Quantum Machines' pulse-level control language.
   // Real-time classical processing alongside quantum pulse sequences.
   ["qua", {
     project: ({ hex }) => `urn:uor:quantum:qua:${hex}`,
@@ -4644,11 +4644,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ── File Formats ───────────────────────────────────────────────────────
-  // PRUNED: qasm-file, quil-file, qs-file removed — file extensions are
+  // PRUNED: qasm-file, quil-file, qs-file removed. file extensions are
   // transport concerns, not semantic identities. The content is already
   // addressed by the language projections (openqasm3, quil, qsharp).
 
-  // QPY — Qiskit's binary serialization for QuantumCircuit objects.
+  // QPY. Qiskit's binary serialization for QuantumCircuit objects.
   // Captures the full circuit including metadata, parameters, and layout.
   //
   //   Format: urn:uor:quantum:qpy:{hex}
@@ -4662,7 +4662,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   // ── Gate-Model SDKs ────────────────────────────────────────────────────
 
-  // Qiskit — IBM's open-source quantum SDK. Largest community, supports
+  // Qiskit. IBM's open-source quantum SDK. Largest community, supports
   // OpenQASM export, QPY serialization, transpilation, and IBM hardware.
   //
   //   Cross-projection: qiskit + openqasm3 → SDK↔spec source bridge
@@ -4673,7 +4673,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.quantum.ibm.com/",
   }],
 
-  // Cirq — Google Quantum AI's Python framework.
+  // Cirq. Google Quantum AI's Python framework.
   // Optimized for NISQ-era devices, noise simulation, and Google hardware.
   ["cirq", {
     project: ({ hex }) => `urn:uor:quantum:sdk:cirq:${hex}`,
@@ -4681,7 +4681,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://quantumai.google/cirq",
   }],
 
-  // Amazon Braket SDK — AWS quantum computing service.
+  // Amazon Braket SDK. AWS quantum computing service.
   // Multi-hardware: IonQ, Rigetti, OQC, QuEra from one API.
   ["braket-sdk", {
     project: ({ hex }) => `urn:uor:quantum:sdk:braket:${hex}`,
@@ -4689,7 +4689,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://amazon-braket-sdk-python.readthedocs.io/",
   }],
 
-  // pyQuil — Rigetti's Python SDK for Quil programs.
+  // pyQuil. Rigetti's Python SDK for Quil programs.
   // Connects to Quilc compiler and QVM simulator.
   //
   //   Cross-projection: pyquil + quil → SDK↔spec bridge
@@ -4699,7 +4699,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://pyquil-docs.rigetti.com/",
   }],
 
-  // pytket — Quantinuum's Python interface to the TKET compiler.
+  // pytket. Quantinuum's Python interface to the TKET compiler.
   // Cross-platform transpilation: Qiskit, Cirq, Braket, pyQuil backends.
   //
   //   Cross-projection: pytket + cirq + qiskit → universal transpilation bridge
@@ -4711,7 +4711,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   // ── Hybrid / Differentiable / Quantum-ML ───────────────────────────────
 
-  // PennyLane — Xanadu's differentiable quantum programming framework.
+  // PennyLane. Xanadu's differentiable quantum programming framework.
   // Quantum gradients, variational circuits, and ML integration.
   // Works with Qiskit, Cirq, Braket, Strawberry Fields backends.
   //
@@ -4725,7 +4725,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
 
   // ── Quantum Annealing ──────────────────────────────────────────────────
 
-  // D-Wave Ocean SDK — Quantum annealing optimization framework.
+  // D-Wave Ocean SDK. Quantum annealing optimization framework.
   // Different computation model: QUBO/Ising problems, hybrid solvers.
   //
   //   Cross-projection: dwave-ocean + qiskit → annealing↔gate model bridge
@@ -4736,14 +4736,14 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TIER 26 — DATA FORMATS: SEMANTIC & KNOWLEDGE GRAPHS
+  // TIER 26. DATA FORMATS: SEMANTIC & KNOWLEDGE GRAPHS
   // ══════════════════════════════════════════════════════════════════════════
 
-  // ── N-Triples / N-Quads — RDF Serialization ────────────────────────────
-  // N-Triples (W3C) is the line-based RDF serialization — one triple per
+  // ── N-Triples / N-Quads. RDF Serialization ────────────────────────────
+  // N-Triples (W3C) is the line-based RDF serialization. one triple per
   // line, unambiguous, streamable. N-Quads extends with named graphs.
   // Used as the canonical serialization for URDNA2015 (RDF Dataset
-  // Normalization) — the very algorithm UOR itself uses for identity.
+  // Normalization). the very algorithm UOR itself uses for identity.
   //
   //   Format: urn:uor:data:nquads:{hex} (SHA-256 of canonical N-Quads)
   //   Canonical: N-Quads → sort lines → SHA-256
@@ -4755,7 +4755,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/n-quads/",
   }],
 
-  // ── Turtle — Terse RDF Triple Language ─────────────────────────────────
+  // ── Turtle. Terse RDF Triple Language ─────────────────────────────────
   // Turtle (W3C) is the human-friendly RDF serialization with prefix
   // declarations, blank nodes, and collections. Most common format for
   // hand-authored ontologies and SHACL shapes.
@@ -4770,7 +4770,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/turtle/",
   }],
 
-  // ── TriG — Named Graph Serialization ───────────────────────────────────
+  // ── TriG. Named Graph Serialization ───────────────────────────────────
   // TriG (W3C) extends Turtle with named graph syntax for serializing
   // RDF datasets. Used for provenance tracking, access control, and
   // multi-source knowledge graphs.
@@ -4785,7 +4785,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/trig/",
   }],
 
-  // ── RDF/XML — Original RDF Serialization ───────────────────────────────
+  // ── RDF/XML. Original RDF Serialization ───────────────────────────────
   // RDF/XML (W3C) was the original RDF serialization format. Still used
   // by legacy systems, OWL ontologies, and Dublin Core metadata. While
   // verbose, it's the most widely deployed RDF format in existing systems.
@@ -4800,17 +4800,17 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/rdf-syntax-grammar/",
   }],
 
-  // ── SHACL — already registered in Tier 10e (urn:uor:schema:shacl) ─────
+  // ── SHACL. already registered in Tier 10e (urn:uor:schema:shacl) ─────
   // Duplicate removed to prevent namespace override (data: → schema:).
 
-  // ── OWL — already registered in Tier 10e (urn:uor:schema:owl) ─────────
+  // ── OWL. already registered in Tier 10e (urn:uor:schema:owl) ─────────
   // Duplicate removed to prevent namespace override (data: → schema:).
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TIER 27 — DATA FORMATS: MEDIA & IMAGE FORMATS
+  // TIER 27. DATA FORMATS: MEDIA & IMAGE FORMATS
   // ══════════════════════════════════════════════════════════════════════════
 
-  // ── JPEG — Joint Photographic Experts Group ────────────────────────────
+  // ── JPEG. Joint Photographic Experts Group ────────────────────────────
   // JPEG (ISO/IEC 10918) is the most widely used lossy image format.
   // Content-addressing JPEG files (by raw bytes, not pixel content)
   // creates permanent identities for specific encoded images.
@@ -4825,7 +4825,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/18902.html",
   }],
 
-  // ── PNG — Portable Network Graphics ────────────────────────────────────
+  // ── PNG. Portable Network Graphics ────────────────────────────────────
   // PNG (ISO/IEC 15948, W3C) is the lossless compressed raster format.
   // Used for web graphics, screenshots, UI assets, and scientific
   // visualization. PNG chunks contain metadata, color profiles, and text.
@@ -4840,7 +4840,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/png-3/",
   }],
 
-  // ── WebP — Modern Web Image Format ─────────────────────────────────────
+  // ── WebP. Modern Web Image Format ─────────────────────────────────────
   // WebP (Google) supports both lossy and lossless compression, alpha
   // transparency, and animation. Smaller than JPEG/PNG at equivalent
   // quality. Supported by all modern browsers.
@@ -4854,8 +4854,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://developers.google.com/speed/webp/docs/riff_container",
   }],
 
-  // ── AVIF — AV1 Image File Format ───────────────────────────────────────
-  // AVIF uses AV1 video codec for still images — superior compression
+  // ── AVIF. AV1 Image File Format ───────────────────────────────────────
+  // AVIF uses AV1 video codec for still images. superior compression
   // to JPEG and WebP. Supports HDR, wide color gamut, and film grain
   // synthesis. Adopted by Netflix, Google, and Apple.
   //
@@ -4868,7 +4868,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://aomediacodec.github.io/av1-avif/",
   }],
 
-  // ── TIFF — Tagged Image File Format ────────────────────────────────────
+  // ── TIFF. Tagged Image File Format ────────────────────────────────────
   // TIFF is the professional imaging format for photography, scanning,
   // printing, and medical/scientific imaging. Supports multiple pages,
   // layers, 16/32-bit depth, and various compression methods.
@@ -4884,7 +4884,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf",
   }],
 
-  // ── HEIF/HEIC — High Efficiency Image Format ──────────────────────────
+  // ── HEIF/HEIC. High Efficiency Image Format ──────────────────────────
   // HEIF (ISO/IEC 23008-12) uses HEVC/H.265 for image compression.
   // Default format for Apple iPhone photos. Supports burst photos,
   // live photos, depth maps, and HDR. HEIC is the HEVC-coded variant.
@@ -4898,7 +4898,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/83650.html",
   }],
 
-  // ── FLAC — Free Lossless Audio Codec ───────────────────────────────────
+  // ── FLAC. Free Lossless Audio Codec ───────────────────────────────────
   // FLAC is the dominant lossless audio format. Used by Tidal, Amazon
   // Music HD, Deezer HiFi, and audiophiles worldwide. FLAC metadata
   // includes Vorbis comments, cue sheets, and album art.
@@ -4913,7 +4913,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://xiph.org/flac/format.html",
   }],
 
-  // ── WAV — Waveform Audio ───────────────────────────────────────────────
+  // ── WAV. Waveform Audio ───────────────────────────────────────────────
   // WAV (RIFF/WAVE) is the standard uncompressed audio format. Used for
   // professional audio production, sound effects, and archival. WAV
   // files contain PCM samples with deterministic header structure.
@@ -4927,9 +4927,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html",
   }],
 
-  // ── Ogg/Vorbis/Opus — Open Audio Containers ───────────────────────────
+  // ── Ogg/Vorbis/Opus. Open Audio Containers ───────────────────────────
   // Ogg is the open container format from Xiph.org. Opus (RFC 6716) is
-  // the state-of-the-art lossy audio codec — superior to MP3, AAC, and
+  // the state-of-the-art lossy audio codec. superior to MP3, AAC, and
   // Vorbis at all bitrates. Used by Discord, WhatsApp, and WebRTC.
   //
   //   Format: urn:uor:data:ogg:{hex} (SHA-256 of Ogg container bytes)
@@ -4941,7 +4941,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://xiph.org/ogg/doc/rfc3533.txt",
   }],
 
-  // ── MP4/ISOBMFF — ISO Base Media File Format ──────────────────────────
+  // ── MP4/ISOBMFF. ISO Base Media File Format ──────────────────────────
   // ISOBMFF (ISO/IEC 14496-12) is the container format for MP4, MOV,
   // 3GP, HEIF, and AVIF. Contains video (H.264/H.265/AV1), audio
   // (AAC/Opus), subtitles, and metadata in a box-based structure.
@@ -4956,7 +4956,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/83102.html",
   }],
 
-  // ── WebM — Open Web Video ─────────────────────────────────────────────
+  // ── WebM. Open Web Video ─────────────────────────────────────────────
   // WebM is the open video container format using VP8/VP9/AV1 video
   // and Vorbis/Opus audio. Default format for YouTube, supported by
   // all modern browsers.
@@ -4970,7 +4970,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.webmproject.org/docs/container/",
   }],
 
-  // ── MKV — Matroska Container ───────────────────────────────────────────
+  // ── MKV. Matroska Container ───────────────────────────────────────────
   // Matroska (MKV/MKA/MKS) is the universal multimedia container using
   // EBML (Extensible Binary Meta Language). Supports unlimited tracks,
   // chapters, tags, and attachments. Used by HandBrake, VLC, and Plex.
@@ -4985,11 +4985,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TIER 28 — DATA FORMATS: 3D, FONTS & ARCHIVES
+  // TIER 28. DATA FORMATS: 3D, FONTS & ARCHIVES
   // ══════════════════════════════════════════════════════════════════════════
 
-  // ── glTF — GL Transmission Format ──────────────────────────────────────
-  // glTF (Khronos) is the "JPEG of 3D" — the universal 3D asset format.
+  // ── glTF. GL Transmission Format ──────────────────────────────────────
+  // glTF (Khronos) is the "JPEG of 3D". the universal 3D asset format.
   // Used by Three.js, Unity, Unreal, Blender, Sketchfab, and every
   // major 3D platform. JSON manifest + binary buffers + textures.
   //
@@ -5003,7 +5003,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html",
   }],
 
-  // ── USD — Universal Scene Description ──────────────────────────────────
+  // ── USD. Universal Scene Description ──────────────────────────────────
   // USD (Pixar/Apple) is the interchange format for 3D scenes, used in
   // film production (Pixar, ILM, Weta), Apple Vision Pro (visionOS),
   // and NVIDIA Omniverse. Supports composition arcs, variants, and
@@ -5019,7 +5019,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://openusd.org/release/spec.html",
   }],
 
-  // ── FBX — Filmbox Exchange ─────────────────────────────────────────────
+  // ── FBX. Filmbox Exchange ─────────────────────────────────────────────
   // FBX (Autodesk) is the dominant interchange format for 3D animation
   // and game development. Supports meshes, skeletons, blend shapes,
   // animation curves, and materials. Used by Maya, 3ds Max, Unity,
@@ -5035,8 +5035,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.autodesk.com/products/fbx/overview",
   }],
 
-  // ── OBJ/MTL — Wavefront 3D ────────────────────────────────────────────
-  // OBJ is the simplest widely-used 3D mesh format — ASCII text with
+  // ── OBJ/MTL. Wavefront 3D ────────────────────────────────────────────
+  // OBJ is the simplest widely-used 3D mesh format. ASCII text with
   // vertices, faces, normals, and texture coordinates. MTL defines
   // materials. Used for 3D printing, scientific visualization, and
   // simple asset exchange.
@@ -5050,8 +5050,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   }],
 
-  // ── STL — Stereolithography ────────────────────────────────────────────
-  // STL is the universal format for 3D printing — defines triangle
+  // ── STL. Stereolithography ────────────────────────────────────────────
+  // STL is the universal format for 3D printing. defines triangle
   // meshes for additive manufacturing. Every 3D printer accepts STL.
   // Both ASCII and binary variants exist; binary is standard.
   //
@@ -5065,7 +5065,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.loc.gov/preservation/digital/formats/fdd/fdd000504.shtml",
   }],
 
-  // ── 3MF — 3D Manufacturing Format ─────────────────────────────────────
+  // ── 3MF. 3D Manufacturing Format ─────────────────────────────────────
   // 3MF (3MF Consortium: Microsoft, HP, Stratasys) replaces STL for 3D
   // printing with support for color, materials, lattices, and beam
   // structures. XML-based ZIP package with OPC conventions.
@@ -5080,7 +5080,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://3mf.io/specification/",
   }],
 
-  // ── WOFF2 — Web Open Font Format ───────────────────────────────────────
+  // ── WOFF2. Web Open Font Format ───────────────────────────────────────
   // WOFF2 (W3C) is the compressed font format for the web. Uses Brotli
   // compression for 30% smaller files than WOFF. Wraps OpenType/TrueType
   // fonts for web delivery. Used by Google Fonts and every modern website.
@@ -5094,7 +5094,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/WOFF2/",
   }],
 
-  // ── OpenType/TrueType — Font Formats ───────────────────────────────────
+  // ── OpenType/TrueType. Font Formats ───────────────────────────────────
   // OpenType (ISO/IEC 14496-22, Microsoft/Adobe) is the universal font
   // format. Supports CFF/CFF2 outlines, TrueType outlines, variable
   // fonts, color fonts (COLR, SVG, CBDT), and OpenType Layout features.
@@ -5109,7 +5109,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://learn.microsoft.com/en-us/typography/opentype/spec/",
   }],
 
-  // ── ZIP — Archive Container ────────────────────────────────────────────
+  // ── ZIP. Archive Container ────────────────────────────────────────────
   // ZIP (ISO/IEC 21320-1) is the most widely used archive format. Used
   // as container for OOXML, ODF, EPUB, JAR, APK, IPA, and many more.
   // ZIP's central directory provides deterministic file listing.
@@ -5123,7 +5123,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT",
   }],
 
-  // ── tar — Tape Archive ────────────────────────────────────────────────
+  // ── tar. Tape Archive ────────────────────────────────────────────────
   // tar is the UNIX standard for combining files into a single stream.
   // Foundation for distribution (.tar.gz, .tar.xz, .tar.zst). Used by
   // every Linux distribution, container images (OCI layers), and
@@ -5139,8 +5139,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html",
   }],
 
-  // ── SQLite — Embedded Database Format ──────────────────────────────────
-  // SQLite is the most deployed database engine in the world — embedded
+  // ── SQLite. Embedded Database Format ──────────────────────────────────
+  // SQLite is the most deployed database engine in the world. embedded
   // in every smartphone, browser, and operating system. The file format
   // is a stable, cross-platform, backward-compatible binary.
   // Recommended by the Library of Congress for archival storage.
@@ -5156,7 +5156,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.sqlite.org/fileformat2.html",
   }],
 
-  // ── Zarr — Chunked Array Storage ───────────────────────────────────────
+  // ── Zarr. Chunked Array Storage ───────────────────────────────────────
   // Zarr is the chunked, compressed array storage format for large
   // multi-dimensional datasets. Used in climate science, genomics,
   // microscopy, and satellite imagery. Zarr v3 supports cloud-native
@@ -5173,8 +5173,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html",
   }],
 
-  // ── NDJSON — Newline Delimited JSON ────────────────────────────────────
-  // NDJSON (JSON Lines) is the standard for streaming JSON records —
+  // ── NDJSON. Newline Delimited JSON ────────────────────────────────────
+  // NDJSON (JSON Lines) is the standard for streaming JSON records.
   // one JSON object per line. Used by Elasticsearch bulk API, BigQuery
   // exports, log aggregation (Datadog, Splunk), and data pipelines.
   //
@@ -5189,7 +5189,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://github.com/ndjson/ndjson-spec",
   }],
 
-  // ── MessagePack Ext — Binary Extensions ────────────────────────────────
+  // ── MessagePack Ext. Binary Extensions ────────────────────────────────
   // While base MessagePack is already registered (msgpack), this covers
   // the extension type system used by Redis serialization (RESP3),
   // Fluentd event streams, and embedded systems. Ext types enable
@@ -5197,9 +5197,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //
   // (Note: base msgpack already registered in Tier 10c)
 
-  // ── Bencode — BitTorrent Encoding ──────────────────────────────────────
+  // ── Bencode. BitTorrent Encoding ──────────────────────────────────────
   // Bencode is the encoding used by BitTorrent for .torrent files and
-  // DHT messages. Deterministic by specification — integers, strings,
+  // DHT messages. Deterministic by specification. integers, strings,
   // lists, and dictionaries with sorted keys. Used by all BitTorrent
   // clients and the Mainline DHT.
   //
@@ -5212,7 +5212,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.bittorrent.org/beps/bep_0003.html",
   }],
 
-  // ── Pickle — Python Serialization ──────────────────────────────────────
+  // ── Pickle. Python Serialization ──────────────────────────────────────
   // Pickle is Python's native object serialization protocol. While not
   // deterministic by default, Protocol 5 (PEP 574) with out-of-band
   // buffers provides stable serialization for NumPy arrays and ML
@@ -5228,7 +5228,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.python.org/3/library/pickle.html",
   }],
 
-  // ── Safetensors — ML Model Weights ─────────────────────────────────────
+  // ── Safetensors. ML Model Weights ─────────────────────────────────────
   // Safetensors (Hugging Face) is the safe, fast tensor serialization
   // format replacing pickle for ML model weights. Zero-copy deserialization,
   // no arbitrary code execution, deterministic format. Used by Hugging
@@ -5244,7 +5244,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://huggingface.co/docs/safetensors/index",
   }],
 
-  // ── GGUF — GPT-Generated Unified Format ───────────────────────────────
+  // ── GGUF. GPT-Generated Unified Format ───────────────────────────────
   // GGUF (llama.cpp) is the quantized model format for local LLM inference.
   // Contains model architecture, tokenizer, and quantized weights in a
   // single file. Used by llama.cpp, Ollama, LM Studio, and GPT4All.
@@ -5260,15 +5260,15 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 29 — NETWORKING & TRANSPORT PROTOCOLS
+  // TIER 29. NETWORKING & TRANSPORT PROTOCOLS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Network protocols define how data moves between systems. Content-
   // addressing protocol specifications and session descriptors creates
-  // verifiable network configuration identities — enabling reproducible
+  // verifiable network configuration identities. enabling reproducible
   // infrastructure and tamper-evident network policy management.
 
-  // ── gRPC — Remote Procedure Calls ──────────────────────────────────────
+  // ── gRPC. Remote Procedure Calls ──────────────────────────────────────
   // gRPC (Google) is the dominant high-performance RPC framework. Uses
   // HTTP/2 + Protobuf for strongly-typed, bi-directional streaming RPCs.
   // Used by Kubernetes, Envoy, etcd, CockroachDB, and microservices.
@@ -5285,7 +5285,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://grpc.io/docs/what-is-grpc/core-concepts/",
   }],
 
-  // ── QUIC — UDP-Based Transport (RFC 9000) ──────────────────────────────
+  // ── QUIC. UDP-Based Transport (RFC 9000) ──────────────────────────────
   // QUIC is the multiplexed, encrypted transport protocol underlying
   // HTTP/3. Built into Chrome, Firefox, Safari, and curl. Provides
   // 0-RTT connection establishment, connection migration, and built-in
@@ -5301,9 +5301,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc9000",
   }],
 
-  // ── WebSocket — Full-Duplex Communication ──────────────────────────────
+  // ── WebSocket. Full-Duplex Communication ──────────────────────────────
   // WebSocket (RFC 6455) enables persistent, full-duplex communication
-  // between browsers and servers. Foundation for real-time apps — chat,
+  // between browsers and servers. Foundation for real-time apps. chat,
   // gaming, trading, collaboration. WebSocket subprotocols define
   // application-level semantics.
   //
@@ -5317,7 +5317,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc6455",
   }],
 
-  // ── SIP — Session Initiation Protocol ──────────────────────────────────
+  // ── SIP. Session Initiation Protocol ──────────────────────────────────
   // SIP (RFC 3261) is the signaling protocol for VoIP, video conferencing,
   // and instant messaging. Used by every phone system, Offen/Offen, Offen/
   // Offen, Offen/Offen, Offen/Offen, Offen/Offen, Offen/Offen, Offen/
@@ -5333,7 +5333,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc3261",
   }],
 
-  // ── RTP — Real-time Transport Protocol ─────────────────────────────────
+  // ── RTP. Real-time Transport Protocol ─────────────────────────────────
   // RTP (RFC 3550) carries real-time audio and video over IP. Used by
   // WebRTC, VoIP, IPTV, and video conferencing. RTP profiles define
   // codec parameters and payload types.
@@ -5349,7 +5349,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc3550",
   }],
 
-  // ── DNS — Domain Name System ───────────────────────────────────────────
+  // ── DNS. Domain Name System ───────────────────────────────────────────
   // DNS (RFC 1035) is the internet's naming system. DNSSEC (RFC 4033)
   // adds cryptographic signatures. DNS zone files are deterministic
   // text records. Content-addressing DNS zones enables tamper-evident
@@ -5365,7 +5365,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc1035",
   }],
 
-  // ── BGP — Border Gateway Protocol ──────────────────────────────────────
+  // ── BGP. Border Gateway Protocol ──────────────────────────────────────
   // BGP (RFC 4271) is the routing protocol of the internet. Every ISP,
   // cloud provider, and CDN uses BGP to exchange routing information.
   // RPKI (RFC 6480) adds cryptographic origin validation. Content-
@@ -5380,8 +5380,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc4271",
   }],
 
-  // ── SNMP — Simple Network Management Protocol ─────────────────────────
-  // SNMP (RFC 3411-3418) manages network devices — routers, switches,
+  // ── SNMP. Simple Network Management Protocol ─────────────────────────
+  // SNMP (RFC 3411-3418) manages network devices. routers, switches,
   // servers, printers. MIB (Management Information Base) defines device
   // object hierarchies using ASN.1. Every enterprise network uses SNMP.
   //
@@ -5396,7 +5396,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 30 — SECURITY & CRYPTOGRAPHIC STANDARDS
+  // TIER 30. SECURITY & CRYPTOGRAPHIC STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Security standards define how identity, authentication, authorization,
@@ -5404,11 +5404,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // artifacts creates permanent, verifiable identities for certificates,
   // keys, and policies.
 
-  // ── X.509 — Public Key Certificates ────────────────────────────────────
+  // ── X.509. Public Key Certificates ────────────────────────────────────
   // X.509 (ITU-T, RFC 5280) is the universal PKI certificate format.
   // Used by TLS/HTTPS, S/MIME, code signing, document signing, and
   // VPN authentication. DER-encoded X.509 certificates are inherently
-  // canonical — identical certificates always produce identical bytes.
+  // canonical. identical certificates always produce identical bytes.
   //
   //   Format: urn:uor:sec:x509:{hex} (SHA-256 of DER-encoded certificate)
   //   Canonical: X.509 → DER encoding → raw bytes → SHA-256
@@ -5421,7 +5421,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc5280",
   }],
 
-  // ── JWK/JWS/JWE/JWT — JOSE Standards ──────────────────────────────────
+  // ── JWK/JWS/JWE/JWT. JOSE Standards ──────────────────────────────────
   // The JOSE (JSON Object Signing and Encryption) family defines how
   // JSON payloads are signed (JWS, RFC 7515), encrypted (JWE, RFC 7516),
   // key-represented (JWK, RFC 7517), and tokened (JWT, RFC 7519).
@@ -5438,7 +5438,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc7519",
   }],
 
-  // ── OAuth 2.0 — Authorization Framework ────────────────────────────────
+  // ── OAuth 2.0. Authorization Framework ────────────────────────────────
   // OAuth 2.0 (RFC 6749) and OAuth 2.1 (draft) define authorization
   // flows for API access. Used by every major platform (Google, GitHub,
   // Azure AD, Okta). Grant types, scopes, and client registrations are
@@ -5455,7 +5455,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc6749",
   }],
 
-  // ── SAML — Security Assertion Markup Language ──────────────────────────
+  // ── SAML. Security Assertion Markup Language ──────────────────────────
   // SAML 2.0 (OASIS) is the enterprise SSO standard. Used by Active
   // Directory Federation Services, Okta, Ping Identity, and every
   // enterprise IdP. SAML assertions are signed XML documents with
@@ -5472,7 +5472,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf",
   }],
 
-  // ── PGP/GPG — Pretty Good Privacy ─────────────────────────────────────
+  // ── PGP/GPG. Pretty Good Privacy ─────────────────────────────────────
   // OpenPGP (RFC 9580) defines message encryption, signing, and key
   // management. Used for email encryption (GPG), software signing
   // (Linux package repos, Git commit signing), and file encryption.
@@ -5488,7 +5488,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc9580",
   }],
 
-  // ── PKCS — Public Key Cryptography Standards ───────────────────────────
+  // ── PKCS. Public Key Cryptography Standards ───────────────────────────
   // PKCS standards (RSA Security/IETF) define key formats (PKCS#1, #8),
   // certificate requests (PKCS#10), and token interfaces (PKCS#11).
   // Every HSM, smart card, and crypto library implements PKCS.
@@ -5504,10 +5504,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc8017",
   }],
 
-  // ── Kerberos — Network Authentication ──────────────────────────────────
+  // ── Kerberos. Network Authentication ──────────────────────────────────
   // Kerberos (RFC 4120) is the authentication protocol for Active
   // Directory, every Windows domain, MIT campus networks, and Hadoop.
-  // Kerberos tickets are ASN.1/DER-encoded — inherently canonical.
+  // Kerberos tickets are ASN.1/DER-encoded. inherently canonical.
   //
   //   Format: urn:uor:sec:kerberos:{hex} (SHA-256 of canonical Kerberos principal)
   //   Canonical: principal → realm + name → JSON-LD → URDNA2015 → SHA-256
@@ -5519,7 +5519,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc4120",
   }],
 
-  // ── ACME — Automatic Certificate Management ───────────────────────────
+  // ── ACME. Automatic Certificate Management ───────────────────────────
   // ACME (RFC 8555) automates TLS certificate issuance. Used by Let's
   // Encrypt (3B+ certificates issued), Cloudflare, AWS Certificate
   // Manager, and ZeroSSL. ACME orders and authorizations are JSON.
@@ -5535,11 +5535,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 31 — EMAIL, CALENDAR & PERSONAL INFORMATION MANAGEMENT
+  // TIER 31. EMAIL, CALENDAR & PERSONAL INFORMATION MANAGEMENT
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── MIME — Email Message Format ────────────────────────────────────────
-  // MIME (RFC 2045-2049) defines the structure of email messages —
+  // ── MIME. Email Message Format ────────────────────────────────────────
+  // MIME (RFC 2045-2049) defines the structure of email messages.
   // multipart bodies, character encoding, content types, and attachments.
   // Every email sent uses MIME. S/MIME adds encryption and signing.
   //
@@ -5553,7 +5553,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc2045",
   }],
 
-  // ── vCard — Contact Information ────────────────────────────────────────
+  // ── vCard. Contact Information ────────────────────────────────────────
   // vCard (RFC 6350) is the standard for electronic business cards.
   // Used by every phone, email client, and CRM system. vCard 4.0
   // properties include name, address, phone, email, photo, and
@@ -5569,7 +5569,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc6350",
   }],
 
-  // ── iCalendar — Calendar Events ────────────────────────────────────────
+  // ── iCalendar. Calendar Events ────────────────────────────────────────
   // iCalendar (RFC 5545) defines calendar events, to-dos, journal
   // entries, and free/busy information. Used by Google Calendar, Apple
   // Calendar, Outlook, and every calendar application. VEVENT, VTODO,
@@ -5585,7 +5585,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://datatracker.ietf.org/doc/html/rfc5545",
   }],
 
-  // ── JMAP — JSON Meta Application Protocol ──────────────────────────────
+  // ── JMAP. JSON Meta Application Protocol ──────────────────────────────
   // JMAP (RFC 8620) is the modern replacement for IMAP. JSON-based
   // protocol for email, contacts, and calendars. Used by Fastmail,
   // Stalwart, and Apache James. JMAP objects are structured JSON.
@@ -5600,10 +5600,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 32 — AUTOMOTIVE & INDUSTRIAL VEHICLE STANDARDS
+  // TIER 32. AUTOMOTIVE & INDUSTRIAL VEHICLE STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── AUTOSAR — Automotive Open System Architecture ──────────────────────
+  // ── AUTOSAR. Automotive Open System Architecture ──────────────────────
   // AUTOSAR defines the software architecture for automotive ECUs.
   // Classic AUTOSAR for hard real-time (engine, brakes, airbags) and
   // Adaptive AUTOSAR for high-performance computing (ADAS, infotainment).
@@ -5619,8 +5619,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.autosar.org/standards",
   }],
 
-  // ── CAN/DBC — Controller Area Network ──────────────────────────────────
-  // CAN (ISO 11898) is the vehicle bus protocol — every car, truck,
+  // ── CAN/DBC. Controller Area Network ──────────────────────────────────
+  // CAN (ISO 11898) is the vehicle bus protocol. every car, truck,
   // and industrial machine uses CAN. DBC files define message IDs,
   // signals, bit positions, and scaling factors. J1939 extends CAN
   // for heavy-duty vehicles. CAN FD adds flexible data rate.
@@ -5636,7 +5636,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/63648.html",
   }],
 
-  // ── SOME/IP — Scalable Service-Oriented Middleware ─────────────────────
+  // ── SOME/IP. Scalable Service-Oriented Middleware ─────────────────────
   // SOME/IP (AUTOSAR) is the service-oriented communication protocol
   // for automotive Ethernet. Replaces CAN for high-bandwidth use cases
   // (cameras, LiDAR, infotainment). Used by BMW, VW, and Tier-1 suppliers.
@@ -5651,8 +5651,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.autosar.org/standards/foundation",
   }],
 
-  // ── UDS — Unified Diagnostic Services ──────────────────────────────────
-  // UDS (ISO 14229) is the standard for vehicle diagnostics — OBD-II
+  // ── UDS. Unified Diagnostic Services ──────────────────────────────────
+  // UDS (ISO 14229) is the standard for vehicle diagnostics. OBD-II
   // scanner protocols, ECU firmware updates, and fault code management.
   // Every modern vehicle implements UDS for dealer diagnostics.
   //
@@ -5666,7 +5666,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso.org/standard/72439.html",
   }],
 
-  // ── ARINC 429 — Avionics Data Bus ─────────────────────────────────────
+  // ── ARINC 429. Avionics Data Bus ─────────────────────────────────────
   // ARINC 429 is the dominant avionics data bus standard. Used on every
   // commercial aircraft (Boeing, Airbus) for flight instruments, FMS,
   // autopilot, and navigation systems. Defines label/SDI/data/SSM words.
@@ -5682,10 +5682,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 33 — BIM, CONSTRUCTION & ARCHITECTURE
+  // TIER 33. BIM, CONSTRUCTION & ARCHITECTURE
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── IFC — Industry Foundation Classes ──────────────────────────────────
+  // ── IFC. Industry Foundation Classes ──────────────────────────────────
   // IFC (ISO 16739-1:2018, buildingSMART) is the open standard for BIM
   // (Building Information Modeling). Contains building geometry, spatial
   // structure, materials, MEP systems, and quantities. Used by Revit,
@@ -5702,8 +5702,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/",
   }],
 
-  // ── CityGML — 3D City Models ───────────────────────────────────────────
-  // CityGML (OGC) defines 3D city models with semantic structure — buildings,
+  // ── CityGML. 3D City Models ───────────────────────────────────────────
+  // CityGML (OGC) defines 3D city models with semantic structure. buildings,
   // roads, vegetation, terrain, water bodies, and city furniture. Used for
   // urban planning, simulation, and digital twins of cities.
   //
@@ -5718,7 +5718,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.ogc.org/standard/citygml/",
   }],
 
-  // ── LAS/LAZ — LiDAR Point Cloud ───────────────────────────────────────
+  // ── LAS/LAZ. LiDAR Point Cloud ───────────────────────────────────────
   // LAS (ASPRS) is the standard for LiDAR point cloud data. LAZ is the
   // lossless compressed variant. Used for terrain mapping, forestry,
   // autonomous vehicles, and construction surveying. Contains XYZ
@@ -5735,7 +5735,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.asprs.org/divisions-committees/lidar-division/laser-las-file-format-exchange-activities",
   }],
 
-  // ── gbXML — Green Building XML ─────────────────────────────────────────
+  // ── gbXML. Green Building XML ─────────────────────────────────────────
   // gbXML enables energy analysis by transferring building geometry and
   // HVAC data between BIM and energy simulation tools (EnergyPlus,
   // eQUEST, IES VE). Used for LEED certification and building energy codes.
@@ -5750,7 +5750,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.gbxml.org/schema_doc/6.01/GreenBuildingXML_Ver6.01.html",
   }],
 
-  // ── GeoPackage — OGC Geospatial Data Container ─────────────────────────
+  // ── GeoPackage. OGC Geospatial Data Container ─────────────────────────
   // GeoPackage is an OGC standard for storing vector features, tile matrix
   // sets, and raster maps in a single SQLite container. Used in BIM/GIS
   // pipelines for spatial data exchange and smart city infrastructure.
@@ -5766,7 +5766,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.geopackage.org/spec/",
   }],
 
-  // ── GeoTIFF — Georeferenced Raster Images ──────────────────────────────
+  // ── GeoTIFF. Georeferenced Raster Images ──────────────────────────────
   ["geotiff", {
     project: ({ hex }) => `urn:uor:geo:geotiff:${hex}`,
     fidelity: "lossless",
@@ -5774,10 +5774,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 34 — COMPLIANCE, FINANCIAL & LEGAL STANDARDS
+  // TIER 34. COMPLIANCE, FINANCIAL & LEGAL STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── XBRL — eXtensible Business Reporting Language ──────────────────────
+  // ── XBRL. eXtensible Business Reporting Language ──────────────────────
   // XBRL is the global standard for digital financial reporting.
   // Required by SEC (US), ESMA (EU), and 60+ regulators worldwide.
   // Inline XBRL (iXBRL) embeds structured data in HTML documents.
@@ -5793,8 +5793,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://specifications.xbrl.org/spec-group-index-group-xbrl-2.1.html",
   }],
 
-  // ── FIX — Financial Information eXchange ───────────────────────────────
-  // FIX Protocol is the standard for electronic trading — equities,
+  // ── FIX. Financial Information eXchange ───────────────────────────────
+  // FIX Protocol is the standard for electronic trading. equities,
   // fixed income, FX, and derivatives. Used by NYSE, NASDAQ, CME,
   // and every major exchange. FIX messages are deterministic tag=value pairs.
   //
@@ -5808,7 +5808,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.fixtrading.org/standards/",
   }],
 
-  // ── ISO 20022 — Financial Messaging ────────────────────────────────────
+  // ── ISO 20022. Financial Messaging ────────────────────────────────────
   // ISO 20022 is the universal financial messaging standard replacing
   // SWIFT MT messages. XML-based messages for payments (pain/pacs),
   // securities (sese/semt), and trade (trad). Adopted by SWIFT,
@@ -5824,9 +5824,9 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.iso20022.org/",
   }],
 
-  // ── EDI/X12 — Electronic Data Interchange ──────────────────────────────
+  // ── EDI/X12. Electronic Data Interchange ──────────────────────────────
   // EDI X12 (ANSI ASC X12) is the standard for business-to-business
-  // electronic transactions — purchase orders (850), invoices (810),
+  // electronic transactions. purchase orders (850), invoices (810),
   // shipping notices (856), and healthcare claims (837). Used by
   // Walmart, Amazon, UPS, and US healthcare (HIPAA).
   //
@@ -5840,7 +5840,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://x12.org/",
   }],
 
-  // ── EDIFACT — UN Electronic Data Interchange ──────────────────────────
+  // ── EDIFACT. UN Electronic Data Interchange ──────────────────────────
   // UN/EDIFACT is the international EDI standard used for customs
   // declarations, shipping, banking, and trade. Dominant in Europe,
   // Asia, and international trade. EDIFACT messages are structured
@@ -5856,8 +5856,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://unece.org/trade/uncefact/introducing-unedifact",
   }],
 
-  // ── HL7 v2 — Healthcare Messaging ─────────────────────────────────────
-  // HL7 v2 is the legacy healthcare messaging standard — used by 95%
+  // ── HL7 v2. Healthcare Messaging ─────────────────────────────────────
+  // HL7 v2 is the legacy healthcare messaging standard. used by 95%
   // of US hospitals for ADT (admit/discharge/transfer), lab results (ORU),
   // orders (ORM), and scheduling. Pipe-delimited message format.
   // (Note: HL7 FHIR is already registered in Scientific Data Formats)
@@ -5873,10 +5873,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 35 — CLOUD-NATIVE & DEVOPS STANDARDS
+  // TIER 35. CLOUD-NATIVE & DEVOPS STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Kubernetes Manifests — Container Orchestration ─────────────────────
+  // ── Kubernetes Manifests. Container Orchestration ─────────────────────
   // Kubernetes manifests (YAML/JSON) define Deployments, Services,
   // ConfigMaps, Secrets, Ingress, CRDs, and the entire cluster state.
   // Used by every cloud platform (GKE, EKS, AKS, OpenShift).
@@ -5892,7 +5892,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://kubernetes.io/docs/reference/kubernetes-api/",
   }],
 
-  // ── Helm Charts — Kubernetes Package Manager ──────────────────────────
+  // ── Helm Charts. Kubernetes Package Manager ──────────────────────────
   // Helm charts package Kubernetes manifests with templating and
   // dependency management. Used by 90%+ of Kubernetes deployments.
   // Chart.yaml + templates + values.yaml define a complete application.
@@ -5908,7 +5908,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://helm.sh/docs/topics/charts/",
   }],
 
-  // ── Terraform State — Infrastructure State ─────────────────────────────
+  // ── Terraform State. Infrastructure State ─────────────────────────────
   // Terraform state files (JSON) record the current state of managed
   // infrastructure. Contains resource addresses, attributes, dependencies,
   // and provider metadata. Content-addressing state enables infrastructure
@@ -5925,7 +5925,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://developer.hashicorp.com/terraform/language/state",
   }],
 
-  // ── Prometheus — Metrics & Monitoring ──────────────────────────────────
+  // ── Prometheus. Metrics & Monitoring ──────────────────────────────────
   // Prometheus exposition format (OpenMetrics, IETF draft) defines how
   // metrics are exposed by applications. Used by Kubernetes, Grafana,
   // and every cloud-native monitoring stack. Metric types: counter,
@@ -5941,7 +5941,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://prometheus.io/docs/instrumenting/exposition_formats/",
   }],
 
-  // ── Docker Compose — Multi-Container Applications ─────────────────────
+  // ── Docker Compose. Multi-Container Applications ─────────────────────
   // Docker Compose (YAML) defines multi-container application stacks.
   // Services, networks, volumes, and dependencies in a single file.
   // Used for local development, CI/CD, and simple deployments.
@@ -5957,8 +5957,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://docs.docker.com/reference/compose-file/",
   }],
 
-  // ── GitHub Actions — CI/CD Workflows ───────────────────────────────────
-  // GitHub Actions workflows (YAML) define CI/CD pipelines — build, test,
+  // ── GitHub Actions. CI/CD Workflows ───────────────────────────────────
+  // GitHub Actions workflows (YAML) define CI/CD pipelines. build, test,
   // deploy, and automate. Used by millions of repositories. Workflow
   // definitions are structured, deterministic YAML documents.
   //
@@ -5974,10 +5974,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 36 — MACHINE LEARNING MODEL FORMATS & STANDARDS
+  // TIER 36. MACHINE LEARNING MODEL FORMATS & STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── TensorFlow SavedModel — TF Model Format ────────────────────────────
+  // ── TensorFlow SavedModel. TF Model Format ────────────────────────────
   // TensorFlow SavedModel is the standard serialization for TF models.
   // Contains computation graph (GraphDef protobuf), variable checkpoints,
   // signatures, and assets. Used by TensorFlow Serving, TFLite, TF.js.
@@ -5992,7 +5992,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.tensorflow.org/guide/saved_model",
   }],
 
-  // ── TFLite — TensorFlow Lite ───────────────────────────────────────────
+  // ── TFLite. TensorFlow Lite ───────────────────────────────────────────
   // TFLite is the optimized model format for mobile and edge inference.
   // FlatBuffers-based schema. Used on 4B+ Android devices, Coral Edge
   // TPU, and microcontrollers (TFLite Micro).
@@ -6007,7 +6007,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.tensorflow.org/lite/guide",
   }],
 
-  // ── TorchScript — PyTorch JIT Format ───────────────────────────────────
+  // ── TorchScript. PyTorch JIT Format ───────────────────────────────────
   // TorchScript serializes PyTorch models as self-contained archives
   // (.pt files) with JIT-compiled computation graphs. Used for
   // production deployment independent of Python runtime.
@@ -6023,8 +6023,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://pytorch.org/docs/stable/jit.html",
   }],
 
-  // ── MLflow Model — ML Experiment Tracking ──────────────────────────────
-  // MLflow Model format wraps any ML model with metadata — flavor
+  // ── MLflow Model. ML Experiment Tracking ──────────────────────────────
+  // MLflow Model format wraps any ML model with metadata. flavor
   // (sklearn, pytorch, tf), conda/pip environment, signature (input/
   // output schema), and run provenance. Used by Databricks, Azure ML.
   //
@@ -6038,7 +6038,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://mlflow.org/docs/latest/models.html",
   }],
 
-  // ── CoreML — Apple ML Model Format ─────────────────────────────────────
+  // ── CoreML. Apple ML Model Format ─────────────────────────────────────
   // CoreML (.mlmodel/.mlpackage) is Apple's on-device ML format.
   // Runs on Neural Engine, GPU, and CPU across iPhone, iPad, Mac,
   // Apple Watch, and Apple Vision Pro. Protobuf-based specification.
@@ -6054,8 +6054,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://apple.github.io/coremltools/mlmodel/index.html",
   }],
 
-  // ── PMML — Predictive Model Markup Language ────────────────────────────
-  // PMML (DMG) is the XML standard for representing predictive models —
+  // ── PMML. Predictive Model Markup Language ────────────────────────────
+  // PMML (DMG) is the XML standard for representing predictive models.
   // decision trees, neural networks, regression, clustering, and scoring.
   // Used by SAS, SPSS, RapidMiner, and enterprise analytics platforms.
   //
@@ -6069,8 +6069,8 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://dmg.org/pmml/v4-4-1/GeneralStructure.html",
   }],
 
-  // ── Model Card — ML Model Documentation ───────────────────────────────
-  // Model Cards (Google/Hugging Face) standardize ML model documentation —
+  // ── Model Card. ML Model Documentation ───────────────────────────────
+  // Model Cards (Google/Hugging Face) standardize ML model documentation.
   // intended use, performance metrics, limitations, ethical considerations,
   // and training data description. Required by EU AI Act for high-risk systems.
   //
@@ -6086,10 +6086,10 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 37 — OBSERVABILITY & DASHBOARD STANDARDS
+  // TIER 37. OBSERVABILITY & DASHBOARD STANDARDS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── Grafana Dashboard — Observability Visualization ────────────────────
+  // ── Grafana Dashboard. Observability Visualization ────────────────────
   // Grafana dashboard JSON model defines panels, data sources, queries,
   // variables, and layouts for observability visualization. Dashboard JSON
   // is the canonical source of truth for Grafana's Scenes-powered renderer.
@@ -6100,7 +6100,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   //   ✓ Panel definitions map cleanly to UOR projection algebra
   //   ✓ Data source queries (PromQL, LogQL, TraceQL) are canonical strings
   //   ✓ Template variables provide parameterized projection composition
-  //   ✗ @grafana/scenes requires Grafana runtime — NOT embeddable standalone
+  //   ✗ @grafana/scenes requires Grafana runtime. NOT embeddable standalone
   //   ✗ @grafana/ui components depend on Grafana plugin context
   //   → Best path: dashboard JSON as canonical format, not React embedding
   //
@@ -6122,7 +6122,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   }],
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 38 — TRUSTED EXECUTION ENVIRONMENT (TEE) PROJECTIONS
+  // TIER 38. TRUSTED EXECUTION ENVIRONMENT (TEE) PROJECTIONS
   // ═══════════════════════════════════════════════════════════════════════════
   //
   // Hardware-rooted attestation projections that map a UOR canonical identity
@@ -6143,7 +6143,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
   // the attestation URI, allowing round-trip verification back to the
   // canonical identity.
 
-  // ── Intel TDX — Trust Domain Extensions ───────────────────────────────
+  // ── Intel TDX. Trust Domain Extensions ───────────────────────────────
   // Intel TDX provides hardware-isolated Trust Domains (TDs) with memory
   // encryption (MKTME), remote attestation via DCAP quotes, and measurement
   // registers (MRTD, RTMR). The projection maps the UOR hash to a TDX
@@ -6167,7 +6167,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/documentation.html",
   }],
 
-  // ── ARM TrustZone — Secure World Isolation ────────────────────────────
+  // ── ARM TrustZone. Secure World Isolation ────────────────────────────
   // ARM TrustZone partitions the processor into Normal World and Secure
   // World, with hardware-enforced memory isolation via TZASC. Trusted
   // Applications (TAs) run in the Secure World under a Trusted OS (OP-TEE,
@@ -6191,7 +6191,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.arm.com/technologies/trustzone-for-cortex-a",
   }],
 
-  // ── Apple Secure Enclave — Hardware Key Manager ───────────────────────
+  // ── Apple Secure Enclave. Hardware Key Manager ───────────────────────
   // Apple's Secure Enclave Processor (SEP) provides a dedicated security
   // coprocessor with its own boot ROM, AES engine, and TRNG. Keys generated
   // in the SEP never leave the hardware boundary. The projection maps the
@@ -6215,7 +6215,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://support.apple.com/guide/security/secure-enclave-sec59b0b31ff/web",
   }],
 
-  // ── WebAuthn / FIDO2 — Universal Platform Attestation ─────────────────
+  // ── WebAuthn / FIDO2. Universal Platform Attestation ─────────────────
   // FIDO2/WebAuthn provides a cross-platform standard for hardware-bound
   // credential creation and assertion. Platform authenticators leverage the
   // device's TEE (Secure Enclave, TrustZone, TPM) while roaming authenticators
@@ -6242,7 +6242,7 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/webauthn-3/",
   }],
 
-  // ── Unified TEE Attestation — Cross-Platform Attestation Root ─────────
+  // ── Unified TEE Attestation. Cross-Platform Attestation Root ─────────
   // The unified TEE attestation projection is the convergence point for all
   // hardware-specific TEE projections. It produces a platform-agnostic
   // attestation URI that can be resolved against ANY TEE backend. The first
@@ -6285,11 +6285,11 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     spec: "https://www.w3.org/TR/webauthn-3/#sctn-attestation",
   }],
 
-  // ── TCB Measurement — Trusted Computing Base Hash Chain ───────────────
+  // ── TCB Measurement. Trusted Computing Base Hash Chain ───────────────
   // Extends the TEE projections with a TCB measurement projection that
   // encodes the full software stack measurement (firmware, kernel, runtime)
   // as a hash chain. This enables remote verification that the entire
-  // execution environment — not just the TEE hardware — is trustworthy.
+  // execution environment. not just the TEE hardware. is trustworthy.
   //
   // Canonical pipeline:
   //   UOR Hash → PCR extend chain → TCB measurement log → endorsement

@@ -1,5 +1,5 @@
 /**
- * MetricBar — Horizontal progress bar for metrics.
+ * MetricBar. Horizontal progress bar for metrics.
  */
 
 export interface MetricBarProps {

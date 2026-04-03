@@ -1,5 +1,5 @@
 /**
- * UOR Code Analyzer — Rust entity extraction.
+ * UOR Code Analyzer. Rust entity extraction.
  *
  * Extracts structs, enums, functions, traits, impls, type aliases,
  * and their relationships from Rust source code using regex-based analysis.

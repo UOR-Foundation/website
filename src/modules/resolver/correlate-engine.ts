@@ -1,5 +1,5 @@
 /**
- * UOR Correlate Engine — Fidelity Scoring + SKOS Semantic Recommendations
+ * UOR Correlate Engine. Fidelity Scoring + SKOS Semantic Recommendations
  *
  * Fidelity is computed from ring arithmetic ONLY:
  *   fidelity(a, b) = 1 - (hammingDistance(a_bytes, b_bytes) / maxBits)
@@ -10,7 +10,7 @@
  *   broadMatch:  fidelity >= 4/256         (CatastropheThreshold)
  *   noMatch:     fidelity < 4/256
  *
- * @see spec/src/namespaces/observable.rs — observable:CorrelationMeasure
+ * @see spec/src/namespaces/observable.rs. observable:CorrelationMeasure
  * @see SKOS: skos:exactMatch, skos:closeMatch, skos:broadMatch
  */
 
@@ -27,7 +27,7 @@ export type SkosRelation =
 // ── Thresholds derived from ring partition cardinalities ─────────────────────
 
 export const FIDELITY_THRESHOLDS = {
-  /** Canonical ID equality — identical objects. */
+  /** Canonical ID equality. identical objects. */
   exactMatch: 1.0,
   /** IrreducibleSet.cardinality / 256 = 126/256 ≈ 0.4921875. */
   closeMatch: 126 / 256,
@@ -100,13 +100,13 @@ export function classifyFidelity(fidelity: number): SkosRelation {
 function skosLabel(relation: SkosRelation): string {
   switch (relation) {
     case "skos:exactMatch":
-      return "Identical — canonical IDs match exactly";
+      return "Identical. canonical IDs match exactly";
     case "skos:closeMatch":
-      return "Close match — structural fidelity ≥ 49.2% (irreducible threshold)";
+      return "Close match. structural fidelity ≥ 49.2% (irreducible threshold)";
     case "skos:broadMatch":
-      return "Broad match — structural fidelity ≥ 1.6% (catastrophe threshold)";
+      return "Broad match. structural fidelity ≥ 1.6% (catastrophe threshold)";
     case "skos:noMatch":
-      return "No match — below catastrophe threshold";
+      return "No match. below catastrophe threshold";
   }
 }
 
@@ -181,7 +181,7 @@ export async function correlateBytes(
  * Find all near-duplicate pairs in a set of canonical IDs.
  *
  * Returns pairs with fidelity >= threshold (default: closeMatch threshold).
- * O(n²) pairwise comparison — suitable for small-to-medium sets.
+ * O(n²) pairwise comparison. suitable for small-to-medium sets.
  */
 export async function findNearDuplicates(
   canonicalIds: string[],

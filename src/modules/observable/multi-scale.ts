@@ -1,5 +1,5 @@
 /**
- * Multi-Scale Observer — Holographic Zoom Engine
+ * Multi-Scale Observer. Holographic Zoom Engine
  * ═══════════════════════════════════════════════
  *
  * The Observer is holographic: the same coherence assessment pattern
@@ -21,8 +21,8 @@
  * coherence metric is scale-invariant.
  *
  * @module observable/multi-scale
- * @see observable/meta-observer — L3+ implementation
- * @see observable/h-score — L0 foundation
+ * @see observable/meta-observer. L3+ implementation
+ * @see observable/h-score. L0 foundation
  */
 
 import { popcount, hScore } from "./h-score";
@@ -65,7 +65,7 @@ export interface ScaleObservation {
   meta: Record<string, number | string>;
 }
 
-// ── Thresholds (same at every scale — holographic invariance) ────────────────
+// ── Thresholds (same at every scale. holographic invariance) ────────────────
 
 const ZONE_THRESHOLDS = { low: 2, high: 5 };
 
@@ -80,7 +80,7 @@ function assignZone(h: number): CoherenceZone {
 /**
  * Observe a single byte against the Grade-A graph.
  *
- * This is the atomic unit of observation — the foundation from which
+ * This is the atomic unit of observation. the foundation from which
  * all higher scales are composed.
  */
 export function observeByte(
@@ -273,7 +273,7 @@ export function observeProjection(
 /**
  * Observe the entire network: aggregate over all projections (or modules).
  *
- * This is the highest zoom level — the telos vector of the full system.
+ * This is the highest zoom level. the telos vector of the full system.
  */
 export function observeNetwork(
   projections: ScaleObservation[],
@@ -310,7 +310,7 @@ export function observeNetwork(
 // ── Multi-Scale Observer Class ──────────────────────────────────────────────
 
 /**
- * The Multi-Scale Observer — a holographic zoom lens.
+ * The Multi-Scale Observer. a holographic zoom lens.
  *
  * Stores observations at all levels and computes cross-scale
  * coherence. The same pattern (H-score → Zone → Φ → Remediation)
@@ -338,7 +338,7 @@ export class MultiScaleObserver {
   // ── Ingestion: bottom-up composition ──────────────────────────────────
 
   /**
-   * Ingest raw bytes — the L0 entry point.
+   * Ingest raw bytes. the L0 entry point.
    *
    * Automatically composes upward: bytes → datums → operations.
    * Higher levels (module, projection, network) are composed via
@@ -484,7 +484,7 @@ export class MultiScaleObserver {
       const zoneDiff = zoneOrd(curr.zone) - zoneOrd(prev.zone);
       if (Math.abs(zoneDiff) > 1) {
         anomalies.push(
-          `Scale jump: L${prev.level}(${prev.zone}) → L${curr.level}(${curr.zone}) — ${
+          `Scale jump: L${prev.level}(${prev.zone}) → L${curr.level}(${curr.zone}). ${
             Math.abs(zoneDiff) > 1 ? "non-adjacent zone transition" : ""
           }`
         );

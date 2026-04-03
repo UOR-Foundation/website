@@ -1,16 +1,16 @@
 /**
- * UNS Build — Image Registry (Tag, Push, Pull)
+ * UNS Build. Image Registry (Tag, Push, Pull)
  *
  * Content-addressed image registry with Docker-compatible
  * tag, push, and pull operations.
  *
  * Every image in the registry is identified by its canonical ID.
  * Tags are human-readable aliases (e.g., "myapp:v2.1") that
- * point to canonical IDs — renaming a tag never changes the image.
+ * point to canonical IDs. renaming a tag never changes the image.
  *
  * Equivalent to Docker Hub / Docker Registry API v2.
  *
- * @see build: namespace — UOR build system
+ * @see build: namespace. UOR build system
  */
 
 import { singleProofHash } from "../core/identity";
@@ -138,7 +138,7 @@ export function removeTag(fullTag: string): boolean {
 /**
  * `uor push <image>`
  *
- * Push an image to the registry. Content-addressed — if the
+ * Push an image to the registry. Content-addressed. if the
  * canonical ID already exists, this is a no-op (deduplication).
  *
  * Equivalent to `docker push`.

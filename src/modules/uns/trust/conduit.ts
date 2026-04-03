@@ -1,5 +1,5 @@
 /**
- * UNS Conduit — Post-Quantum Encrypted Tunnel Daemon (Phase 4-B)
+ * UNS Conduit. Post-Quantum Encrypted Tunnel Daemon (Phase 4-B)
  *
  * Kyber-1024 KEM (FIPS 203 ML-KEM-1024) for key encapsulation
  * + AES-256-GCM for symmetric data encryption.
@@ -15,7 +15,7 @@
  * The relay never sees plaintext. Identity is Dilithium-3.
  */
 
-// @ts-ignore — noble/post-quantum uses .js exports
+// @ts-ignore. noble/post-quantum uses .js exports
 import { ml_kem1024 } from "@noble/post-quantum/ml-kem.js";
 // @ts-ignore
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
@@ -36,7 +36,7 @@ export interface TunnelInitMessage {
   type: "TUNNEL_INIT";
   kyberPublicKey: string; // base64url
   identityCanonicalId: string;
-  dilithiumSignature: string; // base64url — sig over kyberPublicKey bytes
+  dilithiumSignature: string; // base64url. sig over kyberPublicKey bytes
 }
 
 export interface TunnelReadyMessage {
@@ -182,7 +182,7 @@ function computeTag(key: Uint8Array, nonce: Uint8Array, ciphertext: Uint8Array):
 
 /** Synchronous SHA-256 using the same approach as the core address module. */
 function sha256Sync(data: Uint8Array): Uint8Array {
-  // Use a simple synchronous hash — we can't use async here.
+  // Use a simple synchronous hash. we can't use async here.
   // Implement Merkle–Damgård SHA-256 inline for sync operation.
   // For the conduit module, we use a deterministic HMAC-like construction.
   let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
@@ -249,13 +249,13 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
-// ── HKDF-SHA256 (simplified — extract + expand single block) ────────────────
+// ── HKDF-SHA256 (simplified. extract + expand single block) ────────────────
 
 function hkdfSha256(ikm: Uint8Array, info: string, length: number): Uint8Array {
   // Extract: PRK = HMAC-SHA256(salt=zeros, IKM)
   const salt = new Uint8Array(32);
   const prk = hmacSha256(salt, ikm);
-  // Expand: OKM = HMAC-SHA256(PRK, info || 0x01) — single block, length ≤ 32
+  // Expand: OKM = HMAC-SHA256(PRK, info || 0x01). single block, length ≤ 32
   const infoBytes = new TextEncoder().encode(info);
   const expandInput = new Uint8Array(infoBytes.length + 1);
   expandInput.set(infoBytes);
@@ -363,7 +363,7 @@ export class UnsConduit {
 
     // Real WebSocket path would go here
     this._status = "error";
-    throw new Error("Real WebSocket not implemented — use mock for testing");
+    throw new Error("Real WebSocket not implemented. use mock for testing");
   }
 
   async disconnect(): Promise<void> {

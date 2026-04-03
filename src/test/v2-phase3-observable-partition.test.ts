@@ -1,5 +1,5 @@
 /**
- * Phase 3 Test Suite — Observable & Partition Hierarchy
+ * Phase 3 Test Suite. Observable & Partition Hierarchy
  *
  * T3.1: All 13 observable subtypes instantiate correctly
  * T3.2: MetricAxis assignment is correct for each subtype

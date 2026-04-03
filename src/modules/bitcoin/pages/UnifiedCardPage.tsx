@@ -1,5 +1,5 @@
 /**
- * Unified Agent Card — Visual Dashboard
+ * Unified Agent Card. Visual Dashboard
  * ══════════════════════════════════════
  *
  * One descriptor → one hash → nine ecosystems.
@@ -120,7 +120,7 @@ export default function UnifiedCardPage() {
               {/* Nine Ecosystems */}
               <div className="mb-8">
                 <h2 className="text-sm font-bold mb-4">
-                  12 Ecosystem Projections — One Registration
+                  12 Ecosystem Projections. One Registration
                 </h2>
                 <div className="grid gap-3">
                   {ECOSYSTEM_META.map(({ key, label, sublabel, icon: Icon, color }) => {

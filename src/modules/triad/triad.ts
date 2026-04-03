@@ -1,16 +1,16 @@
 /**
- * UOR Triadic Coordinate System — the three canonical coordinates of any datum.
+ * UOR Triadic Coordinate System. the three canonical coordinates of any datum.
  *
  * Every datum decomposes into:
- *   - datum:    ByteTuple — WHAT it is
- *   - stratum:  number[]  — HOW MUCH information it carries (popcount per byte)
- *   - spectrum: number[][] — WHICH bits compose it (active basis indices per byte)
+ *   - datum:    ByteTuple. WHAT it is
+ *   - stratum:  number[] . HOW MUCH information it carries (popcount per byte)
+ *   - spectrum: number[][]. WHICH bits compose it (active basis indices per byte)
  *
  * Delegates to existing primitives in src/lib/uor-ring.ts (buildTriad, bytePopcount,
  * byteBasis). This module adds the semantic stratumLevel classification and
  * computeTriad as a ByteTuple-first entry point.
  *
- * Zero duplication — all arithmetic delegates to the ring engine.
+ * Zero duplication. all arithmetic delegates to the ring engine.
  */
 
 import type { ByteTuple, Triad } from "@/types/uor";
@@ -21,7 +21,7 @@ import { bytePopcount, byteBasis } from "@/lib/uor-ring";
 /**
  * Compute the Triad positional vector for a raw ByteTuple.
  * Unlike buildTriad(value, n) in uor-ring.ts which takes a number,
- * this operates directly on bytes — useful when you already have the tuple.
+ * this operates directly on bytes. useful when you already have the tuple.
  */
 export function computeTriad(bytes: ByteTuple): Triad {
   const stratum = bytes.map(bytePopcount);

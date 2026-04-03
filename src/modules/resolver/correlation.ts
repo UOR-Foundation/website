@@ -1,5 +1,5 @@
 /**
- * UOR Correlation — algebraic similarity WITHOUT embedding models.
+ * UOR Correlation. algebraic similarity WITHOUT embedding models.
  *
  * Fidelity is computed via XOR-stratum Hamming distance:
  *   fidelity = 1.0 - (hammingDistance / maxBits)

@@ -1,5 +1,5 @@
 /**
- * UOR JSON-LD Context — W3C JSON-LD 1.1 @context with all 17 UOR namespaces.
+ * UOR JSON-LD Context. W3C JSON-LD 1.1 @context with all 17 UOR namespaces.
  *
  * Requirement R6: All UOR output must be valid W3C JSON-LD 1.1.
  * This module emits the canonical @context object used by every JSON-LD document.
@@ -9,7 +9,7 @@
  * context file and the inline context in uor-canonical.ts must remain
  * synchronized for deterministic URDNA2015 canonicalization.
  *
- * Zero duplication — this is the single source of truth for namespace bindings
+ * Zero duplication. this is the single source of truth for namespace bindings
  * used in graph emission (emitter.ts).
  */
 

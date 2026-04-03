@@ -1,5 +1,5 @@
 /**
- * UOR Morphism: Transform — structure-preserving maps between ring values.
+ * UOR Morphism: Transform. structure-preserving maps between ring values.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  *
@@ -19,7 +19,7 @@ import { emitContext } from "@/modules/jsonld/context";
 // ── Types ───────────────────────────────────────────────────────────────────
 
 /**
- * Runtime morphism kind — aligned with v2.0.0 foundation MorphismKind.
+ * Runtime morphism kind. aligned with v2.0.0 foundation MorphismKind.
  * These are DISJOINT: no object may carry more than one kind.
  */
 export type MorphismKind = "Transform" | "Isometry" | "Embedding" | "Action" | "Composition" | "Identity";

@@ -57,7 +57,7 @@ const REPEATED_TRIPLES: CompressibleTriple[] = [
 // UGC2 Compression Round-Trip
 // ═══════════════════════════════════════════════════════════════════
 
-describe("UGC2 Graph Compression — Round-Trip", () => {
+describe("UGC2 Graph Compression. Round-Trip", () => {
   it("losslessly round-trips triples with repeated object values", () => {
     const { buffer, stats } = compressTriples(REPEATED_TRIPLES);
     const decompressed = decompressTriples(buffer);
@@ -106,7 +106,7 @@ describe("UGC2 Graph Compression — Round-Trip", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// Ingesters — Correct Projection & Round-Trip
+// Ingesters. Correct Projection & Round-Trip
 // ═══════════════════════════════════════════════════════════════════
 
 describe("Ingesters → UGC2 Round-Trip", () => {
@@ -206,7 +206,7 @@ describe("Ingesters → UGC2 Round-Trip", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// unionTriples — Deduplication
+// unionTriples. Deduplication
 // ═══════════════════════════════════════════════════════════════════
 
 describe("unionTriples deduplication", () => {
@@ -273,7 +273,7 @@ describe("unionTriples deduplication", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// fusionToContextBlock — LLM Context Serialization
+// fusionToContextBlock. LLM Context Serialization
 // ═══════════════════════════════════════════════════════════════════
 
 describe("fusionToContextBlock", () => {

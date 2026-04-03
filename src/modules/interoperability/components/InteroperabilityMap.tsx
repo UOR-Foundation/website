@@ -1,5 +1,5 @@
 /**
- * Interoperability Map — Clean Progressive-Disclosure Explorer
+ * Interoperability Map. Clean Progressive-Disclosure Explorer
  * ═════════════════════════════════════════════════════════════
  *
  * 10 canonical categories, expandable on click.
@@ -102,7 +102,7 @@ export function InteroperabilityMap() {
               <Zap className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold text-foreground">
                 {activeProjection
-                  ? `"${activeProjection}" — ${relevantChains.length} synergy chain${relevantChains.length !== 1 ? "s" : ""}`
+                  ? `"${activeProjection}". ${relevantChains.length} synergy chain${relevantChains.length !== 1 ? "s" : ""}`
                   : activeChain?.name}
               </span>
             </div>
@@ -187,7 +187,7 @@ export function InteroperabilityMap() {
                 isExpanded ? "md:col-span-2 border-primary/30 shadow-sm" : "border-border hover:border-primary/20"
               }`}
             >
-              {/* Header — always visible */}
+              {/* Header. always visible */}
               <button
                 onClick={() => setExpandedCategory(prev => prev === eco.id ? null : eco.id)}
                 className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-secondary/30 transition-colors"
@@ -213,7 +213,7 @@ export function InteroperabilityMap() {
                 }
               </button>
 
-              {/* Expanded — projections */}
+              {/* Expanded. projections */}
               {isExpanded && (
                 <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
                   <p className="text-sm text-foreground leading-relaxed mb-2">{eco.description}</p>
@@ -287,7 +287,7 @@ export function InteroperabilityMap() {
             {totalChains}
           </span>
           <span className="text-sm text-muted-foreground ml-1 hidden sm:inline">
-            — Cross-protocol relationships documented
+           . Cross-protocol relationships documented
           </span>
           <div className="flex-1" />
           {showAllChains
@@ -331,7 +331,7 @@ export function InteroperabilityMap() {
             {totalClusters}
           </span>
           <span className="text-sm text-muted-foreground ml-1 hidden sm:inline">
-            — Standards sharing underlying identity components
+           . Standards sharing underlying identity components
           </span>
           <div className="flex-1" />
           {showClusters

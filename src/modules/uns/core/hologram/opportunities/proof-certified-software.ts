@@ -3,7 +3,7 @@
  * ════════════════════════════════════════
  *
  * Formal proofs (Coq, Lean, Agda, TLA+, Ada/SPARK) become
- * Verifiable Credentials — mathematical certainty is projectable
+ * Verifiable Credentials. mathematical certainty is projectable
  * into the trust layer.
  *
  * @module uns/core/hologram/opportunities/proof-certified-software
@@ -44,7 +44,7 @@ const PROOF_LANGUAGES: ReadonlyArray<{
   {
     language: "coq",
     proofType: "Gallina term (constructive proof)",
-    trustStatement: "This software's correctness has been PROVEN in Coq — not tested, PROVEN",
+    trustStatement: "This software's correctness has been PROVEN in Coq. not tested, PROVEN",
   },
   {
     language: "lean",
@@ -54,7 +54,7 @@ const PROOF_LANGUAGES: ReadonlyArray<{
   {
     language: "agda",
     proofType: "Agda dependent type inhabitant",
-    trustStatement: "This software satisfies its specification by construction — types ARE proofs",
+    trustStatement: "This software satisfies its specification by construction. types ARE proofs",
   },
   {
     language: "tlaplus",
@@ -64,12 +64,12 @@ const PROOF_LANGUAGES: ReadonlyArray<{
   {
     language: "ada",
     proofType: "Ada/SPARK contract proof",
-    trustStatement: "This safety-critical software passes SPARK formal verification — DO-178C certifiable",
+    trustStatement: "This safety-critical software passes SPARK formal verification. DO-178C certifiable",
   },
   {
     language: "haskell",
     proofType: "Referential transparency (Curry-Howard)",
-    trustStatement: "This software's purity is structurally enforced — side effects are type-tracked",
+    trustStatement: "This software's purity is structurally enforced. side effects are type-tracked",
   },
   {
     language: "fsharp",
@@ -84,7 +84,7 @@ const PROOF_LANGUAGES: ReadonlyArray<{
   {
     language: "rust-crate",
     proofType: "Ownership/borrow checker proof",
-    trustStatement: "This software is PROVEN memory-safe by Rust's borrow checker — no runtime overhead",
+    trustStatement: "This software is PROVEN memory-safe by Rust's borrow checker. no runtime overhead",
   },
 ];
 
@@ -92,7 +92,7 @@ const PROOF_LANGUAGES: ReadonlyArray<{
  * Build proof-certified software records for a single identity.
  *
  * Each record binds a formal proof (language-specific) to a
- * Verifiable Credential — mathematical certainty becomes
+ * Verifiable Credential. mathematical certainty becomes
  * a portable, verifiable trust claim.
  */
 export function buildProofCertifiedSoftware(input: ProjectionInput): ProofCertifiedSoftware {

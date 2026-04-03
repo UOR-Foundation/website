@@ -1,5 +1,5 @@
 /**
- * Q0 Instance Graph Builder — generates uor_q0.jsonld
+ * Q0 Instance Graph Builder. generates uor_q0.jsonld
  *
  * Materialises all 256 ring elements of Z/256Z as Datum individuals
  * with full content-addressed IRIs, triadic coordinates, and ring links.

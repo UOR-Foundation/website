@@ -1,5 +1,5 @@
 /**
- * Code-to-Knowledge-Graph — TypeScript Source Code Parser
+ * Code-to-Knowledge-Graph. TypeScript Source Code Parser
  * ════════════════════════════════════════════════════════
  *
  * A client-side TypeScript/JavaScript code analyzer that extracts

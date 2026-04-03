@@ -1,5 +1,5 @@
 /**
- * Feature Persistence Service — Cross-Session Audio Analysis Storage
+ * Feature Persistence Service. Cross-Session Audio Analysis Storage
  * ═══════════════════════════════════════════════════════════════════
  *
  * Bridges the HarmonicLens / CurvatureLens real-time analysis pipeline

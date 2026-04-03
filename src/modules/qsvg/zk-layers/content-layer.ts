@@ -1,5 +1,5 @@
 /**
- * Layer 3: Content — Encrypted User Data
+ * Layer 3: Content. Encrypted User Data
  * ═══════════════════════════════════════
  *
  * User queries, LLM responses, knowledge graph triples.
@@ -41,13 +41,13 @@ export function content<T>(value: T): ContentValue<T> {
 
 // ── Content Types (branded) ───────────────────────────────────────────────
 
-/** A user's query — always encrypted at rest */
+/** A user's query. always encrypted at rest */
 export type UserQuery = ContentValue<string>;
 
-/** An LLM response — always encrypted at rest */
+/** An LLM response. always encrypted at rest */
 export type LLMResponse = ContentValue<string>;
 
-/** A knowledge graph triple — always encrypted at rest */
+/** A knowledge graph triple. always encrypted at rest */
 export interface ContentTriple {
   readonly subject: ContentValue<string>;
   readonly predicate: ContentValue<string>;

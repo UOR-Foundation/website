@@ -1,5 +1,5 @@
 /**
- * Secure Memory Lens — Shield + Memory Composition
+ * Secure Memory Lens. Shield + Memory Composition
  * ═════════════════════════════════════════════════
  *
  * Composes the Prompt Injection Shield with the Memory Crisis Resolver
@@ -19,7 +19,7 @@ import { PROMPT_INJECTION_SHIELD_BLUEPRINT } from "./prompt-injection-shield";
 import { MEMORY_CRISIS_BLUEPRINT } from "./memory-crisis";
 
 /**
- * The Secure Memory Blueprint — fractal composition of Shield + Memory.
+ * The Secure Memory Blueprint. fractal composition of Shield + Memory.
  *
  * The Shield scans, anchors, correlates, classifies, and produces a
  * SecurityVerdict. The Memory Crisis lens then processes the approved

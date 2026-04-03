@@ -1,5 +1,5 @@
 /**
- * Delta Compression — Temporal State Diff as Triples
+ * Delta Compression. Temporal State Diff as Triples
  * ═══════════════════════════════════════════════════
  *
  * Computes minimal diffs between successive JSON state snapshots
@@ -7,15 +7,15 @@
  * UGC1 binary format, achieves 50-100x compression on temporal
  * session chain data vs storing full snapshots.
  *
- * The insight: session states evolve incrementally — typically
+ * The insight: session states evolve incrementally. typically
  * only 2-5% of keys change per tick. Storing full snapshots is
  * O(n × s) where n = sessions and s = snapshot size. Delta
  * encoding reduces this to O(n × δ) where δ << s.
  *
  * Delta operations are encoded as triples:
- *   (session_cid, delta:set,    "path:value")   — key added/changed
- *   (session_cid, delta:delete, "path")         — key removed
- *   (session_cid, delta:base,   parent_cid)     — links to parent
+ *   (session_cid, delta:set,    "path:value")  . key added/changed
+ *   (session_cid, delta:delete, "path")        . key removed
+ *   (session_cid, delta:base,   parent_cid)    . links to parent
  *
  * To reconstruct: start from genesis snapshot, apply deltas forward.
  *
@@ -223,10 +223,10 @@ export function reconstructChain(
     const snapshotTriple = triples.find(t => t.predicate === DELTA_PREDICATES.SNAPSHOT);
 
     if (snapshotTriple) {
-      // Full snapshot — parse directly
+      // Full snapshot. parse directly
       states.push(JSON.parse(snapshotTriple.object));
     } else if (states.length > 0) {
-      // Delta — apply to previous state
+      // Delta. apply to previous state
       states.push(applyDelta(states[states.length - 1], triples));
     }
   }

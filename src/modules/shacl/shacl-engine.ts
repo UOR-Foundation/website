@@ -1,23 +1,23 @@
 /**
- * UOR SHACL Validation Engine — All 9 Shape Constraints as Runtime Guards.
+ * UOR SHACL Validation Engine. All 9 Shape Constraints as Runtime Guards.
  *
  * Implements the nine SHACL shapes from https://uor.foundation/shapes/uor-shapes.ttl
  * as TypeScript validation functions. Each constraint precisely mirrors its
  * Turtle source definition.
  *
  * Shapes:
- *   1. datum-term-disjoint       — Datum and Term are disjoint classes
- *   2. succ-composition          — neg(bnot(x)) = succ(x) proof integrity
- *   3. partition-cardinality     — four-set sum = 2^bits
- *   4. cert-required-fields      — certificate completeness
- *   5. trace-certifiedby         — trace must be certified by Dilithium-3
- *   6. transition-frames         — state transitions need canonical IDs
- *   7. critical-identity-proof   — proof:verified must be true
- *   8. derivation-id-format      — urn:uor:derivation:sha256:<64hex>
- *   9. partition-density-range   — density ∈ [0, 1]
+ *   1. datum-term-disjoint      . Datum and Term are disjoint classes
+ *   2. succ-composition         . neg(bnot(x)) = succ(x) proof integrity
+ *   3. partition-cardinality    . four-set sum = 2^bits
+ *   4. cert-required-fields     . certificate completeness
+ *   5. trace-certifiedby        . trace must be certified by Dilithium-3
+ *   6. transition-frames        . state transitions need canonical IDs
+ *   7. critical-identity-proof  . proof:verified must be true
+ *   8. derivation-id-format     . urn:uor:derivation:sha256:<64hex>
+ *   9. partition-density-range  . density ∈ [0, 1]
  *
- * @see public/shacl/ — individual shape files
- * @see .well-known/uor.json — shape registry
+ * @see public/shacl/. individual shape files
+ * @see .well-known/uor.json. shape registry
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -455,7 +455,7 @@ export function validateShape(
 }
 
 /**
- * SHACL middleware factory — validates request body before handler.
+ * SHACL middleware factory. validates request body before handler.
  * Returns 422 Unprocessable Entity with ShaclResult on violation.
  *
  * For use in Hono-style route handlers:

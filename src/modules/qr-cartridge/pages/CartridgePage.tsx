@@ -1,5 +1,5 @@
 /**
- * QR Cartridge Page — /cartridge
+ * QR Cartridge Page. /cartridge
  *
  * Interactive demo: enter any JSON object → derive a permanent address →
  * generate a scannable QR code → display all identity forms.
@@ -47,7 +47,7 @@ const FEATURES = [
   {
     icon: Smartphone,
     title: "Works on any phone",
-    desc: "Scan with your default camera app. The QR code is a standard URL — no special app needed.",
+    desc: "Scan with your default camera app. The QR code is a standard URL. no special app needed.",
   },
   {
     icon: Shield,
@@ -57,26 +57,26 @@ const FEATURES = [
   {
     icon: Package,
     title: "Works with anything",
-    desc: "Movies, music, apps, websites, documents, scientific data — the cartridge doesn't care what's inside.",
+    desc: "Movies, music, apps, websites, documents, scientific data. the cartridge doesn't care what's inside.",
   },
   {
     icon: WifiOff,
     title: "Offline-first",
-    desc: "The QR code IS the address. No internet needed to verify identity — the proof is in the code itself.",
+    desc: "The QR code IS the address. No internet needed to verify identity. the proof is in the code itself.",
   },
   {
     icon: Layers,
     title: "Composable",
-    desc: "A cartridge can point to other cartridges — playlists, app bundles, datasets. Stack them like building blocks.",
+    desc: "A cartridge can point to other cartridges. playlists, app bundles, datasets. Stack them like building blocks.",
   },
 ];
 
 /* ── Steps ───────────────────────────────────────────────────────────────── */
 
 const STEPS = [
-  { num: "1", title: "Describe", desc: "Enter any content — a movie, a song, a dataset. Just describe it." },
+  { num: "1", title: "Describe", desc: "Enter any content. a movie, a song, a dataset. Just describe it." },
   { num: "2", title: "Generate", desc: "We derive a permanent address from the content and encode it as a QR code." },
-  { num: "3", title: "Scan", desc: "Point any phone camera at the QR. It opens a standard URL — no app required." },
+  { num: "3", title: "Scan", desc: "Point any phone camera at the QR. It opens a standard URL. no app required." },
   { num: "4", title: "Verify", desc: "The address proves the content hasn't been tampered with. Automatic, built-in trust." },
 ];
 
@@ -230,7 +230,7 @@ const CartridgePage = () => {
                   )}
                 </div>
 
-                {/* Cartridge envelope — shown after generation */}
+                {/* Cartridge envelope. shown after generation */}
                 {cartridgeJson && (
                   <div className="rounded-xl border border-border bg-card p-6 space-y-3">
                     <div className="flex items-center justify-between">
@@ -265,7 +265,7 @@ const CartridgePage = () => {
                         <img src={qrDataUrl} alt="Scannable QR code" className="w-56 h-56 md:w-64 md:h-64" />
                       </div>
                       <p className="text-xs text-muted-foreground text-center max-w-xs">
-                        Scan this with any phone camera. It opens a standard URL — no special app needed.
+                        Scan this with any phone camera. It opens a standard URL. no special app needed.
                       </p>
                       <div className="flex gap-3">
                         <button
@@ -302,7 +302,7 @@ const CartridgePage = () => {
                       Permanent Address
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Four different ways to refer to the same content — all derived from one fingerprint.
+                      Four different ways to refer to the same content. all derived from one fingerprint.
                     </p>
                     <IdentityField label="Full Address (256-bit, lossless)" value={identity["u:canonicalId"]} copied={copied} onCopy={copyToClipboard} copyKey="canonical" />
                     <IdentityField label="Network Address (IPv6 projection)" value={identity["u:ipv6"]} copied={copied} onCopy={copyToClipboard} copyKey="ipv6" warn />
@@ -321,7 +321,7 @@ const CartridgePage = () => {
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground text-center mb-3">Why QR Cartridges?</h2>
               <p className="text-center text-muted-foreground mb-10 max-w-lg mx-auto">
-                A better kind of QR code — one where the address proves the content.
+                A better kind of QR code. one where the address proves the content.
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {FEATURES.map((f, i) => (

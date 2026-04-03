@@ -12,10 +12,10 @@ import { decodeCartridgePayload } from "@/modules/qr-cartridge/decoder";
 import { singleProofHash, bytesToHex } from "@/modules/uns/core";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// QR Cartridge Module — Canonical Compliance Tests
+// QR Cartridge Module. Canonical Compliance Tests
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("QR Cartridge — Canonical Encoding", () => {
+describe("QR Cartridge. Canonical Encoding", () => {
   const testObj = { "@type": "VideoObject", name: "Test Movie" };
 
   it("1. same object → same QR payload (determinism)", async () => {
@@ -81,7 +81,7 @@ describe("QR Cartridge — Canonical Encoding", () => {
   });
 });
 
-describe("QR Cartridge — Decoder Round-Trip", () => {
+describe("QR Cartridge. Decoder Round-Trip", () => {
   const testObj = { "@type": "MusicRecording", name: "Test Song" };
 
   it("10. full URL round-trip: encode → decode → same canonicalId", async () => {

@@ -1,5 +1,5 @@
 /**
- * Layer 2: Geometry — Public-Safe Proof Metadata
+ * Layer 2: Geometry. Public-Safe Proof Metadata
  * ═══════════════════════════════════════════════
  *
  * The receipt itself. Contains ONLY topological invariants:
@@ -89,7 +89,7 @@ export interface GeometricProofEnvelope {
  *
  * This is the ONLY entry point for creating L2 envelopes.
  * It accepts raw values and brands them as GeometryValues.
- * It NEVER accepts ContentValues — the type system prevents it.
+ * It NEVER accepts ContentValues. the type system prevents it.
  */
 export function createGeometricEnvelope(raw: {
   cid: string;

@@ -1,5 +1,5 @@
 /**
- * UNS Build — Uorfile Parser & Builder
+ * UNS Build. Uorfile Parser & Builder
  *
  * The Uorfile is the UOR equivalent of a Dockerfile.
  * It declares how to build a content-addressed application image
@@ -11,8 +11,8 @@
  * Every built image is content-addressed via singleProofHash().
  * Docker images can be used as base images via FROM docker://<image>:<tag>.
  *
- * @see compute: namespace — content-addressed functions
- * @see derivation: namespace — canonical identity
+ * @see compute: namespace. content-addressed functions
+ * @see derivation: namespace. canonical identity
  */
 
 import { singleProofHash } from "../core/identity";
@@ -31,7 +31,7 @@ export interface UorfileDirective {
 
 /** Supported Uorfile instructions (Docker-compatible + UOR extensions). */
 export type UorfileInstruction =
-  | "FROM"        // Base image — supports docker://, uor://, scratch
+  | "FROM"        // Base image. supports docker://, uor://, scratch
   | "COPY"        // Copy files into image
   | "ADD"         // Copy + extract archives
   | "RUN"         // Execute build command
@@ -53,7 +53,7 @@ export type UorfileInstruction =
   | "TRUST"       // Require trust certificate
   | "SHIELD"      // Enable shield analysis level;
 
-/** Parsed Uorfile — the build specification. */
+/** Parsed Uorfile. the build specification. */
 export interface UorfileBuildSpec {
   /** Parsed directives in order. */
   directives: UorfileDirective[];
@@ -89,7 +89,7 @@ export interface UorfileBuildSpec {
   maintainer: string;
 }
 
-/** Base image reference — supports Docker, UOR, and scratch. */
+/** Base image reference. supports Docker, UOR, and scratch. */
 export interface UorfileBaseImage {
   /** Image type. */
   type: "docker" | "uor" | "scratch";
@@ -117,7 +117,7 @@ export interface UorfileHealthcheck {
   startPeriod: string;
 }
 
-/** Built image — the result of processing a Uorfile. */
+/** Built image. the result of processing a Uorfile. */
 export interface UorImage {
   /** Canonical ID of the built image. */
   canonicalId: string;
@@ -135,13 +135,13 @@ export interface UorImage {
   builderCanonicalId: string;
   /** Tags applied to this image. */
   tags: string[];
-  /** Docker compatibility — original Dockerfile if translated. */
+  /** Docker compatibility. original Dockerfile if translated. */
   dockerfileSource?: string;
   /** Layer canonical IDs (each RUN/COPY produces a layer). */
   layers: UorImageLayer[];
 }
 
-/** A single image layer — equivalent to a Docker layer. */
+/** A single image layer. equivalent to a Docker layer. */
 export interface UorImageLayer {
   /** Layer canonical ID. */
   canonicalId: string;
@@ -218,7 +218,7 @@ export function parseUorfile(source: string): UorfileBuildSpec {
  * Provides full backwards compatibility with Docker images.
  */
 export function parseDockerfile(dockerfileSource: string): UorfileBuildSpec {
-  // Dockerfiles use the same syntax — parse directly
+  // Dockerfiles use the same syntax. parse directly
   const spec = parseUorfile(dockerfileSource);
 
   // If FROM references a Docker image without prefix, normalize it

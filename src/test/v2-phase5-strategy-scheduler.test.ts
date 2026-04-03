@@ -1,5 +1,5 @@
 /**
- * Phase 5 Test Suite — Strategy Scheduler
+ * Phase 5 Test Suite. Strategy Scheduler
  */
 import { describe, it, expect } from "vitest";
 import {

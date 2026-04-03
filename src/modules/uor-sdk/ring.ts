@@ -1,7 +1,7 @@
 /**
- * UOR SDK — Local ring arithmetic re-exports.
+ * UOR SDK. Local ring arithmetic re-exports.
  *
- * Delegates entirely to src/lib/uor-ring.ts — the single source of truth
+ * Delegates entirely to src/lib/uor-ring.ts. the single source of truth
  * for Z/(2^n)Z ring operations. No duplication.
  *
  * Use these for offline/unit-test scenarios where the live API is unnecessary.

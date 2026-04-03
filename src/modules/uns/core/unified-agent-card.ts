@@ -53,7 +53,7 @@ export interface UnifiedCard {
 
 /**
  * Builds the canonical JSON-LD for an agent.
- * This is the single source of truth — everything else is a projection.
+ * This is the single source of truth. everything else is a projection.
  */
 function buildJsonLd(agent: AgentDescriptor): Record<string, unknown> {
   return {
@@ -122,10 +122,10 @@ export async function createUnifiedCard(agent: AgentDescriptor): Promise<Unified
  * ONNX ↔ skill.md Integrity Proof
  *
  * Verifies that a model and its advertised skill descriptor share the
- * same canonical identity — proving the model matches its capabilities.
+ * same canonical identity. proving the model matches its capabilities.
  *
  * When both are derived from the same agent descriptor, their UOR
- * hashes are structurally identical. This is not an assertion — it's
+ * hashes are structurally identical. This is not an assertion. it's
  * a mathematical consequence of content-addressing.
  */
 export function verifyModelSkillCoherence(card: UnifiedCard): {

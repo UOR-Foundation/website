@@ -1,10 +1,10 @@
 /**
- * Universal Ingest — Any Digital Artifact → Content-Addressed UOR Object
+ * Universal Ingest. Any Digital Artifact → Content-Addressed UOR Object
  * ═══════════════════════════════════════════════════════════════════════
  *
  * The holographic principle applied to ingestion:
- *   Every digital artifact — WASM module, ELF binary, AI model weights,
- *   JSON document, image, PDF — is a hologram waiting to be projected.
+ *   Every digital artifact. WASM module, ELF binary, AI model weights,
+ *   JSON document, image, PDF. is a hologram waiting to be projected.
  *
  * Ingest takes raw bytes and wraps them in a content-addressed JSON-LD
  * envelope, making them first-class UOR citizens that can be:
@@ -76,7 +76,7 @@ export interface IngestEnvelope {
   readonly byteLength: number;
   /** SHA-256 hex of the raw bytes (pre-envelope). */
   readonly contentHash: string;
-  /** The content payload — base64 for binary, raw for text/JSON. */
+  /** The content payload. base64 for binary, raw for text/JSON. */
   readonly payload: string | Record<string, unknown>;
   /** Optional human-readable label. */
   readonly label?: string;
@@ -97,7 +97,7 @@ export interface IngestResult {
   readonly proof: SingleProofResult;
   /** The typed envelope. */
   readonly envelope: IngestEnvelope;
-  /** The full hologram — all protocol projections. */
+  /** The full hologram. all protocol projections. */
   readonly hologram: Hologram;
   /** Projection input for downstream use. */
   readonly identity: ProjectionInput;

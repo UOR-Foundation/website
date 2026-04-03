@@ -1,5 +1,5 @@
 /**
- * UOR Content-Addressing Library — Unified Re-exports
+ * UOR Content-Addressing Library. Unified Re-exports
  * ════════════════════════════════════════════════════
  *
  * This module consolidates all content-addressing primitives by delegating
@@ -10,10 +10,10 @@
  * single source of truth (UNS Core Address Model) and extends it with
  * additional utilities that belong at the library layer:
  *
- *   - computeIpv6Full()         — /8 prefix full-entropy IPv6
- *   - stripSelfReferentialFields() — manifest cleanup for verification
- *   - computeModuleIdentity()   — high-level module identity builder
- *   - canonicalJsonLd()         — deterministic JSON-LD serialization
+ *   - computeIpv6Full()        . /8 prefix full-entropy IPv6
+ *   - stripSelfReferentialFields(). manifest cleanup for verification
+ *   - computeModuleIdentity()  . high-level module identity builder
+ *   - canonicalJsonLd()        . deterministic JSON-LD serialization
  *
  * @module lib/uor-address
  */
@@ -42,7 +42,7 @@ export type { UorCanonicalIdentity } from "@/modules/uns/core/address";
 export { project, PROJECTIONS } from "@/modules/uns/core/hologram";
 export type { Hologram, HologramProjection, ProjectionInput } from "@/modules/uns/core/hologram";
 
-// ── computeUorAddress — Braille bijection wrapper ──────────────────────────
+// ── computeUorAddress. Braille bijection wrapper ──────────────────────────
 
 import { encodeGlyph } from "@/modules/uns/core/address";
 
@@ -55,7 +55,7 @@ export function computeUorAddress(bytes: Uint8Array): {
   return { "u:glyph": glyph, "u:length": bytes.length };
 }
 
-// ── computeIpv6Address — structured IPv6 result ────────────────────────────
+// ── computeIpv6Address. structured IPv6 result ────────────────────────────
 
 import { formatIpv6 } from "@/modules/uns/core/address";
 
@@ -75,7 +75,7 @@ export function computeIpv6Address(hashBytes: Uint8Array): {
   };
 }
 
-// ── computeIpv6Full — /8 prefix full-entropy IPv6 ──────────────────────────
+// ── computeIpv6Full. /8 prefix full-entropy IPv6 ──────────────────────────
 
 /**
  * Full-entropy UOR IPv6 address using minimal /8 prefix.
@@ -93,7 +93,7 @@ export function computeIpv6Full(hashBytes: Uint8Array): string {
   return hextets.join(":");
 }
 
-// ── verifyIpv6Address — supports both /48 and /8 prefix formats ────────────
+// ── verifyIpv6Address. supports both /48 and /8 prefix formats ────────────
 
 /**
  * Verify that a UOR IPv6 address was derived from the given SHA-256 hash.
@@ -111,7 +111,7 @@ export function verifyIpv6Address(ipv6: string, hashBytes: Uint8Array): boolean 
       fullBytes[i * 2 + 1] = val & 0xff;
     }
 
-    // /48 prefix: fd00:0075:6f72 — 10 content bytes
+    // /48 prefix: fd00:0075:6f72. 10 content bytes
     if (fullBytes[0] === 0xfd && fullBytes[1] === 0x00 &&
         fullBytes[2] === 0x00 && fullBytes[3] === 0x75 &&
         fullBytes[4] === 0x6f && fullBytes[5] === 0x72) {
@@ -120,7 +120,7 @@ export function verifyIpv6Address(ipv6: string, hashBytes: Uint8Array): boolean 
       return content.every((b, i) => b === expected[i]);
     }
 
-    // /8 prefix: fd — 15 content bytes
+    // /8 prefix: fd. 15 content bytes
     if (fullBytes[0] === 0xfd) {
       const content = fullBytes.slice(1);
       const expected = hashBytes.slice(0, 15);

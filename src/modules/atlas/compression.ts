@@ -1,5 +1,5 @@
 /**
- * Quotient Compression Analyzer — F₄ Mirror Symmetry in Model Weights
+ * Quotient Compression Analyzer. F₄ Mirror Symmetry in Model Weights
  * ════════════════════════════════════════════════════════════════════════
  *
  * THEOREM (F₄ Quotient Compression):
@@ -7,9 +7,9 @@
  *   into 48 mirror pairs. Each pair {v, τ(v)} is related by τ, meaning
  *   one element is determined by the other.
  *
- *   If a model's weight matrix W exhibits τ-symmetry — meaning weights
+ *   If a model's weight matrix W exhibits τ-symmetry. meaning weights
  *   indexed by mirror-paired Atlas coordinates satisfy W[v] ≈ f(W[τ(v)])
- *   for some simple function f — then W can be stored in HALF the space.
+ *   for some simple function f. then W can be stored in HALF the space.
  *
  *   The F₄ exceptional group (dim 52) governs this quotient because:
  *   - F₄ = Aut(Jordan algebra J₃(O)), the automorphism group of
@@ -100,7 +100,7 @@ export interface CompressionProfile {
   f4OrbitsDetected: number;
   /** F₄ quotient dimension (should approach 48) */
   quotientDimension: number;
-  /** Symmetry breaking measure [0,1] — 0 = perfect τ-symmetry */
+  /** Symmetry breaking measure [0,1]. 0 = perfect τ-symmetry */
   symmetryBreaking: number;
 }
 

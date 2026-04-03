@@ -1,5 +1,5 @@
 /**
- * TrustGraph — Interactive Social Trust Visualization
+ * TrustGraph. Interactive Social Trust Visualization
  * ════════════════════════════════════════════════════
  *
  * Visualizes the attestation network and trust score computation
@@ -361,7 +361,7 @@ export default function TrustGraphPage() {
         [5, 2, 0.88], [5, 6, 0.90],
         // Grace attests
         [6, 0, 0.93], [6, 5, 0.77],
-        // Hank — few attestations (new member, low temporal)
+        // Hank. few attestations (new member, low temporal)
         [7, 3, 0.50],
       ];
 
@@ -454,17 +454,17 @@ export default function TrustGraphPage() {
             {[
               {
                 icon: Eye, label: "Φ Individual",
-                desc: "Observer integration capacity — your coherence with the Grade-A graph",
+                desc: "Observer integration capacity. your coherence with the Grade-A graph",
                 weight: "30%",
               },
               {
                 icon: Users, label: "Φ Social",
-                desc: "PageRank-weighted attestation score — what peers observe about you",
+                desc: "PageRank-weighted attestation score. what peers observe about you",
                 weight: "40%",
               },
               {
                 icon: Clock, label: "τ Temporal",
-                desc: "Behavioral consistency over time — patterns that can't be faked quickly",
+                desc: "Behavioral consistency over time. patterns that can't be faked quickly",
                 weight: "30%",
               },
             ].map(p => (
@@ -497,7 +497,7 @@ export default function TrustGraphPage() {
               <div className="text-[10px] text-muted-foreground space-y-1">
                 <p>• <strong>Φ_individual</strong> = observer integration capacity from God Conjecture (0–1)</p>
                 <p>• <strong>Φ_social</strong> = PageRank on attestation graph, confidence-weighted (0–1)</p>
-                <p>• <strong>τ_temporal</strong> = log₂(1 + membership_days) / log₂(365) — 1 year = 1.0</p>
+                <p>• <strong>τ_temporal</strong> = log₂(1 + membership_days) / log₂(365). 1 year = 1.0</p>
                 <p>• Composite scaled to 0–1000 for human-readable scores</p>
                 <p>• <strong>Sybil resistance</strong>: new accounts have τ ≈ 0, making high scores structurally impossible without sustained behavioral coherence</p>
               </div>
@@ -614,7 +614,7 @@ export default function TrustGraphPage() {
                 },
                 {
                   title: "Network → UnsAccessPolicy",
-                  desc: "Trust networks map to access policies — TrustScore thresholds can gate resource access, governance votes, and API permissions.",
+                  desc: "Trust networks map to access policies. TrustScore thresholds can gate resource access, governance votes, and API permissions.",
                 },
                 {
                   title: "Sybil Resistance → Temporal Depth",
@@ -637,7 +637,7 @@ export default function TrustGraphPage() {
             <a href="https://trustgraph.network/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
               TrustGraph
             </a>
-            {" "}— attestation-based governance by Ithaca. Enhanced with UOR content-addressing and post-quantum signatures.
+            {" "}. attestation-based governance by Ithaca. Enhanced with UOR content-addressing and post-quantum signatures.
           </p>
         </div>
       </main>

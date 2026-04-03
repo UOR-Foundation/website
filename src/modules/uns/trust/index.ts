@@ -1,5 +1,5 @@
 /**
- * UNS Trust — Zero Trust Identity, Access Control & Encrypted Tunnels
+ * UNS Trust. Zero Trust Identity, Access Control & Encrypted Tunnels
  *
  * Phase 4-A: Authentication + Authorization (Dilithium-3)
  * Phase 4-B: Post-Quantum Encrypted Conduit (Kyber-1024 + AES-256-GCM)
@@ -18,7 +18,7 @@ export type {
   MiddlewareHandler,
 } from "./policy";
 
-// ── Conduit — Post-Quantum Encrypted Tunnel (Phase 4-B) ────────────────────
+// ── Conduit. Post-Quantum Encrypted Tunnel (Phase 4-B) ────────────────────
 export {
   UnsConduit,
   ConduitRelay,
@@ -36,7 +36,7 @@ export type {
   KyberKeypair,
 } from "./conduit";
 
-// ── P27: Attribution Protocol — cert:AttributionCertificate ─────────────────
+// ── P27: Attribution Protocol. cert:AttributionCertificate ─────────────────
 export { UnsAttribution } from "./attribution";
 export type {
   AttributionCertificate,
@@ -45,7 +45,7 @@ export type {
   RoyaltyReport,
 } from "./attribution";
 
-// ── TrustGraph — Social Attestation Layer ───────────────────────────────────
+// ── TrustGraph. Social Attestation Layer ───────────────────────────────────
 export { UnsTrustGraph } from "./trust-graph";
 export type {
   TrustAttestation,

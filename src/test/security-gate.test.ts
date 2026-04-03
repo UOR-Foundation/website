@@ -1,5 +1,5 @@
 /**
- * Security Gate (P5) — 10/10 Test Suite
+ * Security Gate (P5). 10/10 Test Suite
  *
  * Validates deployment scanning, partition gate middleware,
  * injection detection, and composed security stack.

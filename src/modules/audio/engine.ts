@@ -1,5 +1,5 @@
 /**
- * Audio Engine — HLS-First Streaming with Content-Addressed Caching
+ * Audio Engine. HLS-First Streaming with Content-Addressed Caching
  * ═══════════════════════════════════════════════════════════════════
  *
  * Wraps HLS.js for adaptive bitrate streaming with automatic
@@ -189,7 +189,7 @@ export class AudioEngine {
 
     if (useProxy) {
       try {
-        // Use the proxy directly — set crossOrigin for AnalyserNode access
+        // Use the proxy directly. set crossOrigin for AnalyserNode access
         this.audio.crossOrigin = "anonymous";
         this.audio.src = proxiedUrl;
         this.audio.load();
@@ -202,7 +202,7 @@ export class AudioEngine {
       } catch {}
     }
 
-    // Direct stream — remove crossOrigin entirely so browser doesn't enforce CORS
+    // Direct stream. remove crossOrigin entirely so browser doesn't enforce CORS
     this.audio.removeAttribute("crossorigin");
     this.audio.crossOrigin = null as unknown as string;
     this.audio.src = url;

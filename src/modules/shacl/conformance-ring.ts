@@ -4,7 +4,7 @@
  * Source: conformance/src/tests/fixtures/test1_ring_operations.rs
  * Validates the five signature operations of the UOR ring R_8 = Z/256Z.
  *
- * @see spec/src/namespaces/op.rs — Operation namespace definitions
+ * @see spec/src/namespaces/op.rs. Operation namespace definitions
  */
 
 import { neg, bnot, succ } from "@/lib/uor-ring";

@@ -8,10 +8,10 @@ import {
 } from "@/modules/uns/shield";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 2-A Tests — 12/12
+// Phase 2-A Tests. 12/12
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Shield — Phase 2-A: Partition Analysis", () => {
+describe("UNS Shield. Phase 2-A: Partition Analysis", () => {
   // Test 1
   it("1. classifyByte(0) === 'EXTERIOR'", () => {
     expect(classifyByte(0)).toBe("EXTERIOR");
@@ -31,7 +31,7 @@ describe("UNS Shield — Phase 2-A: Partition Analysis", () => {
     expect(classifyByte(253)).toBe("IRREDUCIBLE");
   });
 
-  // Test 4 — 128 is EXTERIOR (spec/src/namespaces/partition.rs — ExteriorSet = {0, m/2})
+  // Test 4. 128 is EXTERIOR (spec/src/namespaces/partition.rs. ExteriorSet = {0, m/2})
   it("4. classifyByte(4) === 'REDUCIBLE' (even, not 0 or 128)", () => {
     expect(classifyByte(4)).toBe("REDUCIBLE");
     expect(classifyByte(2)).toBe("REDUCIBLE");

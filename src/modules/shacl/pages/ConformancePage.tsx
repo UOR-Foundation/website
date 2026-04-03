@@ -25,7 +25,7 @@ const ConformancePage = () => {
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 9 — SHACL Conformance
+              Module 9. SHACL Conformance
             </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               Conformance Suite
@@ -135,7 +135,7 @@ function ResultRow({ result: r }: { result: ConformanceResult }) {
       </span>
       <span className="text-foreground font-semibold w-10 flex-shrink-0">{r.testId}</span>
       <span className="text-muted-foreground flex-1">
-        {r.uorClassRef} — expected: {JSON.stringify(r.expected)}, actual: {JSON.stringify(r.actual)}
+        {r.uorClassRef}. expected: {JSON.stringify(r.expected)}, actual: {JSON.stringify(r.actual)}
       </span>
     </div>
   );

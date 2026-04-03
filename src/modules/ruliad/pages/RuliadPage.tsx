@@ -1,5 +1,5 @@
 /**
- * Ruliad Correspondence — Interactive Visual Page
+ * Ruliad Correspondence. Interactive Visual Page
  * ════════════════════════════════════════════════
  *
  * Shows the structural isomorphism between Wolfram's Ruliad
@@ -226,7 +226,7 @@ export default function RuliadPage() {
               Ruliad ≅ UOR Correspondence
             </h1>
             <p className="text-sm text-muted-foreground">
-              Every Wolfram concept maps to a UOR primitive — structural isomorphism, not analogy
+              Every Wolfram concept maps to a UOR primitive. structural isomorphism, not analogy
             </p>
           </div>
           <a
@@ -265,7 +265,7 @@ export default function RuliadPage() {
           <span className="text-2xl">📄</span>
           <div className="flex-1">
             <h3 className="font-semibold text-sm group-hover:text-accent transition-colors">Formal Whitepaper</h3>
-            <p className="text-xs text-muted-foreground">Academic paper with 8 theorems, proofs, and full correspondence table — exportable as PDF</p>
+            <p className="text-xs text-muted-foreground">Academic paper with 8 theorems, proofs, and full correspondence table. exportable as PDF</p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors" />
         </Link>

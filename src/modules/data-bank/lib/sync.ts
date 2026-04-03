@@ -1,5 +1,5 @@
 /**
- * Data Bank Box — Sync Engine (localStorage ↔ Cloud)
+ * Data Bank Box. Sync Engine (localStorage ↔ Cloud)
  * ════════════════════════════════════════════════════
  *
  * Two-tier sync with last-write-wins conflict resolution.
@@ -157,7 +157,7 @@ export async function writeSlot(
 }
 
 /**
- * Read a slot — L1 first, falls back to L2 if missing locally.
+ * Read a slot. L1 first, falls back to L2 if missing locally.
  */
 export async function readSlot(
   userId: string,
@@ -252,7 +252,7 @@ export async function fullSync(userId: string): Promise<DataBankSlot[]> {
         writeLocal(slot);
         merged.push(slot);
       } catch {
-        // Decryption failed — skip
+        // Decryption failed. skip
       }
     } else if (local) {
       merged.push(local);

@@ -1,5 +1,5 @@
 /**
- * P23 — Multi-Quantum Ring Extension tests.
+ * P23. Multi-Quantum Ring Extension tests.
  *
  * 14 verification tests covering:
  *   - Critical identity at Q0, Q1, Q2
@@ -21,8 +21,8 @@ import {
   commutativityWitness,
 } from "@/modules/morphism/morphism-formal";
 
-describe("P23 — Multi-Quantum Ring Engine", () => {
-  // Test 1: Critical identity Q0 — exhaustive 256/256
+describe("P23. Multi-Quantum Ring Engine", () => {
+  // Test 1: Critical identity Q0. exhaustive 256/256
   it("1. verifyCriticalIdentityQ('Q0') → 256/256, holds=true", () => {
     const r = verifyCriticalIdentityQ("Q0");
     expect(r.passed).toBe(256);
@@ -30,7 +30,7 @@ describe("P23 — Multi-Quantum Ring Engine", () => {
     expect(r.holds).toBe(true);
   });
 
-  // Test 2: Critical identity Q1 — exhaustive 65536/65536
+  // Test 2: Critical identity Q1. exhaustive 65536/65536
   it("2. verifyCriticalIdentityQ('Q1', 65536) → 65536/65536, holds=true", () => {
     const r = verifyCriticalIdentityQ("Q1", 65536);
     expect(r.passed).toBe(65536);
@@ -38,7 +38,7 @@ describe("P23 — Multi-Quantum Ring Engine", () => {
     expect(r.holds).toBe(true);
   }, 30_000); // allow extra time for exhaustive Q1
 
-  // Test 3: Critical identity Q2 — sampled 1000
+  // Test 3: Critical identity Q2. sampled 1000
   it("3. verifyCriticalIdentityQ('Q2', 1000) → 1000/1000, holds=true", () => {
     const r = verifyCriticalIdentityQ("Q2", 1000);
     expect(r.passed).toBe(1000);
@@ -67,7 +67,7 @@ describe("P23 — Multi-Quantum Ring Engine", () => {
   });
 });
 
-describe("P23 — Formal Morphisms", () => {
+describe("P23. Formal Morphisms", () => {
   // Test 8: project(300, Q1, Q0).output === 44
   it("8. project(300n, 'Q1', 'Q0').output === 44n", async () => {
     const r = await project(300n, "Q1", "Q0");

@@ -1,5 +1,5 @@
 /**
- * Stabilizer Correspondence Proof — Phase 16
+ * Stabilizer Correspondence Proof. Phase 16
  * ════════════════════════════════════════════
  *
  * THEOREM: The 96 Atlas vertices map bijectively to the 96 canonical
@@ -514,7 +514,7 @@ export function runStabilizerProof(): StabilizerProofReport {
       "stabilizer group: S ↦ S† = {g†: g ∈ S}.",
       "",
       "For stabilizer states, Hermitian conjugation of generators",
-      "maps |ψ⟩ to its 'adjoint state' — the state stabilized by",
+      "maps |ψ⟩ to its 'adjoint state'. the state stabilized by",
       "the conjugate generators.",
       "",
       "Properties verified:",
@@ -562,8 +562,8 @@ export function runStabilizerProof(): StabilizerProofReport {
       "  d₄₅ flip → CNOT₁₂ or CNOT₂₁ (entangling gate)",
       "",
       "Degree structure:",
-      `  d₄₅ = 0: degree 6 (6 possible flips) — ${degree6} vertices`,
-      `  d₄₅ = ±1: degree 5 (5 possible flips) — ${degree5} vertices`,
+      `  d₄₅ = 0: degree 6 (6 possible flips). ${degree6} vertices`,
+      `  d₄₅ = ±1: degree 5 (5 possible flips). ${degree5} vertices`,
       `  Degree-d₄₅ correspondence: ${degreeD45Match}`,
       `  Adjacency symmetric: ${isSymmetric}`,
       `  Total edges: ${atlas.edgeCount}. ∎`,
@@ -589,15 +589,15 @@ export function runStabilizerProof(): StabilizerProofReport {
       "Therefore φ is not merely a bijection but a graph isomorphism",
       "that preserves the full algebraic structure:",
       "",
-      "  φ(adj(v)) = cliff₁(φ(v))     — adjacency = 1-generator distance",
-      "  φ(τ(v))   = φ(v)†             — mirror = Hermitian conjugate",
-      "  φ(sc(v))  = orbit(φ(v))       — sign class = Pauli orbit",
+      "  φ(adj(v)) = cliff₁(φ(v))    . adjacency = 1-generator distance",
+      "  φ(τ(v))   = φ(v)†            . mirror = Hermitian conjugate",
+      "  φ(sc(v))  = orbit(φ(v))      . sign class = Pauli orbit",
       "",
       "The Atlas IS the Cayley graph of the 3-qubit stabilizer formalism",
       "under the quotient by phase equivalence. ∎",
     ].join("\n"),
     holds: true, // Conclusion from above
-    evidence: "QED — follows from Theorems 1–3",
+    evidence: "QED. follows from Theorems 1–3",
   });
 
   // ── STEP 7: Exceptional Group Connection ────────────────────────────
@@ -610,11 +610,11 @@ export function runStabilizerProof(): StabilizerProofReport {
       "of resonance graphs from the 12,288-cell boundary complex.",
       "",
       "The exceptional Lie group hierarchy inherent in the Atlas:",
-      "  G₂ (rank 2, 12 roots)  — acts on sign classes (8 × 12 = 96)",
-      "  F₄ (rank 4, 48 roots)  — quotient: 96/2 = 48 mirror pairs",
-      "  E₆ (rank 6, 72 roots)  — 72 = 96 - 24 (boundary vertices)",
-      "  E₇ (rank 7, 126 roots) — 126 = |C₃|/|P₃| orbit representatives",
-      "  E₈ (rank 8, 240 roots) — 240 = 96 × 2.5 (with multiplicity)",
+      "  G₂ (rank 2, 12 roots) . acts on sign classes (8 × 12 = 96)",
+      "  F₄ (rank 4, 48 roots) . quotient: 96/2 = 48 mirror pairs",
+      "  E₆ (rank 6, 72 roots) . 72 = 96 - 24 (boundary vertices)",
+      "  E₇ (rank 7, 126 roots). 126 = |C₃|/|P₃| orbit representatives",
+      "  E₈ (rank 8, 240 roots). 240 = 96 × 2.5 (with multiplicity)",
       "",
       "maps directly to the quantum gate complexity hierarchy:",
       "  G₂ → Pauli gates (trivial stabilizer action)",

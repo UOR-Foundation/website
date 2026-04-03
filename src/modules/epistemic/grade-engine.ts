@@ -1,22 +1,22 @@
 /**
- * UOR Epistemic Grade Engine — first-class trust primitive for all UNS services.
+ * UOR Epistemic Grade Engine. first-class trust primitive for all UNS services.
  *
  * Verbatim from https://uor.foundation/.well-known/uor.json:epistemic_grades
  *
  * Four grades of trust:
- *   A — Algebraically Proven: ring-arithmetic with derivation:derivationId
- *   B — Graph-Certified: SPARQL graph with cert:Certificate
- *   C — Graph-Present: datum in graph without certificate
- *   D — LLM-Generated / Unverified: treat as hypothesis
+ *   A. Algebraically Proven: ring-arithmetic with derivation:derivationId
+ *   B. Graph-Certified: SPARQL graph with cert:Certificate
+ *   C. Graph-Present: datum in graph without certificate
+ *   D. LLM-Generated / Unverified: treat as hypothesis
  *
  * Rules:
  *   - No module may claim Grade A without a derivation:derivationId.
  *   - No module may downgrade a result from its natural grade.
  *   - Grade D is the safe default for anything unverified.
  *
- * @see .well-known/uor.json — epistemic_grades field
- * @see spec/src/namespaces/derivation.rs — derivation:derivationId
- * @see spec/src/namespaces/cert.rs — cert:Certificate
+ * @see .well-known/uor.json. epistemic_grades field
+ * @see spec/src/namespaces/derivation.rs. derivation:derivationId
+ * @see spec/src/namespaces/cert.rs. cert:Certificate
  */
 
 import type { EpistemicGrade } from "@/types/uor";
@@ -25,13 +25,13 @@ import { singleProofHash } from "@/modules/uns/core/identity";
 // ── Grade Definitions (verbatim from .well-known/uor.json) ──────────────────
 
 export const GRADE_DEFINITIONS: Record<EpistemicGrade, string> = {
-  A: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
-  B: "Graph-Certified — SPARQL graph with cert:Certificate",
-  C: "Graph-Present — datum in graph without certificate",
-  D: "LLM-Generated / Unverified — treat as hypothesis",
+  A: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
+  B: "Graph-Certified. SPARQL graph with cert:Certificate",
+  C: "Graph-Present. datum in graph without certificate",
+  D: "LLM-Generated / Unverified. treat as hypothesis",
 };
 
-// ── Graded<T> — the universal epistemic wrapper ─────────────────────────────
+// ── Graded<T>. the universal epistemic wrapper ─────────────────────────────
 
 /**
  * Any UNS result wrapped with its epistemic grade.
@@ -48,9 +48,9 @@ export interface Graded<T> {
   epistemic_grade_label: string;
   /** Reason why this grade was assigned. */
   epistemic_grade_reason: string;
-  /** Required for Grade A — the derivation URN. */
+  /** Required for Grade A. the derivation URN. */
   "derivation:derivationId"?: string;
-  /** Required for Grade B — the certificate ID. */
+  /** Required for Grade B. the certificate ID. */
   "cert:certificateId"?: string;
 }
 
@@ -62,7 +62,7 @@ export interface Graded<T> {
  * Priority: derivationId → Grade A, certificateId → Grade B,
  *           graphPresent → Grade C, else → Grade D.
  *
- * @see .well-known/uor.json — grade assignment rules
+ * @see .well-known/uor.json. grade assignment rules
  */
 export function assignGrade(result: {
   derivationId?: string;
@@ -98,7 +98,7 @@ export function graded<T>(
     A: `Ring-arithmetic derivation verified (${opts.derivationId?.slice(0, 40)}...)`,
     B: `Graph-certified with certificate ${opts.certificateId}`,
     C: "Present in knowledge graph without certificate",
-    D: "No derivation ID — treat as unverified hypothesis",
+    D: "No derivation ID. treat as unverified hypothesis",
   };
 
   const result: Graded<T> = {
@@ -132,7 +132,7 @@ export function graded<T>(
  * @param result     The computed result, e.g. 43
  * @returns          derivationId (URN) + graded result
  *
- * @see spec/src/namespaces/derivation.rs — derivation:derivationId format
+ * @see spec/src/namespaces/derivation.rs. derivation:derivationId format
  */
 export async function deriveGradeA(
   operation: string,

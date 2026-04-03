@@ -53,7 +53,7 @@ export default function CoadjointOrbitPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[15px] font-mono text-[hsl(38,50%,60%)] flex items-center gap-2">
-            <Orbit size={16} /> Coadjoint Orbit Classifier — E₈
+            <Orbit size={16} /> Coadjoint Orbit Classifier. E₈
           </h2>
           <p className="text-[10px] font-mono text-[hsl(210,10%,45%)] mt-1">
             Neeb's integrability condition: O_λ carries a Gibbs ensemble iff L(λ) converges, Q̄ is a diffeomorphism, g_ij {">"} 0

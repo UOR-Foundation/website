@@ -26,7 +26,7 @@ import { SystemEventBus } from "@/modules/observable/system-event-bus";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** The input every projection receives — derived from singleProofHash(). */
+/** The input every projection receives. derived from singleProofHash(). */
 export interface ProjectionInput {
   /** Raw 32-byte SHA-256 digest. */
   readonly hashBytes: Uint8Array;
@@ -39,7 +39,7 @@ export interface ProjectionInput {
 /** Whether the projection preserves the full 256-bit identity. */
 export type Fidelity = "lossless" | "lossy";
 
-/** A projection specification — one per external standard. */
+/** A projection specification. one per external standard. */
 export interface HologramSpec {
   /** Pure function: identity → protocol-native identifier string. */
   readonly project: (input: ProjectionInput) => string;
@@ -99,7 +99,7 @@ function toInput(source: ProjectionSource): ProjectionInput {
  * pipeline and the certificate/DID/VC layers to use the same projection engine.
  *
  * @param source  UorCanonicalIdentity or ProjectionInput.
- * @param target  Optional — project only one standard by name.
+ * @param target  Optional. project only one standard by name.
  * @returns       The complete hologram, or a single projection if target specified.
  */
 export function project(source: ProjectionSource): Hologram;
@@ -152,7 +152,7 @@ function resolve(spec: HologramSpec, input: ProjectionInput): HologramProjection
 }
 
 // ── Unified Projection (Identity + Coherence merged) ───────────────────────
-// Re-export the unified API — the canonical way to project with coherence.
+// Re-export the unified API. the canonical way to project with coherence.
 
 export { unifiedProject, assessByteCoherence } from "./unified";
 export type {
@@ -223,7 +223,7 @@ export type {
 } from "./engine";
 
 // ── Virtual I/O Layer (POSIX Syscall Interface) ────────────────────────────
-// Maps familiar POSIX syscalls to UOR primitives. Zero new state — pure facade.
+// Maps familiar POSIX syscalls to UOR primitives. Zero new state. pure facade.
 // fork=forkBlueprint, exec=boot, read=refract, write=focus, mmap=project.
 
 export {

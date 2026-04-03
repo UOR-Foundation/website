@@ -1,5 +1,5 @@
 /**
- * UOR Code Analyzer — Python entity extraction.
+ * UOR Code Analyzer. Python entity extraction.
  *
  * Extracts classes, functions, variables, and their relationships
  * from Python source code using regex-based analysis.
@@ -88,7 +88,7 @@ function extractRelations(code: string, entityNames: Set<string>): CodeRelation[
       }
     }
 
-    // Decorator-based exports: @app.route, @dataclass etc. — skip for now
+    // Decorator-based exports: @app.route, @dataclass etc.. skip for now
   }
 
   // Detect calls between known entities

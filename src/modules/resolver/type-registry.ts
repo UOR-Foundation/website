@@ -1,11 +1,11 @@
 /**
- * UOR Type Registry — type: namespace PrimitiveType mappings.
+ * UOR Type Registry. type: namespace PrimitiveType mappings.
  *
  * Maps natural language type names to formal type:PrimitiveType objects
  * with bitWidth and ring quantum. Used in Stage 2 (Type Extraction) of
  * the 8-stage agent resolution cycle.
  *
- * Zero duplication — ring quantum levels are referenced, not redefined.
+ * Zero duplication. ring quantum levels are referenced, not redefined.
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────

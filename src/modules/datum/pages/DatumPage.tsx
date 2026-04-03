@@ -19,7 +19,7 @@ function hexOf(value: number, bytes: number): string {
   return "0x" + value.toString(16).padStart(bytes * 2, "0");
 }
 
-// SHA-256 — canonical single implementation
+// SHA-256. canonical single implementation
 import { sha256hex } from "@/lib/crypto";
 
 function CopyBtn({ text }: { text: string }) {
@@ -116,7 +116,7 @@ const DatumPage = () => {
             <p className="text-base text-muted-foreground leading-relaxed">
               This is the canonical representation of the value{" "}
               <strong className="text-foreground">{datum.value}</strong> in the UOR framework.
-              Its identity is derived entirely from its content — not assigned, not negotiated,
+              Its identity is derived entirely from its content. not assigned, not negotiated,
               not dependent on any external authority.
             </p>
           </div>
@@ -155,7 +155,7 @@ const DatumPage = () => {
             <dl className="space-y-3 text-sm">
               <Row label="Hash Input" value={`${datum.hex}=${datum.fullIri}`} mono copyable />
               <Row label="Derivation ID" value={derivationId} mono copyable />
-              <Row label="Epistemic Grade" value="A — Algebraically Proven" />
+              <Row label="Epistemic Grade" value="A. Algebraically Proven" />
               <Row
                 label="Status"
                 value={verified ? "Verified ✓" : "Computing…"}
@@ -191,7 +191,7 @@ const DatumPage = () => {
                   <strong className="text-foreground">Universal convergence.</strong>{" "}
                   Whether derived from <code className="bg-muted px-1 rounded">mul(6, 7)</code>,{" "}
                   <code className="bg-muted px-1 rounded">add(40, 2)</code>, or the literal{" "}
-                  <code className="bg-muted px-1 rounded">42</code> — every path leads here.
+                  <code className="bg-muted px-1 rounded">42</code>. every path leads here.
                 </span>
               </li>
             </ul>

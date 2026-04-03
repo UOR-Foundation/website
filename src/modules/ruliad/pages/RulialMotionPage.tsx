@@ -1,5 +1,5 @@
 /**
- * Rulial Motion Simulator — navigate quantum levels via morphism animations.
+ * Rulial Motion Simulator. navigate quantum levels via morphism animations.
  *
  * Visualizes ProjectionHomomorphism (Q_high → Q_low) and
  * InclusionHomomorphism (Q_low → Q_high) as animated traversals
@@ -22,10 +22,10 @@ interface QLevel {
 }
 
 const Q_LEVELS: QLevel[] = [
-  { label: "Q0", bits: 8,   modulus: 256n,           ring: "Z/256Z",           color: "from-emerald-400 to-emerald-600",   radius: 18, description: "Byte ring — exhaustively verifiable" },
-  { label: "Q1", bits: 16,  modulus: 65536n,         ring: "Z/65536Z",         color: "from-cyan-400 to-cyan-600",         radius: 26, description: "Word ring — Unicode-complete" },
-  { label: "Q2", bits: 32,  modulus: 4294967296n,     ring: "Z/4294967296Z",    color: "from-blue-400 to-blue-600",         radius: 34, description: "DWord ring — IPv4 address space" },
-  { label: "Q3", bits: 64,  modulus: 1n << 64n,       ring: "Z/2⁶⁴Z",          color: "from-violet-400 to-violet-600",     radius: 42, description: "QWord ring — machine word" },
+  { label: "Q0", bits: 8,   modulus: 256n,           ring: "Z/256Z",           color: "from-emerald-400 to-emerald-600",   radius: 18, description: "Byte ring. exhaustively verifiable" },
+  { label: "Q1", bits: 16,  modulus: 65536n,         ring: "Z/65536Z",         color: "from-cyan-400 to-cyan-600",         radius: 26, description: "Word ring. Unicode-complete" },
+  { label: "Q2", bits: 32,  modulus: 4294967296n,     ring: "Z/4294967296Z",    color: "from-blue-400 to-blue-600",         radius: 34, description: "DWord ring. IPv4 address space" },
+  { label: "Q3", bits: 64,  modulus: 1n << 64n,       ring: "Z/2⁶⁴Z",          color: "from-violet-400 to-violet-600",     radius: 42, description: "QWord ring. machine word" },
   { label: "Q4", bits: 128, modulus: 1n << 128n,      ring: "Z/2¹²⁸Z",         color: "from-purple-400 to-purple-600",     radius: 50, description: "UUID / IPv6 address space" },
   { label: "Q5", bits: 256, modulus: 1n << 256n,      ring: "Z/2²⁵⁶Z",         color: "from-fuchsia-400 to-fuchsia-600",   radius: 58, description: "SHA-256 hash space" },
   { label: "Q6", bits: 512, modulus: 1n << 512n,      ring: "Z/2⁵¹²Z",         color: "from-pink-400 to-pink-600",         radius: 66, description: "Post-quantum key space" },
@@ -56,7 +56,7 @@ function computeMorphism(
   const normalized = value % from.modulus;
 
   if (fromIdx > toIdx) {
-    // Projection: lossy — take low bits
+    // Projection: lossy. take low bits
     const output = normalized % to.modulus;
     return { output, lossless: normalized < to.modulus, direction: "project" };
   } else {
@@ -498,7 +498,7 @@ export default function RulialMotionPage() {
               neg(bnot(x)) ≡ succ(x)
             </p>
             <div className="text-xs text-muted-foreground">
-              Holds independently at every quantum level — the mathematical anchor ensuring each ring in rulial space is sound.
+              Holds independently at every quantum level. the mathematical anchor ensuring each ring in rulial space is sound.
             </div>
             <CriticalIdentityCheck value={currentValue} level={currentLevel} />
           </div>

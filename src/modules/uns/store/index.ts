@@ -1,5 +1,5 @@
 /**
- * UNS Store — Content-Addressed Object Storage
+ * UNS Store. Content-Addressed Object Storage
  *
  * S3-compatible object storage, global KV, and edge caching.
  * Every object is stored by its canonical SHA-256 ID.

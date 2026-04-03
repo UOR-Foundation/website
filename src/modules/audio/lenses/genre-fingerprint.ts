@@ -1,5 +1,5 @@
 /**
- * Genre Fingerprint — 3D Observable Space Classifier
+ * Genre Fingerprint. 3D Observable Space Classifier
  * ═══════════════════════════════════════════════════════════════════
  *
  * Computes a station's position in UOR observable space using three
@@ -8,7 +8,7 @@
  *   Y = Mean Curvature     (harmonic tension / complexity)
  *   Z = Hamming Distance   (bit-level textural change rate)
  *
- * Genre IS a region in this space — not a label, but a coordinate.
+ * Genre IS a region in this space. not a label, but a coordinate.
  *
  * @module audio/lenses/genre-fingerprint
  * @namespace audio/
@@ -44,7 +44,7 @@ export interface GenreClassification {
   genre: GenreRegion;
   /** Distance to the genre center [0, 1+]. */
   distance: number;
-  /** Confidence [0, 1] — 1 when at center, 0 when at radius edge. */
+  /** Confidence [0, 1]. 1 when at center, 0 when at radius edge. */
   confidence: number;
 }
 

@@ -1,5 +1,5 @@
 /**
- * Governance data — board members.
+ * Governance data. board members.
  */
 
 export const governanceBoard = [

@@ -1,5 +1,5 @@
 /**
- * Whisper Compiler + Inference Engine — Module Barrel
+ * Whisper Compiler + Inference Engine. Module Barrel
  * ════════════════════════════════════════════════════
  *
  * Complete ONNX → Hologram pipeline:

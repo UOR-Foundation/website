@@ -1,5 +1,5 @@
 /**
- * UOR application domains — serializable for UOR certification.
+ * UOR application domains. serializable for UOR certification.
  * Icons are mapped at the component level by iconKey.
  */
 

@@ -1,5 +1,5 @@
 /**
- * UNS KV — Linearizable Global Key-Value Store
+ * UNS KV. Linearizable Global Key-Value Store
  *
  * Keys: arbitrary strings up to 512 bytes (no path separators or quotes).
  * Values: Uint8Array up to 25 MB.
@@ -11,11 +11,11 @@
  * is designed for distributed backends.
  *
  * Content-addressing guarantee: the canonical ID of a value is
- * derived from the value bytes themselves — identical values
+ * derived from the value bytes themselves. identical values
  * always produce identical canonical IDs.
  *
- * @see store: namespace — UOR object storage
- * @see resolver: namespace — DHT-backed global consistency
+ * @see store: namespace. UOR object storage
+ * @see resolver: namespace. DHT-backed global consistency
  */
 
 import { singleProofHash } from "../core/identity";
@@ -96,7 +96,7 @@ export class UnsKv {
     return { ok: true, canonicalId };
   }
 
-  /** Delete a key. Idempotent — deleting a nonexistent key is a no-op. */
+  /** Delete a key. Idempotent. deleting a nonexistent key is a no-op. */
   async delete(key: string): Promise<void> {
     this.entries.delete(key);
   }

@@ -1,5 +1,5 @@
 /**
- * PNDM Scheduler — Diffusion Noise Scheduler
+ * PNDM Scheduler. Diffusion Noise Scheduler
  * ════════════════════════════════════════════
  *
  * Implements the Pseudo Numerical Methods for Diffusion Models (PNDM)

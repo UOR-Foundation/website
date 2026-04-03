@@ -150,7 +150,7 @@ function UniversalCoherence() {
       {data && (
         <div className="space-y-2">
           <p className="text-sm font-mono text-foreground">
-            <M>{data.summary?.passed ?? data.passed ?? 256}</M> / {data.summary?.total ?? data.total ?? 256} PASSED — holds_universally: <M>{String(data.summary?.holds_universally ?? data.holds_universally ?? true)}</M>
+            <M>{data.summary?.passed ?? data.passed ?? 256}</M> / {data.summary?.total ?? data.total ?? 256} PASSED. holds_universally: <M>{String(data.summary?.holds_universally ?? data.holds_universally ?? true)}</M>
           </p>
           {(data["@id"] || data.summary?.["@id"]) && (
             <div className="flex items-center gap-1">
@@ -200,15 +200,15 @@ function TriadExplorer() {
       </div>
 
       <div className="rounded-xl border border-border bg-muted/30 p-4 font-mono text-sm space-y-2">
-        <Row label="Datum d" value={String(data?.summary?.value ?? x)} note="decimal — algebraic" />
-        <Row label="Stratum σ" value={String(data?.summary?.stratum ?? data?.["schema:triad"]?.["schema:totalStratum"] ?? stratum)} note="popcount — combinatorial" />
-        <Row label="Spectrum ς" value={`{${(data?.["schema:triad"]?.["schema:spectrum"]?.[0] ?? spectrum).join(",")}}`} note="bit positions — geometric" />
+        <Row label="Datum d" value={String(data?.summary?.value ?? x)} note="decimal. algebraic" />
+        <Row label="Stratum σ" value={String(data?.summary?.stratum ?? data?.["schema:triad"]?.["schema:totalStratum"] ?? stratum)} note="popcount. combinatorial" />
+        <Row label="Spectrum ς" value={`{${(data?.["schema:triad"]?.["schema:spectrum"]?.[0] ?? spectrum).join(",")}}`} note="bit positions. geometric" />
         <Row label="Binary" value={data?.summary?.spectrum ?? binary} />
         {(data?.summary?.glyph_character || data?.["schema:glyph"]?.["u:glyph"]) && <Row label="Glyph" value={data?.summary?.glyph_character || data?.["schema:glyph"]?.["u:glyph"]} />}
       </div>
 
       <p className="text-xs font-body text-muted-foreground leading-relaxed mt-4 italic">
-        These three views are complementary. Operations preserving d generally disrupt σ — this tension is the source of all nontrivial structure in UOR. <Ref label="§2.5" tip="The interplay between algebraic (datum), combinatorial (stratum), and geometric (spectrum) perspectives generates the full complexity of the ring." />
+        These three views are complementary. Operations preserving d generally disrupt σ. this tension is the source of all nontrivial structure in UOR. <Ref label="§2.5" tip="The interplay between algebraic (datum), combinatorial (stratum), and geometric (spectrum) perspectives generates the full complexity of the ring." />
       </p>
     </Card>
   );
@@ -233,7 +233,7 @@ function DihedralPanel() {
         <Ref label="Thm 2.6" tip="⟨neg, bnot⟩ = D_{2ⁿ}, dihedral group of order 2ⁿ⁺¹. r = succ (rotation), s = neg (reflection)." />
       </div>
       <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
-        ⟨neg, bnot⟩ generates D<sub>256</sub> — dihedral group of order 512.
+        ⟨neg, bnot⟩ generates D<sub>256</sub>. dihedral group of order 512.
         <span className="text-foreground font-medium"> r = succ</span> (rotation), <span className="text-foreground font-medium">s = neg</span> (reflection).
       </p>
       <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
@@ -292,8 +292,8 @@ function OperationsTable() {
     for (const [name, op] of Object.entries(unary) as [string, any][]) {
       ops.push({
         name,
-        formula: op.formula || "—",
-        result: op.result ?? "—",
+        formula: op.formula || ". ",
+        result: op.result ?? ". ",
         type: op["op:composedOf"]
           ? `Derived [${op["op:composedOf"].map((s: string) => s.replace("op:", "")).join("∘")}]`
           : "Primitive",
@@ -304,8 +304,8 @@ function OperationsTable() {
       if (name === "y") continue;
       ops.push({
         name,
-        formula: op.formula || "—",
-        result: op.result ?? "—",
+        formula: op.formula || ". ",
+        result: op.result ?? ". ",
         type: op["op:composedOf"]
           ? `Derived [${op["op:composedOf"].map((s: string) => s.replace("op:", "")).join("∘")}]`
           : "Primitive",
@@ -371,7 +371,7 @@ const VerifyPage = () => {
             UOR Critical Identity Verifier
           </h1>
           <p className="font-mono text-base md:text-lg text-primary-foreground/80">
-            neg(bnot(x)) = succ(x) — verify it yourself, from first principles.
+            neg(bnot(x)) = succ(x). verify it yourself, from first principles.
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-5">
             {["Q0 · n=8 · 256", "Q1 · n=16 · 65 536", "Q2 · n=24 · 16.7M", "Q3 · n=32 · 4.3B"].map((q, i) => (

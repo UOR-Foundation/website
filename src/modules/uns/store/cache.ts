@@ -1,17 +1,17 @@
 /**
- * UNS Cache — Content-Addressed Edge Cache
+ * UNS Cache. Content-Addressed Edge Cache
  *
  * A read-through LRU cache in front of UNS Store.
  *
  * Zero-staleness guarantee: cache keys are canonical IDs (SHA-256
  * of content). A cache HIT is always correct because canonical ID X
- * maps to the exact bytes that produced it — by definition.
+ * maps to the exact bytes that produced it. by definition.
  *
  * No TTL eviction: content-addressed entries never go stale.
  * LRU eviction by total size is the only eviction policy.
  *
- * @see store: namespace — UOR object storage
- * @see u: namespace — canonical identity (two-address model)
+ * @see store: namespace. UOR object storage
+ * @see u: namespace. canonical identity (two-address model)
  */
 
 import type { UnsObjectStore } from "./object-store";
@@ -66,7 +66,7 @@ export class UnsCache {
       return { bytes: new Uint8Array(cached.bytes), hit: true };
     }
 
-    // Cache miss — fetch from origin
+    // Cache miss. fetch from origin
     this.missCount++;
     const result = await origin.get(canonicalId);
     if (!result) return null;

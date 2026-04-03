@@ -1,5 +1,5 @@
 /**
- * UorModule Base Class Tests — Generic Lifecycle Verification
+ * UorModule Base Class Tests. Generic Lifecycle Verification
  *
  * Tests the register→observe→certify→remediate pattern across
  * all four refactored modules: ring-core, morphism, trace, certificate.

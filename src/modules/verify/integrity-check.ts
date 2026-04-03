@@ -1,5 +1,5 @@
 /**
- * UOR Self-Verification: Integrity Check — system-wide coherence verification.
+ * UOR Self-Verification: Integrity Check. system-wide coherence verification.
  *
  * Runs verification across ALL modules to confirm the system is self-consistent.
  *
@@ -9,7 +9,7 @@
  *   - audit-trail for receipt chain verification
  *   - Supabase client for data counts
  *
- * Zero duplication — each check delegates to the module's own verify() method.
+ * Zero duplication. each check delegates to the module's own verify() method.
  */
 
 import { Q0, Q1 } from "@/modules/ring-core/ring";
@@ -88,7 +88,7 @@ async function checkDerivationIntegrity(): Promise<CheckResult> {
       name: "Derivation Integrity",
       module: "derivation",
       passed: sampleValid,
-      detail: `${count ?? 0} derivations stored, ${(sample ?? []).length} sampled — ${sampleValid ? "all valid" : "invalid records found"}`,
+      detail: `${count ?? 0} derivations stored, ${(sample ?? []).length} sampled. ${sampleValid ? "all valid" : "invalid records found"}`,
       durationMs: Math.round(performance.now() - start),
     };
   } catch {
@@ -122,7 +122,7 @@ async function checkReceiptIntegrity(): Promise<CheckResult> {
       module: "self-verify",
       passed: allValid,
       detail: allValid
-        ? `${receipts.length} receipts verified — all self-consistent`
+        ? `${receipts.length} receipts verified. all self-consistent`
         : `${failedCount}/${receipts.length} receipts failed verification`,
       durationMs: Math.round(performance.now() - start),
     };

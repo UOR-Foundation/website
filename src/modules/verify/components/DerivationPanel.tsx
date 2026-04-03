@@ -64,7 +64,7 @@ const DerivationPanel = () => {
                     </span>
                   </td>
                   <td className="py-2 pr-3 font-mono text-xs text-muted-foreground">
-                    {(d.metrics as Record<string, string>).source ?? "—"}
+                    {(d.metrics as Record<string, string>).source ?? ". "}
                   </td>
                   <td className="py-2 pr-3 font-mono text-xs truncate max-w-[200px]">{d.originalTerm}</td>
                   <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">

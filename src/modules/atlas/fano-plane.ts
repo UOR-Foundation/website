@@ -1,5 +1,5 @@
 /**
- * Fano Plane — PG(2,2) as Quantum Gate Routing Topology
+ * Fano Plane. PG(2,2) as Quantum Gate Routing Topology
  * ══════════════════════════════════════════════════════
  *
  * THEORY:
@@ -21,7 +21,7 @@
  *     Cyclic order  → gate direction (forward = eᵢeⱼ=eₖ, reverse = eⱼeᵢ=-eₖ)
  *
  *   The incidence matrix F ∈ {0,1}^{7×7} (lines × points) is the adjacency
- *   of the quantum interaction graph — it determines which qubit triples
+ *   of the quantum interaction graph. it determines which qubit triples
  *   can execute a joint gate without SWAP overhead.
  *
  *   Connection to Atlas:
@@ -40,7 +40,7 @@ import { fanoPointToGenerator, type GeneratorKind } from "./morphism-generators"
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-/** |PSL(2,7)| = |GL(3,2)| — the automorphism group of PG(2,2) */
+/** |PSL(2,7)| = |GL(3,2)|. the automorphism group of PG(2,2) */
 export const FANO_AUTOMORPHISM_ORDER = 168;
 
 /** Number of points = lines in PG(2,2) */

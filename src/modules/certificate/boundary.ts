@@ -9,11 +9,11 @@
  *
  * Every object passes through a 5-step enforcement pipeline:
  *
- *   1. TYPE GUARD       — Must be a non-null, non-array object
- *   2. CONTEXT GUARD    — Must have @context (JSON-LD compliance)
- *   3. TYPE ASSERTION   — Must have @type (semantic type identity)
- *   4. FIELD REDUCTION  — Strip undefined/function/symbol values
- *   5. DEPTH BOUND + DETERMINISTIC SORT — Bounded nesting, sorted keys
+ *   1. TYPE GUARD      . Must be a non-null, non-array object
+ *   2. CONTEXT GUARD   . Must have @context (JSON-LD compliance)
+ *   3. TYPE ASSERTION  . Must have @type (semantic type identity)
+ *   4. FIELD REDUCTION . Strip undefined/function/symbol values
+ *   5. DEPTH BOUND + DETERMINISTIC SORT. Bounded nesting, sorted keys
  *
  * Implements Layer 3 (Structure) of the UOR six-layer stack.
  *

@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Fiber Budget Engine
+ * UOR v2.0.0. Fiber Budget Engine
  *
  * Tracks bit-level type resolution progress.
  * A FiberBudget has `totalFibers` bits; each can be Free or Pinned.

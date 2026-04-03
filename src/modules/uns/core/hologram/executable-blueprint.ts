@@ -1,5 +1,5 @@
 /**
- * Executable Blueprint — Self-Evolving Programs for the Hologram OS
+ * Executable Blueprint. Self-Evolving Programs for the Hologram OS
  * ═══════════════════════════════════════════════════════════════════
  *
  * The fusion of LensBlueprint (instruction set) and PolyTree (scheduler)
@@ -31,13 +31,13 @@
  *   6. resume   → rehydrate from bytes to live session (wake)
  *
  * Equivalences to traditional OS concepts:
- *   fork()     = forkBlueprint()    — copy-on-write clone, new CID
- *   exec()     = boot()             — instantiate and run
- *   kill()     = session.stop()     — halt the scheduler
- *   suspend    = dehydrateSession() — serialize state to boundary
- *   resume     = rehydrateSession() — restore state from boundary
- *   pipe       = LensWire           — connect element outputs to inputs
- *   scheduler  = PolyTree           — coinductive state evolution
+ *   fork()     = forkBlueprint()   . copy-on-write clone, new CID
+ *   exec()     = boot()            . instantiate and run
+ *   kill()     = session.stop()    . halt the scheduler
+ *   suspend    = dehydrateSession(). serialize state to boundary
+ *   resume     = rehydrateSession(). restore state from boundary
+ *   pipe       = LensWire          . connect element outputs to inputs
+ *   scheduler  = PolyTree          . coinductive state evolution
  *
  * UOR Compliance:
  *   - Every blueprint enters through singleProofHash() (URDNA2015 → SHA-256)
@@ -98,7 +98,7 @@ import {
  *   - The network channel projects external communication
  *   - The storage channel projects persistence
  *
- * Every channel is a projection — the holographic principle in action.
+ * Every channel is a projection. the holographic principle in action.
  */
 export interface IOChannel {
   /** Channel identifier. */
@@ -116,13 +116,13 @@ export interface IOChannel {
  * Mirrors POSIX stdin/stdout/stderr/fs/net but through projections.
  */
 export interface IOChannelSet {
-  /** Visual output — projects the system onto the browser surface. */
+  /** Visual output. projects the system onto the browser surface. */
   readonly display: IOChannel;
-  /** User input — captures interactions from the surface. */
+  /** User input. captures interactions from the surface. */
   readonly input: IOChannel;
-  /** Network — projects external communication. */
+  /** Network. projects external communication. */
   readonly network: IOChannel;
-  /** Storage — projects persistence (dehydrate/rehydrate). */
+  /** Storage. projects persistence (dehydrate/rehydrate). */
   readonly storage: IOChannel;
   /** Additional custom channels. */
   readonly custom?: readonly IOChannel[];
@@ -131,7 +131,7 @@ export interface IOChannelSet {
 // ── Runtime Constraints ────────────────────────────────────────────────────
 
 /**
- * Constraints governing execution — the "cgroup" equivalent.
+ * Constraints governing execution. the "cgroup" equivalent.
  */
 export interface RuntimeConstraints {
   /** Memory limit in MB. */
@@ -158,7 +158,7 @@ const DEFAULT_CONSTRAINTS: RuntimeConstraints = {
 // ── Executable Blueprint Type ──────────────────────────────────────────────
 
 /**
- * The Executable Blueprint — a self-evolving, content-addressed program.
+ * The Executable Blueprint. a self-evolving, content-addressed program.
  *
  * This is the merger of LensBlueprint (instruction set) and PolyTree (scheduler)
  * into a single UOR object. One hash, one program, one identity.
@@ -179,7 +179,7 @@ export interface ExecutableBlueprint {
   readonly tags?: readonly string[];
 
   // ── The Lens (WHAT to compute) ────────────────────────────────────────
-  /** The underlying lens blueprint — the instruction set. */
+  /** The underlying lens blueprint. the instruction set. */
   readonly lens: LensBlueprint;
 
   // ── The Scheduler (HOW computation evolves) ───────────────────────────
@@ -191,7 +191,7 @@ export interface ExecutableBlueprint {
   readonly scheduler: SchedulerSpec;
 
   // ── I/O Channels (WHERE input/output flows) ───────────────────────────
-  /** I/O channel mappings — projections used for system I/O. */
+  /** I/O channel mappings. projections used for system I/O. */
   readonly channels: IOChannelSet;
 
   // ── Execution Configuration ───────────────────────────────────────────
@@ -206,7 +206,7 @@ export interface ExecutableBlueprint {
 // ── Scheduler Specification (Serializable PolyTree) ────────────────────────
 
 /**
- * Declarative scheduler specification — serializable PolyTree description.
+ * Declarative scheduler specification. serializable PolyTree description.
  *
  * PolyTrees contain functions (non-serializable), so we describe
  * transitions declaratively. At boot time, the spec is compiled
@@ -260,7 +260,7 @@ export type TransitionEffect =
 // ── Session State (Running Executable) ─────────────────────────────────────
 
 /**
- * A live session — the "running process" of an Executable Blueprint.
+ * A live session. the "running process" of an Executable Blueprint.
  *
  * Holographic property: the full session state can be dehydrated
  * to a single canonical hash (suspend) and rehydrated back (resume)
@@ -292,7 +292,7 @@ export interface HologramSession {
   execute: (input: unknown) => Promise<unknown>;
   /** Send an interaction to the scheduler (evolve the PolyTree). */
   interact: (position: number, direction: number) => InteractionResult;
-  /** Suspend the session — dehydrate full state to canonical bytes. */
+  /** Suspend the session. dehydrate full state to canonical bytes. */
   suspend: () => Promise<SuspendedSession>;
   /** Stop the session permanently. */
   stop: () => void;
@@ -317,7 +317,7 @@ export interface InteractionResult {
 }
 
 /**
- * A suspended (dehydrated) session — the holographic boundary encoding.
+ * A suspended (dehydrated) session. the holographic boundary encoding.
  *
  * This is the 2D surface encoding of the full N-dimensional session state.
  * Contains everything needed to rehydrate the session exactly as it was.
@@ -351,7 +351,7 @@ interface SessionEnvelope {
 // ── Core API ───────────────────────────────────────────────────────────────
 
 /**
- * Default I/O channel set — standard holographic I/O.
+ * Default I/O channel set. standard holographic I/O.
  */
 function defaultChannels(): IOChannelSet {
   return {
@@ -359,31 +359,31 @@ function defaultChannels(): IOChannelSet {
       id: "display",
       projection: "cid",
       direction: "out",
-      description: "Visual output — projects system state to browser surface",
+      description: "Visual output. projects system state to browser surface",
     },
     input: {
       id: "input",
       projection: "webfinger",
       direction: "in",
-      description: "User interaction — captures input from the surface",
+      description: "User interaction. captures input from the surface",
     },
     network: {
       id: "network",
       projection: "activitypub",
       direction: "bidirectional",
-      description: "Network I/O — federated communication channel",
+      description: "Network I/O. federated communication channel",
     },
     storage: {
       id: "storage",
       projection: "ipfs-cid",
       direction: "bidirectional",
-      description: "Persistence — content-addressed state storage",
+      description: "Persistence. content-addressed state storage",
     },
   };
 }
 
 /**
- * Default scheduler — a constant (non-evolving) scheduler.
+ * Default scheduler. a constant (non-evolving) scheduler.
  * Suitable for static applications that don't change interface over time.
  */
 function defaultScheduler(): SchedulerSpec {
@@ -408,7 +408,7 @@ export function createExecutableBlueprint(spec: {
   version?: string;
   description?: string;
   tags?: string[];
-  /** Lens elements — the instruction set. */
+  /** Lens elements. the instruction set. */
   elements: ElementSpec[];
   /** Optional wiring between elements. */
   wires?: { from: string; to: string }[];
@@ -489,7 +489,7 @@ export interface GroundExecutableBlueprint {
 }
 
 /**
- * Grind an executable blueprint — compute its permanent UOR address.
+ * Grind an executable blueprint. compute its permanent UOR address.
  *
  * The holographic principle in action:
  *   Full program (N-dimensional volume) → 256-bit hash (2D boundary)
@@ -521,7 +521,7 @@ export async function grindExecutableBlueprint(
  * This mirrors how ElementSpec → LensElement works in lens-blueprint.ts:
  *   SchedulerSpec (serializable) → PolyTree (executable)
  *
- * The compilation is deterministic — same spec = same PolyTree behavior.
+ * The compilation is deterministic. same spec = same PolyTree behavior.
  */
 export function compileScheduler(spec: SchedulerSpec): PolyTree {
   const basePoly: Polynomial = {
@@ -531,7 +531,7 @@ export function compileScheduler(spec: SchedulerSpec): PolyTree {
     fidelity: spec.fidelity,
   };
 
-  // Constant scheduler — return a constant tree
+  // Constant scheduler. return a constant tree
   if (spec.isConstant || spec.transitions.length === 0) {
     const dummySpec: HologramSpec = {
       project: (input) => input.cid,
@@ -651,7 +651,7 @@ function applyEffect(
 // ── Boot (Instantiation + Scheduler Start) ─────────────────────────────────
 
 /**
- * Boot an Executable Blueprint — create a live HologramSession.
+ * Boot an Executable Blueprint. create a live HologramSession.
  *
  * This is the `exec()` syscall of the Hologram OS.
  *
@@ -789,7 +789,7 @@ export async function boot(
 // ── Resume (Rehydrate from Suspended State) ────────────────────────────────
 
 /**
- * Resume a suspended session — rehydrate from canonical bytes.
+ * Resume a suspended session. rehydrate from canonical bytes.
  *
  * This is the holographic principle applied to session management:
  *   suspend → 256-bit boundary encoding (dehydrate)
@@ -818,7 +818,7 @@ export async function resume(
 // ── Fork (Copy-on-Write Clone) ─────────────────────────────────────────────
 
 /**
- * Fork an executable blueprint — create a copy with modifications.
+ * Fork an executable blueprint. create a copy with modifications.
  *
  * This IS the POSIX fork() syscall:
  *   - New identity (different hash = different process)
@@ -891,13 +891,13 @@ export function deserializeExecutable(json: string): ExecutableBlueprint {
 // ── Pre-built Scheduler Templates ──────────────────────────────────────────
 
 /**
- * Static scheduler — the app never changes interface.
+ * Static scheduler. the app never changes interface.
  * Equivalent to a constant PolyTree.
  */
 export const STATIC_SCHEDULER: SchedulerSpec = defaultScheduler();
 
 /**
- * Adaptive scheduler — grows capabilities on verification, halts on revocation.
+ * Adaptive scheduler. grows capabilities on verification, halts on revocation.
  * Models a system that gains features as trust is established.
  */
 export const ADAPTIVE_SCHEDULER: SchedulerSpec = {
@@ -916,7 +916,7 @@ export const ADAPTIVE_SCHEDULER: SchedulerSpec = {
 };
 
 /**
- * Lifecycle scheduler — models a process with distinct lifecycle phases.
+ * Lifecycle scheduler. models a process with distinct lifecycle phases.
  * boot → running → scaling → winding down → halt
  */
 export const LIFECYCLE_SCHEDULER: SchedulerSpec = {

@@ -12,7 +12,7 @@ const STAGE_KEYS = [
 ] as const;
 
 const STAGE_DESCS = [
-  "Declare T ∈ 𝒯ₙ — verify ring coherence at quantum level n",
+  "Declare T ∈ 𝒯ₙ. verify ring coherence at quantum level n",
   "Construct query: CoordinateQuery | MetricQuery | RepresentationQuery",
   "Select Resolver ρ; compute Π(T) = ρ(T, n, K)",
   "Produce P=(Irr, Red, Unit, Ext); enforce |I|+|R|+|U|+|E| = 2ⁿ",
@@ -25,7 +25,7 @@ const STAGE_DESCS = [
 type Status = "pending" | "running" | "pass" | "fail";
 
 function formatStageOutput(key: string, data: Record<string, unknown> | undefined): string {
-  if (!data) return "—";
+  if (!data) return ". ";
   switch (key) {
     case "stage1_type":
       return `R₈ = ℤ/256ℤ. ${data.elements} elements. ${data.coherent ? "Coherent." : "NOT coherent."}`;
@@ -36,11 +36,11 @@ function formatStageOutput(key: string, data: Record<string, unknown> | undefine
     case "stage4_partition":
       return `Irr:${data.Irr} Red:${data.Red} Unit:${data.Unit} Ext:${data.Ext} Sum:${data.sum} ${data.sum === 256 ? "✓" : "✗"}`;
     case "stage5_observe":
-      return `σ=${data.stratum}, dH=${data.hamming_metric ?? "—"}, CascadeLength=${data.cascade_length ?? "—"}`;
+      return `σ=${data.stratum}, dH=${data.hamming_metric ?? ". "}, CascadeLength=${data.cascade_length ?? ". "}`;
     case "stage6_certify":
       return `${String(data["@type"] || "")} issued. verified:${data.verified}`;
     case "stage7_trace":
-      return `ComputationTrace. certifiedBy:${String(data.certifiedBy || "—").split("/").pop()}. drift:${data.hamming_drift}`;
+      return `ComputationTrace. certifiedBy:${String(data.certifiedBy || ". ").split("/").pop()}. drift:${data.hamming_drift}`;
     case "stage8_state":
       return `state:Transition. Grade ${data.grade}. derivation_id:${String(data.derivation_id || "").slice(0, 40)}…`;
     default:
@@ -193,7 +193,7 @@ export default function PrismPipelinePage() {
             </div>
           </div>
 
-          {/* Pipeline Visual — 8 Stage Cards */}
+          {/* Pipeline Visual. 8 Stage Cards */}
           <div className="space-y-3 mb-10">
             {STAGE_NAMES.map((name, i) => {
               const status = statuses[i];

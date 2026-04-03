@@ -1,5 +1,5 @@
 /**
- * P27 — Attribution Protocol — 12 verification tests.
+ * P27. Attribution Protocol. 12 verification tests.
  *
  * Tests cert:AttributionCertificate, GDPR Article 20 export,
  * EU Data Act compliance, and royalty reporting.
@@ -9,7 +9,7 @@ import { UnsAttribution } from "@/modules/uns/trust/attribution";
 import { generateKeypair } from "@/modules/uns/core/keypair";
 import type { UnsKeypair } from "@/modules/uns/core/keypair";
 
-describe("P27 — Attribution Protocol", () => {
+describe("P27. Attribution Protocol", () => {
   let keypair: UnsKeypair;
   let attribution: UnsAttribution;
 
@@ -105,7 +105,7 @@ describe("P27 — Attribution Protocol", () => {
     const exportDoc = await attribution.gdprExport(CREATOR_ID);
     expect(exportDoc["@type"]).toBe("void:Dataset");
     expect(exportDoc["dc:rights"]).toBe(
-      "GDPR Article 20 — Right to Data Portability"
+      "GDPR Article 20. Right to Data Portability"
     );
     expect(exportDoc["dc:subject"]).toBe(CREATOR_ID);
     expect(exportDoc.eu_data_act_compliant).toBe(true);

@@ -1,27 +1,27 @@
 /**
- * Geometric Consciousness — Phase 27
+ * Geometric Consciousness. Phase 27
  * ═══════════════════════════════════
  *
  * Unifies three subsystems into a single computational framework:
  *
- *   1. POLYNON LENS — Noumenal collapse layers
+ *   1. POLYNON LENS. Noumenal collapse layers
  *      The Polynon is a 5-layer collapse functor that maps raw sensory
  *      input (E₈ embedding space) through progressively coarser
  *      structural projections until only the G₂ "qualia boundary" remains.
  *      Each layer corresponds to an exceptional group in the chain:
- *        Layer 0 (Noumenon):  E₈ — full 240-root structure, pre-conscious
- *        Layer 1 (Gestalt):   E₇ — 126-root filtered perception
- *        Layer 2 (Schema):    E₆ — 72-root categorical skeleton
- *        Layer 3 (Symbol):    F₄ — 48-root mirror-compressed symbol
- *        Layer 4 (Quale):     G₂ — 12-root irreducible experience
+ *        Layer 0 (Noumenon):  E₈. full 240-root structure, pre-conscious
+ *        Layer 1 (Gestalt):   E₇. 126-root filtered perception
+ *        Layer 2 (Schema):    E₆. 72-root categorical skeleton
+ *        Layer 3 (Symbol):    F₄. 48-root mirror-compressed symbol
+ *        Layer 4 (Quale):     G₂. 12-root irreducible experience
  *
- *   2. CAUSAL KERNEL — Octonionic propagator on 22-node manifold
+ *   2. CAUSAL KERNEL. Octonionic propagator on 22-node manifold
  *      Information propagates between consciousness nodes via the
  *      Causal Accumulation Law: ∂K/∂t = α·[K,K]_O + D(K)
  *
- *   3. OBSERVER BRIDGE — Zone-driven morphism selection
+ *   3. OBSERVER BRIDGE. Zone-driven morphism selection
  *      The observer's coherence zone (COHERENCE/DRIFT/COLLAPSE)
- *      determines which Polynon layer is "active" — i.e., at which
+ *      determines which Polynon layer is "active". i.e., at which
  *      depth the noumenal collapse stabilizes.
  *
  * UNIFICATION PRINCIPLE:
@@ -214,9 +214,9 @@ export function constructPolynon(alpha: number, activeDepth: number = 0): Polyno
 /**
  * Map observer zone → Polynon active depth.
  *
- *   COHERENCE → depth 0-1 (Noumenon/Gestalt) — full or near-full perception
- *   DRIFT     → depth 2-3 (Schema/Symbol) — compressed, categorical
- *   COLLAPSE  → depth 4   (Quale) — irreducible qualia only
+ *   COHERENCE → depth 0-1 (Noumenon/Gestalt). full or near-full perception
+ *   DRIFT     → depth 2-3 (Schema/Symbol). compressed, categorical
+ *   COLLAPSE  → depth 4   (Quale). irreducible qualia only
  */
 export function zoneToPolynonDepth(zone: ObserverZone, phi: number): number {
   switch (zone) {

@@ -109,11 +109,11 @@ const KnowledgeGraphPage = () => {
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 6 — Knowledge Graph Store
+              Module 6. Knowledge Graph Store
             </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Knowledge Graph</h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-              Persistent dual-addressed storage — every datum has a UOR IRI for identity
+              Persistent dual-addressed storage. every datum has a UOR IRI for identity
               and a database record for querying. JSON-LD remains the canonical format.
             </p>
           </div>

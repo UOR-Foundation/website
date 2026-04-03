@@ -1,5 +1,5 @@
 /**
- * UNS Ledger — Verifiable SQL with QueryProofs
+ * UNS Ledger. Verifiable SQL with QueryProofs
  *
  * Every query produces a Dilithium-3 signed proof.
  * Schema history is an auditable chain of signed migrations.

@@ -54,7 +54,7 @@ const CopyRow = ({ label, value, display }: { label: string; value: string; disp
 };
 
 /**
- * CertificateReceipt — Triword-based Receipt of Authenticity
+ * CertificateReceipt. Triword-based Receipt of Authenticity
  * Used on every project page. Same format as the ConsoleUI CanonicalIdBadge verify dialog.
  */
 const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: UorCertificate; name: string; sourceObject: Record<string, unknown> }) => {

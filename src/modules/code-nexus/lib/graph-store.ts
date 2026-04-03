@@ -1,5 +1,5 @@
 /**
- * Code Nexus — In-Memory Graph Store
+ * Code Nexus. In-Memory Graph Store
  * ═══════════════════════════════════
  *
  * Lightweight, queryable graph engine that replaces KuzuDB WASM
@@ -158,7 +158,7 @@ export class CodeGraphStore {
     return { columns: ["from", "relation", "to", "depth"], rows };
   }
 
-  /** BFS cluster detection — all nodes reachable from a starting entity. */
+  /** BFS cluster detection. all nodes reachable from a starting entity. */
   getCluster(entityId: string, maxSize = 50): QueryResult {
     const visited = new Set<string>();
     const queue = [entityId];

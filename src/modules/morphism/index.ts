@@ -1,5 +1,5 @@
 /**
- * UOR Morphism Module — structure-preserving maps between rings.
+ * UOR Morphism Module. structure-preserving maps between rings.
  *
  * Barrel export for the morphism module.
  */

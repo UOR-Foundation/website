@@ -1,11 +1,11 @@
 /**
- * UOR Agent Tool Interface — the 5 canonical "system calls" of the Semantic Web.
+ * UOR Agent Tool Interface. the 5 canonical "system calls" of the Semantic Web.
  *
  * Each function is a self-contained tool that agents can invoke.
  * All tools enforce R4 (verify ring coherence first) and produce
  * canonical receipts for auditability.
  *
- * Delegates to existing modules — zero duplication:
+ * Delegates to existing modules. zero duplication:
  *   - ring-core for arithmetic and verification
  *   - derivation for derive/verify
  *   - derivation/receipt for canonical receipts
@@ -179,7 +179,7 @@ export async function uor_query(input: QueryInput): Promise<QueryOutput> {
     try {
       legacyResults = await executeSparql(input.sparql);
     } catch {
-      // Non-fatal — in-memory result takes precedence
+      // Non-fatal. in-memory result takes precedence
     }
   }
 

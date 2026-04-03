@@ -1,7 +1,7 @@
 /**
- * P35 — FINAL COHERENCE CERTIFICATE TEST SUITE
+ * P35. FINAL COHERENCE CERTIFICATE TEST SUITE
  *
- * This is NOT a regression test — it is a mathematical certificate.
+ * This is NOT a regression test. it is a mathematical certificate.
  * Every assertion is traceable to a UOR ontology class or property.
  *
  * GATE: Test 1 (conformance suite) must pass before any other test is valid.
@@ -64,11 +64,11 @@ graph.loadOntologyGraph();
 graph.materializeQ0();
 
 // ══════════════════════════════════════════════════════════════════════════════
-// TEST 1 — CONFORMANCE SUITE GATE (must pass first)
+// TEST 1. CONFORMANCE SUITE GATE (must pass first)
 // ══════════════════════════════════════════════════════════════════════════════
 
-describe("P35 — Final Coherence Certificate", () => {
-  it("T1: Conformance Suite Gate — 0 failures", async () => {
+describe("P35. Final Coherence Certificate", () => {
+  it("T1: Conformance Suite Gate. 0 failures", async () => {
     const suite = await runConformanceSuite();
     expect(suite.failed).toBe(0);
     expect(suite.passed).toBe(suite.total);
@@ -76,10 +76,10 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 2 — CRITICAL IDENTITY (multi-quantum algebraic proof)
+  // TEST 2. CRITICAL IDENTITY (multi-quantum algebraic proof)
   // ══════════════════════════════════════════════════════════════════════════
 
-  it("T2: Critical Identity — neg(bnot(x)) = succ(x) at Q0, Q1, Q2", () => {
+  it("T2: Critical Identity. neg(bnot(x)) = succ(x) at Q0, Q1, Q2", () => {
     // Verbatim proof: neg(bnot(42)) = neg(213) = 43 = succ(42)
     expect(neg(bnot(42))).toBe(43);
     expect(succ(42)).toBe(43);
@@ -108,10 +108,10 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 3 — EXTERIOR SET THEOREM
+  // TEST 3. EXTERIOR SET THEOREM
   // ══════════════════════════════════════════════════════════════════════════
 
-  it("T3: ExteriorSet = {0, 128} — algebraically proven", () => {
+  it("T3: ExteriorSet = {0, 128}. algebraically proven", () => {
     // Theorem: ExteriorSet = {x ∈ Z/256Z : neg(x) = x}
     const selfInverse = Array.from({ length: 256 }, (_, x) => x)
       .filter(x => neg(x) === x);
@@ -139,7 +139,7 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 4 — COMMUTATOR THEOREM
+  // TEST 4. COMMUTATOR THEOREM
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T4: [neg,bnot](x) = 2 constant for all 256 x", () => {
@@ -156,7 +156,7 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 5 — HOLONOMY THEOREM
+  // TEST 5. HOLONOMY THEOREM
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T5: Holonomy of involutory closed paths = 0 (topologically flat)", () => {
@@ -179,7 +179,7 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 6 — CATASTROPHE THRESHOLD IS RING-DERIVED
+  // TEST 6. CATASTROPHE THRESHOLD IS RING-DERIVED
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T6: CatastropheThreshold = 4/256 = 0.015625 (ring-derived)", () => {
@@ -198,69 +198,69 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 7 — 14 NAMESPACES PRODUCE GRADE A OUTPUTS
+  // TEST 7. 14 NAMESPACES PRODUCE GRADE A OUTPUTS
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T7: All 14 namespaces produce Grade A ring-arithmetic results", async () => {
-    // u: + schema: + op: — ring arithmetic
+    // u: + schema: + op:. ring arithmetic
     expect(ringMetric(42, 43).epistemic_grade).toBe("A");
 
-    // partition: — partition analysis
+    // partition:. partition analysis
     const partition = analyzePayloadFast(new Uint8Array([104, 101, 108, 108, 111]));
     expect(partition.density).toBeGreaterThan(0);
 
-    // resolver: — entity resolution
+    // resolver:. entity resolution
     const entity = await resolveEntity("test", undefined, graph);
     expect(entity["@type"]).toBe("resolver:Resolution");
 
-    // proof: — conformance proofs are Grade A
+    // proof:. conformance proofs are Grade A
     expect(CATASTROPHE_THRESHOLD.epistemic_grade).toBe("A");
 
-    // derivation: — identity derivation via singleProofHash
+    // derivation:. identity derivation via singleProofHash
     expect(entity["derivation:derivationId"]).toMatch(/^urn:uor:derivation:sha256:/);
 
-    // trace: — computation traces via observable path
+    // trace:. computation traces via observable path
     const { observablePath } = await import("@/modules/observable/geometry");
     const path = observablePath(42, ["neg", "bnot", "succ"]);
     expect(path.epistemic_grade).toBe("A");
 
-    // cert: — conformance certificates
+    // cert:. conformance certificates
     const suite = await runConformanceSuite();
     expect(suite.allPassed).toBe(true);
 
-    // type: — morphism type system
+    // type:. morphism type system
     expect(commutator(42, "neg", "bnot").value.commutator).toBe(2);
 
-    // morphism: — ring metric preserves distance
+    // morphism:. ring metric preserves distance
     const d1 = ringMetric(42, 43).value;
     const d2 = ringMetric(43, 42).value;
     expect(d1).toBe(d2); // Symmetric
 
-    // state: — observer zone assignment
+    // state:. observer zone assignment
     expect(assignZone(0, { low: 2, high: 5 })).toBe("COHERENCE");
     expect(assignZone(3, { low: 2, high: 5 })).toBe("DRIFT");
     expect(assignZone(6, { low: 2, high: 5 })).toBe("COLLAPSE");
 
-    // observable: — all 7 metrics present
+    // observable:. all 7 metrics present
     expect(ringMetric(0, 128).value).toBe(128);
     expect(hammingMetric(0, 255).value).toBe(8);
     expect(cascadeLength(0, 42).value).toBe(42);
     expect(curvature(0).epistemic_grade).toBe("A");
     expect(holonomy(42, ["neg", "neg"]).value.isClosed).toBe(true);
 
-    // query: — intent-based resolution
+    // query:. intent-based resolution
     const query = new UnsQuery(graph);
     const qResult = await query.query("ring operations");
     expect(qResult["@type"]).toBe("query:Resolution");
     expect(qResult["query:strategy"]).toBe("DihedralFactorizationResolver");
 
-    // observer: — H-score computation
+    // observer:. H-score computation
     const h = hScore(42, [42, 43, 44]);
     expect(h).toBe(0); // Exact match
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 8 — ALL 5 AGENT TOOL FUNCTIONS
+  // TEST 8. ALL 5 AGENT TOOL FUNCTIONS
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T8: All 5 agent tools return valid typed results", async () => {
@@ -268,19 +268,19 @@ describe("P35 — Final Coherence Certificate", () => {
     const { analyzePayload: partitionAnalyze } = await import("@/modules/uns/shield/partition");
     const { correlateIds: corrIds } = await import("@/modules/resolver/correlate-engine");
 
-    // 1. uor_derive — produces derivation ID
+    // 1. uor_derive. produces derivation ID
     const derived = await singleProofHash({ "@type": "test:Derivation", value: 42 });
     expect(derived["u:canonicalId"]).toMatch(/^urn:uor:derivation:sha256:[0-9a-f]{64}$/);
 
-    // 2. uor_verify — verify critical identity
+    // 2. uor_verify. verify critical identity
     expect(neg(bnot(42))).toBe(succ(42));
 
-    // 3. uor_partition — partition analysis
+    // 3. uor_partition. partition analysis
     const part = partitionAnalyze(new Uint8Array([42, 43, 44, 128, 0]));
     expect(part.irreducible).toBeGreaterThanOrEqual(0);
     expect(part.total).toBe(5);
 
-    // 4. uor_correlate — fidelity scoring
+    // 4. uor_correlate. fidelity scoring
     const idA = "urn:uor:derivation:sha256:" + "a".repeat(64);
     const idB = "urn:uor:derivation:sha256:" + "b".repeat(64);
     const corr = await corrIds(idA, idB);
@@ -288,7 +288,7 @@ describe("P35 — Final Coherence Certificate", () => {
     expect(corr.fidelity).toBeLessThanOrEqual(1);
     expect(corr.epistemic_grade).toBe("A");
 
-    // 5. uor_query — intent resolution
+    // 5. uor_query. intent resolution
     const query = new UnsQuery(graph);
     const qr = await query.query("hello");
     expect(qr.totalMatches).toBeGreaterThanOrEqual(0);
@@ -296,7 +296,7 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 9 — Q0 GRAPH 265 NODES
+  // TEST 9. Q0 GRAPH 265 NODES
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T9: Q0 graph has 265 nodes (256 datums + 9 named individuals)", () => {
@@ -325,10 +325,10 @@ describe("P35 — Final Coherence Certificate", () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEST 10 — MATHEMATICAL COMPLETENESS CERTIFICATE
+  // TEST 10. MATHEMATICAL COMPLETENESS CERTIFICATE
   // ══════════════════════════════════════════════════════════════════════════
 
-  it("T10: Full mathematical completeness — involutions, partition sum, ring properties", () => {
+  it("T10: Full mathematical completeness. involutions, partition sum, ring properties", () => {
     // Involution: neg(neg(x)) = x for all x
     for (let x = 0; x < 256; x++) {
       expect(neg(neg(x))).toBe(x);

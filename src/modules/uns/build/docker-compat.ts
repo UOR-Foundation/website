@@ -1,19 +1,19 @@
 /**
- * UNS Build — Docker Backwards Compatibility Layer
+ * UNS Build. Docker Backwards Compatibility Layer
  *
  * Ensures Docker images, Dockerfiles, and Docker Compose files
  * can run within the UOR framework with full content-addressing.
  *
  * Compatibility modes:
- *   1. Docker Image Wrapping — wraps a Docker image reference as a UOR image
- *   2. Dockerfile Translation — parses Dockerfile into UOR build spec
- *   3. Docker Compose Translation — converts docker-compose.yml to UOR compose
- *   4. Docker CLI Verb Mapping — maps docker commands to UOR equivalents
+ *   1. Docker Image Wrapping. wraps a Docker image reference as a UOR image
+ *   2. Dockerfile Translation. parses Dockerfile into UOR build spec
+ *   3. Docker Compose Translation. converts docker-compose.yml to UOR compose
+ *   4. Docker CLI Verb Mapping. maps docker commands to UOR equivalents
  *
  * Every Docker artifact is content-addressed via singleProofHash(),
  * gaining cryptographic identity while retaining Docker semantics.
  *
- * @see build: namespace — UOR build system
+ * @see build: namespace. UOR build system
  */
 
 import { singleProofHash } from "../core/identity";
@@ -194,7 +194,7 @@ export function parseDockerRef(ref: string): DockerImageRef {
 /**
  * Wrap a Docker image reference as a UOR content-addressed image.
  *
- * The Docker image itself is not modified — its reference is
+ * The Docker image itself is not modified. its reference is
  * content-addressed so it can be tracked, versioned, and verified
  * within the UOR framework.
  */
@@ -226,7 +226,7 @@ export async function wrapDockerImage(
 
 /**
  * Build a UOR image from a Dockerfile string.
- * Full backwards compatibility — any valid Dockerfile works.
+ * Full backwards compatibility. any valid Dockerfile works.
  */
 export async function buildFromDockerfile(
   dockerfileSource: string,

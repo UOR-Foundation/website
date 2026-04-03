@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — kernel::address
+ * UOR Foundation v2.0.0. kernel::address
  *
  * Content-addressable Braille identifiers.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * Glyph — a single Braille character encoding a byte value.
+ * Glyph. a single Braille character encoding a byte value.
  *
  * @disjoint Address
  */
@@ -22,7 +22,7 @@ export interface Glyph {
 }
 
 /**
- * Address — a Braille string bijection of content bytes.
+ * Address. a Braille string bijection of content bytes.
  * The canonical surface encoding for all UOR objects.
  *
  * @disjoint Glyph

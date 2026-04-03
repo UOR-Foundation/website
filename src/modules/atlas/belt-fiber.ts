@@ -425,7 +425,7 @@ export function runBeltFiberVerification(): BeltFiberReport {
     });
   }
 
-  // Test 12: Surjection — all (vertex, exterior) pairs are hit
+  // Test 12: Surjection. all (vertex, exterior) pairs are hit
   {
     const fiberSet = new Set<string>();
     for (let slot = 0; slot < BELT_TOTAL; slot++) {

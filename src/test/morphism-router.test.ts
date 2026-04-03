@@ -1,5 +1,5 @@
 /**
- * App Composition Layer / Morphism Router (P10) — 10/10 Test Suite
+ * App Composition Layer / Morphism Router (P10). 10/10 Test Suite
  */
 
 import { describe, it, expect } from "vitest";

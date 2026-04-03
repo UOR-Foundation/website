@@ -1,5 +1,5 @@
 /**
- * UOR Code Knowledge Graph Visualizer — converts code graph to SVG-ready format.
+ * UOR Code Knowledge Graph Visualizer. converts code graph to SVG-ready format.
  *
  * Transforms CodeGraphResult into positioned nodes and edges for rendering.
  * Uses a simple force-directed-like layout computed deterministically.

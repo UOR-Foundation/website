@@ -1,5 +1,5 @@
 /**
- * Free Tier & Revenue Share Infrastructure — 10/10 Test Suite (P14)
+ * Free Tier & Revenue Share Infrastructure. 10/10 Test Suite (P14)
  */
 
 import { describe, it, expect, beforeEach } from "vitest";

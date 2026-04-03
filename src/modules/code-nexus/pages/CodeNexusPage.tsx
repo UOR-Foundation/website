@@ -1,5 +1,5 @@
 /**
- * CodeNexusPage — Holographic Lens
+ * CodeNexusPage. Holographic Lens
  * ═════════════════════════════════
  *
  * Repository ingestion → UOR mapping → graph store → visual explorer + query + intelligence.
@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-// PageShell removed with hologram-ui — inline simple shell
+// PageShell removed with hologram-ui. inline simple shell
 const PageShell = ({ children, ..._rest }: { children: React.ReactNode; [key: string]: unknown }) => (
   <div>{children}</div>
 );

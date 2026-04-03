@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Free Tier & Revenue Share Infrastructure (P14)
+ * UOR SDK. Free Tier & Revenue Share Infrastructure (P14)
  *
  * Structurally sustainable tier system. Idle apps cost near-zero because
  * IPFS content addressing, Solid Pods activating only on access, and
@@ -14,8 +14,8 @@
  *   account:{developerCanonicalId}       → DeveloperAccount
  *   app-activity:{appCanonicalId}        → AppActivityRecord
  *
- * @see monetization.ts — payment processing (P7)
- * @see discovery.ts    — observer zones affect idle demotion (P9)
+ * @see monetization.ts. payment processing (P7)
+ * @see discovery.ts   . observer zones affect idle demotion (P9)
  */
 
 import { UnsKv } from "@/modules/uns/store/kv";
@@ -219,7 +219,7 @@ export class FreeTierManager {
 
   /**
    * Check if a developer's current month gross qualifies them for a higher tier.
-   * Upgrades are automatic — no manual action required.
+   * Upgrades are automatic. no manual action required.
    */
   async checkTierUpgrade(developerCanonicalId: string): Promise<TierName> {
     const account = await this.getAccount(developerCanonicalId);

@@ -1,13 +1,13 @@
 /**
- * UOR v2.0.0 — Reasoning Strategy Scheduler
+ * UOR v2.0.0. Reasoning Strategy Scheduler
  *
  * Phase 5: Coinductive PolyTrees as strategy schedulers for the
  * three geometric reasoning modes.
  *
  * Each traversal strategy is a PolyTree TransitionFn:
- *   - Depth-first deductive (Vertical) — dig deep along one constraint chain
- *   - Breadth-first inductive (Horizontal) — fan out across observations
- *   - Abductive spiral (Diagonal) — alternating D/I with increasing radius
+ *   - Depth-first deductive (Vertical). dig deep along one constraint chain
+ *   - Breadth-first inductive (Horizontal). fan out across observations
+ *   - Abductive spiral (Diagonal). alternating D/I with increasing radius
  *
  * The composed scheduler uses tensorProduct to run strategies in parallel
  * and coproduct to select between them based on curvature signals.

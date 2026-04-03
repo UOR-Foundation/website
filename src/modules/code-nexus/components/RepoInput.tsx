@@ -1,5 +1,5 @@
 /**
- * RepoInput — GitHub URL input + ZIP drag-and-drop.
+ * RepoInput. GitHub URL input + ZIP drag-and-drop.
  *
  * Emits a File (ZIP) or string (GitHub URL) to the parent for ingestion.
  */

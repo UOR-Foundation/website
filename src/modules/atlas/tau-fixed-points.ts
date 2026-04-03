@@ -1,5 +1,5 @@
 /**
- * τ-Fixed Point Analysis — The 8 Mirror-Commuting Elements
+ * τ-Fixed Point Analysis. The 8 Mirror-Commuting Elements
  * ═══════════════════════════════════════════════════════════
  *
  * Of the 96 abelian elements (r,d,t) ∈ Z/4Z × Z/3Z × Z/8Z,
@@ -176,15 +176,15 @@ export function findTauFixedPoints(): TauFixedPoint[] {
         const ord = elementOrderInZ96(r, d, t);
         let interpretation: string;
         if (r === 0 && d === 0 && t === 0) {
-          interpretation = "Identity — trivially commutes with all operations. The vacuum state.";
+          interpretation = "Identity. trivially commutes with all operations. The vacuum state.";
         } else if (d === 0 && t === 0) {
-          interpretation = `Pure quadrant rotation R^${r} — commutes with τ because τ preserves quadrant structure.`;
+          interpretation = `Pure quadrant rotation R^${r}. commutes with τ because τ preserves quadrant structure.`;
         } else if (r === 0 && d === 0) {
-          interpretation = `Pure slot translation T^${t} — commutes with τ; this slot shift is mirror-symmetric.`;
+          interpretation = `Pure slot translation T^${t}. commutes with τ; this slot shift is mirror-symmetric.`;
         } else if (r === 0 && t === 0) {
-          interpretation = `Pure modality shift D^${d} — commutes with τ; modality is mirror-invariant.`;
+          interpretation = `Pure modality shift D^${d}. commutes with τ; modality is mirror-invariant.`;
         } else {
-          interpretation = `Mixed transform (R^${r},D^${d},T^${t}) of order ${ord} — commutes with τ through cross-factor cancellation.`;
+          interpretation = `Mixed transform (R^${r},D^${d},T^${t}) of order ${ord}. commutes with τ through cross-factor cancellation.`;
         }
 
         fixedPoints.push({
@@ -305,7 +305,7 @@ export function runTauFixedPointAnalysis(): TauFixedPointAnalysis {
     `Universally fixed vertices: ${universallyFixed.length > 0 ? universallyFixed.join(", ") : "none"}`,
     ``,
     `Physical significance:`,
-    `  • These 8 elements are the "self-dual" transforms — operations`,
+    `  • These 8 elements are the "self-dual" transforms. operations`,
     `    that look the same from both sides of the mirror.`,
     `  • In the quantum substrate: Hermitian gates (G = G†).`,
     `  • In the thermodynamic foliation: reversible (entropy-preserving).`,

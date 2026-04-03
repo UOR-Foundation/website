@@ -1,5 +1,5 @@
 /**
- * Attention vs Coherence — Benchmark Test Suite
+ * Attention vs Coherence. Benchmark Test Suite
  * ══════════════════════════════════════════════
  *
  * Demonstrates that categorical coherence routing achieves
@@ -25,7 +25,7 @@ import {
 // Part I: Ground Truth Computation
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Ground Truth — Algebraic Associativity", () => {
+describe("Ground Truth. Algebraic Associativity", () => {
   it("computes correct number of triples", () => {
     const truth = computeGroundTruth([0, 1, 2, 3, 4]);
     expect(truth.length).toBe(3); // 5 - 2
@@ -54,10 +54,10 @@ describe("Ground Truth — Algebraic Associativity", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part II: Coherence — Deterministic Exact Routing
+// Part II: Coherence. Deterministic Exact Routing
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Routing — Determinism", () => {
+describe("Coherence Routing. Determinism", () => {
   it("accuracy is always 1.0 (algebraically exact)", () => {
     const result = runCoherence([0, 1, 2, 3, 4, 5, 6]);
     expect(result.accuracy).toBe(1.0);
@@ -98,10 +98,10 @@ describe("Coherence Routing — Determinism", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part III: Attention — Probabilistic Approximate Routing
+// Part III: Attention. Probabilistic Approximate Routing
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Attention Routing — Probabilistic", () => {
+describe("Attention Routing. Probabilistic", () => {
   it("requires non-zero parameters", () => {
     const result = simulateAttention([0, 1, 2, 3, 4, 5, 6], true);
     expect(result.parameterCount).toBeGreaterThan(0);
@@ -145,7 +145,7 @@ describe("Attention Routing — Probabilistic", () => {
 // Part IV: Head-to-Head Comparison
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Attention vs Coherence — Direct Comparison", () => {
+describe("Attention vs Coherence. Direct Comparison", () => {
   it("coherence accuracy ≥ attention accuracy", () => {
     const benchmark = runBenchmark("test", [0, 1, 2, 3, 4, 5, 6]);
     expect(benchmark.coherence.accuracy).toBeGreaterThanOrEqual(

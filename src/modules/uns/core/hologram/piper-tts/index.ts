@@ -1,5 +1,5 @@
 /**
- * Piper TTS — Sovereign client-side text-to-speech
+ * Piper TTS. Sovereign client-side text-to-speech
  * ═══════════════════════════════════════════════════
  *
  * @module hologram/piper-tts

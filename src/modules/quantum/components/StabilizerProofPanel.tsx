@@ -40,7 +40,7 @@ export default function StabilizerProofPanel() {
             Stabilizer Correspondence Proof
           </h2>
           <p className="text-[11px] font-mono text-[hsl(210,10%,50%)] mt-1">
-            Atlas₉₆ ≅ Stab₃/~ — constructive bijection with full verification
+            Atlas₉₆ ≅ Stab₃/~. constructive bijection with full verification
           </p>
         </div>
         <div className={`text-[12px] font-mono px-3 py-1 rounded-md border ${
@@ -48,7 +48,7 @@ export default function StabilizerProofPanel() {
             ? "bg-[hsla(140,40%,15%,0.3)] border-[hsla(140,40%,30%,0.4)] text-[hsl(140,60%,55%)]"
             : "bg-[hsla(40,40%,15%,0.3)] border-[hsla(40,40%,30%,0.4)] text-[hsl(40,80%,55%)]"
         }`}>
-          {report.allHold ? "QED ✓" : "INCOMPLETE"} — {stepsHeld}/{report.steps.length} steps
+          {report.allHold ? "QED ✓" : "INCOMPLETE"}. {stepsHeld}/{report.steps.length} steps
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function StabilizerProofPanel() {
           : "bg-[hsla(40,30%,12%,0.3)] border-[hsla(40,30%,25%,0.4)]"
       }`}>
         <div className="text-[11px] font-mono text-[hsl(50,70%,60%)] uppercase mb-2">
-          {report.allHold ? "Proof Summary — QED" : "Proof Summary — Incomplete"}
+          {report.allHold ? "Proof Summary. QED" : "Proof Summary. Incomplete"}
         </div>
         <p className="text-[11px] font-mono text-[hsl(210,10%,60%)] leading-relaxed">
           {report.proofSummary}

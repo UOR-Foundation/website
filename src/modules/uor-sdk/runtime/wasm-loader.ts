@@ -1,5 +1,5 @@
 /**
- * UOR SDK — WASM Runtime Loader
+ * UOR SDK. WASM Runtime Loader
  *
  * Loads a deployed app from the UOR registry and renders it in a
  * sandboxed iframe via streamed WASM execution. Every invocation
@@ -20,8 +20,8 @@
  *   - Execution tracing (every request/response recorded)
  *   - Injection detection (Hamming drift monitoring)
  *
- * @see runtime-witness — execution tracing
- * @see uns/build/registry — image pull
+ * @see runtime-witness. execution tracing
+ * @see uns/build/registry. image pull
  */
 
 import { pullImage } from "@/modules/uns/build/registry";
@@ -49,7 +49,7 @@ export interface WasmRuntimeConfig {
   memoryLimitMb?: number;
 }
 
-/** A running app instance — the "container" equivalent. */
+/** A running app instance. the "container" equivalent. */
 export interface WasmAppInstance {
   /** Instance canonical ID (unique per invocation). */
   instanceId: string;
@@ -211,14 +211,14 @@ export async function runApp(
   // 3. Resolve the source URL for the iframe
   const resolvedSourceUrl = config.sourceUrl || "";
 
-  // 4. Build the proxy URL — route through our edge function to bypass X-Frame-Options
+  // 4. Build the proxy URL. route through our edge function to bypass X-Frame-Options
   // This is like Docker's port-forwarding: the content comes through our infrastructure
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`;
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   let iframeSrc = "";
   if (resolvedSourceUrl && resolvedSourceUrl.startsWith("http")) {
-    // Proxy through serve-app edge function — strips X-Frame-Options, injects UOR shim
+    // Proxy through serve-app edge function. strips X-Frame-Options, injects UOR shim
     const proxyParams = new URLSearchParams({
       proxy: resolvedSourceUrl,
       cid: image.canonicalId,
@@ -235,7 +235,7 @@ export async function runApp(
     frame = document.createElement("iframe");
     frame.src = iframeSrc;
 
-    // Full app functionality — no sandbox restrictions that would break the app
+    // Full app functionality. no sandbox restrictions that would break the app
     // Unlike Docker which uses Linux namespaces, we use browser iframe isolation
     frame.removeAttribute("sandbox");
     frame.style.width = "100%";

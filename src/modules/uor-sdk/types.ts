@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Canonical type definitions.
+ * UOR SDK. Canonical type definitions.
  *
  * All types mirror the live UOR API response shapes exactly.
  * No speculative fields. Every property maps to a documented endpoint.

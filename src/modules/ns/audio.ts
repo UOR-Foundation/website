@@ -1,5 +1,5 @@
 /**
- * audio/ — Canonical Namespace Barrel
+ * audio/. Canonical Namespace Barrel
  *
  * Content-addressed audio: ring-native DSP, segment caching,
  * and frame analysis for the Hologram audio experience.

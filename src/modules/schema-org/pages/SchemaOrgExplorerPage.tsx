@@ -1,5 +1,5 @@
 /**
- * Schema.org Explorer — Interactive dual-representation browser.
+ * Schema.org Explorer. Interactive dual-representation browser.
  *
  * Browse all 806 Schema.org types with their UOR content-addressed identities.
  * Search, inspect type hierarchies, and verify the functor in real time.
@@ -23,7 +23,7 @@ import type { SchemaOrgUorIdentity } from "../types";
 // ── Top-level type categories for the overview grid ────────────────────────
 
 const TOP_CATEGORIES = [
-  { name: "Thing", desc: "Root type — everything inherits from Thing", icon: "🌐" },
+  { name: "Thing", desc: "Root type. everything inherits from Thing", icon: "🌐" },
   { name: "Action", desc: "Operations, tasks, interactions", icon: "⚡" },
   { name: "CreativeWork", desc: "Articles, books, movies, code", icon: "📝" },
   { name: "Event", desc: "Conferences, concerts, deliveries", icon: "📅" },
@@ -164,7 +164,7 @@ function IdentityPanel({
         </div>
       )}
 
-      {/* UOR Identity — The Dual */}
+      {/* UOR Identity. The Dual */}
       <div className="p-3 rounded-lg border border-primary/20 bg-primary/5">
         <div className="flex items-center gap-1.5 mb-3">
           <IconShieldCheck size={14} className="text-primary" />
@@ -264,7 +264,7 @@ export default function SchemaOrgExplorerPage() {
             </h1>
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl font-body">
-            <strong>F : SchemaOrg → UOR</strong> — Every Schema.org type has a dual
+            <strong>F : SchemaOrg → UOR</strong>. Every Schema.org type has a dual
             representation: its original JSON-LD form (web-readable) and a UOR
             canonical form (content-addressed). One functor. {SCHEMA_ORG_TYPE_COUNT} types. Zero per-type code.
           </p>

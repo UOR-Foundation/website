@@ -1,5 +1,5 @@
 /**
- * Cartan Matrices and Dynkin Diagrams — Exact Integer Arithmetic
+ * Cartan Matrices and Dynkin Diagrams. Exact Integer Arithmetic
  *
  * TypeScript port of atlas-embeddings/src/cartan/mod.rs.
  *

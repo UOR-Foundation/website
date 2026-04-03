@@ -1,5 +1,5 @@
 /**
- * Atlas F₄ Quotient Compression — Verification Suite
+ * Atlas F₄ Quotient Compression. Verification Suite
  * ════════════════════════════════════════════════════
  *
  * Proves that the Atlas mirror involution τ enables theoretical compression

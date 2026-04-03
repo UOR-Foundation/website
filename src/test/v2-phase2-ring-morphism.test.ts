@@ -1,5 +1,5 @@
 /**
- * Phase 2 Test Suite — Ring & Morphism Alignment
+ * Phase 2 Test Suite. Ring & Morphism Alignment
  *
  * T2.1: All 10 PrimitiveOps callable and correct at Q0
  * T2.2: GeometricCharacter assigned to each op

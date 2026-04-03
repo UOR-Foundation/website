@@ -1,5 +1,5 @@
 /**
- * Navigation items — serializable data for UOR certification.
+ * Navigation items. serializable data for UOR certification.
  */
 export const navItems = [
   { label: "Docs", href: "/docs" },

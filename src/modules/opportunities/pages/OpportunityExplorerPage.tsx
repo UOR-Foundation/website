@@ -1,5 +1,5 @@
 /**
- * Opportunity Explorer — Interactive Dashboard
+ * Opportunity Explorer. Interactive Dashboard
  * ═════════════════════════════════════════════
  *
  * Visualizes all 9 Coherence Gate opportunities as expandable cards.
@@ -93,7 +93,7 @@ export default function OpportunityExplorerPage() {
       {
         id: 3,
         title: "Multi-Ledger Anchor",
-        subtitle: "Bitcoin + Zcash + IPFS + Lightning + Nostr — triple-anchored trust",
+        subtitle: "Bitcoin + Zcash + IPFS + Lightning + Nostr. triple-anchored trust",
         icon: "⚓",
         color: "from-amber-500/20 to-orange-500/20",
         borderColor: "border-amber-500/30",
@@ -125,7 +125,7 @@ export default function OpportunityExplorerPage() {
       {
         id: 5,
         title: "Universal Notarization",
-        subtitle: "Any projection → Bitcoin OP_RETURN — settlement is structural",
+        subtitle: "Any projection → Bitcoin OP_RETURN. settlement is structural",
         icon: "📜",
         color: "from-yellow-500/20 to-lime-500/20",
         borderColor: "border-yellow-500/30",
@@ -187,7 +187,7 @@ export default function OpportunityExplorerPage() {
         stat: `${proof.languagesCovered.length} provers`,
         status: proof.fullCoverage ? "Full Coverage" : "Partial",
         details: proof.proofs.map(p => ({
-          label: `${p.language} — ${p.proofType}`,
+          label: `${p.language}. ${p.proofType}`,
           value: p.proofUri,
           meta: p.trustStatement,
           tag: p.language,
@@ -196,7 +196,7 @@ export default function OpportunityExplorerPage() {
       {
         id: 9,
         title: "Silicon-to-Cloud Provenance",
-        subtitle: "VHDL → C → OCI → A2A — transistor to agent, one identity",
+        subtitle: "VHDL → C → OCI → A2A. transistor to agent, one identity",
         icon: "⚡",
         color: "from-red-500/20 to-amber-500/20",
         borderColor: "border-red-500/30",
@@ -232,7 +232,7 @@ export default function OpportunityExplorerPage() {
               Opportunity Explorer
             </h1>
             <p className="text-sm text-muted-foreground">
-              9 interoperability opportunities — one identity hash threads them all
+              9 interoperability opportunities. one identity hash threads them all
             </p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export default function OpportunityExplorerPage() {
                 Ruliad ≅ UOR Correspondence
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Every Wolfram Ruliad concept maps to a UOR primitive — 17 structural isomorphisms proving UOR is a computable coordinatization of the Ruliad
+                Every Wolfram Ruliad concept maps to a UOR primitive. 17 structural isomorphisms proving UOR is a computable coordinatization of the Ruliad
               </p>
             </div>
             <span className="text-muted-foreground group-hover:text-primary transition-colors">→</span>

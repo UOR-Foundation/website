@@ -4,8 +4,8 @@
  * Source: conformance/src/tests/fixtures/test3_resolver.rs
  * Validates deterministic content addressing via URDNA2015 → SHA-256.
  *
- * @see spec/src/namespaces/resolver.rs — Resolver namespace
- * @see spec/src/namespaces/u.rs — u:canonicalId, u:ipv6, u:cid definitions
+ * @see spec/src/namespaces/resolver.rs. Resolver namespace
+ * @see spec/src/namespaces/u.rs. u:canonicalId, u:ipv6, u:cid definitions
  */
 
 import { singleProofHash } from "@/modules/uns/core/identity";
@@ -62,7 +62,7 @@ export async function testResolver(): Promise<ConformanceGroup> {
     reorderedId["u:canonicalId"] === firstId,
     firstId.slice(0, 40) + "...",
     reorderedId["u:canonicalId"].slice(0, 40) + "...",
-    CIT + " — URDNA2015 key-order invariance"
+    CIT + ". URDNA2015 key-order invariance"
   ));
 
   // C4.4  IPv6 projection starts with fd00:0075:6f72:
@@ -71,7 +71,7 @@ export async function testResolver(): Promise<ConformanceGroup> {
     identity["u:ipv6"].startsWith("fd00:0075:6f72:"),
     "fd00:0075:6f72:*",
     identity["u:ipv6"],
-    "spec/src/namespaces/u.rs — UOR ULA /48 prefix"
+    "spec/src/namespaces/u.rs. UOR ULA /48 prefix"
   ));
 
   // C4.5  u:lossWarning always present
@@ -90,7 +90,7 @@ export async function testResolver(): Promise<ConformanceGroup> {
     cidPattern.test(identity["u:cid"]),
     "b<base32lower>",
     identity["u:cid"].slice(0, 20) + "...",
-    CIT + " — CIDv1/dag-json/sha2-256/base32lower"
+    CIT + ". CIDv1/dag-json/sha2-256/base32lower"
   ));
 
   return { id: "resolver", name: "Resolver / Content Addressing", fixtureRef: FIX, results };

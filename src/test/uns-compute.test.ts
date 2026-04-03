@@ -24,10 +24,10 @@ afterEach(() => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Phase 3-A Tests — 10/10
+// Phase 3-A Tests. 10/10
 // ═════════════════════════════════════════════════════════════════════════════
 
-describe("UNS Compute — Phase 3-A: Ring-Certified Edge Functions", () => {
+describe("UNS Compute. Phase 3-A: Ring-Certified Edge Functions", () => {
   // Test 1
   it("1. deployFunction returns canonicalId matching urn:uor:derivation:sha256", async () => {
     const fn = await deployFunction(
@@ -100,7 +100,7 @@ describe("UNS Compute — Phase 3-A: Ring-Certified Edge Functions", () => {
     const input = { n: 5 };
     const result = await invokeFunction(fn.canonicalId, input, executor);
 
-    // Tamper with output — replace the output object entirely
+    // Tamper with output. replace the output object entirely
     result.output = { v: 999 };
     const verified = await verifyExecution(result, input);
     expect(verified).toBe(false);

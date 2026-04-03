@@ -1,14 +1,14 @@
 /**
- * ZK Three-Layer Separation — Barrel Export
+ * ZK Three-Layer Separation. Barrel Export
  * ══════════════════════════════════════════
  *
  * The three layers of the Zero-Knowledge Proof-of-Thought architecture:
  *
- *   Layer 3: Content     [ENCRYPTED — only user sees]
+ *   Layer 3: Content     [ENCRYPTED. only user sees]
  *            ↕ (one-way hash)
- *   Layer 2: Geometry    [PUBLIC — spectral grade, drift, phase]
+ *   Layer 2: Geometry    [PUBLIC. spectral grade, drift, phase]
  *            ↕ (lattice constants)
- *   Layer 1: Substrate   [{3,3,5} — universal, immutable]
+ *   Layer 1: Substrate   [{3,3,5}. universal, immutable]
  *
  * No information flows upward. Privacy is structural, not policy-based.
  *

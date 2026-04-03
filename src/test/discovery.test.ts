@@ -1,5 +1,5 @@
 /**
- * Observer Theory & Discovery Engine (P9) — 10/10 Test Suite
+ * Observer Theory & Discovery Engine (P9). 10/10 Test Suite
  */
 
 import { describe, it, expect } from "vitest";

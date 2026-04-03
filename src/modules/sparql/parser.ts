@@ -1,21 +1,21 @@
 /**
- * SPARQL-like Query Parser — translates basic SPARQL SELECT into structured AST.
+ * SPARQL-like Query Parser. translates basic SPARQL SELECT into structured AST.
  *
  * Supported syntax:
  *   PREFIX ns: <uri>
  *   SELECT ?var1 ?var2 WHERE { pattern } LIMIT n OFFSET m
  *
  * Pattern types:
- *   { ?s ?p ?o }           — all triples
- *   { <iri> ?p ?o }        — fixed subject
- *   { ?s <predicate> ?o }  — fixed predicate
- *   { ?s ?p "literal" }    — fixed object
+ *   { ?s ?p ?o }          . all triples
+ *   { <iri> ?p ?o }       . fixed subject
+ *   { ?s <predicate> ?o } . fixed predicate
+ *   { ?s ?p "literal" }   . fixed object
  *
  * FILTER:
  *   FILTER(?var = "value")
  *   FILTER(?var != "value")
  *
- * This parser is intentionally minimal — it covers the patterns needed
+ * This parser is intentionally minimal. it covers the patterns needed
  * for querying the uor_triples table via Supabase.
  */
 
@@ -173,7 +173,7 @@ export function parseSparql(query: string): ParsedSparql {
     // Remove FILTER from body to parse triple patterns
     const cleanBody = body.replace(/FILTER\s*\([^)]+\)/gi, "").trim();
 
-    // Split into triple patterns — use ` . ` (dot surrounded by spaces or at end)
+    // Split into triple patterns. use ` . ` (dot surrounded by spaces or at end)
     // to avoid splitting on dots inside IRIs like <https://example.com/1>
     const patternStrs = splitPatterns(cleanBody);
     for (const ps of patternStrs) {

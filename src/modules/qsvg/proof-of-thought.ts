@@ -1,17 +1,17 @@
 /**
- * QSVG Proof-of-Thought — Zero-Knowledge Geometric Verification
+ * QSVG Proof-of-Thought. Zero-Knowledge Geometric Verification
  * ══════════════════════════════════════════════════════════════
  *
  * Transforms AI reasoning from "Chain-of-Thought" (narrative, unverifiable)
  * to "Proof-of-Thought" (compact, O(1)-verifiable, content-blind).
  *
- * Architecture — Three-Layer ZK Separation:
+ * Architecture. Three-Layer ZK Separation:
  *
- *   Layer 3: Content     [ENCRYPTED — only user sees]
+ *   Layer 3: Content     [ENCRYPTED. only user sees]
  *            ↕ (one-way hash)
- *   Layer 2: Geometry    [PUBLIC — spectral grade, drift, phase]
+ *   Layer 2: Geometry    [PUBLIC. spectral grade, drift, phase]
  *            ↕ (lattice constants)
- *   Layer 1: Substrate   [{3,3,5} — universal, immutable]
+ *   Layer 1: Substrate   [{3,3,5}. universal, immutable]
  *
  * No information flows upward. The geometry layer measures the SHAPE
  * of reasoning, never the CONTENT. This makes every receipt ZK by construction.
@@ -47,7 +47,7 @@ export type EpistemicGrade = "A" | "B" | "C" | "D";
 
 /**
  * A snapshot captured at each reasoning iteration.
- * Contains ONLY geometric/topological data — no content.
+ * Contains ONLY geometric/topological data. no content.
  */
 export interface ProofSnapshot {
   /** Iteration index */
@@ -67,7 +67,7 @@ export interface ProofSnapshot {
 /**
  * The sealed Proof-of-Thought receipt.
  *
- * This is a Layer 2 (Geometry) object — it contains NO content.
+ * This is a Layer 2 (Geometry) object. it contains NO content.
  * Every field is either a topological invariant or a one-way hash.
  */
 export interface ProofOfThoughtReceipt {
@@ -126,7 +126,7 @@ export interface ProofCheck {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ProofAccumulator — rides alongside reasoning, never touches content
+// ProofAccumulator. rides alongside reasoning, never touches content
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -229,14 +229,14 @@ export function recordIteration(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Sealing — Accumulator → Receipt
+// Sealing. Accumulator → Receipt
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
  * Compute a deterministic content-addressed ID from geometric data.
  *
  * Uses the Web Crypto API (SHA-256). The hash input is the
- * canonical JSON of the geometric data — NOT the content.
+ * canonical JSON of the geometric data. NOT the content.
  * This ensures the CID is content-blind by construction.
  */
 async function computeGeometricCID(
@@ -244,7 +244,7 @@ async function computeGeometricCID(
   finalCurvature: number,
   converged: boolean,
 ): Promise<string> {
-  // Canonical geometric payload — no content data
+  // Canonical geometric payload. no content data
   const payload = JSON.stringify({
     snapshots: snapshots.map(s => ({
       i: s.iteration,
@@ -425,7 +425,7 @@ export function sealReceiptSync(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Verification — O(1) receipt check against {3,3,5} lattice
+// Verification. O(1) receipt check against {3,3,5} lattice
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -547,7 +547,7 @@ export function verifyProofOfThought(receipt: ProofOfThoughtReceipt): ProofVerif
     checks.push({
       name: "CID reproducibility",
       passed: cidMatch,
-      detail: cidMatch ? "CID matches recomputed hash" : "CID MISMATCH — possible tampering",
+      detail: cidMatch ? "CID matches recomputed hash" : "CID MISMATCH. possible tampering",
     });
   }
 
@@ -613,7 +613,7 @@ export function receiptToUORCoordinate(cid: string): {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Summary — Human-readable proof summary
+// Summary. Human-readable proof summary
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -632,7 +632,7 @@ export function summarizeReceipt(receipt: ProofOfThoughtReceipt): string {
     `Coupling:         α^depth = ${receipt.coupling.toExponential(4)}`,
     `Converged:        ${receipt.converged ? "Yes" : "No"} (${receipt.iterations} iterations)`,
     `Compression:      ${receipt.compressionRatio.toExponential(2)}`,
-    `ZK Mode:          ${receipt.zk ? "Yes — content-blind" : "No"}`,
+    `ZK Mode:          ${receipt.zk ? "Yes. content-blind" : "No"}`,
     `Free Parameters:  ${receipt.freeParameters}`,
     `Zone:             ${receipt.zone}`,
     `Sealed:           ${receipt.sealedAt}`,

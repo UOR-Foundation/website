@@ -1,5 +1,5 @@
 /**
- * HologramSttEngine — Unified Speech-to-Text for Hologram
+ * HologramSttEngine. Unified Speech-to-Text for Hologram
  * ════════════════════════════════════════════════════════
  *
  * Single abstraction over two STT strategies:
@@ -7,12 +7,12 @@
  *   1. **Native SpeechRecognition** (browser-native)
  *      - Instant, zero download, works in all Chromium browsers
  *      - ⚠️ Audio leaves the device (processed by browser vendor cloud)
- *      - Privacy level: "cloud" — user should be informed
+ *      - Privacy level: "cloud". user should be informed
  *
  *   2. **Whisper ONNX** (self-hosted, vGPU-accelerated)
  *      - True on-device inference, audio never leaves the browser
  *      - Requires ~40MB model (cached permanently after first load)
- *      - Privacy level: "local" — fully sovereign
+ *      - Privacy level: "local". fully sovereign
  *
  * The engine selects the best available strategy automatically:
  *   - If Whisper ONNX is cached → use it (maximum privacy)
@@ -250,7 +250,7 @@ export class HologramSttEngine {
 
   /**
    * Transcribe audio via self-hosted Whisper ONNX on the vGPU.
-   * Audio never leaves the device — full sovereignty.
+   * Audio never leaves the device. full sovereignty.
    */
   async transcribeWhisper(
     audio: Float32Array,
