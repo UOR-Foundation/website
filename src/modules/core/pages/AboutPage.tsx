@@ -1,8 +1,8 @@
-import { Linkedin, BookOpen, Users, Rocket, ExternalLink } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
-import { whatWeDoCards } from "@/data/about-cards";
+import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
