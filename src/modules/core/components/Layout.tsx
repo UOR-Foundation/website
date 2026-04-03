@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import Navbar from "@/modules/core/components/Navbar";
 import Footer from "@/modules/core/components/Footer";
 import ScrollProgress from "@/modules/core/components/ScrollProgress";
+import AgentBeacon from "@/modules/core/components/AgentBeacon";
 interface LayoutProps {
   children: React.ReactNode;
 }
