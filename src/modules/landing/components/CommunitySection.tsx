@@ -65,11 +65,6 @@ const CommunitySection = () => {
     <section className="py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
-          <div className="flex items-center gap-3 mb-golden-lg">
-            <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
-              Our Community
-            </p>
-          </div>
 
           {/* Honeycomb — Row 1: 8 members */}
           <div className="flex flex-wrap justify-center gap-x-1 md:gap-x-2 lg:gap-x-3 gap-y-8">
