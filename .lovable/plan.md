@@ -1,154 +1,112 @@
 
 
-# Streamline the Website for Clarity & Project Focus
+# Streamline Website for CNCF/Linux Community Alignment
 
-## The Problem Today
+## What CNCF Does Right (and What We Should Learn)
 
-A newcomer landing on this site encounters: abstract terminology ("content-addressed object spaces," "algebraic identity," "canonicalization rules"), a fragmented navigation with overlapping content, and too many sections competing for attention before they understand what UOR actually is or why they should care. Someone from the CNCF or Linux world would bounce.
+CNCF's homepage follows a dead-simple pattern that every open-source contributor instantly recognizes:
+1. **One-sentence mission** ("CNCF is the open source, vendor-neutral hub of cloud native computing")
+2. **Stats bar** (221 Projects, 308K Contributors, 21M Contributions, 192 Countries)
+3. **Projects front and center** — categorized by maturity (Graduated/Incubating/Sandbox) with logos
+4. **Nav**: About | Projects | Training | Community | Blog & News
 
-## Guiding Principle
-
-**Every page should answer: "What does this do, and how do I get involved?"** — in language anyone from an open-source community would immediately understand.
-
----
-
-## 1. Reorder Navigation — Projects First
-
-Current: `Framework | Community | Projects | About`
-New: `Projects | Docs | Community | About`
-
-- "Projects" moves to position 1 — it's the most tangible entry point
-- "Framework" becomes "Docs" — familiar to every open-source contributor (Linux, CNCF, Kubernetes all use "Docs")
-- This signals: "we ship software" before "we have a spec"
-
-**Files:** `src/data/nav-items.ts`
+Your site is close but still has friction points: the hero subtitle uses "content-addressed data identity" language, the "What is UOR" section explains the mechanism before the value, the homepage has too many conceptual sections before showing real projects, and the "Where It Applies" cards on the homepage use domain labels (Semantic Web, Proof-Based Computation) that mean nothing to someone who hasn't already bought in.
 
 ---
 
-## 2. Homepage — Simplify the "What is UOR" Copy
+## Changes
 
-Current copy uses phrases like "content-addressed data identity," "location-dependent identifiers," "derives identity from content structure." These are accurate but alienating.
+### 1. Hero Copy — Lead with What the Foundation Does, Not the Mechanism
 
-**Rewrite to plain language:**
-- "Every piece of data gets a permanent address based on what it is, not where it's stored. The same data always gets the same address, on any system."
-- Replace "References that survive migration, replication, and federation" with "Move data anywhere — the address stays the same."
-- Replace "No central registry, no coordination protocol" with "No central authority required."
+Current subtitle: *"The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it."*
 
-The diagram label "Fragmentation → Unification" stays — it's clear. But update "Isolated Data Systems" → "Separate Systems" and keep "One Shared System."
+This still uses "content-addressed data identity." A CNCF/Linux person would read that and ask "what does that mean?"
 
-**Files:** `src/modules/landing/components/WhatIsUorSection.tsx`
+**New subtitle:** *"The UOR Foundation is a nonprofit home for open-source projects that need a universal way to identify, verify, and share data across systems."*
 
----
+This mirrors CNCF's pattern: org type + what it hosts + why it matters. No mechanism — just purpose.
 
-## 3. Homepage — Tighten the Ecosystem Section
+**File:** `src/modules/landing/components/HeroSection.tsx` (line 92)
 
-Currently has three sub-sections stacked: Featured Projects, Community Highlights, Community Members. This is a lot of scrolling with diminishing engagement.
+### 2. Homepage "What is UOR" — Flip the Order: Value Before Mechanism
+
+The current section explains *how* UOR works (permanent address derived from content) before explaining *why anyone should care*. CNCF leads with outcomes.
 
 **Changes:**
-- Keep Featured Projects (3 cards) — this is strong
-- Keep Community Members grid — social proof matters
-- **Remove Community Highlights** (blog cards) from the homepage. They're already on the Community page and add scroll length without driving action. The blog content is important but belongs on its dedicated page.
+- Rewrite the lead paragraph to start with the problem: "Today, the same data gets different IDs in different systems. Move it, copy it, or federate it — the IDs break. UOR fixes this with one rule: the address comes from the content itself. Same data, same address, everywhere."
+- "Where It Applies" cards: simplify titles to be outcome-oriented rather than domain-labeled. Change "Semantic Web" → "Interoperability", "Proof-Based Computation" → "Verifiable Computing", "Agentic AI" → "AI Infrastructure", "Open Science" → "Research Data"
 
-**Files:** `src/modules/landing/components/EcosystemSection.tsx`
+**Files:** `src/modules/landing/components/WhatIsUorSection.tsx`, `src/modules/landing/components/WhatIsUorSection.tsx` (applications array inline)
 
----
+### 3. Homepage Ecosystem Section — Add a Stats Row (CNCF Pattern)
 
-## 4. Homepage — Simplify the Pillars CTA
+CNCF shows "221 Projects / 308K Contributors / 192 Countries" right on the homepage. This is the single most effective social-proof pattern in open source.
 
-The three pillars ("UOR Framework," "Research Community," "Project Launchpad") duplicate navigation. They're well-written but add another decision layer before the final CTA.
+**Add a compact stats row** above Featured Projects in EcosystemSection: "11 Projects · 150+ Contributors · 12 Research Areas · Open Governance"
 
-**Changes:**
-- Shorten pillar descriptions by ~30% — one sentence each instead of two
-- Update pillar titles and CTAs to match new nav labels ("Docs" instead of "UOR Framework")
+This immediately signals activity and scale.
 
-**Files:** `src/data/pillars.ts`, `src/modules/landing/components/ClosingCTASection.tsx`
+**File:** `src/modules/landing/components/EcosystemSection.tsx`
 
----
+### 4. Hero CTA — Add a Secondary "Getting Started" Link
 
-## 5. Framework Page → "Docs" — Remove Jargon from Hero
+CNCF has "About CNCF" as a secondary link. Your hero only has "Explore Projects." Add a secondary ghost button: "What is UOR?" that scrolls to the intro section. This gives newcomers an explicit on-ramp without leaving the page.
 
-Current hero: "A formal specification for content-addressed object spaces. Existing systems use location-dependent identifiers: URLs break, UUIDs collide across boundaries..."
+**File:** `src/modules/landing/components/HeroSection.tsx`
 
-**Rewrite:**
-- "The open specification for how UOR addressing works. If you're building on UOR or evaluating it for your project, start here."
-- Keep the architecture section and layer cards — developers expect this depth on a docs page
-- Simplify the "Anatomy of an Address" descriptions to avoid "raw data itself, stored as a sequence of bytes"
+### 5. Docs Page — Simplify the "Anatomy of an Address" Section
 
-The CTA "14 namespaces, 82 classes, 124 properties" is impressive to spec authors but meaningless to most visitors. Replace with: "The full specification is open source. Read it, fork it, build on it."
+The three coordinate cards (Value/Weight/Components) use phrases like "active bits" and "positions: 0, 2, 4, 6" which are implementation details that lose non-specialists. 
 
-**Files:** `src/modules/framework/pages/StandardPage.tsx`
+**Rewrite card descriptions to be more conceptual:**
+- Value: "The data itself — a document, a number, a record."
+- Weight: "A measure of the data's complexity — how much information it contains."
+- Components: "The building blocks that make up the data, enabling exact reconstruction."
 
----
+Remove the binary/position code examples and replace with simpler illustrative labels.
 
-## 6. Semantic Web Page — Reduce Jargon in Hero & Comparison Table
+**File:** `src/modules/framework/pages/StandardPage.tsx`
 
-This page serves a specific audience (people who know the W3C Semantic Web stack). It's valuable but the hero copy and comparison table use dense terminology.
+### 6. Docs Page — CTA Section Wording
 
-**Changes:**
-- Hero subtitle: simplify "implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI" → "How UOR implements each layer of the W3C Semantic Web stack."
-- Comparison table "Original" column: keep as-is (it's describing the original spec accurately)
-- Comparison table "UOR" column: simplify phrases like "neg(bnot(x)) = succ(x) verifiable by any machine" → "Built-in mathematical verification. Any machine can check it."
-- Keep the tower diagram and layer cards — they're the core value of this page
+"Browse the Ontology" is jargon. Change to "Read the Specification."
 
-**Files:** `src/modules/framework/pages/SemanticWebPage.tsx`
+**File:** `src/modules/framework/pages/StandardPage.tsx` (line 155)
 
----
+### 7. About Page — Add "Our Principles" Section
 
-## 7. Community Page — Simplify Hero Copy
+The `about-cards.ts` data file already has an `ourPrinciplesCards` array (Transparency, Interoperability, Trust) that isn't rendered on the About page. CNCF prominently shows its values. Add this section below "What We Do."
 
-Current: "Researchers and builders working across disciplines to test ideas, validate results, and publish openly."
+**File:** `src/modules/core/pages/AboutPage.tsx`
 
-This is already decent. Minor tweaks:
-- Make it clearer this is about participation: "A global community of researchers and developers. Propose ideas, get peer review, and publish results — all in the open."
+### 8. Community Page — Rename Route to `/community`
 
-**Files:** `src/modules/community/pages/ResearchPage.tsx`
+The Community page lives at `/research` which is confusing. CNCF uses `/community`. Rename the route and add a redirect from `/research`.
 
----
+**Files:** `src/App.tsx`, `src/data/nav-items.ts`, `src/data/route-table.ts`, `src/data/pillars.ts`, links in `ClosingCTASection.tsx`, `ResearchPage.tsx`, `EcosystemSection.tsx` (if any internal links)
 
-## 8. Projects Page — Simplify Hero Copy
+### 9. Footer — Deduplicate className
 
-Current: "Open-source projects built on the UOR specification, organized by maturity level."
+Minor: the Footer has `px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]` duplicated on the container div. Clean up.
 
-**Rewrite:** "Every project in the UOR ecosystem — from early experiments to production-ready tools. Find something to use, or submit your own."
-
-This immediately tells the visitor what they can *do* here.
-
-**Files:** `src/modules/projects/pages/ProjectsPage.tsx`
-
----
-
-## 9. About Page — Minor Copy Polish
-
-Current hero: "A 501(c)(3) nonprofit building open infrastructure for reliable, verifiable data."
-
-**Rewrite:** "A 501(c)(3) nonprofit maintaining the UOR specification and supporting the projects built on it."
-
-This is clearer about what the foundation actually does.
-
-**Files:** `src/modules/core/pages/AboutPage.tsx`
-
----
-
-## 10. Update Route Path for Framework → Docs
-
-Change `/standard` to `/docs` to match the new nav label. Add a redirect from `/standard` → `/docs` for any existing links.
-
-**Files:** `src/App.tsx`, `src/data/nav-items.ts`, internal links in `SemanticWebPage.tsx`, `ClosingCTASection.tsx`, `WhatIsUorSection.tsx`
+**File:** `src/modules/core/components/Footer.tsx` (line 11)
 
 ---
 
 ## Summary
 
-| Change | Impact |
-|--------|--------|
-| Nav reorder: Projects first, "Docs" label | Immediate clarity on what the org ships |
-| Homepage copy simplification | Removes jargon barrier for newcomers |
-| Remove blog highlights from homepage | Shorter scroll, fewer distractions |
-| Shorter pillar descriptions | Faster path to action |
-| Docs page hero rewrite | Welcoming instead of intimidating |
-| Semantic Web jargon reduction | Accessible to broader audience |
-| Projects hero rewrite | Action-oriented, inviting |
-| Route `/standard` → `/docs` | Familiar convention |
+| Change | Why |
+|--------|-----|
+| Hero subtitle rewrite | Matches CNCF "what we host" pattern |
+| What is UOR — value before mechanism | Mirrors how CNCF/Linux describes itself |
+| Application cards — outcome labels | Removes domain jargon |
+| Stats row on homepage | CNCF's most effective social proof |
+| Secondary hero CTA | Gives newcomers an explicit path |
+| Docs "Anatomy" simplification | Removes binary/bit-level jargon |
+| "Browse the Ontology" → "Read the Specification" | Plain language |
+| About page principles section | Uses existing data, mirrors CNCF values display |
+| `/research` → `/community` route | Matches CNCF convention |
+| Footer cleanup | Code quality |
 
-**Files modified:** 10 files. No new files. No structural changes to components. Pure copy, routing, and ordering refinements.
+**10 files modified. No new files. No structural component changes.**
 
