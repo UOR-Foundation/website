@@ -29,7 +29,7 @@ const HeroSection = () => {
           className="font-display text-[clamp(1.75rem,7.5vw,2.75rem)] font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
           style={{ animationDelay: "0.29s" }}
         >
-           The Open Foundation<br />
+           The Foundation<br />
            for Universal<br />
            Data Identity
         </h1>
@@ -87,7 +87,7 @@ const HeroSection = () => {
             className="font-display text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
-             The Open Foundation<br />
+             The Foundation<br />
              for Universal<br />
              Data Identity
           </h1>
