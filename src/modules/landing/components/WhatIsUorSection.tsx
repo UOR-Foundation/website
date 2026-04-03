@@ -12,22 +12,22 @@ interface Application {
 const applications: Application[] = [
   {
     icon: Globe,
-    title: "Semantic Web",
-    description: "Make data understandable by both people and machines, so systems can work together without custom translations.",
+    title: "Interoperability",
+    description: "Connect systems that were never designed to talk to each other — without custom adapters or translations.",
   },
   {
     icon: ShieldCheck,
-    title: "Proof-Based Computation",
+    title: "Verifiable Computing",
     description: "Run a computation once and produce a receipt anyone can check. No need to re-run it or trust the source.",
   },
   {
     icon: Bot,
-    title: "Agentic AI",
+    title: "AI Infrastructure",
     description: "Give AI systems a single, reliable map of all available data so they can find, verify, and use information.",
   },
   {
     icon: Microscope,
-    title: "Open Science",
+    title: "Research Data",
     description: "Make research data findable, reproducible, and composable across institutions and disciplines.",
   },
 ];
@@ -48,8 +48,8 @@ const WhatIsUorSection = () => {
           {/* Left: Text */}
           <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              <span className="text-foreground/90 font-medium">Universal Object Reference (UOR) gives every piece of data a permanent address derived from its content.</span>{" "}
-              <span className="text-foreground/70 font-normal">The same input always produces the same address, on any machine, in any system.</span>
+              <span className="text-foreground/90 font-medium">Today, the same data gets different IDs in different systems. Move it, copy it, or federate it — the IDs break.</span>{" "}
+              <span className="text-foreground/70 font-normal">UOR fixes this with one rule: the address comes from the content itself. Same data, same address, everywhere.</span>
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
               Move data anywhere — the address stays the same. No central authority required, no single point of failure.

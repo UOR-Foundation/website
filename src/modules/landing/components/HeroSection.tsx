@@ -35,7 +35,7 @@ const HeroSection = () => {
         </h1>
 
         <div
-          className="mt-[clamp(1.75rem,5vw,3rem)] animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.75rem,5vw,3rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
@@ -44,6 +44,12 @@ const HeroSection = () => {
           >
             Explore Projects
             <ArrowRight size={15} />
+          </a>
+          <a
+            href="#intro"
+            className="pointer-events-auto inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-foreground/50 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
+          >
+            What is UOR?
           </a>
         </div>
 
@@ -89,10 +95,10 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            The UOR Foundation maintains the open specification for content-addressed data identity. We exist to support the open-source projects building on it.
+            The UOR Foundation is a nonprofit home for open-source projects that need a universal way to identify, verify, and share data across systems.
           </p>
           <div
-            className="mt-[clamp(1.25rem,2.5vw,3rem)] animate-fade-in-up opacity-0"
+            className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
@@ -101,6 +107,12 @@ const HeroSection = () => {
             >
               Explore Projects
               <ArrowRight size={15} />
+            </a>
+            <a
+              href="#intro"
+              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.8vw,2.5rem)] py-[clamp(0.75rem,1vw,1.25rem)] text-[clamp(0.7rem,0.8vw,0.95rem)] font-semibold uppercase tracking-[0.2em] text-foreground/60 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
+            >
+              What is UOR?
             </a>
           </div>
         </div>

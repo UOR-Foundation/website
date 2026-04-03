@@ -64,33 +64,33 @@ const Standard = () => {
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 1</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Value</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The actual content being addressed — a number, a document, a record. This is the "what."
+                  The data itself — a document, a number, a record. This is the "what."
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Example: the number 85</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">01010101</p>
+                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">Document, number, or any content</p>
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-card p-6">
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 2</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Weight</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  How many "active" bits are in the value — a measure of complexity.
+                  A measure of the data's complexity — how much information it contains.
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">85 has four 1-bits</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">Weight: 4</p>
+                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">Complexity score: 4</p>
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-card p-6">
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  Which specific building blocks make up the value, enabling lossless reconstruction.
+                  The building blocks that make up the data, enabling exact reconstruction.
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
-                  <p className="font-mono text-fluid-caption text-foreground/70 mb-1">Active positions</p>
-                  <p className="font-mono text-fluid-label text-foreground font-semibold">Positions: 0, 2, 4, 6</p>
+                  <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
+                  <p className="font-mono text-fluid-label text-foreground font-semibold">4 distinct building blocks</p>
                 </div>
               </div>
             </div>
@@ -152,7 +152,7 @@ const Standard = () => {
               rel="noopener noreferrer"
               className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg inline-flex items-center justify-center gap-2"
             >
-              Browse the Ontology
+              Read the Specification
               <ExternalLink size={15} />
             </a>
             <a

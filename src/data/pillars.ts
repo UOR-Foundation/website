@@ -16,7 +16,7 @@ export const pillars = [
     title: "Community",
     description:
       "Propose ideas, get peer review, and publish results. Active working groups across mathematics, AI, cryptography, and systems engineering.",
-    href: "/research",
+    href: "/community",
     cta: "Join the Discussion",
   },
   {
