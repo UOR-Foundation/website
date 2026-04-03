@@ -29,9 +29,9 @@ const HeroSection = () => {
           className="font-display text-[clamp(1.75rem,7.5vw,2.75rem)] font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2"
           style={{ animationDelay: "0.29s" }}
         >
-          Your Universal<br />
-          Coordinate<br />
-          System for Information
+           The Open Foundation<br />
+           for Universal<br />
+           Data Identity
         </h1>
 
         <div
@@ -87,15 +87,15 @@ const HeroSection = () => {
             className="font-display text-[clamp(3rem,3.8vw,6.5rem)] font-bold leading-[1.08] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.29s" }}
           >
-            Your Universal<br />
-            Coordinate System<br />
-            for Information
+             The Open Foundation<br />
+             for Universal<br />
+             Data Identity
           </h1>
           <p
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            A nonprofit home for open-source projects building universal data identity. Learn the framework, connect with contributors, and build together.
+            We support open-source projects that give data a permanent, verifiable address. Learn the framework, connect with contributors, and start building.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"

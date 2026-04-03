@@ -2,7 +2,6 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Globe, Users, Rocket } from "lucide-react";
 import { pillars } from "@/data/pillars";
-import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
 import type { LucideIcon } from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
@@ -38,37 +37,22 @@ const ClosingCTASection = () => {
           })}
         </div>
 
-        {/* CTA */}
+        {/* Single focused CTA */}
         <div className="relative text-center pt-golden-lg border-t border-foreground/8">
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-            Learn · Connect · Build
+            Ready to Build?
           </h2>
-          <div className="mt-golden-lg flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
-            <a
-              href={GITHUB_FRAMEWORK_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+          <p className="mt-golden-sm text-foreground/60 font-body text-fluid-lead max-w-xl mx-auto leading-relaxed">
+            Submit your project for Sandbox review. Our technical committee reviews every submission within 3 weeks.
+          </p>
+          <div className="mt-golden-lg">
+            <Link
+              to="/projects#submit"
               className="btn-primary inline-flex items-center gap-2"
             >
-              Getting Started Guide
+              Submit Your Project
               <ArrowRight size={14} />
-            </a>
-            <a
-              href={DISCORD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline inline-flex items-center gap-2"
-            >
-              Join Discord
-            </a>
-            <a
-              href={GITHUB_ORG_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline inline-flex items-center gap-2"
-            >
-              GitHub Organization
-            </a>
+            </Link>
           </div>
         </div>
       </div>

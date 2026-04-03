@@ -9,12 +9,17 @@ const maturityDotColors: Record<MaturityLevel, string> = {
   Sandbox: "bg-muted-foreground/50",
 };
 
+const pipelineSteps: { level: MaturityLevel; description: string; count: number }[] = [
+  { level: "Sandbox", description: "Early-stage experiments with clear potential", count: 11 },
+  { level: "Incubating", description: "Growing adoption and community traction", count: 0 },
+  { level: "Graduated", description: "Production-ready with proven stability", count: 0 },
+];
 
 const EcosystemSection = () => {
   return (
     <section className="py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-        {/* Stats row — CNCF pattern */}
+        {/* Stats row */}
         <div className="flex flex-wrap justify-center gap-6 md:gap-10 lg:gap-14 mb-golden-lg pb-golden-lg border-b border-foreground/8">
           {[
             { value: "11", label: "Projects" },
@@ -32,7 +37,7 @@ const EcosystemSection = () => {
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
               Our Projects
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
@@ -52,8 +57,9 @@ const EcosystemSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
           {featuredProjects.map((project, index) => (
-            <div
+            <Link
               key={project.name}
+              to={`/projects/${project.slug}`}
               className="group relative p-6 md:p-8 lg:p-10 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 flex flex-col gap-3 panel-active animate-fade-in-up opacity-0"
               style={{ animationDelay: `${index * 0.11}s` }}
             >
@@ -66,16 +72,59 @@ const EcosystemSection = () => {
               <div className="flex items-center justify-between mt-golden-sm">
                 <span className="font-semibold text-foreground/45 font-body uppercase tracking-[0.15em] text-fluid-label">{project.category}</span>
                 {project.url && (
-                  <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-foreground/50 hover:text-foreground transition-colors">
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-foreground/50 hover:text-foreground transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <ExternalLink size={14} />
                   </a>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
-        {/* Community members — compact */}
+        {/* Maturity Pipeline */}
+        <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
+            The Project Journey
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            {pipelineSteps.map((step, idx) => (
+              <div
+                key={step.level}
+                className="relative flex flex-col p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
+              >
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className={`w-2.5 h-2.5 rounded-full ${maturityDotColors[step.level]}`} />
+                  <h3 className="font-display font-semibold text-foreground text-fluid-card-title">{step.level}</h3>
+                  {idx < pipelineSteps.length - 1 && (
+                    <ArrowRight size={14} className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-foreground/30 z-10" />
+                  )}
+                </div>
+                <p className="text-foreground/60 font-body text-fluid-body leading-relaxed mb-2">{step.description}</p>
+                <p className="font-display font-bold text-foreground text-fluid-lead mt-auto">
+                  {step.count} <span className="text-foreground/50 font-body font-normal text-fluid-label">{step.count === 1 ? "project" : "projects"}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-golden-md">
+            <Link
+              to="/projects#maturity"
+              className="group inline-flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body text-fluid-label"
+            >
+              Learn how maturity works
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Community members */}
         <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
             UOR Community
