@@ -26,7 +26,7 @@ export const categoryResearch: Record<
       authors: "Luis Morató de Dalmases",
       status: "Published",
       description:
-        "The complete mathematical proofs behind the physical theory — how the core geometric property emerges and why it is unique.",
+        "The complete mathematical proofs behind the physical theory: how the core geometric property emerges and why it is unique.",
       href: "/research/qsvg-technical-appendices",
     },
     {
