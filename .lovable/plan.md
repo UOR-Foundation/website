@@ -1,40 +1,46 @@
 
 
-# Hero Section — Mission-Led Headline
+# Docs Page Redesign — Clean, CNCF-Style Developer Entry Point
 
-## The Pattern
+## Goal
+Replace the current dense, diagram-heavy docs page with a clean, scannable page that feels familiar to open-source developers (CNCF, Linux Foundation style). All content links canonically to the UOR Framework GitHub repo. No jargon. Clear developer onboarding.
 
-Both SpaceX and CNCF lead with a **verb-driven mission** — not a description of what the org *is*, but what it's *doing*:
+## Current State
+The `/docs` page (StandardPage.tsx) has four heavy sections: a UOR diagram with interactive capabilities, three "anatomy of an address" cards, six expandable framework layers, six application cards, and a CTA. It's information-dense and unfamiliar in structure.
 
-- SpaceX: **"MAKING LIFE MULTIPLANETARY"**
-- CNCF: **"MAKE CLOUD NATIVE UBIQUITOUS"**
+## New Structure
 
-The subtitle then grounds it: who we are, what we host, why it matters.
+**Section 1 — Hero (simplified)**
+- Title: "Documentation"
+- Subtitle: One sentence — "Everything you need to understand, evaluate, and build with the UOR Framework."
+- Two buttons: "Read the Docs" (links to GitHub Pages docs) and "View on GitHub" (links to repo)
 
-Current UOR hero ("The Foundation for Universal Data Identity") describes the org. It doesn't declare a mission. It's a label, not a rallying cry.
+**Section 2 — Getting Started (3-card grid)**
+Three clean cards, each with an icon, title, one-line description, and a link to the relevant GitHub docs page:
+1. **Overview** — "What UOR is, what problem it solves, and how addressing works." → links to docs overview
+2. **Architecture** — "Six layers from mathematical foundation to data transformation." → links to docs architecture
+3. **Quick Start** — "Verify the core identity proof and explore the API." → links to repo README or quick start
 
-## Proposed Hero
+**Section 3 — Key Concepts (simple list/grid)**
+A clean 2-column or 3-column grid of the six framework layers, but radically simplified — no accordions, no expandable panels. Each is just a card with: layer number, title, one-line summary, and a link out to the canonical GitHub docs page for that namespace. Looks like a typical docs index (Kubernetes docs, CNCF project pages).
 
-**Headline:**
-```
-MAKE DATA IDENTITY
-UNIVERSAL
-```
+**Section 4 — Where It Applies**
+Keep the existing six application cards but simplify styling slightly. This section stays as-is since it's already clean.
 
-Three words of action ("Make data identity"), one word of vision ("universal"). Verb-led like SpaceX and CNCF. Says exactly what UOR exists to do. "Universal" on its own line gives it visual weight — mirrors CNCF's "UBIQUITOUS" treatment.
+**Section 5 — CTA (simplified)**
+- "Explore the Full Specification" with two buttons: "Read the Specification" and "View on GitHub"
+- Remove the "Try Prism" button to reduce noise (Prism is on the Projects page)
 
-**Subtitle (desktop):**
-"The UOR Foundation is the open-source home for projects that give every piece of data a permanent, verifiable address — so it can be found, proven, and trusted anywhere."
+## Technical Changes
 
-This follows the CNCF subtitle pattern: [Org name] is [what it is], [doing what], [to achieve what]. One sentence. Concrete. No jargon.
+| File | Change |
+|---|---|
+| `src/modules/framework/pages/StandardPage.tsx` | Rewrite page with simplified sections described above. Remove UORDiagram and FrameworkLayers component imports. |
+| `src/data/framework-layers.ts` | Keep data file but only use `number`, `title`, `summary`, and first namespace link per layer for the simplified cards. |
+| No new files needed | The page becomes simpler, not more complex. |
 
-**Mobile:** Same headline. Subtitle condensed or omitted (current pattern already hides the `<p>` on mobile — we keep that).
-
-## Changes
-
-**File:** `src/modules/landing/components/HeroSection.tsx`
-
-1. Replace the `<h1>` text (both mobile and desktop) from "The Foundation for Universal Data Identity" to "Make Data Identity Universal"
-2. Replace the desktop subtitle `<p>` text with the new grounding sentence
-3. No layout, styling, or structural changes — pure copy swap
+## Copy Style
+- Plain English. No "substrate," "involution," or "algebraic identity" on the docs page.
+- Every section header is a verb or question developers would ask: "Getting Started," "Key Concepts," "Where It Applies."
+- All links go to `https://github.com/UOR-Foundation/UOR-Framework` or `https://uor-foundation.github.io/UOR-Framework/` — canonical sources only.
 
