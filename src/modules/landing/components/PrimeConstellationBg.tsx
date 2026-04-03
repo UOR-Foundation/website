@@ -16,49 +16,39 @@ function sievePrimes(max: number): Set<number> {
 const MAX_N = 6000;
 const GOLDEN_ANGLE = 2.3999632297286533;
 const ROTATION_SPEED = 0.00003;
-const GOLD = "38, 65%, 55%";
-const WARM_WHITE = "40, 20%, 85%";
+const WARM_WHITE = "220, 15%, 82%";
+const COOL_BLUE = "210, 35%, 72%";
+const SOFT_SILVER = "230, 12%, 78%";
 
-// Scroll: faint whisper at 20%, constellations form by 70%, full at 90%
-const SCROLL_START = 0.20;
-const SCROLL_CONSTELLATION = 0.55;
-const SCROLL_FULL = 0.90;
+// Scroll thresholds — stars appear early and gently
+const SCROLL_START = 0.08;
+const SCROLL_STARS_FULL = 0.40;
+const SCROLL_CONSTELLATION_START = 0.35;
+const SCROLL_CONSTELLATION_FULL = 0.85;
 
-const PEAK_ALPHA = 0.14;
-const DOT_R = 1.2;
-const PULSE_SPEED = 0.0004;
+const DOT_R = 0.9;
+const PULSE_SPEED = 0.0003;
 
-/* ── Constellation definitions using prime numbers ───────────
- * Each constellation is built from specific prime numbers that
- * naturally fall on the Vogel spiral. Lines connect them.
- */
-
-// Find primes near target positions on the spiral
+/* ── Constellation builder ───────────────────────────────────── */
 const primes = sievePrimes(MAX_N);
 const primeList: number[] = [];
 for (let n = 2; n <= MAX_N; n++) if (primes.has(n)) primeList.push(n);
 
-// Pre-compute Vogel positions for all primes (unit circle, unscaled)
 const primeVogel: Array<{ n: number; ux: number; uy: number }> = primeList.map(n => ({
   n,
   ux: Math.sqrt(n) * Math.cos(n * GOLDEN_ANGLE),
   uy: Math.sqrt(n) * Math.sin(n * GOLDEN_ANGLE),
 }));
 
-/* ── Build constellations from nearby primes ─────────────────
- * We select clusters of primes that are spatially close on the
- * Vogel spiral and connect them into constellation figures.
- * Each cluster represents a different cosmic pattern.
- */
 interface ConstellationStar {
-  primeIdx: number; // index into primeVogel
+  primeIdx: number;
   brightness: number;
 }
 interface Constellation {
-  name: string;
   stars: ConstellationStar[];
-  lines: [number, number][]; // indices into stars array
+  lines: [number, number][];
   hue: string;
+  breathePhase: number; // unique phase offset for organic feel
 }
 
 function findNearestPrime(targetUx: number, targetUy: number, exclude: Set<number>): number {
@@ -74,16 +64,13 @@ function findNearestPrime(targetUx: number, targetUy: number, exclude: Set<numbe
   return bestIdx;
 }
 
-// Build constellations by selecting prime clusters at different regions
 function buildConstellations(): Constellation[] {
   const used = new Set<number>();
   const result: Constellation[] = [];
 
-  // Helper: pick a cluster of primes near a center
   const pickCluster = (cx: number, cy: number, count: number): number[] => {
     const indices: number[] = [];
     for (let i = 0; i < count; i++) {
-      // Offset from center in a pattern
       const angle = (i / count) * Math.PI * 2;
       const radius = 2 + (i % 3) * 1.5;
       const tx = cx + Math.cos(angle) * radius;
@@ -95,68 +82,34 @@ function buildConstellations(): Constellation[] {
     return indices;
   };
 
-  // Orion — upper right region
-  const orionIndices = pickCluster(25, -15, 7);
-  result.push({
-    name: "Orion",
-    stars: orionIndices.map((idx, i) => ({ primeIdx: idx, brightness: i === 0 ? 1.8 : i < 3 ? 1.4 : 1.0 })),
-    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [4, 6], [1, 5], [2, 6]],
-    hue: GOLD,
-  });
+  // Scattered across the field — each with a unique cool/warm white hue
+  const configs: Array<{ cx: number; cy: number; count: number; lines: [number, number][]; hue: string; phase: number }> = [
+    { cx: 25, cy: -15, count: 7, lines: [[0,1],[1,2],[2,3],[3,4],[0,5],[4,6],[1,5]], hue: WARM_WHITE, phase: 0 },
+    { cx: -20, cy: -20, count: 5, lines: [[0,1],[1,2],[2,3],[3,4]], hue: COOL_BLUE, phase: 1.2 },
+    { cx: -30, cy: 5, count: 5, lines: [[0,1],[1,2],[2,0],[0,3],[3,4]], hue: SOFT_SILVER, phase: 2.4 },
+    { cx: 10, cy: 30, count: 7, lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]], hue: WARM_WHITE, phase: 3.8 },
+    { cx: 35, cy: 15, count: 5, lines: [[0,2],[2,4],[1,2],[2,3]], hue: COOL_BLUE, phase: 5.0 },
+    { cx: -10, cy: 25, count: 4, lines: [[0,1],[1,2],[2,3],[3,0]], hue: SOFT_SILVER, phase: 6.3 },
+    { cx: 40, cy: -25, count: 4, lines: [[0,1],[1,2],[2,3]], hue: WARM_WHITE, phase: 7.5 },
+  ];
 
-  // Cassiopeia — upper left, W shape
-  const cassIndices = pickCluster(-20, -20, 5);
-  result.push({
-    name: "Cassiopeia",
-    stars: cassIndices.map((idx, i) => ({ primeIdx: idx, brightness: i === 2 ? 1.6 : 1.2 })),
-    lines: [[0, 1], [1, 2], [2, 3], [3, 4]],
-    hue: WARM_WHITE,
-  });
-
-  // Lyra — center-left, small triangle + stem
-  const lyraIndices = pickCluster(-30, 5, 5);
-  result.push({
-    name: "Lyra",
-    stars: lyraIndices.map((idx, i) => ({ primeIdx: idx, brightness: i === 0 ? 1.7 : 1.0 })),
-    lines: [[0, 1], [1, 2], [2, 0], [0, 3], [3, 4]],
-    hue: "220, 40%, 70%",
-  });
-
-  // Ursa Minor — lower region
-  const ursaIndices = pickCluster(10, 30, 7);
-  result.push({
-    name: "Ursa Minor",
-    stars: ursaIndices.map((idx, i) => ({ primeIdx: idx, brightness: i === 0 ? 1.9 : i < 4 ? 1.2 : 0.9 })),
-    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 3]],
-    hue: "200, 30%, 65%",
-  });
-
-  // Cygnus — right region, cross shape
-  const cygnusIndices = pickCluster(35, 15, 5);
-  result.push({
-    name: "Cygnus",
-    stars: cygnusIndices.map((idx, i) => ({ primeIdx: idx, brightness: i === 2 ? 1.5 : 1.1 })),
-    lines: [[0, 2], [2, 4], [1, 2], [2, 3]],
-    hue: "30, 50%, 65%",
-  });
+  for (const cfg of configs) {
+    const indices = pickCluster(cfg.cx, cfg.cy, cfg.count);
+    result.push({
+      stars: indices.map((idx, i) => ({
+        primeIdx: idx,
+        brightness: i === 0 ? 1.6 : i < 3 ? 1.2 : 0.9,
+      })),
+      lines: cfg.lines,
+      hue: cfg.hue,
+      breathePhase: cfg.phase,
+    });
+  }
 
   return result;
 }
 
 const constellations = buildConstellations();
-
-/* ── Flowing connection lines between nearby primes ──────────── */
-const NEIGHBOR_DIST = 5.5;
-const neighborEdges: [number, number][] = [];
-for (let i = 0; i < primeVogel.length && i < 800; i++) {
-  for (let j = i + 1; j < primeVogel.length && j < 800; j++) {
-    const dx = primeVogel[i].ux - primeVogel[j].ux;
-    const dy = primeVogel[i].uy - primeVogel[j].uy;
-    if (dx * dx + dy * dy < NEIGHBOR_DIST * NEIGHBOR_DIST) {
-      neighborEdges.push([i, j]);
-    }
-  }
-}
 
 /* ── Component ───────────────────────────────────────────────── */
 const PrimeConstellationBg = () => {
@@ -184,17 +137,17 @@ const PrimeConstellationBg = () => {
     const scrollFrac = scrollRef.current;
     const time = timeRef.current;
 
-    // Phase 1: dots appear (SCROLL_START → SCROLL_CONSTELLATION)
-    const tDots = Math.min(1, Math.max(0, (scrollFrac - SCROLL_START) / (SCROLL_CONSTELLATION - SCROLL_START)));
-    const easedDots = tDots * tDots * (3 - 2 * tDots);
+    // Phase 1: white star points emerge gently
+    const tStars = Math.min(1, Math.max(0, (scrollFrac - SCROLL_START) / (SCROLL_STARS_FULL - SCROLL_START)));
+    const easedStars = tStars * tStars * (3 - 2 * tStars); // smoothstep
 
-    // Phase 2: constellations form (SCROLL_CONSTELLATION → SCROLL_FULL)
-    const tConst = Math.min(1, Math.max(0, (scrollFrac - SCROLL_CONSTELLATION) / (SCROLL_FULL - SCROLL_CONSTELLATION)));
+    // Phase 2: constellation lines form
+    const tConst = Math.min(1, Math.max(0, (scrollFrac - SCROLL_CONSTELLATION_START) / (SCROLL_CONSTELLATION_FULL - SCROLL_CONSTELLATION_START)));
     const easedConst = tConst * tConst * (3 - 2 * tConst);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (easedDots < 0.001) {
+    if (easedStars < 0.001) {
       angleRef.current += ROTATION_SPEED;
       timeRef.current += PULSE_SPEED;
       rafRef.current = requestAnimationFrame(draw);
@@ -213,114 +166,114 @@ const PrimeConstellationBg = () => {
     const cosA = Math.cos(globalAngle);
     const sinA = Math.sin(globalAngle);
 
-    // Breathing pulse — different frequencies for organic feel
-    const pulse1 = 1 + 0.05 * Math.sin(time);
-    const pulse2 = 1 + 0.03 * Math.sin(time * 1.618);
-    const pulse3 = 1 + 0.04 * Math.sin(time * 0.618);
-
     const toScreen = (ux: number, uy: number): [number, number] => {
       const rx = ux * cosA - uy * sinA;
       const ry = ux * sinA + uy * cosA;
       return [cx + rx * spacing, cy + ry * spacing];
     };
 
-    // ── Phase 1: Scattered prime dots emerge ──
-    const dotAlpha = easedDots * PEAK_ALPHA * pulse1;
+    // ── Phase 1: White star points gradually appearing ──
+    // Inner stars first, outer stars later — like the universe unfurling
+    const maxDist = Math.sqrt(MAX_N);
 
     for (let i = 0; i < primeVogel.length; i++) {
       const p = primeVogel[i];
       const [x, y] = toScreen(p.ux, p.uy);
       if (x < -5 || x > w + 5 || y < -5 || y > h + 5) continue;
 
-      // Stagger appearance: inner primes first, outer later
       const distFromCenter = Math.sqrt(p.ux * p.ux + p.uy * p.uy);
-      const maxDist = Math.sqrt(MAX_N);
-      const stagger = distFromCenter / maxDist;
-      const localT = Math.max(0, (easedDots - stagger * 0.5) / 0.5);
+      const normalizedDist = distFromCenter / maxDist;
+
+      // Stagger: inner stars appear first
+      const stagger = normalizedDist * 0.7;
+      const localT = Math.max(0, Math.min(1, (easedStars - stagger) / 0.3));
       if (localT < 0.01) continue;
 
-      const isTwin = primes.has(p.n + 2) || primes.has(p.n - 2);
-      const r = (isTwin ? DOT_R * 1.4 : DOT_R) * pulse2 * localT;
-      const a = dotAlpha * localT * (isTwin ? 1.3 : 1);
+      // Each star has a unique gentle twinkle
+      const twinkle = 0.6 + 0.4 * Math.sin(time * 1.5 + p.n * 0.37);
 
+      const isTwin = primes.has(p.n + 2) || primes.has(p.n - 2);
+      const r = (isTwin ? DOT_R * 1.3 : DOT_R) * localT;
+      const alpha = localT * twinkle * (isTwin ? 0.18 : 0.12);
+
+      // Soft radial glow — makes each point feel like a real star
+      const glowR = r * 3;
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+      glow.addColorStop(0, `hsla(${WARM_WHITE}, ${alpha * 0.8})`);
+      glow.addColorStop(0.5, `hsla(${WARM_WHITE}, ${alpha * 0.2})`);
+      glow.addColorStop(1, `hsla(${WARM_WHITE}, 0)`);
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${GOLD}, ${a})`;
+      ctx.arc(x, y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      // Core point
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${WARM_WHITE}, ${Math.min(alpha * 2, 0.5)})`;
       ctx.fill();
     }
 
-    // ── Phase 1.5: Subtle web of connections between nearby primes ──
-    if (easedDots > 0.3) {
-      const webAlpha = Math.min(1, (easedDots - 0.3) / 0.4) * 0.03 * pulse3;
-      ctx.strokeStyle = `hsla(${GOLD}, ${webAlpha})`;
-      ctx.lineWidth = 0.3;
-      ctx.beginPath();
-      for (const [i, j] of neighborEdges) {
-        const [x1, y1] = toScreen(primeVogel[i].ux, primeVogel[i].uy);
-        const [x2, y2] = toScreen(primeVogel[j].ux, primeVogel[j].uy);
-        if (
-          (x1 < -10 && x2 < -10) || (x1 > w + 10 && x2 > w + 10) ||
-          (y1 < -10 && y2 < -10) || (y1 > h + 10 && y2 > h + 10)
-        ) continue;
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-      }
-      ctx.stroke();
-    }
-
-    // ── Phase 2: Constellations coalesce ──
+    // ── Phase 2: Constellations coalesce — lines grow like living threads ──
     if (easedConst > 0.01) {
       for (let ci = 0; ci < constellations.length; ci++) {
         const c = constellations[ci];
-        // Stagger constellation appearance
-        const cDelay = ci * 0.15;
+        // Each constellation appears at a different scroll depth
+        const cDelay = ci * 0.1;
         const cT = Math.max(0, Math.min(1, (easedConst - cDelay) / (1 - cDelay)));
         if (cT < 0.01) continue;
 
-        const cPulse = 1 + 0.06 * Math.sin(time + ci * 1.618);
-        const cAlpha = cT * 0.4 * cPulse;
+        // Living, breathing pulse unique to each constellation
+        const breathe = 1 + 0.08 * Math.sin(time * 1.2 + c.breathePhase);
+        const slowDrift = 0.03 * Math.sin(time * 0.7 + c.breathePhase * 0.5);
 
-        // Compute star screen positions
         const starPos = c.stars.map(s => {
           const p = primeVogel[s.primeIdx];
           const [x, y] = toScreen(p.ux, p.uy);
           return { x, y, brightness: s.brightness };
         });
 
-        // Draw constellation lines — animated draw-in
+        // Draw constellation lines — each line draws itself in sequentially
         for (let li = 0; li < c.lines.length; li++) {
           const [a, b] = c.lines[li];
-          const lineT = Math.max(0, Math.min(1, (cT - li * 0.08) / 0.5));
+          // Each line starts drawing at a staggered time
+          const lineDelay = li * 0.06;
+          const lineT = Math.max(0, Math.min(1, (cT - lineDelay) / 0.4));
           if (lineT < 0.01) continue;
+
+          const eased = lineT * lineT * (3 - 2 * lineT); // smoothstep the line growth
 
           const ax = starPos[a].x;
           const ay = starPos[a].y;
-          const bx = ax + (starPos[b].x - ax) * lineT;
-          const by = ay + (starPos[b].y - ay) * lineT;
+          const bx = ax + (starPos[b].x - ax) * eased;
+          const by = ay + (starPos[b].y - ay) * eased;
 
-          // Gradient line
+          const lineAlpha = cT * 0.15 * breathe;
+
+          // Gradient line that fades at the growing tip
           const lineGrad = ctx.createLinearGradient(ax, ay, bx, by);
-          lineGrad.addColorStop(0, `hsla(${c.hue}, ${cAlpha * 0.6})`);
-          lineGrad.addColorStop(1, `hsla(${c.hue}, ${cAlpha * 0.2})`);
+          lineGrad.addColorStop(0, `hsla(${c.hue}, ${lineAlpha})`);
+          lineGrad.addColorStop(0.7, `hsla(${c.hue}, ${lineAlpha * 0.8})`);
+          lineGrad.addColorStop(1, `hsla(${c.hue}, ${lineAlpha * 0.2})`);
 
           ctx.strokeStyle = lineGrad;
-          ctx.lineWidth = 0.6 * cPulse;
+          ctx.lineWidth = (0.5 + 0.2 * breathe) * eased;
           ctx.beginPath();
           ctx.moveTo(ax, ay);
           ctx.lineTo(bx, by);
           ctx.stroke();
         }
 
-        // Draw constellation stars with layered glow
+        // Draw constellation stars — brighter than field stars, with living glow
         for (const star of starPos) {
-          const starR = 2 * star.brightness * cPulse;
-          const starAlpha = cAlpha * star.brightness;
+          const starAlpha = cT * 0.35 * star.brightness * breathe;
+          const starR = 1.5 * star.brightness * breathe;
 
-          // Outer nebula glow
-          const nebulaR = starR * 6;
+          // Outer nebula halo
+          const nebulaR = starR * 8;
           const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${c.hue}, ${starAlpha * 0.25})`);
-          nebula.addColorStop(0.4, `hsla(${c.hue}, ${starAlpha * 0.08})`);
+          nebula.addColorStop(0, `hsla(${c.hue}, ${starAlpha * 0.15})`);
+          nebula.addColorStop(0.3, `hsla(${c.hue}, ${starAlpha * 0.05})`);
           nebula.addColorStop(1, `hsla(${c.hue}, 0)`);
           ctx.beginPath();
           ctx.arc(star.x, star.y, nebulaR, 0, Math.PI * 2);
@@ -328,18 +281,19 @@ const PrimeConstellationBg = () => {
           ctx.fill();
 
           // Inner glow
-          const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, starR * 2.5);
-          inner.addColorStop(0, `hsla(${c.hue}, ${starAlpha * 0.6})`);
+          const innerR = starR * 3;
+          const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, innerR);
+          inner.addColorStop(0, `hsla(${c.hue}, ${starAlpha * 0.5})`);
           inner.addColorStop(1, `hsla(${c.hue}, 0)`);
           ctx.beginPath();
-          ctx.arc(star.x, star.y, starR * 2.5, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, innerR, 0, Math.PI * 2);
           ctx.fillStyle = inner;
           ctx.fill();
 
-          // Core
+          // Bright core
           ctx.beginPath();
-          ctx.arc(star.x, star.y, starR * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${c.hue}, ${Math.min(starAlpha * 1.2, 0.85)})`;
+          ctx.arc(star.x, star.y, starR * 0.6, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${c.hue}, ${Math.min(starAlpha * 1.5, 0.7)})`;
           ctx.fill();
         }
       }
