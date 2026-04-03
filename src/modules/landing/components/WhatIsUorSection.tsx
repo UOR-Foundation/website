@@ -17,7 +17,7 @@ const UorDiagramCompact = () => (
           {silos.map((s) => (
             <div
               key={s}
-              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[52px] text-[10px] md:text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[58px] text-[11px] md:text-sm font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
             >
               {s}
             </div>
