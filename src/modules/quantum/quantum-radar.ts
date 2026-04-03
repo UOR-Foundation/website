@@ -1,5 +1,5 @@
 /**
- * Quantum Radar — Network Coherence Monitor (Phase 17)
+ * Quantum Radar. Network Coherence Monitor (Phase 17)
  * ═════════════════════════════════════════════════════
  *
  * Radar-style real-time display of quantum mesh health:

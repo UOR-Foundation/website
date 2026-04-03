@@ -85,7 +85,7 @@ const About = () => {
               })}
             </div>
 
-            {/* Principles — compact inline row */}
+            {/* Principles. compact inline row */}
             <div className="mt-6 pt-5 border-t border-border/30 flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-8">
               {ourPrinciplesCards.map((item, idx) => (
                 <div

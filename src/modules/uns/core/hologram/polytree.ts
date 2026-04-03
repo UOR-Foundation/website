@@ -1,11 +1,11 @@
 /**
- * Polynomial Trees — Coinductive Interface Evolution
+ * Polynomial Trees. Coinductive Interface Evolution
  * ═══════════════════════════════════════════════════
  *
  * Implementation of Spivak's PolyTr category (arXiv:2602.17917v1)
  * within the UOR Hologram framework.
  *
- * Key insight: Every Hologram projection is currently a "constant tree" —
+ * Key insight: Every Hologram projection is currently a "constant tree".
  * a polynomial tree whose interface never changes. This module generalizes
  * projections to *evolving* interfaces where each I/O round (emit value,
  * receive verification/feedback) may reshape the projection spec.
@@ -16,7 +16,7 @@
  *   - A polynomial tree is an element of the terminal (u◁u)-coalgebra:
  *     a coinductive tree where each node carries a polynomial, and each
  *     (position, direction) pair determines the child tree.
- *   - Constant trees repeat the same polynomial at every depth — these
+ *   - Constant trees repeat the same polynomial at every depth. these
  *     are exactly our current static HologramSpec projections.
  *
  * UOR compliance:
@@ -33,7 +33,7 @@ import type { ProjectionInput, Fidelity, HologramSpec } from "./index";
 // ── Universe of Cardinalities ──────────────────────────────────────────────
 
 /**
- * Universe U — the set of cardinalities our polynomials use.
+ * Universe U. the set of cardinalities our polynomials use.
  * For UOR, we restrict to finite cardinalities (practical systems).
  * This corresponds to Spivak's "finite universe" specialization.
  */
@@ -75,8 +75,8 @@ export interface Polynomial {
  *   tree → (root polynomial, (i,d) ↦ child tree)
  *
  * In Spivak's notation:
- *   p.root  : (u◁u)(1)    — the polynomial at this node
- *   p.rest_{i,d} : PolyTr  — the child tree for position i, direction d
+ *   p.root  : (u◁u)(1)   . the polynomial at this node
+ *   p.rest_{i,d} : PolyTr . the child tree for position i, direction d
  */
 export type TransitionFn = (
   position: number,
@@ -106,7 +106,7 @@ export interface InteractionStep {
 }
 
 /**
- * PolyTree — An element of the terminal (u◁u)-coalgebra.
+ * PolyTree. An element of the terminal (u◁u)-coalgebra.
  *
  * Each node carries:
  *   - root: the polynomial (interface) at this node
@@ -118,7 +118,7 @@ export interface InteractionStep {
  * while maintaining finite memory usage.
  */
 export interface PolyTree {
-  /** The polynomial at this node — the current interface. */
+  /** The polynomial at this node. the current interface. */
   readonly root: Polynomial;
   /** Transition to child tree. Returns self for constant trees. */
   readonly rest: TransitionFn;
@@ -217,7 +217,7 @@ export function evolvingTree(
 }
 
 /**
- * The zero polynomial tree — the "dead" interface.
+ * The zero polynomial tree. the "dead" interface.
  * No positions, no directions. Terminal state.
  *
  * In Spivak's notation: 0̄ (the constant tree of the zero polynomial).
@@ -235,7 +235,7 @@ export const ZERO_TREE: PolyTree = {
 };
 
 /**
- * The unit polynomial tree — the trivial interface.
+ * The unit polynomial tree. the trivial interface.
  * One position, no directions. Pure output, no feedback.
  *
  * In Spivak's notation: ȳ (the constant tree of y = y^1).
@@ -349,7 +349,7 @@ export function coproduct(p: PolyTree, q: PolyTree): PolyTree {
 // ── Internal Hom ───────────────────────────────────────────────────────────
 
 /**
- * Internal hom [p,q] — the polynomial tree of morphisms from p to q.
+ * Internal hom [p,q]. the polynomial tree of morphisms from p to q.
  *
  * From Spivak §8, Theorem 8.21:
  *   PolyTr_U(r⊗p, q) ≅ PolyTr_U(r, [p,q])
@@ -462,9 +462,9 @@ export interface PolyTreeMorphism {
 
 /** A morphism between polynomials: forward on positions, backward on directions. */
 export interface PolynomialMap {
-  /** φ_1: p(1) → q(1) — maps positions forward. */
+  /** φ_1: p(1) → q(1). maps positions forward. */
   readonly onPositions: (i: number) => number;
-  /** φ^#_i: q[φ_1(i)] → p[i] — maps directions backward. */
+  /** φ^#_i: q[φ_1(i)] → p[i]. maps directions backward. */
   readonly onDirections: (i: number, e: number) => number;
 }
 
@@ -682,7 +682,7 @@ export function executeInteraction(
     const { position, direction } = interactions[step];
 
     if (position >= current.root.positionCount) {
-      break;  // Position out of range — interaction terminates
+      break;  // Position out of range. interaction terminates
     }
 
     const ctx: TransitionContext = {

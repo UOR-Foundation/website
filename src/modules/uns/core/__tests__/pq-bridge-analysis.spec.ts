@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest";
 import { coherenceGate, whatIf } from "../hologram/coherence-gate";
 import { SPECS } from "../hologram/specs";
 
-describe("PQ Bridge — Hologram Self-Observation Analysis", () => {
+describe("PQ Bridge. Hologram Self-Observation Analysis", () => {
   const report = coherenceGate();
 
   it("pq-bridge, pq-envelope, and pq-witness projections are registered", () => {
@@ -171,7 +171,7 @@ describe("PQ Bridge — Hologram Self-Observation Analysis", () => {
 
     // Log the analysis (visible in test output)
     console.log("\n╔═══════════════════════════════════════════════════╗");
-    console.log("║   POST-QUANTUM BRIDGE — COHERENCE GATE ANALYSIS  ║");
+    console.log("║   POST-QUANTUM BRIDGE. COHERENCE GATE ANALYSIS  ║");
     console.log("╠═══════════════════════════════════════════════════╣");
     console.log(`║ Total projections in registry: ${report.totalProjections.toString().padStart(16)} ║`);
     console.log(`║ Lossless projections:          ${report.losslessCount.toString().padStart(16)} ║`);

@@ -4,8 +4,8 @@
  * Validates that neg and bnot are true involutions over the full ring,
  * and issues a cert:InvolutionCertificate for each.
  *
- * @see spec/src/namespaces/cert.rs — cert:InvolutionCertificate
- * @see spec/src/namespaces/op.rs — op:Neg, op:Bnot involution property
+ * @see spec/src/namespaces/cert.rs. cert:InvolutionCertificate
+ * @see spec/src/namespaces/op.rs. op:Neg, op:Bnot involution property
  */
 
 import { neg, bnot } from "@/lib/uor-ring";
@@ -13,7 +13,7 @@ import type { ConformanceGroup } from "./conformance-types";
 import { result } from "./conformance-types";
 
 const FIX = "involution_certificates.rs";
-const CIT = "spec/src/namespaces/cert.rs — cert:InvolutionCertificate";
+const CIT = "spec/src/namespaces/cert.rs. cert:InvolutionCertificate";
 
 export function testInvolutions(): ConformanceGroup {
   // C7.1  neg is an involution: ∀x ∈ Z/256Z, neg(neg(x)) = x

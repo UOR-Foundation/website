@@ -199,7 +199,7 @@ describe("Euler's Number Bridge: e connects Atlas ↔ Quantum ↔ Thermodynamics
     it("all 14 discoveries hold", () => {
       const report = runEulerBridgeVerification();
       for (const d of report.discoveries) {
-        expect(d.holds, `FAIL: ${d.name} — ${d.detail}`).toBe(true);
+        expect(d.holds, `FAIL: ${d.name}. ${d.detail}`).toBe(true);
       }
       expect(report.allHold).toBe(true);
       expect(report.discoveries.length).toBe(14);

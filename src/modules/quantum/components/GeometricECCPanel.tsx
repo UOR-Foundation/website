@@ -110,9 +110,9 @@ function OverviewView({ report }: { report: GeometricECCReport }) {
       <div className="bg-[hsla(210,10%,12%,0.6)] rounded-lg border border-[hsla(210,10%,25%,0.3)] p-4">
         <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase mb-3">Architecture</div>
         <div className="space-y-2 text-[10px] font-mono text-[hsl(210,10%,60%)] leading-relaxed">
-          <p><strong className="text-[hsl(140,50%,60%)]">Layer 1 — τ-Mirror Stabilizers:</strong> Each of 48 mirror pairs (v, τ(v)) defines a Z⊗Z stabilizer generator. The mirror involution τ flips e₇ (0↔1) and satisfies τ²=id, τ(v)∉N(v). Any single-qubit X error triggers exactly one stabilizer → 100% detection.</p>
-          <p><strong className="text-[hsl(200,50%,60%)]">Layer 2 — Sign Class Parity:</strong> The 8 sign classes (12 vertices each) provide secondary syndrome bits. Errors crossing sign class boundaries produce additional detectable signatures.</p>
-          <p><strong className="text-[hsl(280,50%,60%)]">Layer 3 — Degree Discrimination:</strong> Mixed-degree pairs (deg-5 ↔ deg-6) allow Z-error discrimination via degree measurement, enhancing the code beyond pure Z⊗Z detection.</p>
+          <p><strong className="text-[hsl(140,50%,60%)]">Layer 1. τ-Mirror Stabilizers:</strong> Each of 48 mirror pairs (v, τ(v)) defines a Z⊗Z stabilizer generator. The mirror involution τ flips e₇ (0↔1) and satisfies τ²=id, τ(v)∉N(v). Any single-qubit X error triggers exactly one stabilizer → 100% detection.</p>
+          <p><strong className="text-[hsl(200,50%,60%)]">Layer 2. Sign Class Parity:</strong> The 8 sign classes (12 vertices each) provide secondary syndrome bits. Errors crossing sign class boundaries produce additional detectable signatures.</p>
+          <p><strong className="text-[hsl(280,50%,60%)]">Layer 3. Degree Discrimination:</strong> Mixed-degree pairs (deg-5 ↔ deg-6) allow Z-error discrimination via degree measurement, enhancing the code beyond pure Z⊗Z detection.</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function GeneratorsView({ generators }: { generators: StabilizerGenerator[] }) {
   return (
     <div className="space-y-3">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        48 Stabilizer Generators — Z⊗Z from τ-Mirror Pairs
+        48 Stabilizer Generators. Z⊗Z from τ-Mirror Pairs
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[10px] font-mono">
@@ -308,7 +308,7 @@ function LogicalView({ report }: { report: GeometricECCReport }) {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        48 Logical Qubits — Encoded via Mirror Pairs
+        48 Logical Qubits. Encoded via Mirror Pairs
       </div>
 
       <div className="bg-[hsla(210,10%,12%,0.6)] rounded-lg border border-[hsla(210,10%,25%,0.3)] p-4">
@@ -319,7 +319,7 @@ function LogicalView({ report }: { report: GeometricECCReport }) {
         {bySignClass.map((group, sc) => (
           <div key={sc} className="mb-3">
             <div className="text-[9px] font-mono text-[hsl(280,50%,65%)] mb-1">
-              Sign Class {sc} — {group.length} logical qubits
+              Sign Class {sc}. {group.length} logical qubits
             </div>
             <div className="grid grid-cols-6 gap-1.5">
               {group.map(q => (
@@ -350,7 +350,7 @@ function TestsView({ report }: { report: GeometricECCReport }) {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Structural Verification — {report.tests.filter(t => t.holds).length}/{report.tests.length} passed
+        Structural Verification. {report.tests.filter(t => t.holds).length}/{report.tests.length} passed
       </div>
       <div className="space-y-1.5">
         {report.tests.map((t, i) => (

@@ -18,10 +18,10 @@ beforeEach(() => {
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Phase 3-D Tests — 10/10
+// Phase 3-D Tests. 10/10
 // ═════════════════════════════════════════════════════════════════════════════
 
-describe("UNS Ledger — Phase 3-D: Verifiable SQL", () => {
+describe("UNS Ledger. Phase 3-D: Verifiable SQL", () => {
   // Test 1
   it("1. migrate() creates table and returns signed SchemaMigration", async () => {
     const migration = await ledger.migrate(

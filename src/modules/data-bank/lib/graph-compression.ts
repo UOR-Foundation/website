@@ -1,5 +1,5 @@
 /**
- * Triple-Graph Compression — Dictionary-Encoded Varint Format
+ * Triple-Graph Compression. Dictionary-Encoded Varint Format
  * ════════════════════════════════════════════════════════════
  *
  * Compresses UOR context triples into a compact binary format

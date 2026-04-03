@@ -5,7 +5,7 @@
  * F : SchemaOrg → UOR
  *
  * A single functor that maps ANY Schema.org type or instance to its
- * UOR content-addressed identity. No per-type code needed — URDNA2015
+ * UOR content-addressed identity. No per-type code needed. URDNA2015
  * handles all 806+ types uniformly.
  *
  * The functor preserves:
@@ -21,7 +21,7 @@ import type { FunctorResult, SchemaOrgUorIdentity } from "./types";
 import { SCHEMA_ORG_HIERARCHY, getAncestorChain } from "./vocabulary";
 
 // ── Dual Context ───────────────────────────────────────────────────────────
-// Inline context avoids network fetch of https://schema.org — any agent
+// Inline context avoids network fetch of https://schema.org. any agent
 // can reproduce this locally. Only the properties we use in type definitions
 // and instance canonicalization are included.
 
@@ -69,7 +69,7 @@ const typeIdentityCache = new Map<string, SchemaOrgUorIdentity>();
  * Content-address a Schema.org TYPE DEFINITION.
  *
  * The canonical form of a type includes its name, parent chain,
- * and position in the hierarchy — making the identity structurally
+ * and position in the hierarchy. making the identity structurally
  * complete and deterministic.
  */
 export async function addressType(typeName: string): Promise<SchemaOrgUorIdentity> {
@@ -130,7 +130,7 @@ export async function schemaToUor(
   }
   const schemaType = rawType.replace("https://schema.org/", "").replace("schema:", "");
 
-  // Build the dual JSON-LD — carries both Schema.org and UOR contexts
+  // Build the dual JSON-LD. carries both Schema.org and UOR contexts
   const dualJsonLd: Record<string, unknown> = {
     ...instance,
     "@context": DUAL_CONTEXT,

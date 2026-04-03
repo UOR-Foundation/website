@@ -1,5 +1,5 @@
 /**
- * Cross-Model Translation — Atlas R₈ Universal Substrate
+ * Cross-Model Translation. Atlas R₈ Universal Substrate
  * ═══════════════════════════════════════════════════════════
  *
  * Proves that the Atlas is a WORKING translation layer between models.
@@ -291,7 +291,7 @@ export function computeFidelity(
   // Structural fidelity: how much R₈ structure is preserved
   const structuralFidelity = Math.min(original.dim, reconstructed.dim) / Math.max(original.dim, reconstructed.dim);
 
-  // Classification — 8-bit R₈ quantization introduces ~1% noise
+  // Classification. 8-bit R₈ quantization introduces ~1% noise
   let fidelityClass: string;
   if (cosineSimilarity > 0.995 && normalizedMSE < 1e-3) fidelityClass = "lossless";
   else if (cosineSimilarity > 0.98) fidelityClass = "near-lossless";

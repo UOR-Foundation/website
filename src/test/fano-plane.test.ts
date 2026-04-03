@@ -1,5 +1,5 @@
 /**
- * Fano Plane — Quantum Gate Routing Topology Test Suite
+ * Fano Plane. Quantum Gate Routing Topology Test Suite
  * ═════════════════════════════════════════════════════
  *
  * Verifies PG(2,2) as the octonionic multiplication graph and
@@ -26,7 +26,7 @@ import {
 // Part I: PG(2,2) Axioms
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Projective Plane Axioms", () => {
+describe("Fano Plane. Projective Plane Axioms", () => {
   let topo: FanoTopology;
 
   it("constructs topology", () => {
@@ -90,7 +90,7 @@ describe("Fano Plane — Projective Plane Axioms", () => {
 // Part II: Automorphism Group
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Automorphism Group", () => {
+describe("Fano Plane. Automorphism Group", () => {
   it("|Aut(PG(2,2))| = 168 = |GL(3,𝔽₂)| = |PSL(2,7)|", () => {
     const topo = constructFanoTopology();
     expect(topo.verifiedAutomorphisms).toBe(FANO_AUTOMORPHISM_ORDER);
@@ -102,7 +102,7 @@ describe("Fano Plane — Automorphism Group", () => {
 // Part III: Octonionic Multiplication Table
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Octonion Multiplication", () => {
+describe("Fano Plane. Octonion Multiplication", () => {
   let topo: FanoTopology;
 
   it("builds multiplication table", () => {
@@ -158,7 +158,7 @@ describe("Fano Plane — Octonion Multiplication", () => {
 // Part IV: Qubit Interaction Patterns
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Qubit Interactions", () => {
+describe("Fano Plane. Qubit Interactions", () => {
   it("21 qubit pair interactions = C(7,2)", () => {
     const topo = constructFanoTopology();
     const interactions = computeInteractions(topo);
@@ -170,7 +170,7 @@ describe("Fano Plane — Qubit Interactions", () => {
     const interactions = computeInteractions(topo);
     const direct = interactions.filter(i => i.directRoute);
     // Each line has C(3,2)=3 collinear pairs, 7 lines × 3 = 21, but each pair on exactly 1 line
-    // So direct pairs = 7 × 3 = 21? No — each pair counted once, 7 lines × 3 pairs = 21 = all pairs
+    // So direct pairs = 7 × 3 = 21? No. each pair counted once, 7 lines × 3 pairs = 21 = all pairs
     // Actually: 7 points, each on 3 lines, each line has 3 points → 7×3/2 pairs per... 
     // Total collinear pairs: 7 lines × C(3,2) = 7 × 3 = 21 but each pair on exactly 1 line → 21 direct
     expect(direct.length).toBe(21);
@@ -181,7 +181,7 @@ describe("Fano Plane — Qubit Interactions", () => {
 // Part V: Gate Routing
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Gate Routing", () => {
+describe("Fano Plane. Gate Routing", () => {
   it("35 routes = C(7,3)", () => {
     const topo = constructFanoTopology();
     const routes = computeGateRoutes(topo);
@@ -215,7 +215,7 @@ describe("Fano Plane — Gate Routing", () => {
 // Part VI: Atlas Connection
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Atlas Connection", () => {
+describe("Fano Plane. Atlas Connection", () => {
   it("7 Fano lines → 7 propagator channels", () => {
     const topo = constructFanoTopology();
     const atlas = connectToAtlas(topo);
@@ -245,11 +245,11 @@ describe("Fano Plane — Atlas Connection", () => {
 // Part VII: Full Report
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Full Verification Report", () => {
+describe("Fano Plane. Full Verification Report", () => {
   it("all 18 internal tests pass", () => {
     const report = runFanoPlaneAnalysis();
     for (const t of report.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(report.allPassed).toBe(true);
     expect(report.tests.length).toBe(18);
@@ -260,7 +260,7 @@ describe("Fano Plane — Full Verification Report", () => {
 // Part VIII: Generator Kind & Fano Line Composition
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fano Plane — Generator Kind & Composition", () => {
+describe("Fano Plane. Generator Kind & Composition", () => {
   it("every FanoPoint has a generatorKind", () => {
     const topo = constructFanoTopology();
     for (const p of topo.points) {

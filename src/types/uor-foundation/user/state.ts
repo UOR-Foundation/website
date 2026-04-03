@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — user::state
+ * UOR Foundation v2.0.0. user::state
  *
  * Parameterized address spaces: contexts, bindings, frames, transitions.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * Binding — a name-to-address association within a context.
+ * Binding. a name-to-address association within a context.
  */
 export interface Binding {
   /** The bound name. */
@@ -20,7 +20,7 @@ export interface Binding {
 }
 
 /**
- * Frame — a snapshot of bindings within a context.
+ * Frame. a snapshot of bindings within a context.
  */
 export interface Frame {
   /** Frame identifier. */
@@ -34,7 +34,7 @@ export interface Frame {
 }
 
 /**
- * Transition — a state change from one frame to another.
+ * Transition. a state change from one frame to another.
  */
 export interface Transition {
   /** Source frame. */
@@ -52,7 +52,7 @@ export interface Transition {
 }
 
 /**
- * Context — a parameterized address space (directory-like container).
+ * Context. a parameterized address space (directory-like container).
  */
 export interface Context {
   /** Context identifier. */

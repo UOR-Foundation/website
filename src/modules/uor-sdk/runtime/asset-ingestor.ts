@@ -1,12 +1,12 @@
 /**
- * UOR SDK — Asset Ingestor
+ * UOR SDK. Asset Ingestor
  *
  * Fetches app source HTML/assets, hashes them for content-addressing,
  * stores them via the serve-app edge function, and tracks the mapping.
  *
  * This bridges the gap between "import" (metadata) and "run" (serving):
  * after ingestion, the serve-app edge function can serve the app
- * entirely from our infrastructure — zero external dependence.
+ * entirely from our infrastructure. zero external dependence.
  *
  * Pipeline:
  *   1. Fetch raw HTML from source URL
@@ -15,8 +15,8 @@
  *   4. Register in app_asset_registry
  *   5. Return serve URL pointing to our edge function
  *
- * @see runtime/registry-ship — ships image metadata
- * @see serve-app edge function — serves stored assets
+ * @see runtime/registry-ship. ships image metadata
+ * @see serve-app edge function. serves stored assets
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

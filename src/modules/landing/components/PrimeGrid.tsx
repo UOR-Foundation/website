@@ -29,7 +29,7 @@ const COMPOSITE_DOT_R = 0.8;
 const PRIME_DOT_R = 1.6;
 const PEAK_DOT_R = 3.2;
 
-const ROTATION_SPEED = 0.00012; // rad per frame — slow, meditative
+const ROTATION_SPEED = 0.00012; // rad per frame. slow, meditative
 
 const GOLD = "38, 65%, 55%";
 const NEUTRAL = "0, 0%, 70%";
@@ -76,7 +76,7 @@ const PrimeGrid = () => {
     const compositeBase = isMobile ? COMPOSITE_ALPHA_MOBILE : COMPOSITE_ALPHA;
     const primeBase = isMobile ? PRIME_ALPHA_MOBILE : PRIME_ALPHA;
 
-    // Plot ALL integers on the Vogel spiral — primes stand out
+    // Plot ALL integers on the Vogel spiral. primes stand out
     for (let n = 1; n <= MAX_N; n++) {
       const angle = n * GOLDEN_ANGLE + globalAngle;
       const r = spacing * Math.sqrt(n);

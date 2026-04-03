@@ -27,10 +27,10 @@ function makeReq(overrides?: Partial<ShieldRequest>): ShieldRequest {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 2-B Tests — 10/10
+// Phase 2-B Tests. 10/10
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Shield — Phase 2-B: HTTP Middleware", () => {
+describe("UNS Shield. Phase 2-B: HTTP Middleware", () => {
   // Test 1
   it("1. Zero-byte body passes partition middleware", async () => {
     const ctx: ShieldContext = {};
@@ -167,11 +167,11 @@ describe("UNS Shield — Phase 2-B: HTTP Middleware", () => {
       headers: { "x-uns-pow-solution": `${challenge.nonce}:${solution}` },
     });
 
-    // First use — valid
+    // First use. valid
     const r1 = await mw(req, ctx);
     expect(r1).toBeNull();
 
-    // Replay — rejected
+    // Replay. rejected
     const r2 = await mw(req, ctx);
     expect(r2).not.toBeNull();
     expect(r2!.status).toBe(429);

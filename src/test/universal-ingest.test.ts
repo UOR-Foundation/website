@@ -1,5 +1,5 @@
 /**
- * Phase 5 Validation Tests — Universal Ingest
+ * Phase 5 Validation Tests. Universal Ingest
  * ════════════════════════════════════════════
  *
  * Verifies that any digital artifact can be ingested into the UOR framework

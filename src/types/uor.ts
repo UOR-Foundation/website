@@ -1,11 +1,11 @@
 /**
- * UOR Semantic Web Agentic Infrastructure — Shared Type System
+ * UOR Semantic Web Agentic Infrastructure. Shared Type System
  *
- * BACKWARD COMPATIBILITY SHIM — All canonical types now live in
+ * BACKWARD COMPATIBILITY SHIM. All canonical types now live in
  * src/types/uor-foundation/ (v2.0.0 ontology). This file re-exports
  * them under the original names for zero-breakage migration.
  *
- * @see src/types/uor-foundation/index.ts — canonical source
+ * @see src/types/uor-foundation/index.ts. canonical source
  */
 
 // ── Re-exports from v2.0.0 Foundation ──────────────────────────────────────
@@ -14,10 +14,10 @@
 // Keep both for backward compatibility.
 export type { PrimitiveOp } from "./uor-foundation";
 
-/** The 5 primitive signature operations (lowercase — legacy compat). */
+/** The 5 primitive signature operations (lowercase. legacy compat). */
 export type OperationName = "neg" | "bnot" | "xor" | "and" | "or";
 
-/** Extended operation set (lowercase — legacy compat). */
+/** Extended operation set (lowercase. legacy compat). */
 export type ExtendedOperationName =
   | OperationName
   | "succ"
@@ -29,7 +29,7 @@ export type ExtendedOperationName =
 // Address replaces UorAddress
 export type { Address as UorAddressV2 } from "./uor-foundation";
 
-// ── Layer 0: Ring Arithmetic Primitives (unchanged — kept inline) ──────────
+// ── Layer 0: Ring Arithmetic Primitives (unchanged. kept inline) ──────────
 
 /** Big-endian byte tuple representing a value in Z/(2^n)Z. */
 export type ByteTuple = number[];
@@ -47,7 +47,7 @@ export interface RingConfig {
 }
 
 /**
- * Triad positional vector — the canonical decomposition of a datum.
+ * Triad positional vector. the canonical decomposition of a datum.
  * Aligns with schema:Triad in the UOR ontology.
  */
 export interface Triad {
@@ -58,7 +58,7 @@ export interface Triad {
 }
 
 /**
- * Full Datum object — corresponds to schema:Datum in the API.
+ * Full Datum object. corresponds to schema:Datum in the API.
  */
 export interface Datum {
   "@type": "schema:Datum";

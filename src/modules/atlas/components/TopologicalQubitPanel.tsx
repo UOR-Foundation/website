@@ -26,7 +26,7 @@ export default function TopologicalQubitPanel() {
           TOPOLOGICAL QUBIT
         </h2>
         <p className="text-[11px] font-mono text-[hsl(210,10%,50%)]">
-          Phase 11 — Geometric α derivation & qubit instantiation in Atlas substrate
+          Phase 11. Geometric α derivation & qubit instantiation in Atlas substrate
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function TopologicalQubitPanel() {
       {/* Triclinic Slant */}
       <div className="bg-[hsla(200,40%,12%,0.4)] border border-[hsla(200,40%,30%,0.3)] rounded-lg p-4">
         <div className="text-[11px] font-mono text-[hsl(200,50%,60%)] uppercase mb-3">
-          Triclinic Slant — The Impedance-Matching Angle
+          Triclinic Slant. The Impedance-Matching Angle
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-[hsla(210,10%,8%,0.5)] rounded p-3 text-center">
@@ -103,7 +103,7 @@ export default function TopologicalQubitPanel() {
       {/* Topological Qubits */}
       <div className="bg-[hsla(280,40%,12%,0.4)] border border-[hsla(280,40%,30%,0.3)] rounded-lg p-4">
         <div className="text-[11px] font-mono text-[hsl(280,50%,65%)] uppercase mb-3">
-          48 Topological Qubits — Mirror Pair Superpositions
+          48 Topological Qubits. Mirror Pair Superpositions
         </div>
         <div className="grid grid-cols-4 gap-3 mb-4">
           {[...anyonCounts.entries()].map(([type, count]) => (

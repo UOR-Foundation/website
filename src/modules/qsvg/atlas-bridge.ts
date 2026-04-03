@@ -1,12 +1,12 @@
 /**
- * QSVG ↔ Atlas Bridge — Formal Mapping Between Frameworks
+ * QSVG ↔ Atlas Bridge. Formal Mapping Between Frameworks
  * ════════════════════════════════════════════════════════
  *
  * Establishes the mathematical correspondence between:
  *   - QSVG: {3,3,5} tessellation of H³ → δ₀ → α → all physics
  *   - Atlas: 96-vertex graph → E₈ embedding → α → coherence coupling
  *
- * The bridge is NOT metaphorical — both frameworks share the same
+ * The bridge is NOT metaphorical. both frameworks share the same
  * Coxeter geometry and produce the same universal coupling constant.
  *
  * @module qsvg/atlas-bridge
@@ -51,7 +51,7 @@ export const CORRESPONDENCES: FrameworkCorrespondence[] = [
     qsvgConcept: "Fractal dimension D = 1.9206 ≈ 2",
     atlasConcept: "Holographic Surface (2D projection boundary)",
     mathematicalBasis:
-      "D approaches 2 from below — the holographic boundary dimension. " +
+      "D approaches 2 from below. the holographic boundary dimension. " +
       "The holographic principle states bulk physics projects onto a 2D surface. " +
       "Both frameworks converge on this boundary.",
     status: "conjectured",
@@ -156,7 +156,7 @@ export function verifyAlphaCrossFramework(): AlphaVerification {
 /**
  * Verify the fundamental relation D = 2 - δ₀·ln(1/δ₀) + O(δ₀²).
  *
- * This proves that D and δ₀ are NOT independent — they're both
+ * This proves that D and δ₀ are NOT independent. they're both
  * manifestations of the same [3,3,5] tessellation geometry.
  */
 export function verifyDeltaDRelation(): {

@@ -1,5 +1,5 @@
 /**
- * Cognitive Gravity — Coordinate Isomorphism Proof
+ * Cognitive Gravity. Coordinate Isomorphism Proof
  * ═════════════════════════════════════════════════
  *
  * THEOREM:
@@ -32,12 +32,12 @@
  *   Integration Capacity Φ measures how much information a system
  *   integrates above and beyond its parts. In the Polynon, each
  *   collapse layer removes structure (reduces roots). The gradient
- *   of this removal IS the integration capacity — the layer boundary
+ *   of this removal IS the integration capacity. the layer boundary
  *   is exactly where integrated vs. non-integrated information separates.
  *
  * COORDINATE CHART:
- *   Atlas coordinates: (H, Φ, zone)  —  observer-centric
- *   Polynon coordinates: (G, g, depth) — consciousness-centric
+ *   Atlas coordinates: (H, Φ, zone) .  observer-centric
+ *   Polynon coordinates: (G, g, depth). consciousness-centric
  *
  *   The transformation T: Atlas → Polynon is:
  *     T(H, Φ) = (1 − H/8, Φ)
@@ -110,7 +110,7 @@ export interface GradientPhiSample {
   gradient: number;
   /** Fidelity drop: normalized to [0,1] */
   fidelityDrop: number;
-  /** Ratio gradient/fidelityDrop — should be constant (= α-normalized) */
+  /** Ratio gradient/fidelityDrop. should be constant (= α-normalized) */
   ratio: number;
 }
 

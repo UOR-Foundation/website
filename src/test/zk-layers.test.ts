@@ -1,5 +1,5 @@
 /**
- * ZK Three-Layer Separation — Test Suite
+ * ZK Three-Layer Separation. Test Suite
  * ═══════════════════════════════════════
  *
  * Verifies that the three-layer architecture maintains isolation:
@@ -182,7 +182,7 @@ describe("Cross-Layer Isolation", () => {
       sealedAt: new Date().toISOString(),
     });
 
-    // Serialize to JSON — should contain ZERO user content
+    // Serialize to JSON. should contain ZERO user content
     const json = JSON.stringify(envelopeToRaw(envelope));
     // Only geometric terms should appear
     expect(json).not.toContain("query");

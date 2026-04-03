@@ -1,5 +1,5 @@
 /**
- * UOR Epistemic Upgrader — promotes data to higher trust levels.
+ * UOR Epistemic Upgrader. promotes data to higher trust levels.
  *
  * Grades can only go UP, never down:
  *   D → C → B → A

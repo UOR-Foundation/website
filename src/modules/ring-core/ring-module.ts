@@ -1,5 +1,5 @@
 /**
- * Ring Core — UorModule<ByteTuple> Implementation
+ * Ring Core. UorModule<ByteTuple> Implementation
  * ════════════════════════════════════════════════
  *
  * The Q0 ring module using the generic lifecycle base.

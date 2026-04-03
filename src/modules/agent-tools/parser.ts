@@ -1,5 +1,5 @@
 /**
- * UOR Agent Term Parser — parses human-readable term strings into Term ASTs.
+ * UOR Agent Term Parser. parses human-readable term strings into Term ASTs.
  *
  * Supports:
  *   - Decimal literals: 42, 255
@@ -9,7 +9,7 @@
  *   - Nested expressions: neg(bnot(42)), xor(0x55, neg(0xAA))
  *
  * Delegates to ring-core/canonicalization.ts for the Term type.
- * Zero duplication — this is a pure parser only.
+ * Zero duplication. this is a pure parser only.
  */
 
 import type { Term } from "@/modules/ring-core/canonicalization";
@@ -85,7 +85,7 @@ function parseExpr(tokens: Token[], pos: { i: number }): Term {
     return { kind: "const", value: token.value };
   }
 
-  // Identifier — either an operation or a variable
+  // Identifier. either an operation or a variable
   if (token.type === "ident") {
     const name = token.value;
 

@@ -1,5 +1,5 @@
 /**
- * Quantum-Native Attention — Phase 22
+ * Quantum-Native Attention. Phase 22
  * ════════════════════════════════════
  *
  * Compiles a single transformer attention head into a quantum circuit
@@ -10,16 +10,16 @@
  *
  *   This decomposes into 4 quantum stages:
  *
- *   Stage 1 — ENCODING: Amplitude-encode Q, K, V vectors into qubits
+ *   Stage 1. ENCODING: Amplitude-encode Q, K, V vectors into qubits
  *             via controlled-Ry rotations (log₂(d_k) qubits per vector)
  *
- *   Stage 2 — INNER PRODUCT: Q·K^T via Hadamard test / swap test circuit
+ *   Stage 2. INNER PRODUCT: Q·K^T via Hadamard test / swap test circuit
  *             Controlled-SWAP + H gates compute |⟨q|k⟩|²
  *
- *   Stage 3 — SCALING (√d_k): Rz phase gates for the 1/√d_k normalization
+ *   Stage 3. SCALING (√d_k): Rz phase gates for the 1/√d_k normalization
  *             Softmax approximated by amplitude amplification
  *
- *   Stage 4 — VALUE PROJECTION: Apply attention weights to V
+ *   Stage 4. VALUE PROJECTION: Apply attention weights to V
  *             via controlled rotations parameterized by attention scores
  *
  *   All gates are Euler-decomposed (Rz·Ry·Rz) and mapped to Atlas vertices.
@@ -49,7 +49,7 @@ export interface AttentionHeadSpec {
   model: string;
   /** Head dimension d_k */
   headDim: number;
-  /** Sequence length (tokens) — determines circuit width */
+  /** Sequence length (tokens). determines circuit width */
   seqLen: number;
   /** Which head index (0-based) */
   headIndex: number;
@@ -114,7 +114,7 @@ function amplitudeEncodingGates(
 
   for (let level = 0; level < nQubits; level++) {
     const qubit = startQubit + level;
-    // Angle encodes relative amplitudes — use structurally meaningful angles
+    // Angle encodes relative amplitudes. use structurally meaningful angles
     // In a real system these come from the actual Q/K/V weight matrices
     const angle = Math.PI / (2 * (level + 1)); // Decreasing angles for hierarchical encoding
 

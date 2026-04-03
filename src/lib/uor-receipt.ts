@@ -1,5 +1,5 @@
 /**
- * UOR Canonical Receipt System — self-verifying computation proofs.
+ * UOR Canonical Receipt System. self-verifying computation proofs.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
  * Every operation wrapped with `withReceipt` produces a CanonicalReceipt

@@ -5,12 +5,12 @@
  * Replaces arithmetic with O(1) hash-table lookups on the UOR ring Z/256Z.
  *
  * Every unary operation on a byte is a 256-entry lookup table that fits
- * in 4 cache lines (256 bytes). "Computing" becomes indexing — the CPU
+ * in 4 cache lines (256 bytes). "Computing" becomes indexing. the CPU
  * does a single memory read instead of arithmetic. This makes every
  * operation constant-time regardless of complexity.
  *
  * Key insight: composing N operations = 1 pre-composed table = 1 lookup.
- *   neg(bnot(x)) → COMPOSED_TABLE[x] — same cost as a single neg(x).
+ *   neg(bnot(x)) → COMPOSED_TABLE[x]. same cost as a single neg(x).
  *
  * The engine provides:
  *   1. Pre-computed tables for all 5 UOR primitives + derived ops
@@ -24,7 +24,7 @@
  *   - Every table is content-addressed (table bytes → SHA-256 → CID)
  *   - Composition preserves the morphism chain (CID trail)
  *   - Critical identity neg(bnot(x)) = succ(x) is verifiable
- *   - All ops stay within Z/256Z — ring closure guaranteed
+ *   - All ops stay within Z/256Z. ring closure guaranteed
  *
  * @module uns/core/hologram/gpu/lut-engine
  */
@@ -103,7 +103,7 @@ export interface LutEngineInfo {
  *
  * The 256-byte lookup table is uploaded as a storage buffer.
  * Each GPU thread reads one input element, indexes into the table,
- * and writes the result — perfect parallelism, zero arithmetic.
+ * and writes the result. perfect parallelism, zero arithmetic.
  */
 export const WGSL_LUT_APPLY = /* wgsl */ `
   // The 256-byte lookup table (packed as 64 u32s)
@@ -145,7 +145,7 @@ export const WGSL_LUT_APPLY = /* wgsl */ `
 /**
  * The UOR Lookup-Table Compute Engine.
  *
- * Singleton — one engine per browser tab. All tables are computed
+ * Singleton. one engine per browser tab. All tables are computed
  * once at construction and cached for the lifetime of the page.
  */
 export class UorLutEngine {
@@ -154,9 +154,9 @@ export class UorLutEngine {
   /** Primitives (from UOR algebraic signature) */
   readonly NEG:  Uint8Array;  // neg(x)  = (256 - x) & 0xFF
   readonly BNOT: Uint8Array;  // bnot(x) = (~x) & 0xFF = (255 - x)
-  readonly XOR:  Uint8Array;  // xor(x, c) — parameterized, default c=0xFF
-  readonly AND:  Uint8Array;  // and(x, c) — parameterized, default c=0xFF
-  readonly OR:   Uint8Array;  // or(x, c)  — parameterized, default c=0x00
+  readonly XOR:  Uint8Array;  // xor(x, c). parameterized, default c=0xFF
+  readonly AND:  Uint8Array;  // and(x, c). parameterized, default c=0xFF
+  readonly OR:   Uint8Array;  // or(x, c) . parameterized, default c=0x00
 
   /** Derived operations */
   readonly SUCC: Uint8Array;  // succ(x) = (x + 1) & 0xFF
@@ -170,13 +170,13 @@ export class UorLutEngine {
   readonly COMPLEMENT: Uint8Array; // complement(x) = 255 - x (same as bnot)
 
   /** Pre-composed pairs */
-  readonly NEG_BNOT: Uint8Array;   // neg(bnot(x)) = succ(x) — the critical identity
+  readonly NEG_BNOT: Uint8Array;   // neg(bnot(x)) = succ(x). the critical identity
   readonly BNOT_NEG: Uint8Array;   // bnot(neg(x)) = pred(x)
 
   /** All named tables for lookup. */
   private readonly tables: Map<string, Uint8Array>;
 
-  /** CID cache — computed lazily. */
+  /** CID cache. computed lazily. */
   private readonly cidCache = new Map<string, string>();
 
   constructor() {
@@ -245,7 +245,7 @@ export class UorLutEngine {
   /**
    * Compose two tables: result[x] = outer[inner[x]].
    *
-   * This is the core optimization — it collapses two operations
+   * This is the core optimization. it collapses two operations
    * into a single lookup. Chain N compositions to collapse N ops.
    *
    * Cost: 256 byte-reads + 256 byte-writes = ~0.5μs on any CPU.
@@ -270,7 +270,7 @@ export class UorLutEngine {
   }
 
   /**
-   * Compose and content-address — returns both table and CID.
+   * Compose and content-address. returns both table and CID.
    */
   async composeWithProof(
     outerName: string,
@@ -296,7 +296,7 @@ export class UorLutEngine {
    * Apply a lookup table to every byte in the input.
    *
    * This is the fundamental compute operation: for each byte x in
-   * the input, output[i] = table[x]. No arithmetic — just indexing.
+   * the input, output[i] = table[x]. No arithmetic. just indexing.
    *
    * Performance: ~0.3ms for 1M elements on any CPU.
    */

@@ -1,5 +1,5 @@
 /**
- * Centralized external URLs — single source of truth.
+ * Centralized external URLs. single source of truth.
  * All external links used across the site are imported from here.
  */
 

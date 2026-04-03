@@ -1,5 +1,5 @@
 /**
- * useDataBank — React Hook for the Data Bank Box
+ * useDataBank. React Hook for the Data Bank Box
  * ════════════════════════════════════════════════
  *
  * Provides transparent encrypted sync between localStorage (L1)

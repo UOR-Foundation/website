@@ -12,7 +12,7 @@ import type { UnsSession } from "@/modules/uns/trust";
 // @ts-ignore
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
 
-describe("UNS Trust — Zero Trust Authentication & Authorization", () => {
+describe("UNS Trust. Zero Trust Authentication & Authorization", () => {
   let serverKp: UnsKeypair;
   let clientKp: UnsKeypair;
   let identityStore: Map<string, object>;
@@ -35,7 +35,7 @@ describe("UNS Trust — Zero Trust Authentication & Authorization", () => {
 
     expect(challenge.challengeId).toBeTruthy();
     expect(challenge.nonce).toBeTruthy();
-    // Decode nonce — should be 32 bytes
+    // Decode nonce. should be 32 bytes
     const noncePadded = challenge.nonce.replace(/-/g, "+").replace(/_/g, "/");
     const decoded = atob(noncePadded);
     expect(decoded.length).toBe(32);
@@ -186,7 +186,7 @@ describe("UNS Trust — Zero Trust Authentication & Authorization", () => {
         "cert:signedAt": new Date().toISOString(),
       },
       epistemic_grade: "A",
-      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
       "derivation:derivationId": "urn:uor:derivation:sha256:0000000000000000000000000000000000000000000000000000000000000000",
     };
 

@@ -1,5 +1,5 @@
 /**
- * P32 Self-Verification Tests — Query Namespace + uor_query Agent Tool
+ * P32 Self-Verification Tests. Query Namespace + uor_query Agent Tool
  *
  * 15 tests covering intent decomposition, resolution, SPARQL grading,
  * and SDK integration.
@@ -16,7 +16,7 @@ function makeTestGraph(): UnsGraph {
   return g;
 }
 
-describe("P32: Query Namespace — Intent-Based Object Resolution", () => {
+describe("P32: Query Namespace. Intent-Based Object Resolution", () => {
   // ── buildIntent ────────────────────────────────────────────────────────
 
   it("T1: buildIntent('hello') returns @type 'query:Intent'", () => {

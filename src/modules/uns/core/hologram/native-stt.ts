@@ -1,5 +1,5 @@
 /**
- * Native STT — Browser SpeechRecognition Utilities
+ * Native STT. Browser SpeechRecognition Utilities
  * ═════════════════════════════════════════════════
  *
  * Low-level utilities for the browser's Web Speech API.

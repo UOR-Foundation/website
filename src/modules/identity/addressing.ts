@@ -1,8 +1,8 @@
 /**
- * UOR Content-Addressed Identity Layer — deterministic algebraic projection.
+ * UOR Content-Addressed Identity Layer. deterministic algebraic projection.
  *
  * Every datum gets a permanent IRI derived from its content via the Braille
- * bijection. This is NOT a hash — it is a lossless, invertible mapping.
+ * bijection. This is NOT a hash. it is a lossless, invertible mapping.
  *
  * Delegates to the existing Braille primitives in src/lib/uor-address.ts
  * for glyph encoding, and extends with IRI/U+ notation and reverse parsing.
@@ -98,7 +98,7 @@ export function iriToBytes(iri: string): ByteTuple {
 
 /**
  * Compute the canonical UOR IRI for a value in the given ring.
- * This is the deterministic content address — identical inputs always
+ * This is the deterministic content address. identical inputs always
  * produce identical IRIs.
  */
 export function contentAddress(ring: UORRing, value: number): string {

@@ -309,7 +309,7 @@ function GradeADemo() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          claim: "neg(42) = 214 — algebraically derived via ring negation in Z/256Z",
+          claim: "neg(42) = 214. algebraically derived via ring negation in Z/256Z",
           evidence_type: "algebraic",
           evidence: { derivation_id: dId },
         }),
@@ -327,7 +327,7 @@ function GradeADemo() {
     <Card>
       <SectionTitle>Get a Grade A Certificate</SectionTitle>
       <p className="text-sm text-muted-foreground mb-4">
-        Three steps to earn the highest epistemic grade — fully automated below.
+        Three steps to earn the highest epistemic grade. fully automated below.
       </p>
 
       <div className="space-y-3 mb-5">
@@ -401,7 +401,7 @@ const EpistemicPage = () => (
           </h1>
         </div>
         <p className="text-sm md:text-base text-primary-foreground/70 font-body max-w-2xl">
-          Every fact carries a trust level. Submit claims with evidence to receive cert: certificates — from Grade A (algebraically proven) to Grade D (unverified).
+          Every fact carries a trust level. Submit claims with evidence to receive cert: certificates. from Grade A (algebraically proven) to Grade D (unverified).
         </p>
       </div>
     </section>

@@ -1,5 +1,5 @@
 /**
- * DashboardGrid — Responsive grid layout for dashboard sections.
+ * DashboardGrid. Responsive grid layout for dashboard sections.
  */
 
 import type { ReactNode } from "react";

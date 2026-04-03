@@ -1,5 +1,5 @@
 /**
- * Stream Projection Tests — Live Coherence Engine
+ * Stream Projection Tests. Live Coherence Engine
  */
 import { describe, it, expect, vi } from "vitest";
 import { StreamProjection, type StreamSnapshot } from "@/modules/observable/stream-projection";

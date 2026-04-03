@@ -1,5 +1,5 @@
 /**
- * UOR Conformance Suite — Authoritative Mathematical Checkpoint
+ * UOR Conformance Suite. Authoritative Mathematical Checkpoint
  *
  * TypeScript equivalent of the Rust `cargo run --bin uor-conformance` suite.
  * Every test is traceable to a named Rust fixture file and a UOR ontology
@@ -9,15 +9,15 @@
  * No service may deploy if this suite fails.
  *
  * Test Groups:
- *   1. Ring Operations     (op: namespace)        — 8 tests
- *   2. Critical Identity   (proof: namespace)     — 1 test (256 elements)
- *   3. Partition           (partition: namespace)  — 9 tests
- *   4. Resolver            (resolver:, u:)        — 6 tests (async)
- *   5. Certificates        (cert: namespace)      — 4 tests (async)
- *   6. End-to-End          (full cycle)           — 4 tests (async)
- *   7. Involution Certs    (cert:Involution)      — 3 tests
+ *   1. Ring Operations     (op: namespace)       . 8 tests
+ *   2. Critical Identity   (proof: namespace)    . 1 test (256 elements)
+ *   3. Partition           (partition: namespace) . 9 tests
+ *   4. Resolver            (resolver:, u:)       . 6 tests (async)
+ *   5. Certificates        (cert: namespace)     . 4 tests (async)
+ *   6. End-to-End          (full cycle)          . 4 tests (async)
+ *   7. Involution Certs    (cert:Involution)     . 3 tests
  *
- * @see conformance/src/tests/fixtures/ — Rust fixture equivalents
+ * @see conformance/src/tests/fixtures/. Rust fixture equivalents
  */
 
 import type { ConformanceSuiteResult, ConformanceTest } from "./conformance-types";

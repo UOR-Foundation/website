@@ -1,5 +1,5 @@
 /**
- * EntityInspector — Side panel showing UOR identity and relationships
+ * EntityInspector. Side panel showing UOR identity and relationships
  * for a selected graph node.
  */
 

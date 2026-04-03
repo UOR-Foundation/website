@@ -83,7 +83,7 @@ export function constructF4(atlas: Atlas): ExceptionalGroup {
   const cartan = CARTAN_F4;
   const dynkin = toDynkinDiagram(cartan, "F₄");
 
-  // F₄ has a double bond (multiplicity 2) — verify
+  // F₄ has a double bond (multiplicity 2). verify
   const hasDoubleBond = dynkin.bonds.some(b => b.multiplicity === 2);
 
   return {
@@ -251,7 +251,7 @@ export interface E8RootAnalysis {
  * Analyze the E₈ root structure and its correspondence to R₈.
  *
  * Key discovery: 128 half-integer roots correspond to our exterior element 128.
- * The half-integer roots have coordinates ±1/2 with even parity — matching
+ * The half-integer roots have coordinates ±1/2 with even parity. matching
  * the bnot (XOR 0xFF) even-parity constraint.
  */
 export function analyzeE8RootStructure(): E8RootAnalysis {

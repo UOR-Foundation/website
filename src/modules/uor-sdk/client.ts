@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Typed API client for the live UOR REST API.
+ * UOR SDK. Typed API client for the live UOR REST API.
  *
  * Wraps https://api.uor.foundation/v1 with full TypeScript types,
  * automatic retry (3 attempts, 500ms exponential backoff), and
@@ -8,7 +8,7 @@
  * No auth required for kernel endpoints (120 req/min rate limit).
  * POST endpoints: 60 req/min.
  *
- * KEY PRINCIPLE: Use existing UOR API endpoints — do NOT reimplement
+ * KEY PRINCIPLE: Use existing UOR API endpoints. do NOT reimplement
  * ring arithmetic or content addressing on the server side.
  */
 

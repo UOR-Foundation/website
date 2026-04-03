@@ -1,7 +1,7 @@
 /**
- * UNS TypeScript SDK — Module Barrel Export (Phase 5-D)
+ * UNS TypeScript SDK. Module Barrel Export (Phase 5-D)
  *
- * Published as @uns/sdk — the official TypeScript SDK for the
+ * Published as @uns/sdk. the official TypeScript SDK for the
  * UOR Name Service. Provides typed access to all UNS services
  * through a single UnsClient class.
  *

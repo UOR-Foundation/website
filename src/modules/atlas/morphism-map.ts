@@ -1,15 +1,15 @@
 /**
- * Atlas Morphism Map — Classifying 356+ Hologram Projections
+ * Atlas Morphism Map. Classifying 356+ Hologram Projections
  * ═══════════════════════════════════════════════════════════
  *
  * Each of the 12 canonical projection domains corresponds to exactly
  * one of the 5 categorical operations discovered in the Atlas–R₈ bridge:
  *
- *   Product     (G₂ = 12)   — decomposition into independent factors
- *   Quotient    (F₄ = 48)   — equivalence-class collapse
- *   Filtration  (E₆ = 72)   — graded subsets by property
- *   Augmentation(E₇ = 126)  — extension with new structure
- *   Embedding   (E₈ = 240)  — full structure-preserving injection
+ *   Product     (G₂ = 12)  . decomposition into independent factors
+ *   Quotient    (F₄ = 48)  . equivalence-class collapse
+ *   Filtration  (E₆ = 72)  . graded subsets by property
+ *   Augmentation(E₇ = 126) . extension with new structure
+ *   Embedding   (E₈ = 240) . full structure-preserving injection
  *
  * The classification is determined by how each domain transforms
  * a UOR canonical identity into a protocol-native identifier.
@@ -112,7 +112,7 @@ const DOMAIN_CLASSIFICATIONS: Record<string, {
     justification:
       "IoT devices and hardware components are independent physical factors. " +
       "A sensor (CoAP), a chip layout (GDSII), and a bus protocol (CAN) are " +
-      "orthogonal components that compose via direct product — each operates " +
+      "orthogonal components that compose via direct product. each operates " +
       "independently, like the factors of G₂.",
   },
 
@@ -122,7 +122,7 @@ const DOMAIN_CLASSIFICATIONS: Record<string, {
     justification:
       "Identity & Trust collapses many credential formats into equivalence " +
       "classes of trust. X.509, OAuth, WebAuthn, SAML all express the SAME " +
-      "trust relationship — they are mirror images under the trust involution, " +
+      "trust relationship. they are mirror images under the trust involution, " +
       "like F₄ = Atlas/τ where τ identifies mirror pairs.",
   },
   "federation-social": {
@@ -166,7 +166,7 @@ const DOMAIN_CLASSIFICATIONS: Record<string, {
     justification:
       "AI & Agents augment static data with inference, agency, and learning. " +
       "MCP tools, A2A protocols, and model formats extend base information " +
-      "with computational intelligence — like E₇ = 96 Atlas vertices + 30 " +
+      "with computational intelligence. like E₇ = 96 Atlas vertices + 30 " +
       "orbit augmentations that enrich the base structure.",
   },
   "network-cloud": {
@@ -233,7 +233,7 @@ export function classifyDomains(): AtlasMorphismClassification[] {
         exceptionalGroup: "E₆",
         rootCount: 72,
         projectionCount: eco.projections.length,
-        justification: "Unclassified domain — defaulting to filtration.",
+        justification: "Unclassified domain. defaulting to filtration.",
       };
     }
     const grp = OPERATION_TO_GROUP[cls.operation];
@@ -302,7 +302,7 @@ export function runMorphismMapVerification(): MorphismMapReport {
     actual: String(totalProjections),
   });
 
-  // Test 4: Product domains = 2 (smallest — G₂ is the boundary)
+  // Test 4: Product domains = 2 (smallest. G₂ is the boundary)
   tests.push({
     name: "Product (G₂) has fewest domains",
     holds: opCounts.product.domains === 2,
@@ -310,7 +310,7 @@ export function runMorphismMapVerification(): MorphismMapReport {
     actual: `${opCounts.product.domains} domains`,
   });
 
-  // Test 5: Embedding domains = 2 (largest — E₈ is the full ring)
+  // Test 5: Embedding domains = 2 (largest. E₈ is the full ring)
   tests.push({
     name: "Embedding (E₈) has 2 domains",
     holds: opCounts.embedding.domains === 2,
@@ -344,7 +344,7 @@ export function runMorphismMapVerification(): MorphismMapReport {
 
   // Test 8: Operation distribution mirrors exceptional group size ordering
   // G₂(12) < F₄(48) < E₆(72) < E₇(126) < E₈(240)
-  // Product < Quotient < Filtration < Augmentation < Embedding (by projection count? No — by structural depth)
+  // Product < Quotient < Filtration < Augmentation < Embedding (by projection count? No. by structural depth)
   // The ordering is by STRUCTURAL DEPTH, not projection count.
   // Verify: each operation maps to exactly one exceptional group
   const groupSet = new Set(classifications.map(c => c.exceptionalGroup));

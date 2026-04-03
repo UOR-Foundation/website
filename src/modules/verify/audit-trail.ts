@@ -1,5 +1,5 @@
 /**
- * UOR Self-Verification: Audit Trail — queryable receipt history.
+ * UOR Self-Verification: Audit Trail. queryable receipt history.
  *
  * Provides read access to the uor_receipts table for audit and compliance.
  *
@@ -7,7 +7,7 @@
  *   - Supabase client for queries
  *   - derivation/receipt for the DerivationReceipt type
  *
- * Zero duplication — uses the same receipt table populated by all modules.
+ * Zero duplication. uses the same receipt table populated by all modules.
  */
 
 import { supabase } from "@/integrations/supabase/client";

@@ -1,5 +1,5 @@
 /**
- * UOR SDK — App Identity Layer (P2)
+ * UOR SDK. App Identity Layer (P2)
  *
  * Every deployed application receives a permanent, unforgeable canonical
  * identity derived from its content bytes via the Single Proof Hashing
@@ -11,8 +11,8 @@
  *   - buildVersionChain: immutable version history ordering
  *   - AppRegistry: in-memory registry with KV persistence
  *
- * @see u: namespace — content addressing
- * @see derivation: namespace — version chain
+ * @see u: namespace. content addressing
+ * @see derivation: namespace. version chain
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

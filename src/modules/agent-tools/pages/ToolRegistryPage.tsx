@@ -132,7 +132,7 @@ function ToolCards({ onTry }: { onTry: (name: string) => void }) {
                   <div key={p.name} className="text-xs">
                     <code className="text-primary">{p.name}</code>{" "}
                     <span className="text-muted-foreground">({p.type})</span>{" "}
-                    <span className="text-muted-foreground">— {p.desc}</span>
+                    <span className="text-muted-foreground">. {p.desc}</span>
                   </div>
                 ))}
               </div>

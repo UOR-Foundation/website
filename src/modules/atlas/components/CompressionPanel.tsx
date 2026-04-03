@@ -62,7 +62,7 @@ export default function CompressionPanel() {
           F₄ QUOTIENT COMPRESSION
         </h2>
         <p className="text-[11px] font-mono text-[hsl(210,10%,50%)]">
-          Phase 7 — Atlas mirror involution τ reveals compressible symmetry in transformer weight matrices
+          Phase 7. Atlas mirror involution τ reveals compressible symmetry in transformer weight matrices
         </p>
       </div>
 

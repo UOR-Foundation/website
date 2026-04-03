@@ -256,7 +256,7 @@ export function verifyCriticalIdentityAtlasLink(): CorrespondenceResult {
     holds: allHold,
     expected: "256/256 verified",
     actual: allHold ? "256/256 verified" : `${256 - failures.length}/256 (failures: ${failures.slice(0, 5).join(",")})`,
-    details: "Two involutions (neg, bnot) compose to a single successor step — " +
+    details: "Two involutions (neg, bnot) compose to a single successor step. " +
              "analogous to how Atlas adjacency is a single Hamming-1 flip. " +
              "Both reduce two transformations to one atomic transition.",
   };
@@ -319,7 +319,7 @@ export function exceptionalGroupChain(): ExceptionalGroupCorrespondence[] {
       operation: "Embedding: Atlas → E₈ direct",
       r8Interpretation: "240 = 256 − 16; 16 = |Ext| + |Unit| + 12 boundary elements",
       r8Value: 240,
-      match: true, // Full embedding — to be verified in Phase 2
+      match: true, // Full embedding. to be verified in Phase 2
     },
   ];
 }

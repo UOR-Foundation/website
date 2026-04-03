@@ -1,8 +1,8 @@
 /**
- * query: namespace — unified barrel export.
+ * query: namespace. unified barrel export.
  *
  * Consolidates: sparql
- * Bridge Space — SPARQL execution, federation, and UNS query interface.
+ * Bridge Space. SPARQL execution, federation, and UNS query interface.
  *
  * @namespace query:
  * @version 2.0.0

@@ -28,7 +28,7 @@ export function LayerSection({ layer, index }: { layer: LayerData; index: number
       className="bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:border-primary/20 hover:shadow-sm animate-fade-in-up scroll-mt-28"
       style={{ animationDelay: `${index * 0.07}s` }}
     >
-      {/* Layer header — always visible */}
+      {/* Layer header. always visible */}
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-4 p-5 md:p-7 cursor-pointer text-left"

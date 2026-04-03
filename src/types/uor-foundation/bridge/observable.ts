@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::observable
+ * UOR Foundation v2.0.0. bridge::observable
  *
  * 13 typed observable subtypes organized by MetricAxis.
  *
@@ -10,7 +10,7 @@
 import type { MetricAxis } from "../enums";
 
 /**
- * Observable — abstract base for all observables.
+ * Observable. abstract base for all observables.
  */
 export interface Observable {
   /** Observable IRI identifier. */
@@ -26,7 +26,7 @@ export interface Observable {
 // ── Vertical (Ring/Additive) Observables ────────────────────────────────────
 
 /**
- * StratumObservable — popcount (Hamming weight) of a datum.
+ * StratumObservable. popcount (Hamming weight) of a datum.
  * @axis Vertical
  * @disjoint MetricObservable, PathObservable, CascadeObservable, CatastropheObservable
  */
@@ -37,7 +37,7 @@ export interface StratumObservable extends Observable {
 }
 
 /**
- * RingMetric — additive distance in the ring: d(x,y) = min(|x-y|, n-|x-y|).
+ * RingMetric. additive distance in the ring: d(x,y) = min(|x-y|, n-|x-y|).
  * @axis Vertical
  */
 export interface RingMetric extends Observable {
@@ -51,7 +51,7 @@ export interface RingMetric extends Observable {
 // ── Horizontal (Hamming/Bitwise) Observables ───────────────────────────────
 
 /**
- * HammingMetric — Hamming distance between two datums.
+ * HammingMetric. Hamming distance between two datums.
  * @axis Horizontal
  */
 export interface HammingMetric extends Observable {
@@ -63,7 +63,7 @@ export interface HammingMetric extends Observable {
 }
 
 /**
- * CascadeObservable — cascade propagation through bit operations.
+ * CascadeObservable. cascade propagation through bit operations.
  * @axis Horizontal
  */
 export interface CascadeObservable extends Observable {
@@ -73,7 +73,7 @@ export interface CascadeObservable extends Observable {
 }
 
 /**
- * CascadeLength — the length metric of a cascade.
+ * CascadeLength. the length metric of a cascade.
  * @axis Horizontal
  */
 export interface CascadeLength extends Observable {
@@ -85,7 +85,7 @@ export interface CascadeLength extends Observable {
 // ── Diagonal (Curvature) Observables ───────────────────────────────────────
 
 /**
- * CurvatureObservable — curvature at a point in the ring's geometry.
+ * CurvatureObservable. curvature at a point in the ring's geometry.
  * @axis Diagonal
  */
 export interface CurvatureObservable extends Observable {
@@ -95,7 +95,7 @@ export interface CurvatureObservable extends Observable {
 }
 
 /**
- * HolonomyObservable — holonomy (parallel transport around loops).
+ * HolonomyObservable. holonomy (parallel transport around loops).
  * @axis Diagonal
  */
 export interface HolonomyObservable extends Observable {
@@ -107,7 +107,7 @@ export interface HolonomyObservable extends Observable {
 }
 
 /**
- * CatastropheObservable — catastrophe theory discontinuity detection.
+ * CatastropheObservable. catastrophe theory discontinuity detection.
  * @axis Diagonal
  */
 export interface CatastropheObservable extends Observable {
@@ -119,7 +119,7 @@ export interface CatastropheObservable extends Observable {
 }
 
 /**
- * CatastropheThreshold — threshold value for catastrophe detection.
+ * CatastropheThreshold. threshold value for catastrophe detection.
  * @axis Diagonal
  */
 export interface CatastropheThreshold extends Observable {
@@ -129,7 +129,7 @@ export interface CatastropheThreshold extends Observable {
 }
 
 /**
- * DihedralElement — an element of the dihedral symmetry group.
+ * DihedralElement. an element of the dihedral symmetry group.
  * @axis Diagonal
  */
 export interface DihedralElement extends Observable {
@@ -143,7 +143,7 @@ export interface DihedralElement extends Observable {
 // ── MetricObservable (generic metric) ──────────────────────────────────────
 
 /**
- * MetricObservable — a generic metric-valued observable.
+ * MetricObservable. a generic metric-valued observable.
  * @disjoint StratumObservable, PathObservable, CascadeObservable
  */
 export interface MetricObservable extends Observable {
@@ -154,7 +154,7 @@ export interface MetricObservable extends Observable {
 }
 
 /**
- * PathObservable — observable along a path in the ring.
+ * PathObservable. observable along a path in the ring.
  * @disjoint StratumObservable, MetricObservable, CascadeObservable
  */
 export interface PathObservable extends Observable {

@@ -2,7 +2,7 @@
  * Curated Radio Stations
  * ═══════════════════════
  *
- * Station catalog for the Ambient Player. Pure data — no UI, no logic.
+ * Station catalog for the Ambient Player. Pure data. no UI, no logic.
  *
  * @module audio/stations
  * @namespace audio/

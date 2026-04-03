@@ -179,7 +179,7 @@ export default function AgentStackPage() {
             </h1>
             <p className="text-muted-foreground text-sm max-w-xl mx-auto">
               One SHA-256 hash projected across six agent protocols.
-              Identity, payments, tools, skills, communication, and services —
+              Identity, payments, tools, skills, communication, and services.
               all resolved from a single canonical object.
             </p>
           </div>

@@ -1,5 +1,5 @@
 /**
- * Trace — UorModule<ComputationTrace> Implementation
+ * Trace. UorModule<ComputationTrace> Implementation
  * ═══════════════════════════════════════════════════
  *
  * The computation trace module using the generic lifecycle base.
@@ -23,7 +23,7 @@ export class TraceModule extends UorModule<ComputationTrace> {
    * Record a trace with automatic lifecycle observation.
    *
    * This is a lightweight in-memory version that doesn't require
-   * Supabase or URDNA2015 — suitable for coherence tracking.
+   * Supabase or URDNA2015. suitable for coherence tracking.
    * For full persistence, use the original recordTrace() function.
    */
   record(

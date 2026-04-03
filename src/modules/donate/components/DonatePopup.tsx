@@ -10,7 +10,7 @@ interface DonatePopupProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// SHA-256 — canonical single implementation
+// SHA-256. canonical single implementation
 import { sha256hex as sha256Hex } from "@/lib/crypto";
 
 const CRYPTO_ADDRESSES = [
@@ -72,7 +72,7 @@ function CopyAddress({ address }: { address: string }) {
   );
 }
 
-/** QR code with blur overlay — click to reveal one at a time. */
+/** QR code with blur overlay. click to reveal one at a time. */
 function RevealableQR({ src, name }: { src: string; name: string }) {
   const [revealed, setRevealed] = useState(false);
 
@@ -104,7 +104,7 @@ function CertificatePanel({ name, symbol, address }: { name: string; symbol: str
   const [open, setOpen] = useState(false);
   const [hash, setHash] = useState<string | null>(null);
 
-  // Precise issuance timestamp — captured at component mount
+  // Precise issuance timestamp. captured at component mount
   const issuedAt = useMemo(() => new Date().toISOString(), []);
 
   useEffect(() => {

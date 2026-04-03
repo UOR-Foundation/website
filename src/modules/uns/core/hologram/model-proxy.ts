@@ -1,5 +1,5 @@
 /**
- * Model Proxy — Universal HuggingFace → Self-Hosted Caching Layer
+ * Model Proxy. Universal HuggingFace → Self-Hosted Caching Layer
  * ════════════════════════════════════════════════════════════════
  *
  * Provides a fetch interceptor that transparently routes all HuggingFace
@@ -53,7 +53,7 @@ function parseHfUrl(url: string): { modelId: string; file: string } | null {
     if (match) {
       return { modelId: match[1], file: match[2] };
     }
-    // CDN-LFS URLs have a different pattern — extract filename
+    // CDN-LFS URLs have a different pattern. extract filename
     const fileName = parsed.pathname.split("/").pop();
     if (fileName) {
       return { modelId: "unknown", file: fileName };

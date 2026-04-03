@@ -36,10 +36,10 @@ function makeOpts(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 1-A Tests — 9/9
+// Phase 1-A Tests. 9/9
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Phase 1-A: DHT", () => {
+describe("UNS Core. Phase 1-A: DHT", () => {
   let nodeA: UnsDht;
   let nodeB: UnsDht;
 
@@ -93,7 +93,7 @@ describe("UNS Core — Phase 1-A: DHT", () => {
 
     await nodeA.put(record["u:canonicalId"]!, signed);
 
-    // get() internally verifies — if it returns non-null, it's verified
+    // get() internally verifies. if it returns non-null, it's verified
     const retrieved = await nodeB.get(record["u:canonicalId"]!);
     expect(retrieved).not.toBeNull();
     expect(retrieved!["cert:signature"]["@type"]).toBe("cert:Signature");
@@ -118,7 +118,7 @@ describe("UNS Core — Phase 1-A: DHT", () => {
     // by using a raw JSON store override
     (nodeA as any).store.set(canonicalId, JSON.stringify(tampered));
 
-    // Node B retrieves — should fail verification
+    // Node B retrieves. should fail verification
     const retrieved = await nodeB.get(canonicalId);
     expect(retrieved).toBeNull();
   });

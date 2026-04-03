@@ -1,5 +1,5 @@
 /**
- * UoR Name Service (UNS) — Type System
+ * UoR Name Service (UNS). Type System
  *
  * Decentralized name resolution types aligned with the UOR ontology.
  * UNS maps human-readable names to UOR content-addressed identities
@@ -14,15 +14,15 @@ import type { UorAddress, EpistemicGrade } from "@/types/uor";
 // ── Record Types ────────────────────────────────────────────────────────────
 
 /**
- * UNS record types — analogous to DNS record types but content-addressed.
+ * UNS record types. analogous to DNS record types but content-addressed.
  *
- *   UAAA  — maps a name to a UOR IPv6 address (like DNS A/AAAA)
- *   UCID  — maps a name to a CIDv1 content identifier (like DNS CNAME → content)
- *   UGLP  — maps a name to a UOR Braille glyph address
- *   UPTR  — reverse resolution: IPv6 → name (like DNS PTR)
- *   UTXT  — arbitrary metadata attached to a name (like DNS TXT)
- *   UCRT  — certificate record: links a name to its verification certificate
- *   USOA  — zone authority record (like DNS SOA)
+ *   UAAA . maps a name to a UOR IPv6 address (like DNS A/AAAA)
+ *   UCID . maps a name to a CIDv1 content identifier (like DNS CNAME → content)
+ *   UGLP . maps a name to a UOR Braille glyph address
+ *   UPTR . reverse resolution: IPv6 → name (like DNS PTR)
+ *   UTXT . arbitrary metadata attached to a name (like DNS TXT)
+ *   UCRT . certificate record: links a name to its verification certificate
+ *   USOA . zone authority record (like DNS SOA)
  */
 export type UnsRecordType =
   | "uns:UAAA"
@@ -35,7 +35,7 @@ export type UnsRecordType =
 
 // ── Core Records ────────────────────────────────────────────────────────────
 
-/** A single UNS record — the atomic unit of the name service. */
+/** A single UNS record. the atomic unit of the name service. */
 export interface UnsRecord {
   "@type": "uns:Record";
   /** Globally unique record identifier (URN format). */
@@ -44,9 +44,9 @@ export interface UnsRecord {
   name: string;
   /** Record type classification. */
   recordType: UnsRecordType;
-  /** The resolved value — content varies by record type. */
+  /** The resolved value. content varies by record type. */
   value: string;
-  /** TTL in seconds — advisory, since content-addressed records are immutable. */
+  /** TTL in seconds. advisory, since content-addressed records are immutable. */
   ttl: number;
   /** Epistemic grade of the record's provenance. */
   epistemicGrade: EpistemicGrade;
@@ -60,7 +60,7 @@ export interface UnsRecord {
 
 // ── Zone Management ─────────────────────────────────────────────────────────
 
-/** A UNS zone — analogous to a DNS zone, but self-certifying. */
+/** A UNS zone. analogous to a DNS zone, but self-certifying. */
 export interface UnsZone {
   "@type": "uns:Zone";
   /** Zone identifier (derivation-based). */

@@ -19,10 +19,10 @@ for (let i = 0; i < 32; i++) TEST_HASH[i] = i;
 const NEXT_HEADER_TCP = 6;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 0-C Tests — 12/12
+// Phase 0-C Tests. 12/12
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Phase 0-C: IPv6 Extension Header", () => {
+describe("UNS Core. Phase 0-C: IPv6 Extension Header", () => {
   // Test 1
   it("1. encodeDestOptHeader produces exactly 40 bytes", () => {
     const buf = encodeDestOptHeader({

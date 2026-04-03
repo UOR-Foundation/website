@@ -1,5 +1,5 @@
 /**
- * Secure Memory Lens — Composition Test
+ * Secure Memory Lens. Composition Test
  * ══════════════════════════════════════
  *
  * Tests the composed Shield + Memory pipeline end-to-end.
@@ -15,7 +15,7 @@ import {
 } from "@/modules/uns/core/hologram/lens-blueprint";
 import { focusLens } from "@/modules/uns/core/hologram/lens";
 
-describe("Secure Memory — Composed Blueprint", () => {
+describe("Secure Memory. Composed Blueprint", () => {
   it("composes Shield + Memory into a single blueprint", () => {
     expect(SECURE_MEMORY_BLUEPRINT.name).toBe("Secure Memory");
     expect(SECURE_MEMORY_BLUEPRINT["@type"]).toBe("uor:LensBlueprint");

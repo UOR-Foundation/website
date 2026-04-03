@@ -1,5 +1,5 @@
 /**
- * UNS Core — First Person Project (FPP) Trust Task Module
+ * UNS Core. First Person Project (FPP) Trust Task Module
  * ════════════════════════════════════════════════════════
  *
  * Implements the First Person Project's trust task protocols (Layer 3
@@ -38,10 +38,10 @@ import type { HologramProjection } from "./hologram";
 import { resolveVid, sealEnvelope } from "./tsp";
 import type { TspVid, SealedTspEnvelope, TspRelationship } from "./tsp";
 
-// ── Personhood Credentials (PHCs) — Part Four & Five of FPP White Paper ────
+// ── Personhood Credentials (PHCs). Part Four & Five of FPP White Paper ────
 
 /**
- * A Personhood Credential — proof that the holder is a real unique person
+ * A Personhood Credential. proof that the holder is a real unique person
  * within a specific digital trust ecosystem.
  *
  * Design Principles (from the Personhood Credentials paper, Aug 2024):
@@ -69,7 +69,7 @@ export interface PersonhoodCredential {
   "fpp:nonce": string;
 }
 
-/** A sealed PHC — the credential plus its canonical identity. */
+/** A sealed PHC. the credential plus its canonical identity. */
 export interface SealedPhc {
   readonly credential: PersonhoodCredential;
   readonly identity: UorCanonicalIdentity;
@@ -138,10 +138,10 @@ export async function issuePhc(
   };
 }
 
-// ── Verifiable Relationship Credentials (VRCs) — Part Five ─────────────────
+// ── Verifiable Relationship Credentials (VRCs). Part Five ─────────────────
 
 /**
- * A Verifiable Relationship Credential — a peer-to-peer attestation of
+ * A Verifiable Relationship Credential. a peer-to-peer attestation of
  * a first-person trust relationship between two PHC holders.
  *
  * VRCs are issued in pairs (one in each direction). Each VRC:
@@ -171,7 +171,7 @@ export interface VerifiableRelationshipCredential {
   "fpp:nonce": string;
 }
 
-/** A sealed VRC — credential plus canonical identity. */
+/** A sealed VRC. credential plus canonical identity. */
 export interface SealedVrc {
   readonly credential: VerifiableRelationshipCredential;
   readonly identity: UorCanonicalIdentity;
@@ -240,10 +240,10 @@ export async function issueVrc(
   };
 }
 
-// ── Verifiable Endorsement Credentials (VECs) — Social Vouching ────────────
+// ── Verifiable Endorsement Credentials (VECs). Social Vouching ────────────
 
 /**
- * A Verifiable Endorsement Credential — contextual reputation vouching.
+ * A Verifiable Endorsement Credential. contextual reputation vouching.
  *
  * Unlike VRCs (which use R-DIDs and assert relationship existence),
  * VECs use Persona DIDs (P-DIDs) and assert specific capabilities
@@ -259,7 +259,7 @@ export interface VerifiableEndorsementCredential {
   "fpp:endorserPdid": string;
   /** Subject's P-DID (the persona being endorsed). */
   "fpp:subjectPdid": string;
-  /** Endorsement claims — what capabilities/qualities are being vouched for. */
+  /** Endorsement claims. what capabilities/qualities are being vouched for. */
   "fpp:endorsements": readonly string[];
   /** The context in which the endorsement applies. */
   "fpp:context": string;
@@ -271,7 +271,7 @@ export interface VerifiableEndorsementCredential {
   "fpp:nonce": string;
 }
 
-/** A sealed VEC — endorsement plus canonical identity. */
+/** A sealed VEC. endorsement plus canonical identity. */
 export interface SealedVec {
   readonly credential: VerifiableEndorsementCredential;
   readonly identity: UorCanonicalIdentity;
@@ -329,7 +329,7 @@ export async function issueVec(
   };
 }
 
-// ── Persona Management — Sovereign Wallet DID Hierarchy ────────────────────
+// ── Persona Management. Sovereign Wallet DID Hierarchy ────────────────────
 
 /**
  * DID Hierarchy (from FPP White Paper Figure 26):
@@ -370,7 +370,7 @@ export interface FppPersona {
   "fpp:nonce": string;
 }
 
-/** A resolved persona — persona object plus its DID projections. */
+/** A resolved persona. persona object plus its DID projections. */
 export interface ResolvedPersona {
   readonly persona: FppPersona;
   readonly identity: UorCanonicalIdentity;
@@ -434,10 +434,10 @@ export async function createPersona(
   return { persona, identity, did: didProj.value, projections };
 }
 
-// ── Relationship Cards (R-Cards) — Digital Business Cards ──────────────────
+// ── Relationship Cards (R-Cards). Digital Business Cards ──────────────────
 
 /**
- * A Relationship Card — the cryptographically signed digital equivalent
+ * A Relationship Card. the cryptographically signed digital equivalent
  * of a business card, exchanged over private channels.
  *
  * R-cards support one-way synchronization: the issuer can push updates
@@ -464,7 +464,7 @@ export interface RelationshipCard {
   "fpp:nonce": string;
 }
 
-/** A sealed r-card — card plus canonical identity. */
+/** A sealed r-card. card plus canonical identity. */
 export interface SealedRcard {
   readonly card: RelationshipCard;
   readonly identity: UorCanonicalIdentity;
@@ -529,10 +529,10 @@ export async function createRcard(
   };
 }
 
-// ── Trust Graph Operations — Decentralized Trust Graph ─────────────────────
+// ── Trust Graph Operations. Decentralized Trust Graph ─────────────────────
 
 /**
- * A Trust Graph Node — represents one entity's position in the
+ * A Trust Graph Node. represents one entity's position in the
  * decentralized trust graph. The node's identity is derived from
  * its aggregate trust relationships.
  *
@@ -546,7 +546,7 @@ export interface TrustGraphNode {
   "fpp:nodeDid": string;
   /** References to the node's PHCs (content-addressed). */
   "fpp:phcRefs": readonly string[];
-  /** Count of VRCs held (privacy-preserving — no VRC IDs exposed). */
+  /** Count of VRCs held (privacy-preserving. no VRC IDs exposed). */
   "fpp:vrcCount": number;
   /** Ecosystems where the node holds PHCs. */
   "fpp:ecosystems": readonly string[];
@@ -556,7 +556,7 @@ export interface TrustGraphNode {
   "fpp:nonce": string;
 }
 
-/** A sealed trust graph node — node plus canonical identity. */
+/** A sealed trust graph node. node plus canonical identity. */
 export interface SealedTrustGraphNode {
   readonly node: TrustGraphNode;
   readonly identity: UorCanonicalIdentity;
@@ -573,7 +573,7 @@ export interface SealedTrustGraphNode {
  * Create a trust graph node snapshot.
  *
  * This captures the current state of an entity's position in the
- * decentralized trust graph. Each snapshot is content-addressed —
+ * decentralized trust graph. Each snapshot is content-addressed.
  * changes in trust relationships produce new snapshots with new hashes.
  */
 export async function createTrustGraphNode(
@@ -619,7 +619,7 @@ export async function createTrustGraphNode(
   };
 }
 
-// ── Composite Operations — PHC+VRC Exchange over TSP ───────────────────────
+// ── Composite Operations. PHC+VRC Exchange over TSP ───────────────────────
 
 /**
  * Exchange VRCs over a TSP private channel.
@@ -740,10 +740,10 @@ export async function verifyTrustTriangle(
   return { valid: true };
 }
 
-// ── Agent Delegation Credentials (ADC) — Certified AI Agents ──────────────
+// ── Agent Delegation Credentials (ADC). Certified AI Agents ──────────────
 
 /**
- * An Agent Delegation Credential — proof that an AI agent is delegated
+ * An Agent Delegation Credential. proof that an AI agent is delegated
  * by a verified human identity (PHC holder).
  *
  * This bridges FPP's trust infrastructure to the agentic AI ecosystem:
@@ -772,7 +772,7 @@ export interface AgentDelegationCredential {
   "fpp:ecosystem": string;
   /** Capabilities delegated to the agent (maps to skill.md / MCP tools). */
   "fpp:delegatedCapabilities": readonly string[];
-  /** Agent model URI (optional — links to ONNX projection). */
+  /** Agent model URI (optional. links to ONNX projection). */
   "fpp:agentModelUri"?: string;
   /** MCP endpoint the agent serves (optional). */
   "fpp:mcpEndpoint"?: string;
@@ -784,7 +784,7 @@ export interface AgentDelegationCredential {
   "fpp:nonce": string;
 }
 
-/** A sealed ADC — credential plus canonical identity and hologram projections. */
+/** A sealed ADC. credential plus canonical identity and hologram projections. */
 export interface SealedAgentDelegation {
   readonly credential: AgentDelegationCredential;
   readonly identity: UorCanonicalIdentity;
@@ -796,11 +796,11 @@ export interface SealedAgentDelegation {
     readonly cid: string;
     /** Verifiable Credential projection. */
     readonly vc: string;
-    /** A2A Agent Card — agent is discoverable in Google A2A protocol. */
+    /** A2A Agent Card. agent is discoverable in Google A2A protocol. */
     readonly a2a: string;
-    /** MCP tool identity — agent's tools are content-addressed. */
+    /** MCP tool identity. agent's tools are content-addressed. */
     readonly mcpTool: string;
-    /** MCP context entry — agent's context contributions. */
+    /** MCP context entry. agent's context contributions. */
     readonly mcpContext: string;
     /** Trust graph position. */
     readonly trustgraph: string;

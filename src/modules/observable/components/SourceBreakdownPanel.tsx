@@ -1,5 +1,5 @@
 /**
- * SourceBreakdownPanel — Real-time event source breakdown with sparklines.
+ * SourceBreakdownPanel. Real-time event source breakdown with sparklines.
  *
  * Subscribes to SystemEventBus and tracks per-source (ring, identity, hologram)
  * event counts + rolling history for sparkline rendering.
@@ -28,7 +28,7 @@ const SOURCES: { id: SystemEventSource; label: string; icon: string; color: stri
 const HISTORY_LEN = 30; // 30 buckets
 const BUCKET_MS = 500;  // each bucket = 500ms → 15s window
 
-const empty = (): SourceStats => ({ count: 0, bytesTotal: 0, lastOp: "—", history: Array(HISTORY_LEN).fill(0) });
+const empty = (): SourceStats => ({ count: 0, bytesTotal: 0, lastOp: ". ", history: Array(HISTORY_LEN).fill(0) });
 
 export function SourceBreakdownPanel() {
   const [stats, setStats] = useState<SourceMap>({

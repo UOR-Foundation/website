@@ -1,5 +1,5 @@
 /**
- * TINN Panel — Thermodynamics-Informed Neural Network Visualization
+ * TINN Panel. Thermodynamics-Informed Neural Network Visualization
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
@@ -279,7 +279,7 @@ export default function TINNPanel() {
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-[15px] font-mono font-semibold text-foreground tracking-wide">
-            TINN — Thermodynamics-Informed Neural Network
+            TINN. Thermodynamics-Informed Neural Network
           </h2>
           <p className="text-[10px] font-mono text-muted-foreground mt-1 max-w-2xl">
             Metriplectic bracket layer from Barbaresco's framework: ẋ = &#123;x,E&#125;<sub>Poisson</sub> + (x,S)<sub>metric</sub>.
@@ -420,7 +420,7 @@ export default function TINNPanel() {
                     </span>
                     <div className="flex-1">
                       <span className="text-foreground">{inv.name}</span>
-                      <span className="text-muted-foreground ml-2">— {inv.evidence}</span>
+                      <span className="text-muted-foreground ml-2">. {inv.evidence}</span>
                     </div>
                   </div>
                 ))}

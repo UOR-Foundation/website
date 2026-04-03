@@ -1,5 +1,5 @@
 /**
- * UOR Quantum scaling levels — serializable data for UOR certification.
+ * UOR Quantum scaling levels. serializable data for UOR certification.
  * Shows how the system scales from small (8-bit) to arbitrary precision.
  */
 

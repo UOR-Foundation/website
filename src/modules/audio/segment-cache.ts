@@ -1,9 +1,9 @@
 /**
- * Audio Segment Cache — Content-Addressed Audio Buffer Store
+ * Audio Segment Cache. Content-Addressed Audio Buffer Store
  * ═══════════════════════════════════════════════════════════════════
  *
  * LRU cache for audio segments keyed by content hash (CID).
- * Segments are verified on retrieval — if the hash doesn't match,
+ * Segments are verified on retrieval. if the hash doesn't match,
  * the entry is evicted (self-healing).
  *
  * Uses in-memory storage with optional IndexedDB persistence

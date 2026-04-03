@@ -1,5 +1,5 @@
 /**
- * UNS Mesh — BGP Content Orbit Routing & Node Orchestrator (Phase 4-C)
+ * UNS Mesh. BGP Content Orbit Routing & Node Orchestrator (Phase 4-C)
  */
 
 export {

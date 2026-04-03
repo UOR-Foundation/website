@@ -1,5 +1,5 @@
 /**
- * EpistemicBadge — reusable grade display component.
+ * EpistemicBadge. reusable grade display component.
  *
  * Shows the grade letter with color coding and an optional tooltip.
  * This is the SINGLE SOURCE OF TRUTH for grade display across the entire UI.
@@ -57,7 +57,7 @@ export function EpistemicBadge({
 }
 
 /**
- * EpistemicGradeLegend — shows all four grades with labels.
+ * EpistemicGradeLegend. shows all four grades with labels.
  * Reusable footer for any page displaying graded data.
  */
 export function EpistemicGradeLegend() {

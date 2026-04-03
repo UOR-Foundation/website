@@ -1,5 +1,5 @@
 /**
- * UNS Knowledge Graph — In-Memory Quad Store with Named Graphs.
+ * UNS Knowledge Graph. In-Memory Quad Store with Named Graphs.
  *
  * Provides a SPARQL 1.1-compatible knowledge graph over the UOR ring substrate.
  * Two canonical named graphs:
@@ -10,11 +10,11 @@
  *   - @type, schema:value, schema:stratum, u:partitionClass
  *   - op:neg, op:bnot, op:succ, op:pred links
  *
- * This is a pure in-memory store — no external dependencies.
+ * This is a pure in-memory store. no external dependencies.
  * For persistent storage, use kg-store/store.ts (Supabase-backed).
  *
- * @see spec/src/namespaces/partition.rs — partition classification
- * @see .well-known/uor.json — quantum_levels, graph definitions
+ * @see spec/src/namespaces/partition.rs. partition classification
+ * @see .well-known/uor.json. quantum_levels, graph definitions
  */
 
 import { neg, bnot, succ, pred, bytePopcount } from "@/lib/uor-ring";
@@ -187,51 +187,51 @@ export class UnsGraph {
     // ── 9 named individual nodes (P34) ───────────────────────────────────
     // These bring the Q0 graph to 265 total nodes (256 datums + 9 individuals)
 
-    // 1. schema:pi1 — the ring generator (value=1)
+    // 1. schema:pi1. the ring generator (value=1)
     const pi1 = `${SCHEMA}pi1`;
     this.quads.push({ subject: pi1, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: pi1, predicate: "rdf:type", object: `${SCHEMA}Datum`, graph: g });
     this.quads.push({ subject: pi1, predicate: `${SCHEMA}value`, object: "1", graph: g });
-    this.quads.push({ subject: pi1, predicate: "rdfs:label", object: "pi1 — ring generator", graph: g });
+    this.quads.push({ subject: pi1, predicate: "rdfs:label", object: "pi1. ring generator", graph: g });
 
-    // 2. schema:zero — the additive identity (value=0)
+    // 2. schema:zero. the additive identity (value=0)
     const zero = `${SCHEMA}zero`;
     this.quads.push({ subject: zero, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: zero, predicate: "rdf:type", object: `${SCHEMA}Datum`, graph: g });
     this.quads.push({ subject: zero, predicate: `${SCHEMA}value`, object: "0", graph: g });
-    this.quads.push({ subject: zero, predicate: "rdfs:label", object: "zero — additive identity", graph: g });
+    this.quads.push({ subject: zero, predicate: "rdfs:label", object: "zero. additive identity", graph: g });
 
-    // 3. op:neg — additive inverse operation
+    // 3. op:neg. additive inverse operation
     const opNeg = `${OP}negOp`;
     this.quads.push({ subject: opNeg, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}Involution`, graph: g });
     this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
     this.quads.push({ subject: opNeg, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
-    this.quads.push({ subject: opNeg, predicate: "rdfs:label", object: "neg — additive inverse", graph: g });
+    this.quads.push({ subject: opNeg, predicate: "rdfs:label", object: "neg. additive inverse", graph: g });
 
-    // 4. op:bnot — bitwise complement operation
+    // 4. op:bnot. bitwise complement operation
     const opBnot = `${OP}bnotOp`;
     this.quads.push({ subject: opBnot, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}Involution`, graph: g });
     this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
     this.quads.push({ subject: opBnot, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
-    this.quads.push({ subject: opBnot, predicate: "rdfs:label", object: "bnot — bitwise complement", graph: g });
+    this.quads.push({ subject: opBnot, predicate: "rdfs:label", object: "bnot. bitwise complement", graph: g });
 
-    // 5. op:succ — successor function
+    // 5. op:succ. successor function
     const opSucc = `${OP}succOp`;
     this.quads.push({ subject: opSucc, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opSucc, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
     this.quads.push({ subject: opSucc, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
-    this.quads.push({ subject: opSucc, predicate: "rdfs:label", object: "succ — successor", graph: g });
+    this.quads.push({ subject: opSucc, predicate: "rdfs:label", object: "succ. successor", graph: g });
 
-    // 6. op:pred — predecessor function
+    // 6. op:pred. predecessor function
     const opPred = `${OP}predOp`;
     this.quads.push({ subject: opPred, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opPred, predicate: "rdf:type", object: `${OP}UnaryOp`, graph: g });
     this.quads.push({ subject: opPred, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
-    this.quads.push({ subject: opPred, predicate: "rdfs:label", object: "pred — predecessor", graph: g });
+    this.quads.push({ subject: opPred, predicate: "rdfs:label", object: "pred. predecessor", graph: g });
 
-    // 7. op:criticalIdentity — neg(bnot(x)) = succ(x)
+    // 7. op:criticalIdentity. neg(bnot(x)) = succ(x)
     const opCrit = `${OP}criticalIdentity`;
     this.quads.push({ subject: opCrit, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opCrit, predicate: "rdf:type", object: `${OP}Identity`, graph: g });
@@ -240,19 +240,19 @@ export class UnsGraph {
     this.quads.push({ subject: opCrit, predicate: `${OP}rhs`, object: `${OP}bnotOp`, graph: g });
     this.quads.push({ subject: opCrit, predicate: `${OP}forAll`, object: "x ∈ R_8", graph: g });
 
-    // 8. op:D2n — the dihedral group D_{2^8}
+    // 8. op:D2n. the dihedral group D_{2^8}
     const opD2n = `${OP}D2n`;
     this.quads.push({ subject: opD2n, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opD2n, predicate: "rdf:type", object: `${OP}DihedralGroup`, graph: g });
     this.quads.push({ subject: opD2n, predicate: "rdf:type", object: `${OP}Group`, graph: g });
-    this.quads.push({ subject: opD2n, predicate: "rdfs:label", object: "D_{2^8} — dihedral group", graph: g });
+    this.quads.push({ subject: opD2n, predicate: "rdfs:label", object: "D_{2^8}. dihedral group", graph: g });
 
-    // 9. op:add — ring addition
+    // 9. op:add. ring addition
     const opAdd = `${OP}addOp`;
     this.quads.push({ subject: opAdd, predicate: "rdf:type", object: "owl:NamedIndividual", graph: g });
     this.quads.push({ subject: opAdd, predicate: "rdf:type", object: `${OP}BinaryOp`, graph: g });
     this.quads.push({ subject: opAdd, predicate: "rdf:type", object: `${OP}Operation`, graph: g });
-    this.quads.push({ subject: opAdd, predicate: "rdfs:label", object: "add — ring addition", graph: g });
+    this.quads.push({ subject: opAdd, predicate: "rdfs:label", object: "add. ring addition", graph: g });
 
     return 265; // 256 datums + 9 named individuals
   }
@@ -311,7 +311,7 @@ export class UnsGraph {
   }
 
   /**
-   * Execute a SPARQL CONSTRUCT query — returns matching quads.
+   * Execute a SPARQL CONSTRUCT query. returns matching quads.
    */
   sparqlConstruct(query: string): Quad[] {
     const { patterns, graphIri } = this.parseQuery(query);
@@ -319,7 +319,7 @@ export class UnsGraph {
   }
 
   /**
-   * Execute a SPARQL ASK query — returns true if any match exists.
+   * Execute a SPARQL ASK query. returns true if any match exists.
    */
   sparqlAsk(query: string): boolean {
     const { patterns, graphIri } = this.parseQuery(query);
@@ -450,7 +450,7 @@ export class UnsGraph {
       filters.push({ variable: fMatch[1], operator: fMatch[2], value: fMatch[3] });
     }
 
-    // Parse triple patterns — split on `.` but not inside <> or ""
+    // Parse triple patterns. split on `.` but not inside <> or ""
     const cleanBody = body.replace(/FILTER\s*\([^)]+\)/gi, "").replace(/GRAPH\s*<[^>]+>\s*\{/gi, "").trim();
     const patternStrs = this.safeSplitPatterns(cleanBody);
 

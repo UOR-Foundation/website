@@ -28,7 +28,7 @@ export default function QuantumISAPanel() {
           QUANTUM ISA MAPPING
         </h2>
         <p className="text-[11px] font-mono text-[hsl(210,10%,50%)]">
-          Phase 10 — 96 Atlas vertices → quantum gate operations via stabilizer correspondence
+          Phase 10. 96 Atlas vertices → quantum gate operations via stabilizer correspondence
         </p>
       </div>
 
@@ -51,7 +51,7 @@ export default function QuantumISAPanel() {
       {/* Gate tier distribution */}
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase mb-3">
-          Gate Complexity Hierarchy — Exceptional Group → Gate Tier
+          Gate Complexity Hierarchy. Exceptional Group → Gate Tier
         </div>
         <div className="grid grid-cols-5 gap-3">
           {([0, 1, 2, 3, 4] as GateTier[]).map(tier => {
@@ -79,7 +79,7 @@ export default function QuantumISAPanel() {
       {/* Mesh network */}
       <div className="bg-[hsla(210,10%,12%,0.6)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-4">
         <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase mb-3">
-          Quantum Mesh Network — UOR IPv6 Entanglement Topology
+          Quantum Mesh Network. UOR IPv6 Entanglement Topology
         </div>
         <div className="grid grid-cols-4 gap-2">
           {report.meshNodes.map((node, i) => (

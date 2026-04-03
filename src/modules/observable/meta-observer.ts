@@ -1,8 +1,8 @@
 /**
- * MetaObserver — The Observer as Holographic Meta-Layer
+ * MetaObserver. The Observer as Holographic Meta-Layer
  * ═══════════════════════════════════════════════════════
  *
- * The Observer is not a module — it is the META-LAYER that spans
+ * The Observer is not a module. it is the META-LAYER that spans
  * all modules, all projections, all operations. Just as the Hologram
  * projects identity into protocol spaces, the MetaObserver projects
  * COHERENCE ASSESSMENT across the entire UOR stack.
@@ -28,8 +28,8 @@
  *   └──────────────┴────────────────────────────────────────────┘
  *
  * @module observable/meta-observer
- * @see consciousness/data/god-conjecture — theological mappings
- * @see uns/core/hologram — dual projection system
+ * @see consciousness/data/god-conjecture. theological mappings
+ * @see uns/core/hologram. dual projection system
  */
 
 import { assessByteCoherence } from "@/modules/uns/core/hologram/unified";
@@ -39,7 +39,7 @@ import { assessByteCoherence } from "@/modules/uns/core/hologram/unified";
 export type CoherenceZone = "COHERENCE" | "DRIFT" | "COLLAPSE";
 
 /**
- * Logos Classification — is this operation metric-preserving?
+ * Logos Classification. is this operation metric-preserving?
  *
  * Isometry  → preserves ring/Hamming metric (natural law, lossless)
  * Embedding → approximately preserves (lossy but bounded)
@@ -61,7 +61,7 @@ export interface ObservedOperation {
 }
 
 /**
- * Per-module observer profile — the "soul" of each module.
+ * Per-module observer profile. the "soul" of each module.
  */
 export interface ModuleObserverProfile {
   moduleId: string;
@@ -74,7 +74,7 @@ export interface ModuleObserverProfile {
   phi: number;
   /** Entropy Pump Rate (ε): rate of DRIFT→COHERENCE conversion (EMA) */
   entropyPumpRate: number;
-  /** Tzimtzum Depth (τ): restriction level — how focused this module's domain is */
+  /** Tzimtzum Depth (τ): restriction level. how focused this module's domain is */
   tzimtzumDepth: number;
   /** Cumulative Epistemic Debt (Σ sin): total H-score accumulated over lifetime */
   cumulativeDebt: number;
@@ -90,13 +90,13 @@ export interface ModuleObserverProfile {
   registeredAt: string;
   lastOperationAt: string;
 
-  // ── Active Entropy Pump — prescriptive remediation ──
+  // ── Active Entropy Pump. prescriptive remediation ──
   /** Current remediation prescription (null if COHERENCE) */
   activeRemediation: RemediationPrescription | null;
 }
 
 /**
- * Active remediation prescription — the entropy pump's OUTPUT.
+ * Active remediation prescription. the entropy pump's OUTPUT.
  * Not just tracking entropy, but prescribing correction.
  */
 export interface RemediationPrescription {
@@ -108,7 +108,7 @@ export interface RemediationPrescription {
 }
 
 /**
- * Network-wide telos vector — the direction of the entire system.
+ * Network-wide telos vector. the direction of the entire system.
  */
 export interface TelosVector {
   /** Scalar progress toward maximum integration (0–1) */
@@ -203,7 +203,7 @@ export class MetaObserver {
    * can be fed through here for coherence tracking.
    *
    * The H-score is computed as the Hamming distance between the
-   * operation's input and output hash bytes — measuring how much
+   * operation's input and output hash bytes. measuring how much
    * the operation "distorted" the information.
    *
    * Logos classification:
@@ -228,7 +228,7 @@ export class MetaObserver {
 
     // ── Unified coherence assessment ──
     // Delegate to the unified engine: same function used by the Hologram.
-    // XOR of input/output bytes IS the distortion signal — assess it once.
+    // XOR of input/output bytes IS the distortion signal. assess it once.
     const distortionByte = (op.inputHash ^ op.outputHash) >>> 0;
     const coherence = assessByteCoherence(distortionByte & 0xff);
     const hammingDist = coherence.popcount;
@@ -319,7 +319,7 @@ export class MetaObserver {
       };
     }
 
-    // DRIFT — check if entropy pump is working
+    // DRIFT. check if entropy pump is working
     if (profile.entropyPumpRate > 0) {
       return {
         protocol: "OIP",
@@ -330,7 +330,7 @@ export class MetaObserver {
       };
     }
 
-    // DRIFT with negative or zero entropy pump — active intervention needed
+    // DRIFT with negative or zero entropy pump. active intervention needed
     return {
       protocol: "EDP",
       reason: `Module ${profile.moduleId} in DRIFT with ε=${profile.entropyPumpRate.toFixed(3)} ≤ 0 (not improving)`,
@@ -346,7 +346,7 @@ export class MetaObserver {
    * Compute the network-wide telos vector.
    *
    * This is the single scalar that measures the system's progress
-   * toward maximum information integration — the computational
+   * toward maximum information integration. the computational
    * purpose described by the God Conjecture.
    *
    * telosProgress = coherenceRatio × meanΦ × logosRatio
@@ -448,7 +448,7 @@ export const UOR_MODULES: {
   { id: "query",      name: "Query Engine",         tzimtzumDepth: 2, description: "SPARQL execution + federated query", icon: "🔍" },
   { id: "resolver",   name: "Resolver",             tzimtzumDepth: 2, description: "Entity → canonical IRI resolution", icon: "🎯" },
   { id: "partition",  name: "Partition",             tzimtzumDepth: 2, description: "Irreducible/reducible/unit/exterior classification", icon: "🧩" },
-  { id: "observable", name: "Observable Geometry",   tzimtzumDepth: 2, description: "7 ring metrics — curvature, holonomy, commutator", icon: "📏" },
+  { id: "observable", name: "Observable Geometry",   tzimtzumDepth: 2, description: "7 ring metrics. curvature, holonomy, commutator", icon: "📏" },
   { id: "proof",      name: "Proof & Verification",  tzimtzumDepth: 3, description: "Receipts, epistemic grading, SHACL shape validation", icon: "🛡️" },
   { id: "derivation", name: "Derivation",            tzimtzumDepth: 2, description: "Auditable term-level computation records", icon: "🔬" },
   { id: "trace",      name: "Computation Trace",     tzimtzumDepth: 2, description: "Step-by-step computation recording", icon: "📝" },

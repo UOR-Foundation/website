@@ -1,9 +1,9 @@
 /**
- * UOR Post-Quantum Bridge — Sign & Verify
+ * UOR Post-Quantum Bridge. Sign & Verify
  * ═════════════════════════════════════════
  *
  * The Lattice-Hash Duality: UOR's ring Z/256Z is a 1-dimensional lattice.
- * Dilithium-3 (ML-DSA-65, NIST FIPS 204) operates on Module-LWE lattices —
+ * Dilithium-3 (ML-DSA-65, NIST FIPS 204) operates on Module-LWE lattices.
  * the same mathematical family. This module bridges them.
  *
  * Pipeline:
@@ -25,7 +25,7 @@ export interface PqKeyPair {
   readonly secretKey: Uint8Array;
 }
 
-/** The complete PQ envelope — everything needed to verify and anchor. */
+/** The complete PQ envelope. everything needed to verify and anchor. */
 export interface PqEnvelope {
   /** The original content hash (hex). */
   readonly contentHash: string;
@@ -35,7 +35,7 @@ export interface PqEnvelope {
   readonly signature: Uint8Array;
   /** Signer's public key. */
   readonly publicKey: Uint8Array;
-  /** Bitcoin OP_RETURN script (hex) — ready for broadcast. */
+  /** Bitcoin OP_RETURN script (hex). ready for broadcast. */
   readonly bitcoinScript: string;
   /** Lightning BOLT-11 payment_hash field. */
   readonly lightningPaymentHash: string;
@@ -81,7 +81,7 @@ export function pqKeygen(seed?: Uint8Array): PqKeyPair {
  *
  * This string is encoded to UTF-8 bytes and signed with ML-DSA-65.
  * The result includes the Bitcoin OP_RETURN script, Lightning payment hash,
- * and ring coherence witness — everything needed for on-chain anchoring.
+ * and ring coherence witness. everything needed for on-chain anchoring.
  *
  * @param identity  ProjectionInput (hashBytes + cid + hex)
  * @param secretKey Dilithium-3 secret key (4,032 bytes)
@@ -100,7 +100,7 @@ export function pqSign(identity: ProjectionInput, secretKey: Uint8Array): PqEnve
   const lightningPaymentHash = project(identity, "lightning").value;
   const coherenceWitness = project(identity, "pq-witness").value;
 
-  // 4. Verify coherence witness holds (it always does — this is the critical identity)
+  // 4. Verify coherence witness holds (it always does. this is the critical identity)
   const x = identity.hashBytes[0];
   const negBnot = (256 - ((~x) & 0xFF)) & 0xFF;
   const succX = (x + 1) & 0xFF;

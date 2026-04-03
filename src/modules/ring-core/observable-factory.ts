@@ -1,9 +1,9 @@
 /**
- * UOR v2.0.0 — Observable Factory
+ * UOR v2.0.0. Observable Factory
  *
  * Creates typed observable instances aligned to MetricAxis.
  * Each factory function returns a plain object satisfying the
- * corresponding v2 interface. No classes — just data.
+ * corresponding v2 interface. No classes. just data.
  *
  * 13 observable subtypes organized into 3 axes:
  *   Vertical:   StratumObservable, RingMetric

@@ -1,5 +1,5 @@
 /**
- * Code Nexus — Ingestion Pipeline
+ * Code Nexus. Ingestion Pipeline
  * ════════════════════════════════
  *
  * Accepts a GitHub URL or ZIP File, extracts source files,
@@ -100,7 +100,7 @@ export function extractFilesFromZip(zipData: Uint8Array): SourceFile[] {
   const files: SourceFile[] = [];
 
   for (const [rawPath, data] of Object.entries(decompressed)) {
-    // GitHub ZIPs have a top-level directory — strip it
+    // GitHub ZIPs have a top-level directory. strip it
     const parts = rawPath.split("/");
     const path = parts.length > 1 ? parts.slice(1).join("/") : rawPath;
 
@@ -114,7 +114,7 @@ export function extractFilesFromZip(zipData: Uint8Array): SourceFile[] {
       const content = strFromU8(data);
       files.push({ path, content, language });
     } catch {
-      // Binary file or encoding issue — skip
+      // Binary file or encoding issue. skip
     }
   }
 

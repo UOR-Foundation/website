@@ -1,5 +1,5 @@
 /**
- * Geometric Error Correction — Phase 23
+ * Geometric Error Correction. Phase 23
  * ══════════════════════════════════════
  *
  * Uses the Atlas mirror involution τ (e₇ flip) as a stabilizer code.
@@ -55,7 +55,7 @@ export interface StabilizerGenerator {
   type: "homogeneous" | "mixed";
 }
 
-/** Error syndrome — bit pattern from measuring stabilizers */
+/** Error syndrome. bit pattern from measuring stabilizers */
 export interface Syndrome {
   /** Binary syndrome vector (48 bits) */
   bits: boolean[];
@@ -131,7 +131,7 @@ export interface CodeDistance {
   correctableTotal: number;
 }
 
-/** Sign class syndrome — secondary error detection */
+/** Sign class syndrome. secondary error detection */
 export interface SignClassSyndrome {
   /** Sign class index (0-7) */
   signClass: number;
@@ -319,7 +319,7 @@ export function signClassSyndromes(errorLocations: number[]): SignClassSyndrome[
 // ── Sign-Class Cross-Stabilizer Layer ─────────────────────────────────────
 
 /**
- * Build 8 sign-class stabilizers — one per sign class.
+ * Build 8 sign-class stabilizers. one per sign class.
  *
  * Each sign-class stabilizer is the product of all mirror-pair Z⊗Z generators
  * within that sign class. Since τ preserves sign class, each class has exactly
@@ -332,7 +332,7 @@ export function signClassSyndromes(errorLocations: number[]): SignClassSyndrome[
  *
  * Cross-stabilizer decoding: given primary syndrome triggers stabilizer i
  * (pair (v, τ(v))), the sign-class syndrome tells us WHICH qubit in the pair
- * was hit — because the sign-class parity changes iff an odd number of qubits
+ * was hit. because the sign-class parity changes iff an odd number of qubits
  * in that class are flipped. Single-qubit errors always flip exactly one,
  * so the sign-class syndrome bit for the error's class will be 1.
  *
@@ -368,8 +368,8 @@ export function buildSignClassStabilizers(): SignClassStabilizer[] {
  * Layer 2 (sign-class): 8 sign-class parity checks → disambiguates WHICH qubit
  *
  * The cross-stabilizer decoding algorithm:
- *   1. Extract primary syndrome (48 bits) — identifies the affected mirror pair
- *   2. Extract sign-class syndrome (8 bits) — identifies the affected sign class
+ *   1. Extract primary syndrome (48 bits). identifies the affected mirror pair
+ *   2. Extract sign-class syndrome (8 bits). identifies the affected sign class
  *   3. If exactly one primary stabilizer fires AND the corresponding sign-class
  *      stabilizer fires, the error is on the vertex (not the mirror) of that pair
  *      if the sign-class parity is odd for the vertex's class.

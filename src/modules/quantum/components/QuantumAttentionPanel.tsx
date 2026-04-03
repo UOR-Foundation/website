@@ -228,7 +228,7 @@ function CatalogView({ summary }: { summary: AttentionCatalogSummary[] }) {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Quantum Circuit Compilation — All {summary.length} Models
+        Quantum Circuit Compilation. All {summary.length} Models
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[10px] font-mono">
@@ -268,7 +268,7 @@ function CatalogView({ summary }: { summary: AttentionCatalogSummary[] }) {
         <div className="text-[11px] font-mono text-[hsl(200,60%,65%)] mb-2">Key Observation</div>
         <p className="text-[10px] font-mono text-[hsl(210,10%,55%)] leading-relaxed">
           All models with d_k = 128 (GPT-3, GPT-4, LLaMA, Gemini, Claude, Mistral, Qwen) compile to
-          <strong className="text-[hsl(280,50%,65%)]"> identical quantum circuit topologies</strong> — same
+          <strong className="text-[hsl(280,50%,65%)]"> identical quantum circuit topologies</strong>. same
           qubit count, same gate structure, same depth. The attention mechanism IS universal; only the
           classical weights differ. The quantum circuit is the invariant.
         </p>
@@ -311,7 +311,7 @@ function InsightsView({ insights, circuit }: { insights: UniversalAttentionInsig
           The Convergence
         </div>
         <p className="text-[10px] font-mono text-[hsl(280,20%,75%)] leading-relaxed">
-          A single transformer attention head — the fundamental unit of modern AI — compiles into a
+          A single transformer attention head. the fundamental unit of modern AI. compiles into a
           quantum circuit of just <strong>{circuit.totalQubits} qubits</strong> through the Atlas
           substrate. The same geometric structure (96 vertices, 256 edges, 48 mirror pairs) that
           produces the exceptional Lie groups also produces the gate set for quantum attention.

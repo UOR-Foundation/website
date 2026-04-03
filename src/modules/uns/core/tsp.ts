@@ -1,9 +1,9 @@
 /**
- * UNS Core — Trust Spanning Protocol (TSP) Integration
+ * UNS Core. Trust Spanning Protocol (TSP) Integration
  * ═════════════════════════════════════════════════════
  *
  * Implements the Trust Spanning Protocol (ToIP TSWG) message framing,
- * relationship forming, and envelope construction — all canonically
+ * relationship forming, and envelope construction. all canonically
  * anchored to the UOR identity pipeline.
  *
  * TSP Architecture Mapping:
@@ -15,7 +15,7 @@
  *
  * Canonicality Guarantee:
  *   Every TSP object (envelope, relationship, key) flows through
- *   singleProofHash() — ensuring URDNA2015 normalization, SHA-256
+ *   singleProofHash(). ensuring URDNA2015 normalization, SHA-256
  *   hashing, and UOR identity derivation. No raw string hashing.
  *
  * @module uns/core/tsp
@@ -32,8 +32,8 @@ import type { HologramProjection } from "./hologram";
 /** TSP message types as defined in the specification. */
 export type TspMessageType =
   | "tsp:GenericMessage"       // General-purpose authenticated message
-  | "tsp:RelationshipRequest"  // RFI — Relationship Forming Invitation
-  | "tsp:RelationshipAccept"   // RFA — Relationship Forming Acceptance
+  | "tsp:RelationshipRequest"  // RFI. Relationship Forming Invitation
+  | "tsp:RelationshipAccept"   // RFA. Relationship Forming Acceptance
   | "tsp:RelationshipCancel"   // Relationship teardown
   | "tsp:RoutedMessage"        // Message through intermediary
   | "tsp:NestedMessage";       // End-to-end through intermediaries
@@ -41,23 +41,23 @@ export type TspMessageType =
 // ── TSP VID (§4) ───────────────────────────────────────────────────────────
 
 /**
- * A TSP Verifiable Identifier — resolved from a UOR canonical identity.
+ * A TSP Verifiable Identifier. resolved from a UOR canonical identity.
  *
  * TSP §4.1: "A VID is a URI that identifies an entity and can be
  * resolved to a set of cryptographic keys."
  *
- * In UOR, the VID IS the did:uor projection — they are structurally
+ * In UOR, the VID IS the did:uor projection. they are structurally
  * identical. This type adds TSP-specific metadata (transport endpoint,
  * key references) while preserving the canonical identity.
  */
 export interface TspVid {
-  /** The VID URI — always did:uor:{cid}. */
+  /** The VID URI. always did:uor:{cid}. */
   readonly vid: string;
   /** The underlying UOR canonical identity. */
   readonly identity: UorCanonicalIdentity;
   /** Optional transport endpoint for direct messaging. */
   readonly transport?: string;
-  /** Verification key fingerprint — tsp-key projection. */
+  /** Verification key fingerprint. tsp-key projection. */
   readonly verificationKeyId: string;
 }
 
@@ -67,7 +67,7 @@ export interface TspVid {
  * This is the bridge between UOR identity and TSP trust:
  *   singleProofHash(object) → UorCanonicalIdentity → TspVid
  *
- * The VID is deterministic — same object always produces same VID.
+ * The VID is deterministic. same object always produces same VID.
  */
 export function resolveVid(identity: UorCanonicalIdentity): TspVid {
   const vidProjection = project(identity, "tsp-vid") as HologramProjection;
@@ -83,7 +83,7 @@ export function resolveVid(identity: UorCanonicalIdentity): TspVid {
 // ── TSP Envelope (§5) ──────────────────────────────────────────────────────
 
 /**
- * TSP Envelope — the authenticated message container.
+ * TSP Envelope. the authenticated message container.
  *
  * Every TSP message is wrapped in an envelope that binds:
  *   - Sender VID (who sent it)
@@ -92,7 +92,7 @@ export function resolveVid(identity: UorCanonicalIdentity): TspVid {
  *   - Payload (the actual content)
  *   - Seal (cryptographic authentication)
  *
- * The envelope itself is a UOR object — canonicalized via URDNA2015
+ * The envelope itself is a UOR object. canonicalized via URDNA2015
  * and content-addressed via singleProofHash(). This means:
  *   - Two identical messages produce the same envelope hash
  *   - The envelope hash IS the message identity
@@ -107,16 +107,16 @@ export interface TspEnvelope {
   "tsp:receiver": string;
   /** Message type. */
   "tsp:messageType": TspMessageType;
-  /** Nonced timestamp — ensures unique envelope identity per send. */
+  /** Nonced timestamp. ensures unique envelope identity per send. */
   "tsp:timestamp": string;
   /** Application-layer payload (opaque to TSP). */
   "tsp:payload": unknown;
-  /** Monotonic nonce — prevents replay and ensures hash uniqueness. */
+  /** Monotonic nonce. prevents replay and ensures hash uniqueness. */
   "tsp:nonce": string;
 }
 
 /**
- * A sealed TSP envelope — envelope + its UOR canonical identity.
+ * A sealed TSP envelope. envelope + its UOR canonical identity.
  *
  * After canonicalization, the envelope gains a content-addressed
  * identity that can be projected through the hologram registry.
@@ -172,7 +172,7 @@ export async function sealEnvelope(
     "tsp:nonce": nonce,
   };
 
-  // Canonicalize through the UOR pipeline — this is the critical path
+  // Canonicalize through the UOR pipeline. this is the critical path
   const identity = await singleProofHash(envelope);
 
   // Project through TSP-specific hologram projections
@@ -195,7 +195,7 @@ export async function sealEnvelope(
 // ── TSP Relationship Forming (§7) ──────────────────────────────────────────
 
 /**
- * TSP Relationship — a verified bilateral trust channel.
+ * TSP Relationship. a verified bilateral trust channel.
  *
  * TSP defines relationship forming as a two-step handshake:
  *   1. Party A sends a Relationship Forming Invitation (RFI)
@@ -235,14 +235,14 @@ export interface TspRfa {
   "tsp:accepter": string;
   /** The inviter's VID (from the RFI). */
   "tsp:inviter": string;
-  /** Thread identifier — MUST match the RFI thread. */
+  /** Thread identifier. MUST match the RFI thread. */
   "tsp:thread": string;
   /** Timestamp of acceptance. */
   "tsp:acceptedAt": string;
 }
 
 /**
- * A formed TSP relationship — the result of a successful RFI+RFA handshake.
+ * A formed TSP relationship. the result of a successful RFI+RFA handshake.
  */
 export interface TspRelationship {
   /** The canonical identity of the relationship (hash of RFI+RFA). */
@@ -266,7 +266,7 @@ export interface TspRelationship {
 /**
  * Create a Relationship Forming Invitation (RFI).
  *
- * The RFI is a UOR object — canonicalized and content-addressed.
+ * The RFI is a UOR object. canonicalized and content-addressed.
  * The thread ID is derived from the RFI's canonical hash, ensuring
  * that the thread is deterministically bound to the invitation content.
  */
@@ -307,7 +307,7 @@ export async function createRfi(
  *   4. Project through tsp-relationship → relationship ID
  *
  * The relationship identity is the canonical hash of the COMBINED
- * RFI+RFA — not either one individually. This ensures that the
+ * RFI+RFA. not either one individually. This ensures that the
  * relationship is a bilateral commitment, not a unilateral assertion.
  */
 export async function acceptRfi(
@@ -352,13 +352,13 @@ export async function acceptRfi(
 // ── TSP Routed Messages (§6) ───────────────────────────────────────────────
 
 /**
- * A routed TSP envelope — wraps an inner envelope for intermediary delivery.
+ * A routed TSP envelope. wraps an inner envelope for intermediary delivery.
  *
  * TSP §6: "A routed message has an outer envelope addressed to the
  * intermediary and an inner envelope addressed to the final recipient."
  *
  * The outer envelope's payload IS the sealed inner envelope. Both are
- * independently content-addressed — the intermediary can verify the
+ * independently content-addressed. the intermediary can verify the
  * outer envelope without decrypting the inner one.
  */
 export interface RoutedTspEnvelope {

@@ -1,5 +1,5 @@
 /**
- * QSVG Spectral Feedback — Critical Line Alignment for Self-Healing
+ * QSVG Spectral Feedback. Critical Line Alignment for Self-Healing
  * ═══════════════════════════════════════════════════════════════════
  *
  * Wires the Riemann spectral operator into the kernel's tick cycle,
@@ -10,14 +10,14 @@
  * means the lattice is deforming, which means coherence is breaking.
  *
  * This module provides LIGHTWEIGHT spectral checks suitable for the
- * hot path — not the full 8-test verification suite, but the essential
+ * hot path. not the full 8-test verification suite, but the essential
  * critical-line alignment check that determines whether self-healing
  * should activate.
  *
  * 3-6-9 Mapping:
- *   3 — spectralHealth():     CHECK the eigenvalue alignment
- *   6 — spectralCorrection(): COMPUTE the correction rotation
- *   9 — spectralClosure():    VERIFY the correction restored rigidity
+ *   3. spectralHealth():     CHECK the eigenvalue alignment
+ *   6. spectralCorrection(): COMPUTE the correction rotation
+ *   9. spectralClosure():    VERIFY the correction restored rigidity
  *
  * @module qsvg/spectral-feedback
  */
@@ -42,7 +42,7 @@ import {
 } from "./geometric-units";
 
 // ══════════════════════════════════════════════════════════════════════════
-// 3 — CHECK: Spectral Health Assessment
+// 3. CHECK: Spectral Health Assessment
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -62,7 +62,7 @@ export interface SpectralHealth {
 }
 
 /**
- * Lightweight spectral health check — suitable for the kernel hot path.
+ * Lightweight spectral health check. suitable for the kernel hot path.
  *
  * Uses the H-score and phi to compute a spectral grade without
  * running the full zeta verification suite. This is O(1) and can
@@ -94,11 +94,11 @@ export function spectralHealth(hScore: number, phi: number): SpectralHealth {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 6 — CORRECT: Spectral Self-Healing
+// 6. CORRECT: Spectral Self-Healing
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * A spectral correction — the geometric rotation needed to
+ * A spectral correction. the geometric rotation needed to
  * restore critical-line alignment.
  */
 export interface SpectralCorrection {
@@ -117,7 +117,7 @@ export interface SpectralCorrection {
 /**
  * Compute the minimal geometric correction to restore spectral health.
  *
- * The correction is a "rotation" on the geometric manifold — moving
+ * The correction is a "rotation" on the geometric manifold. moving
  * the system's state vector back toward the critical line.
  *
  * The rotation angle is proportional to the drift, scaled by the
@@ -134,7 +134,7 @@ export function spectralCorrection(
       targetH: currentH,
       blendFactor: 0,
       correctionLayer: "none",
-      description: "No correction needed — on critical line",
+      description: "No correction needed. on critical line",
     };
   }
 
@@ -156,11 +156,11 @@ export function spectralCorrection(
 
   // Which exceptional group layer needs correction
   const correctionLayer =
-    currentDefects > 4 ? "G₂ (Pauli — foundational)" :
-    currentDefects > 3 ? "F₄ (Clifford — mirror pairs)" :
-    currentDefects > 2 ? "E₆ (T-gate — universality)" :
-    currentDefects > 1 ? "E₇ (Universal — full control)" :
-    "E₈ (Fault-tolerant — topological)";
+    currentDefects > 4 ? "G₂ (Pauli. foundational)" :
+    currentDefects > 3 ? "F₄ (Clifford. mirror pairs)" :
+    currentDefects > 2 ? "E₆ (T-gate. universality)" :
+    currentDefects > 1 ? "E₇ (Universal. full control)" :
+    "E₈ (Fault-tolerant. topological)";
 
   return {
     rotationDefects,
@@ -175,11 +175,11 @@ export function spectralCorrection(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 9 — VERIFY: Spectral Closure
+// 9. VERIFY: Spectral Closure
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * Spectral closure report — did the correction restore rigidity?
+ * Spectral closure report. did the correction restore rigidity?
  */
 export interface SpectralClosure {
   /** Did we return to the critical line? */
@@ -215,11 +215,11 @@ export function spectralClosure(
   // Determine phase
   let phase: 3 | 6 | 9;
   if (onCriticalLine) {
-    phase = 9; // Completion — rigidity restored
+    phase = 9; // Completion. rigidity restored
   } else if (improved) {
-    phase = 6; // Evolution — improving but not there yet
+    phase = 6; // Evolution. improving but not there yet
   } else {
-    phase = 3; // Structure — correction maintained but didn't advance
+    phase = 3; // Structure. correction maintained but didn't advance
   }
 
   return {

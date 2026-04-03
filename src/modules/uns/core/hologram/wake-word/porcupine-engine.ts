@@ -1,5 +1,5 @@
 /**
- * PorcupineWakeWordEngine — Picovoice Porcupine Adapter
+ * PorcupineWakeWordEngine. Picovoice Porcupine Adapter
  * ═════════════════════════════════════════════════════
  *
  * High-performance wake word detection using Porcupine WASM.
@@ -54,7 +54,7 @@ export interface PorcupineEngineConfig {
     | { base64: string; label: string; sensitivity?: number }
     | { publicPath: string; label: string; sensitivity?: number }
   >;
-  /** Porcupine model file — defaults to built-in English */
+  /** Porcupine model file. defaults to built-in English */
   model?: { publicPath?: string; base64?: string };
 }
 
@@ -120,7 +120,7 @@ export class PorcupineWakeWordEngine implements IWakeWordEngine {
           }
       }
 
-      // Model — use default English model from public directory
+      // Model. use default English model from public directory
       const model: PorcupineModelType = this._config.model ?? {
         publicPath: "/porcupine_params.pv",
       };

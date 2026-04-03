@@ -1,21 +1,21 @@
 /**
- * UOR SDK — Observer Theory & Discovery Engine (P9)
+ * UOR SDK. Observer Theory & Discovery Engine (P9)
  *
  * Every app is a UOR Observer. Real engagement accumulates
  * IsometryCertificates. Coherence zone is computed from execution
  * trace quality. Discovery feed ranks by coherence zone + engagement
- * depth + cert count — mathematically bot-proof.
+ * depth + cert count. mathematically bot-proof.
  *
  * Zones:
- *   COHERENCE — ≥80% Grade A traces (high trust)
- *   DRIFT     — 20–80% Grade A (degrading)
- *   COLLAPSE  — <20% Grade A (quarantine)
+ *   COHERENCE. ≥80% Grade A traces (high trust)
+ *   DRIFT    . 20–80% Grade A (degrading)
+ *   COLLAPSE . <20% Grade A (quarantine)
  *
  * H-score (epistemic debt): H=0 Grade A | H≤4 Grade C | H>4 Grade D
  *
- * @see observable: namespace — observer registration
- * @see proof: namespace — coherence proofs
- * @see cert: namespace — isometry certificates
+ * @see observable: namespace. observer registration
+ * @see proof: namespace. coherence proofs
+ * @see cert: namespace. isometry certificates
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -64,7 +64,7 @@ export class DiscoveryEngine {
    * Register a new app as a UOR Observer.
    *
    * Pipeline:
-   *   1. Compute founding derivation via neg(bnot(42)) — the critical identity
+   *   1. Compute founding derivation via neg(bnot(42)). the critical identity
    *   2. Generate observer ID from app canonical ID
    *   3. Initialize profile with COHERENCE zone (clean start)
    *   4. Store in KV under observer:{appCanonicalId}
@@ -220,7 +220,7 @@ export class DiscoveryEngine {
   }
 
   /**
-   * Get discovery feed — apps ranked by discoveryRank descending.
+   * Get discovery feed. apps ranked by discoveryRank descending.
    */
   async getFeed(limit = 50): Promise<AppObserverProfile[]> {
     const profiles: AppObserverProfile[] = [];

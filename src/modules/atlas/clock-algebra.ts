@@ -1,8 +1,8 @@
 /**
- * Clock Algebra — φ(360) = 96 Universal Encoder
+ * Clock Algebra. φ(360) = 96 Universal Encoder
  * ═══════════════════════════════════════════════
  *
- * The 96 Atlas vertices are not arbitrary — they are precisely φ(360) = 96,
+ * The 96 Atlas vertices are not arbitrary. they are precisely φ(360) = 96,
  * the count of integers in [1, 360) coprime to 360. This connects the Atlas
  * to the multiplicative group (ℤ/360ℤ)*, giving it the structure of a
  * finite clock algebra with profound implications:
@@ -11,11 +11,11 @@
  *      onto this 96-element group, which is fully computable geometry.
  *
  *   2. UNIVERSAL ENCODER: The group (ℤ/360ℤ)* acts as a lossless finite
- *      topological space — arbitrary data maps onto it via modular reduction
+ *      topological space. arbitrary data maps onto it via modular reduction
  *      and the Chinese Remainder Theorem (360 = 2³ × 3² × 5).
  *
  *   3. QUANTUM CLOCK ARITHMETIC: Shor's algorithm and quantum phase
- *      estimation are fundamentally clock operations — modular exponentiation
+ *      estimation are fundamentally clock operations. modular exponentiation
  *      on finite cyclic groups. Our 96 vertices provide the exact state space.
  *
  *   4. CRYPTOGRAPHIC ANCHOR: RSA, Diffie-Hellman, and discrete logarithm
@@ -561,7 +561,7 @@ export function enumerateOrbits(): { order: number; count: number; generators: n
  *
  * In our 96-element group with exponent 12, this is trivially solvable
  * by exhaustive search (at most 12 steps). This demonstrates that
- * the finite clock algebra makes the "hard" problem easy — and
+ * the finite clock algebra makes the "hard" problem easy. and
  * conversely, that quantum computers exploit exactly this finiteness.
  *
  * Returns -1 if no solution exists (h is not in ⟨g⟩).
@@ -742,7 +742,7 @@ export function runClockAlgebraVerification(): ClockAlgebraReport {
     detail: `Encoded "Hello" into ${encoded.elements.length} clock elements, ${encoded.clockCycles} cycles`,
   });
 
-  // T15: Period analysis — all periods divide 12
+  // T15: Period analysis. all periods divide 12
   let allDivide12 = true;
   for (const e of elements) {
     if (12 % e.order !== 0) allDivide12 = false;

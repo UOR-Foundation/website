@@ -1,5 +1,5 @@
 /**
- * Import Adapter (P3) — 10/10 Test Suite
+ * Import Adapter (P3). 10/10 Test Suite
  *
  * Validates universal import from URL, directory, ZIP, and GitHub sources.
  * Tests shim injection, determinism, refresh, and byte counting.
@@ -97,7 +97,7 @@ describe("Import Adapter (P3)", () => {
     expect(result.shimInjected).toBe(false);
   });
 
-  // Test 5: Deterministic — identical source → same canonical ID
+  // Test 5: Deterministic. identical source → same canonical ID
   it("two imports of identical source produce same u:canonicalId", async () => {
     const html = "<html><head><title>Det</title></head><body>Deterministic</body></html>";
     const files1: AppFile[] = [{ path: "index.html", bytes: new TextEncoder().encode(html) }];

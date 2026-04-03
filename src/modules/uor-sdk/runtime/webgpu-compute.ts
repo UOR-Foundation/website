@@ -1,11 +1,11 @@
 /**
- * UOR SDK — WebGPU Compute Layer
+ * UOR SDK. WebGPU Compute Layer
  *
  * Provides GPU-accelerated computation for the Hologram virtual
  * infrastructure. When WebGPU is available, offloads SHA-256 hashing,
  * Hamming distance computation, and canonical verification to the GPU.
  *
- * This is the compute backbone of the Hologram runtime — equivalent
+ * This is the compute backbone of the Hologram runtime. equivalent
  * to Docker's containerd compute layer but running on WebGPU instead
  * of Linux cgroups/namespaces.
  *
@@ -17,8 +17,8 @@
  *
  * Falls back gracefully to Web Crypto API when WebGPU is unavailable.
  *
- * @see runtime-witness — uses compute for trace verification
- * @see wasm-loader — uses compute for image verification
+ * @see runtime-witness. uses compute for trace verification
+ * @see wasm-loader. uses compute for image verification
  */
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ let gpuAdapter: any = null;
 let capabilities: GpuCapabilities | null = null;
 let initPromise: Promise<GpuCapabilities> | null = null;
 
-// Hamming drift threshold — above this = potential injection
+// Hamming drift threshold. above this = potential injection
 const HAMMING_INJECTION_THRESHOLD = 0.15;
 
 // ── WGSL Shaders ────────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ const HAMMING_SHADER = /* wgsl */ `
  * Initialize the WebGPU compute layer.
  *
  * Probes for WebGPU support, requests a device, and caches capabilities.
- * Safe to call multiple times — returns cached result after first init.
+ * Safe to call multiple times. returns cached result after first init.
  */
 export async function initWebGpu(): Promise<GpuCapabilities> {
   if (capabilities) return capabilities;
@@ -142,7 +142,7 @@ export async function initWebGpu(): Promise<GpuCapabilities> {
         architecture: "cpu-fallback",
         fallback: true,
       };
-      console.log("[WebGPU] Not available — using Web Crypto fallback");
+      console.log("[WebGPU] Not available. using Web Crypto fallback");
       return capabilities;
     }
 
@@ -167,7 +167,7 @@ export async function initWebGpu(): Promise<GpuCapabilities> {
 
       // Handle device loss
       gpuDevice.lost.then((info) => {
-        console.warn(`[WebGPU] Device lost: ${info.reason} — ${info.message}`);
+        console.warn(`[WebGPU] Device lost: ${info.reason}. ${info.message}`);
         gpuDevice = null;
         capabilities = { ...capabilities!, available: false, fallback: true };
       });
@@ -389,7 +389,7 @@ function cpuHamming(a: Uint32Array, b: Uint32Array): number {
 /**
  * Verify multiple content hashes in parallel.
  *
- * Used for Docker-style image layer verification — ensures every
+ * Used for Docker-style image layer verification. ensures every
  * layer's content matches its declared canonical hash.
  */
 export async function batchVerify(

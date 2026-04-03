@@ -48,7 +48,7 @@ describe("bytesToGlyph", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// bytesToIRI — SPECIFICATION VERIFICATION
+// bytesToIRI. SPECIFICATION VERIFICATION
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("bytesToIRI", () => {
@@ -84,7 +84,7 @@ describe("bytesToUPlus", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// iriToBytes — reverse parsing
+// iriToBytes. reverse parsing
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("iriToBytes", () => {
@@ -127,7 +127,7 @@ describe("round-trip", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// contentAddress — deterministic projection
+// contentAddress. deterministic projection
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("contentAddress", () => {

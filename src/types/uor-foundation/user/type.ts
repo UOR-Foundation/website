@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — user::type
+ * UOR Foundation v2.0.0. user::type
  *
  * Runtime type declarations with constraint algebra.
  *
@@ -10,7 +10,7 @@
 import type { MetricAxis } from "../enums";
 
 /**
- * TypeDefinition — abstract base for all type definitions.
+ * TypeDefinition. abstract base for all type definitions.
  *
  * @disjoint PrimitiveType, ProductType, SumType, ConstrainedType
  */
@@ -26,7 +26,7 @@ export interface TypeDefinition {
 }
 
 /**
- * PrimitiveType — a single ring element type (U8, U16, U32).
+ * PrimitiveType. a single ring element type (U8, U16, U32).
  *
  * @disjoint ProductType, SumType, ConstrainedType
  */
@@ -36,7 +36,7 @@ export interface PrimitiveType extends TypeDefinition {
 }
 
 /**
- * ProductType — AND composition (tuple of types).
+ * ProductType. AND composition (tuple of types).
  * Total bit width = sum of member bit widths.
  *
  * @disjoint PrimitiveType, SumType, ConstrainedType
@@ -49,7 +49,7 @@ export interface ProductType extends TypeDefinition {
 }
 
 /**
- * SumType — OR composition (tagged union).
+ * SumType. OR composition (tagged union).
  * Bit width = max of member bit widths.
  *
  * @disjoint PrimitiveType, ProductType, ConstrainedType
@@ -62,7 +62,7 @@ export interface SumType extends TypeDefinition {
 }
 
 /**
- * ConstrainedType — base type + constraint predicate.
+ * ConstrainedType. base type + constraint predicate.
  *
  * @disjoint PrimitiveType, ProductType, SumType
  */
@@ -78,7 +78,7 @@ export interface ConstrainedType extends TypeDefinition {
 // ── Constraint Algebra ─────────────────────────────────────────────────────
 
 /**
- * Constraint — abstract base for all constraints.
+ * Constraint. abstract base for all constraints.
  *
  * @disjoint ResidueConstraint, CarryConstraint, DepthConstraint, CompositeConstraint
  */
@@ -94,7 +94,7 @@ export interface Constraint {
 }
 
 /**
- * ResidueConstraint — selects x where x ≡ r (mod m).
+ * ResidueConstraint. selects x where x ≡ r (mod m).
  * @axis Vertical
  *
  * @disjoint CarryConstraint, DepthConstraint, CompositeConstraint
@@ -107,7 +107,7 @@ export interface ResidueConstraint extends Constraint {
 }
 
 /**
- * CarryConstraint — selects x by addition carry pattern.
+ * CarryConstraint. selects x by addition carry pattern.
  * @axis Horizontal
  *
  * @disjoint ResidueConstraint, DepthConstraint, CompositeConstraint
@@ -118,7 +118,7 @@ export interface CarryConstraint extends Constraint {
 }
 
 /**
- * DepthConstraint — bounds on factorization depth.
+ * DepthConstraint. bounds on factorization depth.
  * @axis Diagonal
  *
  * @disjoint ResidueConstraint, CarryConstraint, CompositeConstraint
@@ -131,7 +131,7 @@ export interface DepthConstraint extends Constraint {
 }
 
 /**
- * CompositeConstraint — AND/OR composition of child constraints.
+ * CompositeConstraint. AND/OR composition of child constraints.
  *
  * @disjoint ResidueConstraint, CarryConstraint, DepthConstraint
  */

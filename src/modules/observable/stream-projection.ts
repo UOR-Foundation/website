@@ -121,7 +121,7 @@ export class StreamProjection {
   // ── System Event Bus Integration ─────────────────────────────────────
 
   /**
-   * Connect to the system event bus — real ring, identity, and hologram
+   * Connect to the system event bus. real ring, identity, and hologram
    * operations become live byte streams automatically.
    *
    * The system watches itself: every neg(), singleProofHash(), project()

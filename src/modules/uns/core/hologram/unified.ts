@@ -4,17 +4,17 @@
  *
  * THE MERGE: Identity + Coherence = one concept.
  *
- * Before: two separate registries —
+ * Before: two separate registries.
  *   Hologram → projects identity  (hash → protocol string)
  *   Observer → projects coherence (operation → H-score/zone)
  *
- * After: one unified projection —
+ * After: one unified projection.
  *   hash → { value, coherence }
  *
  * Every projection now carries BOTH its protocol-native identifier
  * AND its coherence assessment (H-score, zone, Φ). This is the
  * holographic principle made literal: identity and coherence are
- * not separate systems — they are two aspects of the same projection.
+ * not separate systems. they are two aspects of the same projection.
  *
  *   const result = unifiedProject(identity);
  *   result.did.value       → "did:uor:{cid}"         // identity
@@ -36,7 +36,7 @@ import { hScore, popcount } from "@/modules/observable/h-score";
 
 export type CoherenceZone = "COHERENCE" | "DRIFT" | "COLLAPSE";
 
-/** Coherence assessment — the observer dimension of every projection. */
+/** Coherence assessment. the observer dimension of every projection. */
 export interface ProjectionCoherence {
   /** H-score: Hamming distance to nearest Grade-A datum. */
   readonly hScore: number;
@@ -48,7 +48,7 @@ export interface ProjectionCoherence {
   readonly fidelity: Fidelity;
 }
 
-/** A unified projection result — identity + coherence in one object. */
+/** A unified projection result. identity + coherence in one object. */
 export interface UnifiedProjectionResult {
   /** The protocol-native identifier string. */
   readonly value: string;
@@ -60,7 +60,7 @@ export interface UnifiedProjectionResult {
   readonly lossWarning?: string;
 }
 
-/** The complete unified hologram — all projections with coherence. */
+/** The complete unified hologram. all projections with coherence. */
 export interface UnifiedHologram {
   /** The source identity. */
   readonly source: ProjectionInput;

@@ -1,5 +1,5 @@
 /**
- * Data Bank Box — Client-Side Encryption (AES-256-GCM)
+ * Data Bank Box. Client-Side Encryption (AES-256-GCM)
  * ════════════════════════════════════════════════════════
  *
  * Zero-knowledge encryption: the server only ever sees ciphertext.
@@ -17,7 +17,7 @@ const IV_LENGTH = 12; // 96 bits for AES-GCM
 
 /**
  * Derive a stable AES-256 key from a user-specific seed (e.g. user_id + salt).
- * Uses HKDF with SHA-256 — deterministic so the same seed always yields
+ * Uses HKDF with SHA-256. deterministic so the same seed always yields
  * the same key, enabling multi-device decryption with the same auth session.
  */
 export async function deriveEncryptionKey(

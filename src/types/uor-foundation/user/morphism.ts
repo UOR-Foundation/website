@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — user::morphism
+ * UOR Foundation v2.0.0. user::morphism
  *
  * Structure-preserving maps between UOR objects.
  * Disjoint constraints documented per v2.0.0 spec:
@@ -23,7 +23,7 @@ export type MorphismKind = "Isometry" | "Embedding" | "Action" | "Composition" |
 // ── Transform ──────────────────────────────────────────────────────────────
 
 /**
- * Transform — abstract base for all morphisms.
+ * Transform. abstract base for all morphisms.
  *
  * @disjoint Isometry, Embedding, Action, Composition, IdentityMorphism
  */
@@ -45,7 +45,7 @@ export interface Transform {
 // ── Disjoint Subtypes ──────────────────────────────────────────────────────
 
 /**
- * Isometry — a lossless, distance-preserving morphism.
+ * Isometry. a lossless, distance-preserving morphism.
  * Guarantees: project(embed(x)) = x (round-trip identity).
  *
  * @disjoint Embedding, Action, Composition, IdentityMorphism
@@ -58,7 +58,7 @@ export interface Isometry extends Transform {
 }
 
 /**
- * Embedding — injective map from smaller ring to larger ring.
+ * Embedding. injective map from smaller ring to larger ring.
  * Value preserved, zero-padded in higher bits.
  *
  * @disjoint Isometry, Action, Composition, IdentityMorphism
@@ -71,7 +71,7 @@ export interface Embedding extends Transform {
 }
 
 /**
- * Action — a group action on ring elements.
+ * Action. a group action on ring elements.
  * Applies a sequence of primitive operations.
  * NOTE: Action is a sibling of Transform in v2.0.0, not a subclass.
  *
@@ -85,7 +85,7 @@ export interface Action extends Transform {
 }
 
 /**
- * Composition — sequential composition of transforms.
+ * Composition. sequential composition of transforms.
  *
  * @disjoint Isometry, Embedding, Action, IdentityMorphism
  */
@@ -97,7 +97,7 @@ export interface Composition extends Transform {
 }
 
 /**
- * IdentityMorphism — the identity transform (f(x) = x).
+ * IdentityMorphism. the identity transform (f(x) = x).
  * Links to the TypeDefinition it is identity on.
  *
  * @disjoint Isometry, Embedding, Action, Composition
@@ -110,7 +110,7 @@ export interface IdentityMorphism extends Transform {
 
 // ── Disjoint guard (runtime) ───────────────────────────────────────────────
 
-/** Runtime disjoint set — no morphism may belong to two kinds. */
+/** Runtime disjoint set. no morphism may belong to two kinds. */
 export const MORPHISM_DISJOINT_SETS: ReadonlySet<MorphismKind>[] = [
   new Set(["Isometry"]),
   new Set(["Embedding"]),
@@ -122,7 +122,7 @@ export const MORPHISM_DISJOINT_SETS: ReadonlySet<MorphismKind>[] = [
 // ── CompositionLaw ─────────────────────────────────────────────────────────
 
 /**
- * CompositionLaw — a named algebraic law relating compositions.
+ * CompositionLaw. a named algebraic law relating compositions.
  * Now includes associativity and commutativity predicates per v2.0.0.
  */
 export interface CompositionLaw {
@@ -142,7 +142,7 @@ export interface CompositionLaw {
 
 // ── Named Individual ───────────────────────────────────────────────────────
 
-/** critical_composition — neg ∘ bnot = succ (associative, non-commutative). */
+/** critical_composition. neg ∘ bnot = succ (associative, non-commutative). */
 export const CRITICAL_COMPOSITION = {
   "@id": "morphism:critical_composition",
   lawComponents: ["Neg", "Bnot"] as [PrimitiveOp, PrimitiveOp],

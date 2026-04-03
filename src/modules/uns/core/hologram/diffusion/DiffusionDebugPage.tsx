@@ -1,5 +1,5 @@
 /**
- * Diffusion Debug Page — /debug/diffusion
+ * Diffusion Debug Page. /debug/diffusion
  * ════════════════════════════════════════
  *
  * Shows SD 1.5 compilation progress, tensor count, dedup savings,
@@ -158,7 +158,7 @@ export default function DiffusionDebugPage() {
             <span className="text-primary">◈</span> Hologram Diffusion Debug
           </h1>
           <p className="text-sm text-muted-foreground">
-            Sovereign SD 1.5 — ONNX → Content-Addressed Weights → WGSL Kernels
+            Sovereign SD 1.5. ONNX → Content-Addressed Weights → WGSL Kernels
           </p>
         </div>
 

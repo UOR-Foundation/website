@@ -1,26 +1,26 @@
 /**
- * UOR SDK — Security Gate (P5)
+ * UOR SDK. Security Gate (P5)
  *
  * Three-layer security derived from UOR ring arithmetic:
  *
- *   1. Deployment Scan — static analysis at import time
+ *   1. Deployment Scan. static analysis at import time
  *      Catches hardcoded credentials, destructive patterns, and
  *      low-density (suspicious) source code.
  *
- *   2. Partition Gate — request-level traffic classification
+ *   2. Partition Gate. request-level traffic classification
  *      Uses byte-class irreducible density to distinguish legitimate
  *      traffic (high density) from flood/spam (near-zero density).
  *      Thresholds: ≥0.40 PASS | ≥0.25 WARN | ≥0.15 CHALLENGE | <0.15 BLOCK
  *
- *   3. Injection Detection — runtime trace comparison
+ *   3. Injection Detection. runtime trace comparison
  *      Monitors Hamming drift across execution traces. Non-zero drift
- *      signals possible injection — quarantine and alert.
+ *      signals possible injection. quarantine and alert.
  *
  * All classification is structural (algebraic), not heuristic.
  *
- * @see partition: namespace — byte-class density analysis
- * @see trace: namespace — Hamming drift injection detection
- * @see observable: namespace — runtime monitoring
+ * @see partition: namespace. byte-class density analysis
+ * @see trace: namespace. Hamming drift injection detection
+ * @see observable: namespace. runtime monitoring
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

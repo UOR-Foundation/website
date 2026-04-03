@@ -3,7 +3,7 @@
  * ═════════════════════════════════════
  *
  * Zero-dependency protobuf decoder for reading ONNX model files.
- * Handles the wire format directly — no .proto compilation needed.
+ * Handles the wire format directly. no .proto compilation needed.
  *
  * Supports: varint, fixed32, fixed64, length-delimited, nested messages.
  * ~2KB minified. No npm packages. Fully Hologram-native.
@@ -217,7 +217,7 @@ export class ProtoReader {
         this.pos += 4;
         break;
       default:
-        // Unknown wire type — skip 1 byte and hope for the best
+        // Unknown wire type. skip 1 byte and hope for the best
         console.warn(`[ProtoReader] Unknown wire type ${wire} at pos ${this.pos}, skipping`);
         this.pos++;
     }

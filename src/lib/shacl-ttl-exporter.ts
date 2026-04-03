@@ -1,5 +1,5 @@
 /**
- * SHACL TTL Exporter — generates Turtle serialisation of UOR SHACL shapes.
+ * SHACL TTL Exporter. generates Turtle serialisation of UOR SHACL shapes.
  *
  * Produces the canonical uor-shapes.ttl served at
  * https://uor.foundation/shapes/uor-shapes.ttl

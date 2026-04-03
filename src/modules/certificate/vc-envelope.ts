@@ -1,5 +1,5 @@
 /**
- * W3C Verifiable Credentials Data Model v2.0 — Envelope Layer
+ * W3C Verifiable Credentials Data Model v2.0. Envelope Layer
  * ═══════════════════════════════════════════════════════════
  *
  * Wraps a UOR certificate in a W3C VC 2.0 compliant structure.
@@ -35,7 +35,7 @@ const UOR_CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld" as const;
 // ── Types ───────────────────────────────────────────────────────────────────
 
 /**
- * W3C Data Integrity Proof — attached to the VC.
+ * W3C Data Integrity Proof. attached to the VC.
  *
  * Per VC Data Integrity 1.0 §2.1:
  *   - type: MUST be "DataIntegrityProof"
@@ -92,7 +92,7 @@ export interface VerifiableUorCredential {
   validFrom: string;
   credentialSubject: {
     id: string;
-    /** The full UOR certificate — the actual credential payload */
+    /** The full UOR certificate. the actual credential payload */
     "uor:certificate": UorCertificate;
   };
   proof: DataIntegrityProof;
@@ -197,9 +197,9 @@ export async function wrapAsVerifiableCredential(
  * Verify a W3C VC 2.0 wrapped UOR credential.
  *
  * Checks (aligned with VC DM 2.0 §7 and DI §4):
- *   1. VC structure — required fields per VC DM 2.0 §4
- *   2. Proof integrity — re-hash canonical payload, compare multibase proofValue
- *   3. UOR coherence — verify algebraic witness
+ *   1. VC structure. required fields per VC DM 2.0 §4
+ *   2. Proof integrity. re-hash canonical payload, compare multibase proofValue
+ *   3. UOR coherence. verify algebraic witness
  *
  * @returns Verification result with per-layer diagnostics
  */
@@ -221,13 +221,13 @@ export async function verifyVerifiableCredential(
     !!vc.validFrom &&
     !!vc.credentialSubject;
 
-  // 2. Proof integrity — re-hash canonical payload, compare via multibase
+  // 2. Proof integrity. re-hash canonical payload, compare via multibase
   const cert = vc.credentialSubject["uor:certificate"];
   const recomputedHex = await sha256hex(cert["cert:canonicalPayload"]);
   const storedHex = fromMultibaseHex(vc.proof.proofValue);
   const proofIntegrity = recomputedHex === storedHex;
 
-  // 3. Coherence check — verify witness from proof
+  // 3. Coherence check. verify witness from proof
   const { neg, bnot, succ } = await import("@/lib/uor-ring");
   const x = vc.proof["uor:coherenceWitness"];
   const coherenceValid = neg(bnot(x, 8), 8) === succ(x, 8);
@@ -242,7 +242,7 @@ export async function verifyVerifiableCredential(
     summary: valid
       ? "W3C VC 2.0 verified. Content integrity and algebraic coherence confirmed."
       : !vcStructure
-        ? "Invalid VC 2.0 structure — missing required fields per §4."
+        ? "Invalid VC 2.0 structure. missing required fields per §4."
         : !proofIntegrity
           ? "Proof value does not match canonical payload (Data Integrity §4)."
           : "Algebraic coherence check failed (UOR ring identity).",

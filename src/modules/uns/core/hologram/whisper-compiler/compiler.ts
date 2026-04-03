@@ -74,7 +74,7 @@ export const MODEL_VARIANT_INFO: Record<ModelVariant, { label: string; size: str
   quantized: {
     label: "INT8 Quantized",
     size: "~22 MB",
-    description: "Smallest download. Uses quantized operators — faster to load but may have slight accuracy loss.",
+    description: "Smallest download. Uses quantized operators. faster to load but may have slight accuracy loss.",
   },
 };
 
@@ -95,7 +95,7 @@ function extractNodeParams(attrs: OnnxAttribute[]): Record<string, unknown> {
 }
 
 /**
- * Extract all weight tensors from the model — both initializers AND
+ * Extract all weight tensors from the model. both initializers AND
  * Constant node attributes. Resolves external data references from
  * companion .data files.
  */
@@ -133,7 +133,7 @@ function extractAllTensors(model: OnnxModel, externalDataBuffer?: ArrayBuffer): 
     }
   }
 
-  // 2. Constant nodes — weights stored as attribute tensors
+  // 2. Constant nodes. weights stored as attribute tensors
   for (const node of model.graph.nodes) {
     if (node.opType === "Constant") {
       for (const attr of node.attributes) {

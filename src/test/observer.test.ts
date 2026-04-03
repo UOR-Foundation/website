@@ -1,5 +1,5 @@
 /**
- * P26 — Observer Theory — 14 verification tests.
+ * P26. Observer Theory. 14 verification tests.
  *
  * Tests H-Score, coherence zones, OIP/EDP/CAP protocols,
  * and convergence guarantee.
@@ -11,7 +11,7 @@ import {
   assignZone,
 } from "@/modules/observable/observer";
 
-describe("P26 — Observer Theory", () => {
+describe("P26. Observer Theory", () => {
   // Test 1: popcount(0b10110100) === 4
   it("1. popcount(0b10110100) === 4", () => {
     expect(popcount(0b10110100)).toBe(4);

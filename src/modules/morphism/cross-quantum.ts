@@ -1,9 +1,9 @@
 /**
- * UOR Morphism: Cross-Quantum — embeddings and projections between ring sizes.
+ * UOR Morphism: Cross-Quantum. embeddings and projections between ring sizes.
  *
  * From the UOR ontology:
- *   - Embedding: injective (no information lost) — Q0 → Q1
- *   - Projection: surjective (take low byte) — Q1 → Q0
+ *   - Embedding: injective (no information lost). Q0 → Q1
+ *   - Projection: surjective (take low byte). Q1 → Q0
  *
  * Both operations record the morphism with certificate via transform.ts.
  *
@@ -12,7 +12,7 @@
  *   - morphism/transform for recording
  *   - derivation for receipts and certificates
  *
- * Zero duplication — all arithmetic delegated to ring-core.
+ * Zero duplication. all arithmetic delegated to ring-core.
  */
 
 import { Q0, Q1, UORRing } from "@/modules/ring-core/ring";
@@ -43,7 +43,7 @@ export interface CrossQuantumResult {
 
 /**
  * Embed an 8-bit value into the 16-bit ring (pad with zeros in high byte).
- * This is injective — no information is lost.
+ * This is injective. no information is lost.
  */
 export async function embedQ0toQ1(value: number): Promise<CrossQuantumResult> {
   const start = performance.now();

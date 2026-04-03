@@ -1,5 +1,5 @@
 /**
- * UOR Union Type Canonicalization — R2-compliant type coercion for Schema.org unions.
+ * UOR Union Type Canonicalization. R2-compliant type coercion for Schema.org unions.
  *
  * THE PROBLEM:
  *   ~180 schema.org properties accept union type ranges (Person | Organization,
@@ -7,7 +7,7 @@
  *   reduction, two agents encoding the same entity via different union paths compute
  *   different derivation_ids → incorrectly conclude they are different entities.
  *
- * THE SOLUTION — Three reduction rules applied in order:
+ * THE SOLUTION. Three reduction rules applied in order:
  *   1. Literal coercion: String + union includes Date|DateTime|Text → most restrictive match
  *   2. Entity coercion: Object without @type → infer from property presence
  *   3. Record as morphism:Transform (R2): Every reduction is content-addressed and auditable
@@ -78,7 +78,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 /** Numeric pattern (integer or decimal) */
 const NUMBER_RE = /^-?\d+(\.\d+)?$/;
 
-/** URL pattern (loose — starts with http:// or https://) */
+/** URL pattern (loose. starts with http:// or https://) */
 const URL_RE = /^https?:\/\/.+/;
 
 // ── Entity property → type inference maps ──────────────────────────────────
@@ -86,7 +86,7 @@ const URL_RE = /^https?:\/\/.+/;
 /**
  * Discriminating properties for entity type inference.
  * If an object (without @type) has ANY of these properties, it is inferred
- * as the corresponding type. Checked in order — first match wins.
+ * as the corresponding type. Checked in order. first match wins.
  */
 const ENTITY_DISCRIMINATORS: Array<{
   type: string;
@@ -177,7 +177,7 @@ export interface CoercionRecord {
 // ── Rule 1: Literal Coercion ───────────────────────────────────────────────
 
 /**
- * Rule 1 — Literal Coercion.
+ * Rule 1. Literal Coercion.
  *
  * When a string value appears in a union that includes Date|DateTime|Text,
  * apply the most restrictive match: DateTime regex > Date regex > Number > URL > Text.
@@ -251,7 +251,7 @@ export function coerceLiteral(
     };
   }
 
-  // Falls through to Text (no coercion needed — already the least restrictive)
+  // Falls through to Text (no coercion needed. already the least restrictive)
   if (unionTypes.includes("schema:Text")) {
     return { value: str, resolvedType: "schema:Text", sourceType: "schema:Text", rule: "none", coerced: false };
   }
@@ -262,7 +262,7 @@ export function coerceLiteral(
 // ── Rule 2: Entity Coercion ────────────────────────────────────────────────
 
 /**
- * Rule 2 — Entity Coercion.
+ * Rule 2. Entity Coercion.
  *
  * When an object without @type appears in a union that includes entity types,
  * infer the type from discriminating properties. {givenName} → Person,
@@ -324,7 +324,7 @@ export function coerceUnionValue(
 ): CoercionResult {
   const unionTypes = UNION_TYPE_RANGES[propertyName];
   if (!unionTypes) {
-    // Not a union-typed property — no coercion needed
+    // Not a union-typed property. no coercion needed
     return { value, resolvedType: "unknown", sourceType: "unknown", rule: "none", coerced: false };
   }
 
@@ -348,7 +348,7 @@ export function coerceUnionValue(
  *
  * Every coercion is an auditable transform from the source union representation
  * to the canonical resolved type. Uses URDNA2015 Single Proof Hash for the
- * transform ID — any agent can independently verify the coercion.
+ * transform ID. any agent can independently verify the coercion.
  */
 export async function recordCoercionTransform(
   property: string,

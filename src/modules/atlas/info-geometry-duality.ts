@@ -66,7 +66,7 @@ export interface FisherRaoSide {
   metricDiagonal: number[];
   /** det(g_ij) */
   determinant: number;
-  /** √det(g_ij) — the information volume element */
+  /** √det(g_ij). the information volume element */
   volumeElement: number;
   /** Scalar curvature R */
   scalarCurvature: number;
@@ -90,7 +90,7 @@ export interface QuantumSide {
 }
 
 export interface DualityMetrics {
-  /** Ratio: S_FR_normalized / S_E_normalized — should approach 1 */
+  /** Ratio: S_FR_normalized / S_E_normalized. should approach 1 */
   convergenceRatio: number;
   /** Absolute difference |S_FR - S_E| in normalized units */
   absoluteDifference: number;
@@ -267,10 +267,10 @@ function computeDuality(fr: FisherRaoSide, q: QuantumSide): DualityMetrics {
  */
 function generateProbes(): { label: string; gates: string[]; tempScale: number }[] {
   return [
-    { label: "|00⟩ — Product (zero entanglement)", gates: [], tempScale: 1.0 },
-    { label: "H|00⟩ — Superposition (no entanglement)", gates: ["H-0"], tempScale: 0.9 },
-    { label: "Bell |Φ⁺⟩ — Max entanglement", gates: ["H-0", "CNOT-1-0"], tempScale: 0.5 },
-    { label: "Bell |Ψ⁺⟩ — Max (orthogonal)", gates: ["X-1", "H-0", "CNOT-1-0"], tempScale: 0.5 },
+    { label: "|00⟩. Product (zero entanglement)", gates: [], tempScale: 1.0 },
+    { label: "H|00⟩. Superposition (no entanglement)", gates: ["H-0"], tempScale: 0.9 },
+    { label: "Bell |Φ⁺⟩. Max entanglement", gates: ["H-0", "CNOT-1-0"], tempScale: 0.5 },
+    { label: "Bell |Ψ⁺⟩. Max (orthogonal)", gates: ["X-1", "H-0", "CNOT-1-0"], tempScale: 0.5 },
     { label: "Partial entanglement (Ry)", gates: ["H-0", "CNOT-1-0", "Ry-0"], tempScale: 0.7 },
     { label: "GHZ-like (H+CNOT chain)", gates: ["H-0", "CNOT-1-0", "H-1"], tempScale: 0.6 },
     { label: "High-T thermal (dissipative)", gates: ["H-0", "CNOT-1-0"], tempScale: 0.3 },
@@ -290,7 +290,7 @@ function applyGateSequence(reg: QuantumRegister, gates: string[]): QuantumRegist
     const control = parts.length > 2 ? parseInt(parts[2]) : undefined;
 
     if (gate === "Ry") {
-      // Partial rotation — apply H then S for a partial entanglement
+      // Partial rotation. apply H then S for a partial entanglement
       const { register: r1 } = applyGate(current, "S", target);
       current = r1;
     } else {
@@ -344,7 +344,7 @@ export function runDualityAnalysis(): DualityReport {
   const invariants: DualityInvariant[] = [
     {
       name: "Bures-Fisher identity",
-      description: "ds²_Bures = (1/4) g^FR_ij dθ^i dθ^j — Bures metric is 1/4 of Fisher-Rao",
+      description: "ds²_Bures = (1/4) g^FR_ij dθ^i dθ^j. Bures metric is 1/4 of Fisher-Rao",
       holds: probes.every(p => p.duality.buresDistance >= 0),
       evidence: `All ${probes.length} probes yield non-negative Bures distances`,
     },

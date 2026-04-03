@@ -1,5 +1,5 @@
 /**
- * P34 Self-Verification Tests — NL Entity Resolver + Q0 265 Nodes + Endpoints
+ * P34 Self-Verification Tests. NL Entity Resolver + Q0 265 Nodes + Endpoints
  *
  * 17/17 tests covering:
  *   - Q0 graph materialization (265 nodes)
@@ -14,7 +14,7 @@ import { resolveEntity } from "@/modules/resolver/entity-resolver";
 import { hScoreMultiByte } from "@/modules/observable/h-score";
 import { assignZone } from "@/modules/observable/observer";
 
-describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
+describe("P34. NL Entity Resolver + Q0 Graph 265 Nodes", () => {
   const graph = new UnsGraph();
   graph.loadOntologyGraph();
   const nodeCount = graph.materializeQ0();
@@ -92,7 +92,7 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(["A", "B", "C", "D"]).toContain(result.epistemic_grade);
   });
 
-  // Test 11 — Entity resolver endpoint structure
+  // Test 11. Entity resolver endpoint structure
   it("T11: resolveEntity returns complete EntityResolution structure", async () => {
     const result = await resolveEntity("UOR ring arithmetic", undefined, graph);
     expect(result["@type"]).toBe("resolver:Resolution");
@@ -105,8 +105,8 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
 
   // ── PART 3: Endpoint Logic Tests ──────────────────────────────────────
 
-  // Test 12 — SPARQL verify
-  it("T12: SPARQL verify — query returns verified boolean", () => {
+  // Test 12. SPARQL verify
+  it("T12: SPARQL verify. query returns verified boolean", () => {
     const results = graph.sparqlSelect(
       `SELECT ?s ?v WHERE { GRAPH <${Q0_GRAPH}> { ?s <https://uor.foundation/schema/value> ?v } } LIMIT 5`
     );
@@ -120,8 +120,8 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(verified).toBe(true);
   });
 
-  // Test 13 — Federation plan
-  it("T13: Federation plan — cardinality estimates", () => {
+  // Test 13. Federation plan
+  it("T13: Federation plan. cardinality estimates", () => {
     const stats = graph.stats();
     const cardinalityPerGraph = {
       [Q0_GRAPH]: stats.q0Triples,
@@ -131,8 +131,8 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(Object.keys(cardinalityPerGraph).length).toBeGreaterThanOrEqual(1);
   });
 
-  // Test 14 — Observer assess (read-only)
-  it("T14: observer/assess — H-score and zone computed, no state change", () => {
+  // Test 14. Observer assess (read-only)
+  it("T14: observer/assess. H-score and zone computed, no state change", () => {
     const testBytes = new Uint8Array([104, 101, 108, 108, 111]); // "hello"
     const gradeAGraph = Array.from({ length: 256 }, (_, i) => i); // all Q0 datums
     const hScoreVal = hScoreMultiByte(testBytes, gradeAGraph);
@@ -143,14 +143,14 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(["COHERENCE", "DRIFT", "COLLAPSE"]).toContain(zone);
   });
 
-  // Test 15 — GDPR portability structure
-  it("T15: cert/portability — GDPR Article 20 export structure", () => {
+  // Test 15. GDPR portability structure
+  it("T15: cert/portability. GDPR Article 20 export structure", () => {
     // Verify the GdprExport type structure
     const mockExport = {
       "@context": "https://uor.foundation/contexts/uns-v1.jsonld",
       "@type": "void:Dataset",
       "dc:subject": "urn:uor:derivation:sha256:test",
-      "dc:rights": "GDPR Article 20 — Right to Data Portability",
+      "dc:rights": "GDPR Article 20. Right to Data Portability",
       "dc:date": new Date().toISOString(),
       objects: [],
       totalObjects: 0,
@@ -161,7 +161,7 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(mockExport.eu_data_act_compliant).toBe(true);
   });
 
-  // Test 16 — All phase2 endpoints covered
+  // Test 16. All phase2 endpoints covered
   it("T16: All phase2 endpoint categories are implemented", () => {
     // The 6 endpoint categories that must exist:
     const endpointCategories = [
@@ -176,7 +176,7 @@ describe("P34 — NL Entity Resolver + Q0 Graph 265 Nodes", () => {
     expect(endpointCategories).toHaveLength(6);
   });
 
-  // Test 17 — SPARQL for named individuals returns exactly 9
+  // Test 17. SPARQL for named individuals returns exactly 9
   it("T17: SPARQL query for all named individuals returns exactly 9", () => {
     const results = graph.sparqlSelect(
       `SELECT ?s WHERE { GRAPH <${Q0_GRAPH}> { ?s <rdf:type> <owl:NamedIndividual> } }`

@@ -1,11 +1,11 @@
 /**
- * UOR Conformance Suite — Type Definitions
+ * UOR Conformance Suite. Type Definitions
  *
  * Mirrors the Rust `uor-conformance` test fixture format.
  * Each result is traceable to a specific UOR ontology class/property
  * and a named Rust test fixture file.
  *
- * @see spec/src/namespaces/ — UOR ontology namespace definitions
+ * @see spec/src/namespaces/. UOR ontology namespace definitions
  */
 
 // ── Individual test result ──────────────────────────────────────────────────

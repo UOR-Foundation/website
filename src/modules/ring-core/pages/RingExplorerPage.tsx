@@ -106,11 +106,11 @@ const RingExplorerPage = () => {
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 1 — Ring Arithmetic Core
+              Module 1. Ring Arithmetic Core
             </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">Ring Explorer</h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-              Explore the algebraic foundation of the UOR Framework — Z/(2<sup>n</sup>)Z ring
+              Explore the algebraic foundation of the UOR Framework. Z/(2<sup>n</sup>)Z ring
               operations with live coherence verification and API cross-validation.
             </p>
           </div>
@@ -170,7 +170,7 @@ const RingExplorerPage = () => {
             {/* UOR Triadic Coordinates (Module 3) */}
             <div className="md:col-span-2 rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-medium text-muted-foreground mb-3">
-                Triadic Coordinates — datum / stratum / spectrum
+                Triadic Coordinates. datum / stratum / spectrum
               </p>
 
               {/* Stratum bar chart */}
@@ -178,7 +178,7 @@ const RingExplorerPage = () => {
                 <div className="flex items-center gap-2 mb-1.5">
                   <p className="text-[10px] text-muted-foreground w-16">Stratum</p>
                   <p className="text-xs font-mono text-foreground">
-                    {triad.totalStratum}/{ring.bits} bits ({density.toFixed(0)}%) —{" "}
+                    {triad.totalStratum}/{ring.bits} bits ({density.toFixed(0)}%).{" "}
                     <span className={
                       level === "high" ? "text-primary font-semibold" :
                       level === "medium" ? "text-muted-foreground" :

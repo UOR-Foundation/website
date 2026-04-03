@@ -1,5 +1,5 @@
 /**
- * Phase 4 Test Suite — Proof State Machine
+ * Phase 4 Test Suite. Proof State Machine
  *
  * T-PM1: Proof lifecycle (Unresolved → Partial → Resolved → Certified)
  * T-PM2: Deductive steps pin fibers and advance state

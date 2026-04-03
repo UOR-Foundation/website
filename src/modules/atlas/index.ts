@@ -1,5 +1,5 @@
 /**
- * Atlas Module — Public API
+ * Atlas Module. Public API
  *
  * The Atlas of Resonance Classes and its categorical unfolding into
  * the five exceptional Lie groups: G₂ ⊂ F₄ ⊂ E₆ ⊂ E₇ ⊂ E₈.
@@ -101,7 +101,7 @@ export type {
   ConvergenceReport,
 } from "./convergence";
 
-// Universal Model Fingerprint — Atlas nutritional label for LLMs
+// Universal Model Fingerprint. Atlas nutritional label for LLMs
 export {
   fingerprint,
   fingerprintAll,
@@ -115,7 +115,7 @@ export type {
   FamilyProfile,
 } from "./fingerprint";
 
-// Cross-Model Translation — Atlas R₈ universal translation layer (Phase 6)
+// Cross-Model Translation. Atlas R₈ universal translation layer (Phase 6)
 export {
   createTestEmbedding,
   decomposeToAtlas,
@@ -135,7 +135,7 @@ export type {
   TranslationInvariant,
 } from "./translation";
 
-// F₄ Quotient Compression — τ-mirror symmetry analysis (Phase 7)
+// F₄ Quotient Compression. τ-mirror symmetry analysis (Phase 7)
 export {
   analyzeCompression,
   runCompressionAnalysis,
@@ -149,7 +149,7 @@ export type {
   CompressionInvariant,
 } from "./compression";
 
-// Quantum ISA — Atlas → Quantum gate mapping (Phase 10)
+// Quantum ISA. Atlas → Quantum gate mapping (Phase 10)
 export {
   mapVerticesToGates,
   tierDistribution as quantumTierDistribution,
@@ -167,7 +167,7 @@ export type {
   QuantumISATest,
 } from "./quantum-isa";
 
-// Topological Qubit — geometric α derivation & qubit instantiation (Phase 11)
+// Topological Qubit. geometric α derivation & qubit instantiation (Phase 11)
 export {
   constructManifold22,
   deriveAlpha,
@@ -188,7 +188,7 @@ export type {
   TopologicalQubitTest,
 } from "./topological-qubit";
 
-// Coadjoint Orbit Classifier — Neeb integrability for E₈ (Phase 21)
+// Coadjoint Orbit Classifier. Neeb integrability for E₈ (Phase 21)
 export {
   generateOrbitCatalog,
   testIntegrability,
@@ -203,7 +203,7 @@ export type {
   ClassificationInvariant,
 } from "./coadjoint-orbit-classifier";
 
-// Clock Algebra — φ(360) = 96 universal finite circuit computing
+// Clock Algebra. φ(360) = 96 universal finite circuit computing
 export {
   CLOCK_MODULUS,
   TOTIENT_360,
@@ -237,7 +237,7 @@ export type {
   ClockAlgebraTest,
 } from "./clock-algebra";
 
-// Cryptographic Clock — Atlas ↔ SHA-256 ↔ RSA unity
+// Cryptographic Clock. Atlas ↔ SHA-256 ↔ RSA unity
 export {
   projectHashToAtlas,
   atlasFingerprint,
@@ -256,7 +256,7 @@ export type {
   CryptoClockTest,
 } from "./crypto-clock";
 
-// Euler's Number Bridge — e connects Atlas ↔ Quantum ↔ Thermodynamics
+// Euler's Number Bridge. e connects Atlas ↔ Quantum ↔ Thermodynamics
 export {
   buildPhaseMap,
   vertexPhase,
@@ -279,7 +279,7 @@ export type {
   EulerDiscovery,
 } from "./euler-bridge";
 
-// Triality Coordinate System — Sigmatics (h₂, d, ℓ) decomposition (Phase 1)
+// Triality Coordinate System. Sigmatics (h₂, d, ℓ) decomposition (Phase 1)
 export {
   encodeTriality,
   decodeTriality,
@@ -306,7 +306,7 @@ export type {
   TrialityTest,
 } from "./triality";
 
-// Transform Group — Aut(Atlas) = R(4) × D(3) × T(8) × M(2) (Phase 2)
+// Transform Group. Aut(Atlas) = R(4) × D(3) × T(8) × M(2) (Phase 2)
 export {
   applyTransform,
   applyTransformFull,
@@ -329,7 +329,7 @@ export type {
   TransformGroupTest,
 } from "./transform-group";
 
-// Extended Morphism Generators — 7 categorical operations (Phase 3)
+// Extended Morphism Generators. 7 categorical operations (Phase 3)
 export {
   getGenerators,
   getGenerator,
@@ -346,7 +346,7 @@ export type {
   GeneratorTest,
 } from "./morphism-generators";
 
-// Belt ↔ Fiber Bijection — 12,288-slot correspondence (Phase 4)
+// Belt ↔ Fiber Bijection. 12,288-slot correspondence (Phase 4)
 export {
   beltToFiber,
   fiberToBelt,
@@ -373,7 +373,7 @@ export type {
   BeltFiberTest,
 } from "./belt-fiber";
 
-// Fano Plane — PG(2,2) quantum gate routing topology
+// Fano Plane. PG(2,2) quantum gate routing topology
 export {
   constructFanoTopology,
   computeInteractions,
@@ -395,7 +395,7 @@ export type {
   FanoTest,
 } from "./fano-plane";
 
-// Virtual Qubit Instantiation Engine — Phase 5
+// Virtual Qubit Instantiation Engine. Phase 5
 export {
   instantiateFanoRegister,
   buildSingleQubitGates,

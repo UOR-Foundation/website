@@ -1,5 +1,5 @@
 /**
- * UNS Shield — Module barrel export.
+ * UNS Shield. Module barrel export.
  *
  * Ring-arithmetic traffic classification, injection detection,
  * and HTTP middleware stack (WAF, rate limiting, PoW bot management).

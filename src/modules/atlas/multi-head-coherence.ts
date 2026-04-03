@@ -32,7 +32,7 @@
  *   - Line {1,3,6}: detects coherence in the (e₁,e₃,e₆) plane
  *   etc.
  *
- *   The 7 Fano lines give 7 natural heads — the maximal multi-head
+ *   The 7 Fano lines give 7 natural heads. the maximal multi-head
  *   configuration for octonionic coherence.
  *
  * MERGE STRATEGIES:
@@ -449,7 +449,7 @@ export class MultiHeadCoherenceLayer {
    * In transformer causal attention, position i can only attend to positions j ≤ i.
    * Here, the causal mask restricts triple evaluation: a triple (v_a, v_b, v_c) at
    * sequence positions (i, i+1, i+2) is only evaluated if it satisfies the causal
-   * constraint — the query position can only "see" triples from its causal past.
+   * constraint. the query position can only "see" triples from its causal past.
    *
    * With a causal index map, each vertex gets a causal ordering. A triple is
    * causally valid iff all three vertices have causal indices ≤ the query's position.
@@ -602,7 +602,7 @@ export class MultiHeadCoherenceLayer {
       headCount: this.config.headCount,
       mergeStrategy: this.config.mergeStrategy,
       stats: this.emptyStats(),
-      summary: "Empty sequence — no triples to evaluate.",
+      summary: "Empty sequence. no triples to evaluate.",
     };
   }
 

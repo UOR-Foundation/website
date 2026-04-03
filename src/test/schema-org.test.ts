@@ -1,5 +1,5 @@
 /**
- * P29 — Schema.org Extension + Semantic Web Surface — 12 verification tests.
+ * P29. Schema.org Extension + Semantic Web Surface. 12 verification tests.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -16,7 +16,7 @@ import { validateShaclShapes } from "@/modules/shacl/shacl-engine";
 
 const VALID_CID = "urn:uor:derivation:sha256:" + "ab".repeat(32);
 
-describe("P29 — Schema.org Extension", () => {
+describe("P29. Schema.org Extension", () => {
   // Test 1: dual context
   it("1. recordToSchemaOrg() includes both schema.org and UOR contexts", () => {
     const out = recordToSchemaOrg({

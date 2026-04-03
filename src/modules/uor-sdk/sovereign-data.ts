@@ -1,7 +1,7 @@
 /**
- * UOR SDK — Sovereign User Data Layer (P4)
+ * UOR SDK. Sovereign User Data Layer (P4)
  *
- * User data lives in Solid Pods — personal sovereign data stores governed
+ * User data lives in Solid Pods. personal sovereign data stores governed
  * by the Solid LDP protocol. The developer's app never holds raw user data.
  * Every data access is a certified morphism:Action logged as a
  * cert:TransformCertificate in the user's pod.
@@ -12,9 +12,9 @@
  *   - Audit Trail: every read/write is certificate-logged
  *   - GDPR Export: one-call W3C Verifiable Credential portability
  *
- * @see state:PodContext — user pod session state
- * @see store: namespace — sovereign storage
- * @see cert: namespace — access certificates
+ * @see state:PodContext. user pod session state
+ * @see store: namespace. sovereign storage
+ * @see cert: namespace. access certificates
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -259,7 +259,7 @@ export class PodManager {
 // ── Data Access Layer ───────────────────────────────────────────────────────
 
 /**
- * Connect a user to an app — provision pod, bind app, return certificate.
+ * Connect a user to an app. provision pod, bind app, return certificate.
  * This is the first function a developer calls when a user opens their app.
  */
 export async function connectUser(

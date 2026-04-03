@@ -78,7 +78,7 @@ export default function TranslationPanel() {
           CROSS-MODEL TRANSLATION
         </h2>
         <p className="text-[11px] font-mono text-[hsl(210,10%,50%)]">
-          Phase 6 — Atlas R₈ substrate enables structure-preserving maps between any two transformer embedding spaces
+          Phase 6. Atlas R₈ substrate enables structure-preserving maps between any two transformer embedding spaces
         </p>
       </div>
 

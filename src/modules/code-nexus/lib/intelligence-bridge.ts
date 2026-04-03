@@ -1,5 +1,5 @@
 /**
- * Code Nexus — Intelligence Bridge
+ * Code Nexus. Intelligence Bridge
  * ═════════════════════════════════
  *
  * Translates natural language questions into graph operations

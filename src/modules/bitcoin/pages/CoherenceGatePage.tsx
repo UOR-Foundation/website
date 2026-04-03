@@ -1,5 +1,5 @@
 /**
- * Coherence Gate — Visual Report
+ * Coherence Gate. Visual Report
  * ═══════════════════════════════
  *
  * Invoke the gate, see the full cross-framework synergy map.
@@ -77,7 +77,7 @@ export default function CoherenceGatePage() {
             </h1>
             <p className="text-muted-foreground text-sm max-w-xl mx-auto">
               One invocation analyzes the entire hologram projection registry.
-              Every cross-framework synergy, cluster, and opportunity — discovered automatically.
+              Every cross-framework synergy, cluster, and opportunity. discovered automatically.
             </p>
           </div>
 
@@ -125,7 +125,7 @@ export default function CoherenceGatePage() {
                 <div key={cluster.name}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-mono font-bold">{cluster.name}</span>
-                    <span className="text-[10px] text-muted-foreground">— {cluster.property}</span>
+                    <span className="text-[10px] text-muted-foreground">. {cluster.property}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {cluster.members.map(m => (

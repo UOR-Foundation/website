@@ -14,11 +14,11 @@ import {
 } from "@/modules/atlas/cayley-dickson";
 
 const LEVEL_COLORS = [
-  "hsl(210,10%,60%)",  // R — neutral
-  "hsl(200,60%,60%)",  // C — blue
-  "hsl(280,50%,65%)",  // H — purple
-  "hsl(30,70%,55%)",   // O — orange
-  "hsl(0,55%,55%)",    // S — red
+  "hsl(210,10%,60%)",  // R. neutral
+  "hsl(200,60%,60%)",  // C. blue
+  "hsl(280,50%,65%)",  // H. purple
+  "hsl(30,70%,55%)",   // O. orange
+  "hsl(0,55%,55%)",    // S. red
 ];
 
 export default function OctonionAtlasPanel() {
@@ -175,13 +175,13 @@ function TowerView({ tower }: { tower: CayleyDicksonTower }) {
       {/* Clifford connection */}
       <div className="bg-[hsla(280,30%,12%,0.4)] rounded-lg border border-[hsla(280,30%,30%,0.3)] p-4">
         <div className="text-[11px] font-mono text-[hsl(280,50%,65%)] uppercase mb-2">
-          256 = 2⁸ — The Clifford Connection
+          256 = 2⁸. The Clifford Connection
         </div>
         <div className="text-[10px] font-mono text-[hsl(210,10%,55%)] space-y-1">
           <p>Atlas has <strong className="text-[hsl(280,50%,70%)]">{tower.cliffordConnection.atlasEdges} edges = |R₈| = |Z/256Z|</strong></p>
           <p>256 = 2⁸ = dim <strong className="text-[hsl(280,50%,70%)]">Cl(8,0)</strong> (Clifford algebra over R⁸)</p>
           <p>Cl(8,0) ≅ <strong className="text-[hsl(280,50%,70%)]">{tower.cliffordConnection.matrixAlgebra}</strong></p>
-          <p>Bott periodicity: <strong className="text-[hsl(280,50%,70%)]">Cl(n+8) ≅ Cl(n) ⊗ M₁₆(R)</strong> — period {tower.cliffordConnection.bottPeriod}</p>
+          <p>Bott periodicity: <strong className="text-[hsl(280,50%,70%)]">Cl(n+8) ≅ Cl(n) ⊗ M₁₆(R)</strong>. period {tower.cliffordConnection.bottPeriod}</p>
           <p>Sedenion dimension {tower.cliffordConnection.sedenionDim} = the natural representation of M₁₆(R) on R¹⁶</p>
         </div>
       </div>
@@ -255,7 +255,7 @@ function MultiplicationView({ tower, selectedLevel, setSelectedLevel }: {
 
       <div className="bg-[hsla(210,10%,12%,0.6)] rounded-lg border border-[hsla(210,10%,25%,0.3)] p-3">
         <div className="text-[10px] font-mono text-[hsl(210,10%,55%)]">
-          <strong style={{ color: LEVEL_COLORS[selectedLevel] }}>{algebra.fullName}</strong> —
+          <strong style={{ color: LEVEL_COLORS[selectedLevel] }}>{algebra.fullName}</strong>.
           dim {algebra.dim}, {algebra.imaginaryUnits} imaginary unit{algebra.imaginaryUnits !== 1 ? "s" : ""}.
           {algebra.properties.commutative ? " Commutative." : " Non-commutative."}
           {algebra.properties.associative ? " Associative." : " Non-associative."}
@@ -269,7 +269,7 @@ function MultiplicationView({ tower, selectedLevel, setSelectedLevel }: {
 function FanoView() {
   const fano = fanoPlane();
 
-  // SVG layout for Fano plane — 7 points arranged in a triangle + inscribed circle
+  // SVG layout for Fano plane. 7 points arranged in a triangle + inscribed circle
   const cx = 150, cy = 140, r = 100;
   const pts = [
     { x: cx, y: cy - r },             // e₁ top
@@ -284,7 +284,7 @@ function FanoView() {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Fano Plane — Octonionic Multiplication
+        Fano Plane. Octonionic Multiplication
       </div>
 
       <div className="bg-[hsla(210,10%,12%,0.6)] rounded-lg border border-[hsla(210,10%,25%,0.3)] p-4 flex justify-center">
@@ -315,7 +315,7 @@ function FanoView() {
       </div>
 
       <div className="bg-[hsla(210,10%,12%,0.6)] rounded-lg border border-[hsla(210,10%,25%,0.3)] p-4">
-        <div className="text-[10px] font-mono text-[hsl(210,10%,50%)] mb-2">7 lines, 3 points per line — each line defines a multiplication rule:</div>
+        <div className="text-[10px] font-mono text-[hsl(210,10%,50%)] mb-2">7 lines, 3 points per line. each line defines a multiplication rule:</div>
         <div className="grid grid-cols-2 gap-1.5">
           {fano.lines.map(([a, b, c], i) => (
             <div key={i} className="text-[10px] font-mono text-[hsl(30,60%,60%)] bg-[hsla(30,20%,15%,0.3)] rounded px-2 py-1">
@@ -346,7 +346,7 @@ function AtlasMapView({ tower }: { tower: CayleyDicksonTower }) {
             <span className="text-[14px] font-mono font-bold" style={{ color: LEVEL_COLORS[i] }}>{a.name}</span>
             <span className="text-[11px] font-mono text-[hsl(210,10%,60%)]">{a.fullName}</span>
             <span className="text-[9px] font-mono text-[hsl(210,10%,40%)]">dim {a.dim}</span>
-            {a.atlasLayer.exceptionalGroup !== "—" && (
+            {a.atlasLayer.exceptionalGroup !== ". " && (
               <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[hsla(280,30%,30%,0.3)] text-[hsl(280,50%,65%)]">
                 {a.atlasLayer.exceptionalGroup}
               </span>
@@ -404,7 +404,7 @@ function TestsView({ tower }: { tower: CayleyDicksonTower }) {
   return (
     <div className="space-y-4">
       <div className="text-[11px] font-mono text-[hsl(210,10%,50%)] uppercase">
-        Verification — {tower.tests.filter(t => t.holds).length}/{tower.tests.length} passed
+        Verification. {tower.tests.filter(t => t.holds).length}/{tower.tests.length} passed
       </div>
       <div className="space-y-1.5">
         {tower.tests.map((t, i) => (

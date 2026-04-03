@@ -1,14 +1,14 @@
 /**
- * Hologram AI Inference Cache — O(1) Memoization via UOR Content-Addressing
+ * Hologram AI Inference Cache. O(1) Memoization via UOR Content-Addressing
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * The holographic principle applied to inference: identical prompts produce
  * identical CIDs, enabling constant-time lookup of previously computed results.
  *
  * Three-path architecture:
- *   Path 1 — Cache hit:  singleProofHash(input) → uor_inference_proofs → instant replay
- *   Path 2 — Local miss:  WebGPU/WASM inference → cache write → future O(1)
- *   Path 3 — Cloud miss:  Lovable AI Gateway → cache write → future O(1)
+ *   Path 1. Cache hit:  singleProofHash(input) → uor_inference_proofs → instant replay
+ *   Path 2. Local miss:  WebGPU/WASM inference → cache write → future O(1)
+ *   Path 3. Cloud miss:  Lovable AI Gateway → cache write → future O(1)
  *
  * @module uns/core/hologram/inference-cache
  */
@@ -33,7 +33,7 @@ export interface CacheWriteInput {
   epistemicGrade?: string;
 }
 
-// ── Cache Check (Path 1 — O(1)) ───────────────────────────────────────────
+// ── Cache Check (Path 1. O(1)) ───────────────────────────────────────────
 
 /**
  * Hash the inference input and check the uor_inference_proofs table.
@@ -110,7 +110,7 @@ export async function writeInferenceCache(input: CacheWriteInput): Promise<void>
   });
 
   if (error) {
-    // Duplicate key is fine — another tab may have cached it first
+    // Duplicate key is fine. another tab may have cached it first
     if (!error.message?.includes("duplicate")) {
       console.warn("[inference-cache] write failed:", error.message);
     }

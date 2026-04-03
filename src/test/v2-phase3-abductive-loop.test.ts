@@ -1,5 +1,5 @@
 /**
- * Phase 3 Test Suite — Abductive Loop Engine
+ * Phase 3 Test Suite. Abductive Loop Engine
  *
  * T-AL1: Neural → Horizontal observable projection
  * T-AL2: Symbolic → Vertical observable projection

@@ -1,5 +1,5 @@
 /**
- * Research domain categories — serializable data for UOR certification.
+ * Research domain categories. serializable data for UOR certification.
  * Icons are mapped at the component level by `iconKey`.
  */
 export const researchCategories = [

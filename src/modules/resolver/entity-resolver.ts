@@ -1,5 +1,5 @@
 /**
- * UOR Entity Resolver — DihedralFactorizationResolver
+ * UOR Entity Resolver. DihedralFactorizationResolver
  *
  * Resolves natural-language entity descriptions to canonical IDs
  * using dihedral factorization of UTF-8 bytes in Z/256Z.
@@ -11,7 +11,7 @@
  *   4. Search Q0 graph for closest match by Hamming proximity
  *   5. Grade: exact=A, graph-certified=B, proximity=C, none=D
  *
- * @see spec/src/namespaces/resolver.rs — DihedralFactorizationResolver
+ * @see spec/src/namespaces/resolver.rs. DihedralFactorizationResolver
  */
 
 import { singleProofHash } from "@/modules/uns/core/identity";

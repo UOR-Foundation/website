@@ -20,7 +20,7 @@ export function CorrelationTool() {
     <div className="rounded-lg border border-border bg-card p-5">
       <h3 className="text-sm font-semibold mb-3">Algebraic Correlation (Q0)</h3>
       <p className="text-xs text-muted-foreground mb-4">
-        Algebraic similarity via XOR-stratum Hamming distance — no embedding models needed.
+        Algebraic similarity via XOR-stratum Hamming distance. no embedding models needed.
       </p>
 
       <div className="flex gap-2 mb-4">

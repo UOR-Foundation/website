@@ -1,16 +1,16 @@
 /**
- * UOR v2.0.0 — Proof Pre-Computation Engine
+ * UOR v2.0.0. Proof Pre-Computation Engine
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Batch-generates claim-level proofs for common query patterns so that
  * future PGI lookups hit instantly without touching the LLM.
  *
  * Categories:
- *   • Definitions  — "What is X?"
- *   • Comparisons  — "X vs Y", "difference between X and Y"
- *   • Cause-Effect — "Why does X?", "How does X affect Y?"
- *   • Enumerations — "List types of X", "Examples of X"
- *   • Properties   — "Features of X", "Characteristics of X"
+ *   • Definitions . "What is X?"
+ *   • Comparisons . "X vs Y", "difference between X and Y"
+ *   • Cause-Effect. "Why does X?", "How does X affect Y?"
+ *   • Enumerations. "List types of X", "Examples of X"
+ *   • Properties  . "Features of X", "Characteristics of X"
  *
  * Each pattern is scaffolded via buildScaffold(), decomposed into ClaimSlots,
  * and the slots are written to uor_inference_proofs so PGI can serve them
@@ -224,7 +224,7 @@ export function generateQueryInstances(
 
 /**
  * Pre-compute claim-level proofs for a single query.
- * Returns the claims generated (does NOT call the LLM — only scaffolds).
+ * Returns the claims generated (does NOT call the LLM. only scaffolds).
  */
 export function precomputeScaffold(query: string): ClaimSlot[] {
   const scaffold = buildScaffold(query, 0);
@@ -233,7 +233,7 @@ export function precomputeScaffold(query: string): ClaimSlot[] {
 
 /**
  * Store pre-computed claim scaffolds as "structural" proofs.
- * These contain the constraint structure, not LLM output — they seed
+ * These contain the constraint structure, not LLM output. they seed
  * the PGI cache so that future queries with identical constraints
  * can skip the decomposition step entirely.
  */
@@ -279,8 +279,8 @@ async function storeStructuralProofs(claims: ClaimSlot[]): Promise<{ stored: num
 /**
  * Run the full batch precomputation job.
  *
- * @param batchSize — Number of queries to process per tick (controls backpressure).
- * @param onProgress — Optional callback for progress reporting.
+ * @param batchSize. Number of queries to process per tick (controls backpressure).
+ * @param onProgress. Optional callback for progress reporting.
  */
 export async function runPrecomputation(
   batchSize: number = 20,

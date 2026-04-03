@@ -713,7 +713,7 @@ export default function BulkPinPage() {
                         </button>
                       </div>
 
-                      {/* Expanded group — individual types */}
+                      {/* Expanded group. individual types */}
                       {expanded && (
                         <div className="border-t border-border/50">
                           <table className="w-full text-xs">
@@ -781,7 +781,7 @@ export default function BulkPinPage() {
                                           </button>
                                         </span>
                                       ) : (
-                                        <span className="text-muted-foreground/50">—</span>
+                                        <span className="text-muted-foreground/50">. </span>
                                       )}
                                     </td>
                                     <td className="py-1.5 pr-2 font-mono hidden lg:table-cell">
@@ -806,7 +806,7 @@ export default function BulkPinPage() {
                                           </button>
                                         </span>
                                       ) : (
-                                        <span className="text-muted-foreground/50">—</span>
+                                        <span className="text-muted-foreground/50">. </span>
                                       )}
                                     </td>
                                     <td className="py-1.5 pr-3 hidden xl:table-cell">
@@ -858,9 +858,9 @@ export default function BulkPinPage() {
                 <div>
                   <h3 className="font-semibold text-muted-foreground mb-2">UOR Identity (URDNA2015 Canonical Hash)</h3>
                   <div className="space-y-2 bg-muted/30 rounded-md p-3 font-mono">
-                    <div><span className="text-muted-foreground">derivation_id:</span><br/><span className="break-all text-foreground">{selectedDetail.result?.derivationId || selectedDetail.existingCert?.derivationId || "—"}</span></div>
-                    <div><span className="text-muted-foreground">store:cid (CIDv1/dag-json):</span><br/><span className="break-all text-foreground">{selectedDetail.result?.cid || "—"}</span></div>
-                    <div><span className="text-muted-foreground">certificate_id:</span><br/><span className="break-all text-foreground">{selectedDetail.result?.certificateId || selectedDetail.existingCert?.certificateId || "—"}</span></div>
+                    <div><span className="text-muted-foreground">derivation_id:</span><br/><span className="break-all text-foreground">{selectedDetail.result?.derivationId || selectedDetail.existingCert?.derivationId || ". "}</span></div>
+                    <div><span className="text-muted-foreground">store:cid (CIDv1/dag-json):</span><br/><span className="break-all text-foreground">{selectedDetail.result?.cid || ". "}</span></div>
+                    <div><span className="text-muted-foreground">certificate_id:</span><br/><span className="break-all text-foreground">{selectedDetail.result?.certificateId || selectedDetail.existingCert?.certificateId || ". "}</span></div>
                     <div><span className="text-muted-foreground">quantum_level:</span> Q{selectedDetail.result?.quantumLevel ?? 0} (Z/256Z)</div>
                     {selectedDetail.existingCert && (
                       <div><span className="text-muted-foreground">pinned_at:</span> {selectedDetail.existingCert.issuedAt.slice(0, 19)}</div>
@@ -898,7 +898,7 @@ export default function BulkPinPage() {
                 </div>
               </div>
 
-              {/* Verification Details — shown after verify is clicked */}
+              {/* Verification Details. shown after verify is clicked */}
               {selectedDetail.verifyResult && (
                 <div className="mt-4">
                   <h3 className="font-semibold text-muted-foreground text-xs mb-2">
@@ -915,11 +915,11 @@ export default function BulkPinPage() {
                     </div>
                     {selectedDetail.verifyResult.verified ? (
                       <div className="text-green-700 dark:text-green-400 font-semibold">
-                        ✓ Recomputed hash matches the declared derivation_id — content is authentic and untampered.
+                        ✓ Recomputed hash matches the declared derivation_id. content is authentic and untampered.
                       </div>
                     ) : (
                       <div className="text-destructive font-semibold">
-                        ✗ Recomputed hash does NOT match — content may have been modified.
+                        ✗ Recomputed hash does NOT match. content may have been modified.
                         {selectedDetail.verifyResult.recomputedHash && (
                           <div className="mt-1 font-normal text-foreground">
                             <span className="text-muted-foreground">Recomputed:</span><br/>
@@ -934,11 +934,11 @@ export default function BulkPinPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Grade:</span>
-                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.epistemicGrade || "—"}</span>
+                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.epistemicGrade || ". "}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Verified at:</span>
-                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.timestamp?.slice(0, 19) || "—"}</span>
+                      <span className="ml-1 text-foreground">{selectedDetail.verifyResult.timestamp?.slice(0, 19) || ". "}</span>
                     </div>
                   </div>
                 </div>

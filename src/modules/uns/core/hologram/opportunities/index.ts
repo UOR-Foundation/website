@@ -8,15 +8,15 @@
  * interoperability patterns.
  *
  * Opportunities:
- *   1. PIPELINE              — End-to-end agent lifecycle chain
- *   2. UNIFIED AGENT CARD    — Composite multi-projection descriptor
- *   3. MULTI-LEDGER ANCHOR   — Simultaneous Bitcoin + Zcash + IPFS anchoring
- *   4. SOCIAL DISCOVERY MESH — ActivityPub + AT Protocol + WebFinger resolution
- *   5. UNIVERSAL NOTARIZATION — Any projection notarized on Bitcoin
- *   6. POLYGLOT SUPPLY CHAIN — Cross-language content-addressed artifacts
- *   7. SMART CONTRACT INTEGRITY — Source → bytecode → on-chain audit trail
- *   8. PROOF-CERTIFIED SOFTWARE — Formal proofs → Verifiable Credentials
- *   9. SILICON-TO-CLOUD PROVENANCE — Hardware → firmware → container → agent
+ *   1. PIPELINE             . End-to-end agent lifecycle chain
+ *   2. UNIFIED AGENT CARD   . Composite multi-projection descriptor
+ *   3. MULTI-LEDGER ANCHOR  . Simultaneous Bitcoin + Zcash + IPFS anchoring
+ *   4. SOCIAL DISCOVERY MESH. ActivityPub + AT Protocol + WebFinger resolution
+ *   5. UNIVERSAL NOTARIZATION. Any projection notarized on Bitcoin
+ *   6. POLYGLOT SUPPLY CHAIN. Cross-language content-addressed artifacts
+ *   7. SMART CONTRACT INTEGRITY. Source → bytecode → on-chain audit trail
+ *   8. PROOF-CERTIFIED SOFTWARE. Formal proofs → Verifiable Credentials
+ *   9. SILICON-TO-CLOUD PROVENANCE. Hardware → firmware → container → agent
  *
  * @module uns/core/hologram/opportunities
  */

@@ -1,5 +1,5 @@
 /**
- * Quantum ISA — Atlas → Quantum Gate Mapping (Triality-Based)
+ * Quantum ISA. Atlas → Quantum Gate Mapping (Triality-Based)
  * ═══════════════════════════════════════════════════════════
  *
  * THEOREM (Atlas–Quantum Correspondence):
@@ -76,7 +76,7 @@ export interface QuantumGate {
 export interface VertexGateMapping {
   /** Atlas vertex index */
   vertexIndex: number;
-  /** Triality coordinate (h₂, d, ℓ) — the primary addressing */
+  /** Triality coordinate (h₂, d, ℓ). the primary addressing */
   triality: TrialityCoordinate;
   /** Atlas label as string */
   label: string;
@@ -174,7 +174,7 @@ export interface QuantumISATest {
 // ── Gate Catalog ──────────────────────────────────────────────────────────
 
 const GATE_CATALOG: QuantumGate[] = [
-  // Tier 0: Pauli gates (G₂) — 12 gates for h₂=0 (24 vertices, 3 modalities × 8 slots)
+  // Tier 0: Pauli gates (G₂). 12 gates for h₂=0 (24 vertices, 3 modalities × 8 slots)
   { name: "I",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },
   { name: "X",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },
   { name: "Y",    qubits: 1, tier: 0, family: "pauli",    matrixDim: 2,  selfAdjoint: true,  exceptionalGroup: "G₂", roots: 12 },

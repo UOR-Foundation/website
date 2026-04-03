@@ -3,10 +3,10 @@ import { AppCli } from "@/modules/uor-sdk/cli";
 import { UnsKv } from "@/modules/uns/store/kv";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// P12 Tests — 10/10
+// P12 Tests. 10/10
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("App CLI — P12", () => {
+describe("App CLI. P12", () => {
   let kv: UnsKv;
   let cli: AppCli;
 

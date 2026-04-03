@@ -12,10 +12,10 @@ function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Phase 3-C Tests — 12/12
+// Phase 3-C Tests. 12/12
 // ═════════════════════════════════════════════════════════════════════════════
 
-describe("UNS KV — Phase 3-C", () => {
+describe("UNS KV. Phase 3-C", () => {
   let kv: UnsKv;
 
   beforeEach(() => {
@@ -76,7 +76,7 @@ describe("UNS KV — Phase 3-C", () => {
   });
 });
 
-describe("UNS Cache — Phase 3-C", () => {
+describe("UNS Cache. Phase 3-C", () => {
   let store: UnsObjectStore;
   let cache: UnsCache;
 

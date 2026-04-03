@@ -1,5 +1,5 @@
 /**
- * Three pillars — Learn · Connect · Build — the visitor's journey.
+ * Three pillars. Learn · Connect · Build. the visitor's journey.
  * Icons are mapped at the component level by `iconKey`.
  */
 export const pillars = [

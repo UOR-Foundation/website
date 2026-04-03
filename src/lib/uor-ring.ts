@@ -1,5 +1,5 @@
 /**
- * UOR Client-Side Ring Engine — Z/(2^n)Z arithmetic in the browser.
+ * UOR Client-Side Ring Engine. Z/(2^n)Z arithmetic in the browser.
  *
  * Ports the pure functions from supabase/functions/uor-api/index.ts
  * so ring computations can run locally without API calls.
@@ -219,10 +219,10 @@ export function classifyByte(b: number, n: number): PartitionClassification {
   if (b === 0)
     return { component: "partition:ExteriorSet", reason: "Additive identity (zero)" };
   if (b === 1 || b === m - 1)
-    return { component: "partition:UnitSet", reason: `Ring unit — multiplicative inverse exists in R_${n}` };
+    return { component: "partition:UnitSet", reason: `Ring unit. multiplicative inverse exists in R_${n}` };
   if (b % 2 !== 0)
-    return { component: "partition:IrreducibleSet", reason: `Odd, not a unit — irreducible in R_${n}` };
+    return { component: "partition:IrreducibleSet", reason: `Odd, not a unit. irreducible in R_${n}` };
   if (b === m / 2)
-    return { component: "partition:ExteriorSet", reason: `Even generator (${m / 2}) — exterior in R_${n}` };
-  return { component: "partition:ReducibleSet", reason: `Even — decomposes in R_${n}` };
+    return { component: "partition:ExteriorSet", reason: `Even generator (${m / 2}). exterior in R_${n}` };
+  return { component: "partition:ReducibleSet", reason: `Even. decomposes in R_${n}` };
 }

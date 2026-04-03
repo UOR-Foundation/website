@@ -303,7 +303,7 @@ function parseOpsetVersion(reader: ProtoReader): number {
 /**
  * Parse a raw ONNX file (ArrayBuffer) into a typed OnnxModel.
  *
- * This is a zero-copy operation for tensor data — rawData fields
+ * This is a zero-copy operation for tensor data. rawData fields
  * are views into the original buffer. Do not discard the ArrayBuffer
  * until tensors have been stored.
  *

@@ -13,7 +13,7 @@ import { pruningGate, type PruningReport } from "@/modules/uns/core/pruning-gate
 
 let report: PruningReport;
 
-describe("Pruning Gate — System Hygiene", () => {
+describe("Pruning Gate. System Hygiene", () => {
   it("produces a valid report", () => {
     report = pruningGate();
     expect(report.timestamp).toBeTruthy();
@@ -32,7 +32,7 @@ describe("Pruning Gate — System Hygiene", () => {
     if (pruneItems.length > 0) {
       console.warn("⚠ PRUNE ITEMS:", pruneItems.map(f => f.title).join("; "));
     }
-    // This is advisory — we allow prune items but log them
+    // This is advisory. we allow prune items but log them
     expect(pruneItems.length).toBeLessThanOrEqual(5);
   });
 
@@ -74,6 +74,6 @@ describe("Pruning Gate — System Hygiene", () => {
     }
 
     console.log("═".repeat(60) + "\n");
-    expect(true).toBe(true); // Always passes — this test is for output
+    expect(true).toBe(true); // Always passes. this test is for output
   });
 });

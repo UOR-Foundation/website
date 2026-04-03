@@ -1,5 +1,5 @@
 /**
- * Categorical Coherence Head — Attention Replacement via Associator Brackets
+ * Categorical Coherence Head. Attention Replacement via Associator Brackets
  * ═══════════════════════════════════════════════════════════════════════════
  *
  * THEORY:
@@ -18,7 +18,7 @@
  *   Hamming-distance H-score measuring divergence from the Grade-A graph.
  *
  *   Key insight: collinear triples (on a Fano line) have associator = 0,
- *   meaning they compose *coherently* — no information loss. Non-collinear
+ *   meaning they compose *coherently*. no information loss. Non-collinear
  *   triples have ‖associator‖ = 2, indicating a fixed, quantized
  *   "coherence defect" that must be corrected via rewrite chains.
  *
@@ -152,7 +152,7 @@ export function evaluateTriple(
 // ── Coherence Head ──────────────────────────────────────────────────────────
 
 /**
- * CategoricalCoherenceHead — the attention replacement.
+ * CategoricalCoherenceHead. the attention replacement.
  *
  * Takes a sequence of Atlas vertex triples and produces coherence
  * evaluations with H-scores. This is the categorical analogue of

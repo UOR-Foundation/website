@@ -1,5 +1,5 @@
 /**
- * UOR Entity Linker — resolves text mentions to canonical UOR IRIs.
+ * UOR Entity Linker. resolves text mentions to canonical UOR IRIs.
  *
  * Resolution strategy:
  *   1. Exact match in index → confidence 1.0, grade B

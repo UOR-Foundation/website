@@ -1,25 +1,25 @@
 /**
- * UNS Core — Two-Address Model
+ * UNS Core. Two-Address Model
  *
  * Architecturally critical: every piece of content in UNS has TWO addresses:
  *
- *   1. u:canonicalId  — LOSSLESS 256-bit derivation URN (the source of truth)
- *   2. u:ipv6         — LOSSY 80-bit routing projection (for network transport)
+ *   1. u:canonicalId . LOSSLESS 256-bit derivation URN (the source of truth)
+ *   2. u:ipv6        . LOSSY 80-bit routing projection (for network transport)
  *
  * Plus two supplementary forms:
- *   3. u:cid          — CIDv1/dag-json/sha2-256/base32lower (IPFS interop)
- *   4. u:glyph        — Braille bijection of 32 SHA-256 bytes (visual identity)
+ *   3. u:cid         . CIDv1/dag-json/sha2-256/base32lower (IPFS interop)
+ *   4. u:glyph       . Braille bijection of 32 SHA-256 bytes (visual identity)
  *
  * The u:lossWarning field is ALWAYS present to make the routing-vs-canonical
  * distinction explicit in the type system. This prevents downstream consumers
  * from treating the IPv6 address as a full identity.
  *
  * IPv6 construction follows RFC 4193 (ULA) with the UOR prefix:
- *   fd00:0075:6f72::/48 — "uor" encoded in ASCII within ULA space
+ *   fd00:0075:6f72::/48. "uor" encoded in ASCII within ULA space
  *   80 content bits from hashBytes[0..9] fill the remaining 5 hextets
  *
- * @see RFC 4193 — Unique Local IPv6 Unicast Addresses
- * @see RFC 8200 — Internet Protocol, Version 6 (IPv6) Specification
+ * @see RFC 4193. Unique Local IPv6 Unicast Addresses
+ * @see RFC 8200. Internet Protocol, Version 6 (IPv6) Specification
  */
 
 // ── UOR IPv6 Prefix ─────────────────────────────────────────────────────────
@@ -27,15 +27,15 @@
 /**
  * fd00:0075:6f72::/48
  *
- *   fd   — RFC 4193 ULA prefix (locally assigned)
- *   00:75 — 'u' in ASCII (0x75), zero-padded to 16 bits
- *   6f72  — 'or' in ASCII (0x6F 0x72)
+ *   fd  . RFC 4193 ULA prefix (locally assigned)
+ *   00:75. 'u' in ASCII (0x75), zero-padded to 16 bits
+ *   6f72 . 'or' in ASCII (0x6F 0x72)
  *
  * Together: "uor" → 48-bit network prefix, leaving 80 bits for content.
  */
 const UOR_IPV6_PREFIX = "fd00:0075:6f72";
 
-/** The constant loss warning — MUST appear on every identity object. */
+/** The constant loss warning. MUST appear on every identity object. */
 const LOSS_WARNING = "ipv6-is-routing-projection-only" as const;
 
 // ── Canonical Identity Type ─────────────────────────────────────────────────
@@ -47,23 +47,23 @@ const LOSS_WARNING = "ipv6-is-routing-projection-only" as const;
  * for all UNS services. Every field is derived from ONE SHA-256 hash.
  */
 export interface UorCanonicalIdentity {
-  /** Lossless 256-bit identity: urn:uor:derivation:sha256:{hex64} — NEVER lossy. */
+  /** Lossless 256-bit identity: urn:uor:derivation:sha256:{hex64}. NEVER lossy. */
   "u:canonicalId": string;
   /** Routing-only IPv6 ULA: fd00:0075:6f72:xxxx:xxxx:xxxx:xxxx:xxxx */
   "u:ipv6": string;
-  /** Prefix length — always 48 for the /48 UOR ULA allocation. */
+  /** Prefix length. always 48 for the /48 UOR ULA allocation. */
   "u:ipv6PrefixLength": 48;
   /** Number of content-derived bits in the IPv6 address. */
   "u:contentBits": 80;
-  /** Explicit loss warning — ALWAYS present. */
+  /** Explicit loss warning. ALWAYS present. */
   "u:lossWarning": typeof LOSS_WARNING;
-  /** CIDv1/dag-json/sha2-256/base32lower — IPFS-compatible content identifier. */
+  /** CIDv1/dag-json/sha2-256/base32lower. IPFS-compatible content identifier. */
   "u:cid": string;
-  /** Braille bijection of all 32 SHA-256 bytes — visual lossless identity. */
+  /** Braille bijection of all 32 SHA-256 bytes. visual lossless identity. */
   "u:glyph": string;
   /** Length of the glyph string (always 32 for SHA-256). */
   "u:length": 32;
-  /** Raw 32-byte SHA-256 digest — for internal computations only. */
+  /** Raw 32-byte SHA-256 digest. for internal computations only. */
   hashBytes: Uint8Array;
 }
 
@@ -127,7 +127,7 @@ export function ipv6ToContentBytes(ipv6: string): Uint8Array {
 
 /**
  * Encode a byte array as a Braille glyph string.
- * Each byte b maps to U+2800 + b — a lossless, invertible bijection.
+ * Each byte b maps to U+2800 + b. a lossless, invertible bijection.
  */
 export function encodeGlyph(bytes: Uint8Array): string {
   return Array.from(bytes)
@@ -162,10 +162,10 @@ function encodeBase32Lower(bytes: Uint8Array): string {
  * Compute CIDv1/dag-json/sha2-256/base32lower from canonical bytes.
  *
  * Binary layout:
- *   0x01       — CIDv1 version
- *   0xa9 0x02  — dag-json codec (0x0129 as varint)
- *   0x12 0x20  — sha2-256 multihash header
- *   {32 bytes} — SHA-256 digest
+ *   0x01      . CIDv1 version
+ *   0xa9 0x02 . dag-json codec (0x0129 as varint)
+ *   0x12 0x20 . sha2-256 multihash header
+ *   {32 bytes}. SHA-256 digest
  */
 export async function computeCid(canonicalBytes: Uint8Array): Promise<string> {
   const ab = new ArrayBuffer(canonicalBytes.byteLength);
@@ -232,7 +232,7 @@ export function verifyIpv6Routing(
 /**
  * Build a complete UorCanonicalIdentity from a SHA-256 hash and canonical bytes.
  *
- * This is the final assembly step — called by identity.ts after canonicalization.
+ * This is the final assembly step. called by identity.ts after canonicalization.
  */
 export async function buildIdentity(
   hashBytes: Uint8Array,

@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::proof
+ * UOR Foundation v2.0.0. bridge::proof
  *
  * Kernel-produced verification proofs with typed witness data.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * WitnessData — evidence supporting a proof.
+ * WitnessData. evidence supporting a proof.
  * Now strongly typed with witness_type and witness_content
  * per v2.0.0 spec.
  */
@@ -24,7 +24,7 @@ export interface WitnessData {
 }
 
 /**
- * Proof — abstract base for all proofs.
+ * Proof. abstract base for all proofs.
  *
  * @disjoint CoherenceProof, CriticalIdentityProof
  */
@@ -40,7 +40,7 @@ export interface Proof {
 }
 
 /**
- * CoherenceProof — proves system-wide coherence across all modules.
+ * CoherenceProof. proves system-wide coherence across all modules.
  *
  * @disjoint CriticalIdentityProof
  */
@@ -54,7 +54,7 @@ export interface CoherenceProof extends Proof {
 }
 
 /**
- * CriticalIdentityProof — proves neg(bnot(x)) = succ(x) for all x.
+ * CriticalIdentityProof. proves neg(bnot(x)) = succ(x) for all x.
  *
  * @disjoint CoherenceProof
  */

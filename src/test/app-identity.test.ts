@@ -1,5 +1,5 @@
 /**
- * App Identity Layer (P2) — 10/10 Test Suite
+ * App Identity Layer (P2). 10/10 Test Suite
  *
  * Validates manifest creation, determinism, versioning,
  * verification, and registry operations.
@@ -53,14 +53,14 @@ describe("App Identity Layer (P2)", () => {
     expect(m["u:cid"]!.length).toBeGreaterThan(10);
   });
 
-  // Test 4: deterministic — identical inputs produce same canonical ID
+  // Test 4: deterministic. identical inputs produce same canonical ID
   it("identical inputs produce identical u:canonicalId", async () => {
     const m1 = await createManifest(BASE_INPUT);
     const m2 = await createManifest(BASE_INPUT);
     expect(m1["u:canonicalId"]).toBe(m2["u:canonicalId"]);
   });
 
-  // Test 5: content sensitivity — one field change → different ID
+  // Test 5: content sensitivity. one field change → different ID
   it("one field changed produces completely different u:canonicalId", async () => {
     const m1 = await createManifest(BASE_INPUT);
     const m2 = await createManifest({

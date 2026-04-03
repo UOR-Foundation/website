@@ -65,7 +65,7 @@ export function OpportunityCard({ opportunity: opp, expanded, onToggle }: Props)
       {expanded && (
         <div className="border-t border-border bg-secondary/30 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            {opp.details.length} entries — identity hash threads every row
+            {opp.details.length} entries. identity hash threads every row
           </div>
           <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
             {opp.details.map((d, i) => (

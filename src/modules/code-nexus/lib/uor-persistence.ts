@@ -1,5 +1,5 @@
 /**
- * Code Nexus — UOR Graph Persistence + Certification
+ * Code Nexus. UOR Graph Persistence + Certification
  * ═══════════════════════════════════════════════════
  *
  * Persists code graph entities as first-class UOR citizens:
@@ -121,7 +121,7 @@ export async function persistToUorGraph(
         if (!error) triplesWritten += batch.length;
       }
 
-      // Issue certificates — structural verification via re-hashing
+      // Issue certificates. structural verification via re-hashing
       onProgress?.("Issuing certificates…");
       let certificatesIssued = 0;
       const certRows = [];

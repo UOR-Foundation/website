@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::derivation
+ * UOR Foundation v2.0.0. bridge::derivation
  *
  * Term rewriting witnesses with typed steps.
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * TermMetrics — metrics computed during term rewriting.
+ * TermMetrics. metrics computed during term rewriting.
  */
 export interface TermMetrics {
   /** Total number of rewrite steps. */
@@ -20,7 +20,7 @@ export interface TermMetrics {
 }
 
 /**
- * DerivationStep — a single step in a derivation (abstract).
+ * DerivationStep. a single step in a derivation (abstract).
  *
  * @disjoint RewriteStep, RefinementStep
  */
@@ -36,7 +36,7 @@ export interface DerivationStep {
 }
 
 /**
- * RewriteStep — a term rewriting step.
+ * RewriteStep. a term rewriting step.
  *
  * @disjoint RefinementStep
  */
@@ -48,7 +48,7 @@ export interface RewriteStep extends DerivationStep {
 }
 
 /**
- * RefinementStep — a refinement step (adds precision).
+ * RefinementStep. a refinement step (adds precision).
  *
  * @disjoint RewriteStep
  */
@@ -60,7 +60,7 @@ export interface RefinementStep extends DerivationStep {
 }
 
 /**
- * Derivation — a complete derivation record with steps.
+ * Derivation. a complete derivation record with steps.
  */
 export interface Derivation {
   /** Derivation identifier (URN). */

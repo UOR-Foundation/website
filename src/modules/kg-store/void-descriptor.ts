@@ -1,11 +1,11 @@
 /**
- * UNS Knowledge Graph — VoID Dataset Descriptor.
+ * UNS Knowledge Graph. VoID Dataset Descriptor.
  *
  * Generates a W3C VoID (Vocabulary of Interlinked Datasets) descriptor
  * for the UNS knowledge graph, enabling Linked Open Data discoverability.
  *
- * @see https://www.w3.org/TR/void/ — VoID specification
- * @see .well-known/uor.json — UNS graph configuration
+ * @see https://www.w3.org/TR/void/. VoID specification
+ * @see .well-known/uor.json. UNS graph configuration
  */
 
 import type { UnsGraph } from "./uns-graph";
@@ -53,7 +53,7 @@ export function generateVoID(
     "void:classes": 82,
     "void:properties": 124,
     "void:distinctSubjects": 256 + Math.floor(stats.ontologyTriples / 2),
-    "dc:title": "UNS Platform Knowledge Graph — Q0",
+    "dc:title": "UNS Platform Knowledge Graph. Q0",
     "dc:description": "Complete materialization of the Z/256Z ring with partition classification, critical identity witnesses, and UNS name records.",
     "dc:license": "https://www.apache.org/licenses/LICENSE-2.0",
     "dc:created": new Date().toISOString(),

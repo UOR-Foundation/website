@@ -1,16 +1,16 @@
 /**
- * Executable Blueprint — Validation Test Suite
+ * Executable Blueprint. Validation Test Suite
  * ═════════════════════════════════════════════
  *
  * Validates the holographic properties of the Executable Blueprint system:
  *
- * T0: Content Identity — same program = same hash, different program ≠ same hash
- * T1: Deterministic Execution — same input = same output, always
- * T2: Scheduler Compilation — declarative specs compile to live PolyTrees
- * T3: Session Lifecycle — boot → execute → interact → suspend → resume
- * T4: Fork Semantics — fork creates new identity with shared structure
- * T5: Holographic Losslessness — suspend/resume preserves full state
- * T6: Serialization Round-Trip — serialize → deserialize = identity
+ * T0: Content Identity. same program = same hash, different program ≠ same hash
+ * T1: Deterministic Execution. same input = same output, always
+ * T2: Scheduler Compilation. declarative specs compile to live PolyTrees
+ * T3: Session Lifecycle. boot → execute → interact → suspend → resume
+ * T4: Fork Semantics. fork creates new identity with shared structure
+ * T5: Holographic Losslessness. suspend/resume preserves full state
+ * T6: Serialization Round-Trip. serialize → deserialize = identity
  *
  * @module test/executable-blueprint
  */
@@ -496,7 +496,7 @@ describe("T6: Serialization Round-Trip", () => {
     const restored = deserializeExecutable(json);
 
     // Structural equivalence (readonly arrays become mutable after JSON round-trip,
-    // which changes canonical form — this is expected UOR behavior: different
+    // which changes canonical form. this is expected UOR behavior: different
     // serialization = different identity, but same logical structure)
     expect(restored.name).toBe(bp.name);
     expect(restored.lens.elements.length).toBe(bp.lens.elements.length);

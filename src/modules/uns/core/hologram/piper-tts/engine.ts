@@ -1,5 +1,5 @@
 /**
- * Piper TTS Engine — Sovereign client-side text-to-speech
+ * Piper TTS Engine. Sovereign client-side text-to-speech
  * ═══════════════════════════════════════════════════════════
  *
  * Runs Piper VITS models locally in the browser via ONNX Runtime Web.
@@ -40,7 +40,7 @@ export const PIPER_VOICES: PiperVoice[] = [
     language: "en-US",
     quality: "medium",
     sizeMb: 75,
-    description: "Warm, clear female voice — best balance of quality and speed",
+    description: "Warm, clear female voice. best balance of quality and speed",
   },
   {
     id: "en_US-hfc_male-medium",
@@ -48,7 +48,7 @@ export const PIPER_VOICES: PiperVoice[] = [
     language: "en-US",
     quality: "medium",
     sizeMb: 75,
-    description: "Natural male voice — conversational and articulate",
+    description: "Natural male voice. conversational and articulate",
   },
   {
     id: "en_US-lessac-high",
@@ -56,7 +56,7 @@ export const PIPER_VOICES: PiperVoice[] = [
     language: "en-US",
     quality: "high",
     sizeMb: 75,
-    description: "Studio-quality voice — highest fidelity, slightly larger model",
+    description: "Studio-quality voice. highest fidelity, slightly larger model",
   },
   {
     id: "en_US-lessac-medium",
@@ -72,7 +72,7 @@ export const PIPER_VOICES: PiperVoice[] = [
     language: "en-GB",
     quality: "medium",
     sizeMb: 25,
-    description: "British English male — clear and measured",
+    description: "British English male. clear and measured",
   },
   {
     id: "en_US-amy-medium",
@@ -80,7 +80,7 @@ export const PIPER_VOICES: PiperVoice[] = [
     language: "en-US",
     quality: "medium",
     sizeMb: 25,
-    description: "Friendly female voice — natural cadence",
+    description: "Friendly female voice. natural cadence",
   },
 ];
 
@@ -154,7 +154,7 @@ export class PiperTtsEngine {
 
   /**
    * Download and cache a voice model.
-   * Idempotent — skips if already cached.
+   * Idempotent. skips if already cached.
    */
   async loadVoice(voiceId: VoiceId = DEFAULT_VOICE_ID): Promise<void> {
     try {

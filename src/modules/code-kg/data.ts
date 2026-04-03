@@ -1,5 +1,5 @@
 /**
- * Code-to-Knowledge-Graph — Self-Reflective Module Data
+ * Code-to-Knowledge-Graph. Self-Reflective Module Data
  * ═════════════════════════════════════════════════════════
  *
  * Static representation of this codebase's module structure
@@ -22,7 +22,7 @@ export interface ModuleSource {
 export const UOR_MODULE_SOURCES: ModuleSource[] = [
   {
     path: "src/modules/ring-core/ring.ts",
-    description: "Q0 Ring — 256-element finite ring with UOR operations",
+    description: "Q0 Ring. 256-element finite ring with UOR operations",
     content: `
 export interface UORRing { quantum: number; order: number; toBytes(v: number): number[]; fromBytes(b: number[]): number; }
 export function neg(b: number[]): number[] { return b; }
@@ -35,7 +35,7 @@ export function createRing(quantum: number): UORRing { return {} as UORRing; }
   },
   {
     path: "src/modules/identity/index.ts",
-    description: "Content-addressing — SHA-256 canonical identity",
+    description: "Content-addressing. SHA-256 canonical identity",
     content: `
 import type { UORRing } from "@/modules/ring-core/ring";
 export function contentAddress(ring: UORRing, value: number): string { return ""; }
@@ -57,7 +57,7 @@ export async function verifyRecord<T>(record: SignedRecord<T>): Promise<boolean>
   },
   {
     path: "src/modules/uns/core/hologram/index.ts",
-    description: "Hologram Projection Registry — universal bridge pattern",
+    description: "Hologram Projection Registry. universal bridge pattern",
     content: `
 import type { HologramSpec } from "./specs";
 export interface HologramSpec { project: (input: { hex: string; cid: string; hashBytes: number[] }) => string; fidelity: string; spec: string; }
@@ -67,7 +67,7 @@ export function createProjector(): HologramProjector { return new HologramProjec
   },
   {
     path: "src/modules/uns/trust/auth.ts",
-    description: "Zero-trust authentication — Dilithium-3 challenge-response",
+    description: "Zero-trust authentication. Dilithium-3 challenge-response",
     content: `
 import type { UnsKeypair, SignedRecord } from "../core/keypair";
 export interface UnsChallenge { nonce: string; issuedAt: string; expiresAt: string; }
@@ -78,7 +78,7 @@ export async function signChallenge(challenge: UnsChallenge, keypair: UnsKeypair
   },
   {
     path: "src/modules/uns/trust/trust-graph.ts",
-    description: "TrustGraph — social attestation layer",
+    description: "TrustGraph. social attestation layer",
     content: `
 import { singleProofHash } from "../core/identity";
 import { signRecord, verifyRecord } from "../core/keypair";
@@ -91,7 +91,7 @@ export class UnsTrustGraph { async createNetwork(opts: any): Promise<TrustNetwor
   },
   {
     path: "src/modules/observable/observer.ts",
-    description: "Observer Theory — agent coherence tracking",
+    description: "Observer Theory. agent coherence tracking",
     content: `
 export interface ObserverProfile { canonicalId: string; zone: string; hScoreMean: number; gradeARate: number; persistence: number; }
 export interface IntegrationMetrics { phi: number; epsilon: number; tau: number; sigma: number; }
@@ -101,7 +101,7 @@ export function networkSummary(): { telosProgress: number; meanPhi: number } { r
   },
   {
     path: "src/modules/kg-store/store.ts",
-    description: "Knowledge Graph Store — Supabase-backed persistence",
+    description: "Knowledge Graph Store. Supabase-backed persistence",
     content: `
 import { supabase } from "@/integrations/supabase/client";
 import type { UORRing } from "@/modules/ring-core/ring";
@@ -124,7 +124,7 @@ export const Q0_GRAPH = "https://uor.foundation/graph/q0";
   },
   {
     path: "src/modules/consciousness/data/landscape.ts",
-    description: "Landscape of Consciousness — 44 theories mapped to UOR",
+    description: "Landscape of Consciousness. 44 theories mapped to UOR",
     content: `
 export interface ConsciousnessTheory { id: string; name: string; category: string; connectionFactors: number[]; quantumLevel: number; }
 export const CONSCIOUSNESS_THEORIES: ConsciousnessTheory[] = [];
@@ -133,7 +133,7 @@ export const LOC_CATEGORIES: string[] = [];
   },
   {
     path: "src/modules/consciousness/data/god-conjecture.ts",
-    description: "God Conjecture — teleological completion of observer theory",
+    description: "God Conjecture. teleological completion of observer theory",
     content: `
 export interface IsomorphismMapping { locConcept: string; uorPrimitive: string; structuralProof: string; category: string; }
 export const GOD_CONJECTURE_MAPPINGS: IsomorphismMapping[] = [];

@@ -1,5 +1,5 @@
 /**
- * App Store Catalog — Triadic (Learn / Work / Play) app definitions.
+ * App Store Catalog. Triadic (Learn / Work / Play) app definitions.
  * Each app belongs to a phase and subcategory, with install status.
  */
 

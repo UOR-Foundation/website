@@ -1,5 +1,5 @@
 /**
- * Stress Tests — Cross-Projection Identity Coherence
+ * Stress Tests. Cross-Projection Identity Coherence
  * ═══════════════════════════════════════════════════
  *
  * Verifies that ALL 147+ projections can be simultaneously threaded
@@ -53,7 +53,7 @@ const ALL_OPPORTUNITY_BUILDERS = [
 // STRESS TEST SUITE
 // ═════════════════════════════════════════════════════════════════════════
 
-describe("Stress — Projection Registry Integrity", () => {
+describe("Stress. Projection Registry Integrity", () => {
   it("registry contains 147+ projections", () => {
     expect(ALL_PROJECTION_NAMES.length).toBeGreaterThanOrEqual(147);
   });
@@ -82,7 +82,7 @@ describe("Stress — Projection Registry Integrity", () => {
   });
 });
 
-describe("Stress — Collision Freedom (no two hashes collide)", () => {
+describe("Stress. Collision Freedom (no two hashes collide)", () => {
   const SAMPLE_SIZE = 50;
   const inputs = Array.from({ length: SAMPLE_SIZE }, (_, i) => makeInput(i));
 
@@ -106,7 +106,7 @@ describe("Stress — Collision Freedom (no two hashes collide)", () => {
   });
 });
 
-describe("Stress — Determinism (same hash → identical output)", () => {
+describe("Stress. Determinism (same hash → identical output)", () => {
   it("projecting the same input twice yields identical URIs for all projections", () => {
     const input = makeInput(123);
     for (const name of ALL_PROJECTION_NAMES) {
@@ -126,7 +126,7 @@ describe("Stress — Determinism (same hash → identical output)", () => {
   });
 });
 
-describe("Stress — Identity Drift (threadHash consistency)", () => {
+describe("Stress. Identity Drift (threadHash consistency)", () => {
   it("all 9 opportunities report the same threadHash", () => {
     const input = makeInput(789);
     const results = ALL_OPPORTUNITY_BUILDERS.map(({ name, build }) => {
@@ -149,7 +149,7 @@ describe("Stress — Identity Drift (threadHash consistency)", () => {
   });
 });
 
-describe("Stress — Opportunity Robustness (no throws on any input)", () => {
+describe("Stress. Opportunity Robustness (no throws on any input)", () => {
   it("all 9 opportunities resolve without throwing for 100 random inputs", () => {
     for (let seed = 0; seed < 100; seed++) {
       const input = makeInput(seed);
@@ -160,7 +160,7 @@ describe("Stress — Opportunity Robustness (no throws on any input)", () => {
   });
 });
 
-describe("Stress — Cross-Opportunity Projection Coverage", () => {
+describe("Stress. Cross-Opportunity Projection Coverage", () => {
   const input = makeInput(2025);
 
   it("Pipeline covers 10+ stages", () => {
@@ -200,7 +200,7 @@ describe("Stress — Cross-Opportunity Projection Coverage", () => {
   });
 });
 
-describe("Stress — High-Volume Simultaneous Threading", () => {
+describe("Stress. High-Volume Simultaneous Threading", () => {
   it("1000 identities × 9 opportunities = 9000 builds with zero failures", () => {
     let builds = 0;
     for (let seed = 0; seed < 1000; seed++) {

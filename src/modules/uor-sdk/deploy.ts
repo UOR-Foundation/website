@@ -1,23 +1,23 @@
 /**
- * UOR SDK — Deploy Orchestrator
+ * UOR SDK. Deploy Orchestrator
  *
  * Single entry point that chains Build→Ship→Run into one atomic
  * deployment pipeline. Accepts any ImportSource and returns a
  * running WasmAppInstance.
  *
  * This is the "npx uor-app deploy" equivalent:
- *   1. BUILD  — importApp() resolves source → AppFile[], creates AppManifest
- *   2. IMAGE  — buildAppImage() wraps files into content-addressed UorImage
- *   3. SHIP   — shipApp() pushes to registry + creates DeploymentSnapshot
- *   4. RUN    — runApp() loads into WASM sandbox with RuntimeWitness
+ *   1. BUILD . importApp() resolves source → AppFile[], creates AppManifest
+ *   2. IMAGE . buildAppImage() wraps files into content-addressed UorImage
+ *   3. SHIP  . shipApp() pushes to registry + creates DeploymentSnapshot
+ *   4. RUN   . runApp() loads into WASM sandbox with RuntimeWitness
  *
  * Every step produces auditable, content-addressed artifacts.
  * The pipeline is idempotent: same source = same canonical ID = no-op push.
  *
- * @see import-adapter — source resolution
- * @see runtime/image-builder — canonical image creation
- * @see runtime/registry-ship — registry push + snapshot
- * @see runtime/wasm-loader — WASM sandbox execution
+ * @see import-adapter. source resolution
+ * @see runtime/image-builder. canonical image creation
+ * @see runtime/registry-ship. registry push + snapshot
+ * @see runtime/wasm-loader. WASM sandbox execution
  */
 
 import { importApp } from "./import-adapter";
@@ -69,7 +69,7 @@ export interface DeployOptions {
   onProgress?: DeployProgressCallback;
 }
 
-/** Complete deployment result — all artifacts from every stage. */
+/** Complete deployment result. all artifacts from every stage. */
 export interface DeployResult {
   /** Stage 1: Import result (files + manifest). */
   import: ImportResult;
@@ -123,7 +123,7 @@ export async function deployApp(opts: DeployOptions): Promise<DeployResult> {
       {
         path: importResult.manifest["app:entrypoint"],
         bytes: new TextEncoder().encode(
-          `<!-- ${appName} v${version} — entry: ${importResult.manifest["app:entrypoint"]} -->`
+          `<!-- ${appName} v${version}. entry: ${importResult.manifest["app:entrypoint"]} -->`
         ),
       },
     ],

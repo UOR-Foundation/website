@@ -1,12 +1,12 @@
 /**
- * DID:UOR — Content-Addressed Decentralized Identifier Method
+ * DID:UOR. Content-Addressed Decentralized Identifier Method
  * ════════════════════════════════════════════════════════════
  *
  * Maps UOR content identifiers to W3C DID Documents.
  *
  * DID Method:  did:uor:{cid}
  *
- * The DID Document is a VIEW of the hologram — its `alsoKnownAs` is the
+ * The DID Document is a VIEW of the hologram. its `alsoKnownAs` is the
  * set of all lossless projections, and its `service` endpoints are the
  * protocol-specific resolution URLs derived from the same identity.
  *
@@ -51,7 +51,7 @@ export interface UorDidDocument {
 }
 
 /**
- * DID Resolution Metadata — per DID Resolution §3.1.
+ * DID Resolution Metadata. per DID Resolution §3.1.
  */
 export interface DidResolutionMetadata {
   contentType: "application/did+ld+json";
@@ -88,7 +88,7 @@ function certToInput(certificate: UorCertificate): ProjectionInput {
 }
 
 /**
- * DID Core §5.1.1 — `alsoKnownAs`: all lossless hologram projections.
+ * DID Core §5.1.1. `alsoKnownAs`: all lossless hologram projections.
  *
  * The hologram provides every protocol-native identifier for this identity.
  * We include all lossless projections as equivalent identifiers,
@@ -112,7 +112,7 @@ function buildAlsoKnownAs(input: ProjectionInput): string[] {
 }
 
 /**
- * DID Core §5.4 — `service`: protocol-specific resolution endpoints
+ * DID Core §5.4. `service`: protocol-specific resolution endpoints
  * derived from the hologram's protocol projections.
  */
 function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
@@ -172,7 +172,7 @@ function buildServiceEndpoints(did: string, input: ProjectionInput): Array<{
 /**
  * Resolve a UOR certificate into a W3C DID Document.
  *
- * The DID Document IS a holographic projection — every field derived
+ * The DID Document IS a holographic projection. every field derived
  * from the same canonical identity through the projection registry.
  */
 export function resolveDidDocument(certificate: UorCertificate): UorDidDocument {
@@ -203,7 +203,7 @@ export function resolveDidDocument(certificate: UorCertificate): UorDidDocument 
 }
 
 /**
- * Full DID Resolution — returns document + metadata per DID Resolution spec.
+ * Full DID Resolution. returns document + metadata per DID Resolution spec.
  */
 export function resolveDidFull(certificate: UorCertificate): DidResolutionResult {
   const input = certToInput(certificate);

@@ -1,14 +1,14 @@
 /**
- * Docker Backward-Compatibility & UOR Parity — Exhaustive Test Suite
+ * Docker Backward-Compatibility & UOR Parity. Exhaustive Test Suite
  *
  * Validates that every key Docker primitive is faithfully replicated
  * within the UOR framework, content-addressed, and interoperable.
  *
  * Categories mirrored from Docker's own documentation:
- *   BUILD  — Dockerfile/Uorfile, multi-stage, ARG/ENV, HEALTHCHECK, LABEL
- *   SHIP   — Registry tag/push/pull, dedup, search, digest references
- *   RUN    — Compose up/down/ps/scale, secrets, dependency ordering
- *   COMPAT — Docker image wrapping, feature mapping, verb mapping, reports
+ *   BUILD . Dockerfile/Uorfile, multi-stage, ARG/ENV, HEALTHCHECK, LABEL
+ *   SHIP  . Registry tag/push/pull, dedup, search, digest references
+ *   RUN   . Compose up/down/ps/scale, secrets, dependency ordering
+ *   COMPAT. Docker image wrapping, feature mapping, verb mapping, reports
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -60,10 +60,10 @@ import {
 const CANONICAL = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  BUILD — Dockerfile ↔ Uorfile parity
+//  BUILD. Dockerfile ↔ Uorfile parity
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("BUILD — Dockerfile / Uorfile Parity", () => {
+describe("BUILD. Dockerfile / Uorfile Parity", () => {
   beforeEach(() => { clearImageRegistry(); });
 
   // ── FROM variants ─────────────────────────────────────────────────────
@@ -287,10 +287,10 @@ describe("BUILD — Dockerfile / Uorfile Parity", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  SHIP — Registry, Tags, Push/Pull, Deduplication
+//  SHIP. Registry, Tags, Push/Pull, Deduplication
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("SHIP — Registry (docker push/pull/tag/inspect/history/rmi)", () => {
+describe("SHIP. Registry (docker push/pull/tag/inspect/history/rmi)", () => {
   beforeEach(() => { clearImageRegistry(); });
 
   it("tag → push → pull round-trip", async () => {
@@ -409,10 +409,10 @@ describe("SHIP — Registry (docker push/pull/tag/inspect/history/rmi)", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  DOCKER IMAGE WRAPPING — backwards compatibility
+//  DOCKER IMAGE WRAPPING. backwards compatibility
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("DOCKER COMPAT — Image Wrapping & Reference Parsing", () => {
+describe("DOCKER COMPAT. Image Wrapping & Reference Parsing", () => {
   describe("parseDockerRef covers all Docker reference formats", () => {
     it("official image: nginx", () => {
       const r = parseDockerRef("nginx");
@@ -601,10 +601,10 @@ describe("DOCKER FEATURE & VERB MAPPING", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  RUN — Compose Orchestration
+//  RUN. Compose Orchestration
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("RUN — Compose Orchestration (docker compose equivalent)", () => {
+describe("RUN. Compose Orchestration (docker compose equivalent)", () => {
   beforeEach(() => { clearComposeApps(); clearImageRegistry(); });
 
   it("parses a full docker-compose.yml equivalent", () => {
@@ -823,7 +823,7 @@ describe("RUN — Compose Orchestration (docker compose equivalent)", () => {
 //  SECRETS MANAGER (docker secret create/ls/inspect/rm)
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("RUN — Secrets Manager (docker secret equivalent)", () => {
+describe("RUN. Secrets Manager (docker secret equivalent)", () => {
   beforeEach(() => { clearSecrets(); });
 
   it("create → inspect → get → remove lifecycle", async () => {
@@ -868,7 +868,7 @@ describe("RUN — Secrets Manager (docker secret equivalent)", () => {
   });
 
   it("list secrets returns metadata only (never values)", () => {
-    // We just check the type — values should never leak
+    // We just check the type. values should never leak
     const secrets = listSecrets();
     for (const s of secrets) {
       expect(s).not.toHaveProperty("value");
@@ -924,10 +924,10 @@ describe("RUN — Secrets Manager (docker secret equivalent)", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  END-TO-END — Full Build→Ship→Run Pipeline
+//  END-TO-END. Full Build→Ship→Run Pipeline
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("E2E — Full Build→Ship→Run Pipeline", () => {
+describe("E2E. Full Build→Ship→Run Pipeline", () => {
   beforeEach(() => {
     clearImageRegistry();
     clearComposeApps();

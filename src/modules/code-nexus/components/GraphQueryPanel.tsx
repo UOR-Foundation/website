@@ -1,5 +1,5 @@
 /**
- * GraphQueryPanel — Interactive query interface for the Code Nexus graph.
+ * GraphQueryPanel. Interactive query interface for the Code Nexus graph.
  *
  * Pre-built queries + free-text entity search with results table.
  */

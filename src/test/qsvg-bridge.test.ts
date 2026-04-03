@@ -1,5 +1,5 @@
 /**
- * QSVG Integration Tests — Verifying the QSVG ↔ Atlas Bridge
+ * QSVG Integration Tests. Verifying the QSVG ↔ Atlas Bridge
  * ════════════════════════════════════════════════════════════
  *
  * Tests the foundational constants, cross-framework correspondences,
@@ -74,7 +74,7 @@ describe("QSVG Foundational Constants", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part II: Atlas Bridge — Cross-Framework Verification
+// Part II: Atlas Bridge. Cross-Framework Verification
 // ══════════════════════════════════════════════════════════════════════════
 
 describe("QSVG ↔ Atlas Bridge", () => {
@@ -151,7 +151,7 @@ describe("QSVG Spectral Verification", () => {
     expect(suite.allPassed).toBe(true);
     expect(suite.tests.length).toBe(8);
     for (const t of suite.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
   });
 

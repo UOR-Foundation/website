@@ -1,5 +1,5 @@
 /**
- * QSVG Coherence Bridge — δ₀-Gated Kernel Coherence
+ * QSVG Coherence Bridge. δ₀-Gated Kernel Coherence
  * ═══════════════════════════════════════════════════
  *
  * Bridges the QSVG geometric framework to the hologram kernel's
@@ -8,9 +8,9 @@
  *
  * The bridge implements the 3-6-9 triadic rhythm:
  *
- *   3 (Structure):  measureGeometricDrift  — observe the lattice
- *   6 (Evolution):  computeRefocusTarget   — navigate the manifold
- *   9 (Completion): verifyGeometricClosure — confirm rigidity
+ *   3 (Structure):  measureGeometricDrift . observe the lattice
+ *   6 (Evolution):  computeRefocusTarget  . navigate the manifold
+ *   9 (Completion): verifyGeometricClosure. confirm rigidity
  *
  * @module qsvg/coherence-bridge
  */
@@ -36,11 +36,11 @@ import {
 } from "./geometric-units";
 
 // ══════════════════════════════════════════════════════════════════════════
-// 3 — STRUCTURE: Measurement in geometric units
+// 3. STRUCTURE: Measurement in geometric units
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * A geometric coherence measurement — everything in δ₀ units.
+ * A geometric coherence measurement. everything in δ₀ units.
  */
 export interface GeometricMeasurement {
   /** H-score (0–1, legacy format) */
@@ -92,7 +92,7 @@ export function measureGeometricState(
 /**
  * Measure the geometric drift between two consecutive H-scores.
  *
- * Returns the drift in δ₀ units — the number of angular defects
+ * Returns the drift in δ₀ units. the number of angular defects
  * accumulated (positive) or recovered (negative) between ticks.
  */
 export function measureGeometricDrift(
@@ -123,11 +123,11 @@ export function measureGeometricDrift(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 6 — EVOLUTION: Navigation on the geometric manifold
+// 6. EVOLUTION: Navigation on the geometric manifold
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * A refocusing target — where the system should aim to restore coherence.
+ * A refocusing target. where the system should aim to restore coherence.
  */
 export interface RefocusTarget {
   /** Target H-score to blend toward */
@@ -200,11 +200,11 @@ export function computeRefocusTarget(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 9 — COMPLETION: Geometric closure verification
+// 9. COMPLETION: Geometric closure verification
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * A geometric closure report — the 9 (completion) of the 3-6-9 cycle.
+ * A geometric closure report. the 9 (completion) of the 3-6-9 cycle.
  */
 export interface GeometricClosure {
   /** Is the geometry self-consistent? */

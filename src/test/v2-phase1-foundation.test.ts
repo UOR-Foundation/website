@@ -1,5 +1,5 @@
 /**
- * Phase 1 — v2.0.0 Foundation Types Test Suite
+ * Phase 1. v2.0.0 Foundation Types Test Suite
  *
  * Validates that all 82 interfaces, 5 enums, and 5 named individuals
  * are correctly transcribed from the Rust ontology.
@@ -57,10 +57,10 @@ import type {
 } from "@/types/uor-foundation/user";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.1 — Enum Variant Counts
+// T1.1. Enum Variant Counts
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.1: Enum Variant Counts", () => {
+describe("Phase 1. T1.1: Enum Variant Counts", () => {
   it("Space has 3 variants", () => {
     const values: Space[] = ["Kernel", "Bridge", "User"];
     expect(values).toHaveLength(3);
@@ -94,10 +94,10 @@ describe("Phase 1 — T1.1: Enum Variant Counts", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.2 — Named Individuals
+// T1.2. Named Individuals
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.2: Named Individuals", () => {
+describe("Phase 1. T1.2: Named Individuals", () => {
   it("PI1 has value 1", () => {
     expect(PI1.value).toBe(1);
     expect(PI1["@id"]).toBe("schema:pi1");
@@ -127,10 +127,10 @@ describe("Phase 1 — T1.2: Named Individuals", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.3 — Geometric Character Mapping
+// T1.3. Geometric Character Mapping
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.3: OP_GEOMETRY Mapping", () => {
+describe("Phase 1. T1.3: OP_GEOMETRY Mapping", () => {
   it("All 10 PrimitiveOps have geometric characters", () => {
     expect(Object.keys(OP_GEOMETRY)).toHaveLength(10);
   });
@@ -165,10 +165,10 @@ describe("Phase 1 — T1.3: OP_GEOMETRY Mapping", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.4 — Observable Axis Classification
+// T1.4. Observable Axis Classification
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.4: OBSERVABLE_AXIS Classification", () => {
+describe("Phase 1. T1.4: OBSERVABLE_AXIS Classification", () => {
   it("has 12 observable type classifications", () => {
     expect(Object.keys(OBSERVABLE_AXIS).length).toBeGreaterThanOrEqual(12);
   });
@@ -190,10 +190,10 @@ describe("Phase 1 — T1.4: OBSERVABLE_AXIS Classification", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.5 — Backward Compatibility
+// T1.5. Backward Compatibility
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.5: Backward Compatibility", () => {
+describe("Phase 1. T1.5: Backward Compatibility", () => {
   it("OperationName type alias resolves (compile-time check)", () => {
     const op: OperationName = "neg";
     expect(op).toBe("neg");
@@ -206,12 +206,12 @@ describe("Phase 1 — T1.5: Backward Compatibility", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.6 — Structural Completeness (compile-time type checks)
+// T1.6. Structural Completeness (compile-time type checks)
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.6: Structural Completeness", () => {
+describe("Phase 1. T1.6: Structural Completeness", () => {
   it("Kernel interfaces compile (Address, Datum, Operation, etc.)", () => {
-    // These are compile-time type checks — if this file compiles, they pass
+    // These are compile-time type checks. if this file compiles, they pass
     const _check: true = true;
     expect(_check).toBe(true);
   });
@@ -245,10 +245,10 @@ describe("Phase 1 — T1.6: Structural Completeness", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1.7 — Disjointness (no type overlap between spaces)
+// T1.7. Disjointness (no type overlap between spaces)
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Phase 1 — T1.7: Disjointness", () => {
+describe("Phase 1. T1.7: Disjointness", () => {
   it("Kernel, Bridge, and User exports have no name collisions at module level", () => {
     // The v2 ontology has 44 disjointWith declarations.
     // This test verifies the 3-space partition is maintained.

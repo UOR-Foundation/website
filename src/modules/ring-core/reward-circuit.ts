@@ -1,5 +1,5 @@
 /**
- * Reward Circuit — The Basal Ganglia of Hologram
+ * Reward Circuit. The Basal Ganglia of Hologram
  * ═══════════════════════════════════════════════
  *
  * Every agent action produces a measurable reward signal derived from
@@ -12,7 +12,7 @@
  *   limbicValence  = emotional resonance (does it feel right?)
  *   epistemicBonus = knowledge quality (did the epistemic grade improve?)
  *
- * This is not a hand-crafted reward function — it's derived from the
+ * This is not a hand-crafted reward function. it's derived from the
  * same algebraic structure (R₈ = ℤ/256ℤ) that anchors the entire system.
  * The reward IS coherence improvement, measured across three orthogonal
  * dimensions that together span the full "felt quality" of a reasoning step.
@@ -123,8 +123,8 @@ export function gradeDelta(before: EpistemicGrade, after: EpistemicGrade): numbe
  *
  * Where:
  *   ΔH             = h_after - h_before
- *   valence         = tanh(∂H/∂t_after × 5)  — emotional polarity
- *   epistemicBonus  = 1.0 + 0.2 × gradeDelta  — grade improvement multiplier
+ *   valence         = tanh(∂H/∂t_after × 5) . emotional polarity
+ *   epistemicBonus  = 1.0 + 0.2 × gradeDelta . grade improvement multiplier
  *
  * This ensures:
  *   - Positive ΔH with positive valence → strong positive reward
@@ -152,10 +152,10 @@ export function computeReward(
 // ── Reward Accumulator ─────────────────────────────────────────────────
 
 /**
- * RewardAccumulator — stateful reward tracking for a single agent.
+ * RewardAccumulator. stateful reward tracking for a single agent.
  *
  * Maintains running statistics without allocating new objects per tick.
- * This is the "dopamine pathway" — it tracks whether the agent is
+ * This is the "dopamine pathway". it tracks whether the agent is
  * learning (rising rewards), plateauing (stable), or degrading (falling).
  */
 export class RewardAccumulator {
@@ -230,7 +230,7 @@ export class RewardAccumulator {
 // ── Reward Projection ──────────────────────────────────────────────────
 
 /**
- * RewardProjection — the kernel-visible view of the reward circuit.
+ * RewardProjection. the kernel-visible view of the reward circuit.
  * This is what gets included in the ProjectionFrame, allowing the
  * surface adapter to render reward state without knowing internals.
  */

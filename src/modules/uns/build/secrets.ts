@@ -1,5 +1,5 @@
 /**
- * UNS Build — Secrets Manager
+ * UNS Build. Secrets Manager
  *
  * Encrypted secret storage for application configurations,
  * API keys, database credentials, and other sensitive data.
@@ -12,8 +12,8 @@
  *   3. Access-controlled via UOR trust certificates
  *   4. Never logged or included in traces
  *
- * @see trust: namespace — UOR trust & encryption
- * @see build: namespace — UOR build system
+ * @see trust: namespace. UOR trust & encryption
+ * @see build: namespace. UOR build system
  */
 
 import { singleProofHash } from "../core/identity";
@@ -144,7 +144,7 @@ export function inspectSecret(name: string): UorSecret | null {
 }
 
 /**
- * `uor secret get <name>` (internal — requires trust certificate)
+ * `uor secret get <name>` (internal. requires trust certificate)
  *
  * Retrieve the decrypted secret value.
  * In production, this requires a valid trust certificate

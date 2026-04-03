@@ -26,7 +26,7 @@ import type { CoherenceWitness } from "./types";
  * The first byte of the hash becomes the witness value x.
  * We compute neg(bnot(x)) and succ(x) and verify they're equal.
  *
- * @param hashBytes — The 32-byte SHA-256 hash of the certified content
+ * @param hashBytes. The 32-byte SHA-256 hash of the certified content
  * @returns A CoherenceWitness documenting the algebraic check
  */
 export function deriveCoherenceWitness(hashBytes: Uint8Array): CoherenceWitness {
@@ -44,10 +44,10 @@ export function deriveCoherenceWitness(hashBytes: Uint8Array): CoherenceWitness 
 
 /**
  * Verify that a coherence witness is valid.
- * Any agent can call this with just the witness value — no special access needed.
+ * Any agent can call this with just the witness value. no special access needed.
  */
 export function verifyCoherenceWitness(witness: CoherenceWitness): boolean {
-  // Re-derive from scratch — don't trust the stored values
+  // Re-derive from scratch. don't trust the stored values
   const x = witness.witness;
   const expectedNegBnot = neg(bnot(x, 8), 8);
   const expectedSucc = succ(x, 8);

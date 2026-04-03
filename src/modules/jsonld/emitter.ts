@@ -1,5 +1,5 @@
 /**
- * UOR JSON-LD Emitter — W3C JSON-LD 1.1 document generation.
+ * UOR JSON-LD Emitter. W3C JSON-LD 1.1 document generation.
  *
  * Requirement R6: All UOR output must be valid W3C JSON-LD 1.1.
  *
@@ -92,7 +92,7 @@ export function emitDatum(
     basis: triad.spectrum
       .flat()
       .map((bitIdx) => `op:basis_${bitIdx}`),
-    // Gap 4: SKOS stratum hierarchy — lower stratum = broader concept
+    // Gap 4: SKOS stratum hierarchy. lower stratum = broader concept
     "skos:broader": triad.totalStratum > 0
       ? contentAddress(ring, Math.max(0, value - 1))
       : undefined,

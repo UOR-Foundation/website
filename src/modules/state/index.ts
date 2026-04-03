@@ -1,5 +1,5 @@
 /**
- * UOR State Module — state: namespace barrel export.
+ * UOR State Module. state: namespace barrel export.
  */
 
 export { computeStateFrame, persistStateFrame, getRecentStateFrames } from "./state";
@@ -26,7 +26,7 @@ export type {
 } from "./state";
 export { default as SessionsPage } from "./pages/SessionsPage";
 
-// ── P28: Type System — type: namespace ──────────────────────────────────────
+// ── P28: Type System. type: namespace ──────────────────────────────────────
 export {
   typeCheck,
   U8,
@@ -43,7 +43,7 @@ export type {
   TypeCheckResult,
 } from "./type-system";
 
-// ── P28: State Machine — formal agent lifecycle ─────────────────────────────
+// ── P28: State Machine. formal agent lifecycle ─────────────────────────────
 export { UnsStateMachine } from "./state-machine";
 export type {
   MachineStateFrame,

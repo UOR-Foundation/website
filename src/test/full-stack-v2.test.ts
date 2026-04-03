@@ -1,5 +1,5 @@
 /**
- * P30 — Full System Coherence Proof — Prompts 21-30 Integration.
+ * P30. Full System Coherence Proof. Prompts 21-30 Integration.
  *
  * THE FINAL GATE. This test exercises all ten framework layers together
  * and proves the entire UNS+UOR system is internally coherent.
@@ -58,7 +58,7 @@ import type { UnsKeypair } from "@/modules/uns/core/keypair";
 const CANONICAL_IRREDUCIBLE_COUNT = 126;
 const VALID_DERIVATION_ID = "urn:uor:derivation:sha256:" + "ab".repeat(32);
 
-describe("P30 — Full System Coherence Proof", () => {
+describe("P30. Full System Coherence Proof", () => {
   let keypair: UnsKeypair;
   let graph: UnsGraph;
 
@@ -69,16 +69,16 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 1 — Conformance Suite (MUST RUN FIRST — gate for all subsequent tests)
+  // TEST 1. Conformance Suite (MUST RUN FIRST. gate for all subsequent tests)
   // ═══════════════════════════════════════════════════════════════════════════
-  it("1. Conformance suite passes — 0 failures", async () => {
+  it("1. Conformance suite passes. 0 failures", async () => {
     const result = await runConformanceSuite();
     expect(result.failed).toBe(0);
     expect(result.passed).toBe(result.total);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 2 — Critical Identity (verbatim algebraic proof)
+  // TEST 2. Critical Identity (verbatim algebraic proof)
   // ═══════════════════════════════════════════════════════════════════════════
   it("2. Critical identity: neg(bnot(42)) = 43 = succ(42) at Q0/Q1/Q2", () => {
     // Verbatim: neg(bnot(42)) = neg(213) = 43 = succ(42)
@@ -95,7 +95,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 3 — Epistemic Grade propagation
+  // TEST 3. Epistemic Grade propagation
   // ═══════════════════════════════════════════════════════════════════════════
   it("3. Epistemic grades: A requires derivation ID, C without", () => {
     // Object with valid derivation ID → Grade A eligible
@@ -114,7 +114,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 4 — SHACL shapes pass for all generated objects
+  // TEST 4. SHACL shapes pass for all generated objects
   // ═══════════════════════════════════════════════════════════════════════════
   it("4. SHACL shapes pass for proof + schema.org objects", () => {
     // CriticalIdentityProof
@@ -135,7 +135,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 5 — Cross-quantum morphism coherence
+  // TEST 5. Cross-quantum morphism coherence
   // ═══════════════════════════════════════════════════════════════════════════
   it("5. Cross-quantum morphism: ring operations preserve identity across Q0/Q1/Q2", () => {
     // Verify the critical identity holds identically across quantum levels
@@ -159,7 +159,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 6 — SPARQL knowledge graph coherence
+  // TEST 6. SPARQL knowledge graph coherence
   // ═══════════════════════════════════════════════════════════════════════════
   it("6. SPARQL irreducible count matches canonical (126)", () => {
     const results = graph.sparqlSelect(
@@ -169,7 +169,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 7 — Observer coherence
+  // TEST 7. Observer coherence
   // ═══════════════════════════════════════════════════════════════════════════
   it("7. Observer: register → COHERENCE, Grade-A bytes → stays coherent", () => {
     // Full Q0 graph as Grade-A reference (all 256 elements)
@@ -189,7 +189,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 8 — Attribution certificate chain
+  // TEST 8. Attribution certificate chain
   // ═══════════════════════════════════════════════════════════════════════════
   it("8. Attribution: register → verify → eu_data_act_compliant", async () => {
     const attribution = new UnsAttribution(keypair);
@@ -210,7 +210,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 9 — State machine ring coherence
+  // TEST 9. State machine ring coherence
   // ═══════════════════════════════════════════════════════════════════════════
   it("9. State machine: succ(42) = 43, verifyTransition = true", async () => {
     const sm = new UnsStateMachine(keypair);
@@ -231,7 +231,7 @@ describe("P30 — Full System Coherence Proof", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 10 — Schema.org semantic surface
+  // TEST 10. Schema.org semantic surface
   // ═══════════════════════════════════════════════════════════════════════════
   it("10. Schema.org: dual context, identifier, SHACL pass", () => {
     const schemaObj = recordToSchemaOrg({

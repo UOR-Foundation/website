@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Universal Identity (One Login, All Apps)
+ * UOR SDK. Universal Identity (One Login, All Apps)
  *
  * The entry point to the entire UOR ecosystem. One identity, created once,
  * used everywhere. No per-app sign-ups. No password sprawl.
@@ -8,7 +8,7 @@
  *   1. User creates a UOR identity → Dilithium-3 keypair + canonical ID
  *   2. Identity is stored locally + registered in the UNS DHT
  *   3. Any app calls `authenticateUser(canonicalId)` → SSO session issued
- *   4. Session is a signed cert:SessionCertificate — tamper-evident, portable
+ *   4. Session is a signed cert:SessionCertificate. tamper-evident, portable
  *
  * The identity IS the login. The canonical ID IS the username.
  * No OAuth dance. No email verification. No password reset flow.
@@ -20,8 +20,8 @@
  *   app-sessions:{canonicalId}      → AppSessionIndex (all active sessions)
  *   usage:{canonicalId}:{appId}     → UsageRecord (time-weighted app usage)
  *
- * @see cert: namespace — session certificates
- * @see uns: namespace — identity registration
+ * @see cert: namespace. session certificates
+ * @see uns: namespace. identity registration
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -29,16 +29,16 @@ import { UnsKv } from "@/modules/uns/store/kv";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-/** The core identity record — a UOR data object like any other.
+/** The core identity record. a UOR data object like any other.
  *  Identity = f(attributes). The canonical ID is derived from the object's
  *  nouns (publicKeyFingerprint, algorithm, dateCreated) via URDNA2015 → SHA-256,
  *  exactly the same pipeline used for every datum, triad, and certificate. */
 export interface IdentityRecord {
   "@context"?: string;
   "@type": "uns:UniversalIdentity";
-  /** The permanent canonical ID — derived from the object's attributes. */
+  /** The permanent canonical ID. derived from the object's attributes. */
   "u:canonicalId": string;
-  /** Display name (optional, user-chosen — not part of canonical identity). */
+  /** Display name (optional, user-chosen. not part of canonical identity). */
   displayName?: string;
   /** When this identity was created (noun: temporal anchor). */
   "schema:dateCreated": string;
@@ -46,7 +46,7 @@ export interface IdentityRecord {
   "cert:publicKeyFingerprint": string;
   /** Post-quantum algorithm used (noun: algorithm class). */
   "cert:algorithm": "CRYSTALS-Dilithium-3";
-  /** Epistemic grade — always 'A' for Dilithium-3 identities. */
+  /** Epistemic grade. always 'A' for Dilithium-3 identities. */
   "derivation:epistemicGrade": "A";
   /** CIDv1 content address for IPFS pinning. */
   "store:uorCid"?: string;
@@ -54,7 +54,7 @@ export interface IdentityRecord {
   "u:ipv6"?: string;
 }
 
-/** A cross-app session — one login, valid across all apps. */
+/** A cross-app session. one login, valid across all apps. */
 export interface UniversalSession {
   "@type": "cert:SessionCertificate";
   /** Unique session ID (content-addressed). */
@@ -139,7 +139,7 @@ export class UniversalIdentityManager {
   ): Promise<IdentityRecord> {
     const now = new Date().toISOString();
 
-    // Identity is a data object — canonical ID = f(attributes)
+    // Identity is a data object. canonical ID = f(attributes)
     const identityPayload = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uns:UniversalIdentity",
@@ -178,7 +178,7 @@ export class UniversalIdentityManager {
   // ── SSO Sessions ──────────────────────────────────────────────────────
 
   /**
-   * Authenticate a user for an app — SSO across the entire platform.
+   * Authenticate a user for an app. SSO across the entire platform.
    *
    * If the user already has a valid session, it's reused.
    * If not, a new session is created and registered across all apps.
@@ -197,7 +197,7 @@ export class UniversalIdentityManager {
 
     for (const s of existing) {
       if (new Date(s.expiresAt) > now) {
-        // Existing session still valid — record usage and return
+        // Existing session still valid. record usage and return
         await this.recordUsage(identityCanonicalId, appId);
         return s;
       }
@@ -221,7 +221,7 @@ export class UniversalIdentityManager {
       sessionId: proof.derivationId,
       identityCanonicalId,
       originAppId: appId,
-      authorizedApps: "*", // Universal — valid for all apps
+      authorizedApps: "*", // Universal. valid for all apps
       issuedAt,
       expiresAt,
       sessionCid: proof.cid,

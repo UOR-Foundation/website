@@ -1,5 +1,5 @@
 /**
- * UOR Code Analyzer — lightweight TypeScript/JavaScript entity extraction.
+ * UOR Code Analyzer. lightweight TypeScript/JavaScript entity extraction.
  *
  * Extracts code entities (classes, functions, interfaces, variables)
  * and their relationships (imports, calls, extends, implements)
@@ -34,7 +34,7 @@ export interface AnalysisResult {
   sourceHash: string;
 }
 
-// SHA-256 — canonical single implementation
+// SHA-256. canonical single implementation
 import { sha256hex } from "@/lib/crypto";
 
 // ── Regex-based extraction ──────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 /**
- * UOR Closure modes — serializable data for UOR certification.
+ * UOR Closure modes. serializable data for UOR certification.
  * Defines the three trust levels an agent can request when traversing the graph.
  */
 

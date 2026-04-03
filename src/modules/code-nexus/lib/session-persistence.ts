@@ -1,5 +1,5 @@
 /**
- * Code Nexus — Session Persistence (Dehydration / Rehydration)
+ * Code Nexus. Session Persistence (Dehydration / Rehydration)
  * ════════════════════════════════════════════════════════════
  *
  * Saves and restores Code Nexus graph sessions via hologram_sessions.
@@ -58,7 +58,7 @@ export async function dehydrateSession(
     stats: store.stats(),
   };
 
-  // Upsert — if same session_cid exists, update it
+  // Upsert. if same session_cid exists, update it
   const { error } = await supabase.from("hologram_sessions").upsert(
     {
       user_id: userId,

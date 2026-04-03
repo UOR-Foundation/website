@@ -1,5 +1,5 @@
 /**
- * Whisper Engine — Self-Hosted In-Browser Speech-to-Text
+ * Whisper Engine. Self-Hosted In-Browser Speech-to-Text
  * ═══════════════════════════════════════════════════════
  *
  * High-quality STT powered by OpenAI's Whisper (tiny.en, ONNX),
@@ -49,7 +49,7 @@ const WHISPER_MODEL_ID = "onnx-community/whisper-tiny.en";
 const WHISPER_TASK = "automatic-speech-recognition";
 const TARGET_SAMPLE_RATE = 16000;
 
-// Model proxy is now in model-proxy.ts — imported dynamically during load
+// Model proxy is now in model-proxy.ts. imported dynamically during load
 
 // ── Audio Utilities ─────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ export class WhisperEngine {
       env.useBrowserCache = true;
       env.allowRemoteModels = true;
 
-      // Install universal model proxy — routes all HF fetches through our caching proxy
+      // Install universal model proxy. routes all HF fetches through our caching proxy
       const restoreFetch = installModelProxy();
 
       // ── vGPU Integration ──────────────────────────────────────────────

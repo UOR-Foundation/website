@@ -1,5 +1,5 @@
 /**
- * Opportunity Implementations — Comprehensive Test Suite
+ * Opportunity Implementations. Comprehensive Test Suite
  * ══════════════════════════════════════════════════════════
  *
  * Tests all 9 coherence gate opportunities:
@@ -42,7 +42,7 @@ const INPUT = makeInput();
 // 1. AGENT LIFECYCLE PIPELINE
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 1 — Agent Lifecycle Pipeline", () => {
+describe("Opportunity 1. Agent Lifecycle Pipeline", () => {
   const pipeline = buildAgentLifecyclePipeline(INPUT);
 
   it("has correct @type", () => {
@@ -89,7 +89,7 @@ describe("Opportunity 1 — Agent Lifecycle Pipeline", () => {
 // 2. UNIFIED AGENT CARD
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 2 — Unified Agent Card", () => {
+describe("Opportunity 2. Unified Agent Card", () => {
   const card = buildUnifiedAgentCard(INPUT);
 
   it("has correct @type", () => {
@@ -129,7 +129,7 @@ describe("Opportunity 2 — Unified Agent Card", () => {
 // 3. MULTI-LEDGER ANCHOR
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 3 — Multi-Ledger Anchor", () => {
+describe("Opportunity 3. Multi-Ledger Anchor", () => {
   const anchor = buildMultiLedgerAnchor(INPUT);
 
   it("has correct @type", () => {
@@ -161,7 +161,7 @@ describe("Opportunity 3 — Multi-Ledger Anchor", () => {
 // 4. SOCIAL DISCOVERY MESH
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 4 — Social Discovery Mesh", () => {
+describe("Opportunity 4. Social Discovery Mesh", () => {
   const mesh = buildSocialDiscoveryMesh(INPUT);
 
   it("has correct @type", () => {
@@ -196,7 +196,7 @@ describe("Opportunity 4 — Social Discovery Mesh", () => {
 // 5. UNIVERSAL NOTARIZATION
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 5 — Universal Notarization", () => {
+describe("Opportunity 5. Universal Notarization", () => {
   const nota = buildUniversalNotarization(INPUT);
 
   it("has correct @type", () => {
@@ -237,7 +237,7 @@ describe("Opportunity 5 — Universal Notarization", () => {
 // 6. POLYGLOT SUPPLY CHAIN
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 6 — Polyglot Supply Chain", () => {
+describe("Opportunity 6. Polyglot Supply Chain", () => {
   const chain = buildPolyglotSupplyChain(INPUT);
 
   it("has correct @type", () => {
@@ -281,7 +281,7 @@ describe("Opportunity 6 — Polyglot Supply Chain", () => {
 // 7. SMART CONTRACT INTEGRITY
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 7 — Smart Contract Integrity", () => {
+describe("Opportunity 7. Smart Contract Integrity", () => {
   const integrity = buildSmartContractIntegrity(INPUT);
 
   it("has correct @type", () => {
@@ -311,7 +311,7 @@ describe("Opportunity 7 — Smart Contract Integrity", () => {
 // 8. PROOF-CERTIFIED SOFTWARE
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 8 — Proof-Certified Software", () => {
+describe("Opportunity 8. Proof-Certified Software", () => {
   const proofs = buildProofCertifiedSoftware(INPUT);
 
   it("has correct @type", () => {
@@ -350,7 +350,7 @@ describe("Opportunity 8 — Proof-Certified Software", () => {
 // 9. SILICON-TO-CLOUD PROVENANCE
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("Opportunity 9 — Silicon-to-Cloud Provenance", () => {
+describe("Opportunity 9. Silicon-to-Cloud Provenance", () => {
   const s2c = buildSiliconToCloudProvenance(INPUT);
 
   it("has correct @type", () => {

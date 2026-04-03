@@ -6,20 +6,20 @@
  *
  * A raw certificate is a machine-readable JSON-LD document.
  * This module translates it into a format that humans can
- * understand at a glance — including the three-word coordinate
+ * understand at a glance. including the three-word coordinate
  * (triword) that serves as the memorable identity label.
  *
  * WHAT EACH FIELD MEANS:
  *
- *   subject     — What was certified (e.g., "project:hologram")
- *   triword     — Human-readable identity: "Meadow · Steep · Keep"
- *   coordinates — The three dimensions of the triword:
+ *   subject    . What was certified (e.g., "project:hologram")
+ *   triword    . Human-readable identity: "Meadow · Steep · Keep"
+ *   coordinates. The three dimensions of the triword:
  *                   Entity (who)  · Property (what) · Frame (where)
- *   fingerprint — The CID (content identifier) — the proof
- *   payload     — The original content in canonical form
- *   computedAt  — When the certificate was generated
- *   braille     — Visual encoding of the hash
- *   ipv6        — Network-routable content address
+ *   fingerprint. The CID (content identifier). the proof
+ *   payload    . The original content in canonical form
+ *   computedAt . When the certificate was generated
+ *   braille    . Visual encoding of the hash
+ *   ipv6       . Network-routable content address
  */
 
 import type { UorCertificate } from "./types";
@@ -61,7 +61,7 @@ export interface DecodedCertificate {
 /**
  * Decode a UOR certificate into human-readable fields.
  *
- * @param certificate — The raw UOR certificate
+ * @param certificate. The raw UOR certificate
  * @returns Decoded certificate with triword, coordinates, and all fields
  *
  * @example

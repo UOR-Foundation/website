@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Operation Composition
+ * UOR v2.0.0. Operation Composition
  *
  * Implements the critical composition law: neg ∘ bnot = succ
  * and provides a general unary composition helper.

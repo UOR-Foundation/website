@@ -1,5 +1,5 @@
 /**
- * UOR Knowledge Graph Store — persistent dual-addressed storage.
+ * UOR Knowledge Graph Store. persistent dual-addressed storage.
  *
  * Supabase for structured data + UOR IRIs for identity.
  * JSON-LD remains the canonical format; this module persists

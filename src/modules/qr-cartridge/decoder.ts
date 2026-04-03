@@ -1,5 +1,5 @@
 /**
- * QR Cartridge — Decoder
+ * QR Cartridge. Decoder
  *
  * Parses a scanned QR code payload back into its UOR identity components.
  *

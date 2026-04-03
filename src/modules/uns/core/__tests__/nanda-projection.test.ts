@@ -36,7 +36,7 @@ describe("NANDA Hologram Projections", () => {
   it("NANDA projections share same hash as all others", () => {
     const idx = project(MOCK_INPUT, "nanda-index").value.split(":").pop()!;
     const did = project(MOCK_INPUT, "did").value.split(":").pop()!;
-    // nanda-index embeds full hex, did embeds CID — both from same source
+    // nanda-index embeds full hex, did embeds CID. both from same source
     expect(idx).toBe(MOCK_INPUT.hex);
     expect(did).toBe(MOCK_INPUT.cid);
   });

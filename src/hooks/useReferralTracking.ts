@@ -1,5 +1,5 @@
 /**
- * useReferralTracking — reads ?ref= from URL, tracks clicks & signup attribution.
+ * useReferralTracking. reads ?ref= from URL, tracks clicks & signup attribution.
  *
  * Drop this hook once at the app root. It:
  * 1. On first visit with ?ref=CODE, stores the code and fires a click event.

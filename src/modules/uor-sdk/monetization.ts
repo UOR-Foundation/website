@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Monetization Layer
+ * UOR SDK. Monetization Layer
  *
  * Certificate-gated payments with provider-agnostic revenue share.
  * Payment triggers cert:TransformCertificate issuance → certificate IS
@@ -15,8 +15,8 @@
  *   balance:{appCanonicalId}          → DeveloperBalance
  *   access:{userCanonicalId}:{appCanonicalId} → AccessCertificate[]
  *
- * @see cert: namespace — UOR certificate standard
- * @see morphism: namespace — gated endpoint types
+ * @see cert: namespace. UOR certificate standard
+ * @see morphism: namespace. gated endpoint types
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -95,7 +95,7 @@ export class MonetizationEngine {
    * Process a payment and issue an access certificate.
    *
    * Provider-agnostic: accepts any PaymentProof (Stripe, crypto, x402, etc.).
-   * The certificate is the entitlement — stored under the user's access key.
+   * The certificate is the entitlement. stored under the user's access key.
    */
   async processPayment(
     appCanonicalId: string,
@@ -141,7 +141,7 @@ export class MonetizationEngine {
 
     // 4. Issue cert:TransformCertificate
     // Hash the semantic payload (without @context/@type to avoid JSON-LD
-    // safe-mode expansion — singleProofHash wraps plain objects correctly).
+    // safe-mode expansion. singleProofHash wraps plain objects correctly).
     const certSemantics = {
       subject: userCanonicalId,
       issuer: appCanonicalId,

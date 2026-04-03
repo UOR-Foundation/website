@@ -1,5 +1,5 @@
 /**
- * UOR Observable Module — observable: namespace implementation.
+ * UOR Observable Module. observable: namespace implementation.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for content-addressing.
  * Each observable is content-addressed and grounded in the ring algebra.

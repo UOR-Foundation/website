@@ -1,5 +1,5 @@
 /**
- * Canonical Namespace Barrels — the 14 UOR namespaces.
+ * Canonical Namespace Barrels. the 14 UOR namespaces.
  *
  * These are the CANONICAL import paths for ontological consumers.
  * Non-ontological modules (UI, infra) import from their module dirs directly.

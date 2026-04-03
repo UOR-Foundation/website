@@ -19,7 +19,7 @@ export type { UpgradeResult } from "./upgrader";
 // ── UI Components ───────────────────────────────────────────────────────────
 export { EpistemicBadge, EpistemicGradeLegend } from "./components/EpistemicBadge";
 
-// ── Grade Engine (P22 — first-class trust primitive) ────────────────────────
+// ── Grade Engine (P22. first-class trust primitive) ────────────────────────
 export {
   GRADE_DEFINITIONS,
   assignGrade,

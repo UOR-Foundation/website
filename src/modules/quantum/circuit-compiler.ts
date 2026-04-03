@@ -1,5 +1,5 @@
 /**
- * Quantum Circuit Compiler — Phase 15
+ * Quantum Circuit Compiler. Phase 15
  * ════════════════════════════════════
  *
  * Compiles high-level quantum algorithms into Atlas gate sequences,

@@ -5,10 +5,10 @@
  * Visualizes the UOR holographic principle applied to the Bitcoin-Zcash
  * duality: one SHA-256 identity projected simultaneously into:
  *   - Bitcoin OP_RETURN (public, L1)
- *   - Zcash Transparent (public, L1 — identical to Bitcoin)
+ *   - Zcash Transparent (public, L1. identical to Bitcoin)
  *   - Zcash Shielded Memo (private, encrypted)
  *
- * This demonstrates that identity doesn't change — only visibility does.
+ * This demonstrates that identity doesn't change. only visibility does.
  */
 
 import { useState, useCallback, useMemo } from "react";
@@ -144,7 +144,7 @@ function ZcashDualityPage() {
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               One UOR identity, two visibility modes. The same SHA-256 hash anchors
               a public proof on Bitcoin/Zcash transparent and a private proof in
-              Zcash's encrypted memo field — identity doesn't change, only visibility does.
+              Zcash's encrypted memo field. identity doesn't change, only visibility does.
             </p>
           </div>
 
@@ -311,7 +311,7 @@ function ZcashDualityPage() {
                         <span className="inline-flex px-2 py-0.5 rounded-md text-xs font-mono font-bold border bg-destructive/10 text-destructive border-destructive/30 shrink-0">f5</span>
                         <div>
                           <span className="text-sm font-bold text-foreground">Memo Type</span>
-                          <p className="text-xs text-muted-foreground">ZIP-302 "no particular meaning" — avoids text collision</p>
+                          <p className="text-xs text-muted-foreground">ZIP-302 "no particular meaning". avoids text collision</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
@@ -332,7 +332,7 @@ function ZcashDualityPage() {
                         <span className="inline-flex px-2 py-0.5 rounded-md text-xs font-mono font-bold border bg-muted text-foreground border-border shrink-0 max-w-[140px] truncate">{activeHex?.slice(0, 12)}…</span>
                         <div>
                           <span className="text-sm font-bold text-foreground">SHA-256 Identity</span>
-                          <p className="text-xs text-muted-foreground">The same 256-bit UOR hash — encrypted at rest</p>
+                          <p className="text-xs text-muted-foreground">The same 256-bit UOR hash. encrypted at rest</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
@@ -416,12 +416,12 @@ function ZcashDualityPage() {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       Zcash is the only blockchain that implements <strong className="text-foreground">base-layer duality</strong>:
                       a single transaction can exist simultaneously as public (transparent t-address) and private
-                      (shielded z-address). UOR maps naturally to this architecture — the <strong className="text-foreground">same 256-bit identity</strong>{" "}
+                      (shielded z-address). UOR maps naturally to this architecture. the <strong className="text-foreground">same 256-bit identity</strong>{" "}
                       anchors both modes. The transparent OP_RETURN is <em>byte-identical</em> to Bitcoin's,
                       proving that Zcash's transparent layer IS Bitcoin script. The shielded memo carries the
                       same identity into privacy via{" "}
                       <code className="font-mono text-xs px-1 py-0.5 rounded bg-muted">ZIP-302</code> encryption.
-                      Identity doesn't change — only its visibility does.
+                      Identity doesn't change. only its visibility does.
                     </p>
                     <div className="flex items-center gap-4 mt-3 text-xs font-mono">
                       <Tooltip>

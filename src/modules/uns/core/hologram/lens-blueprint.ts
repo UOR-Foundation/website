@@ -1,5 +1,5 @@
 /**
- * Lens Blueprint — Serializable, Content-Addressed Lens Circuits
+ * Lens Blueprint. Serializable, Content-Addressed Lens Circuits
  * ═══════════════════════════════════════════════════════════════
  *
  * A LensBlueprint is a fully serializable representation of a HolographicLens.
@@ -12,7 +12,7 @@
  * contain element *specifications* (serializable). An element registry maps
  * specifications back to live functions at instantiation time.
  *
- * This makes lenses into shareable, composable, content-addressed objects —
+ * This makes lenses into shareable, composable, content-addressed objects.
  * effectively programs that run on any UOR-compatible system.
  *
  * @module uns/core/hologram/lens-blueprint
@@ -41,7 +41,7 @@ import {
 export interface ElementSpec {
   /** Element ID (unique within the blueprint). */
   readonly id: string;
-  /** Element kind — maps to a registered factory in the element registry. */
+  /** Element kind. maps to a registered factory in the element registry. */
   readonly kind: string;
   /** Optional configuration passed to the factory. */
   readonly config?: Record<string, unknown>;
@@ -56,7 +56,7 @@ export interface ElementSpec {
 }
 
 /**
- * The complete LensBlueprint — a serializable, content-addressed lens circuit.
+ * The complete LensBlueprint. a serializable, content-addressed lens circuit.
  *
  * This is the "schematic" of a lens. It can be:
  *   - Serialized to JSON and stored anywhere
@@ -150,7 +150,7 @@ export function isKindRegistered(kind: string): boolean {
  * These are available in every UOR environment.
  */
 function registerBuiltins(): void {
-  // identity: passthrough — useful as a placeholder or entry point
+  // identity: passthrough. useful as a placeholder or entry point
   registerElementFactory("identity", (spec) =>
     element(spec.id, async (input) => input, "identity", async (input) => input)
   );
@@ -472,7 +472,7 @@ export function createBlueprint(spec: {
 }
 
 /**
- * Grind a blueprint — compute its permanent UOR address.
+ * Grind a blueprint. compute its permanent UOR address.
  *
  * Same elements + same config + same version = same address. Forever.
  * This IS the content-addressed identity of the lens-as-object.
@@ -494,7 +494,7 @@ export async function grindBlueprint(
  * Instantiate a blueprint into a live, executable HolographicLens.
  *
  * Resolves each ElementSpec through the element registry to produce
- * live LensElement objects. Unknown kinds are logged but don't fail —
+ * live LensElement objects. Unknown kinds are logged but don't fail.
  * the lens gracefully degrades.
  */
 export function instantiateBlueprint(blueprint: LensBlueprint): InstantiatedLens {

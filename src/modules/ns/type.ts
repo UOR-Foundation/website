@@ -1,8 +1,8 @@
 /**
- * type: namespace — unified barrel export.
+ * type: namespace. unified barrel export.
  *
  * Consolidates: kg-store + code-kg
- * User Space — knowledge graph storage and code-to-graph projection.
+ * User Space. knowledge graph storage and code-to-graph projection.
  *
  * @namespace type:
  * @version 2.0.0

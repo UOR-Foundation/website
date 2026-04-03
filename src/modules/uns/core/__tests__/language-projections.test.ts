@@ -427,7 +427,7 @@ describe("Complete Language Hologram Projections (75 languages + 30 markup/confi
 
   // ── Coherence gate purity ─────────────────────────────────────────────
 
-  it("coherence gate is pure — two calls produce identical counts", () => {
+  it("coherence gate is pure. two calls produce identical counts", () => {
     const a = coherenceGate();
     const b = coherenceGate();
     expect(a.totalProjections).toBe(b.totalProjections);

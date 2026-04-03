@@ -1,15 +1,15 @@
 /**
- * UOR v2.0.0 — Inference Accelerator
+ * UOR v2.0.0. Inference Accelerator
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Six-tier acceleration architecture that makes inference feel instant:
  *
- *   L0   In-Memory LRU Cache     — 0ms, exact fingerprint match
- *   L0.5 Semantic Similarity     — <0.1ms, trigram cosine nearest-neighbor
- *   L1   Scaffold Memoization    — 0ms, deterministic pure function cache  
- *   L2   LUT-Accelerated Hash    — <0.1ms via Z/256Z ring lookups
- *   L3   Speculative Prefetch    — pre-warm cache while user types
- *   L4   Streaming Optimizer     — rAF-batched token emission at 60fps
+ *   L0   In-Memory LRU Cache    . 0ms, exact fingerprint match
+ *   L0.5 Semantic Similarity    . <0.1ms, trigram cosine nearest-neighbor
+ *   L1   Scaffold Memoization   . 0ms, deterministic pure function cache  
+ *   L2   LUT-Accelerated Hash   . <0.1ms via Z/256Z ring lookups
+ *   L3   Speculative Prefetch   . pre-warm cache while user types
+ *   L4   Streaming Optimizer    . rAF-batched token emission at 60fps
  *
  * Key insight: The Holographic Principle applied to inference itself.
  * Every computation is a projection of a content-addressed canonical form.
@@ -25,7 +25,7 @@ import { SemanticIndex } from "./semantic-similarity";
 import { structuralFingerprint, ConversationalTermEvolver } from "./symbolica-enhancements";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// L0 — In-Memory LRU Cache (zero latency)
+// L0. In-Memory LRU Cache (zero latency)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -33,7 +33,7 @@ import { structuralFingerprint, ConversationalTermEvolver } from "./symbolica-en
  * repeated queries. Populated on first DB hit, stays warm for the
  * entire session lifetime.
  *
- * Capacity: 256 entries (one per ring element — algebraically natural).
+ * Capacity: 256 entries (one per ring element. algebraically natural).
  */
 export class InferenceL0Cache {
   private readonly cache = new Map<string, { output: string; grade: string; ts: number }>();
@@ -78,7 +78,7 @@ export class InferenceL0Cache {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// L1 — Scaffold Memoization (deterministic function cache)
+// L1. Scaffold Memoization (deterministic function cache)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -105,7 +105,7 @@ export function memoizedBuildScaffold(query: string, quantum: number = 0): Symbo
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// L2 — LUT-Accelerated Hashing (constant-time via ring lookups)
+// L2. LUT-Accelerated Hashing (constant-time via ring lookups)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -117,14 +117,14 @@ export function memoizedBuildScaffold(query: string, quantum: number = 0): Symbo
  * (the full content-addressed hash is still used for DB storage).
  */
 export function lutFingerprint(query: string): string {
-  // FNV-1a 32-bit — pass 1 (standard)
+  // FNV-1a 32-bit. pass 1 (standard)
   let h1 = 0x811c9dc5;
   for (let i = 0; i < query.length; i++) {
     h1 ^= query.charCodeAt(i);
     h1 = Math.imul(h1, 0x01000193);
   }
 
-  // FNV-1a 32-bit — pass 2 (different seed for independence)
+  // FNV-1a 32-bit. pass 2 (different seed for independence)
   let h2 = 0x6384BA69;
   for (let i = query.length - 1; i >= 0; i--) {
     h2 ^= query.charCodeAt(i);
@@ -137,7 +137,7 @@ export function lutFingerprint(query: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// L3 — Speculative Prefetch (predict while typing)
+// L3. Speculative Prefetch (predict while typing)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -190,7 +190,7 @@ export class SpeculativePrefetcher {
       // Check if we already have all claims in L0
       const l0Hits = claims.filter(c => this.l0.get(c.claimHash) !== null);
       if (l0Hits.length === claims.length) {
-        // Full L0 hit — no DB fetch needed
+        // Full L0 hit. no DB fetch needed
         this.prefetchedResult = { query, scaffold, claims, lookup: null };
         return;
       }
@@ -205,7 +205,7 @@ export class SpeculativePrefetcher {
 
       this.prefetchedResult = { query, scaffold, claims, lookup };
     } catch {
-      // Abort or error — silently ignore
+      // Abort or error. silently ignore
     }
   }
 
@@ -233,7 +233,7 @@ export class SpeculativePrefetcher {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// L4 — Streaming Optimizer (60fps token emission)
+// L4. Streaming Optimizer (60fps token emission)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -316,7 +316,7 @@ export function streamOptimized(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Unified Accelerator — Orchestrates all tiers
+// Unified Accelerator. Orchestrates all tiers
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface AcceleratedResult {
@@ -355,7 +355,7 @@ export class InferenceAccelerator {
 
   /**
    * Resolve a query through the acceleration tiers.
-   * Returns as fast as possible — L0 in <0.1ms, L2 in ~50ms.
+   * Returns as fast as possible. L0 in <0.1ms, L2 in ~50ms.
    */
   async resolve(query: string, quantum: number = 0): Promise<AcceleratedResult> {
     const start = performance.now();
@@ -439,7 +439,7 @@ export class InferenceAccelerator {
       };
     }
 
-    // Partial or full miss — caller handles LLM
+    // Partial or full miss. caller handles LLM
     return {
       text: null,
       source: "miss",

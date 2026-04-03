@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Semantic Similarity Engine
+ * UOR v2.0.0. Semantic Similarity Engine
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Zero-dependency, constant-time semantic similarity via character n-gram
@@ -11,7 +11,7 @@
  *   3. Compare: cosine similarity in O(min(|A|,|B|)) via sparse dot product
  *
  * This enables queries like "What is UOR?" and "Explain UOR" to share
- * the same cached response — the semantic core ("UOR") dominates both vectors.
+ * the same cached response. the semantic core ("UOR") dominates both vectors.
  *
  * Performance: <0.05ms per comparison (pure arithmetic, no allocations in hot path)
  *
@@ -19,7 +19,7 @@
  */
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Stopword Set (English, minimal — keeps domain terms intact)
+// Stopword Set (English, minimal. keeps domain terms intact)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const STOPWORDS = new Set([

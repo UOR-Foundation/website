@@ -1,5 +1,5 @@
 /**
- * UOR JSON-LD Validator — structural validation for W3C JSON-LD 1.1 compliance.
+ * UOR JSON-LD Validator. structural validation for W3C JSON-LD 1.1 compliance.
  *
  * Validates that emitted documents conform to the UOR ontology:
  *   1. @context is present and correctly typed

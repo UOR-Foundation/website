@@ -1,5 +1,5 @@
 /**
- * UNS Trust — Zero Trust Authentication (Phase 4-A)
+ * UNS Trust. Zero Trust Authentication (Phase 4-A)
  *
  * Challenge-response authentication using Dilithium-3.
  * No CA. No certificate chain. The ring arithmetic is the CA.
@@ -9,13 +9,13 @@
  *   2. Server issues nonce + challengeId
  *   3. Client signs SHA-256(nonce || identityCanonicalId)
  *   4. Server verifies via public key lookup → issues UnsSession
- *   5. Session is Dilithium-3 signed — tamper-evident
+ *   5. Session is Dilithium-3 signed. tamper-evident
  */
 
 import { singleProofHash } from "../core/identity";
 import { sha256 } from "../core/address";
 import type { UnsKeypair, SignatureBlock } from "../core/keypair";
-// @ts-ignore — noble/post-quantum uses .js exports
+// @ts-ignore. noble/post-quantum uses .js exports
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ export interface UnsSession {
   issuedAt: string;
   expiresAt: string;
   "cert:signature": SignatureBlock;
-  /** P22: Epistemic grade — 'A' for Dilithium-3 authenticated sessions. */
+  /** P22: Epistemic grade. 'A' for Dilithium-3 authenticated sessions. */
   epistemic_grade: "A";
   epistemic_grade_label: string;
   "derivation:derivationId": string;
@@ -204,7 +204,7 @@ export class UnsAuthServer {
       },
       // P22: Dilithium-3 authenticated session is Grade A
       epistemic_grade: "A",
-      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
       "derivation:derivationId": identity["u:canonicalId"],
     };
   }
@@ -216,7 +216,7 @@ function bytesToHex(b: Uint8Array): string {
   return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-/** Sign challenge bytes with a client keypair — used by authenticating clients. */
+/** Sign challenge bytes with a client keypair. used by authenticating clients. */
 export async function signChallenge(
   challenge: UnsChallenge,
   clientKeypair: UnsKeypair

@@ -1,5 +1,5 @@
 /**
- * Souriau Thermodynamics Panel — Phase 20 (Neeb–Fré Upgrade)
+ * Souriau Thermodynamics Panel. Phase 20 (Neeb–Fré Upgrade)
  * ═══════════════════════════════════════════════════════════
  *
  * Visualizes the full Souriau–Neeb–Fré framework:
@@ -156,7 +156,7 @@ export default function SouriauThermodynamicsPanel() {
           <div className="bg-[hsla(210,10%,8%,0.8)] border border-[hsla(210,10%,25%,0.3)] rounded-lg p-5 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[hsl(200,60%,50%)] via-[hsl(280,60%,50%)] to-[hsl(0,60%,50%)] opacity-30" />
             <div className="text-[10px] font-mono text-[hsl(210,10%,50%)] uppercase mb-3 flex justify-between">
-              <span>Entropy Production dS/dt — Gibbs Ensemble on 𝒪_γ</span>
+              <span>Entropy Production dS/dt. Gibbs Ensemble on 𝒪_γ</span>
               <span>Ω_T : Positive Weyl Chamber</span>
             </div>
             <div className="h-[140px] flex items-end gap-[2px] relative">
@@ -232,11 +232,11 @@ export default function SouriauThermodynamicsPanel() {
             </div>
           </div>
 
-          {/* Information Capacity Φ — Bekenstein-Hawking */}
+          {/* Information Capacity Φ. Bekenstein-Hawking */}
           <div className="bg-[hsla(160,15%,10%,0.5)] border border-[hsla(160,25%,25%,0.4)] rounded-lg p-4">
             <div className="text-[10px] font-mono text-[hsl(160,60%,60%)] uppercase mb-3 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Shield size={12} /> Information Capacity Φ — Bekenstein-Hawking Bound
+                <Shield size={12} /> Information Capacity Φ. Bekenstein-Hawking Bound
               </span>
               <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                 state.informationCapacity.saturated
@@ -337,7 +337,7 @@ export default function SouriauThermodynamicsPanel() {
               </div>
               <p className="text-[9px] font-mono text-[hsl(0,20%,70%)] leading-relaxed">
                 Landauer: erasing bits exits the Weyl chamber Ω_T. The Fenchel-Legendre transform
-                becomes non-invertible. Cost = k_B T ln2 per bit — the "thermodynamic floor."
+                becomes non-invertible. Cost = k_B T ln2 per bit. the "thermodynamic floor."
               </p>
             </div>
           </div>

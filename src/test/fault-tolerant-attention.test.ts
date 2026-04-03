@@ -1,5 +1,5 @@
 /**
- * Fault-Tolerant Quantum Attention — Verification Suite
+ * Fault-Tolerant Quantum Attention. Verification Suite
  * ═════════════════════════════════════════════════════════
  *
  * Proves that attention heads wrapped in the [[96,48,2]] stabilizer code
@@ -19,7 +19,7 @@ import { runPipeline } from "@/modules/quantum/atlas-compilation-pipeline";
 // Part I: Single Head FT Compilation
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Fault-Tolerant Attention — Single Head", () => {
+describe("Fault-Tolerant Attention. Single Head", () => {
   let ft: FTAttentionCircuit;
 
   it("compiles LLaMA-7B head 0 without error", () => {
@@ -126,7 +126,7 @@ describe("FT QASM Emission", () => {
 // Part III: Internal Verification
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("FT Verification — All 15 Tests", () => {
+describe("FT Verification. All 15 Tests", () => {
   it("all 15 internal verification tests pass", () => {
     const ft = compileFTAttention({
       model: "LLaMA-7B",
@@ -138,7 +138,7 @@ describe("FT Verification — All 15 Tests", () => {
     });
     const v = verifyFTAttention(ft);
     for (const t of v.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(v.allPassed).toBe(true);
     expect(v.tests.length).toBe(15);

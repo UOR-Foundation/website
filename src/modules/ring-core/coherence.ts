@@ -4,7 +4,7 @@
  * Implements exhaustive algebraic verification for Q0 (Z/256Z).
  * All 8 coherence laws are checked for every element of the ring.
  *
- * Throws CoherenceError on any failure — no computation should proceed
+ * Throws CoherenceError on any failure. no computation should proceed
  * until verify() passes (UOR specification requirement R4).
  *
  * Delegates to UORRing for all operations to ensure consistency.

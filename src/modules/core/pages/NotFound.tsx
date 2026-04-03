@@ -14,7 +14,7 @@ const NotFound = () => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname, location.search, location.hash]);
 
-  // Don't render 404 UI for OAuth paths — we're redirecting
+  // Don't render 404 UI for OAuth paths. we're redirecting
   if (location.pathname.startsWith("/~oauth")) {
     return null;
   }

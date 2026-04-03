@@ -1,5 +1,5 @@
 /**
- * IntelligencePanel — Natural language query interface for Code Nexus.
+ * IntelligencePanel. Natural language query interface for Code Nexus.
  *
  * Ask questions about your codebase in plain English.
  * The AI interprets, the graph executes, results appear inline.

@@ -1,11 +1,11 @@
 /**
- * TINN — Thermodynamics-Informed Neural Network Layer
+ * TINN. Thermodynamics-Informed Neural Network Layer
  * ════════════════════════════════════════════════════
  *
  * Implements a metriplectic neural network layer that STRUCTURALLY enforces:
  *
- *   dE/dt = 0   (energy conservation — symplectic bracket)
- *   dS/dt ≥ 0   (entropy production — metric bracket)
+ *   dE/dt = 0   (energy conservation. symplectic bracket)
+ *   dS/dt ≥ 0   (entropy production. metric bracket)
  *
  * via the metriplectic bracket decomposition from Barbaresco's framework:
  *
@@ -237,7 +237,7 @@ function computeEntropy(z: number[], souriau: SouriauState): number {
 }
 
 /**
- * Compute ∇E(z) — the energy gradient.
+ * Compute ∇E(z). the energy gradient.
  * ∇E_i = Q_i (linear in z for Souriau's framework)
  */
 function gradEnergy(z: number[], souriau: SouriauState): number[] {
@@ -246,7 +246,7 @@ function gradEnergy(z: number[], souriau: SouriauState): number[] {
 }
 
 /**
- * Compute ∇S(z) — the entropy gradient.
+ * Compute ∇S(z). the entropy gradient.
  * ∇S_i = g_ii z_i (from the quadratic Fisher-Rao form)
  */
 function gradEntropy(z: number[], souriau: SouriauState): number[] {
@@ -453,7 +453,7 @@ function checkInvariants(
     },
     {
       name: "Metriplectic bracket decomposition",
-      description: "ẋ = {x,E} + (x,S) — Hamiltonian + Onsager split",
+      description: "ẋ = {x,E} + (x,S). Hamiltonian + Onsager split",
       holds: decomps.every(d => d.conservative.length === d.dissipative.length),
       value: decomps.length,
       evidence: `${decomps.length} steps decomposed into conservative + dissipative`,
@@ -463,7 +463,7 @@ function checkInvariants(
       description: "M sourced from Souriau's g_ij = ∂²logZ/∂β_i∂β_j",
       holds: summary.fisherRaoTrace > 0,
       value: summary.fisherRaoTrace,
-      evidence: `Tr(g_FR) = ${summary.fisherRaoTrace.toFixed(4)} — Onsager metric informing dissipation`,
+      evidence: `Tr(g_FR) = ${summary.fisherRaoTrace.toFixed(4)}. Onsager metric informing dissipation`,
     },
   ];
 }

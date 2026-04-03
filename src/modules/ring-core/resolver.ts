@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Resolver State Machine
+ * UOR v2.0.0. Resolver State Machine
  *
  * Implements the resolution lifecycle:
  *   Unresolved → Partial → Resolved → Certified

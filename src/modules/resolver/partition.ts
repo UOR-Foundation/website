@@ -1,5 +1,5 @@
 /**
- * UOR Partition Engine — computes the four disjoint partition sets of a ring.
+ * UOR Partition Engine. computes the four disjoint partition sets of a ring.
  *
  * Every element falls into exactly one of:
  *   - UnitSet: invertible elements (odd numbers, coprime to 2^n)

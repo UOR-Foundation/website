@@ -1,9 +1,9 @@
 /**
- * WhisperVadWakeWordEngine — Sovereign Whisper-based Wake Word Fallback
+ * WhisperVadWakeWordEngine. Sovereign Whisper-based Wake Word Fallback
  * ════════════════════════════════════════════════════════════════════
  *
  * Uses client-side Whisper transcription on short audio windows to detect
- * wake phrases. No API keys required — fully sovereign.
+ * wake phrases. No API keys required. fully sovereign.
  *
  * Trade-offs vs Porcupine:
  *   - Higher latency (~2-3s vs <20ms)

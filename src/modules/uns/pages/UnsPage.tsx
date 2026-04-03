@@ -38,7 +38,7 @@ const UnsPage = () => {
               {
                 title: "Zone Management",
                 description:
-                  "Create and manage zones. Each zone has its own address space and verifies itself — no external certificate authority needed.",
+                  "Create and manage zones. Each zone has its own address space and verifies itself. no external certificate authority needed.",
                 endpoint: "/uns/zones",
               },
               {

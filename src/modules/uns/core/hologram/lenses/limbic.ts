@@ -1,10 +1,10 @@
 /**
- * Limbic Lens — Emotional Memory Through Coherence
+ * Limbic Lens. Emotional Memory Through Coherence
  * ═══════════════════════════════════════════════════
  *
  * The limbic system of the hologram: every memory is tagged with
  * an emotional fingerprint derived from the coherence field at
- * write time. Retrieval weights memories by emotional resonance —
+ * write time. Retrieval weights memories by emotional resonance.
  * not just semantic similarity.
  *
  * The key mathematical insight:
@@ -15,7 +15,7 @@
  *   Arousal   ↔  φ       (observer attention intensity)
  *   Dominance ↔  zone    (convergent = agency, divergent = submission)
  *
- * We don't bolt on a separate emotion system — the Holographic Surface
+ * We don't bolt on a separate emotion system. the Holographic Surface
  * already computes an emotional state as a natural byproduct of
  * coherence tracking. Emotion IS the curvature of the coherence field.
  *
@@ -62,7 +62,7 @@ export interface EmotionalMemory {
 }
 
 /**
- * Affective Link Score result — emotion-weighted similarity.
+ * Affective Link Score result. emotion-weighted similarity.
  */
 export interface AffectiveLinkScore {
   readonly memoryCid: string;
@@ -116,7 +116,7 @@ export function deriveVAD(
 
 /**
  * Compute emotional intensity from a VAD vector.
- * This is the "magnitude" of the emotion — how strongly felt.
+ * This is the "magnitude" of the emotion. how strongly felt.
  * 
  * intensity = √(valence² + (arousal - 0.5)² + (dominance - 0.5)²)
  * 
@@ -312,7 +312,7 @@ const LIMBIC_ELEMENTS: ElementSpec[] = [
   {
     id: "adjust-importance",
     kind: "importance-adjuster",
-    description: "Scale memory importance by emotional intensity — vivid memories persist",
+    description: "Scale memory importance by emotional intensity. vivid memories persist",
   },
   {
     id: "affective-rank",
@@ -325,7 +325,7 @@ const LIMBIC_ELEMENTS: ElementSpec[] = [
 ];
 
 /**
- * The Limbic Lens Blueprint — emotional memory through coherence.
+ * The Limbic Lens Blueprint. emotional memory through coherence.
  *
  * Pipeline: Content → VAD Extraction → Classification → Importance Adjustment → Affective Retrieval
  */

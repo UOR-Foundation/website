@@ -1,4 +1,4 @@
-// Core module barrel export — public API only
+// Core module barrel export. public API only
 export { default as Layout } from "./components/Layout";
 export { default as AboutPage } from "./pages/AboutPage";
 export { default as NotFoundPage } from "./pages/NotFound";
@@ -23,7 +23,7 @@ export { default as UorMetadata } from "./components/UorMetadata";
 // Types
 export type { ModuleManifest, NavItem, ModuleRouteConfig, LayoutProps, ModuleIdentityFields, UorCertificateContract } from "./types";
 
-// UorModule<T> — Generic module lifecycle base
+// UorModule<T>. Generic module lifecycle base
 export { UorModule } from "./uor-module";
 export type {
   CoherenceZone as ModuleZone,

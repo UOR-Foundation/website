@@ -1,5 +1,5 @@
 /**
- * TrustTrendBar — Compact conversation-level trust trend visualization.
+ * TrustTrendBar. Compact conversation-level trust trend visualization.
  *
  * Shows a horizontal sequence of grade dots for each assistant message,
  * revealing how trust evolves across follow-ups. Collapses to a single

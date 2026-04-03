@@ -1,5 +1,5 @@
 /**
- * Atlas Observer Bridge — Phase 4 Test Suite
+ * Atlas Observer Bridge. Phase 4 Test Suite
  */
 
 import { describe, it, expect } from "vitest";

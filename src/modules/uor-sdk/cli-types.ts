@@ -1,11 +1,11 @@
 /**
- * UOR SDK — App CLI Types
+ * UOR SDK. App CLI Types
  *
  * Structured result types for the `uor-app` CLI command engine.
  * Every command returns a CliResult with exit code, human-readable
  * stdout, and machine-parseable JSON.
  *
- * @see uns/cli/commands.ts — UNS CLI (lower-level network commands)
+ * @see uns/cli/commands.ts. UNS CLI (lower-level network commands)
  */
 
 // ── CLI Result ──────────────────────────────────────────────────────────────

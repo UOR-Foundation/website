@@ -1,5 +1,5 @@
 /**
- * Donation project data — serializable for UOR certification.
+ * Donation project data. serializable for UOR certification.
  */
 import { DONATE_URL } from "./external-links";
 

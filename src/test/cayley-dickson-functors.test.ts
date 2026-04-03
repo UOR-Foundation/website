@@ -1,5 +1,5 @@
 /**
- * Cayley-Dickson Functor Chain — Test Suite
+ * Cayley-Dickson Functor Chain. Test Suite
  * ══════════════════════════════════════════
  *
  * Verifies the Cayley-Dickson tower as a chain of adjunctions F ⊣ U
@@ -23,7 +23,7 @@ import {
 // Part I: Free Functor
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Free Functor — Cayley-Dickson Doubling", () => {
+describe("Free Functor. Cayley-Dickson Doubling", () => {
   it("F₀: ℝ(1D) → ℂ(2D)", () => {
     const f = constructFreeFunctor(0);
     expect(f.sourceDim).toBe(1);
@@ -77,7 +77,7 @@ describe("Free Functor — Cayley-Dickson Doubling", () => {
 // Part II: Forgetful Functor
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Forgetful Functor — Projection", () => {
+describe("Forgetful Functor. Projection", () => {
   it("U₀: ℂ(2D) → ℝ(1D)", () => {
     const u = constructForgetfulFunctor(0);
     expect(u.apply([3.5, 2.1])).toEqual([3.5]);
@@ -108,7 +108,7 @@ describe("Forgetful Functor — Projection", () => {
       // Element with all imaginary parts set
       const elem = Array.from({ length: dim }, (_, i) => i < half ? 0 : 99);
       const result = u.apply(elem);
-      // All zeros — imaginary part forgotten
+      // All zeros. imaginary part forgotten
       expect(result).toEqual(zero(half));
     }
   });
@@ -118,7 +118,7 @@ describe("Forgetful Functor — Projection", () => {
 // Part III: Round-Trip (U ∘ F = Id)
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Round-Trip — U∘F = Identity", () => {
+describe("Round-Trip. U∘F = Identity", () => {
   it("U∘F is identity at every level", () => {
     for (let level = 0; level < 4; level++) {
       const f = constructFreeFunctor(level);
@@ -141,10 +141,10 @@ describe("Round-Trip — U∘F = Identity", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part IV: Adjunction — Triangle Identities
+// Part IV: Adjunction. Triangle Identities
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Adjunction — Triangle Identities", () => {
+describe("Adjunction. Triangle Identities", () => {
   it("all 4 adjunctions are valid", () => {
     for (let level = 0; level < 4; level++) {
       const adj = constructAdjunction(level);
@@ -182,7 +182,7 @@ describe("Adjunction — Triangle Identities", () => {
 // Part V: Properties Lost at Each Doubling
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Properties Lost — Cayley-Dickson Degradation", () => {
+describe("Properties Lost. Cayley-Dickson Degradation", () => {
   it("ℝ→ℂ loses ordering", () => {
     const adj = constructAdjunction(0);
     expect(adj.propertyLost).toContain("Ordering");

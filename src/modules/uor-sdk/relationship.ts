@@ -1,13 +1,13 @@
 /**
- * UOR SDK — Certified Developer-User Relationship (P6)
+ * UOR SDK. Certified Developer-User Relationship (P6)
  *
  * The single most important trust guarantee: the bond between a developer's
  * app and a user is cryptographically certified, portable, and irrevocable
  * by the platform. Certificates live in the user's Solid Pod, are signed
  * by UOR, and travel with the user if they leave.
  *
- * @see cert: namespace — certificate issuance and verification
- * @see morphism: namespace — structural transforms
+ * @see cert: namespace. certificate issuance and verification
+ * @see morphism: namespace. structural transforms
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -114,7 +114,7 @@ export async function issueCertificate(
   const now = new Date();
   const expiresAt = new Date(now.getTime() + DEFAULT_VALIDITY_MS);
 
-  // Hash only the binding relationship (deterministic — excludes timestamps)
+  // Hash only the binding relationship (deterministic. excludes timestamps)
   const certBody = {
     "@context": CERT_JSONLD_CONTEXT,
     "@type": "cert:TransformCertificate" as const,
@@ -185,7 +185,7 @@ export async function verifyCertificate(
     if (proof.derivationId !== certificate["u:canonicalId"]) {
       return {
         valid: false,
-        reason: "Canonical ID does not match certificate content — possible tampering",
+        reason: "Canonical ID does not match certificate content. possible tampering",
       };
     }
   }

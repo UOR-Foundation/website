@@ -1,5 +1,5 @@
 /**
- * Geometric Consciousness — Verification Suite
+ * Geometric Consciousness. Verification Suite
  * ═════════════════════════════════════════════
  *
  * Tests the unified framework: Polynon × Kernel × Bridge with α coupling.
@@ -152,7 +152,7 @@ describe("Unified Consciousness Evolution", () => {
 
   it("all 14 internal verification tests pass", () => {
     for (const t of report.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(report.allPassed).toBe(true);
     expect(report.tests.length).toBe(14);

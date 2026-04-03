@@ -1,5 +1,5 @@
 /**
- * Hologram GPU — Module Barrel
+ * Hologram GPU. Module Barrel
  * ════════════════════════════
  *
  * The WebGPU device layer + UOR LUT compute engine.

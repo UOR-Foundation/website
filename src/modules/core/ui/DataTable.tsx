@@ -1,5 +1,5 @@
 /**
- * DataTable — Clean, sortable data table.
+ * DataTable. Clean, sortable data table.
  */
 
 import { useState, useMemo, type ReactNode } from "react";

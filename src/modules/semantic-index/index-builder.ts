@@ -1,5 +1,5 @@
 /**
- * UOR Semantic Index Builder — in-memory lookup index over kg-store datums.
+ * UOR Semantic Index Builder. in-memory lookup index over kg-store datums.
  *
  * Indexes by: IRI, glyph, value (string), hex string.
  * Supports fuzzy matching via correlation (fidelity score).

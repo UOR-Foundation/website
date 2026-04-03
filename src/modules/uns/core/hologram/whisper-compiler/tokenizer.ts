@@ -1,5 +1,5 @@
 /**
- * Whisper Tokenizer — GPT-2 BPE Token Decoder
+ * Whisper Tokenizer. GPT-2 BPE Token Decoder
  * ═════════════════════════════════════════════
  *
  * Decodes Whisper token IDs back into readable English text.

@@ -1,5 +1,5 @@
 /**
- * Code Nexus — UOR Mapper
+ * Code Nexus. UOR Mapper
  * ═══════════════════════
  *
  * Maps ingestion results to UOR-compliant triples and derivations.

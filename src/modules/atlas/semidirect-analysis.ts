@@ -1,5 +1,5 @@
 /**
- * Semidirect Product Analysis — τ-Conjugation on Z/4Z × Z/3Z × Z/8Z
+ * Semidirect Product Analysis. τ-Conjugation on Z/4Z × Z/3Z × Z/8Z
  * ═══════════════════════════════════════════════════════════════════
  *
  * The full Aut(Atlas) = (Z/4Z × Z/3Z × Z/8Z) ⋊_φ Z/2Z where
@@ -311,7 +311,7 @@ export function runSemidirectAnalysis(): SemidirectAnalysis {
       if (f.actsAsInversion) return `τ inverts ${f.factor}: x ↦ -x (mod ${f.order})`;
       return `τ maps ${f.factor}₁ ↦ ${f.factor}^${f.conjugatedPower}`;
     }
-    return `τ·${f.factor}₁·τ = (R^${c.r}, D^${c.d}, T^${c.t}) — CROSS-FACTOR MIXING`;
+    return `τ·${f.factor}₁·τ = (R^${c.r}, D^${c.d}, T^${c.t}). CROSS-FACTOR MIXING`;
   };
   parts.push(descFactor(factorR));
   parts.push(descFactor(factorD));
@@ -323,13 +323,13 @@ export function runSemidirectAnalysis(): SemidirectAnalysis {
       : `Aut(Atlas) = (Z/4Z × Z/3Z × Z/8Z) ⋊_φ Z/2Z (cross-factor action)`,
     allPure
       ? `φ(τ): (r,d,t) ↦ (${autVec[0]}r mod 4, ${autVec[1]}d mod 3, ${autVec[2]}t mod 8)`
-      : `φ(τ): non-diagonal — τ mixes the cyclic factors`,
+      : `φ(τ): non-diagonal. τ mixes the cyclic factors`,
     ...parts,
     `Fixed points: ${fixedPointCount}/96`,
     `Inversion matches: ${inversionCount}/96`,
     normalizesAbelian
       ? "τ normalizes the abelian subgroup (true semidirect product)"
-      : "τ does NOT normalize — not a standard semidirect product",
+      : "τ does NOT normalize. not a standard semidirect product",
     isInvolutory ? "φ(τ)² = id (involutory)" : "φ(τ)² ≠ id",
   ].join("\n");
 

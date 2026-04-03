@@ -1,5 +1,5 @@
 /**
- * DevGate — Invisible route guard for technical/internal pages.
+ * DevGate. Invisible route guard for technical/internal pages.
  * 
  * • Mobile users are ALWAYS redirected to /hologram-os (consoles aren't mobile-optimized).
  * • Desktop users without dev unlock are redirected to /hologram-os.
@@ -29,7 +29,7 @@ export default function DevGate({ children }: { children: React.ReactNode }) {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Mobile devices always get the portal — consoles aren't mobile-optimized
+    // Mobile devices always get the portal. consoles aren't mobile-optimized
     if (isMobileDevice()) {
       navigate("/hologram-os", { replace: true });
       return;

@@ -5,10 +5,10 @@ import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Eager — homepage renders instantly
+// Eager. homepage renders instantly
 import { IndexPage } from "@/modules/landing";
 
-// Lazy — each page code-splits into its own chunk
+// Lazy. each page code-splits into its own chunk
 const AboutPage = lazy(() => import("@/modules/core/pages/AboutPage"));
 const ResearchPage = lazy(() => import("@/modules/community/pages/ResearchPage"));
 const BlogPost1 = lazy(() => import("@/modules/community/pages/BlogPost1"));

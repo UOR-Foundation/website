@@ -1,9 +1,9 @@
 /**
- * UOR Ring Arithmetic Core — UORRing class operating on ByteTuples.
+ * UOR Ring Arithmetic Core. UORRing class operating on ByteTuples.
  *
  * This module wraps the pure functions from src/lib/uor-ring.ts into
  * a stateful class that operates on ByteTuple (big-endian byte arrays)
- * at a given quantum level. No arithmetic logic is duplicated — all
+ * at a given quantum level. No arithmetic logic is duplicated. all
  * computation delegates to the existing ring engine.
  *
  * Mathematical basis: Z/(2^n)Z where n = 8 × (quantum + 1)
@@ -97,7 +97,7 @@ export class UORRing {
     return result;
   }
 
-  /** Successor: neg(bnot(x)) — NOT independently computed (per spec). */
+  /** Successor: neg(bnot(x)). NOT independently computed (per spec). */
   succ(b: ByteTuple): ByteTuple {
     // Pause to avoid double-emit from inner neg/bnot calls
     SystemEventBus.pause();
@@ -107,7 +107,7 @@ export class UORRing {
     return result;
   }
 
-  /** Predecessor: bnot(neg(x)) — derived from involutions. */
+  /** Predecessor: bnot(neg(x)). derived from involutions. */
   pred(b: ByteTuple): ByteTuple {
     SystemEventBus.pause();
     const result = this.bnot(this.neg(b));

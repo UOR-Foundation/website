@@ -1,5 +1,5 @@
 /**
- * HolonomyLens — Tonal Center Drift & Closed-Path Detection
+ * HolonomyLens. Tonal Center Drift & Closed-Path Detection
  * ═══════════════════════════════════════════════════════
  *
  * Tracks the "tonal center" of audio as it drifts through harmonic space
@@ -8,7 +8,7 @@
  *
  * Holonomy is the accumulated angular displacement along a closed path
  * in this ring. When the path returns near its origin (within a tolerance),
- * we declare a "closed loop" — the musical analogue of parallel transport
+ * we declare a "closed loop". the musical analogue of parallel transport
  * returning to its starting point.
  *
  * The holonomy angle accumulates the signed ring-distance between

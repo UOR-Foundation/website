@@ -1,5 +1,5 @@
 /**
- * PQ Bridge — End-to-End Pipeline Test
+ * PQ Bridge. End-to-End Pipeline Test
  * ═════════════════════════════════════
  *
  * Verifies the full post-quantum pipeline:
@@ -30,7 +30,7 @@ const TEST_IDENTITY: ProjectionInput = {
   hex: Array.from(TEST_HASH).map(b => b.toString(16).padStart(2, "0")).join(""),
 };
 
-describe("PQ Bridge — Post-Quantum Pipeline", () => {
+describe("PQ Bridge. Post-Quantum Pipeline", () => {
 
   it("generates valid Dilithium-3 keypair", () => {
     const kp = pqKeygen();
@@ -67,7 +67,7 @@ describe("PQ Bridge — Post-Quantum Pipeline", () => {
     expect(envelope.cid).toBe(TEST_IDENTITY.cid);
   });
 
-  it("verifies a valid PQ envelope — all three checks pass", () => {
+  it("verifies a valid PQ envelope. all three checks pass", () => {
     const kp = pqKeygen();
     const envelope = pqSign(TEST_IDENTITY, kp.secretKey);
     const result = pqVerify(envelope, kp.publicKey);
@@ -167,7 +167,7 @@ describe("PQ Bridge — Post-Quantum Pipeline", () => {
     const elapsed = performance.now() - start;
 
     console.log("\n╔════════════════════════════════════════════════════════╗");
-    console.log("║    POST-QUANTUM BRIDGE — PIPELINE VERIFICATION        ║");
+    console.log("║    POST-QUANTUM BRIDGE. PIPELINE VERIFICATION        ║");
     console.log("╠════════════════════════════════════════════════════════╣");
     console.log(`║ Algorithm:        ML-DSA-65 (Dilithium-3, FIPS 204)   ║`);
     console.log(`║ Security level:   192-bit (NIST Level 3)              ║`);

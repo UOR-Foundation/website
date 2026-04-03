@@ -1,5 +1,5 @@
 /**
- * UOR Signature operations — serializable data for UOR certification.
+ * UOR Signature operations. serializable data for UOR certification.
  * The five primitive operations that form the complete alphabet of the system.
  */
 

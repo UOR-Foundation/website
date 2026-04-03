@@ -7,7 +7,7 @@
  * This is the mathematical trust anchor for the entire UNS platform.
  * If this fails, no identity derivation can be trusted.
  *
- * @see spec/src/namespaces/proof.rs — proof:CriticalIdentity definition
+ * @see spec/src/namespaces/proof.rs. proof:CriticalIdentity definition
  */
 
 import { neg, bnot, succ } from "@/lib/uor-ring";

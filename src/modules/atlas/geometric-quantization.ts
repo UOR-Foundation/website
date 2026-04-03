@@ -6,7 +6,7 @@
  *
  * THESIS (Souriau 1970–2003):
  *   "Quantique? Alors c'est Géométrique."
- *   Quantum mechanics is NOT separate from classical mechanics — they COEXIST.
+ *   Quantum mechanics is NOT separate from classical mechanics. they COEXIST.
  *   Quantum states are solutions to a system of geometric inequalities on
  *   a symplectic manifold, not ad hoc postulates.
  *
@@ -666,7 +666,7 @@ export interface MeasurementResult {
  *
  * Souriau's interpretation: measurement is the projection of the
  * prequantization section onto a Lagrangian submanifold.
- * The "collapse" is not physical — it is the restriction of the
+ * The "collapse" is not physical. it is the restriction of the
  * section to one leaf of the polarization.
  */
 export function measureQubit(

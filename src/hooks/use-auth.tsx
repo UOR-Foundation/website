@@ -1,5 +1,5 @@
 /**
- * useAuth — Reactive authentication state for the whole app.
+ * useAuth. Reactive authentication state for the whole app.
  *
  * Provides session, user, profile, and loading state.
  * Listens to Supabase auth changes so UI updates instantly on sign-in/sign-out.

@@ -1,5 +1,5 @@
 /**
- * QR Cartridge — Type Definitions
+ * QR Cartridge. Type Definitions
  *
  * All types are serializable and aligned with the UOR ontology.
  * The cartridge envelope wraps a UorCanonicalIdentity with
@@ -12,7 +12,7 @@ import type { UorCanonicalIdentity } from "@/modules/uns/core";
 
 /**
  * Content types a cartridge can reference.
- * The cartridge itself is media-agnostic — it carries the identity,
+ * The cartridge itself is media-agnostic. it carries the identity,
  * not the content. The media type is metadata for client hinting.
  */
 export type CartridgeMediaType =
@@ -32,7 +32,7 @@ export type CartridgeMediaType =
 // ── Cartridge Envelope ──────────────────────────────────────────────────────
 
 /**
- * The complete Cartridge — a JSON-LD document that wraps a UOR identity
+ * The complete Cartridge. a JSON-LD document that wraps a UOR identity
  * with QR-specific encoding metadata.
  *
  * This is what gets serialized into the QR code's binary segment
@@ -45,7 +45,7 @@ export interface UorCartridge {
   /** The cartridge protocol version. */
   "cartridge:version": typeof CARTRIDGE_VERSION;
 
-  /** Full canonical identity — all four derived forms. */
+  /** Full canonical identity. all four derived forms. */
   "u:canonicalId": string;
   "u:ipv6": string;
   "u:cid": string;
@@ -60,13 +60,13 @@ export interface UorCartridge {
   /** Human-readable label (optional). */
   "cartridge:label"?: string;
 
-  /** Resolution endpoints — ordered by preference. */
+  /** Resolution endpoints. ordered by preference. */
   "cartridge:resolvers": string[];
 
   /** ISO 8601 timestamp of cartridge creation. */
   "cartridge:issuedAt": string;
 
-  /** Raw 32-byte SHA-256 hash — for verification (not serialized to QR). */
+  /** Raw 32-byte SHA-256 hash. for verification (not serialized to QR). */
   hashBytes?: Uint8Array;
 }
 
@@ -96,8 +96,8 @@ export interface QrEncodingConfig {
 /**
  * The dual-layer payload structure.
  *
- * Layer 1 (Alphanumeric): HTTP fallback URL — scannable by any phone.
- * Layer 2 (Binary): Raw 32-byte SHA-256 hash — UOR-native verification.
+ * Layer 1 (Alphanumeric): HTTP fallback URL. scannable by any phone.
+ * Layer 2 (Binary): Raw 32-byte SHA-256 hash. UOR-native verification.
  *
  * Standard QR scanners see the URL. UOR-aware clients extract the binary.
  */

@@ -1,5 +1,5 @@
 /**
- * UOR Single Proof Hashing Standard — URDNA2015 Canonicalization.
+ * UOR Single Proof Hashing Standard. URDNA2015 Canonicalization.
  *
  * THE FUNDAMENTAL CONTRACT:
  *   nquads = URDNA2015(jsonld.canonize(obj))
@@ -16,12 +16,12 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — jsonld v8 types may not resolve perfectly in all configurations
+// @ts-ignore. jsonld v8 types may not resolve perfectly in all configurations
 import jsonld from "jsonld";
 import { computeCid, computeUorAddress, canonicalJsonLd, computeIpv6Address } from "./uor-address";
 
 // ── UOR inline context for wrapping non-JSON-LD objects ─────────────────────
-// Inline to avoid network dependency — any agent can reproduce this locally.
+// Inline to avoid network dependency. any agent can reproduce this locally.
 
 const UOR_WRAP_CONTEXT: Record<string, unknown> = {
   store: "https://uor.foundation/store/",
@@ -36,7 +36,7 @@ const UOR_WRAP_CONTEXT: Record<string, unknown> = {
 
 const UOR_V1_CONTEXT_URL = "https://uor.foundation/contexts/uor-v1.jsonld";
 
-// Inline context matching public/contexts/uor-v1.jsonld — avoids network fetch.
+// Inline context matching public/contexts/uor-v1.jsonld. avoids network fetch.
 // CRITICAL: This MUST be an exact mirror of the published context file.
 // Any divergence causes different URDNA2015 canonicalization output,
 // breaking content-addressed identity determinism.
@@ -214,7 +214,7 @@ function createDocumentLoader() {
       : (jsonld as any).documentLoaders?.node?.();
 
   return async (url: string) => {
-    // Serve UOR context locally — no network dependency
+    // Serve UOR context locally. no network dependency
     if (
       url === UOR_V1_CONTEXT_URL ||
       url === UOR_V1_CONTEXT_URL.replace("https://", "http://")
@@ -226,7 +226,7 @@ function createDocumentLoader() {
       };
     }
 
-    // Serve FPP context locally — no network dependency
+    // Serve FPP context locally. no network dependency
     if (
       url === FPP_V1_CONTEXT_URL ||
       url === FPP_V1_CONTEXT_URL.replace("https://", "http://")
@@ -238,7 +238,7 @@ function createDocumentLoader() {
       };
     }
 
-    // Serve TSP context locally — no network dependency
+    // Serve TSP context locally. no network dependency
     if (
       url === TSP_V1_CONTEXT_URL ||
       url === TSP_V1_CONTEXT_URL.replace("https://", "http://")
@@ -250,7 +250,7 @@ function createDocumentLoader() {
       };
     }
 
-    // Serve Lens/Executable/Session contexts locally — all use UOR v1 namespaces
+    // Serve Lens/Executable/Session contexts locally. all use UOR v1 namespaces
     const UOR_DERIVED_CONTEXTS = [
       "https://uor.foundation/contexts/lens-v1.jsonld",
       "https://uor.foundation/contexts/executable-v1.jsonld",
@@ -345,7 +345,7 @@ function bytesToHex(bytes: Uint8Array): string {
 export interface SingleProofResult {
   /** The W3C URDNA2015 canonical N-Quads string. */
   nquads: string;
-  /** The canonical N-Quads encoded as UTF-8 bytes — THE single input. */
+  /** The canonical N-Quads encoded as UTF-8 bytes. THE single input. */
   canonicalBytes: Uint8Array;
   /** Raw SHA-256 digest of canonical bytes (32 bytes). */
   hashBytes: Uint8Array;
@@ -353,11 +353,11 @@ export interface SingleProofResult {
   hashHex: string;
   /** Deterministic derivation ID: urn:uor:derivation:sha256:{hex} */
   derivationId: string;
-  /** CIDv1 / dag-json / sha2-256 / base32lower — from canonical bytes. */
+  /** CIDv1 / dag-json / sha2-256 / base32lower. from canonical bytes. */
   cid: string;
-  /** UOR Braille bijection address — from hash bytes (32 bytes). */
+  /** UOR Braille bijection address. from hash bytes (32 bytes). */
   uorAddress: { "u:glyph": string; "u:length": number };
-  /** UOR content-addressed IPv6 (ULA fd00:75:6f72::/48) — from hash bytes. */
+  /** UOR content-addressed IPv6 (ULA fd00:75:6f72::/48). from hash bytes. */
   ipv6Address: {
     "u:ipv6": string;
     "u:ipv6Prefix": string;
@@ -384,18 +384,18 @@ export async function singleProofHash(
   // Step 1: URDNA2015 canonical N-Quads
   const nquads = await canonicalizeToNQuads(obj);
 
-  // Step 2: UTF-8 encode — THE single canonical byte sequence
+  // Step 2: UTF-8 encode. THE single canonical byte sequence
   const canonicalBytes = new TextEncoder().encode(nquads);
 
-  // Step 3: SHA-256 — THE single hash
+  // Step 3: SHA-256. THE single hash
   const hashBytes = await sha256(canonicalBytes);
   const hashHex = bytesToHex(hashBytes);
 
   // Step 4: Derive all four identity forms from ONE hash
-  //   derivation_id — from hex
-  //   store:uorCid  — CIDv1 wrapping the SHA-256 of canonical bytes
-  //   u:address     — Braille bijection of hash bytes
-  //   u:ipv6        — Content-addressed IPv6 ULA from hash bytes
+  //   derivation_id. from hex
+  //   store:uorCid . CIDv1 wrapping the SHA-256 of canonical bytes
+  //   u:address    . Braille bijection of hash bytes
+  //   u:ipv6       . Content-addressed IPv6 ULA from hash bytes
   const derivationId = `urn:uor:derivation:sha256:${hashHex}`;
   const cid = await computeCid(canonicalBytes);
   const uorAddress = computeUorAddress(hashBytes);
@@ -417,7 +417,7 @@ export async function singleProofHash(
  * Verify a derivation ID by recomputing the single proof hash.
  * Returns true iff the recomputed derivation_id matches the given one.
  *
- * Any agent, anywhere, can call this to verify identity — no trusted third party.
+ * Any agent, anywhere, can call this to verify identity. no trusted third party.
  */
 export async function verifySingleProof(
   obj: unknown,

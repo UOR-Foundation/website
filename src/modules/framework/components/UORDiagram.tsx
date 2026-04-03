@@ -16,7 +16,7 @@ const UORDiagram = () => {
   const [active, setActive] = useState<string>("Reason");
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
-      {/* Main diagram — dark for contrast */}
+      {/* Main diagram. dark for contrast */}
       <div className="bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-8 md:p-12 overflow-hidden">
         {/* Header */}
         <p className="text-xs md:text-sm font-body font-semibold tracking-[0.18em] uppercase text-[hsl(var(--section-dark-foreground)/0.7)] mb-10 text-center">
@@ -42,7 +42,7 @@ const UORDiagram = () => {
             </p>
           </div>
 
-          {/* Arrow + UOR label — white text, not blue */}
+          {/* Arrow + UOR label. white text, not blue */}
           <div className="flex flex-col items-center justify-center shrink-0 md:px-10 py-2 md:py-0">
             <ArrowRight className="hidden md:block w-8 h-8 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
             <ArrowDown className="block md:hidden w-7 h-7 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
@@ -100,7 +100,7 @@ const UORDiagram = () => {
                   [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
                 ].map(([cx, cy], i) => (
                   <g key={i}>
-                    {/* Emanating glow — fixed at node center */}
+                    {/* Emanating glow. fixed at node center */}
                     <circle cx={cx} cy={cy} r={i < 3 ? 18 : 13} fill="url(#nodeGlow)" className="uor-emanate" />
                     {/* Core dot */}
                     <circle cx={cx} cy={cy} r={i < 3 ? 4.5 : 2.8} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />

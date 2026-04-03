@@ -1,16 +1,16 @@
 /**
- * UOR Observable Geometry Layer — 7 Ring Metrics
+ * UOR Observable Geometry Layer. 7 Ring Metrics
  *
  * Source: spec/src/namespaces/observable.rs
  *
  * Implements the complete observable: namespace geometry:
- *   1. RingMetric      — geodesic distance on Z/256Z
- *   2. HammingMetric   — bit-level popcount distance
- *   3. CascadeLength   — succ-step traversal cost
- *   4. CatastropheThreshold — ring-derived structural collapse constant
- *   5. Curvature       — discrete partition curvature at a point
- *   6. Holonomy        — phase accumulated on closed ring paths
- *   7. Commutator      — [A,B](x) = A(B(x)) - B(A(x)) in the ring
+ *   1. RingMetric     . geodesic distance on Z/256Z
+ *   2. HammingMetric  . bit-level popcount distance
+ *   3. CascadeLength  . succ-step traversal cost
+ *   4. CatastropheThreshold. ring-derived structural collapse constant
+ *   5. Curvature      . discrete partition curvature at a point
+ *   6. Holonomy       . phase accumulated on closed ring paths
+ *   7. Commutator     . [A,B](x) = A(B(x)) - B(A(x)) in the ring
  *
  * All results carry epistemic_grade: 'A' (algebraically proven).
  * Pure functions. Zero side effects.
@@ -108,7 +108,7 @@ export function ringMetric(x: number, y: number): ObservableResult<number> {
 
 /**
  * Bit-level distance: popcount(x XOR y).
- * Used by Observer H-score — now a named observable metric.
+ * Used by Observer H-score. now a named observable metric.
  */
 export function hammingMetric(x: number, y: number): ObservableResult<number> {
   const dist = popcount((x ^ y) >>> 0);
@@ -145,7 +145,7 @@ export function cascadeLength(from: number, to: number): ObservableResult<number
  *   CatastropheThreshold    = (2 + 2) / 256 = 4/256 = 0.015625 = 1/64
  *
  * Rationale: density ≤ threshold means content is ENTIRELY units/exterior
- * (no irreducible content whatsoever) — structural collapse.
+ * (no irreducible content whatsoever). structural collapse.
  */
 export const CATASTROPHE_THRESHOLD: ObservableResult<number> = {
   "@type": "observable:CatastropheThreshold",
@@ -240,7 +240,7 @@ export function holonomy(
  *   Therefore: succ(x) - pred(x) = (x+1) - (x-1) = 2 mod 256
  *
  * The constant commutator of 2 is the algebraic distance between
- * the critical identity and its dual — a fundamental invariant of Z/256Z.
+ * the critical identity and its dual. a fundamental invariant of Z/256Z.
  */
 export function commutator(
   x: number,

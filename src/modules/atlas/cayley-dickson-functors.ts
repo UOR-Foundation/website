@@ -1,5 +1,5 @@
 /**
- * Cayley-Dickson Functor Chain — Categorical Adjunctions
+ * Cayley-Dickson Functor Chain. Categorical Adjunctions
  * ══════════════════════════════════════════════════════
  *
  * Formalizes the Cayley-Dickson tower ℝ → ℂ → ℍ → 𝕆 → 𝕊 as a chain
@@ -175,7 +175,7 @@ export function multiply(level: number, a: CDElement, b: CDElement): CDElement {
 // ══════════════════════════════════════════════════════════════════════════
 
 const ALGEBRA_NAMES: AlgebraName[] = ["R", "C", "H", "O", "S"];
-const PROPERTIES_LOST = ["—", "Ordering", "Commutativity", "Associativity", "Alternativity"];
+const PROPERTIES_LOST = [". ", "Ordering", "Commutativity", "Associativity", "Alternativity"];
 
 /**
  * Construct the free functor F: Alg(level) → Alg(level+1).
@@ -253,8 +253,8 @@ export function constructForgetfulFunctor(level: number): ForgetfulFunctor {
 const BRIDGE_DESCRIPTIONS = [
   "ℝ→ℂ: Adds imaginary axis. Discrete real line gains continuous phase rotation. Mirror involution τ = complex conjugation.",
   "ℂ→ℍ: Adds 2 imaginary axes. Continuous phase becomes non-commutative rotation group SU(2). Spatial orientation becomes observer-dependent.",
-  "ℍ→𝕆: Adds 4 imaginary axes. Loses associativity — composition order matters. The Fano plane governs which triples compose coherently. This is where attention diverges from coherence.",
-  "𝕆→𝕊: Adds 8 imaginary axes. Loses alternativity — even weakened associativity fails. Zero divisors appear: some nonzero products vanish. This is the thermodynamic boundary where causal information dissipates.",
+  "ℍ→𝕆: Adds 4 imaginary axes. Loses associativity. composition order matters. The Fano plane governs which triples compose coherently. This is where attention diverges from coherence.",
+  "𝕆→𝕊: Adds 8 imaginary axes. Loses alternativity. even weakened associativity fails. Zero divisors appear: some nonzero products vanish. This is the thermodynamic boundary where causal information dissipates.",
 ];
 
 /**
@@ -270,7 +270,7 @@ export function constructAdjunction(level: number): Adjunction {
 
   // Unit η: Id_source → U∘F
   // For a ∈ Alg(n): η(a) = U(F(a)) = U((a, 0)) = a
-  // So η is literally the identity — embedding then projecting is lossless.
+  // So η is literally the identity. embedding then projecting is lossless.
   const unitNat = (a: CDElement): CDElement => {
     return forgetful.apply(free.apply(a));
   };
@@ -394,7 +394,7 @@ export function buildFunctorChain(): FunctorChain {
       `ADJUNCTION ${i}: F${i} ⊣ U${i}  (${adj.free.sourceName} → ${adj.free.targetName})`,
       `  Free F:      ${adj.free.sourceName}(${adj.free.sourceDim}D) → ${adj.free.targetName}(${adj.free.targetDim}D)`,
       `  Forgetful U: ${adj.forgetful.sourceName}(${adj.forgetful.sourceDim}D) → ${adj.forgetful.targetName}(${adj.forgetful.targetDim}D)`,
-      `  Unit η:      a ↦ U(F(a)) = a  [identity — embedding is lossless]`,
+      `  Unit η:      a ↦ U(F(a)) = a  [identity. embedding is lossless]`,
       `  Left  △:     Uε ∘ ηU = id  ${adj.leftTriangleHolds ? '✓' : '✗'}`,
       `  Right △:     εF ∘ Fη = id  ${adj.rightTriangleHolds ? '✓' : '✗'}`,
       `  Property lost: ${adj.propertyLost}`,
@@ -433,7 +433,7 @@ export interface DoublingAnalysis {
   readonly degreesAdded: number;
   /** Total degrees of freedom at target. */
   readonly totalDegrees: number;
-  /** Property lost — quantifies "distance from discrete". */
+  /** Property lost. quantifies "distance from discrete". */
   readonly propertyLost: string;
   /** Whether the target is still a division algebra. */
   readonly isDivisionAlgebra: boolean;

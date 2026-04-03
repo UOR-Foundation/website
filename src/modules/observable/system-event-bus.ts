@@ -1,5 +1,5 @@
 /**
- * System Event Bus — Self-Reflective Observation Backbone
+ * System Event Bus. Self-Reflective Observation Backbone
  * ═══════════════════════════════════════════════════════
  *
  * A singleton event emitter that allows core modules (ring, identity,

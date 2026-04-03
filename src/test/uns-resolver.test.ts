@@ -48,10 +48,10 @@ function makeOpts(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Phase 1-B Tests — 10/10
+// Phase 1-B Tests. 10/10
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("UNS Core — Phase 1-B: Resolver API", () => {
+describe("UNS Core. Phase 1-B: Resolver API", () => {
   let dht: UnsDht;
   let resolver: UnsResolver;
 

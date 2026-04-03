@@ -1,5 +1,5 @@
 /**
- * Universal Model Fingerprint — Atlas-Based LLM Nutritional Label
+ * Universal Model Fingerprint. Atlas-Based LLM Nutritional Label
  * ═══════════════════════════════════════════════════════════════════
  *
  * Every LLM architecture decomposes into Atlas coordinates.
@@ -24,15 +24,15 @@ import { ATLAS_VERTEX_COUNT, ATLAS_EDGE_COUNT_EXPECTED } from "./atlas";
 // ── Fingerprint Types ─────────────────────────────────────────────────────
 
 export interface OperationProfile {
-  /** How much of the model's computation is product (G₂) — attention head independence */
+  /** How much of the model's computation is product (G₂). attention head independence */
   product: number;
-  /** Quotient (F₄) — normalization layers */
+  /** Quotient (F₄). normalization layers */
   quotient: number;
-  /** Filtration (E₆) — multi-head splitting */
+  /** Filtration (E₆). multi-head splitting */
   filtration: number;
-  /** Augmentation (E₇) — FFN expansion */
+  /** Augmentation (E₇). FFN expansion */
   augmentation: number;
-  /** Embedding (E₈) — residual connections */
+  /** Embedding (E₈). residual connections */
   embedding: number;
 }
 

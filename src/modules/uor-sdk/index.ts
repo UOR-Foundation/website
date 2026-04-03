@@ -1,14 +1,14 @@
 /**
- * UOR SDK — Barrel export.
+ * UOR SDK. Barrel export.
  *
  * The typed TypeScript bridge to the UOR Framework.
  * All subsequent app-platform modules (app-identity, app-store, app-compute,
  * app-trust, app-sdk, app-console) import from this single entry point.
  *
  * Three layers:
- *   1. client  — Live API wrapper (remote, verified, JSON-LD responses)
- *   2. ring    — Local ring arithmetic (offline, unit tests)
- *   3. canonical — Local content-addressing (URDNA2015 + SHA-256)
+ *   1. client . Live API wrapper (remote, verified, JSON-LD responses)
+ *   2. ring   . Local ring arithmetic (offline, unit tests)
+ *   3. canonical. Local content-addressing (URDNA2015 + SHA-256)
  */
 
 // ── API Client ──────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ export type {
 } from "./monetization-types";
 export { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
 
-// ── App Identity (P2 — canonical identity for every deployed app) ───────────
+// ── App Identity (P2. canonical identity for every deployed app) ───────────
 export {
   createManifest,
   updateManifest,
@@ -107,7 +107,7 @@ export {
 } from "./app-identity";
 export type { AppManifest, ManifestInput } from "./app-identity";
 
-// ── Import Adapter (P3 — one-click deploy from any platform) ────────────────
+// ── Import Adapter (P3. one-click deploy from any platform) ────────────────
 export { importApp, refreshApp } from "./import-adapter";
 export type {
   ImportSource,
@@ -115,7 +115,7 @@ export type {
   AppFile,
 } from "./import-adapter";
 
-// ── Sovereign Data (P4 — Solid Pod user-owned storage) ──────────────────────
+// ── Sovereign Data (P4. Solid Pod user-owned storage) ──────────────────────
 export {
   PodManager,
   connectUser,
@@ -132,7 +132,7 @@ export type {
   BindingCertificate,
 } from "./sovereign-data";
 
-// ── Security Gate (P5 — partition analysis + injection detection) ────────────
+// ── Security Gate (P5. partition analysis + injection detection) ────────────
 export {
   scanDeployment,
   partitionGate,
@@ -148,7 +148,7 @@ export type {
   GateResponse,
 } from "./security-gate";
 
-// ── Certified Developer-User Relationship (P6 — cert:TransformCertificate) ──
+// ── Certified Developer-User Relationship (P6. cert:TransformCertificate) ──
 export {
   issueCertificate,
   verifyCertificate,
@@ -161,7 +161,7 @@ export type {
   CertificateVerification,
 } from "./relationship";
 
-// ── Runtime Witness (P8 — execution tracing for live-coded apps) ────────────
+// ── Runtime Witness (P8. execution tracing for live-coded apps) ────────────
 export { RuntimeWitness } from "./runtime-witness";
 export type {
   ExecutionTrace,
@@ -170,7 +170,7 @@ export type {
   WitnessHandler,
 } from "./runtime-witness";
 
-// ── Discovery Engine (P9 — observer theory & game-resistant reputation) ─────
+// ── Discovery Engine (P9. observer theory & game-resistant reputation) ─────
 export { DiscoveryEngine } from "./discovery";
 export type {
   AppObserverProfile,
@@ -178,7 +178,7 @@ export type {
   NetworkSummary,
 } from "./discovery";
 
-// ── Morphism Router (P10 — app-to-app composition layer) ────────────────────
+// ── Morphism Router (P10. app-to-app composition layer) ────────────────────
 export { MorphismRouter } from "./morphism-router";
 export type {
   MorphismType,
@@ -226,7 +226,7 @@ export type {
   RuntimeStatus,
 } from "./runtime";
 
-// ── App SDK (P11 — five-function developer-facing SDK) ──────────────────────
+// ── App SDK (P11. five-function developer-facing SDK) ──────────────────────
 export { createUorAppClient, browserAutoInit } from "./app-sdk";
 export type {
   UorAppClientConfig,
@@ -240,7 +240,7 @@ export type {
   RevenueResult,
 } from "./app-sdk";
 
-// ── Free Tier & Revenue Share (P14 — structurally sustainable tiers) ────────
+// ── Free Tier & Revenue Share (P14. structurally sustainable tiers) ────────
 export { FreeTierManager, TIERS } from "./free-tier";
 export type {
   TierName,

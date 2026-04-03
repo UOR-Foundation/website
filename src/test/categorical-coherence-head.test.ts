@@ -1,5 +1,5 @@
 /**
- * Categorical Coherence Head — Test Suite
+ * Categorical Coherence Head. Test Suite
  * ═══════════════════════════════════════
  *
  * Verifies the categorical attention replacement:
@@ -23,7 +23,7 @@ import { constructFanoTopology } from "@/modules/atlas/fano-plane";
 // Part I: Vertex → Fano Mapping
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Vertex Mapping", () => {
+describe("Coherence Head. Vertex Mapping", () => {
   it("maps vertices to Fano points mod 7", () => {
     expect(vertexToFanoPoint(0)).toBe(0);
     expect(vertexToFanoPoint(7)).toBe(0);
@@ -43,7 +43,7 @@ describe("Coherence Head — Vertex Mapping", () => {
 // Part II: Single Triple Evaluation
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Triple Evaluation", () => {
+describe("Coherence Head. Triple Evaluation", () => {
   const gradeA = atlasGradeAGraph();
 
   it("collinear triple → coherent (H-score reflects zero defect)", () => {
@@ -87,7 +87,7 @@ describe("Coherence Head — Triple Evaluation", () => {
 // Part III: Forward Pass (Batch)
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Forward Pass", () => {
+describe("Coherence Head. Forward Pass", () => {
   it("processes batch of triples", () => {
     const head = createCoherenceHead();
     const triples: [number, number, number][] = [
@@ -115,7 +115,7 @@ describe("Coherence Head — Forward Pass", () => {
 // Part IV: Self-Coherence (Self-Attention Analogue)
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Self-Coherence", () => {
+describe("Coherence Head. Self-Coherence", () => {
   it("generates n-2 triples from n vertices", () => {
     const head = createCoherenceHead();
     const seq = [0, 1, 2, 3, 4, 5, 6];
@@ -147,7 +147,7 @@ describe("Coherence Head — Self-Coherence", () => {
 // Part V: Cross-Coherence
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Cross-Coherence", () => {
+describe("Coherence Head. Cross-Coherence", () => {
   it("produces query × (keys-1) triples", () => {
     const head = createCoherenceHead();
     const queries = [0, 7, 14];
@@ -162,7 +162,7 @@ describe("Coherence Head — Cross-Coherence", () => {
 // Part VI: Coherent Route Finding
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Route Optimization", () => {
+describe("Coherence Head. Route Optimization", () => {
   it("finds a route for a vertex set", () => {
     const head = createCoherenceHead();
     const result = head.findCoherentRoute([0, 1, 2, 3, 4]);
@@ -182,7 +182,7 @@ describe("Coherence Head — Route Optimization", () => {
 // Part VII: Strict vs Standard Head
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Strict Mode", () => {
+describe("Coherence Head. Strict Mode", () => {
   it("strict head uses smaller Grade-A graph", () => {
     const standard = createCoherenceHead();
     const strict = createStrictCoherenceHead();
@@ -197,7 +197,7 @@ describe("Coherence Head — Strict Mode", () => {
 // Part VIII: Attention vs Coherence Comparison
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Coherence Head — Attention Comparison", () => {
+describe("Coherence Head. Attention Comparison", () => {
   it("coherence is deterministic", () => {
     const result = compareAttentionVsCoherence([0, 1, 2, 3, 4, 5, 6]);
     expect(result.isDeterministic).toBe(true);

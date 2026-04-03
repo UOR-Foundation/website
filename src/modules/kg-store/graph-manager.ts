@@ -1,5 +1,5 @@
 /**
- * UOR Knowledge Graph Manager — named graph management and stats.
+ * UOR Knowledge Graph Manager. named graph management and stats.
  *
  * Named graphs are logical partitions of the triple store identified by IRIs.
  * This module manages graph lifecycle and provides aggregate statistics.

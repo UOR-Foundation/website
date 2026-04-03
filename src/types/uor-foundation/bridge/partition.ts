@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — bridge::partition
+ * UOR Foundation v2.0.0. bridge::partition
  *
  * Irreducibility decomposition and fiber tracking.
  *
@@ -10,7 +10,7 @@
 import type { FiberState } from "../enums";
 
 /**
- * Component — abstract base for partition set components.
+ * Component. abstract base for partition set components.
  */
 export interface Component {
   /** Set of values belonging to this component. */
@@ -20,7 +20,7 @@ export interface Component {
 }
 
 /**
- * IrreducibleSet — elements with exactly one non-trivial factorization.
+ * IrreducibleSet. elements with exactly one non-trivial factorization.
  * In Z/256Z these are the primes ≤ 255 (126 elements).
  *
  * @disjoint ReducibleSet, UnitSet, ExteriorSet
@@ -31,7 +31,7 @@ export interface IrreducibleSet extends Component {
 }
 
 /**
- * ReducibleSet — elements with multiple non-trivial factorizations.
+ * ReducibleSet. elements with multiple non-trivial factorizations.
  *
  * @disjoint IrreducibleSet, UnitSet, ExteriorSet
  */
@@ -43,7 +43,7 @@ export interface ReducibleSet extends Component {
 }
 
 /**
- * UnitSet — the multiplicative identity {1}.
+ * UnitSet. the multiplicative identity {1}.
  *
  * @disjoint IrreducibleSet, ReducibleSet, ExteriorSet
  */
@@ -53,7 +53,7 @@ export interface UnitSet extends Component {
 }
 
 /**
- * ExteriorSet — the additive identity {0}.
+ * ExteriorSet. the additive identity {0}.
  *
  * @disjoint IrreducibleSet, ReducibleSet, UnitSet
  */
@@ -63,7 +63,7 @@ export interface ExteriorSet extends Component {
 }
 
 /**
- * Partition — the complete partition of a ring into 4 disjoint sets.
+ * Partition. the complete partition of a ring into 4 disjoint sets.
  */
 export interface Partition {
   /** The irreducible elements. */
@@ -83,7 +83,7 @@ export interface Partition {
 // ── Fiber Budget System ────────────────────────────────────────────────────
 
 /**
- * FiberCoordinate — a single bit position in the fiber budget.
+ * FiberCoordinate. a single bit position in the fiber budget.
  */
 export interface FiberCoordinate {
   /** Bit index (0-based from LSB). */
@@ -95,7 +95,7 @@ export interface FiberCoordinate {
 }
 
 /**
- * FiberPinning — records the pinning of a fiber by a constraint.
+ * FiberPinning. records the pinning of a fiber by a constraint.
  */
 export interface FiberPinning {
   /** The fiber being pinned. */
@@ -107,7 +107,7 @@ export interface FiberPinning {
 }
 
 /**
- * FiberBudget — tracks bit-level type resolution progress.
+ * FiberBudget. tracks bit-level type resolution progress.
  * totalFibers = bit width of the quantum level.
  * isClosed = true when all fibers are pinned (fully resolved).
  */

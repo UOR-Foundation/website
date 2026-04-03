@@ -1,5 +1,5 @@
 /**
- * Featured projects (homepage showcase) — serializable data for UOR certification.
+ * Featured projects (homepage showcase). serializable data for UOR certification.
  */
 export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 

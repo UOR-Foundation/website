@@ -1,5 +1,5 @@
 /**
- * Group Closure Analysis — True |Aut(Atlas)| via Stabilizer Enumeration
+ * Group Closure Analysis. True |Aut(Atlas)| via Stabilizer Enumeration
  * ══════════════════════════════════════════════════════════════════════════
  *
  * Strategy: |G| = |orbit(0)| × |Stab(0)| = 96 × |Stab(0)|.
@@ -345,7 +345,7 @@ function identifyGroup(order: number, orbitSizes: number[]): string {
   const chain = orbitSizes.join(" × ");
 
   // Known fingerprints
-  if (order === 192) return `(Z/4Z × Z/3Z × Z/8Z) ⋊ Z/2Z — closed at order 192, chain [${chain}]`;
+  if (order === 192) return `(Z/4Z × Z/3Z × Z/8Z) ⋊ Z/2Z. closed at order 192, chain [${chain}]`;
   if (order === 96) return `Z/4Z × Z/3Z × Z/8Z ≅ Z/96Z (abelian), chain [${chain}]`;
 
   const ratio = order / 96;

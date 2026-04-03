@@ -1,5 +1,5 @@
 /**
- * Hologram Diffusion Pipeline — Zero-Dependency Native Inference
+ * Hologram Diffusion Pipeline. Zero-Dependency Native Inference
  * ══════════════════════════════════════════════════════════════
  *
  * Full Stable Diffusion 1.5 inference running entirely through
@@ -29,7 +29,7 @@ import type {
 import { DEFAULT_DIFFUSION_CONFIG } from "./types";
 import type { HologramCompiledModel, HologramComputeNode, HologramTensorDescriptor } from "../whisper-compiler/types";
 import { OnnxDataType, DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
-// CPU kernel imports removed — all ops route through GpuDispatch
+// CPU kernel imports removed. all ops route through GpuDispatch
 // which handles GPU→CPU fallback internally
 
 // ── Inference Cache (Prompt CID → Image CID) ─────────────────────────────
@@ -175,7 +175,7 @@ class DiffusionInferenceCache {
   }
 
   /**
-   * LRU eviction — delete oldest-accessed entries until count ≤ maxEntries.
+   * LRU eviction. delete oldest-accessed entries until count ≤ maxEntries.
    */
   private async evictIfNeeded(): Promise<void> {
     const { entries } = await this.stats();
@@ -516,7 +516,7 @@ export class DiffusionPipeline {
       case "Upsample":
       case "Resize": {
         const input = await getInput(node.inputs[0]);
-        // Infer spatial dimensions — assume 4D [N,C,H,W]
+        // Infer spatial dimensions. assume 4D [N,C,H,W]
         const totalEl = input.length;
         const channels = 512; // UNet default, will be overridden by graph metadata
         const spatial = totalEl / channels;
@@ -600,7 +600,7 @@ export class DiffusionPipeline {
       };
     }
 
-    console.log(`[DiffusionPipeline] 🎨 Cache MISS: ${pCid.slice(0, 16)}… — generating…`);
+    console.log(`[DiffusionPipeline] 🎨 Cache MISS: ${pCid.slice(0, 16)}…. generating…`);
 
     // ── Text Encoding ─────────────────────────────────────────────────
     onProgress?.({ phase: "encoding-text", progress: 0, message: "Encoding prompt..." });
@@ -673,7 +673,7 @@ export class DiffusionPipeline {
     onProgress?.({
       phase: "complete",
       progress: 1,
-      message: `Generated in ${(elapsedMs / 1000).toFixed(1)}s — cached for O(1) replay`,
+      message: `Generated in ${(elapsedMs / 1000).toFixed(1)}s. cached for O(1) replay`,
       elapsedMs,
     });
 

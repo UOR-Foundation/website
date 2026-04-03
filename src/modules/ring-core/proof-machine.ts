@@ -1,17 +1,17 @@
 /**
- * UOR v2.0.0 — Proof State Machine
+ * UOR v2.0.0. Proof State Machine
  *
  * Formalizes reasoning chains as verifiable, content-addressed proofs.
  *
  * Phase 4 of the Geometric Reasoning Engine plan:
  *
- *   4.1 Proof Lifecycle — maps to ResolutionState:
+ *   4.1 Proof Lifecycle. maps to ResolutionState:
  *       Unresolved → Partial → Resolved → Certified
  *
- *   4.2 Proof Certificate — InvolutionCertificate for complete proofs
+ *   4.2 Proof Certificate. InvolutionCertificate for complete proofs
  *       Content-addressed (CID-like), independently verifiable
  *
- *   4.3 Proof Composition — tensor product of partial proofs:
+ *   4.3 Proof Composition. tensor product of partial proofs:
  *       Proof(A→B) ⊗ Proof(B→C) = Proof(A→C)
  *
  * Pure functions. No classes. No side effects.
@@ -34,7 +34,7 @@ import type {
 
 // ── Proof Step ─────────────────────────────────────────────────────────────
 
-/** A single step in a reasoning proof — tagged with mode. */
+/** A single step in a reasoning proof. tagged with mode. */
 export interface ProofStep {
   /** Which reasoning mode produced this step. */
   readonly mode: ReasoningMode;

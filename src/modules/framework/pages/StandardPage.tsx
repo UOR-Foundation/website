@@ -103,7 +103,7 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Key Concepts — simplified layer index */}
+      {/* Key Concepts. simplified layer index */}
       <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">

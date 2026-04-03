@@ -1,5 +1,5 @@
 /**
- * QR Cartridge — Builder
+ * QR Cartridge. Builder
  *
  * Constructs a complete UorCartridge envelope from any JSON-LD object.
  *

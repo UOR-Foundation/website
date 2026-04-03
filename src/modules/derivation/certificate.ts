@@ -1,5 +1,5 @@
 /**
- * UOR Certificate Engine — attestations binding derivations to identities.
+ * UOR Certificate Engine. attestations binding derivations to identities.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
  * A Certificate attests that a Derivation is valid by re-verifying it

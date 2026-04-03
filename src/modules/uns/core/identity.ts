@@ -1,15 +1,15 @@
 /**
- * UNS Core — Canonical Identity Engine
+ * UNS Core. Canonical Identity Engine
  *
  * THE trust anchor for the entire UNS platform.
  *
  * Pipeline:  obj → URDNA2015 → UTF-8 bytes → SHA-256 → derive all four forms
  *
  * One input. One hash. Four derived identity forms:
- *   1. u:canonicalId  — urn:uor:derivation:sha256:{hex64}  (LOSSLESS, 256-bit)
- *   2. u:ipv6         — fd00:0075:6f72:xxxx:xxxx:xxxx:xxxx:xxxx (routing, 80-bit)
- *   3. u:cid          — CIDv1/dag-json/sha2-256/base32lower (IPFS interop)
- *   4. u:glyph        — Braille bijection (visual identity)
+ *   1. u:canonicalId . urn:uor:derivation:sha256:{hex64}  (LOSSLESS, 256-bit)
+ *   2. u:ipv6        . fd00:0075:6f72:xxxx:xxxx:xxxx:xxxx:xxxx (routing, 80-bit)
+ *   3. u:cid         . CIDv1/dag-json/sha2-256/base32lower (IPFS interop)
+ *   4. u:glyph       . Braille bijection (visual identity)
  *
  * Every service in UNS derives correctness from this module.
  */
@@ -44,10 +44,10 @@ export async function singleProofHash(
   // Step 1: URDNA2015 canonical N-Quads
   const nquads = await canonicalizeToNQuads(obj);
 
-  // Step 2: UTF-8 encode — THE single canonical byte sequence
+  // Step 2: UTF-8 encode. THE single canonical byte sequence
   const canonicalBytes = new TextEncoder().encode(nquads);
 
-  // Step 3: SHA-256 — THE single hash
+  // Step 3: SHA-256. THE single hash
   const hashBytes = await sha256(canonicalBytes);
 
   // Step 4: Derive all four identity forms
@@ -68,9 +68,9 @@ export async function singleProofHash(
  * PRIMARY verification: recompute the canonical identity and compare.
  *
  * Returns true iff the recomputed u:canonicalId matches the expected one.
- * This is the FULL verification — lossless, 256-bit, deterministic.
+ * This is the FULL verification. lossless, 256-bit, deterministic.
  *
- * Any agent, anywhere, can call this to verify identity — no trusted third party.
+ * Any agent, anywhere, can call this to verify identity. no trusted third party.
  */
 export async function verifyCanonical(
   obj: unknown,
@@ -84,7 +84,7 @@ export async function verifyCanonical(
  * ROUTING-ONLY verification: check that an IPv6 address was correctly
  * derived from the given hash bytes.
  *
- * This verifies the routing projection only — NOT full content identity.
+ * This verifies the routing projection only. NOT full content identity.
  * Use verifyCanonical() for authoritative verification.
  */
 export function verifyIpv6Routing(

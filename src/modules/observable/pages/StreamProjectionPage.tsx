@@ -1,5 +1,5 @@
 /**
- * Stream Projection — Live Coherence Rendering
+ * Stream Projection. Live Coherence Rendering
  * ═════════════════════════════════════════════
  *
  * Real-time visualization of a byte stream flowing through
@@ -117,7 +117,7 @@ export default function StreamProjectionPage() {
   return (
     <PageShell
       title="Stream Projection"
-      subtitle="Live coherence rendering — bytes flowing through L0→L5 in real-time"
+      subtitle="Live coherence rendering. bytes flowing through L0→L5 in real-time"
     >
       <div className="space-y-6">
         {/* ── Controls ─────────────────────────────────────────────────── */}
@@ -191,7 +191,7 @@ export default function StreamProjectionPage() {
             />
             <StatPill
               label="Network Zone"
-              value={snapshot.network?.zone ?? "—"}
+              value={snapshot.network?.zone ?? ". "}
               zone={snapshot.network?.zone ?? "COHERENCE"}
             />
             {mode === "live-system" && (

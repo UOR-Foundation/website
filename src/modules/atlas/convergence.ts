@@ -1,5 +1,5 @@
 /**
- * Atlas Convergence Test — Phase 5
+ * Atlas Convergence Test. Phase 5
  * ═════════════════════════════════
  *
  * Proves that LLM embedding architectures map to the Atlas R₈ substrate.
@@ -164,13 +164,13 @@ export function verifyUniversalInvariants(): UniversalInvariant[] {
   const invariants: UniversalInvariant[] = [];
 
   // Invariant 1: ALL head dimensions are powers of 2 × R₈ quantum
-  // head_dim ∈ {64, 96, 128} — all are multiples of 32 = 2⁵
+  // head_dim ∈ {64, 96, 128}. all are multiples of 32 = 2⁵
   const allHeadDimsMultOf32 = MODEL_CATALOG.every(m => m.headDim % 32 === 0);
   invariants.push({
     name: "Head dimensions are multiples of 2⁵ = 32",
     description:
       "Every transformer head dimension is a multiple of 32, " +
-      "which is 2⁵ — the number of binary coordinates in an Atlas label (e₁,e₂,e₃,e₆,e₇).",
+      "which is 2⁵. the number of binary coordinates in an Atlas label (e₁,e₂,e₃,e₆,e₇).",
     holds: allHeadDimsMultOf32,
     evidence: `head_dims: {${[...new Set(MODEL_CATALOG.map(m => m.headDim))].sort((a, b) => a - b).join(", ")}}`,
   });
@@ -257,7 +257,7 @@ export function verifyUniversalInvariants(): UniversalInvariant[] {
   invariants.push({
     name: "Softmax = G₂ boundary projection (∂E₈)",
     description:
-      "Softmax projects unconstrained logits onto the probability simplex — " +
+      "Softmax projects unconstrained logits onto the probability simplex. " +
       "the boundary of the embedding space. This is G₂ as ∂E₈: the 12-element " +
       "boundary of the 240-element root system. Softmax IS the boundary map.",
     holds: true,

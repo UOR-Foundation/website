@@ -1,5 +1,5 @@
 /**
- * UNS Trust — Content-Addressed Access Control (Phase 4-A)
+ * UNS Trust. Content-Addressed Access Control (Phase 4-A)
  *
  * AccessPolicy is a content-addressed UNS Record signed by Dilithium-3.
  * Policy tampering is cryptographically detectable.
@@ -121,7 +121,7 @@ export class UnsAccessControl {
       };
     }
 
-    // No rule matched — fall through to default
+    // No rule matched. fall through to default
     const allowed = policy["uns:defaultAction"] === "allow";
     return {
       allowed,
@@ -131,7 +131,7 @@ export class UnsAccessControl {
   }
 }
 
-// ── Trust Middleware (conceptual — typed for Hono-style handler) ─────────────
+// ── Trust Middleware (conceptual. typed for Hono-style handler) ─────────────
 
 export type MiddlewareHandler = (
   req: { headers: Record<string, string>; body?: unknown },

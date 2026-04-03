@@ -1,5 +1,5 @@
 /**
- * UOR SHACL Validator — validates data against UOR shape constraints.
+ * UOR SHACL Validator. validates data against UOR shape constraints.
  *
  * Provides:
  *   - validate(data, shapeId?): validate against specific or all shapes

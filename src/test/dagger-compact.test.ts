@@ -1,5 +1,5 @@
 /**
- * Dagger-Compact Category — Axiom Verification Test Suite
+ * Dagger-Compact Category. Axiom Verification Test Suite
  * ═══════════════════════════════════════════════════════
  *
  * Maps Bergholm-Biamonte QC category structure onto Atlas:
@@ -24,10 +24,10 @@ import {
 import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part I: Dagger Functor — τ-Mirror Involution
+// Part I: Dagger Functor. τ-Mirror Involution
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Dagger Functor — Involutivity", () => {
+describe("Dagger Functor. Involutivity", () => {
   it("τ² = id for all 96 vertices", () => {
     for (let i = 0; i < ATLAS_VERTEX_COUNT; i++) {
       expect(dagger(dagger(i))).toBe(i);
@@ -49,7 +49,7 @@ describe("Dagger Functor — Involutivity", () => {
   });
 });
 
-describe("Dagger Functor — Contravariance", () => {
+describe("Dagger Functor. Contravariance", () => {
   it("(g∘f)† = f†∘g† for edge morphisms", () => {
     const atlas = getAtlas();
     let tested = 0;
@@ -103,10 +103,10 @@ describe("Dagger Functor — Contravariance", () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════
-// Part II: Compact Structure — Cup/Cap (Bell States)
+// Part II: Compact Structure. Cup/Cap (Bell States)
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Compact Structure — Cup Morphisms", () => {
+describe("Compact Structure. Cup Morphisms", () => {
   it("48 cup morphisms (one per mirror pair)", () => {
     const cups = constructCups();
     expect(cups.length).toBe(48);
@@ -137,7 +137,7 @@ describe("Compact Structure — Cup Morphisms", () => {
   });
 });
 
-describe("Compact Structure — Cap Morphisms", () => {
+describe("Compact Structure. Cap Morphisms", () => {
   it("48 cap morphisms matching cups", () => {
     const caps = constructCaps();
     expect(caps.length).toBe(48);
@@ -231,7 +231,7 @@ describe("Bell State Analysis", () => {
   });
 
   it("mirror pairs are never adjacent (τ-axiom)", () => {
-    // Mirror pairs must not be neighbors — verified by Atlas construction
+    // Mirror pairs must not be neighbors. verified by Atlas construction
     const atlas = getAtlas();
     for (const [v, tv] of atlas.mirrorPairs()) {
       expect(atlas.vertices[v].neighbors.includes(tv)).toBe(false);

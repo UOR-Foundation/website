@@ -1,5 +1,5 @@
 /**
- * Multi-Scale Observer Tests — 12 verifications
+ * Multi-Scale Observer Tests. 12 verifications
  *
  * Validates the holographic zoom engine across all 6 levels:
  * L0 Byte, L1 Datum, L2 Operation, L3 Module, L4 Projection, L5 Network.

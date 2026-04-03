@@ -17,7 +17,7 @@
  * content hashing: certificates, derivations, code-kg, donations,
  * datum pages, and boundary enforcement.
  *
- * Uses the Web Crypto API (SubtleCrypto) — available in all
+ * Uses the Web Crypto API (SubtleCrypto). available in all
  * modern browsers and edge runtimes.
  */
 export async function sha256hex(input: string): Promise<string> {

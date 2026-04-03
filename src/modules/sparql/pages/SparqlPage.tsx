@@ -281,7 +281,7 @@ function ResultsPanel({
                 <tr key={i} className="border-t border-border hover:bg-muted/20 transition-colors">
                   {vars.map((v: string) => (
                     <td key={v} className="px-3 py-1.5 font-mono text-xs text-foreground">
-                      {b[v]?.value ?? "—"}
+                      {b[v]?.value ?? ". "}
                     </td>
                   ))}
                 </tr>
@@ -310,7 +310,7 @@ function ResultsPanel({
                 <tr key={i} className="border-t border-border hover:bg-muted/20 transition-colors">
                   {Object.keys(graph[0]).filter(k => !k.startsWith("_")).map((k) => (
                     <td key={k} className="px-3 py-1.5 font-mono text-xs text-foreground">
-                      {typeof row[k] === "object" ? JSON.stringify(row[k]) : String(row[k] ?? "—")}
+                      {typeof row[k] === "object" ? JSON.stringify(row[k]) : String(row[k] ?? ". ")}
                     </td>
                   ))}
                 </tr>
@@ -365,7 +365,7 @@ function FiberExplorer({
         <Ref label="§5.1" tip="σ : Rₙ → {0,…,n} is the stratum projection. Fiber Fₖ = {x : popcount(x) = k}. bnot maps Fₖ → Fₙ₋ₖ." />
       </div>
       <p className="text-sm text-muted-foreground mb-5">
-        σ : R₈ → {"{0,…,8}"} — click a bar to query that fiber via SPARQL.
+        σ : R₈ → {"{0,…,8}"}. click a bar to query that fiber via SPARQL.
       </p>
 
       {/* Bar chart */}
@@ -501,7 +501,7 @@ const SparqlPage = () => {
     });
   }, []);
 
-  // Auto-run when override changes — handled by editor picking up new preset
+  // Auto-run when override changes. handled by editor picking up new preset
   // We use a key trick instead
   const [editorKey, setEditorKey] = useState(0);
   useEffect(() => {
@@ -519,7 +519,7 @@ const SparqlPage = () => {
             </h1>
           </div>
           <p className="text-sm md:text-base text-primary-foreground/70 font-body max-w-2xl">
-            Query UOR named graphs — partition classes, fiber bundles, canonical forms — via SPARQL over the live Q0 instance graph.
+            Query UOR named graphs. partition classes, fiber bundles, canonical forms. via SPARQL over the live Q0 instance graph.
           </p>
         </div>
       </section>

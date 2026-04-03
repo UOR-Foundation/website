@@ -1,5 +1,5 @@
 /**
- * Canonical route definitions — serializable data for UOR certification.
+ * Canonical route definitions. serializable data for UOR certification.
  */
 export const routeTable = [
   { path: "/", label: "Home" },

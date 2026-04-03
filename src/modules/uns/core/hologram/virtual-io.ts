@@ -1,5 +1,5 @@
 /**
- * Virtual I/O Layer — POSIX Syscall Interface for the Hologram OS
+ * Virtual I/O Layer. POSIX Syscall Interface for the Hologram OS
  * ═══════════════════════════════════════════════════════════════════
  *
  * The holographic principle applied to system calls:
@@ -15,19 +15,19 @@
  *   │ exec()       │ engine.spawn(blueprint)                      │
  *   │ read(fd)     │ refractLens (rehydrate from canonical form)  │
  *   │ write(fd,d)  │ focusLens (dehydrate through pipeline)       │
- *   │ mmap(addr)   │ project(hash, projection) — memory-mapped   │
+ *   │ mmap(addr)   │ project(hash, projection). memory-mapped   │
  *   │ pipe(fd[2])  │ LensWire (element-to-element data flow)      │
  *   │ kill(pid)    │ engine.kill(pid)                              │
  *   │ wait(pid)    │ engine event listener on "halted"             │
  *   │ dup2(fd)     │ IOChannel rebinding                          │
- *   │ ioctl(fd,r)  │ engine.tick(pid, pos, dir) — device control  │
+ *   │ ioctl(fd,r)  │ engine.tick(pid, pos, dir). device control  │
  *   │ suspend      │ engine.suspendProcess(pid)                    │
  *   │ resume       │ engine.resumeProcess(bp, suspended)           │
  *   └──────────────┴──────────────────────────────────────────────┘
  *
  * Design principle: ZERO new state. Every operation delegates to an
  * existing UOR primitive. The Virtual I/O layer adds only naming and
- * composition — no new data structures, no new storage, no new identity.
+ * composition. no new data structures, no new storage, no new identity.
  *
  * @module uns/core/hologram/virtual-io
  */
@@ -57,11 +57,11 @@ import { project, type ProjectionInput, type HologramProjection } from "./index"
 // ── File Descriptor Table ──────────────────────────────────────────────────
 
 /**
- * A virtual file descriptor — a reference to a data channel on a process.
+ * A virtual file descriptor. a reference to a data channel on a process.
  *
  * In POSIX, file descriptors are integers indexing into a per-process table.
  * Here, they are typed references to IOChannels on an engine process.
- * No new state is created — the fd resolves to existing IOChannel + PID.
+ * No new state is created. the fd resolves to existing IOChannel + PID.
  */
 export interface FileDescriptor {
   /** File descriptor number (0=stdin, 1=stdout, 2=stderr, 3+=custom). */
@@ -83,7 +83,7 @@ export const STDERR = 2;
 export const NETFD  = 3;
 
 /**
- * A pipe — two connected file descriptors across processes.
+ * A pipe. two connected file descriptors across processes.
  * Data written to pipe[1] can be read from pipe[0].
  * Implemented as a shared buffer with no external state.
  */
@@ -99,7 +99,7 @@ export interface Pipe {
 // ── Virtual Syscalls ───────────────────────────────────────────────────────
 
 /**
- * vExec — Execute a blueprint as a new process.
+ * vExec. Execute a blueprint as a new process.
  *
  * Maps to: engine.spawn(blueprint)
  * POSIX equivalent: exec()
@@ -114,7 +114,7 @@ export async function vExec(
 }
 
 /**
- * vForkBlueprint — Fork a blueprint and spawn the child.
+ * vForkBlueprint. Fork a blueprint and spawn the child.
  *
  * The pragmatic fork: takes the parent blueprint directly.
  * This is the recommended API when the caller has the blueprint.
@@ -144,12 +144,12 @@ export async function vForkBlueprint(
 }
 
 /**
- * vRead — Read from a process's lens pipeline (rehydration).
+ * vRead. Read from a process's lens pipeline (rehydration).
  *
  * Maps to: refractLens(lens, proof, modality)
  * POSIX equivalent: read(fd, buf, count)
  *
- * "Reading" in the holographic model is rehydration — unpacking
+ * "Reading" in the holographic model is rehydration. unpacking
  * canonical form into a desired modality. The file descriptor
  * determines which channel (and therefore which modality) to read.
  *
@@ -180,12 +180,12 @@ export async function vRead(
 }
 
 /**
- * vWrite — Write data through a process's lens pipeline (dehydration).
+ * vWrite. Write data through a process's lens pipeline (dehydration).
  *
  * Maps to: engine.execute(pid, data) → focusLens
  * POSIX equivalent: write(fd, data, len)
  *
- * "Writing" is dehydration — pushing data through the lens pipeline
+ * "Writing" is dehydration. pushing data through the lens pipeline
  * to produce a canonical, content-addressed output.
  *
  * @returns The pipeline output.
@@ -199,13 +199,13 @@ export async function vWrite(
 }
 
 /**
- * vMmap — Memory-map a projection of a process's identity.
+ * vMmap. Memory-map a projection of a process's identity.
  *
  * Maps to: project(hash, projectionName)
  * POSIX equivalent: mmap(addr, len, prot, flags, fd, offset)
  *
  * Memory-mapping in the holographic model means binding a projection
- * of the process's canonical identity to a "virtual address" —
+ * of the process's canonical identity to a "virtual address".
  * a protocol-native identifier that other systems can reference.
  *
  * @param engine     The engine instance.
@@ -254,7 +254,7 @@ export interface MmapResult {
 }
 
 /**
- * vIoctl — Device control (interaction/tick).
+ * vIoctl. Device control (interaction/tick).
  *
  * Maps to: engine.tick(pid, position, direction)
  * POSIX equivalent: ioctl(fd, request, ...)
@@ -274,7 +274,7 @@ export async function vIoctl(
 }
 
 /**
- * vKill — Terminate a process.
+ * vKill. Terminate a process.
  *
  * Maps to: engine.kill(pid)
  * POSIX equivalent: kill(pid, SIGKILL)
@@ -284,7 +284,7 @@ export function vKill(engine: HologramEngine, pid: string): void {
 }
 
 /**
- * vWait — Wait for a process to halt.
+ * vWait. Wait for a process to halt.
  *
  * Maps to: engine.on("halted") listener
  * POSIX equivalent: waitpid(pid, &status, 0)
@@ -314,7 +314,7 @@ export function vWait(
 }
 
 /**
- * vSuspend — Hibernate a process to canonical bytes.
+ * vSuspend. Hibernate a process to canonical bytes.
  *
  * Maps to: engine.suspendProcess(pid)
  * POSIX equivalent: SIGSTOP + core dump
@@ -329,7 +329,7 @@ export async function vSuspend(
 }
 
 /**
- * vResume — Wake a process from hibernation.
+ * vResume. Wake a process from hibernation.
  *
  * Maps to: engine.resumeProcess(blueprint, suspended)
  * POSIX equivalent: restore from core dump
@@ -345,7 +345,7 @@ export async function vResume(
 }
 
 /**
- * vPipe — Create a pipe between two processes.
+ * vPipe. Create a pipe between two processes.
  *
  * Maps to: LensWire (conceptual data flow connection)
  * POSIX equivalent: pipe(fd[2])
@@ -381,7 +381,7 @@ export function vPipe(
 }
 
 /**
- * vDup2 — Duplicate a file descriptor (rebind an I/O channel).
+ * vDup2. Duplicate a file descriptor (rebind an I/O channel).
  *
  * Maps to: IOChannel rebinding
  * POSIX equivalent: dup2(oldfd, newfd)
@@ -402,7 +402,7 @@ export function vDup2(
 }
 
 /**
- * vOpen — Open a file descriptor for a process channel.
+ * vOpen. Open a file descriptor for a process channel.
  *
  * Maps to: IOChannel lookup
  * POSIX equivalent: open(path, flags)
@@ -423,7 +423,7 @@ export function vOpen(
 }
 
 /**
- * vClose — Close a file descriptor.
+ * vClose. Close a file descriptor.
  *
  * POSIX equivalent: close(fd)
  */
@@ -434,9 +434,9 @@ export function vClose(descriptor: FileDescriptor): void {
 // ── Compound Operations (Convenience) ──────────────────────────────────────
 
 /**
- * vForkExec — Fork a blueprint and immediately execute it.
+ * vForkExec. Fork a blueprint and immediately execute it.
  *
- * Maps to: fork() + exec() — the classic UNIX pattern.
+ * Maps to: fork() + exec(). the classic UNIX pattern.
  * Creates a child process from a modified parent blueprint.
  *
  * @returns The child PID.
@@ -456,7 +456,7 @@ export async function vForkExec(
 }
 
 /**
- * vMmapAll — Memory-map ALL projections of a process's identity.
+ * vMmapAll. Memory-map ALL projections of a process's identity.
  *
  * Returns every registered projection (DID, CID, IPv6, ActivityPub, etc.)
  * as a map of projection name → address string.
@@ -487,7 +487,7 @@ export async function vMmapAll(
 }
 
 /**
- * vStat — Get process status information.
+ * vStat. Get process status information.
  *
  * Maps to: engine.getProcessInfo(pid)
  * POSIX equivalent: stat() / fstat()
@@ -507,7 +507,7 @@ export function vStat(
 }
 
 /**
- * vPs — List all running processes.
+ * vPs. List all running processes.
  *
  * Maps to: engine.listProcesses()
  * POSIX equivalent: ps aux

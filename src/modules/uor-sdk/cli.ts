@@ -1,5 +1,5 @@
 /**
- * UOR SDK — App CLI Engine (`uor-app`)
+ * UOR SDK. App CLI Engine (`uor-app`)
  *
  * One command from finished app to live deployment.
  * Composes from existing UOR infrastructure:
@@ -8,11 +8,11 @@
  *   - UNS KV (state storage)
  *   - Observer zones (discovery ranking)
  *
- * Every command returns an AppCliResult — testable without a real CLI.
+ * Every command returns an AppCliResult. testable without a real CLI.
  * In production, a thin Commander.js wrapper calls these functions.
  *
- * @see P12 spec — Developer CLI
- * @see uns/cli/commands.ts — Lower-level UNS CLI (same pattern)
+ * @see P12 spec. Developer CLI
+ * @see uns/cli/commands.ts. Lower-level UNS CLI (same pattern)
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -40,8 +40,8 @@ const fromBytes = <T>(bytes: Uint8Array): T => JSON.parse(dec.decode(bytes)) as 
 /**
  * The `uor-app` CLI command engine.
  *
- * Stateless — all state lives in the injected KV store.
- * Testable — no filesystem or network side effects.
+ * Stateless. all state lives in the injected KV store.
+ * Testable. no filesystem or network side effects.
  */
 export class AppCli {
   private readonly monetization: MonetizationEngine;
@@ -318,14 +318,14 @@ export class AppCli {
     if (record) {
       return {
         exitCode: 0,
-        stdout: `✓ VERIFIED — ${record.name} (${record.zone} zone)`,
+        stdout: `✓ VERIFIED. ${record.name} (${record.zone} zone)`,
         json: { verified: true, record },
       };
     }
 
     return {
       exitCode: 1,
-      stdout: `✗ MISMATCH — app not found`,
+      stdout: `✗ MISMATCH. app not found`,
       json: { verified: false, canonicalId },
     };
   }
@@ -419,7 +419,7 @@ export class AppCli {
     return {
       exitCode: 0,
       stdout: [
-        "uor-app — UOR App Platform CLI",
+        "uor-app. UOR App Platform CLI",
         "",
         "Commands:",
         "  deploy <source>              Deploy an app (URL, github:owner/repo, or ./path)",

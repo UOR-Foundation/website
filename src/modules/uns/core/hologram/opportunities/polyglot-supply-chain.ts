@@ -3,7 +3,7 @@
  * ═════════════════════════════════════
  *
  * Every language artifact across 75+ projections is content-addressed
- * from source to deployment — one hash bridges every language into
+ * from source to deployment. one hash bridges every language into
  * a unified trust layer.
  *
  * @module uns/core/hologram/opportunities/polyglot-supply-chain

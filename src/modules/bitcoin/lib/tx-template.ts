@@ -183,12 +183,12 @@ export async function buildOpReturnTx(input: TxTemplateInput): Promise<TxTemplat
   const fields: TxField[] = [
     { name: "Version", hex: "02000000", description: "Transaction version 2 (BIP-68 relative lock-time)", category: "header" },
     { name: "Input Count", hex: "01", description: "One input (UTXO to spend)", category: "header" },
-    { name: "Previous Txid", hex: txid, description: isTemplate ? "⚠ Placeholder — replace with real UTXO txid (little-endian)" : `UTXO txid: ${utxoTxid}`, category: "input" },
-    { name: "Previous Vout", hex: vout, description: isTemplate ? "⚠ Placeholder — replace with real output index" : `Output index: ${utxoVout}`, category: "input" },
+    { name: "Previous Txid", hex: txid, description: isTemplate ? "⚠ Placeholder. replace with real UTXO txid (little-endian)" : `UTXO txid: ${utxoTxid}`, category: "input" },
+    { name: "Previous Vout", hex: vout, description: isTemplate ? "⚠ Placeholder. replace with real output index" : `Output index: ${utxoVout}`, category: "input" },
     { name: "ScriptSig Length", hex: scriptSig, description: "Empty scriptSig (witness data goes in SegWit)", category: "input" },
-    { name: "Sequence", hex: sequence, description: "0xFFFFFFFF — no relative lock-time, RBF disabled", category: "input" },
+    { name: "Sequence", hex: sequence, description: "0xFFFFFFFF. no relative lock-time, RBF disabled", category: "input" },
     { name: "Output Count", hex: "02", description: "Two outputs: OP_RETURN (data) + change", category: "header" },
-    { name: "OP_RETURN Value", hex: toLittleEndian64(0), description: "0 satoshis — data output carries no value", category: "output-opreturn" },
+    { name: "OP_RETURN Value", hex: toLittleEndian64(0), description: "0 satoshis. data output carries no value", category: "output-opreturn" },
     { name: "OP_RETURN Script Length", hex: opReturnScriptLen, description: `${parseInt(opReturnScriptLen, 16)} bytes of script`, category: "output-opreturn" },
     { name: "OP_RETURN", hex: "6a", description: "Opcode 106: marks output as provably unspendable", category: "output-opreturn" },
     { name: "Push Length", hex: pushLen, description: `Push ${parseInt(pushLen, 16)} bytes of UOR payload`, category: "output-opreturn" },
@@ -198,8 +198,8 @@ export async function buildOpReturnTx(input: TxTemplateInput): Promise<TxTemplat
     { name: "Identity Hash", hex: identityHash, description: "32-byte SHA-256 UOR canonical identity", category: "output-opreturn" },
     { name: "Change Value", hex: toLittleEndian64(changeSats), description: `${changeSats.toLocaleString()} satoshis returned to sender`, category: "output-change" },
     { name: "Change Script Length", hex: changeScriptLen, description: `${parseInt(changeScriptLen, 16)} bytes of locking script`, category: "output-change" },
-    { name: "Change ScriptPubKey", hex: changeScript, description: isTemplate ? "⚠ Placeholder P2WPKH — replace with your address" : "P2WPKH change output", category: "output-change" },
-    { name: "Locktime", hex: "00000000", description: "No lock-time — transaction valid immediately", category: "footer" },
+    { name: "Change ScriptPubKey", hex: changeScript, description: isTemplate ? "⚠ Placeholder P2WPKH. replace with your address" : "P2WPKH change output", category: "output-change" },
+    { name: "Locktime", hex: "00000000", description: "No lock-time. transaction valid immediately", category: "footer" },
   ];
 
   // ── Concatenate raw transaction ────────────────────────────

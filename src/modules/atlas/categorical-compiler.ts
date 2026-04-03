@@ -167,7 +167,7 @@ export interface CompilationStats {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Step 1: Parse — build morphisms from vertex pairs
+// Step 1: Parse. build morphisms from vertex pairs
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -196,7 +196,7 @@ export function parseChain(vertices: number[]): Morphism[] {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Step 2: Decompose — morphisms → categorical primitives
+// Step 2: Decompose. morphisms → categorical primitives
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -317,7 +317,7 @@ export function decomposeAll(morphisms: Morphism[]): DecomposedMorphism[] {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Step 3: Optimize — apply categorical identities + rewrite chain
+// Step 3: Optimize. apply categorical identities + rewrite chain
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -394,7 +394,7 @@ export function optimizePrimitives(
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Step 4: Emit — produce optimized gate circuit
+// Step 4: Emit. produce optimized gate circuit
 // ══════════════════════════════════════════════════════════════════════════
 
 /** Target gate set options. */

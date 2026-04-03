@@ -1,5 +1,5 @@
 /**
- * Schema.org × UOR Functor — Type Definitions
+ * Schema.org × UOR Functor. Type Definitions
  * ════════════════════════════════════════════
  *
  * The dual representation: every Schema.org type has both its original
@@ -46,7 +46,7 @@ export interface SchemaOrgProperty {
 
 // ── Dual Representation ────────────────────────────────────────────────────
 
-/** The UOR identity of a Schema.org type — the content-addressed dual. */
+/** The UOR identity of a Schema.org type. the content-addressed dual. */
 export interface SchemaOrgUorIdentity {
   /** The Schema.org type name */
   readonly schemaType: string;

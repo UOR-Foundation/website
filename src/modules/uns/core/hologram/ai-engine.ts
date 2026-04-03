@@ -1,5 +1,5 @@
 /**
- * Hologram AI Engine — In-Browser ONNX Model Inference
+ * Hologram AI Engine. In-Browser ONNX Model Inference
  * ═══════════════════════════════════════════════════════
  *
  * Runs any ONNX-compatible Hugging Face model directly in the browser
@@ -56,7 +56,7 @@ export interface AiModelRegistration {
   readonly loadedAt: string;
 }
 
-/** Result of a single inference run — also a v2 ComputationTrace. */
+/** Result of a single inference run. also a v2 ComputationTrace. */
 export interface AiInferenceResult {
   /** Trace type identifier. */
   readonly "@type": "trace:ComputationTrace";
@@ -104,35 +104,35 @@ export const RECOMMENDED_MODELS: ReadonlyArray<{
     id: "onnx-community/Qwen2.5-0.5B-Instruct",
     task: "text-generation",
     dtype: "q4f16",
-    description: "Qwen 0.5B — fast, capable, runs on any device",
+    description: "Qwen 0.5B. fast, capable, runs on any device",
     sizeApprox: "~350MB",
   },
   {
     id: "onnx-community/Qwen3-0.6B-ONNX",
     task: "text-generation",
     dtype: "q4f16",
-    description: "Qwen3 0.6B — ultra-light, fast responses",
+    description: "Qwen3 0.6B. ultra-light, fast responses",
     sizeApprox: "~400MB",
   },
   {
     id: "Xenova/gpt2",
     task: "text-generation",
     dtype: "fp32",
-    description: "GPT-2 — classic, instant responses",
+    description: "GPT-2. classic, instant responses",
     sizeApprox: "~500MB",
   },
   {
     id: "Xenova/distilbert-base-uncased-finetuned-sst-2-english",
     task: "sentiment-analysis",
     dtype: "fp32",
-    description: "DistilBERT — sentiment analysis",
+    description: "DistilBERT. sentiment analysis",
     sizeApprox: "~67MB",
   },
   {
     id: "Xenova/all-MiniLM-L6-v2",
     task: "feature-extraction",
     dtype: "fp32",
-    description: "MiniLM — text embeddings (384-dim)",
+    description: "MiniLM. text embeddings (384-dim)",
     sizeApprox: "~23MB",
   },
 ];
@@ -193,7 +193,7 @@ export class HologramAiEngine {
     this.loading = true;
 
     try {
-      // Dynamic import for code-splitting — only load Transformers.js when needed
+      // Dynamic import for code-splitting. only load Transformers.js when needed
       const { pipeline: createPipeline, env } = await import("@huggingface/transformers");
       const { installModelProxy } = await import("./model-proxy");
 

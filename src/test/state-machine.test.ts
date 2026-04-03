@@ -1,5 +1,5 @@
 /**
- * P28 — State Machine Lifecycle + Type System — 14 verification tests.
+ * P28. State Machine Lifecycle + Type System. 14 verification tests.
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import {
@@ -13,7 +13,7 @@ import { UnsStateMachine } from "@/modules/state/state-machine";
 import { generateKeypair } from "@/modules/uns/core/keypair";
 import type { UnsKeypair } from "@/modules/uns/core/keypair";
 
-describe("P28 — Type System", () => {
+describe("P28. Type System", () => {
   // Test 1: typeCheck(42n, U8) → valid:true
   it("1. typeCheck(42n, U8) → valid:true", () => {
     const r = typeCheck(42n, U8);
@@ -46,7 +46,7 @@ describe("P28 — Type System", () => {
   });
 });
 
-describe("P28 — State Machine", () => {
+describe("P28. State Machine", () => {
   let keypair: UnsKeypair;
   let sm: UnsStateMachine;
   const AGENT_ID = "urn:uor:agent:test-agent-28";

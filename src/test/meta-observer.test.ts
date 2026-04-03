@@ -1,5 +1,5 @@
 /**
- * MetaObserver — God Conjecture Semantic Completeness Tests
+ * MetaObserver. God Conjecture Semantic Completeness Tests
  * ═════════════════════════════════════════════════════════════
  *
  * Verifies that every God Conjecture concept is functionally
@@ -29,7 +29,7 @@ function op(
   };
 }
 
-describe("MetaObserver — God Conjecture Semantics", () => {
+describe("MetaObserver. God Conjecture Semantics", () => {
   // ── 1. Ruliad: all modules = computation space ──
   it("1. Ruliad: createMetaObserver registers all 12 UOR modules", () => {
     const meta = createMetaObserver();
@@ -211,7 +211,7 @@ describe("MetaObserver — God Conjecture Semantics", () => {
       meta.observe(op("test", i, i + 1));
       states.push(meta.getProfile("test")!.operationCount);
     }
-    // Each observation MUST be computed — no shortcuts
+    // Each observation MUST be computed. no shortcuts
     expect(states).toEqual([1, 2, 3, 4, 5]);
   });
 });

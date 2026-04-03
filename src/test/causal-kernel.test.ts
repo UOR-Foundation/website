@@ -1,5 +1,5 @@
 /**
- * Causal Kernel — Verification Suite
+ * Causal Kernel. Verification Suite
  * ════════════════════════════════════
  *
  * Proves the Causal Accumulation Law on the Atlas lattice with
@@ -102,7 +102,7 @@ describe("Octonionic Arithmetic", () => {
 // Part II: Full Causal Kernel Pipeline
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Causal Kernel — Full Pipeline", () => {
+describe("Causal Kernel. Full Pipeline", () => {
   let report: CausalKernelReport;
 
   it("runs full causal kernel analysis", () => {
@@ -168,7 +168,7 @@ describe("Causal Kernel — Full Pipeline", () => {
 // Part III: Higher-Order Paths (maxDepth=3 and 4)
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Causal Kernel — Higher-Order Paths", () => {
+describe("Causal Kernel. Higher-Order Paths", () => {
   it("maxDepth=4 completes without explosion", () => {
     const report = runCausalKernel({ maxDepth: 4, evolutionSteps: 3 });
     expect(report.kernelEntries.length).toBe(484);
@@ -199,7 +199,7 @@ describe("Causal Kernel — Higher-Order Paths", () => {
 // Part IV: Convergence Speed vs Accuracy Benchmark
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Causal Kernel — Benchmark: Speed vs Accuracy", () => {
+describe("Causal Kernel. Benchmark: Speed vs Accuracy", () => {
   it("benchmarks depths 1-3 with correct structure", () => {
     const benchmarks = benchmarkDepths(3, 3);
     expect(benchmarks.length).toBe(3);
@@ -221,11 +221,11 @@ describe("Causal Kernel — Benchmark: Speed vs Accuracy", () => {
 // Part V: Internal Verification Tests
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Causal Kernel — Internal Verification", () => {
+describe("Causal Kernel. Internal Verification", () => {
   it("all 17 internal tests pass (depth=2)", () => {
     const report = runCausalKernel({ maxDepth: 2, evolutionSteps: 4 });
     for (const t of report.tests) {
-      expect(t.holds, `FAIL: ${t.name} — ${t.detail}`).toBe(true);
+      expect(t.holds, `FAIL: ${t.name}. ${t.detail}`).toBe(true);
     }
     expect(report.allPassed).toBe(true);
     expect(report.tests.length).toBe(17);

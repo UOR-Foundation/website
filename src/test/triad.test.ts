@@ -62,7 +62,7 @@ describe("computeTriad", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// stratumLevel — semantic classification
+// stratumLevel. semantic classification
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("stratumLevel", () => {

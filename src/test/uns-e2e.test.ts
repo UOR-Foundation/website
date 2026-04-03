@@ -1,5 +1,5 @@
 /**
- * UNS Platform — Full Stack End-to-End Integration Test (Phase 6-B)
+ * UNS Platform. Full Stack End-to-End Integration Test (Phase 6-B)
  *
  * Exercises ALL UNS services together in a single coherent test suite:
  *   1.  Identity foundation (Dilithium-3 + ring critical identity)
@@ -17,7 +17,7 @@
  * Every namespace is exercised: identity:, cert:, morphism:, trace:,
  * derivation:, state:, proof:, store:, partition:, uns:.
  *
- * @see Phase 6-B — Integration + E2E
+ * @see Phase 6-B. Integration + E2E
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -44,7 +44,7 @@ import { UnsNode, type UnsNodeConfig } from "../modules/uns/mesh/node";
 const CANONICAL_RE = /^urn:uor:derivation:sha256:[0-9a-f]{64}$/;
 const IPV6_RE = /^fd00:0075:6f72:/;
 
-describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
+describe("UNS Platform. Full Stack E2E (Phase 6-B)", () => {
   let keypair: UnsKeypair;
   let client: UnsClient;
   let node: UnsNode;
@@ -84,7 +84,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
   });
 
   // ── TEST 1: Identity Foundation ───────────────────────────────────────
-  it("1. Identity foundation — Dilithium-3 keypair + ring critical identity", async () => {
+  it("1. Identity foundation. Dilithium-3 keypair + ring critical identity", async () => {
     // Keypair has valid canonical ID format
     expect(keypair.canonicalId).toMatch(CANONICAL_RE);
 
@@ -118,7 +118,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(stored.cid).toBeTruthy();
     expect(stored.cid.startsWith("b")).toBe(true); // base32lower prefix
 
-    // Verify integrity — recompute canonical ID from stored bytes
+    // Verify integrity. recompute canonical ID from stored bytes
     const verified = await client.verifyObject(stored.canonicalId);
     expect(verified).toBe(true);
   });
@@ -154,7 +154,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(verification.valid).toBe(true);
   });
 
-  // ── TEST 4: Compute — Deploy → Invoke → Verify ───────────────────────
+  // ── TEST 4: Compute. Deploy → Invoke → Verify ───────────────────────
   it("4. Compute: deploy → invoke → verify trace", async () => {
     // Deploy a content-addressed function
     const { canonicalId: fnId } = await client.deployFunction(
@@ -163,7 +163,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     );
     expect(fnId).toMatch(CANONICAL_RE);
 
-    // Invoke — output should match function logic
+    // Invoke. output should match function logic
     const result = await client.invokeFunction(fnId, { value: 21 });
     expect((result.output as Record<string, number>).doubled).toBe(42);
 
@@ -178,14 +178,14 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(verification.verified).toBe(true);
   });
 
-  // ── TEST 5: Trust — Challenge → Authenticate → Authorize ─────────────
+  // ── TEST 5: Trust. Challenge → Authenticate → Authorize ─────────────
   it("5. Trust: challenge → authenticate → policy", async () => {
     // Issue a challenge
     const challenge = await client.issueChallenge(keypair.canonicalId);
     expect(challenge.challengeId).toMatch(CANONICAL_RE);
     expect(challenge.identityCanonicalId).toBe(keypair.canonicalId);
 
-    // Authenticate — sign the challenge
+    // Authenticate. sign the challenge
     const session = await client.authenticate(
       challenge.challengeId,
       keypair
@@ -217,7 +217,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(policy["u:canonicalId"]).toMatch(CANONICAL_RE);
   });
 
-  // ── TEST 6: KV — Put → Get → Verify ──────────────────────────────────
+  // ── TEST 6: KV. Put → Get → Verify ──────────────────────────────────
   it("6. KV: put → get → value round-trip", async () => {
     const value = new TextEncoder().encode("e2e-kv-value");
 
@@ -225,7 +225,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     const { canonicalId } = await client.kvPut("e2e-key", value);
     expect(canonicalId).toMatch(CANONICAL_RE);
 
-    // Get — value round-trips perfectly
+    // Get. value round-trips perfectly
     const got = await client.kvGet("e2e-key");
     expect(got).not.toBeNull();
     expect(Array.from(got!.value)).toEqual(Array.from(value));
@@ -240,16 +240,16 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(Array.from(updated!.value)).toEqual(Array.from(newValue));
   });
 
-  // ── TEST 7: Shield — Analyze Content + Detect Flood ───────────────────
+  // ── TEST 7: Shield. Analyze Content + Detect Flood ───────────────────
   it("7. Shield: analyze clean content → PASS, flood → BLOCK", async () => {
-    // Clean content (typical text — high irreducible density)
+    // Clean content (typical text. high irreducible density)
     const clean = await client.analyzeContent(
       new TextEncoder().encode("Hello, this is a normal HTTP request body with varied content!")
     );
     expect(clean.action).toBe("PASS");
     expect(clean.density).toBeGreaterThan(0.4);
 
-    // Flood content (all zero bytes — zero irreducible density)
+    // Flood content (all zero bytes. zero irreducible density)
     const flood = await client.analyzeContent(new Uint8Array(1000).fill(0));
     expect(flood.action).toBe("BLOCK");
     expect(flood.density).toBe(0);
@@ -260,7 +260,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     ).toBe(clean.total);
   });
 
-  // ── TEST 8: Agent Gateway — Register → Send → Verify ─────────────────
+  // ── TEST 8: Agent Gateway. Register → Send → Verify ─────────────────
   it("8. Agent gateway: register → send morphism → verify", async () => {
     // Register agent
     const agent = await client.registerAgent(keypair.publicKeyObject);
@@ -286,7 +286,7 @@ describe("UNS Platform — Full Stack E2E (Phase 6-B)", () => {
     expect(history.length).toBeGreaterThan(0);
   });
 
-  // ── TEST 9: Ledger — Migrate → Execute → Query → Proof ───────────────
+  // ── TEST 9: Ledger. Migrate → Execute → Query → Proof ───────────────
   it("9. Ledger: migrate → execute → query → verify proof", async () => {
     // Create table
     await client.ledgerMigrate(

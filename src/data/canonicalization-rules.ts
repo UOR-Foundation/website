@@ -1,5 +1,5 @@
 /**
- * UOR Canonicalization rules — serializable data for UOR certification.
+ * UOR Canonicalization rules. serializable data for UOR certification.
  * Eight rules that normalize any expression into its simplest, deterministic form.
  */
 

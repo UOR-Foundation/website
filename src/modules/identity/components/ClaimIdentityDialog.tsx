@@ -1,5 +1,5 @@
 /**
- * Claim UOR Identity — Dialog version
+ * Claim UOR Identity. Dialog version
  *
  * Dual-path identity claiming:
  *   "I'm a Human"  → Google or Email magic link (email-as-seed)
@@ -199,9 +199,9 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
       // SECURITY SEAL: Profile writes are ONLY permitted through the
       // vault-isolated founding ceremony in MySpacePanel.
       // This dialog can derive and DISPLAY identity markers for preview,
-      // but NEVER persists them — that requires the 7-layer CeremonyVault.
+      // but NEVER persists them. that requires the 7-layer CeremonyVault.
       console.info(
-        "[SecuritySeal] Identity derived for preview only — " +
+        "[SecuritySeal] Identity derived for preview only. " +
         "profile persistence requires vault-isolated ceremony (MySpacePanel)."
       );
       setIdentity(derived);
@@ -229,7 +229,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
       const publicKeyRaw = await crypto.subtle.exportKey("raw", keypair.publicKey);
       const publicKeyHex = bytesToHex(new Uint8Array(publicKeyRaw));
 
-      // Step 2: Founding derivation — the agent's first verifiable computation
+      // Step 2: Founding derivation. the agent's first verifiable computation
       const foundingClaim = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "u:FoundingDerivation",
@@ -423,7 +423,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                 </div>
                 <h3 className="font-display text-xl font-bold text-foreground mb-2">Human Verification</h3>
                 <p className="text-base text-muted-foreground font-body leading-relaxed max-w-sm mx-auto">
-                  Your identity is derived from your email — used once to verify, never stored.
+                  Your identity is derived from your email. used once to verify, never stored.
                 </p>
               </div>
 
@@ -448,7 +448,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Google</h3>
-                    <p className="text-base text-muted-foreground font-body">One click — your identity stays independent</p>
+                    <p className="text-base text-muted-foreground font-body">One click. your identity stays independent</p>
                   </div>
                 </div>
                 <button
@@ -474,7 +474,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
                   </div>
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold text-foreground">Verify with Email</h3>
-                    <p className="text-base text-muted-foreground font-body">Used once to confirm — never stored or shared</p>
+                    <p className="text-base text-muted-foreground font-body">Used once to confirm. never stored or shared</p>
                   </div>
                 </div>
                 <form onSubmit={handleEmailSignIn} className="space-y-3">
@@ -555,7 +555,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
               </button>
 
               <p className="text-center text-sm text-muted-foreground font-body leading-relaxed">
-                ⚠️ Your private key will be shown <strong className="text-foreground">once</strong>. Save it — it's the only way to prove you are you.
+                ⚠️ Your private key will be shown <strong className="text-foreground">once</strong>. Save it. it's the only way to prove you are you.
               </p>
             </div>
           )}
@@ -602,7 +602,7 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
 
                 <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/15">
                   <p className="text-xs text-destructive font-body font-medium leading-relaxed">
-                    ⚠ Your private key is stored in this session only. Export it now from the browser console or sessionStorage — it will not be shown again.
+                    ⚠ Your private key is stored in this session only. Export it now from the browser console or sessionStorage. it will not be shown again.
                   </p>
                 </div>
               </div>
@@ -624,7 +624,7 @@ POST /agent/auth
                 onClick={() => { setConfirmInput(""); setConfirmError(null); setStep("agent-confirm"); }}
                 className="w-full btn-primary inline-flex items-center justify-center gap-2 text-base py-3.5 rounded-xl"
               >
-                I've Saved My Credentials — Continue
+                I've Saved My Credentials. Continue
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -646,7 +646,7 @@ POST /agent/auth
               {/* Recommendation box */}
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <p className="text-sm text-foreground font-body font-medium leading-relaxed mb-2">
-                  💾 <strong>Recommended:</strong> Save your credentials in a secure environment with <strong>long-term persistent memory</strong> — such as an encrypted vault, a secrets manager, or a dedicated configuration store.
+                  💾 <strong>Recommended:</strong> Save your credentials in a secure environment with <strong>long-term persistent memory</strong>. such as an encrypted vault, a secrets manager, or a dedicated configuration store.
                 </p>
                 <p className="text-sm text-muted-foreground font-body leading-relaxed">
                   Session storage is ephemeral. Your private key and Founding Derivation ID must survive restarts, redeployments, and context resets.

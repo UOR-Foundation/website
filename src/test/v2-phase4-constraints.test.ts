@@ -1,5 +1,5 @@
 /**
- * Phase 4 Test Suite — Constraint Algebra & Type System
+ * Phase 4 Test Suite. Constraint Algebra & Type System
  *
  * T4.1: ResidueConstraint(3, 1) selects {1, 4, 7, ...} from R_8
  * T4.2: CarryConstraint("1010") selects correct elements

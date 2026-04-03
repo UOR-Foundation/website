@@ -1,5 +1,5 @@
 /**
- * Audio Frame Analyzer — Ring-Native DSP
+ * Audio Frame Analyzer. Ring-Native DSP
  * ═══════════════════════════════════════════════════════════════════
  *
  * Extracts UOR-native features from audio frames WITHOUT external
@@ -91,7 +91,7 @@ export function analyzeFrame(
   // ZCR ≈ 2 * f_centroid / sampleRate for band-limited signals
   const spectralCentroid = (zeroCrossingRate * sampleRate) / 2;
 
-  // Frame CID placeholder — will be computed by canonical pipeline
+  // Frame CID placeholder. will be computed by canonical pipeline
   const frameCid = `frame:${frameIndex}:pending`;
 
   return {
@@ -111,7 +111,7 @@ export function analyzeFrame(
 
 /**
  * Compute curvature between two adjacent frames.
- * Maps to UOR CurvatureObservable — measures the rate of
+ * Maps to UOR CurvatureObservable. measures the rate of
  * change in spectral energy distribution.
  *
  * High curvature = chord change, drop, transition.
@@ -131,7 +131,7 @@ export function frameCurvature(a: AudioFrameData, b: AudioFrameData): number {
 
 /**
  * Detect catastrophe threshold crossing between frames.
- * Maps to UOR CatastropheObservable — a sudden discontinuity
+ * Maps to UOR CatastropheObservable. a sudden discontinuity
  * in the energy landscape (a "drop" in musical terms).
  *
  * @returns ratio of energy change; > 2.0 is catastrophic

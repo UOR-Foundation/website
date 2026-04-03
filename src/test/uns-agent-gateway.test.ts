@@ -7,7 +7,7 @@ import {
 } from "@/modules/uns/compute/agent-gateway";
 import type { AgentMessage } from "@/modules/uns/compute/agent-gateway";
 
-describe("UNS Agent Gateway — Morphism-Typed AI Agent Routing", () => {
+describe("UNS Agent Gateway. Morphism-Typed AI Agent Routing", () => {
   let agentA: UnsKeypair;
   let agentB: UnsKeypair;
   let gateway: UnsAgentGateway;
@@ -205,7 +205,7 @@ describe("UNS Agent Gateway — Morphism-Typed AI Agent Routing", () => {
       await gateway.route(msg);
     }
 
-    // Access updated registration — re-check baseline
+    // Access updated registration. re-check baseline
     // The gateway updates the registration in place
     // We can verify by sending one more and checking the route trace
     const checkMsg = await buildAgentMessage(

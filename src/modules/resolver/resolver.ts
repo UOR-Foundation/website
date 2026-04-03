@@ -1,5 +1,5 @@
 /**
- * UOR Resolver — maps values to canonical IRIs with partition classification.
+ * UOR Resolver. maps values to canonical IRIs with partition classification.
  *
  * Resolution strategies:
  *   - dihedral-factorization: uses ring structure

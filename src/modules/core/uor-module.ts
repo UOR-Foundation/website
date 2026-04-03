@@ -1,5 +1,5 @@
 /**
- * UorModule<T> — Generic Module Lifecycle Base
+ * UorModule<T>. Generic Module Lifecycle Base
  * ═════════════════════════════════════════════
  *
  * Every UOR module follows the same four-phase lifecycle:
@@ -11,12 +11,12 @@
  *
  * The lifecycle is the Observer Theory applied to modules themselves:
  *
- *   register()   — Module joins the observation network
- *   observe(op)  — Each operation is assessed for coherence (H-score → Zone)
- *   certify()    — Module issues a self-verification certificate
- *   remediate()  — If DRIFT/COLLAPSE, the entropy pump prescribes correction
+ *   register()  . Module joins the observation network
+ *   observe(op) . Each operation is assessed for coherence (H-score → Zone)
+ *   certify()   . Module issues a self-verification certificate
+ *   remediate() . If DRIFT/COLLAPSE, the entropy pump prescribes correction
  *
- * Subclasses implement `executeOperation()` — the module-specific logic.
+ * Subclasses implement `executeOperation()`. the module-specific logic.
  * Everything else (coherence tracking, zone assignment, certification,
  * remediation) is handled by the base class.
  *
@@ -283,7 +283,7 @@ export abstract class UorModule<T = unknown> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ABSTRACT — subclasses implement these
+  // ABSTRACT. subclasses implement these
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**

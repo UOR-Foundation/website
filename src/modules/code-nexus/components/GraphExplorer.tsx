@@ -1,5 +1,5 @@
 /**
- * GraphExplorer — Force-directed d3 visualization of the code knowledge graph.
+ * GraphExplorer. Force-directed d3 visualization of the code knowledge graph.
  *
  * Earth-tone palette, zoom/pan, click-to-inspect. Minimal, delightful.
  */
@@ -225,7 +225,7 @@ export function GraphExplorer({ store, onSelectNode, selectedNodeId }: GraphExpl
                 onPointerEnter={() => setHoveredId(node.id)}
                 onPointerLeave={() => setHoveredId(null)}
               />
-              {/* Label — visible on zoom or hover */}
+              {/* Label. visible on zoom or hover */}
               {(showLabel || isHovered || isSelected) && (
                 <text
                   x={(node.x ?? 0) + r + 4}

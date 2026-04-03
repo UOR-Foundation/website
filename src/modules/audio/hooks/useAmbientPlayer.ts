@@ -1,5 +1,5 @@
 /**
- * useAmbientPlayer — Headless playback hook
+ * useAmbientPlayer. Headless playback hook
  * ══════════════════════════════════════════
  *
  * All playback logic, state management, persistence, and frame

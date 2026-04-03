@@ -1,5 +1,5 @@
 /**
- * AtlasGraph — SpellWeb-style Force-Directed Atlas Visualization
+ * AtlasGraph. SpellWeb-style Force-Directed Atlas Visualization
  * ═══════════════════════════════════════════════════════════════
  *
  * Renders the 96-vertex Atlas of Resonance Classes as an interactive
@@ -30,14 +30,14 @@ import { getAtlas } from "@/modules/atlas/atlas";
 
 // ── Sign-class palette (8 hues, evenly spaced on wheel) ────────────────────
 const SIGN_CLASS_COLORS = [
-  "hsl(0, 70%, 60%)",     // 0 — Red
-  "hsl(30, 80%, 55%)",    // 1 — Orange
-  "hsl(55, 75%, 50%)",    // 2 — Gold
-  "hsl(120, 50%, 50%)",   // 3 — Green
-  "hsl(170, 60%, 48%)",   // 4 — Teal
-  "hsl(210, 70%, 58%)",   // 5 — Blue
-  "hsl(265, 60%, 60%)",   // 6 — Purple
-  "hsl(320, 55%, 55%)",   // 7 — Magenta
+  "hsl(0, 70%, 60%)",     // 0. Red
+  "hsl(30, 80%, 55%)",    // 1. Orange
+  "hsl(55, 75%, 50%)",    // 2. Gold
+  "hsl(120, 50%, 50%)",   // 3. Green
+  "hsl(170, 60%, 48%)",   // 4. Teal
+  "hsl(210, 70%, 58%)",   // 5. Blue
+  "hsl(265, 60%, 60%)",   // 6. Purple
+  "hsl(320, 55%, 55%)",   // 7. Magenta
 ];
 
 const SIGN_CLASS_LABELS = [
@@ -349,7 +349,7 @@ export default function AtlasGraph({ width = 900, height = 700 }: AtlasGraphProp
           96 vertices · 256 edges
           {activeLayer && (
             <span className="ml-3 text-[hsl(38,60%,60%)]">
-              {activeLayer} — {GROUP_LAYER_INFO[activeLayer].roots} roots
+              {activeLayer}. {GROUP_LAYER_INFO[activeLayer].roots} roots
             </span>
           )}
         </div>
@@ -556,7 +556,7 @@ export default function AtlasGraph({ width = 900, height = 700 }: AtlasGraphProp
           neg(bnot(x)) ≡ succ(x)
         </div>
         <div className="text-[9px] text-[hsl(210,10%,40%)] leading-relaxed">
-          Two involutions compose to one successor step — isomorphic to Atlas Hamming-1 adjacency.
+          Two involutions compose to one successor step. isomorphic to Atlas Hamming-1 adjacency.
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 /**
- * Sovereign User Data Layer (P4) — 10/10 Test Suite
+ * Sovereign User Data Layer (P4). 10/10 Test Suite
  *
  * Validates Solid Pod provisioning, app binding, data access,
  * audit trail, and GDPR export.

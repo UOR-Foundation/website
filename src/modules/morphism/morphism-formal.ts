@@ -11,8 +11,8 @@
  *   - epistemic_grade: always "A" (ring arithmetic)
  *   - derivation:derivationId: URDNA2015 content address
  *
- * @see spec/src/namespaces/morphism.rs — morphism type hierarchy
- * @see .well-known/uor.json — quantum_levels, morphism definitions
+ * @see spec/src/namespaces/morphism.rs. morphism type hierarchy
+ * @see .well-known/uor.json. quantum_levels, morphism definitions
  */
 
 import { RINGS, negQ, bnotQ, succQ, type QuantumLevel } from "./quantum";
@@ -25,20 +25,20 @@ export type MorphismType =
   | "InclusionHomomorphism"
   | "IdentityHomomorphism";
 
-/** CommutativityWitness — proves f(op(x)) = op(f(x)) for a morphism f. */
+/** CommutativityWitness. proves f(op(x)) = op(f(x)) for a morphism f. */
 export interface CommutativityWitness {
   /** Result of: apply morphism, then apply operation. */
   leftPath: bigint;
   /** Result of: apply operation, then apply morphism. */
   rightPath: bigint;
-  /** True iff leftPath === rightPath — the morphism commutes with the operation. */
+  /** True iff leftPath === rightPath. the morphism commutes with the operation. */
   commutes: boolean;
 }
 
 /**
- * Full morphism result — the canonical output of any ring homomorphism.
+ * Full morphism result. the canonical output of any ring homomorphism.
  *
- * @see spec/src/namespaces/morphism.rs — morphism:RingHomomorphism
+ * @see spec/src/namespaces/morphism.rs. morphism:RingHomomorphism
  */
 export interface MorphismResult {
   "@type": "morphism:RingHomomorphism";
@@ -58,7 +58,7 @@ export interface MorphismResult {
   isSurjective: boolean;
   /** Proof that the morphism commutes with neg. */
   "morphism:CommutativityWitness": CommutativityWitness;
-  /** P22: Always Grade A — ring arithmetic. */
+  /** P22: Always Grade A. ring arithmetic. */
   epistemic_grade: "A";
   /** Derivation URN from URDNA2015 content addressing. */
   "derivation:derivationId": string;
@@ -70,12 +70,12 @@ export interface MorphismResult {
  * Compute a commutativity witness for a morphism and ring operation.
  *
  * Given morphism f: R_from → R_to and operation op:
- *   leftPath  = op_to(f(x))      — apply morphism, then operation in target ring
- *   rightPath = f(op_from(x))     — apply operation in source ring, then morphism
+ *   leftPath  = op_to(f(x))     . apply morphism, then operation in target ring
+ *   rightPath = f(op_from(x))    . apply operation in source ring, then morphism
  *
  * If leftPath === rightPath, the morphism commutes with op.
  *
- * @see spec/src/namespaces/morphism.rs — morphism:CommutativityWitness
+ * @see spec/src/namespaces/morphism.rs. morphism:CommutativityWitness
  */
 export function commutativityWitness(
   x: bigint,
@@ -111,11 +111,11 @@ function applyMorphism(x: bigint, from: QuantumLevel, to: QuantumLevel): bigint 
   const toConfig = RINGS[to];
 
   if (fromConfig.bitWidth < toConfig.bitWidth) {
-    // Inclusion: lossless embedding — value preserved in larger ring
+    // Inclusion: lossless embedding. value preserved in larger ring
     return x % fromConfig.modulus; // ensure in source range
   }
 
-  // Projection: lossy — take low bits of target width
+  // Projection: lossy. take low bits of target width
   return x % toConfig.modulus;
 }
 
@@ -124,10 +124,10 @@ function applyMorphism(x: bigint, from: QuantumLevel, to: QuantumLevel): bigint 
 /**
  * ProjectionHomomorphism: Q_high → Q_low (lossy: x mod modulus_low).
  *
- * Surjective but not injective — information is lost.
+ * Surjective but not injective. information is lost.
  * The low bits are preserved; high bits are discarded.
  *
- * @see spec/src/namespaces/morphism.rs — ProjectionHomomorphism
+ * @see spec/src/namespaces/morphism.rs. ProjectionHomomorphism
  */
 export async function project(
   x: bigint,
@@ -166,10 +166,10 @@ export async function project(
 /**
  * InclusionHomomorphism: Q_low → Q_high (lossless embedding).
  *
- * Injective but not surjective — the value is embedded unchanged
+ * Injective but not surjective. the value is embedded unchanged
  * in the larger ring. No information is lost.
  *
- * @see spec/src/namespaces/morphism.rs — InclusionHomomorphism
+ * @see spec/src/namespaces/morphism.rs. InclusionHomomorphism
  */
 export async function embed(
   x: bigint,
@@ -208,9 +208,9 @@ export async function embed(
 /**
  * IdentityHomomorphism: Q_n → Q_n (trivial identity).
  *
- * Both injective and surjective — the identity map.
+ * Both injective and surjective. the identity map.
  *
- * @see spec/src/namespaces/morphism.rs — IdentityHomomorphism
+ * @see spec/src/namespaces/morphism.rs. IdentityHomomorphism
  */
 export async function identity(
   x: bigint,

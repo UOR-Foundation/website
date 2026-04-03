@@ -1,5 +1,5 @@
 /**
- * Hologram Diffusion Engine — Module Barrel
+ * Hologram Diffusion Engine. Module Barrel
  * ══════════════════════════════════════════
  *
  * Sovereign, zero-dependency Stable Diffusion 1.5 in the browser.

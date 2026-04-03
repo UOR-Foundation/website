@@ -1,5 +1,5 @@
 /**
- * Universal Identity + Pooled Subscription — Tests
+ * Universal Identity + Pooled Subscription. Tests
  *
  * Verifies one-login SSO and YouTube Premium-style revenue distribution.
  */
@@ -13,7 +13,7 @@ import type { UsageRecord } from "@/modules/uor-sdk/universal-identity";
 import type { PooledSubscription } from "@/modules/uor-sdk/pooled-subscription";
 import { UnsKv } from "@/modules/uns/store/kv";
 
-describe("Universal Identity — One Login, All Apps", () => {
+describe("Universal Identity. One Login, All Apps", () => {
   it("creates an identity with a canonical ID and Dilithium-3 grade", async () => {
     const kv = new UnsKv();
     const mgr = new UniversalIdentityManager(kv);
@@ -116,7 +116,7 @@ describe("Universal Identity — One Login, All Apps", () => {
   });
 });
 
-describe("Pooled Subscription — YouTube Premium Revenue Model", () => {
+describe("Pooled Subscription. YouTube Premium Revenue Model", () => {
   function makeSub(
     identityCanonicalId: string,
     price = 9.99,

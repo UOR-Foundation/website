@@ -17,7 +17,7 @@ import {
   verifyIpv6Address,
 } from "@/lib/uor-address";
 
-describe("uor-canonical — Single Proof Hashing Standard", () => {
+describe("uor-canonical. Single Proof Hashing Standard", () => {
   // ── Determinism ─────────────────────────────────────────────────────────
 
   it("same plain object produces identical proof on every call", async () => {
@@ -164,7 +164,7 @@ describe("uor-canonical — Single Proof Hashing Standard", () => {
 
 // ── IPv6 Address Tests ──────────────────────────────────────────────────────
 
-describe("uor-address — IPv6 Content Addressing", () => {
+describe("uor-address. IPv6 Content Addressing", () => {
   it("computes valid UOR ULA IPv6 from hash bytes", () => {
     // Known 32-byte hash
     const hash = new Uint8Array(32);
@@ -221,7 +221,7 @@ describe("uor-address — IPv6 Content Addressing", () => {
     expect(() => ipv6ToContentBytes("not-an-ipv6")).toThrow();
   });
 
-  it("IPv6 is deterministic — same content always produces same address", async () => {
+  it("IPv6 is deterministic. same content always produces same address", async () => {
     const obj = { schema: "AcceptAction", type: "Action" };
     const p1 = await singleProofHash(obj);
     const p2 = await singleProofHash(obj);

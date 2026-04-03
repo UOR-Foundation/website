@@ -172,7 +172,7 @@ export default function OraclePage() {
             <StatCard
               icon={<Clock className="w-5 h-5" />}
               label="Latest Record"
-              value={stats?.["oracle:latestEncoding"] ? new Date(stats["oracle:latestEncoding"]["oracle:timestamp"]).toLocaleDateString() : "—"}
+              value={stats?.["oracle:latestEncoding"] ? new Date(stats["oracle:latestEncoding"]["oracle:timestamp"]).toLocaleDateString() : ". "}
               isText
             />
           </div>
@@ -292,7 +292,7 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
         <td className="px-4 py-3">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground max-w-[220px] truncate" title={entry.object_label ?? ""}>
-              {entry.object_label ?? "—"}
+              {entry.object_label ?? ". "}
             </span>
             <span className="text-xs font-mono text-muted-foreground max-w-[220px] truncate" title={entry.object_type}>
               {entry.object_type}
@@ -305,19 +305,19 @@ function OracleRow({ entry, expanded, onToggle }: { entry: OracleEntry; expanded
         <td className="px-4 py-3">
           {(entry.storage_source || entry.storage_destination) ? (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="max-w-[100px] truncate" title={entry.storage_source ?? ""}>{entry.storage_source ?? "—"}</span>
+              <span className="max-w-[100px] truncate" title={entry.storage_source ?? ""}>{entry.storage_source ?? ". "}</span>
               <ArrowRight className="w-3 h-3 shrink-0 text-primary/60" />
-              <span className="max-w-[100px] truncate" title={entry.storage_destination ?? ""}>{entry.storage_destination ?? "—"}</span>
+              <span className="max-w-[100px] truncate" title={entry.storage_destination ?? ""}>{entry.storage_destination ?? ". "}</span>
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">—</span>
+            <span className="text-sm text-muted-foreground">. </span>
           )}
         </td>
         <td className="px-4 py-3">
           {entry.uor_cid ? (
             <CopyableHash value={entry.uor_cid} />
           ) : (
-            <span className="text-sm text-muted-foreground">—</span>
+            <span className="text-sm text-muted-foreground">. </span>
           )}
         </td>
       </tr>
@@ -359,20 +359,20 @@ function EntryDetail({ entry }: { entry: OracleEntry }) {
         <DetailRow label="Entry ID" value={entry.entry_id} mono />
         <DetailRow label="Operation" value={entry.operation} />
         <DetailRow label="Object Type" value={entry.object_type} mono />
-        <DetailRow label="Object Label" value={entry.object_label ?? "—"} />
+        <DetailRow label="Object Label" value={entry.object_label ?? ". "} />
         <DetailRow label="Source" value={entry.source_endpoint} mono />
         <DetailRow label="Format" value={entry.encoding_format} />
         <DetailRow label="Quantum" value={`Q${entry.quantum_level}`} />
-        <DetailRow label="Size" value={entry.byte_length ? `${entry.byte_length.toLocaleString()} bytes` : "—"} />
+        <DetailRow label="Size" value={entry.byte_length ? `${entry.byte_length.toLocaleString()} bytes` : ". "} />
         <DetailRow label="Memory Tier" value={getMemoryLabel(tier)} />
       </div>
       <div className="space-y-2">
-        <DetailRow label="Derivation ID" value={entry.derivation_id ?? "—"} mono copyable />
-        <DetailRow label="UOR CID" value={entry.uor_cid ?? "—"} mono copyable />
-        <DetailRow label="SHA-256" value={entry.sha256_hash ?? "—"} mono copyable />
-        <DetailRow label="IPFS CID" value={entry.pinata_cid ?? "—"} mono copyable />
-        <DetailRow label="Filecoin CID" value={entry.storacha_cid ?? "—"} mono copyable />
-        <DetailRow label="Gateway" value={entry.gateway_url ?? "—"} link />
+        <DetailRow label="Derivation ID" value={entry.derivation_id ?? ". "} mono copyable />
+        <DetailRow label="UOR CID" value={entry.uor_cid ?? ". "} mono copyable />
+        <DetailRow label="SHA-256" value={entry.sha256_hash ?? ". "} mono copyable />
+        <DetailRow label="IPFS CID" value={entry.pinata_cid ?? ". "} mono copyable />
+        <DetailRow label="Filecoin CID" value={entry.storacha_cid ?? ". "} mono copyable />
+        <DetailRow label="Gateway" value={entry.gateway_url ?? ". "} link />
         {verifyUrl && (
           <div className="pt-2">
             <a
@@ -409,14 +409,14 @@ function DetailRow({ label, value, mono, copyable, link }: { label: string; valu
   return (
     <div className="flex items-start gap-2">
       <span className="text-muted-foreground font-medium min-w-[110px] shrink-0">{label}</span>
-      {link && value !== "—" ? (
+      {link && value !== ". " ? (
         <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
           {value} <ExternalLink className="w-3.5 h-3.5 inline" />
         </a>
       ) : (
         <span className={`break-all ${mono ? "font-mono" : ""} text-foreground`}>{value}</span>
       )}
-      {copyable && value !== "—" && (
+      {copyable && value !== ". " && (
         <button onClick={handleCopy} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
         </button>

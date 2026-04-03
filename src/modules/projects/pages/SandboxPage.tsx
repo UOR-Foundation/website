@@ -1,5 +1,5 @@
 /**
- * Sandbox — Full Project Exploration Page
+ * Sandbox. Full Project Exploration Page
  * 
  * A visually striking, curiosity-driven showcase of every UOR ecosystem project.
  * Designed for clarity, impact, and exploration.

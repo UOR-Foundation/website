@@ -1,5 +1,5 @@
 /**
- * UOR Multi-Quantum Ring Engine — BigInt arithmetic for Q0, Q1, Q2.
+ * UOR Multi-Quantum Ring Engine. BigInt arithmetic for Q0, Q1, Q2.
  *
  * Extends the UOR ring substrate from Q0 (8-bit, Z/256Z) to:
  *   Q0 = Z/(2^8)Z   = Z/256Z         (8-bit,  fully materialized)
@@ -8,11 +8,11 @@
  *
  * All arithmetic uses BigInt for correctness at every quantum level.
  * The critical identity neg(bnot(x)) = succ(x) holds independently
- * in every ring — this is verified exhaustively at Q0/Q1 and by
+ * in every ring. this is verified exhaustively at Q0/Q1 and by
  * sampling at Q2.
  *
- * @see spec/src/namespaces/morphism.rs — quantum level hierarchy
- * @see .well-known/uor.json — quantum_levels field
+ * @see spec/src/namespaces/morphism.rs. quantum level hierarchy
+ * @see .well-known/uor.json. quantum_levels field
  *
  * Pure functions. Zero dependencies.
  */
@@ -36,7 +36,7 @@ export interface QuantumRingConfig {
 }
 
 /**
- * Ring configurations — verbatim from .well-known/uor.json quantum_levels.
+ * Ring configurations. verbatim from .well-known/uor.json quantum_levels.
  *
  * Z/(2^n)Z where n = 8 × 2^q:
  *   Q0: n=8,  2^8  = 256
@@ -54,7 +54,7 @@ export const RINGS: Record<QuantumLevel, QuantumRingConfig> = {
 /**
  * Additive inverse: neg(x) = (-x) mod modulus(q).
  *
- * @see spec/src/namespaces/op.rs — op:Neg
+ * @see spec/src/namespaces/op.rs. op:Neg
  */
 export function negQ(x: bigint, q: QuantumLevel): bigint {
   const { modulus } = RINGS[q];
@@ -65,7 +65,7 @@ export function negQ(x: bigint, q: QuantumLevel): bigint {
  * Bitwise complement: bnot(x) = x XOR mask(q).
  * The mask is (2^bitWidth - 1), i.e. all bits set.
  *
- * @see spec/src/namespaces/op.rs — op:Bnot
+ * @see spec/src/namespaces/op.rs. op:Bnot
  */
 export function bnotQ(x: bigint, q: QuantumLevel): bigint {
   const { mask } = RINGS[q];
@@ -75,7 +75,7 @@ export function bnotQ(x: bigint, q: QuantumLevel): bigint {
 /**
  * Successor: succ(x) = (x + 1) mod modulus(q).
  *
- * @see spec/src/namespaces/op.rs — op:Succ (derived)
+ * @see spec/src/namespaces/op.rs. op:Succ (derived)
  */
 export function succQ(x: bigint, q: QuantumLevel): bigint {
   const { modulus } = RINGS[q];
@@ -85,7 +85,7 @@ export function succQ(x: bigint, q: QuantumLevel): bigint {
 /**
  * Predecessor: pred(x) = (x - 1) mod modulus(q).
  *
- * @see spec/src/namespaces/op.rs — op:Pred (derived)
+ * @see spec/src/namespaces/op.rs. op:Pred (derived)
  */
 export function predQ(x: bigint, q: QuantumLevel): bigint {
   const { modulus } = RINGS[q];
@@ -108,7 +108,7 @@ export function predQ(x: bigint, q: QuantumLevel): bigint {
  * @param sampleSize Number of elements to test (default: all for Q0/Q1, 1000 for Q2)
  * @returns          Verification result with pass/fail counts
  *
- * @see spec/src/namespaces/proof.rs — proof:CriticalIdentityProof
+ * @see spec/src/namespaces/proof.rs. proof:CriticalIdentityProof
  */
 export function verifyCriticalIdentityQ(
   q: QuantumLevel,

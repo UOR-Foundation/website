@@ -1,5 +1,5 @@
 /**
- * UNS Shield — Derivation Trace & Injection Detection
+ * UNS Shield. Derivation Trace & Injection Detection
  *
  * Detects payload injection by analyzing Hamming distance drift
  * across ring operation chains. Legitimate content produces smooth
@@ -11,10 +11,10 @@
  *   3. Compute mean and max drift
  *   4. Flag injection if any step exceeds 3× baseline mean drift
  *
- * This is a UOR-native intrusion detection signal — no signatures,
+ * This is a UOR-native intrusion detection signal. no signatures,
  * no pattern databases, pure algebraic analysis.
  *
- * @see trace: namespace — UOR Framework spec/src/namespaces/trace.rs
+ * @see trace: namespace. UOR Framework spec/src/namespaces/trace.rs
  */
 
 import { neg, bnot, succ } from "../core/ring";

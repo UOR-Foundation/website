@@ -80,18 +80,18 @@ function MetricExplainer() {
       <div className="grid md:grid-cols-2 gap-4 mb-5">
         <div className="rounded-xl border border-border bg-muted/20 p-4">
           <h3 className="font-display text-sm font-bold text-foreground mb-2">
-            Ring Metric d<sub>R</sub> <Ref label="Def 2.9" tip="dR(x,y) = min(|x−y|, 2ⁿ−|x−y|) — cyclic topology, like a clock face." />
+            Ring Metric d<sub>R</sub> <Ref label="Def 2.9" tip="dR(x,y) = min(|x−y|, 2ⁿ−|x−y|). cyclic topology, like a clock face." />
           </h3>
           <p className="text-xs font-mono text-muted-foreground mb-2">d<sub>R</sub>(x,y) = min(|x−y|, 2ⁿ−|x−y|)</p>
-          <p className="text-xs text-muted-foreground">Cyclic topology — shortest arc on the clock face.</p>
+          <p className="text-xs text-muted-foreground">Cyclic topology. shortest arc on the clock face.</p>
           <p className="text-xs font-mono text-primary mt-2">d<sub>R</sub>(250, 5) = min(245, 11) = <span className="font-bold">11</span></p>
         </div>
         <div className="rounded-xl border border-border bg-muted/20 p-4">
           <h3 className="font-display text-sm font-bold text-foreground mb-2">
-            Hamming Metric d<sub>H</sub> <Ref label="Def 2.10" tip="dH(x,y) = popcount(x XOR y) — hypercube topology, counting differing bits." />
+            Hamming Metric d<sub>H</sub> <Ref label="Def 2.10" tip="dH(x,y) = popcount(x XOR y). hypercube topology, counting differing bits." />
           </h3>
           <p className="text-xs font-mono text-muted-foreground mb-2">d<sub>H</sub>(x,y) = popcount(x XOR y)</p>
-          <p className="text-xs text-muted-foreground">Hypercube topology — count differing bits.</p>
+          <p className="text-xs text-muted-foreground">Hypercube topology. count differing bits.</p>
           <p className="text-xs font-mono text-primary mt-2">d<sub>H</sub>(42, 43) = popcount(1) = <span className="font-bold">1</span></p>
         </div>
       </div>
@@ -177,7 +177,7 @@ function IsometryCertForm() {
     <Card>
       <SectionTitle>Isometry Certificate</SectionTitle>
       <p className="text-sm text-muted-foreground mb-5">
-        Test whether a cyclic shift preserves metric distances across distinct partition classes. <Ref label="§3.3" tip="cert:IsometryCertificate attests metric preservation — morphism:preservesMetric must be 'ring' or 'hamming'." />
+        Test whether a cyclic shift preserves metric distances across distinct partition classes. <Ref label="§3.3" tip="cert:IsometryCertificate attests metric preservation. morphism:preservesMetric must be 'ring' or 'hamming'." />
       </p>
 
       {/* Transform */}
@@ -263,7 +263,7 @@ function IsometryCertForm() {
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle size={16} className="text-amber-400" />
-                <span className="font-display font-bold text-foreground">BLOCKED — Trivial Identity</span>
+                <span className="font-display font-bold text-foreground">BLOCKED. Trivial Identity</span>
               </div>
               <p className="text-xs text-muted-foreground">{result.reason}</p>
               <p className="text-xs font-mono text-muted-foreground mt-1">
@@ -337,7 +337,7 @@ function InvolutionCerts() {
               </button>
             </div>
             <p className="text-xs font-mono text-muted-foreground">
-              {op === "neg" ? "neg(neg(x)) = x — additive involution" : "bnot(bnot(x)) = x — bitwise involution"}
+              {op === "neg" ? "neg(neg(x)) = x. additive involution" : "bnot(bnot(x)) = x. bitwise involution"}
             </p>
 
             {results[op] && (
@@ -388,7 +388,7 @@ const CertificatesPage = () => (
           </h1>
         </div>
         <p className="text-sm md:text-base text-primary-foreground/70 font-body max-w-2xl">
-          Issue cert:IsometryCertificate and cert:InvolutionCertificate — verify that transforms preserve ring or Hamming metrics across partition classes.
+          Issue cert:IsometryCertificate and cert:InvolutionCertificate. verify that transforms preserve ring or Hamming metrics across partition classes.
         </p>
       </div>
     </section>

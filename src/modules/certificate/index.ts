@@ -11,9 +11,9 @@
  * derived from what it IS, not where it LIVES. This module provides
  * the tools to:
  *
- *   1. ENCODE  — Generate a certificate for any JSON-LD object
- *   2. DECODE  — Extract and interpret certificate fields
- *   3. VERIFY  — Independently confirm that content is untampered
+ *   1. ENCODE . Generate a certificate for any JSON-LD object
+ *   2. DECODE . Extract and interpret certificate fields
+ *   3. VERIFY . Independently confirm that content is untampered
  *
  * ── WHY THIS MATTERS ───────────────────────────────────────────────
  *
@@ -67,12 +67,12 @@
  *
  * ── UOR FRAMEWORK COMPLIANCE ───────────────────────────────────────
  *
- * ✓ Content-addressed — identity derived from content
- * ✓ Self-verifying — no external authority needed
- * ✓ Deterministic — same content always yields same certificate
- * ✓ URDNA2015 — W3C standard canonicalization
- * ✓ Triality-aligned — triword maps to Observer/Observable/Context
- * ✓ Lossless — canonical payload preserved for re-verification
+ * ✓ Content-addressed. identity derived from content
+ * ✓ Self-verifying. no external authority needed
+ * ✓ Deterministic. same content always yields same certificate
+ * ✓ URDNA2015. W3C standard canonicalization
+ * ✓ Triality-aligned. triword maps to Observer/Observable/Context
+ * ✓ Lossless. canonical payload preserved for re-verification
  *
  * @module certificate
  * @version 1.0.0

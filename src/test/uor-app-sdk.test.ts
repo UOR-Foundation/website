@@ -1,5 +1,5 @@
 /**
- * @uor/app-sdk — 10/10 Test Suite (P11)
+ * @uor/app-sdk. 10/10 Test Suite (P11)
  *
  * Validates the five primary functions + secondary power tools.
  */
@@ -19,7 +19,7 @@ const USER_ID = "test-user-alice";
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-describe("@uor/app-sdk — Developer SDK (P11)", () => {
+describe("@uor/app-sdk. Developer SDK (P11)", () => {
   let app: AppClient;
 
   beforeEach(() => {

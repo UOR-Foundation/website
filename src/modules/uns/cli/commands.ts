@@ -1,8 +1,8 @@
 /**
- * UNS CLI — Command Handlers (Phase 5-C)
+ * UNS CLI. Command Handlers (Phase 5-C)
  *
  * Self-contained command implementations for the `uns` CLI tool.
- * Equivalent to Cloudflare's Wrangler CLI — manages identities,
+ * Equivalent to Cloudflare's Wrangler CLI. manages identities,
  * deploys functions, registers name records, queries the resolver,
  * verifies canonical IDs, and boots a local UnsNode.
  *
@@ -12,13 +12,13 @@
  * UOR Framework compliance:
  *   - All identity is derived via singleProofHash() (URDNA2015 pipeline)
  *   - All signing uses CRYSTALS-Dilithium-3 (FIPS 204 ML-DSA-65)
- *   - Canonical IDs are ALWAYS shown in full — never truncated
+ *   - Canonical IDs are ALWAYS shown in full. never truncated
  *   - Every verifiable output includes its derivation URN
  *
- * @see identity: namespace — canonical identity engine
- * @see cert: namespace — post-quantum signatures
- * @see compute: namespace — content-addressed functions
- * @see store: namespace — content-addressed object storage
+ * @see identity: namespace. canonical identity engine
+ * @see cert: namespace. post-quantum signatures
+ * @see compute: namespace. content-addressed functions
+ * @see store: namespace. content-addressed object storage
  */
 
 import { singleProofHash, verifyCanonical } from "../core/identity";
@@ -50,7 +50,7 @@ export interface CliResult {
 }
 
 /**
- * In-memory key store — simulates ~/.uns/keys/ on filesystem.
+ * In-memory key store. simulates ~/.uns/keys/ on filesystem.
  *
  * Maps label → keypair for identity management.
  * In production, keys are persisted to disk with chmod 600.
@@ -143,7 +143,7 @@ export async function identityShow(name: string): Promise<CliResult> {
  * Verifies content integrity by recomputing the canonical ID from
  * the provided bytes and comparing to the expected ID.
  *
- * UOR verification is trustless — any agent can verify without
+ * UOR verification is trustless. any agent can verify without
  * contacting any authority. The canonical ID IS the proof.
  *
  * @param canonicalId  Expected canonical ID (urn:uor:derivation:sha256:...)
@@ -189,7 +189,7 @@ export async function verifyRecord(canonicalId: string): Promise<CliResult> {
     return {
       exitCode: valid ? 0 : 1,
       stdout: valid
-        ? `✓ VERIFIED — store object (${obj.meta.sizeBytes} bytes)`
+        ? `✓ VERIFIED. store object (${obj.meta.sizeBytes} bytes)`
         : "✗ INTEGRITY FAILURE",
       json: {
         verified: valid,
@@ -214,7 +214,7 @@ export async function verifyRecord(canonicalId: string): Promise<CliResult> {
  * `uns resolve <name>`
  *
  * Resolves a UNS name to its target canonical identity.
- * Equivalent to DNS resolution but content-addressed —
+ * Equivalent to DNS resolution but content-addressed.
  * the result is cryptographically verifiable.
  *
  * @param name  The UNS name to resolve (e.g., "atlas.uor.foundation")
@@ -257,7 +257,7 @@ export async function resolve(name: string): Promise<CliResult> {
  * `uns name register <name> --target <canonicalId> --sign <keyName>`
  *
  * Creates and signs a UNS Name Record, then publishes it.
- * The record itself is content-addressed — its canonical ID
+ * The record itself is content-addressed. its canonical ID
  * changes if any field is modified (tamper-evident by design).
  *
  * @param name       The name to register
@@ -337,7 +337,7 @@ export async function nameList(): Promise<CliResult> {
  * `uns compute deploy <source> [--name <label>] [--sign <keyName>]`
  *
  * Deploys a JavaScript function to the content-addressed compute layer.
- * The function source is hashed via singleProofHash() — identical source
+ * The function source is hashed via singleProofHash(). identical source
  * always produces the same canonical ID (deduplication is automatic).
  *
  * @param source   JavaScript source code (function body)
@@ -362,7 +362,7 @@ export async function computeDeploy(
     }
   }
 
-  // Deploy function — source bytes are content-addressed
+  // Deploy function. source bytes are content-addressed
   // Generate a temporary keypair if none provided for deployment signing
   if (!keypair) {
     keypair = await generateKeypair();
@@ -454,7 +454,7 @@ export async function computeVerify(
 
   return {
     exitCode: valid ? 0 : 1,
-    stdout: valid ? "✓ VERIFIED" : "✗ FAILED — invalid trace format",
+    stdout: valid ? "✓ VERIFIED" : "✗ FAILED. invalid trace format",
     json: {
       verified: valid,
       traceCanonicalId,
@@ -579,7 +579,7 @@ export async function recordGet(canonicalId: string): Promise<CliResult> {
 /**
  * `uns node start [--port 8080] [--dht-port 7000]`
  *
- * Starts a UnsNode — the single process that runs the entire
+ * Starts a UnsNode. the single process that runs the entire
  * UNS stack: resolver, shield, compute, store, kv, cache,
  * ledger, and trust services.
  *
@@ -627,7 +627,7 @@ export async function nodeStart(
  * Displays comprehensive help text for all command groups.
  */
 export function help(): CliResult {
-  const text = `uns — UOR Name Service CLI
+  const text = `uns. UOR Name Service CLI
 
 USAGE
   uns <command> [options]

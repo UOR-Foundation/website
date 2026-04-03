@@ -1,5 +1,5 @@
 /**
- * UOR Foundation v2.0.0 — Enumerations
+ * UOR Foundation v2.0.0. Enumerations
  *
  * 5 canonical enums transcribed 1:1 from the Rust ontology.
  * Every variant name matches the generated Rust enum character-for-character.
@@ -17,7 +17,7 @@ export type Space = "Kernel" | "Bridge" | "User";
 /**
  * The 10 canonical primitive operations in Z/(2^n)Z.
  *
- * @see spec/src/namespaces/op.rs — op:PrimitiveOp
+ * @see spec/src/namespaces/op.rs. op:PrimitiveOp
  */
 export type PrimitiveOp =
   | "Neg"
@@ -60,7 +60,7 @@ export type FiberState = "Pinned" | "Free";
  * Geometric role of a primitive operation in the ring's symmetry group.
  * 9 distinct roles mapping operations to geometric transformations.
  *
- * @see spec/src/namespaces/op.rs — op:GeometricCharacter
+ * @see spec/src/namespaces/op.rs. op:GeometricCharacter
  */
 export type GeometricCharacter =
   | "RingReflection"

@@ -1,5 +1,5 @@
 /**
- * UNS Store — Content-Addressed Object Storage
+ * UNS Store. Content-Addressed Object Storage
  *
  * Every object is stored by its canonical SHA-256 ID. Identical content
  * is stored exactly once (automatic deduplication). Cache staleness is
@@ -7,13 +7,13 @@
  * that produced canonical ID X.
  *
  * Two access patterns:
- *   1. Canonical ID (primary) — content-addressed, zero-staleness
- *   2. Bucket/Key (S3-compatible) — maps key → canonical ID via index
+ *   1. Canonical ID (primary). content-addressed, zero-staleness
+ *   2. Bucket/Key (S3-compatible). maps key → canonical ID via index
  *
- * Deletion is a metadata operation — content-addressed bytes are immutable.
+ * Deletion is a metadata operation. content-addressed bytes are immutable.
  *
- * @see store: namespace — UOR object storage
- * @see u: namespace — canonical identity
+ * @see store: namespace. UOR object storage
+ * @see u: namespace. canonical identity
  */
 
 import { singleProofHash } from "../core/identity";
@@ -39,11 +39,11 @@ export interface StoredObject {
   partitionDensity: number;
   /** User-defined metadata. */
   metadata: Record<string, string>;
-  /** P22: Epistemic grade — 'A' for hash-verified stored content. */
+  /** P22: Epistemic grade. 'A' for hash-verified stored content. */
   epistemic_grade: "A";
   /** P22: Grade label. */
   epistemic_grade_label: string;
-  /** P22: Derivation ID — the canonical ID IS the derivation proof. */
+  /** P22: Derivation ID. the canonical ID IS the derivation proof. */
   "derivation:derivationId": string;
 }
 
@@ -67,7 +67,7 @@ interface KeyIndexEntry {
  * Content-addressed object store.
  *
  * In-memory implementation for dev; interface designed for distributed backends.
- * Objects are keyed by canonical SHA-256 ID — deduplication is automatic.
+ * Objects are keyed by canonical SHA-256 ID. deduplication is automatic.
  */
 export class UnsObjectStore {
   /** Primary store: canonicalId → entry. */
@@ -79,7 +79,7 @@ export class UnsObjectStore {
    * Store bytes by canonical ID (content-addressed).
    *
    * If the canonical ID already exists, returns the existing entry
-   * without rewriting — deduplication is automatic.
+   * without rewriting. deduplication is automatic.
    */
   async put(
     bytes: Uint8Array,
@@ -108,9 +108,9 @@ export class UnsObjectStore {
       storedAt: new Date().toISOString(),
       partitionDensity: partition.density,
       metadata,
-      // P22: Hash-verified storage is Grade A — the canonical ID is the derivation proof
+      // P22: Hash-verified storage is Grade A. the canonical ID is the derivation proof
       epistemic_grade: "A",
-      epistemic_grade_label: "Algebraically Proven — ring-arithmetic with derivation:derivationId",
+      epistemic_grade_label: "Algebraically Proven. ring-arithmetic with derivation:derivationId",
       "derivation:derivationId": canonicalId,
     };
 
@@ -121,7 +121,7 @@ export class UnsObjectStore {
   /**
    * Retrieve object by canonical ID.
    *
-   * Always returns the correct content — staleness is impossible.
+   * Always returns the correct content. staleness is impossible.
    */
   async get(
     canonicalId: string
@@ -166,7 +166,7 @@ export class UnsObjectStore {
 
   /**
    * Mark object as deleted (metadata operation only).
-   * Content-addressed bytes are immutable — deletion removes the index entry.
+   * Content-addressed bytes are immutable. deletion removes the index entry.
    */
   async delete(canonicalId: string): Promise<void> {
     const entry = this.objects.get(canonicalId);

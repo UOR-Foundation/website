@@ -1,6 +1,6 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  UOR COHERENCE GATE — Holographic Self-Verification                    ║
+ * ║  UOR COHERENCE GATE. Holographic Self-Verification                    ║
  * ║                                                                        ║
  * ║  "The hologram tests itself by projecting through every lens.          ║
  * ║   If any projection is inconsistent, the whole identity is invalid."   ║
@@ -12,15 +12,15 @@
  * This is the single, comprehensive test suite for the entire UOR framework.
  * It is structured as 6 tiers mirroring the UOR architecture:
  *
- *   T0 — RING FOUNDATION        neg(bnot(x)) ≡ succ(x) for all Q0
- *   T1 — HOLOGRAPHIC IDENTITY   23 projections, determinism, fidelity
- *   T2 — CANONICALIZATION       Context sync, URDNA2015, union types
- *   T3 — INTEROPERABILITY       DID, VC, WebFinger, W3C compliance
- *   T4 — INFRASTRUCTURE         Records, DHT, Shield, KV, PQC
- *   T5 — DISCOVERY              Cross-module emergent pattern verification
+ *   T0. RING FOUNDATION        neg(bnot(x)) ≡ succ(x) for all Q0
+ *   T1. HOLOGRAPHIC IDENTITY   23 projections, determinism, fidelity
+ *   T2. CANONICALIZATION       Context sync, URDNA2015, union types
+ *   T3. INTEROPERABILITY       DID, VC, WebFinger, W3C compliance
+ *   T4. INFRASTRUCTURE         Records, DHT, Shield, KV, PQC
+ *   T5. DISCOVERY              Cross-module emergent pattern verification
  *
  * Adding a new capability = adding assertions to the appropriate tier.
- * The gate itself is a UOR object — its output is a proof:CoherenceProof.
+ * The gate itself is a UOR object. its output is a proof:CoherenceProof.
  *
  * @module test/coherence-gate
  */
@@ -28,21 +28,21 @@
 import { describe, it, expect, beforeAll } from "vitest";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T0 — RING FOUNDATION (number-level functions from uns/core/ring)
+// T0. RING FOUNDATION (number-level functions from uns/core/ring)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { neg, bnot, succ, verifyCriticalIdentity } from "@/modules/uns/core/ring";
 import { popcount, basisElements, computeTriad, stratumLevel, stratumDensity } from "@/modules/triad";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T1 — HOLOGRAPHIC IDENTITY
+// T1. HOLOGRAPHIC IDENTITY
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
 import type { UorCanonicalIdentity } from "@/modules/uns/core/address";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T2 — CANONICALIZATION
+// T2. CANONICALIZATION
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -53,7 +53,7 @@ import {
 } from "@/modules/morphism/union-type-canon";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T3 — INTEROPERABILITY
+// T3. INTEROPERABILITY
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { generateCertificate } from "@/modules/certificate";
@@ -61,14 +61,14 @@ import { resolveDidDocument, resolveDidFull, cidToDid, didToCid, isDidUor } from
 import type { UorCertificate } from "@/modules/certificate/types";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T4 — INFRASTRUCTURE
+// T4. INFRASTRUCTURE
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { generateKeypair } from "@/modules/uns/core/keypair";
 import { UnsKv } from "@/modules/uns/store/kv";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// T5 — DISCOVERY (Cross-module emergent pattern verification)
+// T5. DISCOVERY (Cross-module emergent pattern verification)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import {
@@ -116,11 +116,11 @@ const TEST_ATTRIBUTES = { "schema:name": "CoherenceGate", "schema:version": "1.0
 describe("UOR COHERENCE GATE", () => {
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T0 — RING FOUNDATION
+  // T0. RING FOUNDATION
   // "Does the algebraic bedrock hold?"
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T0 — Ring Foundation", () => {
+  describe("T0. Ring Foundation", () => {
     it("critical identity: neg(bnot(x)) ≡ succ(x) for all 256 elements", () => {
       expect(verifyCriticalIdentity()).toBe(true);
     });
@@ -155,11 +155,11 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T1 — HOLOGRAPHIC IDENTITY
+  // T1. HOLOGRAPHIC IDENTITY
   // "Does the same identity cohere across all 23 projections?"
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T1 — Holographic Identity", () => {
+  describe("T1. Holographic Identity", () => {
     it("registers at least 23 projections", () => {
       expect(PROJECTIONS.size).toBeGreaterThanOrEqual(23);
     });
@@ -237,11 +237,11 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T2 — CANONICALIZATION
+  // T2. CANONICALIZATION
   // "Is semantic normalization deterministic and lossless?"
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T2 — Canonicalization", () => {
+  describe("T2. Canonicalization", () => {
     it("singleProofHash is deterministic (same object → same hash)", async () => {
       const obj = { "@type": "schema:Thing", "schema:name": "test" };
       const a = await singleProofHash(obj);
@@ -273,11 +273,11 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T3 — INTEROPERABILITY
+  // T3. INTEROPERABILITY
   // "Do all W3C projections resolve consistently from the same hash?"
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T3 — W3C Interoperability", () => {
+  describe("T3. W3C Interoperability", () => {
     let cert: UorCertificate;
 
     beforeAll(async () => {
@@ -344,11 +344,11 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T4 — INFRASTRUCTURE
+  // T4. INFRASTRUCTURE
   // "Is the network stack functional?"
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T4 — Infrastructure", () => {
+  describe("T4. Infrastructure", () => {
     it("Dilithium-3 keypair generation produces valid keys", async () => {
       const kp = await generateKeypair();
       expect(kp.publicKeyBytes).toBeInstanceOf(Uint8Array);
@@ -378,24 +378,24 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // T5 — DISCOVERY
+  // T5. DISCOVERY
   // "Do emergent cross-module patterns reveal deeper coherence?"
   //
   // The Discovery Gate verifies properties that no single module owns.
   // These are structural insights that *emerge* from the interaction
   // of ring arithmetic, compression, canonical identity, and fusion:
   //
-  //   D1 — Ring identity survives compression round-trip
-  //   D2 — Hamming distance is preserved through ingestion + compression
-  //   D3 — Canonical hashing and compression are compositionally consistent
-  //   D4 — Multi-modal fusion graph union is order-independent
-  //   D5 — Context serialization preserves triple fidelity end-to-end
-  //   D6 — Object dictionary discovers high-frequency patterns autonomously
-  //   D7 — Cross-module type compatibility (triples from any ingester
+  //   D1. Ring identity survives compression round-trip
+  //   D2. Hamming distance is preserved through ingestion + compression
+  //   D3. Canonical hashing and compression are compositionally consistent
+  //   D4. Multi-modal fusion graph union is order-independent
+  //   D5. Context serialization preserves triple fidelity end-to-end
+  //   D6. Object dictionary discovers high-frequency patterns autonomously
+  //   D7. Cross-module type compatibility (triples from any ingester
   //         compress, decompress, and serialize identically)
   // ═══════════════════════════════════════════════════════════════════════
 
-  describe("T5 — Discovery", () => {
+  describe("T5. Discovery", () => {
 
     // D1: Ring identity survives the full pipeline:
     //     ring element → triple object → compress → decompress → read back
@@ -428,7 +428,7 @@ describe("UOR COHERENCE GATE", () => {
     });
 
     // D3: Canonical hash determinism composes with compression determinism.
-    it("D3: compression is deterministic — identical triples produce identical blob", async () => {
+    it("D3: compression is deterministic. identical triples produce identical blob", async () => {
       const triples: CompressibleTriple[] = [
         { subject: "s:1", predicate: "schema:name", object: "Coherence" },
         { subject: "s:1", predicate: "uor:hasRole", object: "verifier" },
@@ -494,7 +494,7 @@ describe("UOR COHERENCE GATE", () => {
       expect(stats.ratio).toBeGreaterThan(2);
     });
 
-    // D7: Cross-module type compatibility — heterogeneous ingesters compose losslessly.
+    // D7: Cross-module type compatibility. heterogeneous ingesters compose losslessly.
     it("D7: heterogeneous ingester outputs compose losslessly", () => {
       const mem = ingestMemories([
         { memoryCid: "m1", memoryType: "procedural", importance: 0.5, storageTier: "cold", epistemicGrade: "C" },
@@ -517,11 +517,11 @@ describe("UOR COHERENCE GATE", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════
-  // GATE OUTPUT — Coherence Receipt
+  // GATE OUTPUT. Coherence Receipt
   // ═══════════════════════════════════════════════════════════════════════
 
   describe("Gate Receipt", () => {
-    it("all tiers executed — coherence proof is valid", () => {
+    it("all tiers executed. coherence proof is valid", () => {
       const receipt = {
         "@type": "proof:CoherenceProof",
         gate: "uor-coherence-gate",

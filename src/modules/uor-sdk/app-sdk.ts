@@ -1,12 +1,12 @@
 /**
- * UOR App SDK — @uor/app-sdk (P11)
+ * UOR App SDK. @uor/app-sdk (P11)
  *
  * Five primary functions for 90% of use cases:
- *   1. connectUser()     — provision pod, issue relationship certificate
- *   2. readUserData()    — certified read from user's Solid Pod
- *   3. writeUserData()   — certified write to user's Solid Pod
- *   4. gateWithPayment() — check access certificate for a feature
- *   5. verifyApp()       — canonical ID check of this app
+ *   1. connectUser()    . provision pod, issue relationship certificate
+ *   2. readUserData()   . certified read from user's Solid Pod
+ *   3. writeUserData()  . certified write to user's Solid Pod
+ *   4. gateWithPayment(). check access certificate for a feature
+ *   5. verifyApp()      . canonical ID check of this app
  *
  * No UOR jargon in the primary API surface. Simple verbs.
  * Feels like localStorage but backed by sovereign data + post-quantum security.
@@ -121,7 +121,7 @@ export interface RevenueResult {
 
 // ── AppClient interface ─────────────────────────────────────────────────────
 
-/** The UOR App SDK client — five primary functions + secondary power tools. */
+/** The UOR App SDK client. five primary functions + secondary power tools. */
 export interface AppClient {
   connectUser(userId: string): Promise<ConnectUserResult>;
   readUserData(userId: string, key: string): Promise<ReadDataResult | null>;

@@ -1,5 +1,5 @@
 /**
- * UNS Core — Name Record
+ * UNS Core. Name Record
  *
  * The UNS Name Record replaces ALL DNS record types (A, AAAA, MX, TXT,
  * SRV, CNAME) with a single composable JSON-LD document that is itself
@@ -31,14 +31,14 @@ export interface UnsService {
   "uns:ipv6"?: string; // override target IPv6 for this service
 }
 
-/** Target identity — what the name currently points to. */
+/** Target identity. what the name currently points to. */
 export interface UnsTarget {
   "u:canonicalId": string;
   "u:ipv6": string;
   "u:cid": string;
 }
 
-/** The UNS Name Record — the atomic unit of the name service. */
+/** The UNS Name Record. the atomic unit of the name service. */
 export interface UnsNameRecord {
   "@context": "https://uor.foundation/contexts/uns-v1.jsonld";
   "@type": "uns:NameRecord";
@@ -52,7 +52,7 @@ export interface UnsNameRecord {
   "uns:successorKeyCanonicalId"?: string;
   "partition:irreducibleDensity": number; // 0..1 quality score
   "cert:signature"?: SignatureBlock;
-  "u:canonicalId"?: string; // computed — not in signed bytes
+  "u:canonicalId"?: string; // computed. not in signed bytes
 }
 
 /** A signed UNS Name Record. */
@@ -98,7 +98,7 @@ function computeIrreducibleDensity(opts: CreateRecordOpts): number {
   return Math.min(1, Math.round(score * 1000) / 1000);
 }
 
-// ── Record Store (local Map — replaced by DHT/DB in production) ─────────────
+// ── Record Store (local Map. replaced by DHT/DB in production) ─────────────
 
 const recordStore = new Map<string, SignedUnsRecord[]>();
 
@@ -113,7 +113,7 @@ export function clearRecordStore(): void {
  * Create a UNS Name Record.
  *
  * Builds the record, computes quality score, and content-addresses it.
- * The record is NOT signed — call signRecord() separately.
+ * The record is NOT signed. call signRecord() separately.
  */
 export async function createRecord(
   opts: CreateRecordOpts

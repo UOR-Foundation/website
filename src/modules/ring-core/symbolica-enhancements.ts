@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Symbolica-Inspired Enhancements
+ * UOR v2.0.0. Symbolica-Inspired Enhancements
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Five key insights extracted from Symbolica AI's architecture and applied
@@ -34,7 +34,7 @@
  * │  INSIGHT 5: Scope-Evolved Discovery                                   │
  * │  Symbolica's REPL scope grows as agents discover new objects.         │
  * │  → HODMA: As the user converses, grow the scaffold's term map        │
- * │  with discovered entities — each answer enriches future scaffolds.   │
+ * │  with discovered entities. each answer enriches future scaffolds.   │
  * │  This is "conversational term evolution."                             │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
@@ -48,7 +48,7 @@ import type { SymbolicScaffold, ScaffoldConstraint, AnnotatedClaim, EpistemicGra
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Compute a "structural fingerprint" of a scaffold — independent of surface
+ * Compute a "structural fingerprint" of a scaffold. independent of surface
  * phrasing. Two queries with the same constraint types and term ring values
  * produce the same structural hash, enabling cross-phrasing recall.
  *
@@ -57,7 +57,7 @@ import type { SymbolicScaffold, ScaffoldConstraint, AnnotatedClaim, EpistemicGra
  *   - constraint types: ["factual", "logical:interrogative"]
  *   - term ring values: [hash("holographic"), hash("principle")]
  *
- * This is the categorical "skeleton functor" — mapping queries to their
+ * This is the categorical "skeleton functor". mapping queries to their
  * abstract shape while forgetting surface morphology.
  */
 export function structuralFingerprint(scaffold: SymbolicScaffold): string {
@@ -141,7 +141,7 @@ export class StreamingCurvatureMonitor {
     // Check for catastrophic divergence
     if (this.cumulativeCurvature > this.earlyTerminationThreshold && this.sentenceCount >= 3) {
       this.onAlert(
-        `Curvature ${(this.cumulativeCurvature * 100).toFixed(0)}% after ${this.sentenceCount} sentences — response is diverging from scaffold`,
+        `Curvature ${(this.cumulativeCurvature * 100).toFixed(0)}% after ${this.sentenceCount} sentences. response is diverging from scaffold`,
         this.cumulativeCurvature,
       );
       return false; // Recommend early termination
@@ -193,9 +193,9 @@ export class StreamingCurvatureMonitor {
  * Each claim slot is typed with a morphism signature that determines how it
  * composes with adjacent claims during tensor product assembly.
  *
- * Isometry: preserves structure (factual claims — can be freely reordered)
- * Transform: changes representation (causal chains — must preserve order)
- * Embedding: adds context (definitional — must precede dependent claims)
+ * Isometry: preserves structure (factual claims. can be freely reordered)
+ * Transform: changes representation (causal chains. must preserve order)
+ * Embedding: adds context (definitional. must precede dependent claims)
  */
 export type ClaimMorphismType = "isometry" | "transform" | "embedding";
 
@@ -417,7 +417,7 @@ export class ConversationalTermEvolver {
 
     const newTerms = evolved
       .filter(t => !existingTerms.has(t.term))
-      .slice(0, 4) // Don't overwhelm — max 4 evolved terms per scaffold
+      .slice(0, 4) // Don't overwhelm. max 4 evolved terms per scaffold
       .map(t => ({ term: t.term, ringValue: t.ringValue }));
 
     if (newTerms.length === 0) return scaffold;

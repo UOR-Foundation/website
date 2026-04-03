@@ -1,5 +1,5 @@
 /**
- * Certificate — UorModule<ModuleCertificate> Implementation
+ * Certificate. UorModule<ModuleCertificate> Implementation
  * ═════════════════════════════════════════════════════════
  *
  * The certificate engine using the generic lifecycle base.

@@ -63,13 +63,13 @@ const SessionsPage = () => {
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-8">
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">
-            MODULE 14 — STATE LIFECYCLE
+            MODULE 14. STATE LIFECYCLE
           </p>
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
             State Explorer
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Compute state:Frame objects — evaluation contexts with bindings, entry/exit conditions,
+            Compute state:Frame objects. evaluation contexts with bindings, entry/exit conditions,
             and all possible transitions. Every frame is self-verified via canonical receipt.
           </p>
         </div>

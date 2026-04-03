@@ -1,5 +1,5 @@
 /**
- * Whisper Inference — WGSL Compute Kernels
+ * Whisper Inference. WGSL Compute Kernels
  * ═════════════════════════════════════════
  *
  * Pure WGSL shaders for every op Whisper needs.
@@ -373,7 +373,7 @@ fn main(
 // ── Batched Multi-Head Fused Attention ─────────────────────────────────────
 // Dispatches ALL heads simultaneously in a single GPU call.
 // Layout: Q/K/V are interleaved [nHeads × seqLen × dHead].
-// Grid: (q_len, n_heads, 1) — one workgroup per (query_row, head) pair.
+// Grid: (q_len, n_heads, 1). one workgroup per (query_row, head) pair.
 // Eliminates sequential per-head dispatch overhead entirely.
 
 export const WGSL_BATCHED_FUSED_ATTN = /* wgsl */ `
@@ -436,7 +436,7 @@ fn main(
 
   workgroupBarrier();
 
-  // ── Phase 2: Softmax (thread 0 sequential — safe for S ≤ 4096) ───
+  // ── Phase 2: Softmax (thread 0 sequential. safe for S ≤ 4096) ───
   if (tid == 0u) {
     var maxVal: f32 = -3.402823e+38;
     for (var j: u32 = 0u; j < S; j = j + 1u) {

@@ -1,5 +1,5 @@
 /**
- * Ethereum Bridge — Integration Tests
+ * Ethereum Bridge. Integration Tests
  * ════════════════════════════════════
  *
  * Verifies all four integration pillars produce correct, consistent
@@ -37,7 +37,7 @@ const REAL: ProjectionInput = {
   hex: Array.from(REALISTIC_HASH).map(b => b.toString(16).padStart(2, "0")).join(""),
 };
 
-describe("Ethereum Bridge — Four Pillars", () => {
+describe("Ethereum Bridge. Four Pillars", () => {
 
   describe("Pillar 1: EIP-4844 Blob Witness", () => {
     it("commitment is valid 0x-prefixed bytes32", () => {
@@ -189,7 +189,7 @@ describe("Ethereum Bridge — Four Pillars", () => {
     const elapsed = performance.now() - t0;
 
     console.log("\n╔═══════════════════════════════════════════════════════════╗");
-    console.log("║   ETHEREUM BRIDGE — FOUR PILLARS INTEGRATION SUMMARY     ║");
+    console.log("║   ETHEREUM BRIDGE. FOUR PILLARS INTEGRATION SUMMARY     ║");
     console.log("╠═══════════════════════════════════════════════════════════╣");
     console.log(`║ Pipeline time:         ${elapsed.toFixed(1).padStart(7)} ms                        ║`);
     console.log("╠═══════════════════════════════════════════════════════════╣");

@@ -1,5 +1,5 @@
 /**
- * UNS TypeScript SDK — Unified Client for All UNS Services (Phase 5-D)
+ * UNS TypeScript SDK. Unified Client for All UNS Services (Phase 5-D)
  *
  * The primary interface for application developers to interact with
  * the UOR Name Service. Every method returns typed objects with
@@ -95,7 +95,7 @@ import type { SignedRecord } from "../core/keypair";
 export interface UnsClientConfig {
   /** UnsNode HTTP API base URL. */
   nodeUrl: string;
-  /** Optional identity keypair — if provided, all writes are Dilithium-3 signed. */
+  /** Optional identity keypair. if provided, all writes are Dilithium-3 signed. */
   identity?: UnsKeypair;
   /** Request timeout in milliseconds (default: 30000). */
   timeout?: number;
@@ -104,7 +104,7 @@ export interface UnsClientConfig {
 // ── UNS Client ──────────────────────────────────────────────────────────────
 
 /**
- * The UNS TypeScript SDK client — typed access to all UNS services.
+ * The UNS TypeScript SDK client. typed access to all UNS services.
  */
 export class UnsClient {
   private readonly config: UnsClientConfig;
@@ -488,10 +488,10 @@ export class UnsClient {
    * Compute the full UOR canonical identity for any object.
    *
    * Returns all four identity forms:
-   *   1. u:canonicalId  — lossless 256-bit derivation URN
-   *   2. u:ipv6         — lossy 80-bit routing projection
-   *   3. u:cid          — CIDv1 IPFS-compatible identifier
-   *   4. u:glyph        — Braille visual identity
+   *   1. u:canonicalId . lossless 256-bit derivation URN
+   *   2. u:ipv6        . lossy 80-bit routing projection
+   *   3. u:cid         . CIDv1 IPFS-compatible identifier
+   *   4. u:glyph       . Braille visual identity
    */
   async computeFullIdentity(obj: unknown): Promise<UorCanonicalIdentity> {
     return singleProofHash(obj);
@@ -544,7 +544,7 @@ export class UnsClient {
   }
 
   /**
-   * SPARQL query with epistemic grading (Grade B — graph-certified).
+   * SPARQL query with epistemic grading (Grade B. graph-certified).
    */
   async sparqlQuery(
     sparql: string,
@@ -580,7 +580,7 @@ export class UnsClient {
    * Compute fidelity between two canonical IDs using ring Hamming distance.
    *
    * Returns SKOS semantic recommendation (exactMatch/closeMatch/broadMatch/noMatch)
-   * with thresholds derived from partition cardinalities. Grade A — ring arithmetic.
+   * with thresholds derived from partition cardinalities. Grade A. ring arithmetic.
    */
   async correlate(
     canonicalIdA: string,

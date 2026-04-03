@@ -1,5 +1,5 @@
 /**
- * Hologram Projection Registry — Tests
+ * Hologram Projection Registry. Tests
  * ═════════════════════════════════════
  *
  * Verifies that every registered projection produces deterministic,
@@ -168,7 +168,7 @@ describe("Hologram Projection Registry", () => {
     expect(project(IDENTITY, "crdt").fidelity).toBe("lossless");
   });
 
-  // ── Bitcoin Protocol — SHA-256 Native Alignment ───────────────────────
+  // ── Bitcoin Protocol. SHA-256 Native Alignment ───────────────────────
 
   it("bitcoin projection produces valid OP_RETURN script (6a24 + UOR magic + hash)", () => {
     const p = project(IDENTITY, "bitcoin");
@@ -200,7 +200,7 @@ describe("Hologram Projection Registry", () => {
     expect(hashlock.fidelity).toBe("lossless");
   });
 
-  // ── Lightning BOLT-11 — Payment Hash Projection ───────────────────────
+  // ── Lightning BOLT-11. Payment Hash Projection ───────────────────────
 
   it("lightning projection produces valid BOLT-11 p tagged field", () => {
     const p = project(IDENTITY, "lightning");
@@ -243,7 +243,7 @@ describe("Hologram Projection Registry", () => {
     }
   });
 
-  // ── Nostr NIP-01/NIP-19 — Social Protocol Projection ───────────────────
+  // ── Nostr NIP-01/NIP-19. Social Protocol Projection ───────────────────
 
   it("nostr projection returns raw 64-char lowercase hex event ID", () => {
     const p = project(IDENTITY, "nostr");
@@ -278,12 +278,12 @@ describe("Hologram Projection Registry", () => {
     expect(btcScript.slice(10)).toBe(nostrId);
   });
 
-  // ── Zcash — Bitcoin-Compatible Privacy Duality ─────────────────────────
+  // ── Zcash. Bitcoin-Compatible Privacy Duality ─────────────────────────
 
   it("zcash-transparent produces identical script to bitcoin projection", () => {
     const btc = project(IDENTITY, "bitcoin").value;
     const zec = project(IDENTITY, "zcash-transparent").value;
-    // Zcash transparent IS Bitcoin script — outputs must be byte-identical
+    // Zcash transparent IS Bitcoin script. outputs must be byte-identical
     expect(zec).toBe(btc);
     expect(project(IDENTITY, "zcash-transparent").fidelity).toBe("lossless");
   });
@@ -311,7 +311,7 @@ describe("Hologram Projection Registry", () => {
     expect(hashFromTransparent).toBe(HEX);
   });
 
-  it("zcash-transparent matches bitcoin OP_RETURN — cross-chain identity proof", () => {
+  it("zcash-transparent matches bitcoin OP_RETURN. cross-chain identity proof", () => {
     const btcHash = project(IDENTITY, "bitcoin").value.slice(10);
     const zecHash = project(IDENTITY, "zcash-transparent").value.slice(10);
     const nostrId = project(IDENTITY, "nostr").value;
@@ -344,10 +344,10 @@ describe("Hologram Projection Registry", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TIER 7 — AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
+  // TIER 7. AGENTIC AI INFRASTRUCTURE (Moltbook Agent Stack)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // ── ERC-8004 — On-Chain Agent Identity ────────────────────────────────
+  // ── ERC-8004. On-Chain Agent Identity ────────────────────────────────
 
   it("erc8004 projection embeds full hex as on-chain tokenId", () => {
     const p = project(IDENTITY, "erc8004");
@@ -355,13 +355,13 @@ describe("Hologram Projection Registry", () => {
     expect(p.fidelity).toBe("lossless");
   });
 
-  it("erc8004 identity matches bitcoin OP_RETURN — cross-ledger proof", () => {
+  it("erc8004 identity matches bitcoin OP_RETURN. cross-ledger proof", () => {
     const erc = project(IDENTITY, "erc8004").value.split(":").pop()!;
     const btc = project(IDENTITY, "bitcoin").value.slice(10);
     expect(erc).toBe(btc);
   });
 
-  // ── x402 — Agent Payment Protocol ────────────────────────────────────
+  // ── x402. Agent Payment Protocol ────────────────────────────────────
 
   it("x402 projection produces payment hash with full identity", () => {
     const p = project(IDENTITY, "x402");
@@ -409,7 +409,7 @@ describe("Hologram Projection Registry", () => {
     expect(skillHash).toBe(btcEmbedded);
   });
 
-  // ── A2A — Agent-to-Agent Communication ───────────────────────────────
+  // ── A2A. Agent-to-Agent Communication ───────────────────────────────
 
   it("a2a projection produces URN with full hash", () => {
     const p = project(IDENTITY, "a2a");
@@ -429,7 +429,7 @@ describe("Hologram Projection Registry", () => {
     expect(agentHash).toBe(taskHash);
   });
 
-  // ── OASF — Open Agent Service Framework ──────────────────────────────
+  // ── OASF. Open Agent Service Framework ──────────────────────────────
 
   it("oasf projection uses CID for native IPFS alignment", () => {
     const p = project(IDENTITY, "oasf");
@@ -437,7 +437,7 @@ describe("Hologram Projection Registry", () => {
     expect(p.fidelity).toBe("lossless");
   });
 
-  // ── ONNX — Open Neural Network Exchange ─────────────────────────────
+  // ── ONNX. Open Neural Network Exchange ─────────────────────────────
 
   it("onnx projection produces URN with full hash", () => {
     const p = project(IDENTITY, "onnx");
@@ -451,7 +451,7 @@ describe("Hologram Projection Registry", () => {
     expect(p.fidelity).toBe("lossless");
   });
 
-  it("onnx model hash matches agent identity — model provenance", () => {
+  it("onnx model hash matches agent identity. model provenance", () => {
     const modelHash = project(IDENTITY, "onnx").value.split(":").pop()!;
     const agentHash = project(IDENTITY, "erc8004").value.split(":").pop()!;
     const skillHash = project(IDENTITY, "skill-md").value.split(":").pop()!;

@@ -1,5 +1,5 @@
 /**
- * P15 — Full Stack Integration Test
+ * P15. Full Stack Integration Test
  *
  * Exercises the complete UOR App Platform stack (P1–P14) as a coherent system:
  *   Import → Certify → Write → Gate → Execute → Discover → Compose → Account
@@ -71,7 +71,7 @@ const IPV6_UOR_PREFIX = "fd00:0075:6f72";
 const DEV_ID = "urn:uor:derivation:sha256:" + "aa".repeat(32);
 const USER_ID = "user-e2e-test-001";
 
-describe("P15 — Full Stack Integration (P1–P14)", () => {
+describe("P15. Full Stack Integration (P1–P14)", () => {
   let kv: UnsKv;
   let appManifest: AppManifest;
   let appId: string;
@@ -79,7 +79,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   beforeAll(async () => {
     kv = new UnsKv();
 
-    // Import a test app — this exercises P2 + P3 together
+    // Import a test app. this exercises P2 + P3 together
     const importResult = await importApp(
       { type: "url", url: "https://example.com/test-app" },
       DEV_ID,
@@ -89,7 +89,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 1 — UOR Mathematical Foundation (P1)
+  // TEST 1. UOR Mathematical Foundation (P1)
   // ═══════════════════════════════════════════════════════════════════════════
   it("1. Critical identity: neg(bnot(x)) = succ(x) for all 256 elements", () => {
     // Verbatim algebraic proof
@@ -113,7 +113,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 2 — App Identity and Import (P2 + P3)
+  // TEST 2. App Identity and Import (P2 + P3)
   // ═══════════════════════════════════════════════════════════════════════════
   it("2. Import produces valid manifest with canonical ID, IPv6, and IPFS CID", () => {
     // Canonical ID matches pattern
@@ -133,7 +133,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 3 — Security Gate (P5)
+  // TEST 3. Security Gate (P5)
   // ═══════════════════════════════════════════════════════════════════════════
   it("3. Security: clean files PASS, zero-byte flood returns 429", async () => {
     // Clean deployment scan
@@ -168,7 +168,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 4 — User Data Sovereignty (P4)
+  // TEST 4. User Data Sovereignty (P4)
   // ═══════════════════════════════════════════════════════════════════════════
   it("4. Sovereign data: connect → write → read round-trip via Solid Pod", async () => {
     const podManager = new PodManager(kv);
@@ -196,7 +196,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 5 — Certified Relationship (P6)
+  // TEST 5. Certified Relationship (P6)
   // ═══════════════════════════════════════════════════════════════════════════
   it("5. Certificates: issue → verify → revoke → verify-revoked", async () => {
     const userPodUrl = `https://pod.uor.app/${USER_ID}/`;
@@ -225,7 +225,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 6 — Monetization (P7)
+  // TEST 6. Monetization (P7)
   // ═══════════════════════════════════════════════════════════════════════════
   it("6. Monetization: configure → deny → pay → grant → balance", async () => {
     const engine = new MonetizationEngine(kv);
@@ -266,7 +266,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 7 — Runtime Witness (P8)
+  // TEST 7. Runtime Witness (P8)
   // ═══════════════════════════════════════════════════════════════════════════
   it("7. Witness: middleware creates trace → IPFS-pinned → verifiable", async () => {
     const witness = new RuntimeWitness(appId, kv);
@@ -298,7 +298,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 8 — Observer Zone and Discovery (P9)
+  // TEST 8. Observer Zone and Discovery (P9)
   // ═══════════════════════════════════════════════════════════════════════════
   it("8. Discovery: register → COHERENCE zone → feed ordered by rank", async () => {
     const discovery = new DiscoveryEngine(kv);
@@ -329,7 +329,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 9 — Morphism Composition (P10)
+  // TEST 9. Morphism Composition (P10)
   // ═══════════════════════════════════════════════════════════════════════════
   it("9. Morphism: register interface → call delivered → history recorded", async () => {
     const router = new MorphismRouter(kv);
@@ -372,7 +372,7 @@ describe("P15 — Full Stack Integration (P1–P14)", () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TEST 10 — Free Tier and Revenue Accounting (P14)
+  // TEST 10. Free Tier and Revenue Accounting (P14)
   // ═══════════════════════════════════════════════════════════════════════════
   it("10. Free tier: limits enforced → payout correct → auto-upgrade", async () => {
     const mgr = new FreeTierManager(kv);

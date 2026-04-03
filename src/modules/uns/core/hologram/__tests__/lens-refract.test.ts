@@ -20,7 +20,7 @@ const SAMPLE_OBJ = {
   age: 36,
 };
 
-describe("Bidirectional Lens — dehydrate / rehydrate", () => {
+describe("Bidirectional Lens. dehydrate / rehydrate", () => {
   it("dehydrate produces valid SingleProofResult + hologram", async () => {
     const result = await dehydrate(SAMPLE_OBJ);
 
@@ -34,7 +34,7 @@ describe("Bidirectional Lens — dehydrate / rehydrate", () => {
     expect(result.original).toBe(SAMPLE_OBJ);
   });
 
-  it("dehydrate is deterministic — same object always produces same hash", async () => {
+  it("dehydrate is deterministic. same object always produces same hash", async () => {
     const a = await dehydrate(SAMPLE_OBJ);
     const b = await dehydrate(SAMPLE_OBJ);
     expect(a.proof.hashHex).toBe(b.proof.hashHex);
@@ -102,7 +102,7 @@ describe("Bidirectional Lens — dehydrate / rehydrate", () => {
   });
 });
 
-describe("refractLens — lens-guided rehydration", () => {
+describe("refractLens. lens-guided rehydration", () => {
   it("refracts through a simple lens with default modality", async () => {
     const lens = composeLens("test-refract", [
       element("passthrough", async (x) => x),
@@ -140,7 +140,7 @@ describe("refractLens — lens-guided rehydration", () => {
   });
 });
 
-describe("roundTrip — dehydrate + refract in one call", () => {
+describe("roundTrip. dehydrate + refract in one call", () => {
   it("performs a full round trip", async () => {
     const lens = composeLens("round-trip-lens", [
       element("id", async (x) => x),

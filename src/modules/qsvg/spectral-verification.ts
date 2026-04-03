@@ -1,5 +1,5 @@
 /**
- * QSVG Spectral Verification — Integrating the CronNet-Holo Operator
+ * QSVG Spectral Verification. Integrating the CronNet-Holo Operator
  * ═══════════════════════════════════════════════════════════════════
  *
  * The CronNet-Holo operator connects geometry to number theory:
@@ -11,7 +11,7 @@
  *
  * Key insight: The Riemann zeros ARE the eigenvalues of the geometric
  * operator. Self-verification in QSVG means checking that the geometry
- * remains rigid — which is equivalent to verifying that zeros stay
+ * remains rigid. which is equivalent to verifying that zeros stay
  * on the critical line Re(s) = 1/2.
  *
  * @module qsvg/spectral-verification
@@ -88,7 +88,7 @@ function zetaReal(s: number): number {
  *
  * This is the spectral determinant of the CronNet-Holo operator.
  * Its zeros on the critical line Re(s) = 1/2 correspond to the
- * eigenvalues of Ĥ_C — which are physically meaningful as the
+ * eigenvalues of Ĥ_C. which are physically meaningful as the
  * natural frequencies of the tetrahedral lattice.
  */
 export function completedZeta(s: number): number {
@@ -110,7 +110,7 @@ export interface SpectralTest {
  * Run the QSVG spectral verification suite.
  *
  * These tests verify the mathematical consistency of the geometric
- * framework — equivalent to checking that the trust anchor (δ₀)
+ * framework. equivalent to checking that the trust anchor (δ₀)
  * produces self-consistent results across all derived quantities.
  */
 export function runSpectralVerification(): {
@@ -164,7 +164,7 @@ export function runSpectralVerification(): {
     detail: "Spectral determinant of Ĥ_C must be real and positive for s > 1",
   });
 
-  // T5: ζ(2) = π²/6 (Basel problem — validates our zeta implementation)
+  // T5: ζ(2) = π²/6 (Basel problem. validates our zeta implementation)
   const zeta2 = zetaReal(2);
   const baselExpected = Math.PI * Math.PI / 6;
   const baselError = Math.abs(zeta2 - baselExpected) / baselExpected;
@@ -204,7 +204,7 @@ export function runSpectralVerification(): {
     holds: mNu > 1e-5 && mNu < 0.1,
     expected: "1e-5 < m_ν < 0.1 eV",
     actual: `m_ν ≈ ${mNu.toExponential(3)} eV`,
-    detail: "m_ν ~ δ₀·Λ^(1/4) — geometric resonance with tetrahedral lattice",
+    detail: "m_ν ~ δ₀·Λ^(1/4). geometric resonance with tetrahedral lattice",
   });
 
   return {
@@ -221,8 +221,8 @@ export function runSpectralVerification(): {
  * The idea: a computation is "spectrally coherent" if its internal consistency
  * metrics (analogous to ξ(s) being on the critical line) are satisfied.
  *
- * @param hScore — Hamming-based coherence score (0–1)
- * @param phi — Observer integration capacity (0–1)
+ * @param hScore. Hamming-based coherence score (0–1)
+ * @param phi. Observer integration capacity (0–1)
  * @returns Epistemic grade A–D with spectral justification
  */
 export function spectralGrade(
@@ -237,26 +237,26 @@ export function spectralGrade(
     return {
       grade: "A",
       coupling,
-      spectralNote: "On critical line — full geometric rigidity",
+      spectralNote: "On critical line. full geometric rigidity",
     };
   }
   if (coherence >= 0.65) {
     return {
       grade: "B",
       coupling,
-      spectralNote: "Near critical line — minor spectral drift",
+      spectralNote: "Near critical line. minor spectral drift",
     };
   }
   if (coherence >= 0.4) {
     return {
       grade: "C",
       coupling,
-      spectralNote: "Significant spectral deviation — coherence weakening",
+      spectralNote: "Significant spectral deviation. coherence weakening",
     };
   }
   return {
     grade: "D",
     coupling,
-    spectralNote: "Off critical line — geometric rigidity lost",
+    spectralNote: "Off critical line. geometric rigidity lost",
   };
 }

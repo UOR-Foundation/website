@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Canonical Operation Metadata
+ * UOR v2.0.0. Canonical Operation Metadata
  *
  * Maps each of the 10 PrimitiveOps to its geometric character,
  * arity, and involution status. This is the runtime counterpart
@@ -19,7 +19,7 @@ export interface OpMeta {
   readonly involution: boolean;
 }
 
-/** Canonical metadata table — all 10 primitive operations. */
+/** Canonical metadata table. all 10 primitive operations. */
 export const OP_TABLE: readonly OpMeta[] = [
   { name: "Neg",  geometry: "RingReflection",       arity: 1, involution: true  },
   { name: "Bnot", geometry: "HypercubeReflection",  arity: 1, involution: true  },

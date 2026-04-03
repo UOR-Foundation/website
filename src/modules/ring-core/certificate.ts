@@ -1,5 +1,5 @@
 /**
- * UOR v2.0.0 — Certificate Factory
+ * UOR v2.0.0. Certificate Factory
  *
  * Creates typed certificate instances satisfying the v2 cert hierarchy.
  * Three certificate types, each a plain data object. No classes.

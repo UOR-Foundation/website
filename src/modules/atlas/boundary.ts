@@ -5,7 +5,7 @@
  * Central question: 256 − 240 = 16. What ARE these 16 elements?
  *
  * Hypothesis: 16 = Ext(2) + Unit(2) + 12, where the 12 boundary
- * elements correspond to G₂'s 12 roots — the smallest exceptional
+ * elements correspond to G₂'s 12 roots. the smallest exceptional
  * group forming the boundary of the largest (E₈).
  *
  * This module performs exhaustive verification.
@@ -166,7 +166,7 @@ function popcount(b: number): number {
  * - Bytes with EVEN popcount → even # of +1s → even # of -1s → E₈ root ✓
  * - Bytes with ODD popcount → odd # of +1s → odd # of -1s → NOT E₈ root ✗
  * 
- * Wait — this gives 128 non-roots (half the ring), not 16.
+ * Wait. this gives 128 non-roots (half the ring), not 16.
  * The 240/16 split must work differently.
  * 
  * The CORRECT interpretation:
@@ -304,7 +304,7 @@ export function verifyG2Correspondence(): G2BoundaryCorrespondence {
   }
   // Products of pure powers of 2: 2^i × 2^j = 2^(i+j)
   // When i+j ≥ 8, this wraps to 0 mod 256.
-  // Key: products stay within {0, boundary, Ext} — they don't scatter into Irr/Red
+  // Key: products stay within {0, boundary, Ext}. they don't scatter into Irr/Red
   const productsInBoundaryOrExt = [...products].every(p =>
     boundary12.includes(p) || p === 0 || p === 128 || p === 1 || p === 255
   );
@@ -336,7 +336,7 @@ export function verifyG2Correspondence(): G2BoundaryCorrespondence {
     cyclicChain.push(cx);
     cx = mul(cx, 2);
   }
-  // cyclicChain = [2, 4, 8, 16, 32, 64] — exactly 6 steps before hitting Ext
+  // cyclicChain = [2, 4, 8, 16, 32, 64]. exactly 6 steps before hitting Ext
   const chainTerminatesAtExt = mul(64, 2) === 128;
   tests.push({
     name: "Cyclic chain termination",
@@ -368,7 +368,7 @@ export function verifyG2Correspondence(): G2BoundaryCorrespondence {
   });
   tests.push({
     name: "Pure power characterization",
-    description: "Boundary = {2^k : 1≤k≤6} ∪ {-2^k : 1≤k≤6} — the binary skeleton",
+    description: "Boundary = {2^k : 1≤k≤6} ∪ {-2^k : 1≤k≤6}. the binary skeleton",
     holds: isPurePowerOrNeg,
     expected: "{2,4,8,16,32,64} ∪ {192,224,240,248,252,254}",
     actual: `{${boundary12.join(", ")}}`,
@@ -442,7 +442,7 @@ export function runBoundaryInvestigation(): BoundaryReport {
       `  ${t.holds ? "✅" : "❌"} ${t.name}: ${t.description}\n     Expected: ${t.expected}\n     Actual: ${t.actual}`
     ),
     ``,
-    `Conclusion: ${g2Correspondence.structuralMatch ? "G₂ = ∂E₈ CONFIRMED" : "Partial match"} — the 12 boundary elements`,
+    `Conclusion: ${g2Correspondence.structuralMatch ? "G₂ = ∂E₈ CONFIRMED" : "Partial match"}. the 12 boundary elements`,
     `are the pure powers of 2 and their negatives, forming the binary skeleton`,
     `of R₈ that terminates at the Exterior boundary (128 → 0).`,
     ``,

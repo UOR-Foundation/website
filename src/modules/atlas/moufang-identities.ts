@@ -2,14 +2,14 @@
  * Moufang Identity Verification
  * ══════════════════════════════
  *
- * The four Moufang identities characterize Moufang loops — the algebraic
+ * The four Moufang identities characterize Moufang loops. the algebraic
  * structure that octonions satisfy despite lacking full associativity.
  *
  * MOUFANG IDENTITIES (for all a, b, c):
- *   M1: (a·b)·(c·a) = a·((b·c)·a)       — "middle Moufang"
- *   M2: ((a·b)·c)·b = a·(b·(c·b))       — "right Moufang"
- *   M3: a·(b·(a·c)) = ((a·b)·a)·c       — "left Moufang"
- *   M4: (a·b·a)·c   = a·(b·(a·c))       — "flexible Moufang" (equiv to M3)
+ *   M1: (a·b)·(c·a) = a·((b·c)·a)      . "middle Moufang"
+ *   M2: ((a·b)·c)·b = a·(b·(c·b))      . "right Moufang"
+ *   M3: a·(b·(a·c)) = ((a·b)·a)·c      . "left Moufang"
+ *   M4: (a·b·a)·c   = a·(b·(a·c))      . "flexible Moufang" (equiv to M3)
  *
  * THEOREM (Moufang, 1935):
  *   Every alternative algebra satisfies the Moufang identities.
@@ -285,7 +285,7 @@ export function verifySedenionMoufang(): MoufangVerification {
   // Representative sampling: pick triples with at least one boundary element
   const triples: [number, number, number][] = [];
 
-  // All purely octonionic basis triples (i,j,k < 8) — sample a few
+  // All purely octonionic basis triples (i,j,k < 8). sample a few
   for (let i = 1; i < 8; i += 2) {
     for (let j = 1; j < 8; j += 3) {
       for (let k = 1; k < 8; k += 2) {

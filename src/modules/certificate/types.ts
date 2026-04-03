@@ -5,23 +5,23 @@
  * The certificate is a self-verifying JSON-LD document carrying
  * everything needed for independent verification:
  *
- *   @context              — The JSON-LD context (UOR ontology)
- *   @type                 — Always "cert:ModuleCertificate"
- *   cert:subject          — What this certificate is about
- *   cert:cid              — The content identifier (CIDv1)
- *   cert:canonicalPayload — The original content in canonical form
- *   cert:boundary         — Compact boundary (hash + keys)
- *   cert:sourceHash       — SHA-256 of the pre-boundary source object
- *   cert:coherence        — Algebraic coherence witness
- *   store:uorAddress      — Braille visual encoding of the hash
- *   store:ipv6Address     — Routable network address derived from content
- *   cert:computedAt       — When the certificate was last computed
- *   cert:issuedAt         — Immutable birth timestamp
- *   cert:specification    — Version of the certificate format
+ *   @context             . The JSON-LD context (UOR ontology)
+ *   @type                . Always "cert:ModuleCertificate"
+ *   cert:subject         . What this certificate is about
+ *   cert:cid             . The content identifier (CIDv1)
+ *   cert:canonicalPayload. The original content in canonical form
+ *   cert:boundary        . Compact boundary (hash + keys)
+ *   cert:sourceHash      . SHA-256 of the pre-boundary source object
+ *   cert:coherence       . Algebraic coherence witness
+ *   store:uorAddress     . Braille visual encoding of the hash
+ *   store:ipv6Address    . Routable network address derived from content
+ *   cert:computedAt      . When the certificate was last computed
+ *   cert:issuedAt        . Immutable birth timestamp
+ *   cert:specification   . Version of the certificate format
  */
 
 /**
- * Compact boundary record — only the essential shape identity.
+ * Compact boundary record. only the essential shape identity.
  * The full diagnostic manifest is available on-demand during verification.
  */
 export interface CompactBoundary {
@@ -36,7 +36,7 @@ export interface CompactBoundary {
 }
 
 /**
- * Algebraic coherence witness — binds the certificate to UOR ring identity.
+ * Algebraic coherence witness. binds the certificate to UOR ring identity.
  *
  * A witness value x is extracted from the certificate's hash.
  * The critical identity neg(bnot(x)) ≡ succ(x) must hold in Z/256Z.
@@ -45,7 +45,7 @@ export interface CompactBoundary {
 export interface CoherenceWitness {
   /** The witness value x (0–255), derived from the first byte of the hash */
   witness: number;
-  /** neg(bnot(x)) — must equal succ(x) */
+  /** neg(bnot(x)). must equal succ(x) */
   negBnot: number;
   /** succ(x) */
   succ: number;
@@ -65,7 +65,7 @@ export interface UorCertificate {
   /** Human-readable subject of the certificate (e.g., "project:hologram") */
   "cert:subject": string;
 
-  /** CIDv1 content identifier — the primary fingerprint */
+  /** CIDv1 content identifier. the primary fingerprint */
   "cert:cid": string;
 
   /**
@@ -75,7 +75,7 @@ export interface UorCertificate {
   "cert:canonicalPayload": string;
 
   /**
-   * Compact boundary — the object's shape identity.
+   * Compact boundary. the object's shape identity.
    * Hash + keys + type + field count. Enough to verify scope.
    */
   "cert:boundary": CompactBoundary;
@@ -87,18 +87,18 @@ export interface UorCertificate {
   "cert:sourceHash": string;
 
   /**
-   * Algebraic coherence witness — proves this certificate was
+   * Algebraic coherence witness. proves this certificate was
    * issued within a system where neg(bnot(x)) ≡ succ(x) holds.
    */
   "cert:coherence": CoherenceWitness;
 
-  /** UOR Braille address — visual, bijective encoding of the hash */
+  /** UOR Braille address. visual, bijective encoding of the hash */
   "store:uorAddress": {
     "u:glyph": string;
     "u:length": number;
   };
 
-  /** IPv6 content address — routable network projection of the hash */
+  /** IPv6 content address. routable network projection of the hash */
   "store:ipv6Address": {
     "u:ipv6": string;
     "u:ipv6Prefix": string;
@@ -110,7 +110,7 @@ export interface UorCertificate {
   "cert:computedAt": string;
 
   /**
-   * Immutable creation timestamp — set once at first issuance,
+   * Immutable creation timestamp. set once at first issuance,
    * never modified. The canonical birth moment of the object.
    */
   "cert:issuedAt": string;

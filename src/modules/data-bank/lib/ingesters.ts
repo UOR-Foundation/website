@@ -1,5 +1,5 @@
 /**
- * Multi-Modal Graph Ingesters — Domain → Triple Projection Operators
+ * Multi-Modal Graph Ingesters. Domain → Triple Projection Operators
  * ═══════════════════════════════════════════════════════════════════
  *
  * Pure functions that convert typed domain objects into
@@ -276,7 +276,7 @@ export function ingestRelationships(rels: RelationshipInput[]): CompressibleTrip
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// UNIVERSAL UNION — Merge all modalities
+// UNIVERSAL UNION. Merge all modalities
 // ══════════════════════════════════════════════════════════════════════
 
 /**

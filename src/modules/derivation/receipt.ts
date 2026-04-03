@@ -1,5 +1,5 @@
 /**
- * UOR Canonical Receipt — self-verifying computation proofs for Term-level ops.
+ * UOR Canonical Receipt. self-verifying computation proofs for Term-level ops.
  *
  * Uses the Single Proof Hashing Standard (URDNA2015) for all identity computation.
  * Every receipt proves the operation was computed correctly by recomputing

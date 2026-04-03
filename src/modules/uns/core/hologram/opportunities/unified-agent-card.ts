@@ -2,11 +2,11 @@
  * Opportunity 2: UNIFIED AGENT CARD
  * ══════════════════════════════════
  *
- * Merges complementary pairs into a single composite descriptor —
+ * Merges complementary pairs into a single composite descriptor.
  * one JSON-LD object that projects simultaneously into DID, VC,
  * ONNX, skill.md, OASF, NANDA, and A2A.
  *
- * The card IS the identity — every field is derived from the same hash.
+ * The card IS the identity. every field is derived from the same hash.
  *
  * @module uns/core/hologram/opportunities/unified-agent-card
  */
@@ -14,7 +14,7 @@
 import { project, PROJECTIONS } from "../index";
 import type { ProjectionInput } from "../index";
 
-/** The unified agent card — a single document spanning all agent protocols. */
+/** The unified agent card. a single document spanning all agent protocols. */
 export interface UnifiedAgentCard {
   readonly "@context": readonly string[];
   readonly "@type": "opportunity:UnifiedAgentCard";
@@ -93,7 +93,7 @@ function tryProject(input: ProjectionInput, name: string): string | null {
  * Build a Unified Agent Card from a single identity.
  *
  * The card is a JSON-LD document that simultaneously resolves
- * into every agent protocol — one object, one hash, every standard.
+ * into every agent protocol. one object, one hash, every standard.
  */
 export function buildUnifiedAgentCard(input: ProjectionInput): UnifiedAgentCard {
   const did = project(input, "did").value;

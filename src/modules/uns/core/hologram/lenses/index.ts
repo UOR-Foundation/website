@@ -1,5 +1,5 @@
 /**
- * UOR Lens Library — Pre-built Lens Blueprints
+ * UOR Lens Library. Pre-built Lens Blueprints
  * ═════════════════════════════════════════════
  *
  * Curated collection of functional lens blueprints that solve real problems.

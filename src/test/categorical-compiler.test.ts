@@ -1,5 +1,5 @@
 /**
- * Categorical Quantum Circuit Compiler — Test Suite
+ * Categorical Quantum Circuit Compiler. Test Suite
  * ══════════════════════════════════════════════════
  */
 
@@ -48,7 +48,7 @@ function getNeighborPair(): [number, number] {
 // Part I: Parsing
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Parsing — vertex pairs to morphisms", () => {
+describe("Parsing. vertex pairs to morphisms", () => {
   it("parses single neighbor pair", () => {
     const [a, b] = getNeighborPair();
     const morphisms = parseMorphisms([[a, b]]);
@@ -80,7 +80,7 @@ describe("Parsing — vertex pairs to morphisms", () => {
 // Part II: Decomposition
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Decomposition — morphisms to categorical primitives", () => {
+describe("Decomposition. morphisms to categorical primitives", () => {
   it("identity morphism → identity primitive", () => {
     const m = identityMorphism(0);
     const dec = decomposeMorphism(m);
@@ -130,7 +130,7 @@ describe("Decomposition — morphisms to categorical primitives", () => {
 // Part III: Optimization
 // ══════════════════════════════════════════════════════════════════════════
 
-describe("Optimization — categorical identity elimination", () => {
+describe("Optimization. categorical identity elimination", () => {
   it("eliminates identity primitives", () => {
     const morphisms = [identityMorphism(0), identityMorphism(5)];
     const decs = decomposeAll(morphisms);

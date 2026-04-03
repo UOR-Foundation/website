@@ -1,5 +1,5 @@
 /**
- * Phase 2 Reasoning Test Suite — Geometric Reasoning Primitives
+ * Phase 2 Reasoning Test Suite. Geometric Reasoning Primitives
  *
  * T-R1: Canonical axis↔reasoning mapping
  * T-R2: Deductive step pins fibers and tracks depth

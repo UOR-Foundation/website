@@ -79,7 +79,7 @@ describe("correlate", () => {
   });
 
   it("complementary values have fidelity 0.0", () => {
-    // 0x00 vs 0xFF — all bits differ
+    // 0x00 vs 0xFF. all bits differ
     const c = correlate(ring, 0x00, 0xff);
     expect(c.fidelity).toBe(0.0);
     expect(c.totalDifference).toBe(8);

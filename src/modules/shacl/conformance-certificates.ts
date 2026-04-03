@@ -4,7 +4,7 @@
  * Source: conformance/src/tests/fixtures/test4_certificates.rs
  * Validates Dilithium-3 (ML-DSA-65) keypair generation, signing, and verification.
  *
- * @see spec/src/namespaces/cert.rs — Certificate namespace definitions
+ * @see spec/src/namespaces/cert.rs. Certificate namespace definitions
  */
 
 import {
@@ -37,7 +37,7 @@ export async function testCertificates(): Promise<ConformanceGroup> {
     keypair.publicKeyBytes.length === 1952,
     1952,
     keypair.publicKeyBytes.length,
-    CIT + " — ML-DSA-65 public key size"
+    CIT + ". ML-DSA-65 public key size"
   ));
 
   // C5.3  signRecord → verifyRecord round-trip: true
@@ -49,7 +49,7 @@ export async function testCertificates(): Promise<ConformanceGroup> {
     verified === true,
     true,
     verified,
-    CIT + " — sign → verify round-trip"
+    CIT + ". sign → verify round-trip"
   ));
 
   // C5.4  Tampered field → verifyRecord: false
@@ -60,7 +60,7 @@ export async function testCertificates(): Promise<ConformanceGroup> {
     tamperedVerified === false,
     false,
     tamperedVerified,
-    CIT + " — tampered record must fail verification"
+    CIT + ". tampered record must fail verification"
   ));
 
   return { id: "certificates", name: "Certificates", fixtureRef: FIX, results };

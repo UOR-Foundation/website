@@ -1,5 +1,5 @@
 /**
- * UoR Name Service (UNS) — Module barrel export.
+ * UoR Name Service (UNS). Module barrel export.
  *
  * Decentralized name resolution via IPv6 content-addressing
  * and UOR algebraic identity. All public API surfaces are
@@ -43,7 +43,7 @@ export type {
   ResolveQuery, QueryType,
 } from "./core";
 
-// ── Compute — Edge Functions & Agent Gateway (Phase 3-A, 5-A) ───────────────
+// ── Compute. Edge Functions & Agent Gateway (Phase 3-A, 5-A) ───────────────
 export {
   deployFunction, getFunction, listFunctions, clearRegistry,
   invokeFunction, verifyExecution,
@@ -59,11 +59,11 @@ export type {
 export { UnsObjectStore, UnsKv, UnsCache } from "./store";
 export type { StoredObject, CacheStats } from "./store";
 
-// ── Ledger — Verifiable SQL (Phase 3-D) ─────────────────────────────────────
+// ── Ledger. Verifiable SQL (Phase 3-D) ─────────────────────────────────────
 export { UnsLedger } from "./ledger";
 export type { QueryProof, QueryResult, StateTransition, SchemaMigration } from "./ledger";
 
-// ── Trust — Zero Trust Identity, Access & Conduit (Phase 4-A, 4-B) ──────────
+// ── Trust. Zero Trust Identity, Access & Conduit (Phase 4-A, 4-B) ──────────
 export {
   UnsAuthServer, signChallenge, UnsAccessControl, trustMiddleware,
   UnsConduit, ConduitRelay,
@@ -77,7 +77,7 @@ export type {
   TrustAttestation, TrustNetwork, TrustWeights, TrustScore, TrustMember,
 } from "./trust";
 
-// ── Mesh — BGP Orbit Routing & Node Orchestrator (Phase 4-C) ────────────────
+// ── Mesh. BGP Orbit Routing & Node Orchestrator (Phase 4-C) ────────────────
 export {
   canonicalIdToOrbitPrefix, canonicalIdToBgpCommunity,
   bgpCommunityToOrbitPrefix, buildRouteAnnouncements,
@@ -88,7 +88,7 @@ export type {
   OrbitRouteAnnouncement, UnsNodeConfig, ServiceStatus, HealthResponse,
 } from "./mesh";
 
-// ── Build — Uorfile, Docker Compat, Compose, Secrets, Registry ──────────────
+// ── Build. Uorfile, Docker Compat, Compose, Secrets, Registry ──────────────
 export {
   parseUorfile, parseDockerfile, buildImage, serializeUorfile,
   parseDockerRef, wrapDockerImage, buildFromDockerfile, generateCompatReport,

@@ -1,5 +1,5 @@
 /**
- * CLIP Tokenizer — Browser-Native BPE Tokenizer
+ * CLIP Tokenizer. Browser-Native BPE Tokenizer
  * ════════════════════════════════════════════════
  *
  * Minimal CLIP tokenizer for Stable Diffusion text encoding.

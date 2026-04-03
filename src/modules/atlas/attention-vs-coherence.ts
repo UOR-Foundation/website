@@ -6,18 +6,18 @@
  * categorical coherence routing on sequence composition tasks.
  *
  * TASK: Given a sequence of Atlas vertices (analogous to tokens),
- * determine the correct composition routing — which triples compose
+ * determine the correct composition routing. which triples compose
  * associatively (losslessly) and which require correction.
  *
  * ATTENTION approach:
  *   - Learns Q, K, V weight matrices from data
- *   - Computes softmax(QKᵀ/√d) — probabilistic, approximate
+ *   - Computes softmax(QKᵀ/√d). probabilistic, approximate
  *   - Requires training, has variance across runs
  *   - O(n²) pairwise comparisons
  *
  * COHERENCE approach:
  *   - Uses algebraic structure (Fano collinearity)
- *   - Computes associator brackets — deterministic, exact
+ *   - Computes associator brackets. deterministic, exact
  *   - Zero parameters, zero training
  *   - O(n) consecutive triple evaluations
  *
@@ -258,7 +258,7 @@ export function runCoherence(vertices: number[]): CoherenceResult {
     parameterCount: 0,
     isDeterministic: true,
     complexity: `O(n) = O(${n}) = ${Math.max(0, n - 2)}`,
-    accuracy: 1.0, // Algebraically exact — this IS the ground truth
+    accuracy: 1.0, // Algebraically exact. this IS the ground truth
     variance: 0,
   };
 }
@@ -341,7 +341,7 @@ export function runBenchmark(
 // Predefined Benchmark Tasks
 // ══════════════════════════════════════════════════════════════════════════
 
-/** Task 1: Collinear sequence — all triples on Fano lines. */
+/** Task 1: Collinear sequence. all triples on Fano lines. */
 export function benchmarkCollinearSequence(): BenchmarkResult {
   const topo = constructFanoTopology();
   // Chain two Fano lines sharing a point: e.g. line0 = [0,1,3], line1 = [1,2,4]
@@ -352,13 +352,13 @@ export function benchmarkCollinearSequence(): BenchmarkResult {
   return runBenchmark("Collinear Chain (Fano lines)", seq);
 }
 
-/** Task 2: Mixed sequence — some collinear, some not. */
+/** Task 2: Mixed sequence. some collinear, some not. */
 export function benchmarkMixedSequence(): BenchmarkResult {
   // 0-6 in order: some consecutive triples are collinear, some not
   return runBenchmark("Mixed Sequence (0-6)", [0, 1, 2, 3, 4, 5, 6]);
 }
 
-/** Task 3: Adversarial — all non-collinear triples. */
+/** Task 3: Adversarial. all non-collinear triples. */
 export function benchmarkAdversarialSequence(): BenchmarkResult {
   // Pick vertices whose Fano points form no collinear triple
   // e.g. cycling through non-line points
@@ -372,13 +372,13 @@ export function benchmarkAdversarialSequence(): BenchmarkResult {
   return runBenchmark("Adversarial (maximize non-associativity)", seq);
 }
 
-/** Task 4: Long sequence — scaling test. */
+/** Task 4: Long sequence. scaling test. */
 export function benchmarkLongSequence(length: number = 50): BenchmarkResult {
   const seq = Array.from({ length }, (_, i) => i % 96);
   return runBenchmark(`Long Sequence (n=${length})`, seq);
 }
 
-/** Task 5: Repeated pattern — tests consistency. */
+/** Task 5: Repeated pattern. tests consistency. */
 export function benchmarkRepeatedPattern(): BenchmarkResult {
   const topo = constructFanoTopology();
   const line = topo.lines[0].points;
@@ -410,7 +410,7 @@ export function runAllBenchmarks(): {
 
   const overallSummary = [
     `╔══════════════════════════════════════════════════════╗`,
-    `║  ATTENTION vs COHERENCE — OVERALL RESULTS           ║`,
+    `║  ATTENTION vs COHERENCE. OVERALL RESULTS           ║`,
     `╠══════════════════════════════════════════════════════╣`,
     `║                                                      ║`,
     `║  Benchmarks run:        ${benchmarks.length}                           ║`,

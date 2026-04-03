@@ -1,5 +1,5 @@
 /**
- * Multi-Head Categorical Coherence Layer — Test Suite
+ * Multi-Head Categorical Coherence Layer. Test Suite
  * ════════════════════════════════════════════════════
  */
 

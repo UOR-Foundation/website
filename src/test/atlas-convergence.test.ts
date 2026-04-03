@@ -1,5 +1,5 @@
 /**
- * Atlas Convergence Test — Phase 5 Test Suite
+ * Atlas Convergence Test. Phase 5 Test Suite
  *
  * Verifies: ALL LLM architectures map to the Atlas R₈ substrate.
  */

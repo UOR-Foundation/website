@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Pooled Subscription (YouTube Premium Model)
+ * UOR SDK. Pooled Subscription (YouTube Premium Model)
  *
  * One subscription. All apps. Revenue divided by usage.
  *
@@ -23,8 +23,8 @@
  *   pool-payout:{periodId}:{appId}          → AppPayout
  *   pool-balance:{appCanonicalId}           → PooledDeveloperBalance
  *
- * @see monetization: namespace — per-app payment gates
- * @see universal-identity: namespace — usage tracking
+ * @see monetization: namespace. per-app payment gates
+ * @see universal-identity: namespace. usage tracking
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -136,7 +136,7 @@ function fromBytes<T>(bytes: Uint8Array): T {
  * YouTube Premium-style revenue pooling engine.
  *
  * Users pay one subscription. Revenue is divided by actual app usage.
- * Vibe coders deploy and earn — zero payment configuration required.
+ * Vibe coders deploy and earn. zero payment configuration required.
  */
 export class PooledSubscriptionEngine {
   constructor(

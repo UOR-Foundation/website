@@ -1,5 +1,5 @@
 /**
- * UOR MCP Module — Shared types for tool inputs/outputs.
+ * UOR MCP Module. Shared types for tool inputs/outputs.
  *
  * These types mirror the MCP tool schemas defined in the edge function
  * and can be used by any frontend code that needs to reference MCP

@@ -117,7 +117,7 @@ export interface DaggerCompactVerification {
  * Apply the dagger functor to a vertex (object).
  * In Atlas, † = τ = mirror involution (flip e₇).
  *
- * For objects, A† = A* = τ(A) — the dual object.
+ * For objects, A† = A* = τ(A). the dual object.
  */
 export function dagger(vertexIndex: number): number {
   const atlas = getAtlas();

@@ -1,5 +1,5 @@
 /**
- * Layer 1: Substrate — The {3,3,5} Lattice Constants
+ * Layer 1: Substrate. The {3,3,5} Lattice Constants
  * ════════════════════════════════════════════════════
  *
  * Universal, immutable, publicly known.
@@ -44,7 +44,7 @@ function substrate<T>(value: T): SubstrateValue<T> {
 
 // ── Substrate Constants (branded) ─────────────────────────────────────────
 
-/** δ₀ in radians — the single geometric origin */
+/** δ₀ in radians. the single geometric origin */
 export const S_DELTA_0 = substrate(DELTA_0_RAD);
 
 /** Fractal dimension D = log(37)/log(8) */

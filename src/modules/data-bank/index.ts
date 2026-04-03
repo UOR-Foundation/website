@@ -1,5 +1,5 @@
 /**
- * Data Bank Box — Module Barrel Export
+ * Data Bank Box. Module Barrel Export
  * ═════════════════════════════════════
  *
  * Encrypted, content-addressed, multi-device user storage.

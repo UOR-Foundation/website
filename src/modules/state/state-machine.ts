@@ -1,5 +1,5 @@
 /**
- * UNS State Machine — Formal agent lifecycle model.
+ * UNS State Machine. Formal agent lifecycle model.
  *
  * Every agent action is a state:Transition from one ring-element
  * state to another. Transitions are ring-arithmetically verifiable
@@ -92,7 +92,7 @@ export class UnsStateMachine {
   }
 
   /**
-   * Define a state frame — bind a ring value to a semantic label.
+   * Define a state frame. bind a ring value to a semantic label.
    */
   defineFrame(
     ringValue: bigint,

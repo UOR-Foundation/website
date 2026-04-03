@@ -1,15 +1,15 @@
 /**
- * UOR v2.0.0 — Reasoning Command Module for vShell
+ * UOR v2.0.0. Reasoning Command Module for vShell
  *
  * Phase 6: Exposes the geometric reasoning engine through vShell commands.
  *
  * Commands:
- *   reason run [quantum] [obs...]   — Run abductive loop with observations
- *   reason status                   — Show current reasoning state
- *   reason explain [step]           — Explain a reasoning step or cycle
- *   reason certify                  — Certify the current proof
- *   reason strategy <dfs|bfs|spiral|composed> — Select traversal strategy
- *   reason reset                    — Reset reasoning state
+ *   reason run [quantum] [obs...]  . Run abductive loop with observations
+ *   reason status                  . Show current reasoning state
+ *   reason explain [step]          . Explain a reasoning step or cycle
+ *   reason certify                 . Certify the current proof
+ *   reason strategy <dfs|bfs|spiral|composed>. Select traversal strategy
+ *   reason reset                   . Reset reasoning state
  *
  * @module ring-core/reason-command
  */

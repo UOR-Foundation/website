@@ -1,11 +1,11 @@
 /**
- * UOR v2.0.0 — Geometric Reasoning Primitives
+ * UOR v2.0.0. Geometric Reasoning Primitives
  *
  * Formalizes the three reasoning modes as first-class operations on the ring:
  *
- *   Vertical   (Deductive)  — constraint propagation → pinned fibers
- *   Horizontal (Inductive)  — pattern matching → Hamming similarity
- *   Diagonal   (Abductive)  — curvature between deductive & inductive results
+ *   Vertical   (Deductive) . constraint propagation → pinned fibers
+ *   Horizontal (Inductive) . pattern matching → Hamming similarity
+ *   Diagonal   (Abductive) . curvature between deductive & inductive results
  *
  * The canonical mapping:
  *   MetricAxis → ReasoningMode
@@ -52,7 +52,7 @@ export interface DeductiveResult {
   readonly constraintId: string;
   /** Fiber budget after applying the constraint. */
   readonly budget: FiberBudget;
-  /** Resolution ratio [0, 1] — depth of the deduction. */
+  /** Resolution ratio [0, 1]. depth of the deduction. */
   readonly depth: number;
   /** Number of fibers pinned in this step. */
   readonly fibersPinned: number;
@@ -249,7 +249,7 @@ export function abductiveCurvature(
   const isCatastrophe = normalizedCurvature > threshold;
 
   // Holonomy: if we went D → I → back, does the loop close?
-  // Measured as |depth - confidence| — if deductive depth matches inductive confidence,
+  // Measured as |depth - confidence|. if deductive depth matches inductive confidence,
   // the loop closes (holonomy = 0).
   const holonomyValue = Math.abs(deductive.depth - inductive.confidence);
 

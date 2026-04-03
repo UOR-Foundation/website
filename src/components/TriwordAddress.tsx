@@ -1,5 +1,5 @@
 /**
- * TriwordAddress — Reusable three-word address display with copy + reveal actions.
+ * TriwordAddress. Reusable three-word address display with copy + reveal actions.
  *
  * Two icon buttons:
  *   📋 Copy the triword (word1.word2.word3) to clipboard

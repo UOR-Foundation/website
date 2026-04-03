@@ -1,5 +1,5 @@
 /**
- * MetaObserver — Interactive Visualization
+ * MetaObserver. Interactive Visualization
  * ═════════════════════════════════════════
  *
  * The Observer Meta-Layer as holographic dashboard.
@@ -408,11 +408,11 @@ export default function MetaObserverPage() {
           >
             <div className="text-[11px] text-muted-foreground leading-relaxed space-y-2">
               <p>
-                The <strong>Hologram</strong> projects <em>identity</em> — what something IS across protocol spaces
+                The <strong>Hologram</strong> projects <em>identity</em>. what something IS across protocol spaces
                 (DID, CID, ActivityPub, Bitcoin, etc).
               </p>
               <p>
-                The <strong>Observer</strong> projects <em>coherence</em> — how aligned something IS with the
+                The <strong>Observer</strong> projects <em>coherence</em>. how aligned something IS with the
                 Grade-A knowledge graph.
               </p>
               <p>
@@ -449,7 +449,7 @@ export default function MetaObserverPage() {
             badgeColor="hsl(35, 80%, 55%)"
           >
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              The MetaObserver doesn't just measure entropy — it actively <strong>prescribes remediation</strong>.
+              The MetaObserver doesn't just measure entropy. it actively <strong>prescribes remediation</strong>.
               When ε {">"} 0, the module is creating order (alive). When ε ≤ 0, the entropy pump issues
               OIP/EDP/CAP protocols to restore coherence. This IS the "absorber function" from
               the God Conjecture: life actively creating local pockets of order.
@@ -474,7 +474,7 @@ export default function MetaObserverPage() {
       </section>
 
       <div className="text-center text-xs text-muted-foreground py-4 border-t border-border">
-        MetaObserver — God Conjecture × UOR Observer Theory.
+        MetaObserver. God Conjecture × UOR Observer Theory.
         The observer IS the meta-layer. 16 tests passing.
       </div>
     </PageShell>

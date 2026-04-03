@@ -1,8 +1,8 @@
 /**
- * UOR SDK — Import Adapter (P3)
+ * UOR SDK. Import Adapter (P3)
  *
- * One-click deploy from any vibe coding platform. Accept any app source —
- * URL, GitHub repo, local directory, or ZIP — compute canonical identity,
+ * One-click deploy from any vibe coding platform. Accept any app source.
+ * URL, GitHub repo, local directory, or ZIP. compute canonical identity,
  * pin snapshot to IPFS, inject the UOR session shim, return AppManifest.
  *
  * The import IS the deployment: no separate build step required.
@@ -13,8 +13,8 @@
  *   - Directory: local file tree (path + bytes pairs)
  *   - ZIP: raw Uint8Array of a ZIP archive
  *
- * @see store: namespace — IPFS pinning
- * @see u: namespace — content addressing
+ * @see store: namespace. IPFS pinning
+ * @see u: namespace. content addressing
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

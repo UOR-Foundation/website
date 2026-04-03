@@ -106,7 +106,7 @@ describe("generateReceipt", () => {
     expect(receipt.receiptId).toMatch(/^urn:uor:receipt:/);
   });
 
-  it("CRITICAL: commutative receipt — swapped operands match", async () => {
+  it("CRITICAL: commutative receipt. swapped operands match", async () => {
     ring.verify();
     const t1: Term = {
       kind: "binary", op: "and",

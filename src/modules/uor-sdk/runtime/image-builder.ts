@@ -1,5 +1,5 @@
 /**
- * UOR SDK — Runtime Image Builder
+ * UOR SDK. Runtime Image Builder
  *
  * Wraps an imported file tree (AppFile[]) into a content-addressed UorImage
  * with individual layers per file. Bridges the import-adapter (which resolves
@@ -13,8 +13,8 @@
  *
  * This is the "docker build" equivalent for vibe-coded apps.
  *
- * @see import-adapter — source resolution (URL, GitHub, ZIP, dir)
- * @see uns/build/uorfile — canonical image builder
+ * @see import-adapter. source resolution (URL, GitHub, ZIP, dir)
+ * @see uns/build/uorfile. canonical image builder
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";

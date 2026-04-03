@@ -1,12 +1,12 @@
 /**
- * UNS Shield — HTTP Middleware Stack
+ * UNS Shield. HTTP Middleware Stack
  *
  * Four composable middleware layers that protect any HTTP endpoint:
  *
- *   1. PARTITION — Ring-arithmetic payload classification (L3/L4 DDoS)
- *   2. WAF       — Content-addressed rule engine (L7 application firewall)
- *   3. RATE      — Sliding-window rate limiting keyed by canonical identity
- *   4. POW       — Ring proof-of-work bot management (neg∘bnot composition)
+ *   1. PARTITION. Ring-arithmetic payload classification (L3/L4 DDoS)
+ *   2. WAF      . Content-addressed rule engine (L7 application firewall)
+ *   3. RATE     . Sliding-window rate limiting keyed by canonical identity
+ *   4. POW      . Ring proof-of-work bot management (neg∘bnot composition)
  *
  * Each layer is independent and composable. The `unsShield()` function
  * chains all four in the correct order.
@@ -18,9 +18,9 @@
  *   - PoW challenges are O(1) to verify server-side
  *   - All decisions are auditable via response headers
  *
- * @see partition: namespace — UOR ring-arithmetic classification
- * @see observable: namespace — rate observation windows
- * @see derivation: namespace — PoW challenge derivation
+ * @see partition: namespace. UOR ring-arithmetic classification
+ * @see observable: namespace. rate observation windows
+ * @see derivation: namespace. PoW challenge derivation
  */
 
 import { analyzePayloadFast } from "./partition";
@@ -41,7 +41,7 @@ export interface ShieldRequest {
   method: string;
 }
 
-/** Middleware response — null means "pass through". */
+/** Middleware response. null means "pass through". */
 export interface ShieldResponse {
   status: number;
   headers: Record<string, string>;

@@ -1,5 +1,5 @@
 /**
- * UNS Trust — TrustGraph: Social Attestation Layer
+ * UNS Trust. TrustGraph: Social Attestation Layer
  * ═════════════════════════════════════════════════
  *
  * Implements a content-addressed, Dilithium-3 signed attestation graph
@@ -17,7 +17,7 @@
  *     Φ_social     = PageRank-weighted attestation score
  *     τ_temporal   = temporal depth (time-weighted behavioral consistency)
  *
- * Inspired by TrustGraph.network — attestation-based governance.
+ * Inspired by TrustGraph.network. attestation-based governance.
  * Enhanced with UOR content-addressing and post-quantum signatures.
  *
  * @module uns/trust/trust-graph
@@ -47,7 +47,7 @@ export interface TrustAttestation {
   subjectCanonicalId: string;
   /** Trust network this attestation belongs to */
   networkId: string;
-  /** Confidence level (0–1) — maps to TrustGraph's slider */
+  /** Confidence level (0–1). maps to TrustGraph's slider */
   confidence: number;
   /** Domain-specific criteria being attested (e.g., "expertise", "integrity") */
   criteria: string[];
@@ -55,7 +55,7 @@ export interface TrustAttestation {
   createdAt: string;
   /** Dilithium-3 signature */
   "cert:signature": SignatureBlock;
-  /** Grade A — cryptographically signed attestation */
+  /** Grade A. cryptographically signed attestation */
   epistemic_grade: "A";
 }
 
@@ -78,11 +78,11 @@ export interface TrustNetwork {
 
 /** Tunable weights for the three trust dimensions */
 export interface TrustWeights {
-  /** Weight for individual coherence (Φ from observer) — default 0.3 */
+  /** Weight for individual coherence (Φ from observer). default 0.3 */
   individual: number;
-  /** Weight for social attestations (graph PageRank) — default 0.4 */
+  /** Weight for social attestations (graph PageRank). default 0.4 */
   social: number;
-  /** Weight for temporal depth (behavior over time) — default 0.3 */
+  /** Weight for temporal depth (behavior over time). default 0.3 */
   temporal: number;
 }
 
@@ -134,7 +134,7 @@ export interface TrustMember {
 // ── TrustGraph Engine ───────────────────────────────────────────────────────
 
 /**
- * TrustGraph — Social attestation engine for the UOR trust layer.
+ * TrustGraph. Social attestation engine for the UOR trust layer.
  *
  * Manages trust networks, peer attestations, and composite trust
  * score computation. Integrates with UnsObserver for individual
@@ -357,7 +357,7 @@ export class UnsTrustGraph {
       inbound.set(a.subjectCanonicalId, list);
     }
 
-    // Iterative propagation (3 rounds — converges fast for small networks)
+    // Iterative propagation (3 rounds. converges fast for small networks)
     const DAMPING = 0.85;
     const ITERATIONS = 3;
 
@@ -404,7 +404,7 @@ export class UnsTrustGraph {
       const phiSoc = Math.min(1, (socialScores.get(id) ?? 0) * n);
 
       // Temporal depth: logarithmic membership duration
-      // τ = log2(1 + durationDays) / log2(365) — 1 year = 1.0
+      // τ = log2(1 + durationDays) / log2(365). 1 year = 1.0
       const durationMs = now - new Date(member.joinedAt).getTime();
       const durationDays = Math.max(0, durationMs / 86_400_000);
       const tauTemp = Math.min(1, Math.log2(1 + durationDays) / Math.log2(365));

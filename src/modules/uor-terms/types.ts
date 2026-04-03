@@ -1,5 +1,5 @@
 /**
- * UOR Terms — Type Definitions
+ * UOR Terms. Type Definitions
  *
  * All terms are structured as JSON-LD objects that pass through the
  * canonical pipeline: Object → URDNA2015 → SHA-256 → Canonical ID.
@@ -12,7 +12,7 @@
 
 // ── Core Enums ──────────────────────────────────────────────────────────────
 
-/** Data usage purposes — what a recipient is allowed to do with personal data. */
+/** Data usage purposes. what a recipient is allowed to do with personal data. */
 export type DataPurpose =
   | "terms:CoreService"          // Required for the service to function
   | "terms:Analytics"            // Aggregated, anonymized usage analysis
@@ -25,7 +25,7 @@ export type DataPurpose =
   | "terms:Advertising"          // Targeted advertising
   | "terms:LegalCompliance";     // Required by law
 
-/** Retention durations — how long data may be kept. */
+/** Retention durations. how long data may be kept. */
 export type RetentionPolicy =
   | "terms:SessionOnly"          // Deleted when session ends
   | "terms:TransactionOnly"      // Deleted after transaction completes
@@ -36,7 +36,7 @@ export type RetentionPolicy =
   | "terms:Indefinite"           // No expiry (requires explicit consent)
   | "terms:CustomDuration";      // User-specified duration in days
 
-/** Data categories — what types of data are covered. */
+/** Data categories. what types of data are covered. */
 export type DataCategory =
   | "terms:IdentityData"         // Name, email, identifiers
   | "terms:ContactData"          // Phone, address, social handles
@@ -50,7 +50,7 @@ export type DataCategory =
   | "terms:DeviceData"           // Hardware IDs, OS, browser info
   | "terms:ContentData";         // User-generated content, uploads
 
-/** Enforcement actions — what happens on violation. */
+/** Enforcement actions. what happens on violation. */
 export type EnforcementAction =
   | "terms:RevokeAccess"         // Immediately revoke data access
   | "terms:NotifyOwner"          // Alert the data owner
@@ -74,7 +74,7 @@ export interface TermsPermission {
   "terms:allowsDeletion": boolean;         // User can request deletion
 }
 
-/** The complete terms document — a user's machine-readable privacy terms. */
+/** The complete terms document. a user's machine-readable privacy terms. */
 export interface UorTermsDocument {
   "@context": "https://uor.foundation/contexts/uor-terms-v1.jsonld";
   "@type": "terms:PersonalTerms";
@@ -100,7 +100,7 @@ export interface TermsGlobalDefaults {
   "terms:minimumSecurityStandard"?: string;   // e.g. "SOC2", "ISO27001"
 }
 
-/** Enforcement configuration — what happens when terms are violated. */
+/** Enforcement configuration. what happens when terms are violated. */
 export interface TermsEnforcement {
   "@type": "terms:Enforcement";
   "terms:onViolation": EnforcementAction[];
@@ -111,7 +111,7 @@ export interface TermsEnforcement {
 
 // ── Consent & Acceptance ────────────────────────────────────────────────────
 
-/** A consent record — proof that a party accepted specific terms. */
+/** A consent record. proof that a party accepted specific terms. */
 export interface TermsConsent {
   "@context": "https://uor.foundation/contexts/uor-terms-v1.jsonld";
   "@type": "consent:Acceptance";
@@ -124,7 +124,7 @@ export interface TermsConsent {
   "consent:signature"?: string;               // Optional cryptographic signature
 }
 
-/** A terms revocation — proof that consent was withdrawn. */
+/** A terms revocation. proof that consent was withdrawn. */
 export interface TermsRevocation {
   "@context": "https://uor.foundation/contexts/uor-terms-v1.jsonld";
   "@type": "consent:Revocation";

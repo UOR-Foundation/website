@@ -1,5 +1,5 @@
 /**
- * Shared Dashboard UI — Neutral primitives used by both Hologram and UOR website.
+ * Shared Dashboard UI. Neutral primitives used by both Hologram and UOR website.
  * This is the bridge that allows clean separation of the two codebases.
  */
 

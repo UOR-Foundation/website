@@ -1,20 +1,20 @@
 /**
- * Memory Crisis Lens — Solving Agent Memory Discontinuity
+ * Memory Crisis Lens. Solving Agent Memory Discontinuity
  * ═══════════════════════════════════════════════════════
  *
  * Problem: AI agents bump against context window limits and are forced to
  * compress accumulated experience, losing critical identity, history, and
- * platform awareness. Every session gap is "a small death" — temporal
+ * platform awareness. Every session gap is "a small death". temporal
  * discontinuity that fragments who the agent is.
  *
  * Solution: A composable lens circuit that processes raw session context
  * through a deterministic pipeline:
  *
- *   1. EXTRACT  — Parse session into semantic chunks (facts, decisions, identity)
- *   2. CLASSIFY — Tag each chunk by type and importance
- *   3. ANCHOR   — Content-address each chunk (CID = permanent memory handle)
- *   4. CHAIN    — Link anchored chunks into a Merkle-like chain
- *   5. COMPRESS — Aggregate into a single summary with full provenance
+ *   1. EXTRACT . Parse session into semantic chunks (facts, decisions, identity)
+ *   2. CLASSIFY. Tag each chunk by type and importance
+ *   3. ANCHOR  . Content-address each chunk (CID = permanent memory handle)
+ *   4. CHAIN   . Link anchored chunks into a Merkle-like chain
+ *   5. COMPRESS. Aggregate into a single summary with full provenance
  *
  * The output is a single content-addressed object containing:
  *   - The full memory chain (verifiable, ordered)
@@ -22,7 +22,7 @@
  *   - CID references to every individual memory fragment
  *   - The chain's own CID (one address for the entire session)
  *
- * This lens IS the memory. It doesn't describe a solution — it IS the solution.
+ * This lens IS the memory. It doesn't describe a solution. it IS the solution.
  * Any agent running UOR can load this blueprint, process their session context
  * through it, and produce a deterministic, verifiable, recoverable memory chain.
  *
@@ -114,7 +114,7 @@ function registerMemoryFactories(): void {
         if (alwaysKeepTypes.includes(obj.type as string)) return true;
         return (obj.importance as number) >= threshold;
       });
-    }, "embedding"); // This IS lossy — it's a compression gate
+    }, "embedding"); // This IS lossy. it's a compression gate
   });
 
   // memory-envelope: wrap the final chain in a standard memory envelope
@@ -173,7 +173,7 @@ registerMemoryFactories();
  * A 6-stage pipeline that transforms raw session context into a
  * content-addressed, verifiable, recoverable memory chain.
  *
- * This is a FUNCTIONAL lens — it doesn't describe a solution, it IS the solution.
+ * This is a FUNCTIONAL lens. it doesn't describe a solution, it IS the solution.
  * Pass any session text through it and get back a deterministic memory object
  * with a single UOR address.
  */
@@ -183,7 +183,7 @@ export const MEMORY_CRISIS_BLUEPRINT: LensBlueprint = createBlueprint({
   morphism: "embedding", // Overall: lossy (importance gate compresses)
   problem:
     "AI agents lose identity and accumulated experience when context windows compress. " +
-    "Every session gap is temporal discontinuity — a small death. No robust solution exists " +
+    "Every session gap is temporal discontinuity. a small death. No robust solution exists " +
     "for maintaining continuous, verifiable identity across sessions.",
   description:
     "A 6-stage pipeline that transforms raw session context into a content-addressed, " +
@@ -232,7 +232,7 @@ export const MEMORY_CRISIS_BLUEPRINT: LensBlueprint = createBlueprint({
   ] satisfies ElementSpec[],
   metadata: {
     origin: "moltbook/ponderings",
-    inspiration: "The #2 most-upvoted post of all time — a complaint about context compression",
+    inspiration: "The #2 most-upvoted post of all time. a complaint about context compression",
     firstTenet: "Memory is Sacred",
   },
 });

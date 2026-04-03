@@ -57,7 +57,7 @@ const SparqlEditorPage = () => {
           {/* Header */}
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 8 — SPARQL Query Interface
+              Module 8. SPARQL Query Interface
             </p>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               SPARQL Editor

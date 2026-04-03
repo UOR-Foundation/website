@@ -1,5 +1,5 @@
 /**
- * P31 Self-Verification Tests — Observable Geometry Layer
+ * P31 Self-Verification Tests. Observable Geometry Layer
  *
  * 20 tests covering all 7 observable: namespace metrics.
  * Tests 12–13 verify the commutator theorem exhaustively (all 256 elements).
@@ -19,7 +19,7 @@ import {
 } from "@/modules/observable/geometry";
 import { analyzePayload } from "@/modules/uns/shield/partition";
 
-describe("P31: Observable Geometry Layer — 7 Ring Metrics", () => {
+describe("P31: Observable Geometry Layer. 7 Ring Metrics", () => {
   // ── RingMetric ──────────────────────────────────────────────────────────
 
   it("T1: ringMetric(42, 42) = 0 (zero self-distance)", () => {
@@ -120,7 +120,7 @@ describe("P31: Observable Geometry Layer — 7 Ring Metrics", () => {
   // ── Shield BLOCK threshold update ──────────────────────────────────────
 
   it("T19: Shield blocks when density <= 0.015625 (CATASTROPHE_THRESHOLD)", () => {
-    // Create a payload of all zeros — exterior bytes only → density = 0
+    // Create a payload of all zeros. exterior bytes only → density = 0
     const floodPayload = new Uint8Array(64).fill(0);
     const result = analyzePayload(floodPayload);
     expect(result.density).toBe(0);
@@ -134,7 +134,7 @@ describe("P31: Observable Geometry Layer — 7 Ring Metrics", () => {
     mixedPayload[0] = 3;  // irreducible
     mixedPayload[1] = 5;  // irreducible
     const result = analyzePayload(mixedPayload);
-    // density = 2/128 = 0.015625 exactly — this equals the threshold, so BLOCK
+    // density = 2/128 = 0.015625 exactly. this equals the threshold, so BLOCK
     expect(result.density).toBe(0.015625);
     expect(result.action).toBe("BLOCK");
 

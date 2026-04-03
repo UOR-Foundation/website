@@ -1,5 +1,5 @@
 /**
- * Package Registry API — Client for the package-registry edge function.
+ * Package Registry API. Client for the package-registry edge function.
  * Supports npm, cargo (crates.io), and PyPI lookups.
  */
 
