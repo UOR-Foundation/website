@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
-import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
+import { whatWeDoCards } from "@/data/about-cards";
 import { GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 import DonatePopup from "@/modules/donate/components/DonatePopup";
 
