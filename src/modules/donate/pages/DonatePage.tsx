@@ -20,8 +20,8 @@ const ProjectCard = ({ project }: { project: DonationProject }) => {
     <div className="border border-border rounded-2xl p-6 md:p-8 bg-card transition-all duration-300">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground">{project.title}</h3>
-          <div className="mt-3 flex items-center justify-between text-base text-muted-foreground font-body">
+          <h3 className="font-display text-fluid-card-title font-semibold text-foreground">{project.title}</h3>
+          <div className="mt-3 flex items-center justify-between text-fluid-body text-muted-foreground font-body">
             <span>{formatCurrency(project.raised)} raised</span>
             <span>{formatCurrency(project.target)} target</span>
           </div>
@@ -34,10 +34,10 @@ const ProjectCard = ({ project }: { project: DonationProject }) => {
         </button>
       </div>
       <div className={`overflow-hidden transition-all duration-400 ease-out ${expanded ? "max-h-96 opacity-100 mt-6" : "max-h-0 opacity-0"}`}>
-        <p className="text-muted-foreground font-body leading-relaxed">{project.description}</p>
+        <p className="text-muted-foreground font-body text-fluid-body leading-relaxed">{project.description}</p>
         <ul className="mt-4 space-y-2">
           {project.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-3 text-muted-foreground font-body text-base">
+            <li key={h} className="flex items-start gap-3 text-muted-foreground font-body text-fluid-body">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
               {h}
             </li>
@@ -59,13 +59,13 @@ const Donate = () => {
       {/* Hero */}
       <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
             Fund open infrastructure
           </h1>
-          <p className="mt-8 text-base text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
+          <p className="mt-6 text-fluid-body text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
             Your donation funds development, infrastructure, and a global research community. Every dollar goes directly to maintaining open tools that scientists, developers, and institutions rely on.
           </p>
-          <div className="mt-10 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
+          <div className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
             <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
               <Heart size={16} fill="white" strokeWidth={0} />
               Donate Now
@@ -78,9 +78,9 @@ const Donate = () => {
       </section>
 
       {/* Content A: Projects to support */}
-      <section className="py-8 md:py-14 bg-background">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-10 animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
+          <h2 className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
             Projects to support
           </h2>
           <div className="space-y-5">
@@ -92,31 +92,31 @@ const Donate = () => {
       </section>
 
       {/* Content B: Ways to donate */}
-      <section className="py-8 md:py-14 section-dark">
+      <section className="py-section-sm section-dark">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">
+          <h2 className="font-display text-fluid-heading font-semibold mb-golden-md">
             Ways to donate
           </h2>
           <div className="grid md:grid-cols-2 gap-5">
             <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300">
-              <h3 className="font-display text-lg font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Credit Card →</h3>
-              <p className="mt-2 text-base text-muted-foreground font-body leading-relaxed">Make a one-time or recurring donation securely via credit card.</p>
+              <h3 className="font-display text-fluid-card-title font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Credit Card →</h3>
+              <p className="mt-2 text-fluid-body text-muted-foreground font-body leading-relaxed">Make a one-time or recurring donation securely via credit card.</p>
             </a>
             <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300">
-              <h3 className="font-display text-lg font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Get in Touch →</h3>
-              <p className="mt-2 text-base text-muted-foreground font-body leading-relaxed">For larger donations, sponsorships, or partnerships, reach out to us on Discord.</p>
+              <h3 className="font-display text-fluid-card-title font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Get in Touch →</h3>
+              <p className="mt-2 text-fluid-body text-muted-foreground font-body leading-relaxed">For larger donations, sponsorships, or partnerships, reach out to us on Discord.</p>
             </a>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-12 md:py-20 bg-background">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] text-center max-w-3xl mx-auto">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] text-center max-w-6xl mx-auto">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
             Every contribution matters
           </h2>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-lg mx-auto mb-8">
+          <p className="text-muted-foreground font-body text-fluid-body leading-relaxed max-w-lg mx-auto mb-8">
             Open infrastructure depends on community support. Thank you for helping us build a more connected, verifiable future.
           </p>
           <a

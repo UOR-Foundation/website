@@ -48,7 +48,7 @@ function SemanticWebTower() {
         const widthPx = (layer.widthPct / 100) * mainRight;
         const leftPx = mainRight - widthPx;
         return (
-          <a key={layer.id} href={`#layer-${layer.id}`} className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: leftPx, width: widthPx, height: ROW_H, backgroundColor: layer.color, color: layer.darkText ? "hsl(220, 20%, 12%)" : "white", borderRadius: 3 }} title={`Jump to: ${layer.label}`}>
+          <a key={layer.id} href={`#layer-${layer.id}`} className="absolute flex items-center justify-center font-display font-bold text-fluid-label transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: leftPx, width: widthPx, height: ROW_H, backgroundColor: layer.color, color: layer.darkText ? "hsl(220, 20%, 12%)" : "white", borderRadius: 3 }} title={`Jump to: ${layer.label}`}>
             {layer.label}
           </a>
         );
@@ -63,13 +63,13 @@ function SemanticWebTower() {
         const unicodeLeft = uriLeft - unicodeW - gap;
         return (
           <>
-            <a href="#layer-0" className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: unicodeLeft, width: unicodeW, height: ROW_H, backgroundColor: TOWER_COLORS.unicode, color: "white", borderRadius: 3 }} title="Jump to: Unicode">Unicode</a>
-            <a href="#layer-0" className="absolute flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: uriLeft, width: uriW, height: ROW_H, backgroundColor: TOWER_COLORS.uri, color: "white", borderRadius: 3 }} title="Jump to: URI">URI</a>
+            <a href="#layer-0" className="absolute flex items-center justify-center font-display font-bold text-fluid-label transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: unicodeLeft, width: unicodeW, height: ROW_H, backgroundColor: TOWER_COLORS.unicode, color: "white", borderRadius: 3 }} title="Jump to: Unicode">Unicode</a>
+            <a href="#layer-0" className="absolute flex items-center justify-center font-display font-bold text-fluid-label transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top, left: uriLeft, width: uriW, height: ROW_H, backgroundColor: TOWER_COLORS.uri, color: "white", borderRadius: 3 }} title="Jump to: URI">URI</a>
           </>
         );
       })()}
-      <a href="#layer-7" className="absolute flex flex-col items-center justify-center font-display font-bold text-sm sm:text-base transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top: sigTop, left: mainRight + SIG_GAP_PX, width: SIG_W_PX, height: sigBottom - sigTop, backgroundColor: "transparent", border: `2px solid ${TOWER_COLORS.sig}`, color: TOWER_COLORS.sig, borderRadius: 3, writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.05em" }} title="Jump to: Digital Signature">Digital Signature</a>
-      <div className="absolute font-body text-sm text-muted-foreground leading-relaxed space-y-2" style={{ top: CONTAINER_H + 16, left: 0, right: 0 }}>
+      <a href="#layer-7" className="absolute flex flex-col items-center justify-center font-display font-bold text-fluid-label transition-all duration-200 hover:brightness-110 hover:scale-[1.01]" style={{ top: sigTop, left: mainRight + SIG_GAP_PX, width: SIG_W_PX, height: sigBottom - sigTop, backgroundColor: "transparent", border: `2px solid ${TOWER_COLORS.sig}`, color: TOWER_COLORS.sig, borderRadius: 3, writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.05em" }} title="Jump to: Digital Signature">Digital Signature</a>
+      <div className="absolute font-body text-fluid-caption text-muted-foreground leading-relaxed space-y-2" style={{ top: CONTAINER_H + 16, left: 0, right: 0 }}>
         <p><span className="font-display font-bold text-foreground">* URI:</span> UOR replaces location-based URIs with content-derived addresses. Identity comes from what the data is, not where it lives.</p>
         <p><span className="font-display font-bold text-foreground">* Digital Signature:</span> UOR certificates are content-addressed hashes built into every object. Any modification changes the address, making tampering self-evident.</p>
       </div>
@@ -81,23 +81,23 @@ function LayerCard({ layer }: { layer: (typeof semanticWebLayers)[number] }) {
   return (
     <div id={`layer-${layer.number}`} className="rounded-2xl border border-border bg-card overflow-hidden scroll-mt-28">
       <div className="px-6 py-3.5 flex items-center gap-3" style={{ backgroundColor: layer.color, color: layer.textDark ? "hsl(220, 20%, 12%)" : "white" }}>
-        <span className="font-mono text-sm font-bold opacity-60">{layer.number === 7 ? "⧫" : `L${layer.number}`}</span>
-        <h3 className="font-display text-lg sm:text-xl font-bold">{layer.title}</h3>
+        <span className="font-mono text-fluid-caption font-bold opacity-60">{layer.number === 7 ? "⧫" : `L${layer.number}`}</span>
+        <h3 className="font-display text-fluid-card-title font-bold">{layer.title}</h3>
       </div>
       <div className="p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">What It Does</p>
-            <p className="text-base font-body text-foreground leading-relaxed">{layer.what}</p>
+            <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">What It Does</p>
+            <p className="text-fluid-body font-body text-foreground leading-relaxed">{layer.what}</p>
           </div>
           <div>
-            <p className="text-xs font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">Why It Matters</p>
-            <p className="text-base font-body text-muted-foreground leading-relaxed">{layer.why}</p>
+            <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-2">Why It Matters</p>
+            <p className="text-fluid-body font-body text-muted-foreground leading-relaxed">{layer.why}</p>
           </div>
         </div>
         <div className="rounded-xl bg-primary/5 border border-primary/10 p-5">
-          <p className="text-xs font-body font-semibold tracking-widest uppercase text-primary mb-2">UOR Implementation</p>
-          <p className="text-base font-body text-foreground leading-relaxed">{layer.uor}</p>
+          <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary mb-2">UOR Implementation</p>
+          <p className="text-fluid-body font-body text-foreground leading-relaxed">{layer.uor}</p>
         </div>
       </div>
     </div>
@@ -120,20 +120,20 @@ const SemanticWebPage = () => {
 
   return (
     <Layout>
-      {/* Hero — absorbs Definition */}
-      <section className="hero-gradient pt-28 md:pt-36 pb-12 md:pb-16">
+      {/* Hero */}
+      <section className="hero-gradient pt-28 md:pt-36 pb-8 md:pb-12">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
             The Semantic Web, Powered by UOR
           </h1>
-          <p className="mt-6 text-base md:text-lg text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
+          <p className="mt-6 text-fluid-body text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
             How the UOR Framework implements and extends every layer of the W3C Semantic Web architecture to power the era of trusted Agentic AI.
           </p>
           <blockquote className="mt-8 border-l-4 border-primary pl-6 py-2 max-w-3xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
-            <p className="text-foreground font-display text-lg md:text-xl font-medium italic leading-relaxed">
+            <p className="text-foreground font-display text-fluid-lead font-medium italic leading-relaxed">
               "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
             </p>
-            <footer className="mt-3 text-sm font-body text-muted-foreground">
+            <footer className="mt-3 text-fluid-caption font-body text-muted-foreground">
               Tim Berners-Lee, James Hendler, and Ora Lassila.{" "}
               <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
             </footer>
@@ -145,16 +145,16 @@ const SemanticWebPage = () => {
         </div>
       </section>
 
-      {/* Content A: Tower + Layer Details merged */}
-      <section id="tower" className="py-8 md:py-14 bg-background border-b border-border scroll-mt-28">
+      {/* Content A: Tower + Layer Details */}
+      <section id="tower" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Architecture
           </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-2">
             The Semantic Web Tower
           </h2>
-          <p className="text-sm text-muted-foreground font-body mb-10">
+          <p className="text-fluid-caption text-muted-foreground font-body mb-golden-md">
             Click any layer to jump to its description.{" "}
             <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
               W3C Reference <ExternalLink className="w-3 h-3" />
@@ -165,10 +165,10 @@ const SemanticWebPage = () => {
 
           {/* Layer details inline */}
           <div className="mt-golden-lg pt-golden-lg border-t border-border">
-            <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
               Layer by Layer
             </p>
-            <h3 className="font-display text-xl md:text-2xl font-bold text-foreground mb-8">
+            <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-8">
               What each layer does, and how UOR implements it
             </h3>
             <div className="space-y-5">
@@ -181,17 +181,17 @@ const SemanticWebPage = () => {
       </section>
 
       {/* Content B: Comparison */}
-      <section className="py-8 md:py-14 bg-background border-b border-border">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-sm md:text-base font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
             Comparison
           </p>
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-10">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-golden-md">
             Original proposal vs. UOR implementation
           </h2>
 
           <div className="hidden md:block rounded-2xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-sm font-body">
+            <table className="w-full text-fluid-body font-body">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left px-6 py-3.5 font-semibold text-foreground w-[15%]">Layer</th>
@@ -214,15 +214,15 @@ const SemanticWebPage = () => {
           <div className="md:hidden space-y-3">
             {comparisons.map((row) => (
               <div key={row.aspect} className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display text-sm font-bold text-foreground mb-3">{row.aspect}</h3>
+                <h3 className="font-display text-fluid-label font-bold text-foreground mb-3">{row.aspect}</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-[11px] font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-1">Original</p>
-                    <p className="text-sm font-body text-muted-foreground leading-relaxed">{row.original}</p>
+                    <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-1">Original</p>
+                    <p className="text-fluid-body-sm font-body text-muted-foreground leading-relaxed">{row.original}</p>
                   </div>
                   <div className="rounded-lg bg-primary/5 border border-primary/10 p-3">
-                    <p className="text-[11px] font-body font-semibold tracking-widest uppercase text-primary mb-1">UOR</p>
-                    <p className="text-sm font-body text-foreground leading-relaxed">{row.uor}</p>
+                    <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary mb-1">UOR</p>
+                    <p className="text-fluid-body-sm font-body text-foreground leading-relaxed">{row.uor}</p>
                   </div>
                 </div>
               </div>
@@ -232,12 +232,12 @@ const SemanticWebPage = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl text-center">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+      <section className="py-section-sm section-dark">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl text-center mx-auto">
+          <h2 className="font-display text-fluid-heading font-bold text-section-dark-foreground mb-4">
             Explore the full framework
           </h2>
-          <p className="text-muted-foreground font-body text-base leading-relaxed max-w-md mx-auto mb-8">
+          <p className="text-muted-foreground font-body text-fluid-body leading-relaxed max-w-md mx-auto mb-8">
             Every layer is formally specified, implemented, and independently verifiable.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
