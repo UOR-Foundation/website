@@ -43,10 +43,10 @@ const Research = () => {
       <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
-            Learn, Connect, and Build — the UOR Way
+            Community
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Join researchers and developers working together across disciplines. Propose ideas, review each other's work, and ship projects in the open.
+            Propose ideas, review work, and ship projects in the open.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
