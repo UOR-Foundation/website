@@ -104,11 +104,9 @@ const About = () => {
           {/* Governance Board */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               Governance Board
+            </p>
             </h2>
             <p
               className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-6xl animate-fade-in-up opacity-0"
