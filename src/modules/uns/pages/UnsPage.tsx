@@ -1,12 +1,5 @@
 import { Layout } from "@/modules/core";
 
-/**
- * UoR Name Service (UNS) — Landing Page
- *
- * Placeholder page for the decentralized name resolution module.
- * Full implementation will include: name registration, forward/reverse
- * resolution, zone management, and record certification panels.
- */
 const UnsPage = () => {
   return (
     <Layout>
@@ -22,9 +15,8 @@ const UnsPage = () => {
               UoR Name Service
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Decentralized name resolution via IPv6 content-addressing and UOR
-              algebraic identity. DNS-equivalent services encoded within the UOR
-              framework for secure, verifiable, location-independent routing.
+              A naming system where addresses come from the content itself.
+              Look up any name, verify it independently, no central authority required.
             </p>
           </div>
 
@@ -34,25 +26,25 @@ const UnsPage = () => {
               {
                 title: "Forward Resolution",
                 description:
-                  "Resolve human-readable names to UOR identities: IPv6 ULA, CIDv1, Braille address, and full derivation ID.",
+                  "Turn a human-readable name into a verified address. One lookup, one result, fully traceable.",
                 endpoint: "/uns/resolve",
               },
               {
                 title: "Reverse Resolution",
                 description:
-                  "Map IPv6 ULA addresses back to registered names, analogous to DNS PTR records but content-verified.",
+                  "Go from an address back to its registered name. Like reverse DNS, but the result is self-verifying.",
                 endpoint: "/uns/reverse",
               },
               {
                 title: "Zone Management",
                 description:
-                  "Create and manage self-certifying zones. Each zone is anchored to a UOR address with a dedicated IPv6 /48 prefix.",
+                  "Create and manage zones. Each zone has its own address space and verifies itself — no external certificate authority needed.",
                 endpoint: "/uns/zones",
               },
               {
                 title: "Record Certification",
                 description:
-                  "Every record is issued a cert:UnsCertificate with derivation-based integrity proofs and epistemic grading.",
+                  "Every record comes with a built-in proof of integrity. Anyone can verify it, anywhere, without special tools.",
                 endpoint: "/uns/certify",
               },
             ].map((item) => (
@@ -80,12 +72,12 @@ const UnsPage = () => {
             </h2>
             <div className="grid gap-3">
               {[
-                { type: "UAAA", analog: "A/AAAA", desc: "Name → IPv6 ULA address" },
-                { type: "UCID", analog: "CNAME", desc: "Name → CIDv1 content identifier" },
-                { type: "UGLP", analog: "n/a", desc: "Name → UOR Braille glyph address" },
-                { type: "UPTR", analog: "PTR", desc: "IPv6 ULA → Name (reverse)" },
+                { type: "UAAA", analog: "A/AAAA", desc: "Name → address" },
+                { type: "UCID", analog: "CNAME", desc: "Name → content address" },
+                { type: "UGLP", analog: "n/a", desc: "Name → compact visual address" },
+                { type: "UPTR", analog: "PTR", desc: "Address → name (reverse)" },
                 { type: "UTXT", analog: "TXT", desc: "Arbitrary metadata" },
-                { type: "UCRT", analog: "TLSA", desc: "Name → verification certificate" },
+                { type: "UCRT", analog: "TLSA", desc: "Name → integrity proof" },
                 { type: "USOA", analog: "SOA", desc: "Zone authority record" },
               ].map((r) => (
                 <div

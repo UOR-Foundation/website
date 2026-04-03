@@ -10,9 +10,9 @@ const maturityDotColors: Record<MaturityLevel, string> = {
 };
 
 const pipelineSteps: { level: MaturityLevel; description: string; count: number }[] = [
-  { level: "Sandbox", description: "Early-stage experiments with clear potential", count: 11 },
-  { level: "Incubating", description: "Growing adoption and community traction", count: 0 },
-  { level: "Graduated", description: "Production-ready with proven stability", count: 0 },
+  { level: "Sandbox", description: "Early-stage projects exploring new ideas", count: 11 },
+  { level: "Incubating", description: "Projects with active contributors and real-world use", count: 0 },
+  { level: "Graduated", description: "Stable, widely adopted, independently audited", count: 0 },
 ];
 
 const EcosystemSection = () => {

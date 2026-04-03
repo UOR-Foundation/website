@@ -7,12 +7,12 @@ export const whatWeDoCards = [
   {
     iconKey: "Users",
     title: "Community",
-    desc: "We coordinate working groups in mathematics, AI, and systems engineering. All proposals and results published on GitHub.",
+    desc: "We run working groups across mathematics, AI, and systems engineering. Everything is published on GitHub.",
   },
   {
     iconKey: "Rocket",
     title: "Project Launchpad",
-    desc: "We run a three-stage maturity pipeline (Sandbox → Incubation → Graduated) with community review and clear promotion criteria.",
+    desc: "Projects move through three stages — Sandbox, Incubating, Graduated — with community review at every step.",
   },
 ];
 

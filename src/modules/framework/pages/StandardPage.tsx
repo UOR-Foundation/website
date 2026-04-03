@@ -108,7 +108,7 @@ const Standard = () => {
             Framework Architecture
           </h2>
           <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-4xl mb-golden-lg">
-            Six layers, each building on the one below it. Together they form a complete system for naming, finding, proving, and transforming data.
+            Six layers. Each builds on the one below. Together they handle naming, discovery, verification, and transformation.
           </p>
           <FrameworkLayers />
 
