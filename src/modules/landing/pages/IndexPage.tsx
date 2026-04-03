@@ -10,8 +10,8 @@ const Index = () => {
     <Layout>
       <PrimeConstellationBg />
       <HeroSection />
-      <WhatIsUorSection />
       <EcosystemSection />
+      <WhatIsUorSection />
       <ClosingCTASection />
     </Layout>
   );

@@ -59,7 +59,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </Link>
 
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-              {navItems.map((item) => (
+              {navItems.filter(item => !(item as any).isCta).map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -88,6 +88,12 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Linkedin className="w-[clamp(21px,1.5vw,28px)] h-[clamp(21px,1.5vw,28px)]" />
               </a>
             </div>
+            <Link
+              to="/projects#submit"
+              className="px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground active:scale-[0.97] transition-all duration-200 ease-out inline-flex items-center"
+            >
+              Contribute
+            </Link>
             <button
               onClick={() => setDonateOpen(true)}
               className="px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out inline-flex items-center cursor-pointer"
@@ -129,7 +135,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           <div className="h-[5rem] shrink-0" />
 
           <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
-            {navItems.map((item, idx) => {
+            {navItems.filter(item => !(item as any).isCta).map((item, idx) => {
               // φ-based stagger: 100, 162, 262, 424ms
               const phiDelay = Math.round(100 * Math.pow(1.618, idx));
               const sectionNum = idx + 1;

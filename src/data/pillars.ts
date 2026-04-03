@@ -1,29 +1,29 @@
 /**
- * Three pillars — serializable data for UOR certification.
+ * Three pillars — Learn · Connect · Build — the visitor's journey.
  * Icons are mapped at the component level by `iconKey`.
  */
 export const pillars = [
   {
     iconKey: "Globe",
-    title: "Docs",
+    title: "Learn",
     description:
-      "The open specification for how UOR addressing works. Six layers covering addressing, resolution, verification, and transformation.",
+      "Understand how UOR addressing works. Read the specification, explore the architecture, and see how it compares to existing standards.",
     href: "/docs",
     cta: "Read the Docs",
   },
   {
     iconKey: "Users",
-    title: "Community",
+    title: "Connect",
     description:
-      "Propose ideas, get peer review, and publish results. Active working groups across mathematics, AI, cryptography, and systems engineering.",
+      "Join a global community of developers and researchers. Propose ideas, get peer review, and collaborate in the open.",
     href: "/community",
-    cta: "Join the Discussion",
+    cta: "Join the Community",
   },
   {
     iconKey: "Rocket",
-    title: "Projects",
+    title: "Build",
     description:
-      "Every project in the UOR ecosystem — from early experiments to production-ready tools. Find something to use, or submit your own.",
+      "Start building with UOR. Pick a project to contribute to, or submit your own for review.",
     href: "/projects",
     cta: "Explore Projects",
   },
