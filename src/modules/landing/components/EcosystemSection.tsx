@@ -72,43 +72,6 @@ const EcosystemSection = () => {
           ))}
         </div>
 
-        {/* Maturity Pipeline */}
-        <div className="mt-golden-lg pt-golden-lg border-t border-foreground/8">
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
-            The Project Journey
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-            {pipelineSteps.map((step, idx) => (
-              <div
-                key={step.level}
-                className="relative flex flex-col p-6 md:p-8 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${0.1 + idx * 0.1}s` }}
-              >
-                <div className="flex items-center gap-2.5 mb-3">
-                  <span className={`w-2.5 h-2.5 rounded-full ${maturityDotColors[step.level]}`} />
-                  <h3 className="font-display font-semibold text-foreground text-fluid-card-title">{step.level}</h3>
-                  {idx < pipelineSteps.length - 1 && (
-                    <ArrowRight size={14} className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 text-foreground/30 z-10" />
-                  )}
-                </div>
-                <p className="text-foreground/60 font-body text-fluid-body leading-relaxed mb-2">{step.description}</p>
-                <p className="font-display font-bold text-foreground text-fluid-lead mt-auto">
-                  {step.count} <span className="text-foreground/50 font-body font-normal text-fluid-label">{step.count === 1 ? "project" : "projects"}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-golden-md">
-            <Link
-              to="/projects#maturity"
-              className="group inline-flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body text-fluid-label"
-            >
-              Learn how maturity works
-              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-          </div>
-        </div>
-
       </div>
     </section>
   );
