@@ -39,13 +39,13 @@
      * Provides harmonious, proportional rhythm across the entire site.
      */
     --phi: 1.618;
-    --section-py-sm:   clamp(2.5rem, 5vw, 4.854rem);
-    --section-py-md:   clamp(3.5rem, 8vw, 7.854rem);
-    --section-py-lg:   clamp(4.5rem, 10vw, 10rem);
-    --content-gap-sm:  1rem;
-    --content-gap-md:  1.618rem;
-    --content-gap-lg:  2.618rem;
-    --content-gap-xl:  4.236rem;
+    --section-py-sm:   clamp(4rem, 8vw, 7.854rem);
+    --section-py-md:   clamp(5.5rem, 11vw, 10.472rem);
+    --section-py-lg:   clamp(7rem, 14vw, 14rem);
+    --content-gap-sm:  1.618rem;
+    --content-gap-md:  2.618rem;
+    --content-gap-lg:  4.236rem;
+    --content-gap-xl:  6.854rem;
 
     /* ── Hologram Adaptive Scale ─────────────────────────────────────
      * The system attends to the human's screen — not the reverse.

@@ -57,15 +57,15 @@ const Donate = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-36 md:pt-48 pb-12 md:pb-16">
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <h1 className="font-display text-fluid-page-title font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
             Fund open infrastructure
           </h1>
-          <p className="mt-6 text-fluid-body text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
+          <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
             Your donation funds development, infrastructure, and a global research community. Every dollar goes directly to maintaining open tools that scientists, developers, and institutions rely on.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
+          <div className="mt-12 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
             <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
               <Heart size={16} fill="white" strokeWidth={0} />
               Donate Now
