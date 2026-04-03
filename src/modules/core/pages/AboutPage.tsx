@@ -1,13 +1,17 @@
-import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield, Heart } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
+import DonatePopup from "@/modules/donate/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
 const About = () => {
+  const [donateOpen, setDonateOpen] = useState(false);
+
   return (
     <Layout>
       {/* Hero */}
@@ -167,8 +171,34 @@ const About = () => {
               ))}
             </div>
           </div>
+          {/* Support the Foundation */}
+          <div>
+            <div className="h-px w-full bg-border/40 mb-golden-md" />
+            <h2
+              className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Support the Foundation
+            </h2>
+            <p
+              className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-4xl animate-fade-in-up opacity-0"
+              style={{ animationDelay: "0.25s" }}
+            >
+              The UOR Foundation is a 501(c)(3) nonprofit. Your donations help us maintain open infrastructure, fund research, and support the developer community.
+            </p>
+            <button
+              onClick={() => setDonateOpen(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-primary/30 bg-primary/5 text-primary font-medium font-body text-fluid-body hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 cursor-pointer animate-fade-in-up opacity-0"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <Heart size={16} fill="currentColor" strokeWidth={0} className="opacity-70" />
+              Make a Donation
+            </button>
+          </div>
         </div>
       </section>
+
+      <DonatePopup open={donateOpen} onOpenChange={setDonateOpen} />
     </Layout>
   );
 };
