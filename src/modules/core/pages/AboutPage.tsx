@@ -62,12 +62,9 @@ const About = () => {
           {/* What We Do */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               What We Do
-            </h2>
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
               {whatWeDoCards.map((item, idx) => {
                 const Icon = cardIconMap[item.iconKey];
@@ -106,12 +103,9 @@ const About = () => {
           {/* Governance Board */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               Governance Board
-            </h2>
+            </p>
             <p
               className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-6xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
@@ -164,12 +158,9 @@ const About = () => {
           {/* Resources */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               Resources
-            </h2>
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
               {[
                 { label: "Foundation Bylaws", href: "https://github.com/UOR-Foundation/.github/blob/main/governance/The_UOR_Foundation_Bylaws.pdf" },
@@ -195,12 +186,10 @@ const About = () => {
           {/* Support the Foundation */}
           <div>
             <div className="h-px w-full bg-border/40 mb-golden-md" />
-            <h2
-              className="font-display text-fluid-heading font-semibold text-foreground mb-3 animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
               Support the Foundation
-            </h2>
+            </p>
+            
             <p
               className="text-foreground/70 font-body text-fluid-body leading-relaxed mb-golden-md max-w-4xl animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.25s" }}
