@@ -36,7 +36,7 @@ export const teamMembers = [
   },
   {
     name: "Bill Wright",
-    role: "Chief Architect @ Red Hat",
+    role: "Chairman @ Enterprise Neurosystems",
     description: "Enterprise AI and network architecture.",
     image: "/images/profiles/bill-wright.jpg",
     link: "https://www.linkedin.com/in/billwright1/",
