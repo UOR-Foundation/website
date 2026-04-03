@@ -112,7 +112,7 @@ const WhatIsUorSection = () => {
         </div>
         <div className="rule-prime" />
 
-        <div className="py-golden-lg flex flex-col lg:flex-row lg:items-center lg:gap-16 animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
+        <div className="py-golden-lg flex flex-col lg:flex-row lg:items-center lg:gap-20 animate-fade-in-up opacity-0" style={{ animationDelay: "0.11s" }}>
           {/* Text */}
           <div className="max-w-2xl lg:flex-1">
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
