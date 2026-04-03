@@ -9,11 +9,6 @@ const maturityDotColors: Record<MaturityLevel, string> = {
   Sandbox: "bg-muted-foreground/50",
 };
 
-const imageMap: Record<string, string> = {
-  knowledgeGraph: highlightKnowledgeGraph,
-  frameworkLaunch: highlightFrameworkLaunch,
-  semanticWeb: highlightSemanticWeb,
-};
 
 const EcosystemSection = () => {
   return (
