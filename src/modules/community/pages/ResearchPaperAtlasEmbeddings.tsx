@@ -110,7 +110,7 @@ const ResearchPaperAtlasEmbeddings = () => {
             </h2>
             <div className="bg-card border border-border rounded-xl p-6 md:p-8">
               <p className="text-sm md:text-base text-foreground/90 font-body leading-relaxed">
-                This paper presents a constructive proof that all five <em>exceptional Lie groups</em>—a family of rare and highly symmetric mathematical objects—can be derived from a single geometric structure: the <strong>Atlas of Resonance Classes</strong>, a 96-vertex graph. Using five well-defined categorical operations (product, quotient, filtration, augmentation, and embedding), we demonstrate that the groups G₂, F₄, E₆, E₇, and E₈ emerge naturally from this common origin. All computations use exact arithmetic (no floating-point approximation), and every claim is verified both computationally (Rust implementation) and formally (Lean 4 proof assistant, 54 theorems, zero unresolved obligations). The resulting structure—the <strong>Golden Seed Vector</strong>—provides a unified mathematical language for describing the deepest symmetries known to science.
+                This paper presents a constructive proof that all five <em>exceptional Lie groups</em>, a family of rare and highly symmetric mathematical objects, can be derived from a single geometric structure: the <strong>Atlas of Resonance Classes</strong>, a 96-vertex graph. Using five well-defined categorical operations (product, quotient, filtration, augmentation, and embedding), we demonstrate that the groups G₂, F₄, E₆, E₇, and E₈ emerge naturally from this common origin. All computations use exact arithmetic (no floating-point approximation), and every claim is verified both computationally (Rust implementation) and formally (Lean 4 proof assistant, 54 theorems, zero unresolved obligations). The resulting structure, the <strong>Golden Seed Vector</strong>, provides a unified mathematical language for describing the deepest symmetries known to science.
               </p>
             </div>
           </section>
@@ -123,10 +123,10 @@ const ResearchPaperAtlasEmbeddings = () => {
             </h2>
             <div className="space-y-4 text-sm md:text-base text-muted-foreground font-body leading-relaxed">
               <p>
-                In mathematics, <strong>symmetry</strong> is not just a visual property—it is a precise, measurable structure. The most complex symmetries in nature are captured by objects called <em>Lie groups</em>. Among these, five stand apart: the <strong>exceptional Lie groups</strong> (G₂, F₄, E₆, E₇, E₈). For over a century, these groups have been studied individually, each with its own construction. No single origin has been known.
+                In mathematics, <strong>symmetry</strong> is not just a visual property; it is a precise, measurable structure. The most complex symmetries in nature are captured by objects called <em>Lie groups</em>. Among these, five stand apart: the <strong>exceptional Lie groups</strong> (G₂, F₄, E₆, E₇, E₈). For over a century, these groups have been studied individually, each with its own construction. No single origin has been known.
               </p>
               <p>
-                This research changes that. We show that <em>all five</em> exceptional groups can be constructed from one starting point: a graph with exactly 96 vertices called the <strong>Atlas of Resonance Classes</strong>. This graph is not chosen arbitrarily—it is the unique solution to a mathematical optimisation principle (the stationarity of an action functional on a 12,288-cell boundary).
+                This research changes that. We show that <em>all five</em> exceptional groups can be constructed from one starting point: a graph with exactly 96 vertices called the <strong>Atlas of Resonance Classes</strong>. This graph is not chosen arbitrarily; it is the unique solution to a mathematical optimisation principle (the stationarity of an action functional on a 12,288-cell boundary).
               </p>
               <p>
                 The significance is fundamental: where previously these five groups appeared to be independent mathematical phenomena, we demonstrate they are all expressions of a single underlying structure. This is analogous to discovering that five seemingly unrelated chemical elements are in fact isotopes of the same atom.
@@ -156,7 +156,7 @@ const ResearchPaperAtlasEmbeddings = () => {
               <div>
                 <h3 className="font-display text-base font-semibold text-foreground mb-2">1. Construction of the Atlas</h3>
                 <p>
-                  The Atlas of Resonance Classes is derived from first principles. An <em>action functional</em>—a mathematical rule that assigns a cost to every possible configuration—is applied to the boundary of a 12,288-cell polytope. The 96 vertices that minimise this cost form the Atlas. This is not a design choice; it is a mathematical necessity. Exactly 96 resonance classes satisfy the stationarity condition.
+                  The Atlas of Resonance Classes is derived from first principles. An <em>action functional</em>, a mathematical rule that assigns a cost to every possible configuration, is applied to the boundary of a 12,288-cell polytope. The 96 vertices that minimise this cost form the Atlas. This is not a design choice; it is a mathematical necessity. Exactly 96 resonance classes satisfy the stationarity condition.
                 </p>
               </div>
               <div>
@@ -239,10 +239,10 @@ const ResearchPaperAtlasEmbeddings = () => {
                   <strong className="text-foreground">Computational reproduction.</strong> The complete source code is publicly available under the MIT licence. Any researcher can clone the repository, build the project (requires only Rust 1.75+), and run the full test suite. Every mathematical claim maps directly to a testable assertion.
                 </li>
                 <li>
-                  <strong className="text-foreground">Formal proof verification.</strong> A complete formalisation in Lean 4 (a machine-checked proof assistant) accompanies the computational implementation. The formalisation comprises 8 modules, 1,454 lines of proof, and 54 theorems—all verified with zero unresolved obligations ("sorrys"). Any reviewer with Lean 4 installed can independently check every proof.
+                  <strong className="text-foreground">Formal proof verification.</strong> A complete formalisation in Lean 4 (a machine-checked proof assistant) accompanies the computational implementation. The formalisation comprises 8 modules, 1,454 lines of proof, and 54 theorems, all verified with zero unresolved obligations ("sorrys"). Any reviewer with Lean 4 installed can independently check every proof.
                 </li>
                 <li>
-                  <strong className="text-foreground">Comparison with established theory.</strong> The Cartan matrices and Dynkin diagrams produced by the construction can be compared against any standard reference in Lie theory (e.g., Carter 2005, Conway &amp; Sloane 1988). The results must—and do—match exactly.
+                  <strong className="text-foreground">Comparison with established theory.</strong> The Cartan matrices and Dynkin diagrams produced by the construction can be compared against any standard reference in Lie theory (e.g., Carter 2005, Conway &amp; Sloane 1988). The results must, and do, match exactly.
                 </li>
                 <li>
                   <strong className="text-foreground">No external dependencies.</strong> The exceptional groups are constructed entirely from the Atlas structure, without importing known Lie-theoretic data. This means the construction is self-contained and cannot be circular.

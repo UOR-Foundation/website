@@ -17,7 +17,7 @@ const gettingStarted = [
   {
     icon: Layers,
     title: "Architecture",
-    description: "Six layers — from mathematical foundation to lossless data transformation.",
+    description: "Six layers, from mathematical foundation to lossless data transformation.",
     url: `${GITHUB_FRAMEWORK_DOCS_URL}docs/architecture.html`,
   },
   {
