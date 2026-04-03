@@ -1,9 +1,11 @@
-import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield } from "lucide-react";
+import { Linkedin, BookOpen, Users, Rocket, ExternalLink, Shield, Heart } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
 import { GITHUB_GOVERNANCE_URL, GITHUB_DOTGITHUB_URL } from "@/data/external-links";
+import DonatePopup from "@/modules/donate/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
