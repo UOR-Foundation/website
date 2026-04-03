@@ -31,7 +31,7 @@ const HeroSection = () => {
         >
            <span className="text-[clamp(1.5rem,6vw,2.25rem)]">Make Data Identity</span>
            <br />
-           <span className="text-[clamp(2.25rem,10vw,3.5rem)]">Universal</span>
+           <span className="text-[clamp(2.25rem,10vw,3.5rem)] tracking-[0.2em]">Universal</span>
         </h1>
 
         <div
