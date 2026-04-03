@@ -1,203 +1,105 @@
-import { ArrowRight } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { ArrowRight, ArrowDown } from "lucide-react";
 
-const UorSchematic = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+const UorDiagramCompact = () => (
+  <div className="w-full max-w-[520px] bg-[hsl(var(--section-dark))] border border-[hsl(var(--section-dark-foreground)/0.1)] rounded-2xl p-6 md:p-8 overflow-hidden">
+    {/* Header */}
+    <p className="text-xs md:text-sm font-body font-semibold tracking-[0.18em] uppercase text-[hsl(var(--section-dark-foreground)/0.7)] mb-8 text-center">
+      Fragmentation → Unification
+    </p>
 
-    const dpr = window.devicePixelRatio || 1;
-    const w = 420;
-    const h = 380;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    canvas.style.width = `${w}px`;
-    canvas.style.height = `${h}px`;
-    ctx.scale(dpr, dpr);
+    {/* Three-stage flow */}
+    <div className="flex flex-col md:flex-row items-center gap-5 md:gap-0">
+      {/* Stage 1: Fragmented silos */}
+      <div className="flex-1 w-full flex flex-col items-center">
+        <div className="grid grid-cols-3 gap-2 max-w-[180px] w-full">
+          {silos.map((s) => (
+            <div
+              key={s}
+              className="flex items-center justify-center rounded-lg border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] h-[52px] text-[10px] md:text-xs font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+            >
+              {s}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
+          Isolated Data<br />Systems and Formats
+        </p>
+      </div>
 
-    ctx.clearRect(0, 0, w, h);
+      {/* Arrow + UOR label */}
+      <div className="flex flex-col items-center justify-center shrink-0 md:px-6 py-1 md:py-0">
+        <ArrowRight className="hidden md:block w-6 h-6 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
+        <ArrowDown className="block md:hidden w-5 h-5 text-[hsl(var(--section-dark-foreground)/0.9)]" strokeWidth={1.5} />
+        <span className="text-lg md:text-xl font-display font-extrabold tracking-[0.3em] uppercase text-[hsl(var(--section-dark-foreground))] mt-2">
+          UOR
+        </span>
+        <span className="text-[10px] md:text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.6)] mt-1 tracking-[0.15em] uppercase text-center leading-snug">
+          Universal<br />Address System
+        </span>
+      </div>
 
-    // --- LEFT SIDE: Isolated Systems (3x3 grid) ---
-    const gridX = 30;
-    const gridY = 40;
-    const cellSize = 38;
-    const gap = 6;
-    const labels = ["DB", "API", "FS", "DNS", "URI", "PKI", "S3", "Git", "IoT"];
-    const colors = [
-      "rgba(239,68,68,0.6)", "rgba(59,130,246,0.6)", "rgba(34,197,94,0.6)",
-      "rgba(251,191,36,0.6)", "rgba(168,85,247,0.6)", "rgba(236,72,153,0.6)",
-      "rgba(14,165,233,0.6)", "rgba(249,115,22,0.6)", "rgba(99,102,241,0.6)",
-    ];
-
-    ctx.font = "bold 9px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // Section label
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = "600 10px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Isolated Data Systems", gridX + (cellSize * 3 + gap * 2) / 2, gridY - 14);
-
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
-        const i = row * 3 + col;
-        const x = gridX + col * (cellSize + gap);
-        const y = gridY + row * (cellSize + gap);
-
-        ctx.fillStyle = "rgba(255,255,255,0.04)";
-        ctx.strokeStyle = colors[i];
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.roundRect(x, y, cellSize, cellSize, 4);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = colors[i];
-        ctx.font = "bold 9px monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(labels[i], x + cellSize / 2, y + cellSize / 2);
-      }
-    }
-
-    // --- CENTER: Arrow with UOR label ---
-    const arrowY = gridY + (cellSize * 3 + gap * 2) / 2;
-    const arrowStartX = gridX + cellSize * 3 + gap * 2 + 18;
-    const arrowEndX = arrowStartX + 80;
-
-    // Arrow line
-    const grad = ctx.createLinearGradient(arrowStartX, arrowY, arrowEndX, arrowY);
-    grad.addColorStop(0, "rgba(212,175,55,0.3)");
-    grad.addColorStop(1, "rgba(212,175,55,0.8)");
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(arrowStartX, arrowY);
-    ctx.lineTo(arrowEndX - 6, arrowY);
-    ctx.stroke();
-
-    // Arrowhead
-    ctx.fillStyle = "rgba(212,175,55,0.8)";
-    ctx.beginPath();
-    ctx.moveTo(arrowEndX, arrowY);
-    ctx.lineTo(arrowEndX - 8, arrowY - 4);
-    ctx.lineTo(arrowEndX - 8, arrowY + 4);
-    ctx.closePath();
-    ctx.fill();
-
-    // UOR label
-    ctx.fillStyle = "rgba(212,175,55,0.9)";
-    ctx.font = "bold 10px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("UOR", (arrowStartX + arrowEndX) / 2, arrowY - 12);
-    ctx.fillStyle = "rgba(212,175,55,0.5)";
-    ctx.font = "8px system-ui, sans-serif";
-    ctx.fillText("Universal Address", (arrowStartX + arrowEndX) / 2, arrowY + 14);
-
-    // --- RIGHT SIDE: Unified graph ---
-    const graphCx = arrowEndX + 70;
-    const graphCy = arrowY;
-    const nodeRadius = 16;
-    const orbitRadius = 52;
-
-    // Label
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = "600 10px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("One Shared System", graphCx, gridY - 14);
-
-    // Outer ring
-    ctx.strokeStyle = "rgba(212,175,55,0.12)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(graphCx, graphCy, orbitRadius + 8, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Nodes around center
-    const nodeCount = 6;
-    const nodePositions: [number, number][] = [];
-    for (let i = 0; i < nodeCount; i++) {
-      const angle = (Math.PI * 2 * i) / nodeCount - Math.PI / 2;
-      const nx = graphCx + Math.cos(angle) * orbitRadius;
-      const ny = graphCy + Math.sin(angle) * orbitRadius;
-      nodePositions.push([nx, ny]);
-    }
-
-    // Edges (connect each to center and neighbors)
-    for (const [nx, ny] of nodePositions) {
-      ctx.strokeStyle = "rgba(212,175,55,0.15)";
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(graphCx, graphCy);
-      ctx.lineTo(nx, ny);
-      ctx.stroke();
-    }
-    for (let i = 0; i < nodeCount; i++) {
-      const [x1, y1] = nodePositions[i];
-      const [x2, y2] = nodePositions[(i + 1) % nodeCount];
-      ctx.strokeStyle = "rgba(212,175,55,0.1)";
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-
-    // Center node
-    const centerGrad = ctx.createRadialGradient(graphCx, graphCy, 0, graphCx, graphCy, nodeRadius);
-    centerGrad.addColorStop(0, "rgba(212,175,55,0.3)");
-    centerGrad.addColorStop(1, "rgba(212,175,55,0.05)");
-    ctx.fillStyle = centerGrad;
-    ctx.beginPath();
-    ctx.arc(graphCx, graphCy, nodeRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(212,175,55,0.5)";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(212,175,55,0.9)";
-    ctx.font = "bold 8px monospace";
-    ctx.fillText("CID", graphCx, graphCy + 1);
-
-    // Outer nodes
-    const outerLabels = ["DB", "API", "FS", "DNS", "S3", "IoT"];
-    for (let i = 0; i < nodeCount; i++) {
-      const [nx, ny] = nodePositions[i];
-      const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, 10);
-      ng.addColorStop(0, "rgba(255,255,255,0.12)");
-      ng.addColorStop(1, "rgba(255,255,255,0.02)");
-      ctx.fillStyle = ng;
-      ctx.beginPath();
-      ctx.arc(nx, ny, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.2)";
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.font = "bold 7px monospace";
-      ctx.fillText(outerLabels[i], nx, ny + 1);
-    }
-
-    // Bottom caption
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.font = "8px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Same data → same address → any system", w / 2, h - 16);
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="w-full max-w-[420px] h-auto opacity-80"
-      style={{ aspectRatio: "420/380" }}
-    />
-  );
-};
+      {/* Stage 3: Unified graph */}
+      <div className="flex-1 w-full flex flex-col items-center">
+        <div className="relative rounded-xl border border-[hsl(var(--section-dark-foreground)/0.2)] bg-[hsl(var(--section-dark-foreground)/0.05)] p-3 aspect-square max-w-[180px] w-full">
+          <svg viewBox="0 0 100 100" className="w-full h-full" fill="none">
+            <defs>
+              <radialGradient id="homeNodeGlow">
+                <stop offset="0%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.5" />
+                <stop offset="30%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.15" />
+                <stop offset="60%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="hsl(var(--section-dark-foreground))" stopOpacity="0" />
+              </radialGradient>
+              <style>{`
+                @keyframes home-node-emanate {
+                  0%, 100% { opacity: 0.12; transform: scale(0.3); }
+                  13% { opacity: 0.4; transform: scale(1); }
+                  26% { opacity: 0.14; transform: scale(0.4); }
+                  39% { opacity: 0.32; transform: scale(0.88); }
+                  52% { opacity: 0.12; transform: scale(0.3); }
+                }
+                .home-emanate {
+                  animation: home-node-emanate 1.94s ease-in-out infinite;
+                  transform-box: fill-box;
+                  transform-origin: center;
+                }
+                @keyframes home-line-breathe {
+                  0%, 100% { opacity: 0.18; }
+                  13% { opacity: 0.32; }
+                  26% { opacity: 0.2; }
+                  39% { opacity: 0.28; }
+                  52% { opacity: 0.18; }
+                }
+                .home-line-breathe { animation: home-line-breathe 1.94s ease-in-out infinite; }
+              `}</style>
+            </defs>
+            {/* Connections */}
+            {[
+              [30, 25, 70, 50], [70, 50, 50, 75], [50, 75, 30, 25],
+              [30, 25, 20, 50], [70, 50, 80, 25], [50, 75, 80, 75],
+            ].map(([x1, y1, x2, y2], i) => (
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--section-dark-foreground))" strokeWidth="1" className="home-line-breathe" />
+            ))}
+            {/* Nodes */}
+            {[
+              [30, 25], [70, 50], [50, 75], [20, 50], [80, 25], [80, 75],
+            ].map(([cx, cy], i) => (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r={i < 3 ? 18 : 13} fill="url(#homeNodeGlow)" className="home-emanate" />
+                <circle cx={cx} cy={cy} r={i < 3 ? 4.5 : 2.8} fill="hsl(var(--section-dark-foreground))" opacity="0.9" />
+                <circle cx={cx} cy={cy} r={i < 3 ? 8 : 5.5} fill="none" stroke="hsl(var(--section-dark-foreground))" strokeWidth="0.5" opacity="0.18" />
+              </g>
+            ))}
+          </svg>
+        </div>
+        <p className="text-xs font-body font-semibold text-[hsl(var(--section-dark-foreground)/0.65)] text-center mt-4 tracking-[0.15em] uppercase leading-snug">
+          One Shared<br />System
+        </p>
+      </div>
+    </div>
+  </div>
+);
 
 const WhatIsUorSection = () => {
   return (
@@ -233,7 +135,7 @@ const WhatIsUorSection = () => {
 
           {/* Schematic */}
           <div className="mt-golden-lg lg:mt-0 lg:flex-1 flex justify-center">
-            <UorSchematic />
+            <UorDiagramCompact />
           </div>
         </div>
       </div>
