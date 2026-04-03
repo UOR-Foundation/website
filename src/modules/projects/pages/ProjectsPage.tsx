@@ -89,7 +89,7 @@ const Projects = () => {
       </section>
 
       {/* Maturity Model. compact inline reference */}
-      <section id="maturity" className="py-section-sm bg-background border-b border-foreground/8 scroll-mt-28">
+      <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Project Maturity
