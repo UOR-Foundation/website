@@ -49,7 +49,7 @@ const ScrollProgress = () => {
 
   return (
     <div
-      className={`fixed right-4 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center transition-opacity duration-500 ${
+      className={`fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center transition-opacity duration-500 ${
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       style={{ gap: 0 }}
