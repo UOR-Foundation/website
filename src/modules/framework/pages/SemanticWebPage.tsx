@@ -114,7 +114,7 @@ const SemanticWebPage = () => {
     { aspect: "Schema", original: "Schemas authored separately and linked by convention. Validity requires external tools.", uor: "Schema embedded in every document via JSON-LD @context. Every document is self-describing." },
     { aspect: "Reasoning", original: "Open-world inference. Computationally expensive. May not terminate.", uor: "Seven deterministic canonicalization rules. Always terminates. Always verifiable." },
     { aspect: "Proof", original: "Proposed but never widely standardized. Most systems rely on source trust.", uor: "Every operation produces a PROV-O aligned derivation record. Proofs are structural, not optional." },
-    { aspect: "Trust", original: "Depends on digital signatures, certificate authorities, and institutional reputation.", uor: "Mathematical property. neg(bnot(x)) = succ(x) verifiable by any machine in under a second." },
+    { aspect: "Trust", original: "Depends on digital signatures, certificate authorities, and institutional reputation.", uor: "Built-in mathematical verification. Any machine can check it in under a second." },
     { aspect: "Deduplication", original: "owl:sameAs assertions: manual, error-prone, non-transitive at scale.", uor: "Same derivation ID = provably identical. Computed, not asserted." },
   ];
 
