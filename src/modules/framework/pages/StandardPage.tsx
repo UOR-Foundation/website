@@ -86,7 +86,7 @@ const Standard = () => {
                 <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary/60 mb-3">Coordinate 3</p>
                 <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-2">The Components</h3>
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed mb-4">
-                  The building blocks that make up the data, enabling exact reconstruction.
+                  The parts that make up the data. Given these, anyone can reconstruct the original exactly.
                 </p>
                 <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                   <p className="font-mono text-fluid-caption text-foreground/50 mb-1">Example</p>
