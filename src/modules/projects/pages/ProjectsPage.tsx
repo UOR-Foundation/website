@@ -219,6 +219,42 @@ const Projects = () => {
         </div>
       </section>
 
+      {/* The Project Journey — maturity framework before catalog */}
+      <section id="maturity" className="py-section-sm bg-background border-b border-foreground/8 scroll-mt-28">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            The Project Journey
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {maturityInfo.map((stage, idx) => {
+              const StageIcon = [FlaskConical, Rocket, GraduationCap][idx];
+              return (
+                <div
+                  key={stage.level}
+                  className={`rounded-2xl border p-6 flex flex-col ${maturityBgColors[stage.level]} ${idx === 2 ? 'border-primary/30' : ''} animate-fade-in-up opacity-0`}
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <StageIcon size={18} className={idx === 2 ? 'text-primary' : 'text-foreground/50'} />
+                    <span className={`w-2.5 h-2.5 rounded-full ${maturityDotColors[stage.level]}`} />
+                    <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
+                  </div>
+                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mb-3">{stage.tagline}</p>
+                  <ul className="space-y-1.5 mt-auto">
+                    {stage.criteria.map((c) => (
+                      <li key={c} className="text-fluid-label text-foreground/60 font-body flex items-start gap-2">
+                        <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Content A: Project Catalog */}
       <section id="projects-list" className="py-section-sm bg-background scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] space-y-8">
