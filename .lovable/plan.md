@@ -1,102 +1,94 @@
 
 
-# Streamline Every Page to 4 Sections
+# Spacing & Proportion Audit — Site-Wide Consistency Pass
 
-## The Problem
-Pages range from 3 to 8 sections, creating an inconsistent, busy experience. Users scroll too much and lose context.
+## What This Fixes
 
-## The Rule
-Every page gets exactly **4 sections**: Hero → Content A → Content B → CTA/Footer-close. This creates a rhythm users learn once and never think about again.
+Every page except Home currently has inconsistent hero padding, section spacing, typography sizing, and CTA layout. This pass standardizes all pages to a single set of golden-ratio-based spacing tokens and fluid typography, so the entire site feels like one coherent product.
+
+## The Standard (derived from Framework + Community pages — the best current examples)
 
 ```text
-┌──────────────────────┐
-│       HERO           │  Identity: title + subtitle + action
-├──────────────────────┤
-│     CONTENT A        │  Primary substance (the "what")
-├──────────────────────┤
-│     CONTENT B        │  Supporting detail (the "how" or "proof")
-├──────────────────────┤
-│       CTA            │  Single call-to-action closure
-└──────────────────────┘
+HERO            pt-28 md:pt-36  pb-golden-lg (new)    hero-gradient
+CONTENT A       py-section-sm   bg-background         border-b border-border/40
+CONTENT B       py-section-sm   bg-background          border-b border-border/40
+CTA             py-section-sm   section-dark
 ```
 
----
+- All containers: `container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]`
+- All page titles: `text-fluid-page-title`
+- All section headings: `text-fluid-heading`
+- All card titles: `text-fluid-card-title`
+- All body text: `text-fluid-body` or `text-fluid-lead`
+- All labels: `text-fluid-label`
+- Hero subtitle gap: `mt-6`, CTA button gap: `mt-8`
+- CTA sections centered, `max-w-6xl text-center`
 
-## Page-by-Page Changes
+## Changes Per Page
 
-### 1. Home (8 → 4)
-- **Hero** — keep as-is
-- **Content A: "What is UOR"** — merge the current Intro diagram + Applications cards into one section (diagram left, 4 app cards right, or stacked)
-- **Content B: "Ecosystem"** — merge Projects showcase + Community members into one section (projects row on top, community avatars below, with a Highlights stat bar between them)
-- **CTA** — merge Pillars + CTA into one closing section: three pillar cards above the final call-to-action buttons
+### 1. Home (`IndexPage`) — No changes
+Already correct. Hero is full-viewport, subsequent sections use `py-section-md`.
 
-**Removed/merged**: Intro, Applications, ProjectsShowcase, Community, Highlights, Pillars, CTA → condensed into 3 body sections + hero
+### 2. Framework (`StandardPage`) — Minor
+- Already well-standardized. No changes needed.
 
-### 2. Framework `/standard` (7 → 4)
-- **Hero** — keep, fold "The Problem" text into the hero subtitle (it's just two paragraphs)
-- **Content A: "How It Works"** — merge the UOR Diagram + Anatomy of an Address into one section
-- **Content B: "Architecture & Applications"** — merge Framework Architecture layers + Applications grid into one section
-- **CTA** — keep as-is
+### 3. Community (`ResearchPage`) — Minor
+- Already well-standardized. No changes needed.
 
-**Removed/merged**: Problem section absorbed into hero; Diagram + Anatomy merged; Architecture + Applications merged
+### 4. About (`AboutPage`)
+- Fix duplicate `px-6 md:px-[5%]...` on hero container (line 15)
+- Add hero subtitle `mt-6` consistency (currently `mt-5`)
+- Hero `pb` currently `pb-8 md:pb-12` — standardize to match others
+- Content section already uses `py-section-sm` — good
 
-### 3. Community `/research` (5 → 4)
-- **Hero** — keep as-is
-- **Content A: "Research"** — keep the research categories + papers section as-is (it's the core content)
-- **Content B: "Blog & Events"** — merge Blog cards and Events list into one combined section (blog cards row, then events list below)
-- **CTA: "Join"** — keep as-is
+### 5. Donate (`DonatePage`) — Major overhaul
+- Hero: replace `text-4xl md:text-5xl` → `text-fluid-page-title`; fix `mt-8` → `mt-6` for subtitle; `mt-10` → `mt-8` for buttons
+- Content A (`py-8 md:py-14`): replace with `py-section-sm`; heading `text-2xl md:text-3xl` → `text-fluid-heading`
+- Content B (`py-8 md:py-14`): replace with `py-section-sm`; heading → `text-fluid-heading`
+- CTA (`py-12 md:py-20`): replace with `py-section-sm section-dark`; heading → `text-fluid-heading`; body → `text-fluid-body`
+- Replace all `text-base` → `text-fluid-body`, `text-lg` → `text-fluid-lead`
+- Add `border-b border-border/40` between Content A and B for visual separation
+- Standardize card internal text sizes to fluid tokens
 
-**Removed/merged**: Blog and Events become one section
+### 6. Semantic Web (`SemanticWebPage`) — Major overhaul
+- Hero: replace `text-4xl md:text-5xl` → `text-fluid-page-title`; subtitle `text-base md:text-lg` → `text-fluid-body`; blockquote text `text-lg md:text-xl` → `text-fluid-lead`
+- Content A (`py-8 md:py-14`): replace with `py-section-sm`; headings `text-2xl md:text-3xl` → `text-fluid-heading`; sub-heading `text-xl md:text-2xl` → `text-fluid-card-title` or keep smaller
+- Content B (`py-8 md:py-14`): replace with `py-section-sm`; heading → `text-fluid-heading`
+- CTA (`py-16 md:py-24`): replace with `py-section-sm`; heading → `text-fluid-heading`
+- Replace all hardcoded `text-sm`, `text-base`, `text-lg` with fluid equivalents
+- Label text: `text-sm md:text-base` → `text-fluid-label`
+- Layer card internal text: `text-xs` → `text-fluid-caption`, `text-base` → `text-fluid-body`
+- Comparison table text: standardize to `text-fluid-body` / `text-fluid-caption`
+- Add `section-dark` to CTA for visual consistency
 
-### 4. Projects `/projects` (5 → 4)
-- **Hero** — keep as-is
-- **Content A: "Project Catalog"** — keep the collapsible maturity-tier project listing as-is
-- **Content B: "Submit a Project"** — merge Maturity Levels explanation + Submission Process steps + Submit Form into one section (maturity cards as a compact reference row, then the form below)
-- **CTA** — the submit form itself serves as the closing action (dark section with form = natural page closer)
+### 7. Projects (`ProjectsPage`) — Minor
+- Hero already standardized
+- Content A uses `py-section-sm` — good
+- Content B uses `section-dark py-section-sm` — good
+- No changes needed
 
-**Removed/merged**: Maturity Levels, Submission Process, and Submit Form collapse into one section
+## Summary of Tokens Applied Everywhere
 
-### 5. About `/about` (4 → 4)
-- Already at 4 logical sections (Hero, What We Do, Governance, Resources). **No changes needed** — it's already the model.
+| Element | Token |
+|---------|-------|
+| Hero top padding | `pt-28 md:pt-36` |
+| Hero bottom padding | `pb-8 md:pb-12` |
+| Hero title → CTA gap | subtitle `mt-6`, buttons `mt-8` |
+| Section vertical padding | `py-section-sm` |
+| Page title | `text-fluid-page-title` |
+| Section heading | `text-fluid-heading` |
+| Card title | `text-fluid-card-title` |
+| Body / descriptions | `text-fluid-body` |
+| Lead paragraphs | `text-fluid-lead` |
+| Labels / tags | `text-fluid-label` |
+| Captions | `text-fluid-caption` |
+| Container | `container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]` |
+| CTA sections | `section-dark py-section-sm`, centered `max-w-6xl` |
 
-### 6. Donate `/donate` (3 → 4)
-- **Hero** — keep as-is
-- **Content A: "Projects to Support"** — keep as-is
-- **Content B: "Ways to Donate"** — keep as-is
-- **CTA** — add a brief closing section with a final "Donate Now" button and a thank-you message
+## Files Modified
+1. `src/modules/core/pages/AboutPage.tsx` — fix duplicate padding class, minor spacing tweaks
+2. `src/modules/donate/pages/DonatePage.tsx` — full typography + spacing standardization
+3. `src/modules/framework/pages/SemanticWebPage.tsx` — full typography + spacing standardization
 
-**Change**: Add a small closing CTA section for consistency
-
-### 7. Semantic Web `/semantic-web` (6 → 4)
-- **Hero** — keep, fold the Definition blockquote into the hero (it's a single quote + one paragraph)
-- **Content A: "The Tower"** — merge the Tower diagram + Layer Detail cards into one section (diagram at top, expandable/accordion layer cards below)
-- **Content B: "Comparison"** — keep the comparison table as-is
-- **CTA** — keep as-is
-
-**Removed/merged**: Definition absorbed into hero; Tower + Layer Details merged
-
----
-
-## Technical Details
-
-### Files Modified
-1. `src/modules/landing/pages/IndexPage.tsx` — reduce from 8 to 4 component imports
-2. `src/modules/landing/components/` — create 2 new merged components (e.g., `WhatIsUorSection.tsx`, `EcosystemSection.tsx`), retire individual ones
-3. `src/modules/framework/pages/StandardPage.tsx` — restructure sections
-4. `src/modules/community/pages/ResearchPage.tsx` — merge Blog + Events
-5. `src/modules/projects/pages/ProjectsPage.tsx` — merge submission sections
-6. `src/modules/donate/pages/DonatePage.tsx` — add closing CTA
-7. `src/modules/framework/pages/SemanticWebPage.tsx` — merge sections
-
-### What Gets Preserved
-- All existing content and data — nothing is deleted, only reorganized
-- All animations and styling patterns
-- All external links and CTAs
-- The design system (cards, typography, spacing tokens)
-
-### What Changes
-- Section count becomes uniform (4 per page)
-- Less whitespace between conceptually related blocks
-- Fewer full-width dividers and section headers
-- Faster time-to-bottom on every page
+Three files changed. No new files created. No content removed.
 
