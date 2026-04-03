@@ -19,21 +19,6 @@ const EcosystemSection = () => {
   return (
     <section className="py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-        {/* Stats row */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-10 lg:gap-14 mb-golden-lg pb-golden-lg border-b border-foreground/8">
-          {[
-            { value: "11", label: "Projects" },
-            { value: "150+", label: "Contributors" },
-            { value: "12", label: "Research Areas" },
-            { value: "Open", label: "Governance" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display font-bold text-foreground text-[clamp(1.75rem,3vw,3rem)] leading-none">{stat.value}</p>
-              <p className="font-body text-foreground/50 text-fluid-label uppercase tracking-[0.15em] mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
