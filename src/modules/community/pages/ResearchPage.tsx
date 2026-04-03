@@ -207,7 +207,7 @@ const Research = () => {
       {/* Blog */}
       <section id="blog" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-foreground/45 mb-3">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Blog
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
