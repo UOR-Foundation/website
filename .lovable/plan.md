@@ -1,71 +1,137 @@
 
 
-# Performance Streamlining Plan — Phase 2
+# Canonical Rust Crate Anchoring Plan
 
-## Current State
-Phase 1 (already shipped) added lazy-loading for below-fold sections, 30fps cap on PrimeConstellationBg, RAF-gated scroll progress, and dead code removal. This phase targets the remaining bottlenecks.
+## Concept
 
-## Findings
+Every discovery surface on uor.foundation — metadata, agent files, JSON-LD, UI, and OpenAPI — will declare `uor-foundation` (the Rust crate on crates.io) as the single canonical source of truth. The website, API, MCP, and future playground all become *instantiations* of what the crate defines. The crate is the root; everything else is a projection.
 
-### 1. GalaxyAnimation renders 1,400 DOM nodes (mobile only)
-The CSS-only galaxy orb creates **2 galaxies x 20 stars x 35 dots = 1,400 individual DOM elements**, each with CSS transforms and a continuous 18s rotation animation. On mobile, this is a significant compositor cost — every frame repaints 1,400 transform calculations.
+```text
+                    ┌─────────────────────────┐
+                    │   uor-foundation crate   │
+                    │   (canonical authority)   │
+                    └────────┬────────────────┘
+           ┌─────────┬──────┴──────┬──────────┐
+           ▼         ▼            ▼           ▼
+        Website    REST API      MCP      Playground
+       (this app)  (edge fns)  (future)   (future)
+```
 
-### 2. PrimeGrid runs at unlimited FPS
-The hero's Vogel spiral canvas animation (4,000 points per frame) has no frame cap. On 120Hz displays, this doubles the GPU work for a slow-rotating pattern that looks identical at 30fps.
+## Changes (11 files)
 
-### 3. No `prefers-reduced-motion` support anywhere
-Users who enable "Reduce motion" in OS settings still get all three animation loops (PrimeGrid, PrimeConstellationBg, GalaxyAnimation). This is both an accessibility gap and a missed performance win.
+### 1. `src/data/external-links.ts` — Add crate URLs
+Add three constants:
+- `CRATE_URL` = `https://crates.io/crates/uor-foundation`
+- `CRATE_DOCS_URL` = `https://docs.rs/uor-foundation`
+- `CRATE_SOURCE_URL` = `https://docs.rs/crate/uor-foundation/latest/source/`
 
-### 4. Images total 11MB, no size optimization
-The largest images (blog-knowledge-graph.png at 1.3MB, uor-logo.png at 1.1MB, project images at 700KB-1MB each) are served as full-resolution originals. These are only used in lazy-loaded sections, but they're still unnecessarily large when they do load.
+All other files import from here — single source of truth for these URLs.
 
-### 5. GalaxyAnimation missing GPU promotion
-The `.circle` elements animate `transform: rotate()` but have no `will-change` or `translateZ(0)` hint, forcing the browser to decide per-frame whether to promote layers.
+### 2. `public/.well-known/uor.json` — Add `source_of_truth` root block
+Insert a top-level block declaring the crate as canonical origin:
+```json
+"source_of_truth": {
+  "type": "rust-crate",
+  "name": "uor-foundation",
+  "crate": "https://crates.io/crates/uor-foundation",
+  "docs": "https://docs.rs/uor-foundation",
+  "repository": "https://github.com/UOR-Foundation/UOR-Framework",
+  "install": "cargo add uor-foundation",
+  "no_std": true,
+  "license": "Apache-2.0",
+  "relationship": "All API endpoints, MCP tools, and TypeScript types are projections of this crate"
+}
+```
 
----
+### 3. `public/openapi.json` — Add `x-source-crate` to info block
+Add three extension fields to the existing `info` object:
+```json
+"x-source-crate": "https://crates.io/crates/uor-foundation",
+"x-source-docs": "https://docs.rs/uor-foundation",
+"x-source-install": "cargo add uor-foundation"
+```
+This tells any agent reading the OpenAPI spec where the canonical definitions live.
 
-## Plan
+### 4. `public/llms.txt` — Add crate as primary resource
+Add a new `## Source of Truth` section after the Documentation section:
+```
+## Source of Truth
 
-### A. Throttle PrimeGrid to 30fps
-Add the same timestamp-based frame cap already used in PrimeConstellationBg. Also add `document.hidden` check to pause when the tab is backgrounded.
+The canonical implementation is the Rust crate `uor-foundation`.
+All API endpoints, schemas, and type definitions are projections of this crate.
 
-**File**: `src/modules/landing/components/PrimeGrid.tsx`
+- Crate: https://crates.io/crates/uor-foundation
+- API docs: https://docs.rs/uor-foundation
+- Install: cargo add uor-foundation
+```
 
-### B. Add `prefers-reduced-motion` support
-- **PrimeGrid**: Skip animation loop entirely, render a single static frame
-- **PrimeConstellationBg**: Same — render one frame, then stop
-- **GalaxyAnimation CSS**: Add `@media (prefers-reduced-motion: reduce)` rule to pause the `.circle` animation
-- This single change makes the site immediately lighter on any machine where the user has reduced motion enabled
+### 5. `public/llms.md` — Add crate provenance
+- Add `crate: https://crates.io/crates/uor-foundation` to the YAML frontmatter
+- Add a "Source of Truth" section after "How To Use It" explaining the crate is the canonical authority
+- Add crate rows to the Resources table at the bottom
 
-**Files**: `PrimeGrid.tsx`, `PrimeConstellationBg.tsx`, `galaxy.css`
+### 6. `public/llms-full.md` — Add crate provenance
+- Add `crate: https://crates.io/crates/uor-foundation` to the YAML frontmatter
+- Update the "0. Start Here" section to mention the crate as the canonical Rust implementation
+- Update the ontology stats line to reference the crate
 
-### C. GPU-promote galaxy animation elements
-Add `will-change: transform` to `.circle` and `backface-visibility: hidden` to `.dot` in the galaxy CSS. This tells the browser to composite these layers on the GPU instead of recalculating on the CPU each frame.
+### 7. `public/agent-discovery.md` — Add crate to resource tables
+- Add `crate: https://crates.io/crates/uor-foundation` to the YAML frontmatter
+- Add crate rows to both the Document Hierarchy and Machine-Readable Discovery tables
+- Add crate to the footer reference block
 
-**File**: `src/modules/landing/components/galaxy.css`
+### 8. `public/robots.txt` — Add crate reference
+Add two comment lines in the AI Agent Discovery block:
+```
+# Source of Truth (Rust crate): https://crates.io/crates/uor-foundation
+# Crate API Docs: https://docs.rs/uor-foundation
+```
 
-### D. Add `loading="lazy"` to all below-fold images
-Ensure every `<img>` in lazy-loaded sections uses `loading="lazy"`. The HighlightsSection already does this — verify the others (EcosystemSection, CommunitySection, etc.) do too.
+### 9. `src/modules/core/components/AgentBeacon.tsx`
+- Add `"sourceOfTruth"` object to the JSON-LD schema pointing to crates.io and docs.rs
+- Add a `<h3>Source of Truth</h3>` section in the semantic HTML explaining the crate is the canonical implementation
+- Add crate links to the `<nav>` block
 
-**Files**: Any section components with `<img>` tags missing `loading="lazy"`
+### 10. `src/modules/core/components/UorMetadata.tsx`
+Add `"uor:sourceOfTruth"` field to the injected JSON-LD module graph:
+```json
+"uor:sourceOfTruth": {
+  "type": "rust-crate",
+  "name": "uor-foundation",
+  "crate": "https://crates.io/crates/uor-foundation",
+  "docs": "https://docs.rs/uor-foundation"
+}
+```
 
-### E. Pause PrimeConstellationBg canvas when not visible
-The constellation canvas is `position: fixed` and runs its animation loop even when fully obscured by opaque sections below the fold. Add an IntersectionObserver on the canvas (or use the scroll fraction it already tracks) to skip drawing when `tStars < 0.001` — which it already does, but the rAF loop still runs. Enhance: when scroll fraction indicates the canvas is fully past view, cancel rAF entirely and restart on scroll-back.
+### 11. `src/modules/framework/pages/StandardPage.tsx` — Add Rust Crate CTA
+- Add a third button in the hero alongside "Read the Docs" and "View on GitHub":
+  - Label: **"Rust Crate"** with a 🦀 or external-link icon
+  - Links to `https://crates.io/crates/uor-foundation`
+- Add a docs.rs link as a secondary action
+- In the bottom CTA section, add crate link alongside the existing spec/GitHub buttons
 
-**File**: `src/modules/landing/components/PrimeConstellationBg.tsx`
-
----
+### 12. `src/types/uor-foundation/index.ts` — Update doc header
+Update the module documentation comment to declare Rust crate provenance:
+```ts
+/**
+ * UOR Foundation v2.0.0 — TypeScript Projection
+ *
+ * Canonical source of truth: https://crates.io/crates/uor-foundation (Rust)
+ * API documentation: https://docs.rs/uor-foundation
+ *
+ * These TypeScript types are a projection of the authoritative Rust crate's
+ * trait definitions. The crate is the single source of truth for all
+ * namespaces, classes, properties, and named individuals in the UOR ontology.
+ * ...existing doc content...
+ */
+```
 
 ## What stays untouched
-- All visual design, layout, routes, and features
-- The lazy-loading infrastructure from Phase 1
-- All page-level code splitting
-- AgentBeacon, Navbar, Footer functionality
+- All visual design, animations, and performance optimizations
+- All existing GitHub links (kept alongside crate links — GitHub is the repo, crate is the published authority)
+- All routes, lazy loading, PWA config
+- No new dependencies
 
-## Summary of impact
-- **PrimeGrid 30fps cap**: ~50% CPU reduction on hero section for high-refresh displays
-- **Reduced motion**: Eliminates all animation cost for users who prefer it
-- **GPU promotion**: Smoother galaxy animation with less CPU paint work on mobile
-- **Canvas pause**: Zero CPU cost from constellation when scrolled past it
-- **Lazy images**: Faster initial paint, lower memory usage
+## Summary
+Every machine-readable and human-readable discovery surface will point to the Rust crate as the root authority. The website becomes the *canonical entry point* into the framework, but explicitly declares that it (and the API, and any future MCP/playground) are instantiations of what the crate defines. Agents, developers, and crawlers all encounter this provenance chain regardless of which surface they enter through.
 
