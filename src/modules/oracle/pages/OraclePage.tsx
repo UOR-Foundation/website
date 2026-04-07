@@ -310,7 +310,10 @@ const OraclePage = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="max-w-none">
+                        <div
+                          className="max-w-none"
+                          ref={i === messages.length - 1 && isStreaming ? streamMsgRef : undefined}
+                        >
                           <div className="oracle-prose">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
