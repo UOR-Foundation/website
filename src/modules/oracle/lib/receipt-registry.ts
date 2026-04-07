@@ -73,6 +73,8 @@ const registry = new Map<string, RegistryEntry>();
 export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, "nquads"> & { nquads: string } {
   const ringByte = proof.hashBytes[0];
 
+  const triword = canonicalToTriword(proof.cid);
+
   return {
     cid: proof.cid,
     derivationId: proof.derivationId,
@@ -90,6 +92,11 @@ export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, 
     ringBasis: bridge.byteBasis(ringByte),
     engine: bridge.engineType(),
     crateVersion: bridge.crateVersion(),
+
+    // Triword address
+    triword,
+    triwordFormatted: formatTriword(triword),
+    triwordDimensions: triwordBreakdown(triword),
   };
 }
 
