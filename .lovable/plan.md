@@ -1,68 +1,69 @@
 
 
-# Fix UOR Resolve + Add Three-Word Addressing
+# Simplify UOR Resolve to Two Things: Address ↔ Content
 
-## Problem
+## The Problem
 
-1. **Resolve is broken**: When navigating to `/resolve?cid=...`, the registry lookup fails because the receipt was stored in a different browser context (the Oracle page). The in-memory `Map` only holds entries from the current session's encode operations.
-2. **No three-word addressing**: The triword system (`src/lib/uor-triword.ts`) already exists with 256^3 = 16.7M unique addresses, but it's not integrated into the Resolve page or the receipt registry.
+The current Resolve page is cluttered with Identity cards, WASM Ring Verification grids, N-Quads sections, and multiple panels. The user wants a Google-search experience: **one input, one answer**. Two things only:
 
-## Solution
+1. **The Address** (triword)
+2. **The Content** (the data that lives at that address)
 
-### 1. Add triword to the receipt registry
+Everything else is noise.
 
-**File: `src/modules/oracle/lib/receipt-registry.ts`**
+## The Design
 
-- Add `triword` field to `EnrichedReceipt` (computed via `canonicalToTriword(cid)`)
-- Index entries by triword in addition to CID and derivation ID
-- Export a `lookupByTriword` function that uses `triwordToPrefix` to find matches
+A single-screen experience with no scrolling needed. Like Google: a search bar at the top, the result below. Bidirectional:
 
-### 2. Fix resolve to work with any address format
-
-**File: `src/modules/oracle/pages/ResolvePage.tsx`**
-
-When resolving, detect the input format:
-- If it looks like `word.word.word` → treat as triword, look up via triword index in registry. If not found, use `triwordToPrefix` to show the decoded bytes.
-- If it starts with `b` (CID) or `urn:uor:` (derivation ID) → existing registry lookup
-- If not found in registry for any format → instead of just switching to Encode mode, offer to **re-encode from pasted JSON** while showing what the address decodes to (triword breakdown, hash prefix)
-
-### 3. Add triword as a fifth identity form in results
-
-**File: `src/modules/oracle/pages/ResolvePage.tsx`**
-
-In the Identity card, add a "Triword" row showing the formatted three-word address (e.g., "Meadow · Steep · Keep") with its breakdown (Observer / Observable / Context dimensions).
-
-### 4. Support triword input in the search bar
-
-**File: `src/modules/oracle/pages/ResolvePage.tsx`**
-
-- Update placeholder to: `"Paste a CID, derivation ID, or triword (e.g. meadow.steep.keep)…"`
-- Add a third mode tab: **Resolve** | **Encode** | remains two tabs but Resolve accepts all three formats
-- When a triword is entered, show the triality breakdown (Observer / Observable / Context) alongside results
-
-### 5. Make receipt badges show triword on hover
-
-**File: `src/modules/oracle/pages/OraclePage.tsx`**
-
-Update `ReceiptBadge` tooltip to show the triword alongside the derivation ID, and navigate using the triword as the URL param: `/resolve?w=meadow.steep.keep`
-
-## Files Changed
-
-| File | Change |
-|------|--------|
-| `src/modules/oracle/lib/receipt-registry.ts` | Add `triword` to `EnrichedReceipt`, index by triword, export `lookupByTriword` |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Accept triword input, show triword in Identity card with breakdown, fix resolve flow for missing entries |
-| `src/modules/oracle/pages/OraclePage.tsx` | Show triword in receipt badges, use triword in navigation URL |
-
-## Layout Change (Identity Card)
+- **Address → Content**: Paste a triword (or CID) → see the original data
+- **Content → Address**: Paste JSON → see its deterministic address
 
 ```text
-  IDENTITY
-  CID         bafy2bzace...
-  Derivation  urn:uor:derivation:sha256:a3f...
-  Triword     Meadow · Steep · Keep
-              Observer: Meadow | Observable: Steep | Context: Keep
-  Glyph       ⠣⠺⠁⠎...
-  IPv6        fd00:0075:6f72:a3f0:...
+┌──────────────────────────────────────────────────┐
+│                                                  │
+│              ⠕⠗⠁⠉⠇⠑                             │
+│                                                  │
+│   ┌──────────────────────────────────────────┐   │
+│   │  meadow.steep.keep                    ⏎  │   │
+│   └──────────────────────────────────────────┘   │
+│                                                  │
+│   Address → Content  |  Content → Address        │
+│                                                  │
+│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│                                                  │
+│   ADDRESS                                        │
+│   Meadow · Steep · Keep                          │
+│   bafy2bzace…                        ● WASM ✓   │
+│                                                  │
+│   CONTENT                                        │
+│   ┌────────────────────────────────────────┐     │
+│   │ {                                      │     │
+│   │   "@type": "oracle:Claim",             │     │
+│   │   "oracle:text": "Memory involves…",   │     │
+│   │   "oracle:grade": "A"                  │     │
+│   │ }                                      │     │
+│   └────────────────────────────────────────┘     │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
+
+## What Changes
+
+**File: `src/modules/oracle/pages/ResolvePage.tsx`** — Complete rewrite to ~200 lines:
+
+- Remove: Identity card (CID/Derivation/Glyph/IPv6 rows), WASM Ring Verification grid, N-Quads section, VerifyCell component, IdentityRow component
+- Keep: Search bar, resolve/encode logic, WASM loading, registry lookup, `computeAndRegister` (all WASM-anchored)
+- Result view becomes two simple blocks:
+  - **ADDRESS**: Triword (large, beautiful), CID below it in small mono text, tiny WASM verified badge
+  - **CONTENT**: Pretty-printed JSON of the source object in a clean code block
+- The mode toggle ("Address → Content" / "Content → Address") replaces the current Resolve/Encode tabs — same functionality, clearer labels
+- Single input field that auto-detects: if it looks like JSON → encode mode; if it looks like an address → resolve mode
+- Re-derive button stays as a subtle link at the bottom ("Verify determinism")
+- Everything fits on one screen without scrolling
+
+## Technical
+
+- All encoding still goes through `computeAndRegister()` → `singleProofHash()` → WASM bridge
+- Registry lookup unchanged
+- No new dependencies, no new files — just a dramatic simplification of ResolvePage.tsx
 
