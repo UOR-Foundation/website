@@ -13,10 +13,10 @@ const HeroSection = () => {
 
       {/* Mobile: fill the viewport, golden-ratio vertical distribution */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
-        {/* Top: navbar clearance + breathing room */}
-        <div className="h-[5.5rem] shrink-0" />
+        {/* Top spacer — matches the orb→text gap via same flex ratio */}
+        <div className="flex-[0.618] min-h-[5.5rem]" />
 
-        {/* Galaxy orb — larger to fill width meaningfully */}
+        {/* Galaxy orb */}
         <div
           className="w-[min(72vw,300px)] h-[min(72vw,300px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
@@ -24,7 +24,7 @@ const HeroSection = () => {
           <GalaxyAnimation />
         </div>
 
-        {/* Flexible spacer — golden minor proportion */}
+        {/* Spacer orb → text — same flex as top for balance */}
         <div className="flex-[0.618] min-h-[1rem]" />
 
         <h1
