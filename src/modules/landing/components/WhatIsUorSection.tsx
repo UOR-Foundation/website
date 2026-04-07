@@ -114,7 +114,7 @@ const WhatIsUorSection = () => {
         </div>
         <div className="rule-prime" />
 
-        <div className="py-golden-lg grid grid-cols-1 items-center gap-[clamp(2.5rem,4vw,5.5rem)] animate-fade-in-up opacity-0 lg:grid-cols-[minmax(0,0.618fr)_minmax(0,1fr)]" style={{ animationDelay: "0.11s" }}>
+        <div className="py-golden-lg grid grid-cols-1 items-start gap-[clamp(2.5rem,4vw,5.5rem)] animate-fade-in-up opacity-0 lg:grid-cols-[minmax(0,0.618fr)_minmax(0,1fr)]" style={{ animationDelay: "0.11s" }}>
           <div>
             <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
               <span className="text-foreground/90 font-medium">Every system assigns its own identifiers. Move data between platforms, federate across organizations, or replicate for resilience: the IDs collide, break, or disappear.</span>{" "}
