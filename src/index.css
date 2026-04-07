@@ -1187,3 +1187,170 @@
 .sidebar-tooltip {
   box-shadow: 0 8px 24px -6px hsla(25, 15%, 5%, calc(0.5 * var(--still-shadow-opacity)));
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §  Oracle Prose — Optimized for readability and delight
+   Research-backed: ~65 chars/line, 1.7 line-height, generous spacing.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.oracle-prose {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: clamp(14.5px, 1vw, 16.5px);
+  line-height: 1.75;
+  color: hsl(var(--foreground) / 0.88);
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  max-width: 68ch;
+}
+
+/* Paragraph spacing: generous but not wasteful */
+.oracle-prose p {
+  margin-bottom: 1.1em;
+}
+.oracle-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings: display font, tight tracking, clear hierarchy */
+.oracle-prose h1,
+.oracle-prose h2,
+.oracle-prose h3,
+.oracle-prose h4 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+}
+.oracle-prose h1 { font-size: 1.5em; }
+.oracle-prose h2 { font-size: 1.25em; }
+.oracle-prose h3 { font-size: 1.1em; font-weight: 500; }
+.oracle-prose h4 { font-size: 1em; font-weight: 500; color: hsl(var(--foreground) / 0.7); }
+
+/* First heading needs no top margin */
+.oracle-prose > h1:first-child,
+.oracle-prose > h2:first-child,
+.oracle-prose > h3:first-child {
+  margin-top: 0;
+}
+
+/* Lists: comfortable indent, clean bullets */
+.oracle-prose ul,
+.oracle-prose ol {
+  padding-left: 1.4em;
+  margin-bottom: 1.1em;
+}
+.oracle-prose li {
+  margin-bottom: 0.35em;
+  padding-left: 0.3em;
+}
+.oracle-prose ul > li {
+  list-style-type: disc;
+}
+.oracle-prose ul > li::marker {
+  color: hsl(var(--primary) / 0.4);
+}
+.oracle-prose ol > li {
+  list-style-type: decimal;
+}
+.oracle-prose ol > li::marker {
+  color: hsl(var(--muted-foreground) / 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nested lists */
+.oracle-prose li > ul,
+.oracle-prose li > ol {
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
+}
+
+/* Inline code */
+.oracle-prose code {
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: hsl(var(--muted) / 0.5);
+  color: hsl(var(--primary) / 0.85);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Code blocks */
+.oracle-prose pre {
+  margin: 1.2em 0;
+  padding: 1em 1.2em;
+  border-radius: 10px;
+  background: hsl(var(--background) / 0.6);
+  border: 1px solid hsl(var(--border) / 0.2);
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+.oracle-prose pre code {
+  padding: 0;
+  background: transparent;
+  color: hsl(var(--foreground) / 0.75);
+  font-size: 1em;
+}
+
+/* Blockquotes */
+.oracle-prose blockquote {
+  border-left: 2px solid hsl(var(--primary) / 0.25);
+  padding-left: 1.2em;
+  margin: 1.2em 0;
+  color: hsl(var(--foreground) / 0.65);
+  font-style: italic;
+}
+
+/* Links */
+.oracle-prose a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  border-bottom: 1px solid hsl(var(--primary) / 0.2);
+  transition: border-color 0.15s ease;
+}
+.oracle-prose a:hover {
+  border-bottom-color: hsl(var(--primary) / 0.6);
+}
+
+/* Strong & emphasis */
+.oracle-prose strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+.oracle-prose em {
+  font-style: italic;
+  color: hsl(var(--foreground) / 0.8);
+}
+
+/* Horizontal rules */
+.oracle-prose hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border) / 0.15);
+  margin: 2em 0;
+}
+
+/* Tables */
+.oracle-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 0.9em;
+}
+.oracle-prose th,
+.oracle-prose td {
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid hsl(var(--border) / 0.15);
+  text-align: left;
+}
+.oracle-prose th {
+  font-weight: 600;
+  color: hsl(var(--foreground) / 0.7);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
