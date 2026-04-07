@@ -11,53 +11,52 @@ const HeroSection = () => {
       {/* Living prime number field. desktop only */}
       {!isMobile && <PrimeGrid />}
 
-      {/* Mobile: golden-ratio balanced layout */}
+      {/* Mobile: fill the viewport, golden-ratio vertical distribution */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
-        {/* Top spacer — φ ratio (1.618 parts top vs 1 part bottom) pushes content slightly above center */}
-        <div className="flex-[1]" />
+        {/* Top: navbar clearance + breathing room */}
+        <div className="h-[5.5rem] shrink-0" />
 
-        {/* Galaxy orb — sized for visual weight without dominating */}
+        {/* Galaxy orb — larger to fill width meaningfully */}
         <div
-          className="w-[min(56vw,230px)] h-[min(56vw,230px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
+          className="w-[min(72vw,300px)] h-[min(72vw,300px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
         >
           <GalaxyAnimation />
         </div>
 
-        {/* Spacing: orb → text (golden minor) */}
-        <div className="h-[clamp(1.5rem,4vw,2.25rem)] shrink-0" />
+        {/* Flexible spacer — golden minor proportion */}
+        <div className="flex-[0.618] min-h-[1rem]" />
 
         <h1
-          className="font-display font-bold leading-[1.1] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-4 inline-block"
+          className="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
           style={{ animationDelay: "0.29s" }}
         >
-           <span className="text-[clamp(1.65rem,6.8vw,2.4rem)] block">Make Data Identity</span>
-           <span className="text-[clamp(2rem,8.2vw,3rem)] flex justify-between w-full mt-0.5" aria-label="Universal">
+           <span className="text-[clamp(1.8rem,7.5vw,2.75rem)] block">Make Data Identity</span>
+           <span className="text-[clamp(2.2rem,9vw,3.5rem)] flex justify-between w-full mt-0.5" aria-label="Universal">
              {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
            </span>
         </h1>
 
-        {/* Spacing: text → CTA (golden minor) */}
         <div
-          className="mt-[clamp(1.25rem,3.5vw,2rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.25rem,3vw,1.75rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0 shrink-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
             href="/projects"
-            className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/30 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
+            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/30 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
           >
             Explore Projects
             <ArrowRight size={14} />
           </a>
         </div>
 
-        {/* Bottom spacer — φ reciprocal (1 part) to balance with top */}
-        <div className="flex-[1.618]" />
+        {/* Flexible spacer — golden major proportion */}
+        <div className="flex-[1] min-h-[1.5rem]" />
 
-        {/* Stats bar — generous, well-spaced */}
-        <div className="w-3/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/12 to-transparent mb-5 animate-fade-in-up opacity-0" style={{ animationDelay: "0.6s" }} />
+        {/* Stats bar */}
+        <div className="w-2/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/12 to-transparent mb-4 animate-fade-in-up opacity-0 shrink-0" style={{ animationDelay: "0.6s" }} />
         <div
-          className="w-full grid grid-cols-3 gap-8 px-8 pb-[max(2rem,calc(env(safe-area-inset-bottom,1rem)+1.5rem))] animate-fade-in-up opacity-0 pointer-events-none"
+          className="w-full grid grid-cols-3 gap-6 px-6 pb-[max(1.75rem,calc(env(safe-area-inset-bottom,1rem)+1rem))] animate-fade-in-up opacity-0 pointer-events-none shrink-0"
           style={{ animationDelay: "0.65s" }}
         >
           {[
