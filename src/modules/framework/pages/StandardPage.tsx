@@ -75,20 +75,6 @@ const Standard = () => {
               <ExternalLink size={14} />
             </a>
           </div>
-          <p
-            className="mt-4 text-fluid-label text-foreground/50 font-body animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.4s" }}
-          >
-            Source of truth:{" "}
-            <a
-              href={CRATE_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-primary transition-colors"
-            >
-              docs.rs/uor-foundation
-            </a>
-          </p>
         </div>
       </section>
 
