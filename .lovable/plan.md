@@ -1,74 +1,56 @@
 
 
-# Oracle — Full-Screen Portal Chat Experience
+# Redesign Audit Section for Human-Interpretable Trust
 
-## Concept
+## Current Problems
 
-Transform the Oracle from a scrollable page-within-a-page into an immersive full-viewport chat portal — like iMessage or WhatsApp — where the input bar is pinned to the bottom, messages flow upward naturally, and the entire screen is the conversation.
+The expanded audit section uses jargon that means nothing to a lay person:
+- **"9/18 verified"** — verified how? what does this mean?
+- **"Refined 2×"** — refined what?
+- **"Proof"** — sounds legal/academic, not friendly
+- **"Parse / Check / Verify / Result"** — developer terminology
+- **Claim X-Ray** shows raw grade letters (A/B/C/D) and cryptic `source` strings like `grounded:c0,c1` or `llm-generated`
+- **"Verified automatically"** — says nothing useful
 
-## Key Changes
+## New Design
 
-### 1. Full-viewport layout, no page scroll
+### Summary line (replaces current actions row)
 
-- Remove the `Layout` wrapper (Navbar/Footer) so Oracle owns the entire screen
-- Use `100dvh` (dynamic viewport height) for the container — no page-level scrolling at all
-- Structure: fixed header bar (minimal) → flex-grow message area → fixed input bar at bottom
+Replace `9/18 verified | Refined 2× | Proof ▸` with:
 
-### 2. Messages anchored to bottom, flowing upward
+- `✓ 9 of 18 statements backed by evidence` (replaces verified count)
+- `Answer improved twice` (only if iterations > 1, replaces "Refined 2×")
+- `How we checked ▸` (replaces "Proof ▸")
 
-- Use `flex-direction: column; justify-content: flex-end` on the messages container so content hugs the bottom when there are few messages (like iMessage)
-- As messages accumulate, the container scrolls naturally — older messages slide up and out of view
-- The newest content is always near the input bar where the user's eyes already are
+### Trust Breakdown (replaces "Proof Trail")
 
-### 3. Fixed input bar at the bottom
+Replace Parse/Check/Verify/Result with a metrics grid using plain-English labels:
 
-- Pinned to the bottom of the viewport with comfortable padding
-- Centered, max-width constrained, with the same rounded pill style
-- Always visible regardless of scroll position
+| Metric | Value example | Source |
+|--------|---------------|--------|
+| **Confidence** | High / Moderate / Low | Mapped from grade A/B → High, C → Moderate, D → Low |
+| **Statements checked** | 18 statements analyzed | `claims.length` |
+| **Evidence found** | 9 supported by evidence | claims with grade ≤ B |
+| **Key topics covered** | 3 of 3 topics addressed | `premisesCount` |
+| **Consistency** | All checks agree / Some uncertainty | `converged` boolean |
+| **Answer improved** | Yes, twice / Not needed | `iterations` |
 
-### 4. Sidebar becomes a collapsible overlay
+Each row gets a small green/amber/red status dot for at-a-glance scanning.
 
-- On desktop, the sidebar settings (precision, strictness, self-improve) become accessible via a small gear/settings icon in the header bar
-- Opens as a slide-over panel or dropdown — keeps the main view clean and focused
-- Trust results (grade badge) shown inline with messages, not in a sidebar
+### Claim-by-Claim View (replaces X-Ray)
 
-### 5. Compact header
+- Replace grade letters with words: **Proven** / **Verified** / **Plausible** / **Unverified**
+- Replace raw `source` strings with plain English:
+  - `grounded:...` → "Backed by evidence"
+  - `scaffold:...` → "Matches reasoning pattern"
+  - `llm-generated` → "No direct evidence"
+- Section title: "Statement breakdown" instead of implicit X-ray
 
-- Minimal top bar: "Oracle" title on the left, settings gear + engine status on the right
-- Thin, no subtitle paragraph — the empty state handles onboarding
+### Footer
 
-## Files to Change
+Replace "Verified automatically" with: **"Every statement checked independently against your question"**
 
-| File | What changes |
-|------|-------------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Remove `Layout` wrapper; restructure to full-viewport flex column; move sidebar into collapsible overlay panel; pin input bar; apply `justify-end` to message list; compact header |
-| `src/index.css` | Add `oracle-page` utility styles if needed for `100dvh` and scroll anchoring |
+## File to Change
 
-## Layout Structure (ASCII)
-
-```text
-┌──────────────────────────────────┐
-│  Oracle              ⚙️  ● Ready │  ← thin fixed header
-├──────────────────────────────────┤
-│                                  │
-│   (empty: presets centered)      │
-│         or                       │
-│   ┌─────────────────────┐        │
-│   │ user bubble          │  →    │  ← messages flex-end,
-│   └─────────────────────┘        │    older ones scroll up
-│   ┌──────────────────────────┐   │
-│   │ assistant response        │  │
-│   │ ...                       │  │
-│   │ [grade bar] [proof trail] │  │
-│   └──────────────────────────┘   │
-│   ● ● ●  (typing dots)          │
-│                                  │
-├──────────────────────────────────┤
-│  [  Ask anything...        ⬆ ]  │  ← fixed input bar
-└──────────────────────────────────┘
-```
-
-## Settings Panel (overlay)
-
-When the gear icon is clicked, a right-side panel slides in with the existing controls (precision, self-improve, strictness, how-it-works). Clicking outside or pressing Escape closes it. This keeps the portal feel clean while retaining all functionality.
+`src/modules/oracle/pages/OraclePage.tsx` — lines ~354-420 (trust bar actions, proof trail, claim X-ray sections)
 
