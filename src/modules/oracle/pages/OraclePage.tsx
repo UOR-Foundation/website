@@ -23,7 +23,9 @@ const OraclePage = () => {
   const [symbolicResults, setSymbolicResults] = useState<SymbolicResult[]>([]);
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [wasmReady, setWasmReady] = useState(false);
 
+  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, symbolicResults]);
