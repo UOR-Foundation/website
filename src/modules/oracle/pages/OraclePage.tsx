@@ -86,7 +86,7 @@ const OraclePage = () => {
 
   // Expandable trust card per message
   const [expandedTrust, setExpandedTrust] = useState<Set<number>>(new Set());
-  const [activePillar, setActivePillar] = useState<Record<number, string | null>>({});
+  const [xrayOpen, setXrayOpen] = useState<Set<number>>(new Set());
 
   const temperature = 0.7 - (precision / 100) * 0.5;
 
@@ -226,6 +226,8 @@ const OraclePage = () => {
         [msgIndex]: {
           grade, claims: report.annotations, curvature: report.overallCurvature,
           converged: report.converged, iterations: iteration + 1,
+          constraints: scaffold.constraints.map(c => ({ id: c.id, type: c.type, description: c.description, ringValue: c.ringValue })),
+          termMap: scaffold.termMap.map(t => ({ term: t.term, ringValue: t.ringValue })),
           proof: {
             proofId: proofData.proofId, state: proofData.state,
             stepsCount: proofData.steps.length, premisesCount: proofData.premises.length,
