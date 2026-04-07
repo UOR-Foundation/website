@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
@@ -15,6 +16,7 @@ import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash } from "@/lib/uor-canonical";
+import { computeAndRegister, enrichWithWasm, type EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
@@ -44,6 +46,15 @@ interface UorReceipt {
   cid: string;
   derivationId: string;
   uorAddress: unknown;
+  /** WASM ring algebraic signature */
+  ring?: {
+    byte: number;
+    partition: string;
+    factors: number[];
+    criticalIdentity: boolean;
+    engine: "wasm" | "typescript";
+    crateVersion: string | null;
+  };
 }
 
 interface TrustData {
