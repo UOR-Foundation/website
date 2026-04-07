@@ -273,10 +273,10 @@ const OraclePage = () => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
       {/* ── Compact header ── */}
-      <header className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-border/20 bg-background/80 backdrop-blur-md shrink-0">
+      <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-border/20 bg-background/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-3">
-          <a href="/" className="text-muted-foreground/60 hover:text-foreground transition-colors text-sm">←</a>
-          <h1 className="font-display font-bold text-foreground text-base tracking-tight">Oracle</h1>
+          <a href="/" className="text-muted-foreground/60 hover:text-foreground transition-colors text-base">←</a>
+          <h1 className="font-display font-bold text-foreground text-lg tracking-tight">Oracle</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
