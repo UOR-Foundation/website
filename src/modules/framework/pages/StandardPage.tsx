@@ -181,8 +181,6 @@ const Standard = () => {
           </div>
         </div>
       </section>
-        </div>
-      </section>
 
       {/* Where It Applies */}
       <section className="py-section-sm bg-background border-b border-border/40">
