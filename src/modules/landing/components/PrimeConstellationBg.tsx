@@ -225,6 +225,10 @@ const PrimeConstellationBg = () => {
   const angleRef = useRef(0);
   const scrollRef = useRef(0);
   const timeRef = useRef(0);
+  const runningRef = useRef(false);
+  const reducedMotionRef = useRef(
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 
   const lastFrameRef = useRef(0);
   const FRAME_INTERVAL = 1000 / 30; // 30fps cap
@@ -413,9 +417,28 @@ const PrimeConstellationBg = () => {
       canvas.style.height = `${window.innerHeight}px`;
     };
 
+    const startLoop = () => {
+      if (!runningRef.current) {
+        runningRef.current = true;
+        rafRef.current = requestAnimationFrame(draw);
+      }
+    };
+
+    const stopLoop = () => {
+      runningRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+
     const onScroll = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       scrollRef.current = scrollHeight > 0 ? window.scrollY / scrollHeight : 0;
+
+      // If scroll is before the stars-start threshold, pause entirely
+      if (scrollRef.current < SCROLL_STARS_START - 0.02) {
+        stopLoop();
+      } else {
+        startLoop();
+      }
     };
 
     resize();
@@ -423,7 +446,13 @@ const PrimeConstellationBg = () => {
 
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
-    rafRef.current = requestAnimationFrame(draw);
+
+    // If reduced motion, draw one static frame at current scroll and stop
+    if (reducedMotionRef.current) {
+      draw(performance.now());
+    } else {
+      startLoop();
+    }
 
     return () => {
       window.removeEventListener("resize", resize);

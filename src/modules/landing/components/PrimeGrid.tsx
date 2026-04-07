@@ -30,6 +30,7 @@ const PRIME_DOT_R = 1.6;
 const PEAK_DOT_R = 3.2;
 
 const ROTATION_SPEED = 0.00012; // rad per frame. slow, meditative
+const FRAME_INTERVAL = 1000 / 30; // 30fps cap
 
 const GOLD = "38, 65%, 55%";
 const NEUTRAL = "0, 0%, 70%";
@@ -45,6 +46,10 @@ const PrimeGrid = () => {
   const mouseRef = useRef<{ x: number; y: number } | null>(null);
   const rafRef = useRef(0);
   const angleRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  const reducedMotionRef = useRef(
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
   const isMobile = useIsMobile();
 
   const primes = useMemo(() => sievePrimes(MAX_N), []);
@@ -145,9 +150,23 @@ const PrimeGrid = () => {
       mouseRef.current = null;
     };
 
-    const loop = () => {
+    const loop = (now: number = 0) => {
+      if (document.hidden) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+      const elapsed = now - lastFrameRef.current;
+      if (elapsed < FRAME_INTERVAL) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+      lastFrameRef.current = now - (elapsed % FRAME_INTERVAL);
+
       angleRef.current += ROTATION_SPEED;
       draw();
+
+      // If user prefers reduced motion, render one frame and stop
+      if (reducedMotionRef.current) return;
       rafRef.current = requestAnimationFrame(loop);
     };
 
