@@ -2,7 +2,7 @@ export const whatWeDoCards = [
   {
     iconKey: "BookOpen",
     title: "Specification",
-    desc: "We maintain the formal specification, publish updates, and ship reference implementations that anyone can audit.",
+    desc: "We maintain the formal specification as the Rust crate uor-foundation — every ontology class as a trait, every property as a method. Published on crates.io under Apache-2.0.",
   },
   {
     iconKey: "Users",

@@ -1,6 +1,9 @@
 /**
  * Six UOR framework layers. serializable data for UOR certification.
  * Icons are mapped at the component level by `iconKey`.
+ *
+ * Canonical source of truth: https://crates.io/crates/uor-foundation
+ * Each layer maps directly to modules in the Rust crate.
  */
 export interface NamespaceLinkData {
   label: string;
@@ -14,7 +17,11 @@ export interface FrameworkLayerData {
   summary: string;
   description: string;
   namespaces: NamespaceLinkData[];
+  /** docs.rs module paths for this layer's Rust trait definitions */
+  crateModules: NamespaceLinkData[];
 }
+
+const DOCS_RS = "https://docs.rs/uor-foundation/latest/uor_foundation";
 
 export const frameworkLayers: FrameworkLayerData[] = [
   {
@@ -26,6 +33,9 @@ export const frameworkLayers: FrameworkLayerData[] = [
       "Everything in UOR rests on a small set of mathematical rules that can be verified by anyone, on any machine, in under a second. The key rule: applying two simple reversible operations in sequence always produces the next value. This single fact guarantees that every possible value is reachable, making the system complete. If the foundation holds, every layer above it is reliable. The UOR Framework defines these rules formally. Prism executes them.",
     namespaces: [
       { label: "Axioms", url: "https://uor-foundation.github.io/UOR-Framework/docs/overview.html" },
+    ],
+    crateModules: [
+      { label: "Enforcement", url: `${DOCS_RS}/enforcement/` },
     ],
   },
   {
@@ -39,6 +49,10 @@ export const frameworkLayers: FrameworkLayerData[] = [
       { label: "Content Addressing", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/u/" },
       { label: "Schema", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/schema/" },
     ],
+    crateModules: [
+      { label: "kernel::u", url: `${DOCS_RS}/kernel/u/` },
+      { label: "kernel::schema", url: `${DOCS_RS}/kernel/schema/` },
+    ],
   },
   {
     number: 2,
@@ -50,6 +64,10 @@ export const frameworkLayers: FrameworkLayerData[] = [
     namespaces: [
       { label: "Operations", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/op/" },
       { label: "Partitions", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/partition/" },
+    ],
+    crateModules: [
+      { label: "kernel::op", url: `${DOCS_RS}/kernel/op/` },
+      { label: "bridge::partition", url: `${DOCS_RS}/bridge/partition/` },
     ],
   },
   {
@@ -63,6 +81,11 @@ export const frameworkLayers: FrameworkLayerData[] = [
       { label: "Type System", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/type/" },
       { label: "Resolvers", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/resolver/" },
       { label: "Queries", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/query/" },
+    ],
+    crateModules: [
+      { label: "user::type_", url: `${DOCS_RS}/user/type_/` },
+      { label: "bridge::resolver", url: `${DOCS_RS}/bridge/resolver/` },
+      { label: "bridge::query", url: `${DOCS_RS}/bridge/query/` },
     ],
   },
   {
@@ -78,6 +101,12 @@ export const frameworkLayers: FrameworkLayerData[] = [
       { label: "Derivations", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/derivation/" },
       { label: "Traces", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/trace/" },
     ],
+    crateModules: [
+      { label: "bridge::proof", url: `${DOCS_RS}/bridge/proof/` },
+      { label: "bridge::cert", url: `${DOCS_RS}/bridge/cert/` },
+      { label: "bridge::derivation", url: `${DOCS_RS}/bridge/derivation/` },
+      { label: "bridge::trace", url: `${DOCS_RS}/bridge/trace/` },
+    ],
   },
   {
     number: 5,
@@ -90,6 +119,11 @@ export const frameworkLayers: FrameworkLayerData[] = [
       { label: "Morphisms", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/morphism/" },
       { label: "Observables", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/observable/" },
       { label: "State", url: "https://uor-foundation.github.io/UOR-Framework/namespaces/state/" },
+    ],
+    crateModules: [
+      { label: "user::morphism", url: `${DOCS_RS}/user/morphism/` },
+      { label: "bridge::observable", url: `${DOCS_RS}/bridge/observable/` },
+      { label: "user::state", url: `${DOCS_RS}/user/state/` },
     ],
   },
 ];

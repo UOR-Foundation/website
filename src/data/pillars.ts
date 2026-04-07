@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Build",
     description:
-      "Start building with UOR. Pick a project to contribute to, or submit your own for review.",
+      "Start building with UOR. Add the canonical Rust crate — cargo add uor-foundation — and implement the ontology traits in your own system.",
     href: "/projects",
     cta: "Explore Projects",
   },
