@@ -316,11 +316,11 @@ const SearchPage = () => {
                       {msg.role === "user" ? (
                         <p className="text-sm text-foreground/90">{msg.content}</p>
                       ) : (
-                        <ReactMarkdown
-                          className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3 [&>h1]:text-base [&>h1]:font-semibold [&>h1]:text-foreground/90 [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:text-foreground/85 [&>h3]:text-sm [&>h3]:font-medium [&>h3]:text-foreground/80"
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
+                        <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
+                          <ReactMarkdown>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
                       )}
                     </div>
                   </div>
