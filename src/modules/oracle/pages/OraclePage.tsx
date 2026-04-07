@@ -65,6 +65,68 @@ interface TrustData {
   termMap: Array<{ term: string; ringValue: number }>;
   /** UOR canonical receipts keyed by label */
   receipts?: Record<string, UorReceipt>;
+  /** Raw response text for trust map re-rendering */
+  responseText?: string;
+  /** Original user query */
+  userQuery?: string;
+}
+
+/* ── Blind Spot Extraction ── */
+
+/** Common English stop words to exclude from analysis */
+const STOP_WORDS = new Set([
+  "the","a","an","is","are","was","were","be","been","being","have","has","had",
+  "do","does","did","will","would","shall","should","may","might","can","could",
+  "of","in","to","for","with","on","at","by","from","as","into","through","during",
+  "before","after","above","below","between","out","about","against","over","under",
+  "again","further","then","once","here","there","when","where","why","how","all",
+  "each","every","both","few","more","most","other","some","such","no","nor","not",
+  "only","own","same","so","than","too","very","just","because","but","and","or",
+  "if","while","that","this","these","those","it","its","they","them","their","we",
+  "our","you","your","he","she","him","her","his","what","which","who","whom",
+]);
+
+function extractBlindSpots(
+  userQuery: string,
+  responseText: string,
+  termMap: Array<{ term: string; ringValue: number }>,
+): Array<{ concept: string; why: string; ringDistance: number }> {
+  const queryWords = new Set(
+    userQuery.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.has(w))
+  );
+  const queryTermSet = new Set(termMap.map(t => t.term.toLowerCase()));
+
+  // Extract substantive phrases from response that weren't in the query
+  const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+  const responseWords = new Map<string, string>(); // normalized → original context sentence
+  for (const sentence of sentences) {
+    const words = sentence.trim().toLowerCase().replace(/[^\w\s-]/g, "").split(/\s+/);
+    for (const w of words) {
+      if (w.length > 4 && !STOP_WORDS.has(w) && !queryWords.has(w) && !queryTermSet.has(w) && !responseWords.has(w)) {
+        responseWords.set(w, sentence.trim());
+      }
+    }
+  }
+
+  // Compute ring distance (XOR) from query's composite ring value
+  const queryComposite = termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
+  const candidates: Array<{ concept: string; why: string; ringDistance: number }> = [];
+
+  for (const [word, context] of responseWords) {
+    const wordRing = Array.from(word).reduce((acc, ch) => (acc + ch.charCodeAt(0)) & 0xFF, 0);
+    const dist = bridge.xor(queryComposite, wordRing);
+    // Higher distance = more "surprising" concept
+    if (dist > 40) {
+      // Extract a meaningful snippet around this word
+      const idx = context.toLowerCase().indexOf(word);
+      const snippet = context.length > 100 ? context.slice(0, 100) + "…" : context;
+      candidates.push({ concept: word.charAt(0).toUpperCase() + word.slice(1), why: snippet, ringDistance: dist });
+    }
+  }
+
+  // Sort by ring distance (most algebraically distant = most surprising) and take top 3
+  candidates.sort((a, b) => b.ringDistance - a.ringDistance);
+  return candidates.slice(0, 3);
 }
 
 /* ── Page ── */
