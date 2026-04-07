@@ -134,6 +134,18 @@ const OraclePage = () => {
     }
   }, [messages, isStreaming, temperature]);
 
+  /* ── Selection action handler ── */
+
+  const handleSelectionAction = useCallback((action: SelectionAction, text: string) => {
+    const prompts: Record<SelectionAction, string> = {
+      "zoom-in": `Explain this in more detail: "${text}"`,
+      "zoom-out": `Explain this more simply, in broader context: "${text}"`,
+      "clarify": `Clarify what this means: "${text}"`,
+      "verify": `What are the sources and evidence for: "${text}"`,
+    };
+    send(prompts[action]);
+  }, [send]);
+
   /* ── Verification loop ── */
 
   const runVerificationLoop = useCallback(async (
