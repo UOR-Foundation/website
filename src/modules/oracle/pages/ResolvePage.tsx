@@ -31,6 +31,7 @@ function CopyBtn({ onClick, copied, size = 12, label }: {
 }
 
 const ResolvePage = () => {
+  const [contentMode, setContentMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
