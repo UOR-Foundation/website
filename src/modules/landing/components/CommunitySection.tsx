@@ -6,6 +6,9 @@ const CommunitySection = () => {
   const row1 = teamMembers.slice(0, 8);
   const row2 = [...teamMembers.slice(8), { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true }];
 
+  // Mobile: show first 8 + count tile = 9 items in a 3-column grid
+  const mobileMembers = [...teamMembers.slice(0, 8), { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true }];
+
   const hexSize = "w-[5rem] h-[5rem] md:w-[5.5rem] md:h-[5.5rem] lg:w-[6.5rem] lg:h-[6.5rem]";
   const cellWidth = "w-[6.5rem] md:w-[8rem] lg:w-[9.5rem]";
 
