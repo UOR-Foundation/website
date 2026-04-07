@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
+import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import {
   buildScaffold,
   processResponse,
@@ -66,6 +67,10 @@ const OraclePage = () => {
   const [refiningIteration, setRefiningIteration] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const proseContainerRef = useRef<HTMLDivElement>(null);
+  const streamMsgRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToStream = useRef(false);
+  const tokenBufferRef = useRef<TokenBuffer | null>(null);
+  const [showTypingDots, setShowTypingDots] = useState(false);
   const [wasmReady, setWasmReady] = useState(false);
 
   // Controls
@@ -80,9 +85,17 @@ const OraclePage = () => {
   const temperature = 0.7 - (precision / 100) * 0.5;
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+
+  // Scroll to the TOP of the new assistant message once, then stop
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, trustMap]);
+    if (!hasScrolledToStream.current && streamMsgRef.current && isStreaming) {
+      hasScrolledToStream.current = true;
+      // Small delay so the DOM has the element
+      requestAnimationFrame(() => {
+        streamMsgRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [messages, isStreaming]);
 
   const toggle = (set: Set<number>, idx: number) => {
     const s = new Set(set);
@@ -102,10 +115,30 @@ const OraclePage = () => {
     setMessages(newMessages);
     setInput("");
     setIsStreaming(true);
+    setShowTypingDots(true);
+    hasScrolledToStream.current = false;
+
+    // Scroll to bottom so user sees their own message
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current!.scrollHeight, behavior: "smooth" });
+    });
 
     const scaffold = buildScaffold(text.trim());
     let assistantSoFar = "";
     const assistantIndex = newMessages.length;
+
+    // Set up token buffer for humanised pacing
+    const buffer = new TokenBuffer((displayText) => {
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: displayText } : m);
+        }
+        return [...prev, { role: "assistant", content: displayText }];
+      });
+    });
+    buffer.start();
+    tokenBufferRef.current = buffer;
 
     try {
       await streamOracle({
@@ -114,22 +147,29 @@ const OraclePage = () => {
         temperature,
         onDelta: (chunk) => {
           assistantSoFar += chunk;
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last?.role === "assistant") {
-              return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-            }
-            return [...prev, { role: "assistant", content: assistantSoFar }];
-          });
+          setShowTypingDots(false);
+          buffer.push(chunk);
         },
         onDone: () => {
+          buffer.stop();
+          tokenBufferRef.current = null;
           setIsStreaming(false);
+          setShowTypingDots(false);
           runVerificationLoop(scaffold, assistantSoFar, assistantIndex, 0, newMessages);
         },
-        onError: (err) => { setIsStreaming(false); toast.error(err); },
+        onError: (err) => {
+          buffer.stop();
+          tokenBufferRef.current = null;
+          setIsStreaming(false);
+          setShowTypingDots(false);
+          toast.error(err);
+        },
       });
     } catch {
+      buffer.stop();
+      tokenBufferRef.current = null;
       setIsStreaming(false);
+      setShowTypingDots(false);
       toast.error("Connection error.");
     }
   }, [messages, isStreaming, temperature]);
@@ -270,7 +310,10 @@ const OraclePage = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="max-w-none">
+                        <div
+                          className="max-w-none"
+                          ref={i === messages.length - 1 && isStreaming ? streamMsgRef : undefined}
+                        >
                           <div className="oracle-prose">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
@@ -383,12 +426,24 @@ const OraclePage = () => {
                     </div>
                   ))}
 
-                  {/* Streaming indicator */}
-                  {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-                    <div className="flex justify-start py-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary/50" />
-                    </div>
-                  )}
+                  {/* Typing indicator — WhatsApp-style dots */}
+                  <AnimatePresence>
+                    {showTypingDots && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.25 }}
+                        className="flex items-center gap-1.5 py-3 px-1"
+                      >
+                        <div className="flex gap-[5px] items-center bg-muted/30 rounded-2xl px-4 py-2.5">
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "160ms" }} />
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "320ms" }} />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Verification status */}
                   <AnimatePresence>
