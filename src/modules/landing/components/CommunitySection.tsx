@@ -44,7 +44,7 @@ const CommunitySection = () => {
         style={{ animationDelay: delay }}
       >
         <div
-          className={`${hexSize} group-hover:scale-105 transition-transform duration-300 ring-1 ring-foreground/8 group-hover:ring-primary/40`}
+          className={`${hexSize} group-hover:scale-105 transition-transform duration-300 ring-1 ring-black/8 md:ring-foreground/8 group-hover:ring-primary/40`}
           style={{ clipPath: HEX_CLIP }}
         >
           <img
