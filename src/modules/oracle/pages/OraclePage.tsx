@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
@@ -15,6 +16,7 @@ import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash } from "@/lib/uor-canonical";
+import { computeAndRegister, enrichWithWasm, type EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
@@ -44,6 +46,15 @@ interface UorReceipt {
   cid: string;
   derivationId: string;
   uorAddress: unknown;
+  /** WASM ring algebraic signature */
+  ring?: {
+    byte: number;
+    partition: string;
+    factors: number[];
+    criticalIdentity: boolean;
+    engine: "wasm" | "typescript";
+    crateVersion: string | null;
+  };
 }
 
 interface TrustData {
@@ -132,6 +143,7 @@ function extractBlindSpots(
 /* ── Page ── */
 
 const OraclePage = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -314,13 +326,34 @@ const OraclePage = () => {
 
       setTrustMap(prev => ({ ...prev, [msgIndex]: trustEntry }));
 
-      // Compute UOR canonical receipts asynchronously (non-blocking)
+      // Compute WASM-anchored UOR canonical receipts asynchronously (non-blocking)
       (async () => {
         try {
           const receiptMap: Record<string, UorReceipt> = {};
 
+          /** Helper: compute receipt, enrich with WASM ring, register in global registry */
+          const makeReceipt = async (source: Record<string, unknown>): Promise<UorReceipt> => {
+            const proof = await singleProofHash(source);
+            const enriched = enrichWithWasm(proof);
+            // Register in global receipt registry for /resolve page lookup
+            await computeAndRegister(source);
+            return {
+              cid: proof.cid,
+              derivationId: proof.derivationId,
+              uorAddress: proof.uorAddress,
+              ring: {
+                byte: enriched.ringByte,
+                partition: enriched.ringPartition,
+                factors: enriched.ringFactors,
+                criticalIdentity: enriched.ringCriticalIdentity,
+                engine: enriched.engine,
+                crateVersion: enriched.crateVersion,
+              },
+            };
+          };
+
           // Receipt for the full proof
-          const proofReceipt = await singleProofHash({
+          receiptMap["proof"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:ReasoningProof",
             "oracle:proofId": proofData.proofId,
@@ -330,21 +363,19 @@ const OraclePage = () => {
             "oracle:claimCount": report.annotations.length,
             "oracle:quantum": proofData.quantum,
           });
-          receiptMap["proof"] = { cid: proofReceipt.cid, derivationId: proofReceipt.derivationId, uorAddress: proofReceipt.uorAddress };
 
           // Receipt for the scaffold/query interpretation
-          const scaffoldReceipt = await singleProofHash({
+          receiptMap["scaffold"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:QueryScaffold",
             "oracle:constraints": scaffold.constraints.map(c => ({ type: c.type, description: c.description, ring: c.ringValue })),
             "oracle:terms": scaffold.termMap.map(t => ({ term: t.term, ring: t.ringValue })),
           });
-          receiptMap["scaffold"] = { cid: scaffoldReceipt.cid, derivationId: scaffoldReceipt.derivationId, uorAddress: scaffoldReceipt.uorAddress };
 
           // Receipt for each claim (batch in parallel)
           const claimReceipts = await Promise.all(
             report.annotations.map((claim, idx) =>
-              singleProofHash({
+              makeReceipt({
                 "@context": { "oracle": "https://uor.foundation/oracle/" },
                 "@type": "oracle:Claim",
                 "oracle:index": idx,
@@ -355,19 +386,18 @@ const OraclePage = () => {
             )
           );
           claimReceipts.forEach((r, idx) => {
-            receiptMap[`claim-${idx}`] = { cid: r.cid, derivationId: r.derivationId, uorAddress: r.uorAddress };
+            receiptMap[`claim-${idx}`] = r;
           });
 
           // Receipt for the composite ring signature
           const compositeRing = scaffold.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
-          const sigReceipt = await singleProofHash({
+          receiptMap["signature"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:RingSignature",
             "oracle:compositeRing": compositeRing,
             "oracle:proofId": proofData.proofId,
             "oracle:certified": proofData.certificate !== null,
           });
-          receiptMap["signature"] = { cid: sigReceipt.cid, derivationId: sigReceipt.derivationId, uorAddress: sigReceipt.uorAddress };
 
           setTrustMap(prev => ({
             ...prev,
@@ -530,18 +560,21 @@ const OraclePage = () => {
                               ? extractBlindSpots(t.userQuery, t.responseText, t.termMap)
                               : [];
 
-                            /** Compact CID receipt badge */
+                            /** Compact CID receipt badge — clickable → /resolve */
                             const ReceiptBadge = ({ receiptKey }: { receiptKey: string }) => {
                               const receipt = r[receiptKey];
                               if (!receipt) return null;
                               const shortCid = receipt.cid.slice(0, 8) + "…";
+                              const engineLabel = receipt.ring?.engine === "wasm" ? "WASM" : "TS";
                               return (
                                 <span
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono bg-primary/8 text-primary/50 border border-primary/10 hover:bg-primary/15 hover:text-primary/70 transition-colors cursor-default"
-                                  title={`UOR Derivation: ${receipt.derivationId}\nCID: ${receipt.cid}`}
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/resolve?cid=${encodeURIComponent(receipt.cid)}`); }}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono bg-primary/8 text-primary/50 border border-primary/10 hover:bg-primary/15 hover:text-primary/70 hover:shadow-[0_0_8px_hsl(var(--primary)/0.15)] transition-all cursor-pointer"
+                                  title={`UOR Derivation: ${receipt.derivationId}\nCID: ${receipt.cid}\nEngine: ${engineLabel}\nClick to resolve`}
                                 >
                                   <Link2 className="w-2.5 h-2.5 shrink-0" />
                                   {shortCid}
+                                  <span className="text-[9px] opacity-40">{engineLabel}</span>
                                 </span>
                               );
                             };
