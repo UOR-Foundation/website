@@ -34,7 +34,8 @@ const Footer = () => {
               ))}
             </nav>
 
-            <div className="flex items-center gap-5">
+            {/* Desktop: icon social links */}
+            <div className="hidden md:flex items-center gap-5">
               <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="GitHub">
                 <Github size={18} />
               </a>
@@ -43,6 +44,19 @@ const Footer = () => {
               </a>
               <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="LinkedIn">
                 <Linkedin size={18} />
+              </a>
+            </div>
+
+            {/* Mobile: text social links (47G editorial style) */}
+            <div className="flex md:hidden items-center gap-6">
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+                Discord
+              </a>
+              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+                GitHub
+              </a>
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+                LinkedIn
               </a>
             </div>
           </div>

@@ -30,6 +30,8 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
+  const primaryNavItems = navItems.filter(item => !(item as any).isCta);
+
   return (
     <>
       <header
@@ -41,22 +43,23 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               : "bg-transparent"
         }`}
       >
-        <div className="flex items-center justify-between h-[5rem] md:h-[clamp(5rem,6.5vw,7rem)] pt-5 md:pt-[clamp(1.25rem,2vw,2.5rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <div className="flex items-center justify-between h-[4.5rem] md:h-[clamp(5rem,6.5vw,7rem)] pt-4 md:pt-[clamp(1.25rem,2vw,2.5rem)] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           {/* Left group: Logo + Nav links */}
           <div className="flex items-center gap-8 lg:gap-[clamp(2rem,2.5vw,4rem)] relative z-[60]">
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
-                className="w-11 h-11 md:w-[clamp(2.25rem,2.6vw,3.25rem)] md:h-[clamp(2.25rem,2.6vw,3.25rem)] object-contain invert brightness-[300] contrast-[1.5] drop-shadow-[0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300"
+                className="w-10 h-10 md:w-[clamp(2.25rem,2.6vw,3.25rem)] md:h-[clamp(2.25rem,2.6vw,3.25rem)] object-contain invert brightness-[300] contrast-[1.5] drop-shadow-[0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300"
               />
-              <span className="font-display text-[17px] md:text-[clamp(16px,1.25vw,22px)] font-semibold tracking-[0.18em] uppercase text-foreground">
+              {/* Hide wordmark on mobile for minimal 47G-style look */}
+              <span className="hidden md:inline font-display text-[clamp(16px,1.25vw,22px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 The UOR Foundation
               </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-              {navItems.filter(item => !(item as any).isCta).map((item) => (
+              {primaryNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -72,7 +75,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </nav>
           </div>
 
-          {/* Right group: social icons + Contribute CTA */}
+          {/* Right group: social icons + Contribute CTA (desktop) */}
           <div className="hidden md:flex items-center gap-5">
             <div className="flex items-center gap-1.5">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
@@ -93,90 +96,102 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </Link>
           </div>
 
+          {/* Mobile: MENU / CLOSE text toggle (47G style) */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-3 -mr-1 text-foreground transition-transform duration-200 active:scale-90 relative z-[60]"
+            className="md:hidden font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-foreground/70 active:text-foreground transition-colors duration-200 relative z-[60] py-2"
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? "Close" : "Menu"}
           </button>
         </div>
       </header>
 
-      {/* Full-screen mobile menu */}
+      {/* Full-screen mobile menu — 47G editorial style */}
       <div
-        className={`md:hidden fixed inset-0 z-40 transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`md:hidden fixed inset-0 z-40 transition-all duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
           mobileOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
       >
         <div className="absolute inset-0 bg-background" />
-        <div
-          className={`absolute inset-0 transition-opacity duration-700 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
-          style={{
-            background: "radial-gradient(ellipse at 50% 38.2%, hsl(38 65% 55% / 0.03) 0%, transparent 60%)",
-          }}
-        />
 
-        <div className="relative h-full flex flex-col">
-          <div className="h-[5rem] shrink-0" />
+        <div className="relative h-full flex flex-col px-8">
+          {/* Spacer for header */}
+          <div className="h-[4.5rem] shrink-0" />
 
-          <nav className="flex-[1.618] flex flex-col items-center justify-center gap-2 px-8">
-            {navItems.filter(item => !(item as any).isCta).map((item, idx) => {
-              const phiDelay = Math.round(100 * Math.pow(1.618, idx));
-              const sectionNum = idx + 1;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`py-4 px-6 text-[17px] font-semibold uppercase tracking-[0.18em] font-body text-center transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-3 ${
-                    mobileOpen
-                      ? "opacity-100 translate-y-0 scale-100"
-                      : "opacity-0 translate-y-4 scale-[0.98]"
-                  } ${
-                    location.pathname === item.href
-                      ? "text-foreground"
-                      : "text-foreground/60 active:text-foreground"
-                  }`}
-                  style={{ transitionDelay: mobileOpen ? `${phiDelay}ms` : "0ms" }}
-                >
-                  <span className="font-mono text-[10px] text-primary/30 tracking-[0.05em]">§{sectionNum}</span>
-                  {item.label}
-                </Link>
-              );
-            })}
+          {/* Primary nav links — large, left-aligned, editorial */}
+          <nav className="flex flex-col items-start pt-10 gap-1">
+            {primaryNavItems.map((item, idx) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`py-3 text-[28px] font-display font-bold uppercase tracking-[0.08em] transition-all duration-[350ms] ease-out ${
+                  mobileOpen
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-3"
+                } ${
+                  location.pathname === item.href
+                    ? "text-foreground"
+                    : "text-foreground/50 active:text-foreground"
+                }`}
+                style={{ transitionDelay: mobileOpen ? `${80 + idx * 50}ms` : "0ms" }}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
+          {/* Divider */}
           <div
-            className={`flex-1 flex flex-col items-center justify-end px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] gap-6 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              mobileOpen
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
+            className={`w-12 h-px bg-foreground/15 mt-8 mb-6 transition-all duration-[350ms] ${
+              mobileOpen ? "opacity-100" : "opacity-0"
             }`}
-            style={{ transitionDelay: mobileOpen ? "450ms" : "0ms" }}
+            style={{ transitionDelay: mobileOpen ? "350ms" : "0ms" }}
+          />
+
+          {/* Secondary: Contribute link */}
+          <Link
+            to="/projects#submit"
+            className={`font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-foreground/50 active:text-foreground transition-all duration-[350ms] py-2 ${
+              mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            }`}
+            style={{ transitionDelay: mobileOpen ? "380ms" : "0ms" }}
           >
-            <Link
-              to="/projects#submit"
-              className="w-full max-w-xs py-4 text-[13px] font-semibold uppercase tracking-[0.2em] font-body text-center border border-primary/60 text-primary flex items-center justify-center gap-2.5 active:scale-[0.97] transition-all"
-            >
-              Contribute
-            </Link>
-            <div className="flex items-center justify-center gap-10 py-3">
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="Discord">
-                <DiscordIcon size={24} />
-              </a>
-              <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="GitHub">
-                <Github size={24} />
-              </a>
-              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="p-3 text-foreground/50 hover:text-foreground transition-colors" aria-label="LinkedIn">
-                <Linkedin size={24} />
-              </a>
-            </div>
-            <span className="font-mono text-[9px] text-foreground/[0.06] tracking-[0.25em] uppercase select-none pb-2">
-              §0 · Navigate
-            </span>
+            Contribute →
+          </Link>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Social links as text labels (47G style) */}
+          <div
+            className={`flex items-center gap-8 pb-4 transition-all duration-[350ms] ${
+              mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            }`}
+            style={{ transitionDelay: mobileOpen ? "420ms" : "0ms" }}
+          >
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+              Discord
+            </a>
+            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+              GitHub
+            </a>
+            <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/40 hover:text-foreground transition-colors">
+              LinkedIn
+            </a>
           </div>
+
+          {/* Copyright at bottom */}
+          <p
+            className={`font-mono text-[9px] uppercase tracking-[0.2em] text-foreground/20 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] transition-all duration-[350ms] ${
+              mobileOpen ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ transitionDelay: mobileOpen ? "460ms" : "0ms" }}
+          >
+            © {new Date().getFullYear()} The UOR Foundation
+          </p>
         </div>
       </div>
     </>
