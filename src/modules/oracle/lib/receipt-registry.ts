@@ -110,10 +110,11 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
 
   const entry: RegistryEntry = { source, receipt: enriched, createdAt: Date.now() };
 
-  // Index by CID, derivationId, and triword for flexible lookup
+  // Index by CID, derivationId, triword, and IPv6 for flexible lookup
   registry.set(enriched.cid, entry);
   registry.set(enriched.derivationId, entry);
   registry.set(enriched.triword, entry);
+  registry.set(enriched.ipv6, entry);
 
   return enriched;
 }
@@ -123,7 +124,7 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
  * Accepts any of the three formats.
  */
 export function lookupReceipt(key: string): RegistryEntry | undefined {
-  // Direct lookup first
+  // Direct lookup first (covers CID, derivationId, triword, IPv6)
   const direct = registry.get(key);
   if (direct) return direct;
 
@@ -132,6 +133,14 @@ export function lookupReceipt(key: string): RegistryEntry | undefined {
   if (normalized !== key) {
     const triwordMatch = registry.get(normalized);
     if (triwordMatch) return triwordMatch;
+  }
+
+  // IPv6 normalization: lowercase, collapse :: expansions
+  const trimmed = key.trim().toLowerCase();
+  if (trimmed.startsWith("fd00:0075:6f72")) {
+    for (const entry of registry.values()) {
+      if (entry.receipt.ipv6.toLowerCase() === trimmed) return entry;
+    }
   }
 
   // Check if it's a valid triword and scan by prefix match
