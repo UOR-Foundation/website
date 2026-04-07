@@ -25,6 +25,7 @@ const HighlightsSection = () => {
             <a
               key={item.title}
               href={item.href}
+              {...(item.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="group flex flex-col overflow-hidden border-t border-foreground/8 transition-all duration-300 animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.11 + index * 0.11}s` }}
             >

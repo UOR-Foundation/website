@@ -5,6 +5,15 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
   {
+    name: "UOR Foundation Crate",
+    slug: "uor-foundation",
+    category: "Core",
+    description: "The canonical Rust implementation. Every ontology class as a trait, every property as a method, every named individual as a constant. cargo add uor-foundation.",
+    maturity: "Graduated" as MaturityLevel,
+    license: "Apache-2.0",
+    url: "https://crates.io/crates/uor-foundation",
+  },
+  {
     name: "Hologram",
     slug: "hologram",
     category: "Systems",
