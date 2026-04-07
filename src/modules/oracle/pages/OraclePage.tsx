@@ -87,6 +87,7 @@ const OraclePage = () => {
   // Expandable trust card per message
   const [expandedTrust, setExpandedTrust] = useState<Set<number>>(new Set());
   const [xrayOpen, setXrayOpen] = useState<Set<number>>(new Set());
+  const [activePillar, setActivePillar] = useState<Record<number, string | null>>({});
 
   const temperature = 0.7 - (precision / 100) * 0.5;
 
