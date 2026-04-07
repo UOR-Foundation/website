@@ -26,6 +26,7 @@ const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQr
 const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHologramSdk"));
 const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUorIdentity"));
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
+const ResolvePage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
@@ -63,6 +64,7 @@ const App = () => {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/donate" element={<DonatePage />} />
               <Route path="/oracle" element={<OraclePage />} />
+              <Route path="/resolve" element={<ResolvePage />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />

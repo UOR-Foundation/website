@@ -1270,6 +1270,18 @@
 .oracle-trust-C { border-left: 3px solid hsl(38 92% 50% / 0.6); }
 .oracle-trust-D { border-left: 3px solid hsl(0 84% 60% / 0.5); }
 
+/* ── UOR Resolve Page ── */
+.resolve-search-input {
+  backdrop-filter: blur(4px);
+  line-height: 1.6;
+}
+.resolve-search-input:focus {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.08);
+}
+.resolve-identity-card {
+  backdrop-filter: blur(4px);
+}
+
 
 .oracle-prose ::selection {
   background: hsl(var(--primary) / 0.2);
