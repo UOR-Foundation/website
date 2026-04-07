@@ -26,10 +26,10 @@ const CommunitySection = () => {
             className={`${hexSize} border border-foreground/10 flex items-center justify-center`}
             style={{ clipPath: HEX_CLIP }}
           >
-            <span className="font-mono text-foreground/40 text-xl">+</span>
+            <span className="font-mono text-foreground/40 md:text-foreground/40 text-xl">+</span>
           </div>
-          <p className="font-display font-bold text-foreground text-sm md:text-base lg:text-lg leading-tight mt-3">150+</p>
-          <p className="font-body text-foreground/45 text-xs md:text-sm mt-0.5">contributors</p>
+          <p className="font-display font-bold text-foreground md:text-foreground text-sm md:text-base lg:text-lg leading-tight mt-3">150+</p>
+          <p className="font-body text-foreground/60 md:text-foreground/45 text-xs md:text-sm mt-0.5">contributors</p>
         </div>
       );
     }
