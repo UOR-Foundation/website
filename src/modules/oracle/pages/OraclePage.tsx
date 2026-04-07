@@ -486,6 +486,7 @@ const OraclePage = () => {
           )}
         </div>
       </div>
+      </div>
 
       {/* ── Fixed input bar ── */}
       <div className="shrink-0 border-t border-border/20 bg-background/80 backdrop-blur-md px-4 py-3">
