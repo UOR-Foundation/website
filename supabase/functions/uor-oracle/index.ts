@@ -54,7 +54,7 @@ serve(async (req) => {
         ],
         stream: true,
         max_tokens: 4096,
-        temperature: 0.4,
+        temperature,
       }),
     });
 
