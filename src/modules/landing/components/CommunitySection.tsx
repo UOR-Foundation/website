@@ -28,8 +28,8 @@ const CommunitySection = () => {
           >
             <span className="font-mono text-black/30 md:text-foreground/40 text-xl">+</span>
           </div>
-          <p className="font-display font-bold text-black md:text-foreground text-sm md:text-base lg:text-lg leading-tight mt-3">150+</p>
-          <p className="font-body text-black/55 md:text-foreground/45 text-xs md:text-sm mt-0.5">contributors</p>
+          <p className="font-display font-bold text-black md:text-foreground text-base md:text-base lg:text-lg leading-tight mt-3">150+</p>
+          <p className="font-body text-black/70 md:text-foreground/45 text-[12px] md:text-sm mt-0.5 font-medium">contributors</p>
         </div>
       );
     }
@@ -54,10 +54,10 @@ const CommunitySection = () => {
             loading="lazy"
           />
         </div>
-        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[13px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
+        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[15px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
           {member.name.split(" ")[0]}
         </p>
-        <p className="font-body text-black/55 md:text-foreground/50 leading-snug mt-0.5 text-[11px] md:text-base">
+        <p className="font-body text-black/70 md:text-foreground/50 leading-snug mt-0.5 text-[12px] md:text-base font-medium">
           {member.role}
         </p>
       </a>
