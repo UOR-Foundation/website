@@ -293,10 +293,7 @@ const OraclePage = () => {
       <div className="flex-1 overflow-hidden relative">
         {/* Focus-fade overlays */}
         {messages.length > 0 && (
-          <>
-            <div className="oracle-fade-top" />
-            <div className="oracle-fade-bottom" />
-          </>
+          <div className="oracle-fade-top" />
         )}
         <div ref={scrollRef} className="h-full overflow-y-auto oracle-scroll-area">
           <div className="flex flex-col justify-end min-h-full">
@@ -568,29 +565,106 @@ const OraclePage = () => {
               </AnimatePresence>
             </div>
           )}
-        </div>
-      </div>
-      </div>
 
-      {/* ── Fixed input bar ── */}
-      <div className="shrink-0 border-t border-border/30 bg-background backdrop-blur-md px-4 py-3">
-        <div className="flex gap-2 items-end max-w-3xl mx-auto">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-            placeholder="Ask anything…"
-            rows={1}
-            className="flex-1 bg-muted/15 border border-border/50 rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/40 resize-none focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/10 transition-all shadow-[inset_0_1px_4px_hsl(var(--background)/0.3)]"
-          />
-          <button
-            onClick={() => send(input)}
-            disabled={isStreaming || !input.trim()}
-            className="p-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-20 hover:bg-primary/90 transition-colors"
-          >
-            <ArrowUp className="w-4 h-4" />
-          </button>
+            {/* ── Breathing dot / typing indicator ── */}
+            {messages.length > 0 && (
+              <div className="flex justify-start px-4 md:px-6 max-w-3xl mx-auto w-full">
+                <AnimatePresence mode="wait">
+                  {showTypingDots ? (
+                    <motion.div
+                      key="typing"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex gap-[5px] items-center px-3 py-2"
+                    >
+                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
+                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "160ms" }} />
+                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "320ms" }} />
+                    </motion.div>
+                  ) : (verifying || refiningIteration !== null) ? (
+                    <motion.div
+                      key="verifying"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-2 text-xs text-muted-foreground/50 py-2"
+                    >
+                      {refiningIteration !== null ? (
+                        <><RefreshCw className="w-3.5 h-3.5 animate-spin text-primary/60" /><span>Improving <span className="text-primary/70 font-mono">{refiningIteration + 1}/3</span></span></>
+                      ) : (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Verifying…</span></>
+                      )}
+                    </motion.div>
+                  ) : !isStreaming ? (
+                    <motion.div
+                      key="breathing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="py-3 px-3"
+                    >
+                      <div className="oracle-breathing-dot" />
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* ── Inline flow input ── */}
+            <div className="px-4 md:px-6 max-w-3xl mx-auto w-full pb-6 pt-2">
+              {messages.length === 0 && (
+                <div className="flex flex-col items-center justify-center flex-1 text-center py-10">
+                  <p className="text-foreground font-display font-semibold text-xl mb-2">Ask anything</p>
+                  <p className="text-muted-foreground/60 text-sm mb-8 max-w-sm leading-relaxed">
+                    Every claim verified. Every answer graded.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2 max-w-lg mb-8">
+                    {PRESETS.map((p) => (
+                      <button
+                        key={p.label}
+                        onClick={() => send(p.prompt)}
+                        className="px-4 py-2.5 rounded-full border border-border/40 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 items-end">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+                  placeholder={isStreaming ? (queuedMessage ? "Queued — will send next…" : "Type while I respond…") : "Ask anything…"}
+                  rows={1}
+                  className="oracle-flow-input flex-1 bg-muted/10 border border-border/30 rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
+                />
+                <button
+                  onClick={() => send(input)}
+                  disabled={!input.trim()}
+                  className="p-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-20 hover:bg-primary/90 transition-colors"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
+              {queuedMessage && (
+                <motion.p
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-primary/60 mt-1.5 ml-1"
+                >
+                  ↳ "{queuedMessage}" will send when current response finishes
+                </motion.p>
+              )}
+            </div>
+
+            <div ref={flowEndRef} className="h-1" />
         </div>
+      </div>
       </div>
 
       {/* ── Settings overlay ── */}
