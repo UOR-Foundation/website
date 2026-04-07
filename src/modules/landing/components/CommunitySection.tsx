@@ -23,7 +23,7 @@ const CommunitySection = () => {
           style={{ animationDelay: delay }}
         >
           <div
-            className={`${hexSize} border border-foreground/10 flex items-center justify-center`}
+            className={`${hexSize} border border-black/10 md:border-foreground/10 flex items-center justify-center`}
             style={{ clipPath: HEX_CLIP }}
           >
             <span className="font-mono text-foreground/40 md:text-foreground/40 text-xl">+</span>
