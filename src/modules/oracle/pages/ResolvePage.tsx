@@ -8,9 +8,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles } from "lucide-react";
-import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
-import { encode, decode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { loadWasm } from "@/lib/wasm/uor-bridge";
+import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
+import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 
 interface Result {
@@ -31,11 +33,12 @@ function CopyBtn({ onClick, copied, size = 12, label }: {
 }
 
 const SearchPage = () => {
-  const [contentMode, setContentMode] = useState(false);
+  const [aiMode, setAiMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const aiInputRef = useRef<HTMLInputElement>(null);
+  const aiScrollRef = useRef<HTMLDivElement>(null);
 
   const [input, setInput] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -44,16 +47,27 @@ const SearchPage = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [rederived, setRederived] = useState(false);
 
-  const looksLikeJson = contentMode || input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
+  // AI Mode state
+  const [aiMessages, setAiMessages] = useState<Msg[]>([]);
+  const [aiStreaming, setAiStreaming] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
-  useEffect(() => { if (!result) inputRef.current?.focus(); }, [result]);
+  useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
   useEffect(() => {
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
     if (addr) { setInput(addr); handleSearch(addr); }
   }, [searchParams]);
+
+  // Auto-scroll AI chat
+  useEffect(() => {
+    if (aiScrollRef.current) {
+      aiScrollRef.current.scrollTop = aiScrollRef.current.scrollHeight;
+    }
+  }, [aiMessages]);
 
   const handleSearch = async (address: string) => {
     const trimmed = address.trim();
@@ -70,20 +84,8 @@ const SearchPage = () => {
     finally { setLoading(false); }
   };
 
-  const handleEncode = async (jsonStr: string) => {
-    setLoading(true); setResult(null); setRederived(false);
-    try {
-      const parsed = JSON.parse(jsonStr);
-      const receipt = await encode(parsed);
-      setResult({ source: parsed, receipt });
-      setInput(receipt.triword);
-    } catch { toast.error("Invalid JSON."); }
-    finally { setLoading(false); }
-  };
-
   const submit = () => {
-    if (looksLikeJson) handleEncode(input);
-    else handleSearch(input);
+    handleSearch(input);
   };
 
   const rederive = async () => {
@@ -105,11 +107,50 @@ const SearchPage = () => {
 
   const clearResult = () => { setResult(null); setRederived(false); setInput(""); };
 
+  /* ── AI Oracle ── */
+  const sendAiMessage = async () => {
+    const trimmed = aiInput.trim();
+    if (!trimmed || aiStreaming) return;
+
+    const userMsg: Msg = { role: "user", content: trimmed };
+    const updatedMessages = [...aiMessages, userMsg];
+    setAiMessages(updatedMessages);
+    setAiInput("");
+    setAiStreaming(true);
+
+    let assistantSoFar = "";
+
+    await streamOracle({
+      messages: updatedMessages,
+      onDelta: (chunk) => {
+        assistantSoFar += chunk;
+        setAiMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") {
+            return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+          }
+          return [...prev, { role: "assistant", content: assistantSoFar }];
+        });
+      },
+      onDone: () => setAiStreaming(false),
+      onError: (err) => {
+        toast.error(err);
+        setAiStreaming(false);
+      },
+    });
+  };
+
+  const exitAiMode = () => {
+    setAiMode(false);
+    setAiMessages([]);
+    setAiInput("");
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
       {/* Loading bar */}
       <AnimatePresence>
-        {loading && (
+        {(loading || aiStreaming) && (
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
@@ -144,8 +185,8 @@ const SearchPage = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 md:px-6">
 
-          {/* ══════════════ EMPTY STATE — Google-style Homepage ══════════════ */}
-          {!result && (
+          {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
+          {!result && !aiMode && (
             <div
               className="flex flex-col items-center"
               style={{ paddingTop: "38.2vh" }}
@@ -163,58 +204,34 @@ const SearchPage = () => {
                 className="w-full max-w-[582px] relative group"
                 style={{ marginTop: "calc(3.5rem * 0.618)" }}
               >
-                {looksLikeJson && !contentMode ? null : null}
-                {contentMode ? (
-                  <textarea
-                    ref={textareaRef}
+                <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
+                  {/* Left + icon */}
+                  <button className="pl-4 pr-1 py-[14px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
+                    <Plus className="w-5 h-5" />
+                  </button>
+
+                  <input
+                    ref={inputRef}
+                    type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-                    placeholder="Paste content as JSON…"
-                    rows={6}
-                    className="w-full bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-3xl px-5 py-4 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-[hsl(0_0%_37%)] transition-all"
-                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+                    placeholder=""
+                    className="flex-1 bg-transparent py-[14px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
                   />
-                ) : (
-                  <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
-                    {/* Left + icon */}
-                    <button className="pl-4 pr-1 py-[14px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
-                      <Plus className="w-5 h-5" />
+
+                  {/* Right side — separator + AI Mode pill */}
+                  <div className="flex items-center gap-2 pr-2 shrink-0">
+                    <div className="w-px h-6 bg-[hsl(0_0%_37%)]" />
+                    <button
+                      onClick={() => setAiMode(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[hsl(0_0%_30%)] hover:bg-[hsl(0_0%_24%)] transition-all"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                      <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">AI Mode</span>
                     </button>
-
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
-                      placeholder=""
-                      className="flex-1 bg-transparent py-[14px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
-                    />
-
-                    {/* Right side — separator + Content Mode pill */}
-                    <div className="flex items-center gap-2 pr-2 shrink-0">
-                      <div className="w-px h-6 bg-[hsl(0_0%_37%)]" />
-                      <button
-                        onClick={() => setContentMode(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[hsl(0_0%_30%)] hover:bg-[hsl(0_0%_24%)] transition-all"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-                        <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">Content Mode</span>
-                      </button>
-                    </div>
                   </div>
-                )}
-
-                {/* Exit content mode */}
-                {contentMode && (
-                  <button
-                    onClick={() => { setContentMode(false); setInput(""); }}
-                    className="absolute top-3 right-4 text-xs text-muted-foreground/40 hover:text-foreground/60 transition-colors"
-                  >
-                    ✕ Address mode
-                  </button>
-                )}
+                </div>
               </div>
 
               {/* Dual buttons */}
@@ -232,9 +249,7 @@ const SearchPage = () => {
                 <button
                   onClick={() => {
                     if (!input.trim()) {
-                      const example = { "@type": "Thing", name: "Hello World" };
-                      setInput(JSON.stringify(example, null, 2));
-                      setContentMode(true);
+                      setAiMode(true);
                     } else {
                       submit();
                     }
@@ -250,6 +265,101 @@ const SearchPage = () => {
                 Searching across <span className="text-foreground/60 font-medium">340,282,366,920,938,463,463,374,607,431,768,211,456</span> possible addresses
               </p>
             </div>
+          )}
+
+          {/* ══════════════ AI MODE — Oracle ══════════════ */}
+          {!result && aiMode && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col"
+              style={{ height: "100dvh" }}
+            >
+              {/* AI Mode header */}
+              <div className="flex items-center justify-between py-5 shrink-0">
+                <div className="flex items-center gap-3">
+                  <button onClick={exitAiMode} className="text-muted-foreground/40 hover:text-foreground transition-colors">
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary/70" />
+                    <span className="text-sm font-medium text-foreground/80">UOR Oracle</span>
+                  </div>
+                </div>
+                <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Messages area */}
+              <div ref={aiScrollRef} className="flex-1 overflow-y-auto space-y-6 pb-4 min-h-0">
+                {aiMessages.length === 0 && (
+                  <div className="flex flex-col items-center justify-center pt-[20vh] text-center">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                      <Sparkles className="w-6 h-6 text-primary/60" />
+                    </div>
+                    <h2 className="text-lg font-display font-medium text-foreground/80 mb-2">Ask the Oracle</h2>
+                    <p className="text-sm text-muted-foreground/40 max-w-sm">
+                      Ask anything. The Oracle reasons through your question with epistemic rigor and content-addressable proofs.
+                    </p>
+                  </div>
+                )}
+
+                {aiMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] ${
+                      msg.role === "user"
+                        ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
+                        : "prose prose-invert prose-sm max-w-none"
+                    }`}>
+                      {msg.role === "user" ? (
+                        <p className="text-sm text-foreground/90">{msg.content}</p>
+                      ) : (
+                        <ReactMarkdown
+                          className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3 [&>h1]:text-base [&>h1]:font-semibold [&>h1]:text-foreground/90 [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:text-foreground/85 [&>h3]:text-sm [&>h3]:font-medium [&>h3]:text-foreground/80"
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {aiStreaming && aiMessages[aiMessages.length - 1]?.role !== "assistant" && (
+                  <div className="flex justify-start">
+                    <div className="flex items-center gap-1.5 px-3 py-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:150ms]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:300ms]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* AI input bar — fixed at bottom */}
+              <div className="shrink-0 pb-6 pt-3">
+                <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
+                  <input
+                    ref={aiInputRef}
+                    type="text"
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAiMessage(); } }}
+                    placeholder="Ask the Oracle anything…"
+                    className="flex-1 bg-transparent py-[14px] pl-5 pr-2 text-base text-foreground placeholder:text-muted-foreground/30 focus:outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={sendAiMessage}
+                    disabled={!aiInput.trim() || aiStreaming}
+                    className="mr-2 p-2 rounded-full bg-primary/20 hover:bg-primary/30 text-foreground/70 transition-all disabled:opacity-20"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
 
           {/* ══════════════ RESULT STATE — SERP ══════════════ */}
@@ -272,7 +382,7 @@ const SearchPage = () => {
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
                   </div>
 
-                  {/* IPv6 — base address */}
+                  {/* IPv6 */}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-wider text-primary/40 font-semibold shrink-0">IPv6</span>
                     <code className="text-[12px] font-mono text-primary/70 tracking-wide">
@@ -281,7 +391,7 @@ const SearchPage = () => {
                     <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} size={10} />
                   </div>
 
-                  {/* CID — interop */}
+                  {/* CID */}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground/30 font-semibold shrink-0">CID</span>
                     <code className="text-[11px] font-mono text-muted-foreground/30 break-all leading-relaxed">
