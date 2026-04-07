@@ -133,8 +133,13 @@ export function factorize(x: number): number[] {
 
 export function evaluateExpr(expr: string): number {
   if (wasmModule) return wasmModule.evaluate_expr(expr);
-  // TS fallback uses compute dispatch
-  return tsRing.compute(expr.split("(")[0] as any, parseInt(expr.match(/\d+/)?.[0] || "0")) ?? -1;
+  // TS fallback: parse simple expressions
+  const match = expr.match(/^(\w+)\((\d+)(?:,\s*(\d+))?\)$/);
+  if (!match) return -1;
+  const [, op, a, b] = match;
+  const x = parseInt(a);
+  const y = b !== undefined ? parseInt(b) : undefined;
+  return (tsRing.compute(op as any, x, y) as number) ?? -1;
 }
 
 export function listNamespaces(): string {
