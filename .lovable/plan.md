@@ -1,59 +1,63 @@
 
 
-# Oracle Portal: Immersive Reading Experience
+# Streamlined Trust Card — Focused, Expandable, Delightful
 
-## What changes
+## Current State
 
-### 1. Wider content area, uniform text sizing
-- Remove `max-w-2xl` constraint on the message container; use `max-w-3xl` or `max-w-4xl` so responses use more screen width
-- Reduce left/right padding on mobile
-- In `.oracle-prose`, bump `font-size` to `clamp(16.5px, 1.15vw, 19px)` and widen `max-width` from `68ch` to `78ch`
-- Ensure user bubbles use the same base font size as response prose for visual uniformity
+The "How we checked" panel shows 6 metrics in a flat list: Confidence, Statements checked, Evidence found, Key topics covered, Consistency, Answer improved. Some are redundant (e.g., "Statements checked" and "Evidence found" overlap with the summary line above). The section feels like a data dump rather than a curated insight.
 
-### 2. Input bar with stronger contrast
-- Give the textarea a visible `bg-muted/20` or `bg-[hsl(var(--muted)/0.15)]` background instead of `bg-transparent`
-- Slightly thicker border (`border-border/50`) and a subtle inner glow/shadow so it pops against the dark background
-- Increase input text size to match the prose (`text-base`)
+## New Design: Three-Metric Trust Card with Drill-Down
 
-### 3. Focus-fade gradient overlays (top and bottom)
-- Add two fixed gradient overlays on the scroll area using `pointer-events-none`:
-  - **Top**: fades from `bg-background` to transparent over ~120px — older messages dissolve as they scroll up
-  - **Bottom**: fades from transparent to `bg-background` over ~80px just above the input bar — creates a soft reading zone boundary
-- This creates an Apple-style "spotlight" reading zone in the center of the screen
+Reduce to **3 core dimensions** that each tell a distinct, meaningful story. Each one is clickable to expand further detail.
 
-### 4. Message-by-message paragraph reveal
-- When streaming, instead of dumping all text at once, split the assistant response by double-newline (`\n\n`) into paragraph chunks
-- Each new paragraph enters with a subtle `motion.div` fade-up animation (opacity 0→1, y 8→0, 300ms)
-- This creates the WhatsApp "messages arriving one by one" feel while keeping it as a single response block
-- Older paragraphs are already visible; only the newest chunk animates in
+### The Three Pillars
 
-### 5. Scroll anchoring refinement
-- After each new paragraph appears, auto-scroll smoothly so the new content sits in the center-bottom of the visible area (not flush against the very bottom)
-- Use `scrollIntoView({ behavior: 'smooth', block: 'end' })` with a small bottom offset
+| Pillar | Label | Value | What it reveals | Expandable detail |
+|--------|-------|-------|-----------------|-------------------|
+| **Trust** | "How much can I trust this?" | "High" / "Moderate" / "Low" with a smooth arc or bar | Overall epistemic grade mapped to a human word + a subtle percentage | Expands to show the claim-by-claim breakdown (the existing Statement Breakdown list, already built) |
+| **Evidence** | "What's backed by evidence?" | "8 of 16 statements" | How many claims were grounded vs generated | Expands to highlight only the grounded vs ungrounded claims, color-coded |
+| **Consistency** | "Did everything check out?" | "Yes, all checks agree" / "Some uncertainty" | Whether the iterative refinement converged | Expands to show iteration count and convergence status in plain language |
 
-## Files to change
+### Visual Treatment
+
+- Each pillar is a compact row with: colored indicator dot → bold label → value on the right
+- Clicking a pillar smoothly expands its detail underneath (accordion-style, only one open at a time)
+- The "Trust" pillar's detail view IS the existing Statement Breakdown (reuse that code)
+- Remove the separate "Statement breakdown" toggle button from the summary line — it now lives inside the Trust pillar
+- Keep the colored grade bar at the top (it's visually strong)
+- Footer becomes just: "Checked independently · [derivation count] verifications"
+
+### Summary Line Simplification
+
+Replace the current summary line with just:
+- Left: `✓ 8 of 16 backed by evidence`  
+- Right: `Details ▸` (toggles the three-pillar card)
+
+No separate "How we checked" and eye icon toggles — one single toggle reveals the focused card.
+
+## Files to Change
 
 | File | Changes |
 |------|---------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Widen container (`max-w-3xl`), add top/bottom fade overlays as siblings of scroll div, split response into animated paragraph blocks, increase input contrast styling, uniform text sizing on user bubbles |
-| `src/index.css` | Bump `.oracle-prose` font-size and max-width, add `.oracle-fade-top` / `.oracle-fade-bottom` gradient classes |
+| `src/modules/oracle/pages/OraclePage.tsx` | Lines ~374-458: Replace the two separate expandable sections (claims + proof) with a single expandable three-pillar trust card. Remove `expandedProofs` state — merge into a single `expandedTrust` toggle. Each pillar gets its own accordion sub-state. Reuse Statement Breakdown markup inside the Trust pillar's expansion. |
 
-## Layout sketch
+## Layout Sketch
 
 ```text
-┌──────────────────────────────────────┐
-│  ← Oracle                  ● Ready ⚙│
-├──▓▓▓▓▓▓▓▓ fade gradient ▓▓▓▓▓▓▓▓▓──┤
-│                                      │
-│  (older messages faded/scrolled up)  │
-│                                      │
-│  ┌────────────────────────────────┐  │  ← wider content area
-│  │  Clear, focused reading zone   │  │
-│  │  Current paragraph animates in │  │
-│  └────────────────────────────────┘  │
-│                                      │
-├──▓▓▓▓▓▓▓▓ fade gradient ▓▓▓▓▓▓▓▓▓──┤
-│  [ Ask anything...              ⬆ ] │  ← high-contrast input
-└──────────────────────────────────────┘
+── collapsed ──────────────────────────────
+  ✓ 8 of 16 backed by evidence    Details ▸
+───────────────────────────────────────────
+
+── expanded ───────────────────────────────
+  ✓ 8 of 16 backed by evidence    Details ▾
+
+  ┌─────────────────────────────────────┐
+  │ ● Trust level          High      ▸ │  ← click to see claims
+  │ ● Evidence             8 of 16   ▸ │  ← click to see which
+  │ ● Consistency          Confirmed ▸ │  ← click for details
+  │                                     │
+  │ Checked independently · 16 checks  │
+  └─────────────────────────────────────┘
+───────────────────────────────────────────
 ```
 
