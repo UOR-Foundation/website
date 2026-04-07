@@ -1,72 +1,74 @@
 
 
-# Natural, Human-Like Streaming Experience
+# Oracle — Full-Screen Portal Chat Experience
 
-## Problems Identified
+## Concept
 
-1. **Scroll-to-bottom on every token**: Line 83-85 scrolls to `scrollHeight` every time `messages` changes — which is every single token. The user sees the bottom of the response and must scroll back up to read from the top.
+Transform the Oracle from a scrollable page-within-a-page into an immersive full-viewport chat portal — like iMessage or WhatsApp — where the input bar is pinned to the bottom, messages flow upward naturally, and the entire screen is the conversation.
 
-2. **Raw token bursts**: Every SSE chunk instantly appends to state, causing jerky character-by-character jumps. Real humans don't type at machine speed with zero variance.
+## Key Changes
 
-## Solution
+### 1. Full-viewport layout, no page scroll
 
-### 1. Smart Scroll — Keep the top visible during streaming
+- Remove the `Layout` wrapper (Navbar/Footer) so Oracle owns the entire screen
+- Use `100dvh` (dynamic viewport height) for the container — no page-level scrolling at all
+- Structure: fixed header bar (minimal) → flex-grow message area → fixed input bar at bottom
 
-Replace the blanket scroll-to-bottom with a "scroll to the start of the new message, then stay put" strategy:
+### 2. Messages anchored to bottom, flowing upward
 
-- When a new assistant message **first appears**, scroll so the **top of that message** is visible (not the bottom)
-- While streaming continues, do **not** auto-scroll at all — let the user read from the top down naturally
-- Only auto-scroll to bottom when the **user sends a new message** (so they see their own bubble appear)
-- If the user manually scrolls down during streaming, respect that and don't fight it
+- Use `flex-direction: column; justify-content: flex-end` on the messages container so content hugs the bottom when there are few messages (like iMessage)
+- As messages accumulate, the container scrolls naturally — older messages slide up and out of view
+- The newest content is always near the input bar where the user's eyes already are
 
-Implementation: track a `streamStartRef` that marks the top of the current assistant response. On first token, `scrollIntoView({ behavior: 'smooth', block: 'start' })`. Then stop scrolling until streaming ends.
+### 3. Fixed input bar at the bottom
 
-### 2. Token Buffer — Smooth, human-paced text reveal
+- Pinned to the bottom of the viewport with comfortable padding
+- Centered, max-width constrained, with the same rounded pill style
+- Always visible regardless of scroll position
 
-Add a small buffer layer between raw SSE tokens and the rendered text:
+### 4. Sidebar becomes a collapsible overlay
 
-- Accumulate incoming tokens in a queue
-- Flush them to the displayed text using `requestAnimationFrame` at a natural pace (~30-50ms per token batch)
-- Add subtle variance to the flush interval (±15ms randomized) so it doesn't feel metronomic
-- Batch small tokens (single characters, punctuation) together to avoid single-char flicker
-- Brief natural pause (~200-400ms) after sentence-ending punctuation (`. ! ?`) to mimic human "thinking between thoughts"
+- On desktop, the sidebar settings (precision, strictness, self-improve) become accessible via a small gear/settings icon in the header bar
+- Opens as a slide-over panel or dropdown — keeps the main view clean and focused
+- Trust results (grade badge) shown inline with messages, not in a sidebar
 
-This creates the effect of someone typing thoughtfully rather than a machine dumping bytes.
+### 5. Compact header
 
-### 3. Typing indicator
-
-Show a subtle "thinking" indicator (three soft dots) before the first token arrives, then fade it out as text begins. This mirrors the WhatsApp/iMessage "typing..." bubble.
+- Minimal top bar: "Oracle" title on the left, settings gear + engine status on the right
+- Thin, no subtitle paragraph — the empty state handles onboarding
 
 ## Files to Change
 
-### `src/modules/oracle/lib/stream-oracle.ts`
-- No changes needed — the raw stream is fine. Buffering happens on the UI side.
+| File | What changes |
+|------|-------------|
+| `src/modules/oracle/pages/OraclePage.tsx` | Remove `Layout` wrapper; restructure to full-viewport flex column; move sidebar into collapsible overlay panel; pin input bar; apply `justify-end` to message list; compact header |
+| `src/index.css` | Add `oracle-page` utility styles if needed for `100dvh` and scroll anchoring |
 
-### `src/modules/oracle/lib/token-buffer.ts` (new)
-- A small class `TokenBuffer` that:
-  - Accepts raw tokens via `push(token)`
-  - Internally queues them
-  - Calls a `onFlush(accumulatedText)` callback on a natural cadence using `requestAnimationFrame`
-  - Detects sentence boundaries and inserts micro-pauses
-  - Has `start()` / `stop()` / `flush()` lifecycle methods
+## Layout Structure (ASCII)
 
-### `src/modules/oracle/pages/OraclePage.tsx`
-- **Remove** the `useEffect` that scrolls on every `messages` change (line 83-85)
-- **Add** a ref for the streaming message element (`streamMsgRef`)
-- On first assistant token: scroll `streamMsgRef` into view at `block: 'start'`, then stop auto-scrolling
-- On user send: scroll to bottom so they see their own message
-- **Integrate `TokenBuffer`**: in `onDelta`, push tokens to buffer instead of directly to state. Buffer's `onFlush` updates the displayed text.
-- **Add typing indicator**: show animated dots between user message and first token arrival
+```text
+┌──────────────────────────────────┐
+│  Oracle              ⚙️  ● Ready │  ← thin fixed header
+├──────────────────────────────────┤
+│                                  │
+│   (empty: presets centered)      │
+│         or                       │
+│   ┌─────────────────────┐        │
+│   │ user bubble          │  →    │  ← messages flex-end,
+│   └─────────────────────┘        │    older ones scroll up
+│   ┌──────────────────────────┐   │
+│   │ assistant response        │  │
+│   │ ...                       │  │
+│   │ [grade bar] [proof trail] │  │
+│   └──────────────────────────┘   │
+│   ● ● ●  (typing dots)          │
+│                                  │
+├──────────────────────────────────┤
+│  [  Ask anything...        ⬆ ]  │  ← fixed input bar
+└──────────────────────────────────┘
+```
 
-### `src/index.css`
-- Add a simple `.typing-dots` animation (three dots with staggered opacity pulse)
+## Settings Panel (overlay)
 
-## Summary of UX Principles Applied
-
-| Problem | Solution | Inspiration |
-|---------|----------|-------------|
-| Jumps to bottom | Scroll to message top, then freeze | Reading a letter |
-| Robotic pace | Buffered flush with variance | Human typing on WhatsApp |
-| No thinking gap | Typing dots before first token | iMessage "..." bubble |
-| Uniform speed | Micro-pauses after sentences | Natural speech cadence |
+When the gear icon is clicked, a right-side panel slides in with the existing controls (precision, self-improve, strictness, how-it-works). Clicking outside or pressing Escape closes it. This keeps the portal feel clean while retaining all functionality.
 
