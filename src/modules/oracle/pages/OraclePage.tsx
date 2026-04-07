@@ -18,8 +18,6 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
-import { motion, AnimatePresence } from "framer-motion";
-import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
 /* ── Constants ── */
 
