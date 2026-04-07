@@ -65,6 +65,7 @@ const OraclePage = () => {
   const [verifying, setVerifying] = useState(false);
   const [refiningIteration, setRefiningIteration] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const proseContainerRef = useRef<HTMLDivElement>(null);
   const [wasmReady, setWasmReady] = useState(false);
 
   // Controls
