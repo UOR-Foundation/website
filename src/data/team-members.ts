@@ -42,11 +42,11 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/billwright1/",
   },
   {
-    name: "Emmanuel Bello",
-    role: "Founder @ Kinetic Keys",
-    description: "Full-stack engineering and developer tooling.",
-    image: "/images/profiles/emmanuel-bello.jpg",
-    link: "https://www.linkedin.com/in/emmanuxl/",
+    name: "Mateusz Tobola",
+    role: "PM @ Stealth AI Startup",
+    description: "AI strategy and product management.",
+    image: "/images/profiles/mateusz-tobola.jpg",
+    link: "https://www.linkedin.com/in/mateusztobola/",
   },
   {
     name: "Adam de Delva",
