@@ -8,6 +8,7 @@
 
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
+import { canonicalToTriword, formatTriword, triwordBreakdown, isValidTriword, triwordToPrefix } from "@/lib/uor-triword";
 
 // ── Enriched Receipt (WASM-anchored) ───────────────────────────────────────
 
@@ -42,6 +43,14 @@ export interface EnrichedReceipt {
   engine: "wasm" | "typescript";
   /** Crate version if WASM, null if TS fallback */
   crateVersion: string | null;
+
+  // ── Triword Address ──
+  /** Three-word human-readable address: "observer.observable.context" */
+  triword: string;
+  /** Formatted triword: "Observer · Observable · Context" */
+  triwordFormatted: string;
+  /** Triword breakdown into dimensions */
+  triwordDimensions: { observer: string; observable: string; context: string } | null;
 }
 
 export interface RegistryEntry {
@@ -64,6 +73,8 @@ const registry = new Map<string, RegistryEntry>();
 export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, "nquads"> & { nquads: string } {
   const ringByte = proof.hashBytes[0];
 
+  const triword = canonicalToTriword(proof.cid);
+
   return {
     cid: proof.cid,
     derivationId: proof.derivationId,
@@ -81,6 +92,11 @@ export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, 
     ringBasis: bridge.byteBasis(ringByte),
     engine: bridge.engineType(),
     crateVersion: bridge.crateVersion(),
+
+    // Triword address
+    triword,
+    triwordFormatted: formatTriword(triword),
+    triwordDimensions: triwordBreakdown(triword),
   };
 }
 
@@ -92,25 +108,40 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
   const proof = await singleProofHash(source);
   const enriched = enrichWithWasm(proof);
 
-  registry.set(enriched.cid, {
-    source,
-    receipt: enriched,
-    createdAt: Date.now(),
-  });
+  const entry: RegistryEntry = { source, receipt: enriched, createdAt: Date.now() };
 
-  // Also index by derivationId for lookup flexibility
-  registry.set(enriched.derivationId, {
-    source,
-    receipt: enriched,
-    createdAt: Date.now(),
-  });
+  // Index by CID, derivationId, and triword for flexible lookup
+  registry.set(enriched.cid, entry);
+  registry.set(enriched.derivationId, entry);
+  registry.set(enriched.triword, entry);
 
   return enriched;
 }
 
-/** Look up a registry entry by CID or derivation ID */
+/**
+ * Look up a registry entry by CID, derivation ID, or triword.
+ * Accepts any of the three formats.
+ */
 export function lookupReceipt(key: string): RegistryEntry | undefined {
-  return registry.get(key);
+  // Direct lookup first
+  const direct = registry.get(key);
+  if (direct) return direct;
+
+  // Try as triword (normalized lowercase dot-separated)
+  const normalized = key.toLowerCase().replace(/\s*[·]\s*/g, ".").replace(/\s+/g, ".").trim();
+  if (normalized !== key) {
+    const triwordMatch = registry.get(normalized);
+    if (triwordMatch) return triwordMatch;
+  }
+
+  // Check if it's a valid triword and scan by prefix match
+  if (isValidTriword(normalized)) {
+    for (const entry of registry.values()) {
+      if (entry.receipt.triword === normalized) return entry;
+    }
+  }
+
+  return undefined;
 }
 
 /** Get all registered entries */
