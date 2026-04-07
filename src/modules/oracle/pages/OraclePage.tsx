@@ -115,10 +115,30 @@ const OraclePage = () => {
     setMessages(newMessages);
     setInput("");
     setIsStreaming(true);
+    setShowTypingDots(true);
+    hasScrolledToStream.current = false;
+
+    // Scroll to bottom so user sees their own message
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current!.scrollHeight, behavior: "smooth" });
+    });
 
     const scaffold = buildScaffold(text.trim());
     let assistantSoFar = "";
     const assistantIndex = newMessages.length;
+
+    // Set up token buffer for humanised pacing
+    const buffer = new TokenBuffer((displayText) => {
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: displayText } : m);
+        }
+        return [...prev, { role: "assistant", content: displayText }];
+      });
+    });
+    buffer.start();
+    tokenBufferRef.current = buffer;
 
     try {
       await streamOracle({
@@ -127,22 +147,29 @@ const OraclePage = () => {
         temperature,
         onDelta: (chunk) => {
           assistantSoFar += chunk;
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last?.role === "assistant") {
-              return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-            }
-            return [...prev, { role: "assistant", content: assistantSoFar }];
-          });
+          setShowTypingDots(false);
+          buffer.push(chunk);
         },
         onDone: () => {
+          buffer.stop();
+          tokenBufferRef.current = null;
           setIsStreaming(false);
+          setShowTypingDots(false);
           runVerificationLoop(scaffold, assistantSoFar, assistantIndex, 0, newMessages);
         },
-        onError: (err) => { setIsStreaming(false); toast.error(err); },
+        onError: (err) => {
+          buffer.stop();
+          tokenBufferRef.current = null;
+          setIsStreaming(false);
+          setShowTypingDots(false);
+          toast.error(err);
+        },
       });
     } catch {
+      buffer.stop();
+      tokenBufferRef.current = null;
       setIsStreaming(false);
+      setShowTypingDots(false);
       toast.error("Connection error.");
     }
   }, [messages, isStreaming, temperature]);
