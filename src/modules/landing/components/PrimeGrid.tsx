@@ -16,18 +16,18 @@ function sievePrimes(max: number): Set<number> {
 /* ── Constants ───────────────────────────────────────────────── */
 const MAX_N = 4000;
 const GOLDEN_ANGLE = 2.3999632297286533; // π * (3 - √5)
-const SPOTLIGHT_RADIUS = 320;
+const SPOTLIGHT_RADIUS = 220;
 
 // All dots are plotted; primes are darker/larger
-const COMPOSITE_ALPHA = 0.025;
-const COMPOSITE_ALPHA_MOBILE = 0.05;
-const PRIME_ALPHA = 0.12;
-const PRIME_ALPHA_MOBILE = 0.18;
-const PEAK_ALPHA = 0.6;
+const COMPOSITE_ALPHA = 0.018;
+const COMPOSITE_ALPHA_MOBILE = 0.04;
+const PRIME_ALPHA = 0.08;
+const PRIME_ALPHA_MOBILE = 0.14;
+const PEAK_ALPHA = 0.32;
 
-const COMPOSITE_DOT_R = 0.8;
-const PRIME_DOT_R = 1.6;
-const PEAK_DOT_R = 3.2;
+const COMPOSITE_DOT_R = 0.7;
+const PRIME_DOT_R = 1.3;
+const PEAK_DOT_R = 2.4;
 
 const ROTATION_SPEED = 0.00012; // rad per frame. slow, meditative
 const FRAME_INTERVAL = 1000 / 30; // 30fps cap
@@ -100,9 +100,9 @@ const PrimeGrid = () => {
         const dist = Math.hypot(x - mouse.x, y - mouse.y);
         if (dist < SPOTLIGHT_RADIUS) {
           const norm = dist / SPOTLIGHT_RADIUS;
-          const t = 1 - norm * norm * norm; // cubic falloff
-          alpha = lerp(alpha, isPrime ? PEAK_ALPHA : PEAK_ALPHA * 0.35, t);
-          dotR = lerp(dotR, isPrime ? PEAK_DOT_R : PEAK_DOT_R * 0.5, t);
+          const t = (1 - norm * norm) * (1 - norm); // gentler quintic-ish falloff
+          alpha = lerp(alpha, isPrime ? PEAK_ALPHA : PEAK_ALPHA * 0.25, t);
+          dotR = lerp(dotR, isPrime ? PEAK_DOT_R : PEAK_DOT_R * 0.4, t);
         }
       }
 
