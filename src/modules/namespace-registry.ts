@@ -5,6 +5,9 @@
  * Maps the 14 canonical namespaces (from the v2.0.0 Tri-Space ontology)
  * to the runtime modules that implement them.
  *
+ * Canonical source of truth: https://crates.io/crates/uor-foundation
+ * API documentation: https://docs.rs/uor-foundation
+ *
  * Tri-Space Layout:
  *   Kernel (3):  u/, schema/, op/
  *   Bridge (8):  query/, resolver/, partition/, observable/, proof/, derivation/, trace/, cert/
@@ -13,7 +16,10 @@
  * Non-ontological modules (presentation, infra) remain outside this registry.
  *
  * @version 2.0.0
+ * @see https://crates.io/crates/uor-foundation
  */
+
+import { CRATE_DOCS_URL } from "@/data/external-links";
 
 // ── Namespace Descriptor ───────────────────────────────────────────────────
 
@@ -32,6 +38,13 @@ export interface NamespaceDescriptor {
   readonly depth: number;
   /** Icon glyph */
   readonly icon: string;
+  /** docs.rs module path within the crate (e.g., "kernel/u/") */
+  readonly crateModule: string;
+}
+
+/** Build full docs.rs URL for a namespace */
+export function crateUrl(ns: NamespaceDescriptor): string {
+  return `${CRATE_DOCS_URL}/latest/uor_foundation/${ns.crateModule}`;
 }
 
 // ── The 14 Canonical Namespaces ────────────────────────────────────────────
@@ -46,6 +59,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/identity",
     depth: 1,
     icon: "∞",
+    crateModule: "kernel/u/",
   },
   {
     prefix: "schema:",
@@ -55,15 +69,17 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/ns/schema",
     depth: 1,
     icon: "📐",
+    crateModule: "kernel/schema/",
   },
   {
     prefix: "op:",
     label: "Operations",
     space: "kernel",
-    modules: ["ring-core"], // op-meta lives inside ring-core
+    modules: ["ring-core"],
     barrel: "@/modules/ring-core",
     depth: 1,
     icon: "⚡",
+    crateModule: "kernel/op/",
   },
 
   // ── Bridge Space ──────────────────────────────────────────────────────
@@ -75,6 +91,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/ns/query",
     depth: 2,
     icon: "🔍",
+    crateModule: "bridge/query/",
   },
   {
     prefix: "resolver:",
@@ -84,15 +101,17 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/resolver",
     depth: 2,
     icon: "🎯",
+    crateModule: "bridge/resolver/",
   },
   {
     prefix: "partition:",
     label: "Partition",
     space: "bridge",
-    modules: ["resolver"], // partition logic lives inside resolver
+    modules: ["resolver"],
     barrel: "@/modules/resolver",
     depth: 2,
     icon: "🧩",
+    crateModule: "bridge/partition/",
   },
   {
     prefix: "observable:",
@@ -102,6 +121,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/observable",
     depth: 2,
     icon: "📐",
+    crateModule: "bridge/observable/",
   },
   {
     prefix: "proof:",
@@ -111,6 +131,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/ns/proof",
     depth: 3,
     icon: "🛡️",
+    crateModule: "bridge/proof/",
   },
   {
     prefix: "derivation:",
@@ -120,6 +141,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/derivation",
     depth: 2,
     icon: "🔬",
+    crateModule: "bridge/derivation/",
   },
   {
     prefix: "trace:",
@@ -129,6 +151,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/trace",
     depth: 2,
     icon: "📝",
+    crateModule: "bridge/trace/",
   },
   {
     prefix: "cert:",
@@ -138,6 +161,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/certificate",
     depth: 3,
     icon: "📜",
+    crateModule: "bridge/cert/",
   },
 
   // ── User Space ────────────────────────────────────────────────────────
@@ -149,6 +173,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/ns/type",
     depth: 2,
     icon: "🧠",
+    crateModule: "user/type_/",
   },
   {
     prefix: "morphism:",
@@ -158,6 +183,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/morphism",
     depth: 3,
     icon: "🔀",
+    crateModule: "user/morphism/",
   },
   {
     prefix: "state:",
@@ -167,6 +193,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/state",
     depth: 3,
     icon: "⚙️",
+    crateModule: "user/state/",
   },
 
   // ── Extended Namespaces ──────────────────────────────────────────────
@@ -178,6 +205,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/modules/ns/audio",
     depth: 2,
     icon: "🎵",
+    crateModule: "bridge/",
   },
   {
     prefix: "tee:",
@@ -187,6 +215,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     barrel: "@/hologram/kernel/tee-bridge",
     depth: 3,
     icon: "🔐",
+    crateModule: "bridge/",
   },
 ] as const;
 
