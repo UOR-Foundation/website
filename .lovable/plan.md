@@ -1,81 +1,104 @@
 
 
-# Response X-Ray — Reveal What's Behind Every Answer
+# X-Ray Insights: Reveal What's Hidden Behind Every Answer
 
-## What It Is
+## The Problem With the Current X-Ray
 
-A per-message toggle (Layers icon) that morphs the response bubbles into a visual decomposition of the five dimensions the UOR framework computed to build and verify that answer. Every value shown is real — computed by the WASM ring engine and the neuro-symbolic pipeline. Nothing decorative.
+The current sections (Understanding, Evidence, Alignment, Reasoning, Signature) describe *how the engine processed* the response. That's meta-information about the machinery. It answers "how did this work?" but not "what did I just learn that I didn't know before?"
 
-## The Five Dimensions (all grounded in existing computed data)
+The user's instinct is right: the current X-Ray risks the "so what?" response because it shows process, not revelation.
 
-| Dimension | Human question it answers | Data source (already computed) | Visual |
-|-----------|--------------------------|-------------------------------|--------|
-| **What You Asked** | "What did the engine understand from my question?" | `scaffold.constraints[]` (type + description) and `scaffold.termMap[]` | Colored pills grouped by type: factual (blue), logical (purple), causal (amber). Key terms shown as ring-mapped tokens with their byte value. |
-| **What's Grounded** | "Which parts of this answer have evidence behind them?" | `claims[].grade` + `claims[].text` | The original response text re-rendered with inline background highlights: green (A/B = backed), amber (C = plausible), red-tinted (D = generated). User sees exactly which sentences are strong vs weak. |
-| **How Far It Drifted** | "Did the answer stay on track or wander?" | `curvature` (0–1 normalized) | A single horizontal gauge bar, gradient green→amber→red, with a dot at the actual value. Low = answer aligned with what you asked. High = answer drifted. |
-| **How It Was Built** | "What reasoning process produced this?" | `proof.stepsCount`, `proof.premisesCount`, `iterations`, `converged` | Three connected nodes (Deductive → Inductive → Abductive) with counts. Shows whether the loop converged or needed refinement. |
-| **Ring Fingerprint** | "What's the mathematical signature of this response?" | WASM bridge: `classifyByte`, `bytePopcount`, `factorize` on the scaffold's composite ring value | A compact row showing: partition class (Unit/Irreducible/Reducible), popcount, factorization. This is the unique algebraic identity of the query→response pair — computed by the actual Rust WASM crate. |
+## The New Design: Three Insight Layers
 
-## Why Each Dimension Passes the "So What?" Test
+Replace the current five sections with three that are content-derived, surprising, and immediately useful. Each one answers a question the reader didn't know to ask.
 
-- **What You Asked**: Users see whether the engine truly understood their intent, or misread it. Actionable: they can rephrase.
-- **What's Grounded**: Users see exactly which sentences to trust and which to double-check. This is the single most valuable transparency feature.
-- **How Far It Drifted**: One number that tells you "did the AI stay on topic?" Zero jargon.
-- **How It Was Built**: Shows the answer wasn't just generated — it went through a verification loop. Builds trust.
-- **Ring Fingerprint**: The "wow" moment — a unique mathematical identity for this specific exchange, verifiable via the WASM engine. No other AI product shows this.
+### 1. What You Didn't Ask (but should have)
 
-## Implementation
+**The "holy shit" moment.** Derived from the scaffold's constraint analysis and the response's claim coverage.
 
-### Data: Extend `TrustData` to carry scaffold info
+- The engine already knows which constraints the response satisfied and which it didn't (from `CurvatureReport.violations` and `gradeSentence`).
+- We compute the **gap**: terms from the user's query that the response touched on, vs adjacent concepts that the response revealed but the user never mentioned.
+- Present these as "blind spots": concepts the user's question implicitly depends on but never named.
+- Implementation: Compare `scaffold.termMap` (what was asked) against terms extracted from the response text that don't appear in the original query. Use the ring engine to compute XOR distance between query terms and response terms, surfacing the most "algebraically distant" concepts that still appeared.
+- Display: Clean list of 2-4 concepts with a one-line explanation of why each matters, each linked to its UOR receipt.
 
-Add `constraints` and `termMap` fields to `TrustData`. Populate them in `runVerificationLoop` from the scaffold that's already available there.
+### 2. Trust Map (replaces Evidence + Alignment)
 
-### State: Add `xrayOpen: Set<number>`
+**The "I can see what to trust" moment.** The response text itself, re-rendered sentence by sentence, with each sentence's epistemic grade shown as a subtle left-border color. No separate panel, the text IS the visualization.
 
-Tracks which message indices have X-Ray toggled on.
+- Green border = grounded (A/B). Amber = plausible (C). Red-tint = unverified (D).
+- Each sentence is clickable: opens its UOR receipt + external verification link.
+- At the top: a single fraction: "7 of 9 claims backed" with the overall grade.
+- This replaces the current Evidence section (which lists claims separately from the text) and Alignment (which is abstract). Now the user sees trust *in context*, directly on the words.
 
-### UI: Toggle button + X-Ray panel
+### 3. Proof Chain (replaces Reasoning + Signature, condensed)
 
-- Small `Layers` icon button appears at top-right of each assistant message group, only after verification completes (`trustMap[i]` exists)
-- When toggled ON: bubbles dim to `opacity-20`, X-Ray panel slides in with `AnimatePresence`
-- The five dimensions render as staggered sections (100ms apart), each with a subtle header and visual content
-- The "What's Grounded" section re-renders the full response text with inline colored backgrounds per sentence grade — this is the centerpiece
-- The curvature gauge is a simple CSS gradient bar with a positioned dot
-- Ring Fingerprint calls WASM bridge functions (`classifyByte`, `bytePopcount`, `factorize`) on a composite ring value derived from the scaffold's term hashes
+**The "this is real" moment.** A single compact row showing the complete provenance chain:
 
-### Files to Change
+```
+Your question → 4 constraints extracted → 9 claims verified → converged ✓ → 0xA3 Irreducible · 3 × 7
+```
 
-| File | Changes |
-|------|---------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Add `constraints` and `termMap` to `TrustData`. Store them in `runVerificationLoop`. Add `xrayOpen` state. Add Layers toggle button per assistant message. Add X-Ray panel with 5 dimension sections. Import `Layers` from lucide-react. Import WASM bridge functions for Ring Fingerprint. |
-| `src/index.css` | Add `.oracle-xray-panel` for the panel container, `.oracle-xray-gauge` for the curvature bar, `.oracle-xray-sentence` variants for grounded/plausible/unverified inline highlights. |
+One line. Every element is a clickable receipt. The entire reasoning chain and algebraic signature compressed into a single scannable provenance trail. No boxes, no sections, just a clean chain of linked facts.
 
-### Layout Sketch
+## What Makes This Different
+
+| Old X-Ray | New X-Ray |
+|-----------|-----------|
+| Shows engine internals | Shows content insights |
+| "Understanding" = what the engine did | "What You Didn't Ask" = what you missed |
+| Evidence listed separately from text | Trust Map overlaid on actual text |
+| Alignment gauge (abstract number) | Trust visible per-sentence (concrete) |
+| Reasoning + Signature in separate boxes | Single provenance chain (one line) |
+
+## Data Sources (all existing, no new API calls)
+
+- **What You Didn't Ask**: `scaffold.termMap` vs response text word extraction + `bridge.xor()` for ring distance
+- **Trust Map**: `claims[].grade` + `claims[].text` + `receipts[claim-N]` (already computed)
+- **Proof Chain**: `proof.constraintsCount`, `claims.length`, `converged`, composite ring + `classifyByte`/`factorize` (already computed)
+
+## Files to Change
+
+| File | Change |
+|------|--------|
+| `OraclePage.tsx` | Replace X-Ray panel content (lines ~449-663). Add blind-spot extraction function. Restructure into 3 layers. Add `responseText` to TrustData so we can re-render the trust map. |
+| `OraclePage.tsx` | Store the raw response text in `TrustData` during `runVerificationLoop` |
+| `index.css` | Add `.oracle-trust-sentence` border-left variants for A/B/C/D grades |
+
+## Layout
 
 ```text
-  ┌─ X-Ray ──────────────────────────── [×] ─┐
-  │                                           │
-  │  WHAT YOU ASKED                           │
-  │  ┌─────┐ ┌───────┐ ┌──────┐              │
-  │  │ factual: memory │ factual: brain │ logical: Q │
-  │  └─────┘ └───────┘ └──────┘              │
-  │  Terms: memory(0xA3) brain(0x7F) encoding │
-  │                                           │
-  │  WHAT'S GROUNDED                          │
-  │  ██ Memory involves encoding info...    A │
-  │  ██ The hippocampus plays a key...      B │
-  │  ░░ Some researchers believe...         C │
-  │  ░░ This could potentially change...    D │
-  │                                           │
-  │  HOW FAR IT DRIFTED                       │
-  │  ═══════════●──── 0.18 (low)              │
-  │                                           │
-  │  HOW IT WAS BUILT                         │
-  │  ● Deductive(4) → ● Inductive(12) →      │
-  │    ● Abductive → Converged ✓              │
-  │                                           │
-  │  RING FINGERPRINT                         │
-  │  Irreducible · popcount 5 · 3 × 7 × 11   │
-  └───────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────┐
+  │  WHAT YOU DIDN'T ASK                        │
+  │                                             │
+  │  Your question about memory assumes         │
+  │  several things you never stated:           │
+  │                                             │
+  │  • Neuroplasticity — the mechanism that     │
+  │    makes memory possible. Without it,       │
+  │    none of the above applies.     🔗 receipt │
+  │                                             │
+  │  • Encoding specificity — how context       │
+  │    at storage time affects retrieval.        │
+  │    This changes the practical advice.       │
+  │                                   🔗 receipt │
+  ├─────────────────────────────────────────────┤
+  │  TRUST MAP          7 of 9 claims backed  B │
+  │                                             │
+  │  ┃ Memory involves encoding information     │
+  │  ┃ into neural patterns that can be         │
+  │  ┃ retrieved later.                    A 🔗 │
+  │  ┃                                          │
+  │  ┃ The hippocampus plays a central role     │
+  │  ┃ in consolidating short-term memory       │
+  │  ┃ into long-term storage.             B 🔗 │
+  │  ┃                                          │
+  │  ░ Some researchers believe emotional       │
+  │  ░ memories may be stored differently. C 🔗 │
+  ├─────────────────────────────────────────────┤
+  │  Your question → 4 constraints → 9 claims  │
+  │  → converged ✓ → 0xA3 Irreducible · 3 × 7 │
+  │                              all receipts ↗ │
+  └─────────────────────────────────────────────┘
 ```
 
