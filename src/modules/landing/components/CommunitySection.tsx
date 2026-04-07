@@ -65,7 +65,7 @@ const CommunitySection = () => {
   };
 
   return (
-    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-section-dark section-depth">
+    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-white md:bg-section-dark md:section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
 
