@@ -12,9 +12,12 @@ import {
   type NeuroSymbolicConfig,
 } from "@/modules/ring-core/neuro-symbolic";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
-import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink } from "lucide-react";
+import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
