@@ -326,13 +326,34 @@ const OraclePage = () => {
 
       setTrustMap(prev => ({ ...prev, [msgIndex]: trustEntry }));
 
-      // Compute UOR canonical receipts asynchronously (non-blocking)
+      // Compute WASM-anchored UOR canonical receipts asynchronously (non-blocking)
       (async () => {
         try {
           const receiptMap: Record<string, UorReceipt> = {};
 
+          /** Helper: compute receipt, enrich with WASM ring, register in global registry */
+          const makeReceipt = async (source: Record<string, unknown>): Promise<UorReceipt> => {
+            const proof = await singleProofHash(source);
+            const enriched = enrichWithWasm(proof);
+            // Register in global receipt registry for /resolve page lookup
+            await computeAndRegister(source);
+            return {
+              cid: proof.cid,
+              derivationId: proof.derivationId,
+              uorAddress: proof.uorAddress,
+              ring: {
+                byte: enriched.ringByte,
+                partition: enriched.ringPartition,
+                factors: enriched.ringFactors,
+                criticalIdentity: enriched.ringCriticalIdentity,
+                engine: enriched.engine,
+                crateVersion: enriched.crateVersion,
+              },
+            };
+          };
+
           // Receipt for the full proof
-          const proofReceipt = await singleProofHash({
+          receiptMap["proof"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:ReasoningProof",
             "oracle:proofId": proofData.proofId,
@@ -342,21 +363,19 @@ const OraclePage = () => {
             "oracle:claimCount": report.annotations.length,
             "oracle:quantum": proofData.quantum,
           });
-          receiptMap["proof"] = { cid: proofReceipt.cid, derivationId: proofReceipt.derivationId, uorAddress: proofReceipt.uorAddress };
 
           // Receipt for the scaffold/query interpretation
-          const scaffoldReceipt = await singleProofHash({
+          receiptMap["scaffold"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:QueryScaffold",
             "oracle:constraints": scaffold.constraints.map(c => ({ type: c.type, description: c.description, ring: c.ringValue })),
             "oracle:terms": scaffold.termMap.map(t => ({ term: t.term, ring: t.ringValue })),
           });
-          receiptMap["scaffold"] = { cid: scaffoldReceipt.cid, derivationId: scaffoldReceipt.derivationId, uorAddress: scaffoldReceipt.uorAddress };
 
           // Receipt for each claim (batch in parallel)
           const claimReceipts = await Promise.all(
             report.annotations.map((claim, idx) =>
-              singleProofHash({
+              makeReceipt({
                 "@context": { "oracle": "https://uor.foundation/oracle/" },
                 "@type": "oracle:Claim",
                 "oracle:index": idx,
@@ -367,19 +386,18 @@ const OraclePage = () => {
             )
           );
           claimReceipts.forEach((r, idx) => {
-            receiptMap[`claim-${idx}`] = { cid: r.cid, derivationId: r.derivationId, uorAddress: r.uorAddress };
+            receiptMap[`claim-${idx}`] = r;
           });
 
           // Receipt for the composite ring signature
           const compositeRing = scaffold.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
-          const sigReceipt = await singleProofHash({
+          receiptMap["signature"] = await makeReceipt({
             "@context": { "oracle": "https://uor.foundation/oracle/" },
             "@type": "oracle:RingSignature",
             "oracle:compositeRing": compositeRing,
             "oracle:proofId": proofData.proofId,
             "oracle:certified": proofData.certificate !== null,
           });
-          receiptMap["signature"] = { cid: sigReceipt.cid, derivationId: sigReceipt.derivationId, uorAddress: sigReceipt.uorAddress };
 
           setTrustMap(prev => ({
             ...prev,
