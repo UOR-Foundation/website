@@ -357,7 +357,7 @@ const OraclePage = () => {
                                   transition={{ delay: ci * 0.02, duration: 0.25 }}
                                   className={`h-full ${GRADE_COLORS[claim.grade].fill} origin-left cursor-pointer hover:opacity-100 transition-opacity`}
                                   style={{ width: `${100 / trustMap[i].claims.length}%`, opacity: 0.6 }}
-                                  onClick={() => setExpandedClaims(prev => toggle(prev, i))}
+                                  onClick={() => { setExpandedTrust(prev => toggle(prev, i)); setActivePillar(prev => ({ ...prev, [i]: "trust" })); }}
                                 />
                               ))}
                             </div>
