@@ -3,11 +3,18 @@ import { teamMembers } from "@/data/team-members";
 const HEX_CLIP = "polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)";
 
 const CommunitySection = () => {
-  const row1 = teamMembers.slice(0, 8);
-  const row2 = [...teamMembers.slice(8), { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true }];
+  // Split into two balanced rows for honeycomb: 7 top, 6+count bottom
+  const row1 = teamMembers.slice(0, 7);
+  const row2 = [
+    ...teamMembers.slice(7),
+    { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true },
+  ];
 
-  // Mobile: show first 8 + count tile = 9 items in a 3-column grid
-  const mobileMembers = [...teamMembers.slice(0, 8), { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true }];
+  // Mobile: 3-column grid, show first 8 + count
+  const mobileMembers = [
+    ...teamMembers.slice(0, 8),
+    { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true },
+  ];
 
   const hexSize = "w-[5rem] h-[5rem] md:w-[5.5rem] md:h-[5.5rem] lg:w-[6.5rem] lg:h-[6.5rem]";
   const cellWidth = "w-[6.5rem] md:w-[8rem] lg:w-[9.5rem]";
@@ -36,7 +43,7 @@ const CommunitySection = () => {
 
     return (
       <a
-        key={member.name}
+        key={`${member.name}-${idx}`}
         href={member.link}
         target="_blank"
         rel="noopener noreferrer"
@@ -69,21 +76,18 @@ const CommunitySection = () => {
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
 
-          {/* Mobile: 3-column grid with 9 items */}
+          {/* Mobile: 3-column grid */}
           <div className="md:hidden grid grid-cols-3 gap-x-2 gap-y-8 justify-items-center">
             {mobileMembers.map((m, i) => renderHex(m, i, 0.22))}
           </div>
 
-          {/* Desktop: Honeycomb. Row 1: 8 members */}
-          <div className="hidden md:flex flex-wrap justify-center gap-x-2 lg:gap-x-3 gap-y-8">
+          {/* Desktop: Honeycomb Row 1 — 7 members centered */}
+          <div className="hidden md:flex justify-center gap-x-2 lg:gap-x-3">
             {row1.map((m, i) => renderHex(m, i, 0.22))}
           </div>
 
-          {/* Desktop: Honeycomb. Row 2: offset for honeycomb interlock */}
-          <div
-            className="hidden md:flex flex-wrap justify-center gap-x-2 lg:gap-x-3 gap-y-8 mt-8 md:mt-10"
-            style={{ paddingLeft: "calc(4rem + 0.125rem)", paddingRight: "calc(4rem + 0.125rem)" }}
-          >
+          {/* Desktop: Honeycomb Row 2 — 6 members + count, offset half-cell for interlock */}
+          <div className="hidden md:flex justify-center gap-x-2 lg:gap-x-3 mt-8 md:mt-10">
             {row2.map((m, i) => renderHex(m, i, 0.45))}
           </div>
         </div>
