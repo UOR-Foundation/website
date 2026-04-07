@@ -1258,6 +1258,18 @@
   );
 }
 
+/* ── Trust Map sentence borders ── */
+.oracle-trust-sentence {
+  transition: all 0.2s ease;
+}
+.oracle-trust-sentence:hover {
+  background: hsl(var(--muted) / 0.12);
+}
+.oracle-trust-A { border-left: 3px solid hsl(142 71% 45% / 0.7); }
+.oracle-trust-B { border-left: 3px solid hsl(217 91% 60% / 0.7); }
+.oracle-trust-C { border-left: 3px solid hsl(38 92% 50% / 0.6); }
+.oracle-trust-D { border-left: 3px solid hsl(0 84% 60% / 0.5); }
+
 
 .oracle-prose ::selection {
   background: hsl(var(--primary) / 0.2);
