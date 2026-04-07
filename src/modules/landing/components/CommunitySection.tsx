@@ -69,14 +69,19 @@ const CommunitySection = () => {
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
 
-          {/* Honeycomb. Row 1: 8 members */}
-          <div className="flex flex-wrap justify-center gap-x-1 md:gap-x-2 lg:gap-x-3 gap-y-8">
+          {/* Mobile: 3-column grid with 9 items */}
+          <div className="md:hidden grid grid-cols-3 gap-x-2 gap-y-8 justify-items-center">
+            {mobileMembers.map((m, i) => renderHex(m, i, 0.22))}
+          </div>
+
+          {/* Desktop: Honeycomb. Row 1: 8 members */}
+          <div className="hidden md:flex flex-wrap justify-center gap-x-2 lg:gap-x-3 gap-y-8">
             {row1.map((m, i) => renderHex(m, i, 0.22))}
           </div>
 
-          {/* Honeycomb. Row 2: offset for honeycomb interlock */}
+          {/* Desktop: Honeycomb. Row 2: offset for honeycomb interlock */}
           <div
-            className="flex flex-wrap justify-center gap-x-1 md:gap-x-2 lg:gap-x-3 gap-y-8 mt-8 md:mt-10"
+            className="hidden md:flex flex-wrap justify-center gap-x-2 lg:gap-x-3 gap-y-8 mt-8 md:mt-10"
             style={{ paddingLeft: "calc(4rem + 0.125rem)", paddingRight: "calc(4rem + 0.125rem)" }}
           >
             {row2.map((m, i) => renderHex(m, i, 0.45))}
