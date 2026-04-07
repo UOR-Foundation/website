@@ -15,6 +15,7 @@ import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
 /* ── Constants ── */
 
@@ -64,6 +65,7 @@ const OraclePage = () => {
   const [verifying, setVerifying] = useState(false);
   const [refiningIteration, setRefiningIteration] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const proseContainerRef = useRef<HTMLDivElement>(null);
   const [wasmReady, setWasmReady] = useState(false);
 
   // Controls
@@ -131,6 +133,18 @@ const OraclePage = () => {
       toast.error("Connection error.");
     }
   }, [messages, isStreaming, temperature]);
+
+  /* ── Selection action handler ── */
+
+  const handleSelectionAction = useCallback((action: SelectionAction, text: string) => {
+    const prompts: Record<SelectionAction, string> = {
+      "zoom-in": `Explain this in more detail: "${text}"`,
+      "zoom-out": `Explain this more simply, in broader context: "${text}"`,
+      "clarify": `Clarify what this means: "${text}"`,
+      "verify": `What are the sources and evidence for: "${text}"`,
+    };
+    send(prompts[action]);
+  }, [send]);
 
   /* ── Verification loop ── */
 
@@ -245,7 +259,8 @@ const OraclePage = () => {
                 )}
 
                 {/* Messages */}
-                <div className="px-5 md:px-8 py-6 space-y-6">
+                <div className="px-5 md:px-8 py-6 space-y-6" ref={proseContainerRef}>
+                  <SelectionToolbar containerRef={proseContainerRef} onAction={handleSelectionAction} />
                   {messages.map((msg, i) => (
                     <div key={i}>
                       {msg.role === "user" ? (
