@@ -323,7 +323,19 @@ const OraclePage = () => {
                       ref={i === messages.length - 1 && isStreaming ? streamMsgRef : undefined}
                     >
                       <div className="oracle-prose">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        {(() => {
+                          const chunks = msg.content.split(/\n\n+/).filter(Boolean);
+                          return chunks.map((chunk, ci) => (
+                            <motion.div
+                              key={`${i}-${ci}-${chunk.slice(0, 20)}`}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                            >
+                              <ReactMarkdown>{chunk}</ReactMarkdown>
+                            </motion.div>
+                          ));
+                        })()}
                       </div>
 
                       {/* ── Trust bar + controls ── */}
