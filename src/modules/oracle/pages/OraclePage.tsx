@@ -565,16 +565,17 @@ const OraclePage = () => {
                             const ReceiptBadge = ({ receiptKey }: { receiptKey: string }) => {
                               const receipt = r[receiptKey];
                               if (!receipt) return null;
-                              const shortCid = receipt.cid.slice(0, 8) + "…";
+                              const triword = canonicalToTriword(receipt.cid);
+                              const triwordDisplay = formatTriword(triword);
                               const engineLabel = receipt.ring?.engine === "wasm" ? "WASM" : "TS";
                               return (
                                 <span
-                                  onClick={(e) => { e.stopPropagation(); navigate(`/resolve?cid=${encodeURIComponent(receipt.cid)}`); }}
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/resolve?w=${encodeURIComponent(triword)}`); }}
                                   className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono bg-primary/8 text-primary/50 border border-primary/10 hover:bg-primary/15 hover:text-primary/70 hover:shadow-[0_0_8px_hsl(var(--primary)/0.15)] transition-all cursor-pointer"
-                                  title={`UOR Derivation: ${receipt.derivationId}\nCID: ${receipt.cid}\nEngine: ${engineLabel}\nClick to resolve`}
+                                  title={`UOR Address: ${triwordDisplay}\nDerivation: ${receipt.derivationId}\nEngine: ${engineLabel}\nClick to resolve`}
                                 >
                                   <Link2 className="w-2.5 h-2.5 shrink-0" />
-                                  {shortCid}
+                                  {triwordDisplay}
                                   <span className="text-[9px] opacity-40">{engineLabel}</span>
                                 </span>
                               );
