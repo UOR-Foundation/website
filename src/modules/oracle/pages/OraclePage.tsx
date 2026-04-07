@@ -15,6 +15,7 @@ import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
 /* ── Constants ── */
 
