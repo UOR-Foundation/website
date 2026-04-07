@@ -141,11 +141,8 @@ const Standard = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {frameworkLayers.map((layer) => (
-              <a
+              <div
                 key={layer.number}
-                href={layer.namespaces[0]?.url ?? GITHUB_FRAMEWORK_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
               >
                 <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
@@ -157,6 +154,31 @@ const Standard = () => {
                 <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
                   {layer.summary}
                 </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4">
+                  <a
+                    href={layer.namespaces[0]?.url ?? GITHUB_FRAMEWORK_DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-primary/70 hover:text-primary transition-colors"
+                  >
+                    View docs
+                    <ExternalLink size={13} className="opacity-60" />
+                  </a>
+                  {layer.crateModules.length > 0 && (
+                    <a
+                      href={layer.crateModules[0].url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-foreground/40 hover:text-primary transition-colors"
+                    >
+                      <Package size={12} className="opacity-60" />
+                      Rust traits
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
                 <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-body font-medium text-primary/70 group-hover:text-primary transition-colors">
                   View docs
                   <ExternalLink size={13} className="opacity-60" />
