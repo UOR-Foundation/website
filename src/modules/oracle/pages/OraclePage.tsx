@@ -274,10 +274,18 @@ const OraclePage = () => {
       </header>
 
       {/* ── Message area ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto oracle-scroll-area">
-        <div className="flex flex-col justify-end min-h-full">
-          {/* Empty state — centered presets */}
-          {messages.length === 0 && (
+      <div className="flex-1 overflow-hidden relative">
+        {/* Focus-fade overlays */}
+        {messages.length > 0 && (
+          <>
+            <div className="oracle-fade-top" />
+            <div className="oracle-fade-bottom" />
+          </>
+        )}
+        <div ref={scrollRef} className="h-full overflow-y-auto oracle-scroll-area">
+          <div className="flex flex-col justify-end min-h-full">
+            {/* Empty state — centered presets */}
+            {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center flex-1 text-center px-6 py-10">
               <p className="text-foreground font-display font-semibold text-xl mb-2">Ask anything</p>
               <p className="text-muted-foreground/60 text-sm mb-8 max-w-sm leading-relaxed">
@@ -299,14 +307,14 @@ const OraclePage = () => {
 
           {/* Messages */}
           {messages.length > 0 && (
-            <div className="px-4 md:px-0 py-4 space-y-5 w-full max-w-2xl mx-auto" ref={proseContainerRef}>
+            <div className="px-4 md:px-6 py-4 space-y-5 w-full max-w-3xl mx-auto" ref={proseContainerRef}>
               <SelectionToolbar containerRef={proseContainerRef} onAction={handleSelectionAction} />
               {messages.map((msg, i) => (
                 <div key={i}>
                   {msg.role === "user" ? (
                     <div className="flex justify-end">
                       <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-4 py-2.5">
-                        <p className="text-sm text-foreground leading-relaxed">{msg.content}</p>
+                        <p className="text-base text-foreground leading-relaxed">{msg.content}</p>
                       </div>
                     </div>
                   ) : (
@@ -315,7 +323,19 @@ const OraclePage = () => {
                       ref={i === messages.length - 1 && isStreaming ? streamMsgRef : undefined}
                     >
                       <div className="oracle-prose">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        {(() => {
+                          const chunks = msg.content.split(/\n\n+/).filter(Boolean);
+                          return chunks.map((chunk, ci) => (
+                            <motion.div
+                              key={`${i}-${ci}-${chunk.slice(0, 20)}`}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                            >
+                              <ReactMarkdown>{chunk}</ReactMarkdown>
+                            </motion.div>
+                          ));
+                        })()}
                       </div>
 
                       {/* ── Trust bar + controls ── */}
@@ -478,17 +498,18 @@ const OraclePage = () => {
           )}
         </div>
       </div>
+      </div>
 
       {/* ── Fixed input bar ── */}
-      <div className="shrink-0 border-t border-border/20 bg-background/80 backdrop-blur-md px-4 py-3">
-        <div className="flex gap-2 items-end max-w-2xl mx-auto">
+      <div className="shrink-0 border-t border-border/30 bg-background backdrop-blur-md px-4 py-3">
+        <div className="flex gap-2 items-end max-w-3xl mx-auto">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
             placeholder="Ask anything…"
             rows={1}
-            className="flex-1 bg-transparent border border-border/30 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 transition-colors"
+            className="flex-1 bg-muted/15 border border-border/50 rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/40 resize-none focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/10 transition-all shadow-[inset_0_1px_4px_hsl(var(--background)/0.3)]"
           />
           <button
             onClick={() => send(input)}

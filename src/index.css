@@ -1196,17 +1196,37 @@
 
 .oracle-prose {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  font-size: clamp(15.5px, 1.05vw, 17.5px);
+  font-size: clamp(16.5px, 1.15vw, 19px);
   line-height: 1.82;
   color: hsl(var(--foreground) / 0.88);
   letter-spacing: 0.005em;
   word-spacing: 0.01em;
-  max-width: 68ch;
+  max-width: 78ch;
   text-wrap: pretty;
   font-feature-settings: 'liga' 1, 'calt' 1, 'pnum' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* ── Focus-fade overlays ── */
+.oracle-fade-top,
+.oracle-fade-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.oracle-fade-top {
+  top: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, hsl(var(--background)) 0%, hsl(var(--background) / 0.6) 40%, transparent 100%);
+}
+.oracle-fade-bottom {
+  bottom: 0;
+  height: 80px;
+  background: linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.5) 35%, transparent 100%);
 }
 
 /* Selection highlight */
