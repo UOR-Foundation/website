@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles } from "lucide-react";
 import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 import { encode, decode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ function CopyBtn({ onClick, copied, size = 12, label }: {
 }
 
 const ResolvePage = () => {
+  const [contentMode, setContentMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +44,7 @@ const ResolvePage = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [rederived, setRederived] = useState(false);
 
-  const looksLikeJson = input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
+  const looksLikeJson = contentMode || input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
@@ -149,33 +150,38 @@ const ResolvePage = () => {
               className="flex flex-col items-center"
               style={{ paddingTop: "38.2vh" }}
             >
-              {/* Brand wordmark — large, crisp, centered */}
+              {/* Brand wordmark */}
               <h1
-                className="font-display font-medium tracking-[0.12em] text-foreground select-none leading-none"
+                className="font-display font-medium tracking-[0.05em] text-foreground select-none leading-none"
                 style={{ fontSize: "clamp(4rem, 8vw, 7rem)" }}
               >
                 UOR
               </h1>
 
-              {/* Search bar — Google style */}
+              {/* Search bar */}
               <div
-                className="w-full relative group"
+                className="w-full max-w-[582px] relative group"
                 style={{ marginTop: "calc(3.5rem * 0.618)" }}
               >
-                {looksLikeJson ? (
+                {looksLikeJson && !contentMode ? null : null}
+                {contentMode ? (
                   <textarea
                     ref={textareaRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-                    placeholder="Paste content…"
+                    placeholder="Paste content as JSON…"
                     rows={6}
-                    className="w-full bg-[hsl(0_0%_19%)] border border-transparent rounded-3xl px-5 py-4 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-border/30 transition-all"
+                    className="w-full bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-3xl px-5 py-4 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-[hsl(0_0%_37%)] transition-all"
                     autoFocus
                   />
                 ) : (
-                  <div className="relative">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/30" />
+                  <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
+                    {/* Left + icon */}
+                    <button className="pl-4 pr-1 py-[14px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
+                      <Plus className="w-5 h-5" />
+                    </button>
+
                     <input
                       ref={inputRef}
                       type="text"
@@ -183,13 +189,35 @@ const ResolvePage = () => {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
                       placeholder=""
-                      className="w-full bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_22%)] border border-transparent rounded-full pl-12 pr-5 py-3.5 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:bg-[hsl(0_0%_22%)] focus:border-border/30 focus:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)] transition-all"
+                      className="flex-1 bg-transparent py-[14px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
                     />
+
+                    {/* Right side — separator + Content Mode pill */}
+                    <div className="flex items-center gap-2 pr-2 shrink-0">
+                      <div className="w-px h-6 bg-[hsl(0_0%_37%)]" />
+                      <button
+                        onClick={() => setContentMode(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[hsl(0_0%_30%)] hover:bg-[hsl(0_0%_24%)] transition-all"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                        <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">Content Mode</span>
+                      </button>
+                    </div>
                   </div>
+                )}
+
+                {/* Exit content mode */}
+                {contentMode && (
+                  <button
+                    onClick={() => { setContentMode(false); setInput(""); }}
+                    className="absolute top-3 right-4 text-xs text-muted-foreground/40 hover:text-foreground/60 transition-colors"
+                  >
+                    ✕ Address mode
+                  </button>
                 )}
               </div>
 
-              {/* Dual buttons — Google style */}
+              {/* Dual buttons */}
               <div
                 className="flex items-center gap-3"
                 style={{ marginTop: "calc(2rem * 0.618)" }}
@@ -197,7 +225,7 @@ const ResolvePage = () => {
                 <button
                   onClick={submit}
                   disabled={!input.trim() || loading}
-                  className="px-5 py-2.5 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-border/20 border border-transparent text-sm font-medium text-foreground/90 transition-all disabled:opacity-30"
+                  className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all disabled:opacity-30"
                 >
                   UOR Search
                 </button>
@@ -206,11 +234,12 @@ const ResolvePage = () => {
                     if (!input.trim()) {
                       const example = { "@type": "Thing", name: "Hello World" };
                       setInput(JSON.stringify(example, null, 2));
+                      setContentMode(true);
                     } else {
                       submit();
                     }
                   }}
-                  className="px-5 py-2.5 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-border/20 border border-transparent text-sm font-medium text-foreground/90 transition-all"
+                  className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all"
                 >
                   I'm Feeling Lucky
                 </button>
