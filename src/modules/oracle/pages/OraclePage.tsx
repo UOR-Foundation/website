@@ -88,6 +88,9 @@ const OraclePage = () => {
     return s;
   };
 
+  const latestTrustIdx = Object.keys(trustMap).map(Number).sort((a, b) => b - a)[0];
+  const latestTrust = latestTrustIdx !== undefined ? trustMap[latestTrustIdx] : null;
+
   /* ── Send ── */
 
   const send = useCallback(async (text: string) => {
