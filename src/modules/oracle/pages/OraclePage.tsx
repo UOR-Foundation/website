@@ -12,7 +12,8 @@ import {
   type NeuroSymbolicConfig,
 } from "@/modules/ring-core/neuro-symbolic";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
-import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X } from "lucide-react";
+import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers } from "lucide-react";
+import * as bridge from "@/lib/wasm/uor-bridge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
@@ -53,6 +54,8 @@ interface TrustData {
     quantum: number;
     certified: boolean;
   };
+  constraints: Array<{ id: string; type: string; description: string; ringValue: number }>;
+  termMap: Array<{ term: string; ringValue: number }>;
 }
 
 /* ── Page ── */
