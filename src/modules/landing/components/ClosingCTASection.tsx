@@ -8,10 +8,10 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const ClosingCTASection = () => {
   return (
-    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-section-dark section-depth">
+    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-white md:bg-section-dark md:section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-amber-700 md:text-primary/70 text-fluid-lead">
             Getting Started
           </p>
         </div>
@@ -24,16 +24,16 @@ const ClosingCTASection = () => {
               <Link
                 key={pillar.title}
                 to={pillar.href}
-                className="group flex flex-col p-8 md:p-10 lg:p-12 border-b md:border-b-0 md:border-r border-foreground/8 last:border-r-0 last:border-b-0 transition-all duration-300 animate-fade-in-up opacity-0"
+                className="group flex flex-col p-8 md:p-10 lg:p-12 border-b md:border-b-0 md:border-r border-black/8 md:border-foreground/8 last:border-r-0 last:border-b-0 transition-all duration-300 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${0.17 + index * 0.13}s` }}
               >
                 <div className="flex items-center gap-3 mb-golden-md">
-                  <Icon className="w-5 h-5 text-primary/60 transition-colors duration-300 group-hover:text-primary" strokeWidth={1.5} />
-                  <h3 className="font-display font-semibold text-foreground text-fluid-card-title">{pillar.title}</h3>
+                  <Icon className="w-5 h-5 text-primary/80 md:text-primary/60 transition-colors duration-300 group-hover:text-primary" strokeWidth={1.5} />
+                  <h3 className="font-display font-semibold text-black md:text-foreground text-fluid-card-title">{pillar.title}</h3>
                 </div>
-                <p className="text-foreground/65 font-body leading-[1.68] flex-1 text-fluid-lead">{pillar.description}</p>
+                <p className="text-black/70 md:text-foreground/65 font-body leading-[1.68] flex-1 text-fluid-lead">{pillar.description}</p>
                 <div className="flex justify-start mt-golden-lg">
-                  <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground transition-all duration-300 text-fluid-label">
+                  <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-black/60 md:text-foreground/60 font-body group-hover:text-black md:group-hover:text-foreground transition-all duration-300 text-fluid-label">
                     {pillar.cta}
                     <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
