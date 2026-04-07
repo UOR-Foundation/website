@@ -4,11 +4,13 @@ const ORACLE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-oracle
 
 export async function streamOracle({
   messages,
+  scaffoldFragment,
   onDelta,
   onDone,
   onError,
 }: {
   messages: Msg[];
+  scaffoldFragment?: string;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
@@ -19,7 +21,7 @@ export async function streamOracle({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, scaffoldFragment }),
   });
 
   if (!resp.ok || !resp.body) {
