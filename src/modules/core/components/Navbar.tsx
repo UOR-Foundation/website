@@ -156,7 +156,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           {/* Secondary: Contribute link */}
           <Link
             to="/projects#submit"
-            className={`font-mono text-[13px] font-semibold uppercase tracking-[0.25em] text-foreground/70 active:text-foreground transition-all duration-[350ms] py-2 ${
+            className={`font-mono text-[15px] font-semibold uppercase tracking-[0.2em] text-foreground/70 active:text-foreground transition-all duration-[350ms] py-2 ${
               mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
             style={{ transitionDelay: mobileOpen ? "380ms" : "0ms" }}
@@ -169,25 +169,25 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
 
           {/* Social links as text labels */}
           <div
-            className={`flex items-center gap-8 pb-4 transition-all duration-[350ms] ${
+            className={`flex items-center gap-8 pb-5 transition-all duration-[350ms] ${
               mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
             style={{ transitionDelay: mobileOpen ? "420ms" : "0ms" }}
           >
-            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-foreground/55 hover:text-foreground transition-colors">
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[14px] font-medium uppercase tracking-[0.18em] text-foreground/55 hover:text-foreground transition-colors">
               Discord
             </a>
-            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-foreground/55 hover:text-foreground transition-colors">
+            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[14px] font-medium uppercase tracking-[0.18em] text-foreground/55 hover:text-foreground transition-colors">
               GitHub
             </a>
-            <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-foreground/55 hover:text-foreground transition-colors">
+            <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-[14px] font-medium uppercase tracking-[0.18em] text-foreground/55 hover:text-foreground transition-colors">
               LinkedIn
             </a>
           </div>
 
           {/* Copyright at bottom */}
           <p
-            className={`font-mono text-[11px] uppercase tracking-[0.2em] text-foreground/35 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] transition-all duration-[350ms] ${
+            className={`font-mono text-[13px] uppercase tracking-[0.18em] text-foreground/40 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] transition-all duration-[350ms] ${
               mobileOpen ? "opacity-100" : "opacity-0"
             }`}
             style={{ transitionDelay: mobileOpen ? "460ms" : "0ms" }}
