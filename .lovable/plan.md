@@ -1,63 +1,63 @@
 
 
-# Streamlined Trust Card — Focused, Expandable, Delightful
+# iMessage-Style Message Bubbles for Oracle Responses
 
-## Current State
+## Problem
 
-The "How we checked" panel shows 6 metrics in a flat list: Confidence, Statements checked, Evidence found, Key topics covered, Consistency, Answer improved. Some are redundant (e.g., "Statements checked" and "Evidence found" overlap with the summary line above). The section feels like a data dump rather than a curated insight.
+Currently, assistant responses render as a single continuous prose block under `oracle-prose`. Even with paragraph-level fade-in animations, the visual result is a wall of text that feels like reading a document, not having a conversation. This is the opposite of how iMessage, WhatsApp, and other messaging apps present information.
 
-## New Design: Three-Metric Trust Card with Drill-Down
+## Design: Chat Bubble Paragraphs
 
-Reduce to **3 core dimensions** that each tell a distinct, meaningful story. Each one is clickable to expand further detail.
+Each paragraph of the assistant's response becomes its own **chat bubble**, visually separated and staggered in time, exactly like receiving multiple iMessage messages from a friend explaining something.
 
-### The Three Pillars
+### Visual treatment per bubble
 
-| Pillar | Label | Value | What it reveals | Expandable detail |
-|--------|-------|-------|-----------------|-------------------|
-| **Trust** | "How much can I trust this?" | "High" / "Moderate" / "Low" with a smooth arc or bar | Overall epistemic grade mapped to a human word + a subtle percentage | Expands to show the claim-by-claim breakdown (the existing Statement Breakdown list, already built) |
-| **Evidence** | "What's backed by evidence?" | "8 of 16 statements" | How many claims were grounded vs generated | Expands to highlight only the grounded vs ungrounded claims, color-coded |
-| **Consistency** | "Did everything check out?" | "Yes, all checks agree" / "Some uncertainty" | Whether the iterative refinement converged | Expands to show iteration count and convergence status in plain language |
+- Each paragraph gets its own rounded container with subtle `bg-muted/8` background and soft border
+- Left-aligned (assistant side), with slight left margin to distinguish from user bubbles on the right
+- Rounded corners: `rounded-2xl rounded-bl-md` (mirroring iMessage's connected-bubble aesthetic where the tail is bottom-left)
+- Consecutive bubbles have tighter spacing (`gap-1.5`) to show they belong together, like iMessage groups messages from the same sender
+- A tiny timestamp or "just now" on the last bubble only (optional, subtle)
 
-### Visual Treatment
+### Staggered reveal animation
 
-- Each pillar is a compact row with: colored indicator dot → bold label → value on the right
-- Clicking a pillar smoothly expands its detail underneath (accordion-style, only one open at a time)
-- The "Trust" pillar's detail view IS the existing Statement Breakdown (reuse that code)
-- Remove the separate "Statement breakdown" toggle button from the summary line — it now lives inside the Trust pillar
-- Keep the colored grade bar at the top (it's visually strong)
-- Footer becomes just: "Checked independently · [derivation count] verifications"
+- Each bubble animates in with a stagger delay: `delay: ci * 0.15s` (150ms between bubbles)
+- Animation: fade + slight upward slide (opacity 0→1, y 6→0)
+- During streaming, only the last/current bubble is "typing" — previous ones are settled
+- This creates the sensation of receiving discrete thoughts, not a data dump
 
-### Summary Line Simplification
+### User bubble refinement
 
-Replace the current summary line with just:
-- Left: `✓ 8 of 16 backed by evidence`  
-- Right: `Details ▸` (toggles the three-pillar card)
+- Keep existing right-aligned bubble style but ensure visual symmetry with the new assistant bubbles
+- Same base font size for consistency
 
-No separate "How we checked" and eye icon toggles — one single toggle reveals the focused card.
+## Changes
 
-## Files to Change
+| File | What |
+|------|------|
+| `src/modules/oracle/pages/OraclePage.tsx` | Lines 320-339: Replace the flat `oracle-prose` div with individual bubble containers per paragraph chunk. Each chunk wrapped in a styled bubble div with staggered `motion.div`. The `oracle-prose` class moves inside each bubble so markdown rendering is preserved. |
+| `src/index.css` | Add `.oracle-bubble` class for the bubble container styling. Adjust `.oracle-prose` paragraph bottom margin to 0 (since spacing is now between bubbles, not between paragraphs within a single block). |
 
-| File | Changes |
-|------|---------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Lines ~374-458: Replace the two separate expandable sections (claims + proof) with a single expandable three-pillar trust card. Remove `expandedProofs` state — merge into a single `expandedTrust` toggle. Each pillar gets its own accordion sub-state. Reuse Statement Breakdown markup inside the Trust pillar's expansion. |
-
-## Layout Sketch
+## Layout
 
 ```text
-── collapsed ──────────────────────────────
-  ✓ 8 of 16 backed by evidence    Details ▸
-───────────────────────────────────────────
+              ┌──────────────────────────┐
+              │ Explain quantum computing │  ← user bubble (right)
+              └──────────────────────────┘
 
-── expanded ───────────────────────────────
-  ✓ 8 of 16 backed by evidence    Details ▾
+  ┌──────────────────────────────────────────┐
+  │ Traditional computers process info       │  ← bubble 1 (fades in)
+  │ using bits...                            │
+  └──────────────────────────────────────────┘
+  ┌──────────────────────────────────────────┐
+  │ Quantum computing relies on subatomic    │  ← bubble 2 (150ms later)
+  │ particles...                             │
+  └──────────────────────────────────────────┘
+  ┌──────────────────────────────────────────┐
+  │ Superposition is grounded in the laws    │  ← bubble 3 (300ms later)
+  │ of quantum mechanics...                  │
+  └──────────────────────────────────────────┘
 
-  ┌─────────────────────────────────────┐
-  │ ● Trust level          High      ▸ │  ← click to see claims
-  │ ● Evidence             8 of 16   ▸ │  ← click to see which
-  │ ● Consistency          Confirmed ▸ │  ← click for details
-  │                                     │
-  │ Checked independently · 16 checks  │
-  └─────────────────────────────────────┘
-───────────────────────────────────────────
+  ── trust bar ──────────────────────────────
+  ✓ 9 of 12 backed by evidence     Details ▸
 ```
 
