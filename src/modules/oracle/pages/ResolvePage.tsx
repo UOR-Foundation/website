@@ -44,7 +44,7 @@ const ResolvePage = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [rederived, setRederived] = useState(false);
 
-  const looksLikeJson = input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
+  const looksLikeJson = contentMode || input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
