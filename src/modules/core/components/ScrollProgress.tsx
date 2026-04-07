@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const ScrollProgress = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [sectionCount, setSectionCount] = useState(0);
   const [visible, setVisible] = useState(false);
+
+  const rafPending = useRef(false);
 
   const update = useCallback(() => {
     const sections = document.querySelectorAll("main section");
@@ -34,13 +36,22 @@ const ScrollProgress = () => {
   }, [sectionCount]);
 
   useEffect(() => {
-    window.addEventListener("scroll", update, { passive: true });
+    const onScroll = () => {
+      if (rafPending.current) return;
+      rafPending.current = true;
+      requestAnimationFrame(() => {
+        update();
+        rafPending.current = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     const observer = new MutationObserver(update);
     const main = document.querySelector("main");
     if (main) observer.observe(main, { childList: true, subtree: true });
     update();
     return () => {
-      window.removeEventListener("scroll", update);
+      window.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
   }, [update]);
