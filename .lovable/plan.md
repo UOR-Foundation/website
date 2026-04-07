@@ -1,96 +1,68 @@
 
 
-# UOR Canonical Encoder/Decoder + Resolve Page
+# Fix UOR Resolve + Add Three-Word Addressing
 
-## Overview
+## Problem
 
-Two deliverables:
-1. **WASM-anchored receipts**: Every UOR receipt generated in the Oracle X-Ray must pass through the WASM Rust ring engine to produce an algebraic signature alongside the CID.
-2. **`/resolve` page**: A clean, Google-search-style page where any UOR address (CID, derivation ID) can be pasted to decode and display the original data, all four identity forms, and WASM verification status.
+1. **Resolve is broken**: When navigating to `/resolve?cid=...`, the registry lookup fails because the receipt was stored in a different browser context (the Oracle page). The in-memory `Map` only holds entries from the current session's encode operations.
+2. **No three-word addressing**: The triword system (`src/lib/uor-triword.ts`) already exists with 256^3 = 16.7M unique addresses, but it's not integrated into the Resolve page or the receipt registry.
 
-## Current State
+## Solution
 
-- Receipts are generated via `singleProofHash()` (URDNA2015 → SHA-256 → CID/Braille/IPv6) — pure TypeScript. The WASM ring engine (`bridge.classifyByte`, `bridge.factorize`, `bridge.verifyCriticalIdentity`) is used in the X-Ray *display* but not embedded in the receipt itself.
-- No `/resolve` route exists. Receipt badges are hover-only tooltips with no navigation.
-- No shared receipt registry exists for cross-page lookup.
+### 1. Add triword to the receipt registry
 
-## Plan
+**File: `src/modules/oracle/lib/receipt-registry.ts`**
 
-### 1. Receipt Registry Module
+- Add `triword` field to `EnrichedReceipt` (computed via `canonicalToTriword(cid)`)
+- Index entries by triword in addition to CID and derivation ID
+- Export a `lookupByTriword` function that uses `triwordToPrefix` to find matches
 
-**New file: `src/modules/oracle/lib/receipt-registry.ts`**
+### 2. Fix resolve to work with any address format
 
-A module-level `Map<string, { source: unknown; receipt: EnrichedReceipt }>` that stores each receipt's original JSON-LD object keyed by CID. This allows the Resolve page to look up and re-derive any receipt.
+**File: `src/modules/oracle/pages/ResolvePage.tsx`**
 
-```typescript
-interface EnrichedReceipt {
-  cid: string;
-  derivationId: string;
-  glyph: string;
-  ipv6: string;
-  nquads: string;
-  ringByte: number;
-  ringPartition: string;
-  ringFactors: number[];
-  ringCriticalIdentity: boolean;
-  wasmEngine: string | null; // e.g. "uor-foundation v0.1.0" or null if TS fallback
-}
-```
+When resolving, detect the input format:
+- If it looks like `word.word.word` → treat as triword, look up via triword index in registry. If not found, use `triwordToPrefix` to show the decoded bytes.
+- If it starts with `b` (CID) or `urn:uor:` (derivation ID) → existing registry lookup
+- If not found in registry for any format → instead of just switching to Encode mode, offer to **re-encode from pasted JSON** while showing what the address decodes to (triword breakdown, hash prefix)
 
-### 2. WASM-Anchor Receipt Generation
+### 3. Add triword as a fifth identity form in results
 
-**File: `OraclePage.tsx`** — Update the async receipt generation block (~lines 318-379):
+**File: `src/modules/oracle/pages/ResolvePage.tsx`**
 
-- After each `singleProofHash()` call, take `hashBytes[0]` and run:
-  - `bridge.classifyByte(byte)` → partition
-  - `bridge.factorize(byte)` → prime factors
-  - `bridge.verifyCriticalIdentity(byte)` → boolean
-  - `bridge.engineType()` → "wasm" or "typescript"
-  - `bridge.crateVersion()` → version string
-- Extend `UorReceipt` to include `ringByte`, `ringPartition`, `ringFactors`, `ringVerified`, `engine`.
-- Store source object + enriched receipt in the registry.
+In the Identity card, add a "Triword" row showing the formatted three-word address (e.g., "Meadow · Steep · Keep") with its breakdown (Observer / Observable / Context dimensions).
 
-### 3. Clickable Receipt Badges
+### 4. Support triword input in the search bar
 
-**File: `OraclePage.tsx`** — Update `ReceiptBadge` component:
+**File: `src/modules/oracle/pages/ResolvePage.tsx`**
 
-- Import `useNavigate` from react-router-dom.
-- On click, navigate to `/resolve?cid={cid}`.
-- Add pointer cursor and subtle hover glow.
+- Update placeholder to: `"Paste a CID, derivation ID, or triword (e.g. meadow.steep.keep)…"`
+- Add a third mode tab: **Resolve** | **Encode** | remains two tabs but Resolve accepts all three formats
+- When a triword is entered, show the triality breakdown (Observer / Observable / Context) alongside results
 
-### 4. Resolve Page
+### 5. Make receipt badges show triword on hover
 
-**New file: `src/modules/oracle/pages/ResolvePage.tsx`**
+**File: `src/modules/oracle/pages/OraclePage.tsx`**
 
-Layout (dark theme, matching Oracle):
-
-- **Empty state**: Centered search bar with placeholder "Paste a CID or derivation ID…", UOR glyph above, subtle tagline below.
-- **On submit**: Look up CID in the registry. If found, display:
-  - **Original Data**: Pretty-printed JSON-LD of the source object.
-  - **Identity**: All four forms (CID, derivation ID, Braille glyph, IPv6).
-  - **WASM Verification**: Ring byte, partition, factors, critical identity, engine version.
-- **If not found**: Allow the user to paste raw JSON and encode it live — run `singleProofHash()` + WASM ring on the input, display all identity forms. This makes the page a universal encoder/decoder.
-- **Re-derive button**: Always re-computes from the source object to prove determinism (same input → same output).
-
-### 5. Route Registration
-
-**File: `App.tsx`** — Add:
-```
-const ResolvePage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
-<Route path="/resolve" element={<ResolvePage />} />
-```
-
-### 6. Minimal CSS
-
-**File: `index.css`** — Add `.resolve-search-input` styling (large centered input, dark glass bg) and `.resolve-identity-card` for the result panels.
+Update `ReceiptBadge` tooltip to show the triword alongside the derivation ID, and navigate using the triword as the URL param: `/resolve?w=meadow.steep.keep`
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/lib/receipt-registry.ts` | New — shared receipt store |
-| `src/modules/oracle/pages/OraclePage.tsx` | Enrich receipts with WASM ring data, store in registry, make badges clickable |
-| `src/modules/oracle/pages/ResolvePage.tsx` | New — the resolve/encode/decode page |
-| `src/App.tsx` | Add `/resolve` route |
-| `src/index.css` | Resolve page styles |
+| `src/modules/oracle/lib/receipt-registry.ts` | Add `triword` to `EnrichedReceipt`, index by triword, export `lookupByTriword` |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Accept triword input, show triword in Identity card with breakdown, fix resolve flow for missing entries |
+| `src/modules/oracle/pages/OraclePage.tsx` | Show triword in receipt badges, use triword in navigation URL |
+
+## Layout Change (Identity Card)
+
+```text
+  IDENTITY
+  CID         bafy2bzace...
+  Derivation  urn:uor:derivation:sha256:a3f...
+  Triword     Meadow · Steep · Keep
+              Observer: Meadow | Observable: Steep | Context: Keep
+  Glyph       ⠣⠺⠁⠎...
+  IPv6        fd00:0075:6f72:a3f0:...
+```
 
