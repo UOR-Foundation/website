@@ -31,6 +31,7 @@ const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUo
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
 const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
+const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 
 const queryClient = new QueryClient({
@@ -65,6 +66,7 @@ const App = () => {
               <Route path="/donate" element={<DonatePage />} />
               <Route path="/oracle" element={<OraclePage />} />
               <Route path="/resolve" element={<ResolvePage />} />
+              <Route path="/uns" element={<UnsExplainer />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />

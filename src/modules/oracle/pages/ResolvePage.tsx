@@ -10,7 +10,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw } from "lucide-react";
 import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
-import { lookupReceipt, computeAndRegister, type EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { encode, decode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { toast } from "sonner";
 
 interface Result {
@@ -61,7 +61,7 @@ const ResolvePage = () => {
     if (!trimmed) return;
     setLoading(true); setResult(null); setRederived(false);
     try {
-      const entry = lookupReceipt(trimmed);
+      const entry = lookup(trimmed);
       if (entry) {
         setResult({ source: entry.source, receipt: entry.receipt });
       } else {
@@ -75,7 +75,7 @@ const ResolvePage = () => {
     setLoading(true); setResult(null); setRederived(false);
     try {
       const parsed = JSON.parse(jsonStr);
-      const receipt = await computeAndRegister(parsed);
+      const receipt = await encode(parsed);
       setResult({ source: parsed, receipt });
       setInput(receipt.triword);
     } catch { toast.error("Invalid JSON."); }
@@ -91,7 +91,7 @@ const ResolvePage = () => {
     if (!result?.source) return;
     setLoading(true);
     try {
-      const receipt = await computeAndRegister(result.source);
+      const receipt = await encode(result.source);
       setRederived(receipt.cid === result.receipt.cid);
       toast.success("Deterministic ✓ — identical address.");
     } catch { toast.error("Re-derivation failed."); }

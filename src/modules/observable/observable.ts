@@ -9,7 +9,7 @@
  *   - supabase client for persistence to uor_observables table
  */
 
-import { singleProofHash } from "@/lib/uor-canonical";
+import { encode } from "@/lib/uor-codec";
 import { supabase } from "@/integrations/supabase/client";
 import { requireAuth } from "@/lib/supabase-auth-guard";
 
@@ -40,8 +40,8 @@ export async function recordObservable(
 ): Promise<Observable> {
   const timestamp = new Date().toISOString();
 
-  // Content-addressed observable IRI via URDNA2015 Single Proof Hash
-  const proof = await singleProofHash({
+  // Content-addressed observable IRI via universal codec (WASM-anchored)
+  const enriched = await encode({
     "@context": { observable: "https://uor.foundation/observable/" },
     "@type": "observable:Observable",
     "observable:value": String(value),
@@ -50,7 +50,7 @@ export async function recordObservable(
     "observable:stratum": String(stratum),
     "observable:timestamp": timestamp,
   });
-  const observableIri = `urn:uor:observable:${proof.cid.slice(0, 24)}`;
+  const observableIri = `urn:uor:observable:${enriched.cid.slice(0, 24)}`;
 
   const observable: Observable = {
     "@type": "observable:Observable",
