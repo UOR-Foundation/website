@@ -29,7 +29,8 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, scaffoldFragment } = await req.json();
+    const { messages, scaffoldFragment, temperature: reqTemp } = await req.json();
+    const temperature = typeof reqTemp === "number" && reqTemp >= 0 && reqTemp <= 1 ? reqTemp : 0.4;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
