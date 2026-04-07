@@ -516,10 +516,6 @@ const OraclePage = () => {
                         <AnimatePresence>
                           {xrayOpen.has(i) && trustMap[i] && (() => {
                             const t = trustMap[i];
-                            const curvPct = Math.min(t.curvature * 100, 100);
-                            const curvLabel = curvPct < 20 ? "Closely aligned" : curvPct < 50 ? "Some drift" : "Significant drift";
-                            const curvColor = curvPct < 20 ? "text-emerald-400" : curvPct < 50 ? "text-amber-400" : "text-red-400";
-
                             const compositeRing = t.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
                             const partition = bridge.classifyByte(compositeRing);
                             const popcount = bridge.bytePopcount(compositeRing);
@@ -529,18 +525,22 @@ const OraclePage = () => {
                             const backedCount = t.claims.filter(c => c.grade <= "B").length;
                             const r = t.receipts ?? {};
 
+                            // Blind spots: concepts in the response the user never asked about
+                            const blindSpots = t.responseText && t.userQuery
+                              ? extractBlindSpots(t.userQuery, t.responseText, t.termMap)
+                              : [];
+
                             /** Compact CID receipt badge */
-                            const ReceiptBadge = ({ receiptKey, label }: { receiptKey: string; label?: string }) => {
+                            const ReceiptBadge = ({ receiptKey }: { receiptKey: string }) => {
                               const receipt = r[receiptKey];
                               if (!receipt) return null;
-                              const shortCid = receipt.cid.slice(0, 12) + "…" + receipt.cid.slice(-4);
+                              const shortCid = receipt.cid.slice(0, 8) + "…";
                               return (
                                 <span
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono bg-primary/8 text-primary/60 border border-primary/12 hover:bg-primary/15 hover:text-primary/80 transition-colors cursor-default select-all"
-                                  title={`UOR Receipt: ${receipt.derivationId}\nCID: ${receipt.cid}`}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono bg-primary/8 text-primary/50 border border-primary/10 hover:bg-primary/15 hover:text-primary/70 transition-colors cursor-default"
+                                  title={`UOR Derivation: ${receipt.derivationId}\nCID: ${receipt.cid}`}
                                 >
-                                  <Link2 className="w-3 h-3 shrink-0" />
-                                  {label ? <span className="font-sans text-muted-foreground/50 mr-0.5">{label}</span> : null}
+                                  <Link2 className="w-2.5 h-2.5 shrink-0" />
                                   {shortCid}
                                 </span>
                               );
@@ -552,179 +552,141 @@ const OraclePage = () => {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0, filter: "blur(4px)" }}
                                 transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-                                className="oracle-xray-panel relative z-10 space-y-6"
+                                className="oracle-xray-panel relative z-10 space-y-5"
                               >
-                                {/* ── Understanding ── */}
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.08, duration: 0.35 }}
-                                  className="oracle-bubble"
-                                >
-                                  <div className="flex items-center justify-between mb-3">
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Understanding</p>
-                                    <ReceiptBadge receiptKey="scaffold" />
-                                  </div>
-                                  <p className="text-base text-foreground/70 mb-3">How the engine interpreted your question:</p>
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                    {t.constraints.map((c, ci) => (
-                                      <span key={ci} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${
-                                        c.type === "factual" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-                                        c.type === "logical" ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                                        c.type === "causal" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                      }`}>
-                                        {c.description}
-                                      </span>
-                                    ))}
-                                    {t.constraints.length === 0 && <span className="text-sm text-muted-foreground/40">General knowledge query</span>}
-                                  </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {t.termMap.map((tm, ti) => (
-                                      <span key={ti} className="px-2.5 py-1 rounded-lg text-sm bg-muted/10 text-foreground/50 border border-border/15">
-                                        {tm.term}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </motion.div>
+                                {/* ── 1. What You Didn't Ask ── */}
+                                {blindSpots.length > 0 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.06, duration: 0.35 }}
+                                    className="oracle-bubble"
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">What you didn't ask</p>
+                                      <ReceiptBadge receiptKey="scaffold" />
+                                    </div>
+                                    <p className="text-base text-foreground/60 mb-4">
+                                      Your question implicitly depends on concepts you never mentioned:
+                                    </p>
+                                    <div className="space-y-3">
+                                      {blindSpots.map((spot, si) => (
+                                        <motion.div
+                                          key={si}
+                                          initial={{ opacity: 0, x: -8 }}
+                                          animate={{ opacity: 1, x: 0 }}
+                                          transition={{ delay: 0.15 + si * 0.1, duration: 0.3 }}
+                                          className="flex items-start gap-3 group/spot"
+                                        >
+                                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-2.5 shrink-0" />
+                                          <div className="flex-1 min-w-0">
+                                            <span className="text-base font-medium text-foreground/90">{spot.concept}</span>
+                                            <span className="text-base text-foreground/50 ml-1.5">— {spot.why}</span>
+                                          </div>
+                                        </motion.div>
+                                      ))}
+                                    </div>
+                                  </motion.div>
+                                )}
 
-                                {/* ── Evidence ── */}
+                                {/* ── 2. Trust Map ── */}
                                 <motion.div
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.16, duration: 0.35 }}
+                                  transition={{ delay: 0.18, duration: 0.35 }}
                                   className="oracle-bubble"
                                 >
-                                  <div className="flex items-center justify-between mb-3">
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Evidence</p>
-                                    <span className="text-sm text-muted-foreground/40">{backedCount} of {t.claims.length} backed</span>
+                                  <div className="flex items-center justify-between mb-4">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Trust map</p>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-foreground/50">
+                                        {backedCount} of {t.claims.length} backed
+                                      </span>
+                                      <span className={`text-sm font-bold ${GRADE_COLORS[t.grade].text}`}>
+                                        {t.grade}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+
+                                  {/* The actual response text, re-rendered with trust borders */}
+                                  <div className="space-y-1">
                                     {t.claims.map((claim, ci) => {
                                       const gc = GRADE_COLORS[claim.grade];
                                       const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
-                                      const claimReceipt = r[`claim-${ci}`];
                                       return (
-                                        <div
+                                        <motion.div
                                           key={ci}
-                                          className={`rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} group/claim`}
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          transition={{ delay: 0.25 + ci * 0.04, duration: 0.25 }}
+                                          className={`oracle-trust-sentence oracle-trust-${claim.grade} rounded-r-lg pl-3.5 pr-3 py-2 cursor-pointer group/sent`}
+                                          onClick={() => window.open(searchUrl, "_blank")}
+                                          title="Click to verify externally"
                                         >
-                                          <div className="flex items-start gap-3">
-                                            <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
+                                          <div className="flex items-start gap-2.5">
                                             <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
-                                            <a
-                                              href={searchUrl}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="shrink-0 mt-1.5 text-muted-foreground/20 hover:text-muted-foreground/60 transition-colors"
-                                              title="Verify externally"
-                                            >
-                                              <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
+                                            <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                              <span className={`text-xs font-semibold ${gc.text} opacity-60`}>
+                                                {GRADE_LABELS[claim.grade]}
+                                              </span>
+                                              <ExternalLink className="w-3 h-3 text-muted-foreground/20 group-hover/sent:text-muted-foreground/50 transition-colors" />
+                                            </div>
                                           </div>
-                                          {claimReceipt && (
-                                            <div className="mt-1.5 ml-8">
+                                          {r[`claim-${ci}`] && (
+                                            <div className="mt-1">
                                               <ReceiptBadge receiptKey={`claim-${ci}`} />
                                             </div>
                                           )}
-                                        </div>
+                                        </motion.div>
                                       );
                                     })}
                                   </div>
                                 </motion.div>
 
-                                {/* ── Alignment + Reasoning ── */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                  {/* Alignment */}
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.24, duration: 0.35 }}
-                                    className="oracle-bubble"
-                                  >
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Alignment</p>
-                                    <p className="text-base text-foreground/70 mb-3">How closely the answer followed your question.</p>
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <div className="oracle-xray-gauge flex-1 h-2.5 rounded-full overflow-hidden relative">
-                                        <motion.div
-                                          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-foreground border-2 border-background shadow-lg z-10"
-                                          initial={{ left: "0%" }}
-                                          animate={{ left: `${curvPct}%` }}
-                                          transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-                                          style={{ marginLeft: "-7px" }}
-                                        />
-                                      </div>
-                                    </div>
-                                    <p className={`text-base font-medium ${curvColor}`}>{curvLabel}</p>
-                                  </motion.div>
-
-                                  {/* Reasoning */}
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.32, duration: 0.35 }}
-                                    className="oracle-bubble"
-                                  >
-                                    <div className="flex items-center justify-between mb-3">
-                                      <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Reasoning</p>
-                                      <ReceiptBadge receiptKey="proof" />
-                                    </div>
-                                    <div className="space-y-2.5">
-                                      {[
-                                        { label: "Extracted constraints", value: `${t.proof?.constraintsCount ?? 0}`, color: "bg-blue-400" },
-                                        { label: "Claims generated", value: `${t.claims.length}`, color: "bg-purple-400" },
-                                        { label: "Verification", value: t.converged ? "Converged" : "Open", color: t.converged ? "bg-emerald-400" : "bg-amber-400" },
-                                      ].map((step, si) => (
-                                        <div key={si} className="flex items-center gap-3">
-                                          <div className={`w-2 h-2 rounded-full ${step.color} shrink-0`} />
-                                          <span className="text-base text-foreground/70 flex-1">{step.label}</span>
-                                          <span className="text-base text-foreground/50 font-medium">{step.value}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    {t.iterations > 1 && (
-                                      <p className="text-sm text-primary/60 mt-3">
-                                        Refined {t.iterations - 1}× to improve quality
-                                      </p>
-                                    )}
-                                  </motion.div>
-                                </div>
-
-                                {/* ── Signature ── */}
+                                {/* ── 3. Proof Chain ── */}
                                 <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
+                                  initial={{ opacity: 0, y: 8 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.4, duration: 0.35 }}
+                                  transition={{ delay: 0.35, duration: 0.3 }}
                                   className="oracle-bubble"
                                 >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Signature</p>
-                                    <ReceiptBadge receiptKey="signature" />
-                                  </div>
-                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the WASM ring engine.</p>
-                                  <div className="flex flex-wrap items-center gap-3 text-base">
-                                    <span className="px-3 py-1.5 rounded-lg bg-primary/8 text-primary/80 border border-primary/12 font-mono">
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-foreground/60">
+                                    <span className="text-foreground/40">Your question</span>
+                                    <span className="text-muted-foreground/30">→</span>
+                                    <span
+                                      className="cursor-default"
+                                      title={t.constraints.map(c => c.description).join(", ")}
+                                    >
+                                      {t.proof?.constraintsCount ?? 0} constraints
+                                    </span>
+                                    <span className="text-muted-foreground/30">→</span>
+                                    <span>{t.claims.length} claims verified</span>
+                                    <span className="text-muted-foreground/30">→</span>
+                                    <span className={t.converged ? "text-emerald-400/70" : "text-amber-400/70"}>
+                                      {t.converged ? "converged ✓" : "open"}
+                                    </span>
+                                    <span className="text-muted-foreground/30">→</span>
+                                    <span className="font-mono text-primary/60">
                                       0x{compositeRing.toString(16).padStart(2, "0")}
                                     </span>
-                                    <span className="text-foreground/50">{partition}</span>
-                                    <span className="text-muted-foreground/30">·</span>
-                                    <span className="text-foreground/50">weight {popcount}</span>
+                                    <span className="text-foreground/40">{partition}</span>
                                     {factors.length > 0 && (
                                       <>
                                         <span className="text-muted-foreground/30">·</span>
-                                        <span className="text-foreground/50">{factors.join(" × ")}</span>
+                                        <span className="text-foreground/40">{factors.join(" × ")}</span>
                                       </>
                                     )}
-                                    <span className="text-muted-foreground/30">·</span>
-                                    <span className={critHolds ? "text-emerald-400/70" : "text-amber-400/70"}>
-                                      {critHolds ? "verified ✓" : "unverified"}
-                                    </span>
+                                    {t.iterations > 1 && (
+                                      <>
+                                        <span className="text-muted-foreground/30">·</span>
+                                        <span className="text-primary/50">refined {t.iterations - 1}×</span>
+                                      </>
+                                    )}
                                   </div>
-                                  {r["signature"] && (
-                                    <p className="text-xs text-muted-foreground/30 mt-3 font-mono break-all">
-                                      derivation: {r["signature"].derivationId}
-                                    </p>
-                                  )}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <ReceiptBadge receiptKey="proof" />
+                                    <ReceiptBadge receiptKey="signature" />
+                                  </div>
                                 </motion.div>
                               </motion.div>
                             );
