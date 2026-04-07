@@ -319,24 +319,29 @@ const OraclePage = () => {
                     </div>
                   ) : (
                     <div
-                      className="max-w-none"
+                      className="flex flex-col gap-1.5 max-w-[88%]"
                       ref={i === messages.length - 1 && isStreaming ? streamMsgRef : undefined}
                     >
-                      <div className="oracle-prose">
-                        {(() => {
-                          const chunks = msg.content.split(/\n\n+/).filter(Boolean);
-                          return chunks.map((chunk, ci) => (
-                            <motion.div
-                              key={`${i}-${ci}-${chunk.slice(0, 20)}`}
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-                            >
+                      {(() => {
+                        const chunks = msg.content.split(/\n\n+/).filter(Boolean);
+                        return chunks.map((chunk, ci) => (
+                          <motion.div
+                            key={`${i}-${ci}-${chunk.slice(0, 20)}`}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.28,
+                              delay: i < messages.length - 1 ? 0 : ci * 0.15,
+                              ease: [0.25, 0.1, 0.25, 1],
+                            }}
+                            className="oracle-bubble"
+                          >
+                            <div className="oracle-prose">
                               <ReactMarkdown>{chunk}</ReactMarkdown>
-                            </motion.div>
-                          ));
-                        })()}
-                      </div>
+                            </div>
+                          </motion.div>
+                        ));
+                      })()}
 
                       {/* ── Trust bar + controls ── */}
                       {trustMap[i] && (
