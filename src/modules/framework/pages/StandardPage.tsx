@@ -179,13 +179,8 @@ const Standard = () => {
               </div>
             ))}
           </div>
-                <span className="inline-flex items-center gap-1.5 mt-4 text-fluid-label font-body font-medium text-primary/70 group-hover:text-primary transition-colors">
-                  View docs
-                  <ExternalLink size={13} className="opacity-60" />
-                </span>
-              </a>
-            ))}
-          </div>
+        </div>
+      </section>
         </div>
       </section>
 
