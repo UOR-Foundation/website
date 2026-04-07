@@ -56,13 +56,6 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/adamdedelva/",
   },
   {
-    name: "Mateusz Tobola",
-    role: "PM @ Stealth AI Startup",
-    description: "Product management and AI strategy.",
-    image: "/images/profiles/mateusz-tobola.jpg",
-    link: "https://de.linkedin.com/in/mateusz-tobola-ai/en",
-  },
-  {
     name: "Matt McKibbin",
     role: "Founder @ DecentraNet",
     description: "Decentralized networks and protocol engineering.",
