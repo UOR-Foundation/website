@@ -1,9 +1,9 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, BookOpen, Layers, Rocket, Globe, ShieldCheck, Bot, Microscope } from "lucide-react";
+import { ExternalLink, BookOpen, Layers, Rocket, Globe, ShieldCheck, Bot, Microscope, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
 import { frameworkLayers } from "@/data/framework-layers";
-import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL } from "@/data/external-links";
+import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, CRATE_URL, CRATE_DOCS_URL } from "@/data/external-links";
 
 const appIconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
 
@@ -64,7 +64,31 @@ const Standard = () => {
             >
               View on GitHub
             </a>
+            <a
+              href={CRATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-outline inline-flex items-center gap-2"
+            >
+              <Package size={14} />
+              Rust Crate
+              <ExternalLink size={14} />
+            </a>
           </div>
+          <p
+            className="mt-4 text-fluid-label text-foreground/50 font-body animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.4s" }}
+          >
+            Source of truth:{" "}
+            <a
+              href={CRATE_DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary transition-colors"
+            >
+              docs.rs/uor-foundation
+            </a>
+          </p>
         </div>
       </section>
 
@@ -196,6 +220,15 @@ const Standard = () => {
               className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
             >
               View on GitHub
+            </a>
+            <a
+              href={CRATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-7 py-3 rounded-full font-medium text-fluid-label transition-all duration-300 ease-out border border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10 inline-flex items-center justify-center gap-2"
+            >
+              <Package size={15} />
+              Rust Crate
             </a>
           </div>
         </div>

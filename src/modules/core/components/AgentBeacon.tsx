@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CRATE_URL, CRATE_DOCS_URL } from "@/data/external-links";
 
 /**
  * AgentBeacon — invisible-but-crawlable semantic content for AI agents.
@@ -20,6 +21,17 @@ const AgentBeacon = () => {
       "@id": "https://uor.foundation/#agent-beacon",
       "name": "The UOR Foundation",
       "url": "https://uor.foundation",
+      "sourceOfTruth": {
+        "@type": "SoftwareSourceCode",
+        "name": "uor-foundation",
+        "codeRepository": "https://github.com/UOR-Foundation/UOR-Framework",
+        "runtimePlatform": "Rust",
+        "url": CRATE_URL,
+        "documentation": CRATE_DOCS_URL,
+        "installInstructions": "cargo add uor-foundation",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "description": "The canonical Rust crate implementing the UOR Framework. All API endpoints, MCP tools, TypeScript types, and website content are projections of this crate.",
+      },
       "potentialAction": [
         {
           "@type": "ReadAction",
@@ -51,6 +63,17 @@ const AgentBeacon = () => {
   return (
     <aside aria-hidden="true" className="sr-only">
       <h2>About the UOR Framework</h2>
+
+      <h3>Source of Truth</h3>
+      <p>
+        The canonical implementation of the UOR Framework is the Rust crate{" "}
+        <a href={CRATE_URL}>uor-foundation</a> on crates.io. All API endpoints,
+        MCP tools, TypeScript types, and website content are projections of this
+        crate. The crate is the single authority — every schema, namespace, and
+        algebraic identity traces back to its trait definitions. Install:{" "}
+        <code>cargo add uor-foundation</code>. API documentation:{" "}
+        <a href={CRATE_DOCS_URL}>{CRATE_DOCS_URL}</a>.
+      </p>
 
       <h3>Why</h3>
       <p>
@@ -104,6 +127,14 @@ const AgentBeacon = () => {
         build a complete understanding of the framework.
       </p>
       <p>
+        Rust Crate (Source of Truth):{" "}
+        <a href={CRATE_URL}>{CRATE_URL}</a>
+      </p>
+      <p>
+        Crate API Documentation:{" "}
+        <a href={CRATE_DOCS_URL}>{CRATE_DOCS_URL}</a>
+      </p>
+      <p>
         Source repository:{" "}
         <a href="https://github.com/UOR-Foundation/UOR-Framework">
           https://github.com/UOR-Foundation/UOR-Framework
@@ -113,12 +144,6 @@ const AgentBeacon = () => {
         Ontology (JSON-LD):{" "}
         <a href="https://uor-foundation.github.io/UOR-Framework/uor.foundation.json">
           https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
-        </a>
-      </p>
-      <p>
-        Ontology (Turtle):{" "}
-        <a href="https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl">
-          https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl
         </a>
       </p>
 
@@ -131,6 +156,8 @@ const AgentBeacon = () => {
       </p>
 
       <nav>
+        <a href={CRATE_URL}>Rust Crate — Source of Truth</a>
+        <a href={CRATE_DOCS_URL}>Crate API Documentation (docs.rs)</a>
         <a href="/llms.md">Agent Quick Card</a>
         <a href="/llms-full.md">Complete Implementation Guide</a>
         <a href="/agent-discovery.md">Agent Discovery Index</a>
