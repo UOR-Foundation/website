@@ -143,6 +143,7 @@ function extractBlindSpots(
 /* ── Page ── */
 
 const OraclePage = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
