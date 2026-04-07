@@ -72,6 +72,9 @@ const OraclePage = () => {
   const [showTypingDots, setShowTypingDots] = useState(false);
   const [wasmReady, setWasmReady] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const flowEndRef = useRef<HTMLDivElement>(null);
 
   // Controls
   const [precision, setPrecision] = useState(60);
@@ -88,15 +91,23 @@ const OraclePage = () => {
 
   // Keep newest messages visible — scroll to bottom when new content arrives during streaming
   useEffect(() => {
-    if (isStreaming && scrollRef.current) {
+    if (scrollRef.current) {
       const el = scrollRef.current;
-      // Auto-scroll only if user is near the bottom (within 120px)
-      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
       if (nearBottom) {
-        el.scrollTop = el.scrollHeight;
+        flowEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
       }
     }
   }, [messages, isStreaming]);
+
+  // Fire queued message after stream completes
+  useEffect(() => {
+    if (!isStreaming && queuedMessage) {
+      const msg = queuedMessage;
+      setQueuedMessage(null);
+      requestAnimationFrame(() => send(msg));
+    }
+  }, [isStreaming, queuedMessage]);
 
   const toggle = (set: Set<number>, idx: number) => {
     const s = new Set(set);
@@ -107,7 +118,12 @@ const OraclePage = () => {
   /* ── Send ── */
 
   const send = useCallback(async (text: string) => {
-    if (!text.trim() || isStreaming) return;
+    if (!text.trim()) return;
+    if (isStreaming) {
+      setQueuedMessage(text.trim());
+      setInput("");
+      return;
+    }
     const userMsg: Msg = { role: "user", content: text.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
