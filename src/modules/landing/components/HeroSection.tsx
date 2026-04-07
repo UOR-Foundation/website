@@ -14,7 +14,7 @@ const HeroSection = () => {
       {/* Mobile: fill the viewport, golden-ratio vertical distribution */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
         {/* Top spacer — matches the orb→text gap via same flex ratio */}
-        <div className="flex-[1] min-h-[5.5rem]" />
+        <div className="flex-[1.35] min-h-[5.5rem]" />
 
         {/* Galaxy orb */}
         <div
