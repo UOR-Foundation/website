@@ -1,56 +1,72 @@
 
 
-# Smart Text Selection — Contextual Actions on Any Word, Sentence, or Paragraph
+# Natural, Human-Like Streaming Experience
 
-## Concept
+## Problems Identified
 
-When you select any text inside an Oracle response, a floating action toolbar appears near the selection. It offers instant follow-up actions that inject a new prompt based on your selection. No double-click heuristics needed — the browser's native text selection is the trigger, which is the most natural and familiar gesture.
+1. **Scroll-to-bottom on every token**: Line 83-85 scrolls to `scrollHeight` every time `messages` changes — which is every single token. The user sees the bottom of the response and must scroll back up to read from the top.
 
-## How It Works
+2. **Raw token bursts**: Every SSE chunk instantly appends to state, causing jerky character-by-character jumps. Real humans don't type at machine speed with zero variance.
 
-1. User highlights any text (word, phrase, sentence, paragraph) inside an assistant response
-2. A compact floating toolbar appears just above the selection
-3. Four action buttons, each sends a contextual follow-up prompt:
+## Solution
 
-| Action | Icon | What it does |
-|--------|------|-------------|
-| **Zoom In** | `ZoomIn` | "Explain this in more detail: {selection}" |
-| **Zoom Out** | `ZoomOut` | "Explain this more simply, in broader context: {selection}" |
-| **Clarify** | `HelpCircle` | "Clarify what this means: {selection}" |
-| **Verify** | `ShieldCheck` | "What are the sources and evidence for: {selection}" |
+### 1. Smart Scroll — Keep the top visible during streaming
 
-4. Clicking any action dismisses the toolbar and sends the prompt as if the user typed it
+Replace the blanket scroll-to-bottom with a "scroll to the start of the new message, then stay put" strategy:
 
-## UI Design
+- When a new assistant message **first appears**, scroll so the **top of that message** is visible (not the bottom)
+- While streaming continues, do **not** auto-scroll at all — let the user read from the top down naturally
+- Only auto-scroll to bottom when the **user sends a new message** (so they see their own bubble appear)
+- If the user manually scrolls down during streaming, respect that and don't fight it
 
-- Floating pill-shaped bar with a subtle backdrop blur and shadow
-- Appears via `framer-motion` fade+slide animation (from below, 150ms)
-- Positioned above the selection using `window.getSelection().getRangeAt(0).getBoundingClientRect()`
-- Dismisses on click outside, scroll, or Escape key
-- Icons only with tooltips on hover (keeps it minimal and clean)
+Implementation: track a `streamStartRef` that marks the top of the current assistant response. On first token, `scrollIntoView({ behavior: 'smooth', block: 'start' })`. Then stop scrolling until streaming ends.
 
-## Implementation
+### 2. Token Buffer — Smooth, human-paced text reveal
 
-### New component: `src/modules/oracle/components/SelectionToolbar.tsx`
+Add a small buffer layer between raw SSE tokens and the rendered text:
 
-- Listens for `mouseup` events on the prose container
-- Reads `window.getSelection()`, checks if text is selected and within an assistant message
-- Computes position from the selection range bounding rect
-- Renders a portal with 4 icon buttons
-- Calls `onAction(type, selectedText)` callback which the parent uses to send a new prompt
-- Cleans up on unmount (event listeners)
+- Accumulate incoming tokens in a queue
+- Flush them to the displayed text using `requestAnimationFrame` at a natural pace (~30-50ms per token batch)
+- Add subtle variance to the flush interval (±15ms randomized) so it doesn't feel metronomic
+- Batch small tokens (single characters, punctuation) together to avoid single-char flicker
+- Brief natural pause (~200-400ms) after sentence-ending punctuation (`. ! ?`) to mimic human "thinking between thoughts"
 
-### Changes to `OraclePage.tsx`
+This creates the effect of someone typing thoughtfully rather than a machine dumping bytes.
 
-- Import `SelectionToolbar`
-- Wrap assistant message content in a ref-tracked container
-- Pass the `send` function as the action handler
-- Add state for selection toolbar visibility and position
+### 3. Typing indicator
 
-### Files to change
+Show a subtle "thinking" indicator (three soft dots) before the first token arrives, then fade it out as text begins. This mirrors the WhatsApp/iMessage "typing..." bubble.
 
-| File | Change |
-|------|--------|
-| `src/modules/oracle/components/SelectionToolbar.tsx` | New component — floating contextual toolbar |
-| `src/modules/oracle/pages/OraclePage.tsx` | Integrate toolbar with message rendering, wire actions to `send()` |
+## Files to Change
+
+### `src/modules/oracle/lib/stream-oracle.ts`
+- No changes needed — the raw stream is fine. Buffering happens on the UI side.
+
+### `src/modules/oracle/lib/token-buffer.ts` (new)
+- A small class `TokenBuffer` that:
+  - Accepts raw tokens via `push(token)`
+  - Internally queues them
+  - Calls a `onFlush(accumulatedText)` callback on a natural cadence using `requestAnimationFrame`
+  - Detects sentence boundaries and inserts micro-pauses
+  - Has `start()` / `stop()` / `flush()` lifecycle methods
+
+### `src/modules/oracle/pages/OraclePage.tsx`
+- **Remove** the `useEffect` that scrolls on every `messages` change (line 83-85)
+- **Add** a ref for the streaming message element (`streamMsgRef`)
+- On first assistant token: scroll `streamMsgRef` into view at `block: 'start'`, then stop auto-scrolling
+- On user send: scroll to bottom so they see their own message
+- **Integrate `TokenBuffer`**: in `onDelta`, push tokens to buffer instead of directly to state. Buffer's `onFlush` updates the displayed text.
+- **Add typing indicator**: show animated dots between user message and first token arrival
+
+### `src/index.css`
+- Add a simple `.typing-dots` animation (three dots with staggered opacity pulse)
+
+## Summary of UX Principles Applied
+
+| Problem | Solution | Inspiration |
+|---------|----------|-------------|
+| Jumps to bottom | Scroll to message top, then freeze | Reading a letter |
+| Robotic pace | Buffered flush with variance | Human typing on WhatsApp |
+| No thinking gap | Typing dots before first token | iMessage "..." bubble |
+| Uniform speed | Micro-pauses after sentences | Natural speech cadence |
 
