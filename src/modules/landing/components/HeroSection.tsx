@@ -11,19 +11,19 @@ const HeroSection = () => {
       {/* Living prime number field. desktop only */}
       {!isMobile && <PrimeGrid />}
 
-      {/* Mobile: stacked layout with galaxy circle + headline + CTA */}
+      {/* Mobile: stacked layout — tighter, more cinematic */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
-        <div className="flex-[1]" />
+        <div className="flex-[0.8]" />
 
-        {/* Galaxy orb. circular */}
+        {/* Galaxy orb */}
         <div
-          className="w-[min(75vw,320px)] h-[min(75vw,320px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
+          className="w-[min(68vw,280px)] h-[min(68vw,280px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
         >
           <GalaxyAnimation />
         </div>
 
-        <div className="h-[clamp(2.5rem,7vw,4rem)] shrink-0" />
+        <div className="h-[clamp(1.75rem,5vw,2.5rem)] shrink-0" />
 
         <h1
           className="font-display font-bold leading-[1.15] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block"
@@ -36,24 +36,24 @@ const HeroSection = () => {
         </h1>
 
         <div
-          className="mt-[clamp(1.75rem,5vw,3rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.5rem,4vw,2.5rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
             href="/projects"
-            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[13px] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
+            className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/40 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
           >
             Explore Projects
-            <ArrowRight size={15} />
+            <ArrowRight size={14} />
           </a>
         </div>
 
-        <div className="flex-[0.3]" />
+        <div className="flex-[0.4]" />
 
-        {/* Stats bar. mobile */}
+        {/* Stats bar — crisp layout */}
         <div className="w-4/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-5 animate-fade-in-up opacity-0" style={{ animationDelay: "0.6s" }} />
         <div
-          className="w-full grid grid-cols-4 gap-2 px-4 pb-6 animate-fade-in-up opacity-0 pointer-events-none"
+          className="w-full grid grid-cols-4 gap-1 px-2 pb-6 animate-fade-in-up opacity-0 pointer-events-none"
           style={{ animationDelay: "0.65s" }}
         >
           {[
@@ -63,8 +63,8 @@ const HeroSection = () => {
             { value: "Open", label: "Governance" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display font-bold text-foreground text-[clamp(1.1rem,4.5vw,1.75rem)] leading-none">{stat.value}</p>
-              <p className="font-body text-foreground/40 text-[9px] uppercase tracking-[0.08em] mt-1.5 leading-tight">{stat.label}</p>
+              <p className="font-display font-bold text-foreground text-[clamp(1rem,4vw,1.5rem)] leading-none">{stat.value}</p>
+              <p className="font-mono text-foreground/35 text-[8px] uppercase tracking-[0.12em] mt-1.5 leading-tight">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -75,14 +75,12 @@ const HeroSection = () => {
         className="hidden md:flex absolute inset-0 items-center justify-end animate-fade-in opacity-0 pointer-events-none"
         style={{ animationDelay: "0.13s" }}
       >
-        {/* Volumetric glow. warm amber radiance from galaxy */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: "radial-gradient(ellipse 50% 50% at 75% 50%, hsla(38, 50%, 45%, 0.04), transparent 70%)",
           }}
         />
-        {/* Galactic plane. faint horizontal light band */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
