@@ -351,39 +351,48 @@ const OraclePage = () => {
                             </motion.span>
                           </div>
 
-                          {/* Inline actions */}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground/50">
+                          {/* Summary line */}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground/50 flex-wrap">
                             <button
                               onClick={() => setExpandedClaims(prev => toggle(prev, i))}
                               className="flex items-center gap-1.5 hover:text-foreground/80 transition-colors"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              {trustMap[i].claims.filter(c => c.grade <= "B").length}/{trustMap[i].claims.length} verified
+                              {trustMap[i].claims.filter(c => c.grade <= "B").length} of {trustMap[i].claims.length} statements backed by evidence
                             </button>
                             {trustMap[i].iterations > 1 && (
-                              <span className="text-primary/70">Refined {trustMap[i].iterations}×</span>
+                              <span className="text-primary/70">
+                                Answer improved {trustMap[i].iterations === 2 ? "once" : trustMap[i].iterations === 3 ? "twice" : `${trustMap[i].iterations - 1} times`}
+                              </span>
                             )}
                             <button
                               onClick={() => setExpandedProofs(prev => toggle(prev, i))}
                               className="flex items-center gap-1.5 hover:text-foreground/80 transition-colors ml-auto"
                             >
-                              <Shield className="w-3.5 h-3.5" />
-                              Proof
+                              How we checked
                               {expandedProofs.has(i) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                             </button>
                           </div>
 
-                          {/* ── Claim X-Ray ── */}
+                          {/* ── Statement Breakdown ── */}
                           <AnimatePresence>
                             {expandedClaims.has(i) && (
                               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                 <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-3 space-y-1.5 max-h-60 overflow-y-auto">
+                                  <p className="text-xs font-medium text-muted-foreground/50 mb-2">Statement breakdown</p>
                                   {trustMap[i].claims.map((claim, ci) => (
                                     <div key={ci} className={`flex items-start gap-2.5 rounded-lg p-2.5 ${GRADE_COLORS[claim.grade].bg} border ${GRADE_COLORS[claim.grade].border}`}>
-                                      <span className={`text-xs font-bold font-mono ${GRADE_COLORS[claim.grade].text} shrink-0 mt-0.5`}>{claim.grade}</span>
+                                      <span className={`text-xs font-bold shrink-0 mt-0.5 ${GRADE_COLORS[claim.grade].text}`}>
+                                        {GRADE_LABELS[claim.grade]}
+                                      </span>
                                       <div className="min-w-0">
                                         <p className="text-sm text-foreground/85 leading-relaxed">{claim.text}</p>
-                                        <p className="text-xs text-muted-foreground/50 mt-0.5">{claim.source}</p>
+                                        <p className="text-xs text-muted-foreground/50 mt-0.5">
+                                          {claim.source.startsWith("grounded") ? "Backed by evidence" :
+                                           claim.source.startsWith("scaffold") ? "Matches reasoning pattern" :
+                                           claim.source.startsWith("terms") ? "Mentions relevant terms" :
+                                           "No direct evidence"}
+                                        </p>
                                       </div>
                                     </div>
                                   ))}
@@ -392,31 +401,40 @@ const OraclePage = () => {
                             )}
                           </AnimatePresence>
 
-                          {/* ── Proof Trail ── */}
+                          {/* ── Trust Breakdown ── */}
                           <AnimatePresence>
-                            {expandedProofs.has(i) && trustMap[i].proof && (
-                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-3">
-                                  <div className="space-y-2">
-                                    {[
-                                      { label: "Parse", detail: `${trustMap[i].proof!.premisesCount} key topics identified` },
-                                      { label: "Check", detail: `${trustMap[i].claims.length} individual claims found` },
-                                      { label: "Verify", detail: `${trustMap[i].proof!.stepsCount} checks performed` },
-                                      { label: "Result", detail: `${GRADE_LABELS[trustMap[i].grade]}${trustMap[i].proof!.certified ? ", certified" : ""}` },
-                                    ].map((step, si) => (
-                                      <div key={si} className="flex items-center gap-3">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${si === 3 ? GRADE_COLORS[trustMap[i].grade].fill : "bg-primary/40"}`} />
-                                        <span className="text-sm font-medium text-foreground/70 w-14 shrink-0">{step.label}</span>
-                                        <span className="text-sm text-muted-foreground/60">{step.detail}</span>
-                                      </div>
-                                    ))}
+                            {expandedProofs.has(i) && trustMap[i].proof && (() => {
+                              const t = trustMap[i];
+                              const evidenceCount = t.claims.filter(c => c.grade <= "B").length;
+                              const confidence = t.grade <= "B" ? "High" : t.grade === "C" ? "Moderate" : "Low";
+                              const confidenceColor = t.grade <= "B" ? "bg-emerald-400" : t.grade === "C" ? "bg-amber-400" : "bg-red-400";
+                              const metrics = [
+                                { label: "Confidence", value: confidence, dot: confidenceColor },
+                                { label: "Statements checked", value: `${t.claims.length} statements analyzed`, dot: "bg-emerald-400" },
+                                { label: "Evidence found", value: `${evidenceCount} supported by evidence`, dot: evidenceCount > t.claims.length / 2 ? "bg-emerald-400" : evidenceCount > 0 ? "bg-amber-400" : "bg-red-400" },
+                                { label: "Key topics covered", value: `${t.proof!.premisesCount} of ${t.proof!.premisesCount} topics addressed`, dot: "bg-emerald-400" },
+                                { label: "Consistency", value: t.converged ? "All checks agree" : "Some uncertainty remains", dot: t.converged ? "bg-emerald-400" : "bg-amber-400" },
+                                ...(t.iterations > 1 ? [{ label: "Answer improved", value: `Yes, ${t.iterations === 2 ? "once" : t.iterations === 3 ? "twice" : `${t.iterations - 1} times`}`, dot: "bg-emerald-400" }] : [{ label: "Answer improved", value: "Not needed", dot: "bg-muted-foreground/30" }]),
+                              ];
+                              return (
+                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                  <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-3">
+                                    <div className="space-y-2.5">
+                                      {metrics.map((m, mi) => (
+                                        <div key={mi} className="flex items-center gap-3">
+                                          <div className={`w-1.5 h-1.5 rounded-full ${m.dot} shrink-0`} />
+                                          <span className="text-sm font-medium text-foreground/70 w-36 shrink-0">{m.label}</span>
+                                          <span className="text-sm text-muted-foreground/60">{m.value}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="mt-2.5 pt-2 border-t border-border/10 text-xs text-muted-foreground/30">
+                                      Every statement checked independently against your question
+                                    </div>
                                   </div>
-                                  <div className="mt-2 pt-2 border-t border-border/10 text-xs text-muted-foreground/30">
-                                    Verified automatically
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
+                                </motion.div>
+                              );
+                            })()}
                           </AnimatePresence>
                         </motion.div>
                       )}
