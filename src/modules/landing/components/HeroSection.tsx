@@ -38,7 +38,7 @@ const HeroSection = () => {
         </h1>
 
         <div
-          className="mt-[clamp(1.25rem,3vw,1.75rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0 shrink-0"
+          className="mt-[clamp(2rem,5vw,3rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0 shrink-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
