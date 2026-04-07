@@ -56,11 +56,11 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/adamdedelva/",
   },
   {
-    name: "Ryan Westerberg",
-    role: "Engineer @ Peoplevine",
-    description: "Full-stack development and system architecture.",
-    image: "/images/profiles/ryan-westerberg.jpg",
-    link: "https://www.linkedin.com/in/ryan-westerberg/",
+    name: "Mateusz Tobola",
+    role: "PM @ Stealth AI Startup",
+    description: "Product management and AI strategy.",
+    image: "/images/profiles/mateusz-tobola.jpg",
+    link: "https://de.linkedin.com/in/mateusz-tobola-ai/en",
   },
   {
     name: "Matt McKibbin",
