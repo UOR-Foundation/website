@@ -312,8 +312,8 @@ const OraclePage = () => {
                 <div key={i}>
                   {msg.role === "user" ? (
                     <div className="flex justify-end">
-                      <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-4 py-2.5">
-                        <p className="text-base text-foreground leading-relaxed">{msg.content}</p>
+                      <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-5 py-3">
+                        <p className="text-lg text-foreground leading-relaxed">{msg.content}</p>
                       </div>
                     </div>
                   ) : (
