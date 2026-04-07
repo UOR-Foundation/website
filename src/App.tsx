@@ -62,6 +62,7 @@ const App = () => {
               <Route path="/research" element={<Navigate to="/community" replace />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/donate" element={<DonatePage />} />
+              <Route path="/oracle" element={<OraclePage />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
