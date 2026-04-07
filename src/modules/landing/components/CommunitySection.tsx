@@ -23,13 +23,13 @@ const CommunitySection = () => {
           style={{ animationDelay: delay }}
         >
           <div
-            className={`${hexSize} border border-foreground/10 flex items-center justify-center`}
+            className={`${hexSize} border border-black/10 md:border-foreground/10 flex items-center justify-center`}
             style={{ clipPath: HEX_CLIP }}
           >
-            <span className="font-mono text-foreground/40 text-xl">+</span>
+            <span className="font-mono text-black/30 md:text-foreground/40 text-xl">+</span>
           </div>
-          <p className="font-display font-bold text-foreground text-sm md:text-base lg:text-lg leading-tight mt-3">150+</p>
-          <p className="font-body text-foreground/45 text-xs md:text-sm mt-0.5">contributors</p>
+          <p className="font-display font-bold text-black md:text-foreground text-sm md:text-base lg:text-lg leading-tight mt-3">150+</p>
+          <p className="font-body text-black/55 md:text-foreground/45 text-xs md:text-sm mt-0.5">contributors</p>
         </div>
       );
     }
@@ -44,7 +44,7 @@ const CommunitySection = () => {
         style={{ animationDelay: delay }}
       >
         <div
-          className={`${hexSize} group-hover:scale-105 transition-transform duration-300 ring-1 ring-foreground/8 group-hover:ring-primary/40`}
+          className={`${hexSize} group-hover:scale-105 transition-transform duration-300 ring-1 ring-black/8 md:ring-foreground/8 group-hover:ring-primary/40`}
           style={{ clipPath: HEX_CLIP }}
         >
           <img
@@ -54,10 +54,10 @@ const CommunitySection = () => {
             loading="lazy"
           />
         </div>
-        <p className="font-display font-semibold text-foreground leading-tight text-base md:text-lg lg:text-xl mt-3">
+        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[13px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
           {member.name.split(" ")[0]}
         </p>
-        <p className="font-body text-foreground/50 leading-snug mt-0.5 text-sm md:text-base">
+        <p className="font-body text-black/55 md:text-foreground/50 leading-snug mt-0.5 text-[11px] md:text-base">
           {member.role}
         </p>
       </a>
@@ -65,7 +65,7 @@ const CommunitySection = () => {
   };
 
   return (
-    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-section-dark section-depth">
+    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-white md:bg-section-dark md:section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
 
