@@ -1,13 +1,9 @@
 /**
- * Symbolic Engine — executes UOR ring operations locally.
- * Uses the existing TypeScript ring engine (same math as the Rust crate).
- * WASM upgrade path: swap imports to WASM bridge when compiled.
+ * Symbolic Engine — executes UOR ring operations via WASM (Rust crate) or TS fallback.
+ * The WASM module IS the uor-foundation crate compiled to WebAssembly.
  */
 
-import {
-  neg, bnot, succ, pred, add, sub, mul, xor, and, or,
-  verifyCriticalIdentity, classifyByte, buildTriad, bytePopcount, byteBasis,
-} from "@/lib/uor-ring";
+import * as bridge from "@/lib/wasm/uor-bridge";
 
 export interface SymbolicResult {
   expression: string;
@@ -15,7 +11,7 @@ export interface SymbolicResult {
   details: Record<string, unknown>;
   traitRef: string;
   docsUrl: string;
-  engine: "typescript" | "wasm";
+  engine: "wasm" | "typescript";
 }
 
 const TRAIT_MAP: Record<string, { trait: string; url: string }> = {
@@ -33,21 +29,20 @@ const TRAIT_MAP: Record<string, { trait: string; url: string }> = {
   classify_byte: { trait: "bridge::partition::Component", url: "https://docs.rs/uor-foundation/latest/uor_foundation/bridge/partition/" },
 };
 
-const OPS: Record<string, Function> = { neg, bnot, succ, pred, add, sub, mul, xor, and, or };
-
 export function executeExpression(expr: string): SymbolicResult | null {
   const trimmed = expr.trim();
+  const engine = bridge.engineType();
 
   // verify_critical_identity(x)
   const verifyMatch = trimmed.match(/^verify_critical_identity\((\d+)\)$/);
   if (verifyMatch) {
     const x = parseInt(verifyMatch[1]);
-    const holds = verifyCriticalIdentity(x);
+    const holds = bridge.verifyCriticalIdentity(x);
     const ref = TRAIT_MAP.verify_critical_identity;
     return {
       expression: trimmed, value: holds,
-      details: { x, neg_bnot: neg(bnot(x)), succ_x: succ(x), holds },
-      traitRef: ref.trait, docsUrl: ref.url, engine: "typescript",
+      details: { x, neg_bnot: bridge.neg(bridge.bnot(x)), succ_x: bridge.succ(x), holds },
+      traitRef: ref.trait, docsUrl: ref.url, engine,
     };
   }
 
@@ -55,71 +50,42 @@ export function executeExpression(expr: string): SymbolicResult | null {
   const classifyMatch = trimmed.match(/^classify_byte\((\d+)\)$/);
   if (classifyMatch) {
     const x = parseInt(classifyMatch[1]);
-    const result = classifyByte(x, 8);
+    const component = bridge.classifyByte(x);
+    const factors = bridge.factorize(x);
     const ref = TRAIT_MAP.classify_byte;
     return {
-      expression: trimmed, value: result.component,
-      details: { x, ...result, popcount: bytePopcount(x), basis: byteBasis(x) },
-      traitRef: ref.trait, docsUrl: ref.url, engine: "typescript",
+      expression: trimmed, value: component,
+      details: { x, component, factors: factors.join(" × "), popcount: bridge.bytePopcount(x), basis: bridge.byteBasis(x) },
+      traitRef: ref.trait, docsUrl: ref.url, engine,
     };
   }
 
-  // Recursive expression evaluation
-  const result = evalExpr(trimmed);
-  if (result !== null) {
+  // Try expression evaluation via WASM
+  const result = bridge.evaluateExpr(trimmed);
+  if (result >= 0) {
     const funcName = trimmed.match(/^(\w+)\(/)?.[1] || "unknown";
     const ref = TRAIT_MAP[funcName] || { trait: "kernel::op", url: "https://docs.rs/uor-foundation/latest/uor_foundation/kernel/op/" };
-    const partition = classifyByte(result, 8);
+    const partition = bridge.classifyByte(result);
     return {
       expression: trimmed, value: result,
       details: {
-        decimal: result, binary: result.toString(2).padStart(8, "0"), hex: "0x" + result.toString(16).padStart(2, "0"),
-        partition: partition.component, popcount: bytePopcount(result), basis: byteBasis(result),
-        criticalIdentity: { neg_bnot: neg(bnot(result)), succ: succ(result), holds: verifyCriticalIdentity(result) },
+        decimal: result,
+        binary: result.toString(2).padStart(8, "0"),
+        hex: "0x" + result.toString(16).padStart(2, "0"),
+        partition,
+        factors: bridge.factorize(result).join(" × ") || "—",
+        popcount: bridge.bytePopcount(result),
+        basis: bridge.byteBasis(result),
+        criticalIdentity: {
+          neg_bnot: bridge.neg(bridge.bnot(result)),
+          succ: bridge.succ(result),
+          holds: bridge.verifyCriticalIdentity(result),
+        },
       },
-      traitRef: ref.trait, docsUrl: ref.url, engine: "typescript",
+      traitRef: ref.trait, docsUrl: ref.url, engine,
     };
   }
 
-  return null;
-}
-
-function evalExpr(s: string): number | null {
-  const t = s.trim();
-  const numMatch = t.match(/^\d+$/);
-  if (numMatch) { const v = parseInt(t); return v >= 0 && v <= 255 ? v : null; }
-
-  const funcMatch = t.match(/^(\w+)\((.+)\)$/s);
-  if (!funcMatch) return null;
-  const [, func, argsStr] = funcMatch;
-
-  // Unary
-  if (["neg", "bnot", "succ", "pred"].includes(func)) {
-    const inner = evalExpr(argsStr);
-    if (inner === null) return null;
-    return (OPS[func] as (x: number) => number)(inner);
-  }
-
-  // Binary
-  if (["add", "sub", "mul", "xor", "and", "or"].includes(func)) {
-    const split = splitArgs(argsStr);
-    if (!split) return null;
-    const a = evalExpr(split[0]);
-    const b = evalExpr(split[1]);
-    if (a === null || b === null) return null;
-    return (OPS[func] as (a: number, b: number) => number)(a, b);
-  }
-
-  return null;
-}
-
-function splitArgs(s: string): [string, string] | null {
-  let depth = 0;
-  for (let i = 0; i < s.length; i++) {
-    if (s[i] === "(") depth++;
-    else if (s[i] === ")") depth--;
-    else if (s[i] === "," && depth === 0) return [s.slice(0, i), s.slice(i + 1)];
-  }
   return null;
 }
 

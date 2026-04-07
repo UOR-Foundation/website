@@ -3,6 +3,7 @@ import Layout from "@/modules/core/components/Layout";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { executeExpression, extractWasmBlocks, type SymbolicResult } from "@/modules/oracle/lib/symbolic-engine";
+import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 import { ArrowRight, Copy, Check, Cpu, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,7 +23,9 @@ const OraclePage = () => {
   const [symbolicResults, setSymbolicResults] = useState<SymbolicResult[]>([]);
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [wasmReady, setWasmReady] = useState(false);
 
+  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, symbolicResults]);
@@ -166,8 +169,10 @@ const OraclePage = () => {
             <div className="flex flex-col gap-4">
               <div className="rounded-xl border border-border/40 bg-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Symbolic Engine</p>
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${wasmReady ? "bg-emerald-500" : "bg-amber-500"}`} />
+                  <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                    {wasmReady ? `WASM Engine v${crateVersion() || "0.1.5"}` : "Loading WASM..."}
+                  </p>
                 </div>
                 {symbolicResults.length === 0 ? (
                   <p className="text-xs text-muted-foreground/60 font-mono">Computations appear here when the Oracle references ring operations.</p>
