@@ -296,27 +296,7 @@ const OraclePage = () => {
           <div className="oracle-fade-top" />
         )}
         <div ref={scrollRef} className="h-full overflow-y-auto oracle-scroll-area">
-          <div className="flex flex-col justify-end min-h-full">
-            {/* Empty state — centered presets */}
-            {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center flex-1 text-center px-6 py-10">
-              <p className="text-foreground font-display font-semibold text-xl mb-2">Ask anything</p>
-              <p className="text-muted-foreground/60 text-sm mb-8 max-w-sm leading-relaxed">
-                Every claim verified. Every answer graded.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 max-w-lg">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => send(p.prompt)}
-                    className="px-4 py-2.5 rounded-full border border-border/40 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="flex flex-col min-h-full">
 
           {/* Messages */}
           {messages.length > 0 && (
@@ -532,37 +512,6 @@ const OraclePage = () => {
                 </div>
               ))}
 
-              {/* Typing indicator */}
-              <AnimatePresence>
-                {showTypingDots && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex items-center gap-1.5 py-2"
-                  >
-                    <div className="flex gap-[5px] items-center bg-muted/30 rounded-2xl px-4 py-2.5">
-                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
-                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "160ms" }} />
-                      <span className="typing-dot w-[6px] h-[6px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "320ms" }} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Verification status */}
-              <AnimatePresence>
-                {(verifying || refiningIteration !== null) && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-xs text-muted-foreground/50 py-1">
-                    {refiningIteration !== null ? (
-                      <><RefreshCw className="w-3.5 h-3.5 animate-spin text-primary/60" /><span>Improving answer <span className="text-primary/70 font-mono">{refiningIteration + 1}/3</span></span></>
-                    ) : (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Verifying claims…</span></>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
 
