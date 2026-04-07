@@ -8,6 +8,7 @@
 
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
+import { canonicalToTriword, formatTriword, triwordBreakdown, isValidTriword, triwordToPrefix } from "@/lib/uor-triword";
 
 // ── Enriched Receipt (WASM-anchored) ───────────────────────────────────────
 
@@ -42,6 +43,14 @@ export interface EnrichedReceipt {
   engine: "wasm" | "typescript";
   /** Crate version if WASM, null if TS fallback */
   crateVersion: string | null;
+
+  // ── Triword Address ──
+  /** Three-word human-readable address: "observer.observable.context" */
+  triword: string;
+  /** Formatted triword: "Observer · Observable · Context" */
+  triwordFormatted: string;
+  /** Triword breakdown into dimensions */
+  triwordDimensions: { observer: string; observable: string; context: string } | null;
 }
 
 export interface RegistryEntry {
