@@ -293,11 +293,17 @@ const OraclePage = () => {
       const grade = result ? result.overallGrade : overallGrade(report.annotations);
       const proofData = result?.proof ?? report.proof;
 
+      const userQuery = scaffold.constraints.length > 0
+        ? scaffold.constraints.map(c => c.description).join("; ")
+        : (currentMessages.find(m => m.role === "user")?.content ?? "");
+
       const trustEntry: TrustData = {
           grade, claims: report.annotations, curvature: report.overallCurvature,
           converged: report.converged, iterations: iteration + 1,
           constraints: scaffold.constraints.map(c => ({ id: c.id, type: c.type, description: c.description, ringValue: c.ringValue })),
           termMap: scaffold.termMap.map(t => ({ term: t.term, ringValue: t.ringValue })),
+          responseText: response,
+          userQuery: currentMessages.filter(m => m.role === "user").pop()?.content ?? "",
           proof: {
             proofId: proofData.proofId, state: proofData.state,
             stepsCount: proofData.steps.length, premisesCount: proofData.premises.length,
