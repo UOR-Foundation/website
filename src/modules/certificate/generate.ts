@@ -10,7 +10,7 @@
  *   5. PACKAGE       . Self-verifying certificate
  */
 
-import { singleProofHash } from "@/lib/uor-canonical";
+import { encode } from "@/lib/uor-codec";
 import { enforceBoundary } from "./boundary";
 import { deriveCoherenceWitness } from "./coherence";
 import { sourceObjectHash, toCompactBoundary } from "./utils";
@@ -27,9 +27,13 @@ export async function generateCertificate(
     throw new Error(`Boundary enforcement failed: ${boundary.error}`);
   }
 
-  const proof = await singleProofHash(boundary.boundedObject);
+  const enriched = await encode(boundary.boundedObject);
 
-  const coherence = deriveCoherenceWitness(proof.hashBytes);
+  // Extract hash bytes from the enriched receipt for coherence gate
+  const hashBytes = new Uint8Array(
+    enriched.hashHex.match(/.{2}/g)!.map((b) => parseInt(b, 16))
+  );
+  const coherence = deriveCoherenceWitness(hashBytes);
   if (!coherence.holds) {
     throw new Error("Algebraic coherence gate failed. system integrity error");
   }
@@ -40,13 +44,13 @@ export async function generateCertificate(
     "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
     "@type": "cert:ModuleCertificate",
     "cert:subject": subject,
-    "cert:cid": proof.cid,
-    "cert:canonicalPayload": proof.nquads,
+    "cert:cid": enriched.cid,
+    "cert:canonicalPayload": enriched.nquads,
     "cert:boundary": toCompactBoundary(boundary.manifest),
     "cert:sourceHash": srcHash,
     "cert:coherence": coherence,
-    "store:uorAddress": proof.uorAddress,
-    "store:ipv6Address": proof.ipv6Address,
+    "store:uorAddress": enriched.glyph,
+    "store:ipv6Address": enriched.ipv6,
     "cert:computedAt": now,
     "cert:issuedAt": now,
     "cert:specification": "1.0.0",
