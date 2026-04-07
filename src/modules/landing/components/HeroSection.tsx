@@ -25,7 +25,7 @@ const HeroSection = () => {
         </div>
 
         {/* Spacer orb → text — same flex as top for balance */}
-        <div className="flex-[0.618] min-h-[1rem]" />
+        <div className="flex-[0.9] min-h-[1rem]" />
 
         <h1
           className="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
