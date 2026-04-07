@@ -40,6 +40,12 @@ const GRADE_LABELS = { A: "Proven", B: "Verified", C: "Plausible", D: "Unverifie
 
 /* ── Types ── */
 
+interface UorReceipt {
+  cid: string;
+  derivationId: string;
+  uorAddress: string;
+}
+
 interface TrustData {
   grade: EpistemicGrade;
   claims: AnnotatedClaim[];
@@ -57,6 +63,8 @@ interface TrustData {
   };
   constraints: Array<{ id: string; type: string; description: string; ringValue: number }>;
   termMap: Array<{ term: string; ringValue: number }>;
+  /** UOR canonical receipts keyed by label */
+  receipts?: Record<string, UorReceipt>;
 }
 
 /* ── Page ── */
