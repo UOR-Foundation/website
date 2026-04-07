@@ -459,6 +459,24 @@ const OraclePage = () => {
                             const critHolds = bridge.verifyCriticalIdentity(compositeRing);
 
                             const backedCount = t.claims.filter(c => c.grade <= "B").length;
+                            const r = t.receipts ?? {};
+
+                            /** Compact CID receipt badge */
+                            const ReceiptBadge = ({ receiptKey, label }: { receiptKey: string; label?: string }) => {
+                              const receipt = r[receiptKey];
+                              if (!receipt) return null;
+                              const shortCid = receipt.cid.slice(0, 12) + "…" + receipt.cid.slice(-4);
+                              return (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono bg-primary/8 text-primary/60 border border-primary/12 hover:bg-primary/15 hover:text-primary/80 transition-colors cursor-default select-all"
+                                  title={`UOR Receipt: ${receipt.derivationId}\nCID: ${receipt.cid}`}
+                                >
+                                  <Link2 className="w-3 h-3 shrink-0" />
+                                  {label ? <span className="font-sans text-muted-foreground/50 mr-0.5">{label}</span> : null}
+                                  {shortCid}
+                                </span>
+                              );
+                            };
 
                             return (
                               <motion.div
@@ -475,7 +493,10 @@ const OraclePage = () => {
                                   transition={{ delay: 0.08, duration: 0.35 }}
                                   className="oracle-bubble"
                                 >
-                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Understanding</p>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Understanding</p>
+                                    <ReceiptBadge receiptKey="scaffold" />
+                                  </div>
                                   <p className="text-base text-foreground/70 mb-3">How the engine interpreted your question:</p>
                                   <div className="flex flex-wrap gap-2 mb-3">
                                     {t.constraints.map((c, ci) => (
@@ -514,24 +535,37 @@ const OraclePage = () => {
                                     {t.claims.map((claim, ci) => {
                                       const gc = GRADE_COLORS[claim.grade];
                                       const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
+                                      const claimReceipt = r[`claim-${ci}`];
                                       return (
-                                        <a
+                                        <div
                                           key={ci}
-                                          href={searchUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className={`flex items-start gap-3 rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} hover:brightness-110 transition-all group/claim cursor-pointer`}
+                                          className={`rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} group/claim`}
                                         >
-                                          <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
-                                          <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
-                                          <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-1.5 text-muted-foreground/20 group-hover/claim:text-muted-foreground/60 transition-colors" />
-                                        </a>
+                                          <div className="flex items-start gap-3">
+                                            <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
+                                            <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
+                                            <a
+                                              href={searchUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="shrink-0 mt-1.5 text-muted-foreground/20 hover:text-muted-foreground/60 transition-colors"
+                                              title="Verify externally"
+                                            >
+                                              <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                          </div>
+                                          {claimReceipt && (
+                                            <div className="mt-1.5 ml-8">
+                                              <ReceiptBadge receiptKey={`claim-${ci}`} />
+                                            </div>
+                                          )}
+                                        </div>
                                       );
                                     })}
                                   </div>
                                 </motion.div>
 
-                                {/* ── Alignment + Reasoning (side by side on wider screens) ── */}
+                                {/* ── Alignment + Reasoning ── */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   {/* Alignment */}
                                   <motion.div
@@ -563,7 +597,10 @@ const OraclePage = () => {
                                     transition={{ delay: 0.32, duration: 0.35 }}
                                     className="oracle-bubble"
                                   >
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Reasoning</p>
+                                    <div className="flex items-center justify-between mb-3">
+                                      <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Reasoning</p>
+                                      <ReceiptBadge receiptKey="proof" />
+                                    </div>
                                     <div className="space-y-2.5">
                                       {[
                                         { label: "Extracted constraints", value: `${t.proof?.constraintsCount ?? 0}`, color: "bg-blue-400" },
@@ -592,8 +629,11 @@ const OraclePage = () => {
                                   transition={{ delay: 0.4, duration: 0.35 }}
                                   className="oracle-bubble"
                                 >
-                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-2">Signature</p>
-                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the ring engine.</p>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Signature</p>
+                                    <ReceiptBadge receiptKey="signature" />
+                                  </div>
+                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the WASM ring engine.</p>
                                   <div className="flex flex-wrap items-center gap-3 text-base">
                                     <span className="px-3 py-1.5 rounded-lg bg-primary/8 text-primary/80 border border-primary/12 font-mono">
                                       0x{compositeRing.toString(16).padStart(2, "0")}
@@ -612,6 +652,11 @@ const OraclePage = () => {
                                       {critHolds ? "verified ✓" : "unverified"}
                                     </span>
                                   </div>
+                                  {r["signature"] && (
+                                    <p className="text-xs text-muted-foreground/30 mt-3 font-mono break-all">
+                                      derivation: {r["signature"].derivationId}
+                                    </p>
+                                  )}
                                 </motion.div>
                               </motion.div>
                             );
