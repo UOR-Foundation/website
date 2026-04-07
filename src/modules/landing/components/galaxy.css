@@ -45,12 +45,20 @@
 
 .circle {
   animation: 18s galaxy cubic-bezier(0.4, 0, 0.2, 1) infinite reverse;
+  will-change: transform;
 }
 
 .dot {
   width: 20px;
   height: 20px;
   border: 5px dotted #fff;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .circle {
+    animation: none;
+  }
 }
 
 @keyframes galaxy {
