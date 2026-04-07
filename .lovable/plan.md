@@ -1,81 +1,81 @@
 
 
-# Flow Mode — Continuous Conversational Stream
+# Response X-Ray — Reveal What's Behind Every Answer
 
-## Core Insight
+## What It Is
 
-The current UX has a hard separation: content area (top) vs input bar (bottom). This creates a ping-pong rhythm — type, wait, read, type again. Real conversation doesn't work this way. When you're texting a friend on iMessage, you start composing your reply *while reading their last message*, and the input sits right there in the flow.
+A per-message toggle (Layers icon) that morphs the response bubbles into a visual decomposition of the five dimensions the UOR framework computed to build and verify that answer. Every value shown is real — computed by the WASM ring engine and the neuro-symbolic pipeline. Nothing decorative.
 
-The most ingenious implementation: **the input field travels with the conversation**. Instead of being anchored to the bottom of the screen behind a border, the textarea lives *inline* at the end of the message stream, as the next natural element in the scroll. The conversation becomes one continuous river of thought.
+## The Five Dimensions (all grounded in existing computed data)
 
-## What Changes
+| Dimension | Human question it answers | Data source (already computed) | Visual |
+|-----------|--------------------------|-------------------------------|--------|
+| **What You Asked** | "What did the engine understand from my question?" | `scaffold.constraints[]` (type + description) and `scaffold.termMap[]` | Colored pills grouped by type: factual (blue), logical (purple), causal (amber). Key terms shown as ring-mapped tokens with their byte value. |
+| **What's Grounded** | "Which parts of this answer have evidence behind them?" | `claims[].grade` + `claims[].text` | The original response text re-rendered with inline background highlights: green (A/B = backed), amber (C = plausible), red-tinted (D = generated). User sees exactly which sentences are strong vs weak. |
+| **How Far It Drifted** | "Did the answer stay on track or wander?" | `curvature` (0–1 normalized) | A single horizontal gauge bar, gradient green→amber→red, with a dot at the actual value. Low = answer aligned with what you asked. High = answer drifted. |
+| **How It Was Built** | "What reasoning process produced this?" | `proof.stepsCount`, `proof.premisesCount`, `iterations`, `converged` | Three connected nodes (Deductive → Inductive → Abductive) with counts. Shows whether the loop converged or needed refinement. |
+| **Ring Fingerprint** | "What's the mathematical signature of this response?" | WASM bridge: `classifyByte`, `bytePopcount`, `factorize` on the scaffold's composite ring value | A compact row showing: partition class (Unit/Irreducible/Reducible), popcount, factorization. This is the unique algebraic identity of the query→response pair — computed by the actual Rust WASM crate. |
 
-### 1. Inline floating input (the "flow cursor")
+## Why Each Dimension Passes the "So What?" Test
 
-- Remove the fixed bottom input bar entirely
-- The textarea renders as the **last element inside the message scroll area**, sitting right below the most recent Oracle bubble
-- It has the same left-alignment and width as Oracle bubbles, so it feels like you're continuing the conversation inline
-- As messages accumulate and scroll, the input scrolls naturally with them — always at the bottom of content, never in a separate zone
-- When the page is empty (no messages), the input sits centered in the viewport with the preset chips above it
+- **What You Asked**: Users see whether the engine truly understood their intent, or misread it. Actionable: they can rephrase.
+- **What's Grounded**: Users see exactly which sentences to trust and which to double-check. This is the single most valuable transparency feature.
+- **How Far It Drifted**: One number that tells you "did the AI stay on topic?" Zero jargon.
+- **How It Was Built**: Shows the answer wasn't just generated — it went through a verification loop. Builds trust.
+- **Ring Fingerprint**: The "wow" moment — a unique mathematical identity for this specific exchange, verifiable via the WASM engine. No other AI product shows this.
 
-### 2. Mid-stream composition
+## Implementation
 
-- While the Oracle is streaming, the input remains visible and editable below the streaming bubbles
-- The user can compose their next question while watching the response arrive
-- When the user hits Enter during a stream, their message queues and fires immediately after the current stream completes
-- A subtle "thinking…" indicator replaces the input briefly during the gap between streams
-- This removes the "wait wall" — users never feel blocked
+### Data: Extend `TrustData` to carry scaffold info
 
-### 3. Seamless scroll behavior
+Add `constraints` and `termMap` fields to `TrustData`. Populate them in `runVerificationLoop` from the scaffold that's already available there.
 
-- After each new bubble appears, the view gently scrolls so the input field stays visible at the bottom of the viewport
-- The top fade gradient remains (content dissolving as it scrolls up)
-- The bottom fade gradient is removed since the input is no longer fixed at the bottom — instead, the content simply flows to the edge
-- The input itself has a subtle glow/focus ring that acts as the visual anchor point
+### State: Add `xrayOpen: Set<number>`
 
-### 4. Conversation rhythm indicators
+Tracks which message indices have X-Ray toggled on.
 
-- Between the last Oracle bubble and the input, show a subtle breathing dot (pulsing at ~2s interval) when the Oracle is idle — indicating it's "listening" and ready
-- During streaming, this dot becomes the typing indicator (three dots)
-- After verification completes, a brief ✓ flash before returning to the breathing dot
-- This creates the feeling of a living, present conversational partner
+### UI: Toggle button + X-Ray panel
 
-## Files to Change
+- Small `Layers` icon button appears at top-right of each assistant message group, only after verification completes (`trustMap[i]` exists)
+- When toggled ON: bubbles dim to `opacity-20`, X-Ray panel slides in with `AnimatePresence`
+- The five dimensions render as staggered sections (100ms apart), each with a subtle header and visual content
+- The "What's Grounded" section re-renders the full response text with inline colored backgrounds per sentence grade — this is the centerpiece
+- The curvature gauge is a simple CSS gradient bar with a positioned dot
+- Ring Fingerprint calls WASM bridge functions (`classifyByte`, `bytePopcount`, `factorize`) on a composite ring value derived from the scaffold's term hashes
+
+### Files to Change
 
 | File | Changes |
-|------|------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Move textarea from fixed footer into the scroll area as the last child after messages. Remove the `shrink-0 border-t` footer div. Add queued-message state for mid-stream sends. Add breathing dot between last message and input. Adjust scroll-into-view logic to keep the inline input visible. |
-| `src/index.css` | Remove `.oracle-fade-bottom` (no longer needed with inline input). Add `.oracle-flow-input` class for the inline textarea styling. Add `.oracle-breathing-dot` keyframes for the idle pulse animation. |
+|------|---------|
+| `src/modules/oracle/pages/OraclePage.tsx` | Add `constraints` and `termMap` to `TrustData`. Store them in `runVerificationLoop`. Add `xrayOpen` state. Add Layers toggle button per assistant message. Add X-Ray panel with 5 dimension sections. Import `Layers` from lucide-react. Import WASM bridge functions for Ring Fingerprint. |
+| `src/index.css` | Add `.oracle-xray-panel` for the panel container, `.oracle-xray-gauge` for the curvature bar, `.oracle-xray-sentence` variants for grounded/plausible/unverified inline highlights. |
 
-## Layout
+### Layout Sketch
 
 ```text
-┌──────────────────────────────────────┐
-│  ← Oracle                  ● Ready ⚙│
-├──▓▓▓▓▓▓ fade top gradient ▓▓▓▓▓▓▓──┤
-│                                      │
-│  ┌──────────────────────────────┐    │
-│  │ Memory involves encoding...  │    │  ← Oracle bubble
-│  └──────────────────────────────┘    │
-│  ┌──────────────────────────────┐    │
-│  │ The hippocampus plays a...   │    │  ← Oracle bubble
-│  └──────────────────────────────┘    │
-│                                      │
-│  ✓ 8 of 12 backed         Details ▸  │  ← trust bar
-│                                      │
-│            ● (breathing dot)         │
-│                                      │
-│  ┌──────────────────────────────┐    │
-│  │ Ask anything…             ⬆  │    │  ← inline input (IN the scroll)
-│  └──────────────────────────────┘    │
-│                                      │
-└──────────────────────────────────────┘
+  ┌─ X-Ray ──────────────────────────── [×] ─┐
+  │                                           │
+  │  WHAT YOU ASKED                           │
+  │  ┌─────┐ ┌───────┐ ┌──────┐              │
+  │  │ factual: memory │ factual: brain │ logical: Q │
+  │  └─────┘ └───────┘ └──────┘              │
+  │  Terms: memory(0xA3) brain(0x7F) encoding │
+  │                                           │
+  │  WHAT'S GROUNDED                          │
+  │  ██ Memory involves encoding info...    A │
+  │  ██ The hippocampus plays a key...      B │
+  │  ░░ Some researchers believe...         C │
+  │  ░░ This could potentially change...    D │
+  │                                           │
+  │  HOW FAR IT DRIFTED                       │
+  │  ═══════════●──── 0.18 (low)              │
+  │                                           │
+  │  HOW IT WAS BUILT                         │
+  │  ● Deductive(4) → ● Inductive(12) →      │
+  │    ● Abductive → Converged ✓              │
+  │                                           │
+  │  RING FINGERPRINT                         │
+  │  Irreducible · popcount 5 · 3 × 7 × 11   │
+  └───────────────────────────────────────────┘
 ```
-
-## Why This Is Ingenious
-
-- **Zero dead time**: Users compose while reading — the conversation never pauses
-- **Spatial continuity**: Input and output share the same space, like writing in a notebook
-- **The breathing dot**: Creates the sensation of presence — the Oracle is *there*, listening
-- **UOR-native**: The coherence framework's real-time verification feeds the breathing dot's state (idle → verifying → confirmed), making the framework's operation *felt* rather than shown
 
