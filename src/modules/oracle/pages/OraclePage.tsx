@@ -259,7 +259,8 @@ const OraclePage = () => {
                 )}
 
                 {/* Messages */}
-                <div className="px-5 md:px-8 py-6 space-y-6">
+                <div className="px-5 md:px-8 py-6 space-y-6" ref={proseContainerRef}>
+                  <SelectionToolbar containerRef={proseContainerRef} onAction={handleSelectionAction} />
                   {messages.map((msg, i) => (
                     <div key={i}>
                       {msg.role === "user" ? (
