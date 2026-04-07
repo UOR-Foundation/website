@@ -25,6 +25,7 @@ const ProjectUns = lazy(() => import("@/modules/projects/pages/ProjectUns"));
 const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQrCartridge"));
 const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHologramSdk"));
 const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUorIdentity"));
+const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
