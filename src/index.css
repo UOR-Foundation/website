@@ -1196,7 +1196,7 @@
 
 .oracle-prose {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  font-size: clamp(16.5px, 1.15vw, 19px);
+  font-size: clamp(17.5px, 1.25vw, 21px);
   line-height: 1.82;
   color: hsl(var(--foreground) / 0.88);
   letter-spacing: 0.005em;
@@ -1306,10 +1306,10 @@
   margin-top: 2em;
   margin-bottom: 0.5em;
 }
-.oracle-prose h1 { font-size: 1.5em; }
-.oracle-prose h2 { font-size: 1.25em; }
-.oracle-prose h3 { font-size: 1.1em; font-weight: 500; }
-.oracle-prose h4 { font-size: 1em; font-weight: 500; color: hsl(var(--foreground) / 0.7); }
+.oracle-prose h1 { font-size: 1.618em; }
+.oracle-prose h2 { font-size: 1.382em; }
+.oracle-prose h3 { font-size: 1.146em; font-weight: 500; }
+.oracle-prose h4 { font-size: 1.05em; font-weight: 500; color: hsl(var(--foreground) / 0.7); }
 
 /* First heading needs no top margin */
 .oracle-prose > h1:first-child,

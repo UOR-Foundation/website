@@ -273,10 +273,10 @@ const OraclePage = () => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
       {/* ── Compact header ── */}
-      <header className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-border/20 bg-background/80 backdrop-blur-md shrink-0">
+      <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-border/20 bg-background/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-3">
-          <a href="/" className="text-muted-foreground/60 hover:text-foreground transition-colors text-sm">←</a>
-          <h1 className="font-display font-bold text-foreground text-base tracking-tight">Oracle</h1>
+          <a href="/" className="text-muted-foreground/60 hover:text-foreground transition-colors text-base">←</a>
+          <h1 className="font-display font-bold text-foreground text-lg tracking-tight">Oracle</h1>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -312,8 +312,8 @@ const OraclePage = () => {
                 <div key={i}>
                   {msg.role === "user" ? (
                     <div className="flex justify-end">
-                      <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-4 py-2.5">
-                        <p className="text-base text-foreground leading-relaxed">{msg.content}</p>
+                      <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-5 py-3">
+                        <p className="text-lg text-foreground leading-relaxed">{msg.content}</p>
                       </div>
                     </div>
                   ) : (
@@ -790,55 +790,82 @@ const OraclePage = () => {
             )}
 
             {/* ── Inline flow input ── */}
-            <div className="px-4 md:px-6 max-w-3xl mx-auto w-full pb-6 pt-2">
-              {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center flex-1 text-center py-10">
-                  <p className="text-foreground font-display font-semibold text-xl mb-2">Ask anything</p>
-                  <p className="text-muted-foreground/60 text-sm mb-8 max-w-sm leading-relaxed">
+            {messages.length === 0 ? (
+              /* ── Empty state: input ABOVE presets, golden-ratio centered ── */
+              <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-3rem)] px-4 md:px-6">
+                {/* φ-spaced content block */}
+                <div className="flex flex-col items-center w-full max-w-2xl" style={{ marginTop: "-6.18%" }}>
+                  <h1 className="text-foreground font-display font-bold text-3xl md:text-4xl mb-3 tracking-tight">Ask anything</h1>
+                  <p className="text-muted-foreground/60 text-lg md:text-xl mb-10 max-w-md leading-relaxed text-center">
                     Every claim verified. Every answer graded.
                   </p>
-                  <div className="flex flex-wrap justify-center gap-2 max-w-lg mb-8">
+
+                  {/* Input first */}
+                  <div className="flex gap-2 items-end w-full mb-10">
+                    <textarea
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+                      placeholder="Ask anything…"
+                      rows={1}
+                      className="oracle-flow-input flex-1 bg-muted/10 border border-border/30 rounded-xl px-5 py-4 text-lg text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
+                    />
+                    <button
+                      onClick={() => send(input)}
+                      disabled={!input.trim()}
+                      className="p-4 rounded-xl bg-primary text-primary-foreground disabled:opacity-20 hover:bg-primary/90 transition-colors"
+                    >
+                      <ArrowUp className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Presets below input */}
+                  <div className="flex flex-wrap justify-center gap-2.5 max-w-lg">
                     {PRESETS.map((p) => (
                       <button
                         key={p.label}
                         onClick={() => send(p.prompt)}
-                        className="px-4 py-2.5 rounded-full border border-border/40 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+                        className="px-5 py-3 rounded-full border border-border/40 text-base text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
                       >
                         {p.label}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
-
-              <div className="flex gap-2 items-end">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-                  placeholder={isStreaming ? (queuedMessage ? "Queued — will send next…" : "Type while I respond…") : "Ask anything…"}
-                  rows={1}
-                  className="oracle-flow-input flex-1 bg-muted/10 border border-border/30 rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
-                />
-                <button
-                  onClick={() => send(input)}
-                  disabled={!input.trim()}
-                  className="p-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-20 hover:bg-primary/90 transition-colors"
-                >
-                  <ArrowUp className="w-4 h-4" />
-                </button>
               </div>
-              {queuedMessage && (
-                <motion.p
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-primary/60 mt-1.5 ml-1"
-                >
-                  ↳ "{queuedMessage}" will send when current response finishes
-                </motion.p>
-              )}
-            </div>
+            ) : (
+              /* ── Has messages: input anchored near bottom ── */
+              <div className="px-4 md:px-6 max-w-3xl mx-auto w-full pb-6 pt-2">
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+                    placeholder={isStreaming ? (queuedMessage ? "Queued — will send next…" : "Type while I respond…") : "Ask anything…"}
+                    rows={1}
+                    className="oracle-flow-input flex-1 bg-muted/10 border border-border/30 rounded-xl px-5 py-3.5 text-base text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
+                  />
+                  <button
+                    onClick={() => send(input)}
+                    disabled={!input.trim()}
+                    className="p-3.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-20 hover:bg-primary/90 transition-colors"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                </div>
+                {queuedMessage && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-primary/60 mt-1.5 ml-1"
+                  >
+                    ↳ "{queuedMessage}" will send when current response finishes
+                  </motion.p>
+                )}
+              </div>
+            )}
 
             <div ref={flowEndRef} className="h-1" />
         </div>
