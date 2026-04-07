@@ -201,7 +201,7 @@ const OraclePage = () => {
       <div className="min-h-screen bg-background pt-20">
         <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 md:py-10">
 
-          {/* ── Minimal header ── */}
+          {/* ── Header ── */}
           <div className="mb-6 flex items-end justify-between">
             <div>
               <h1 className="font-display font-bold text-foreground text-2xl md:text-3xl tracking-tight">
@@ -213,8 +213,8 @@ const OraclePage = () => {
             </div>
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full ${wasmReady ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
-              <span className="text-[10px] font-mono text-muted-foreground/50">
-                {wasmReady ? "WASM active" : "Loading..."}
+              <span className="text-xs font-mono text-muted-foreground/60">
+                {wasmReady ? "Engine ready" : "Loading..."}
               </span>
             </div>
           </div>
@@ -235,7 +235,7 @@ const OraclePage = () => {
                         <button
                           key={p.label}
                           onClick={() => send(p.prompt)}
-                          className="px-4 py-2 rounded-full border border-border/40 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+                          className="px-4 py-2.5 rounded-full border border-border/40 text-sm text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
                         >
                           {p.label}
                         </button>
@@ -249,16 +249,13 @@ const OraclePage = () => {
                   {messages.map((msg, i) => (
                     <div key={i}>
                       {msg.role === "user" ? (
-                        /* ── User message ── */
                         <div className="flex justify-end">
                           <div className="max-w-[75%] rounded-2xl rounded-br-md bg-primary/10 border border-primary/10 px-5 py-3">
                             <p className="text-sm text-foreground leading-relaxed">{msg.content}</p>
                           </div>
                         </div>
                       ) : (
-                        /* ── Assistant message ── */
                         <div className="max-w-none">
-                          {/* Beautiful prose rendering */}
                           <div className="oracle-prose">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
@@ -269,11 +266,11 @@ const OraclePage = () => {
                               initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.4 }}
-                              className="mt-4 pt-4 border-t border-border/15"
+                              className="mt-5 pt-4 border-t border-border/15"
                             >
                               {/* Grade bar */}
-                              <div className="flex items-center gap-3 mb-2">
-                                <div className="flex gap-[1px] flex-1 h-1.5 rounded-full overflow-hidden">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="flex gap-[1px] flex-1 h-2 rounded-full overflow-hidden">
                                   {trustMap[i].claims.map((claim, ci) => (
                                     <motion.div
                                       key={ci}
@@ -290,31 +287,31 @@ const OraclePage = () => {
                                   key={trustMap[i].grade}
                                   initial={{ scale: 0.7 }}
                                   animate={{ scale: 1 }}
-                                  className={`text-xs font-mono font-bold ${GRADE_COLORS[trustMap[i].grade].text}`}
+                                  className={`text-sm font-mono font-bold ${GRADE_COLORS[trustMap[i].grade].text}`}
                                 >
                                   {trustMap[i].grade}
                                 </motion.span>
                               </div>
 
                               {/* Inline actions */}
-                              <div className="flex items-center gap-4 text-[11px] text-muted-foreground/60 font-mono">
+                              <div className="flex items-center gap-5 text-xs text-muted-foreground/60">
                                 <button
                                   onClick={() => setExpandedClaims(prev => toggle(prev, i))}
-                                  className="flex items-center gap-1 hover:text-foreground/80 transition-colors"
+                                  className="flex items-center gap-1.5 hover:text-foreground/80 transition-colors"
                                 >
-                                  <Eye className="w-3 h-3" />
-                                  {trustMap[i].claims.filter(c => c.grade <= "B").length}/{trustMap[i].claims.length} verified
+                                  <Eye className="w-3.5 h-3.5" />
+                                  {trustMap[i].claims.filter(c => c.grade <= "B").length}/{trustMap[i].claims.length} claims verified
                                 </button>
                                 {trustMap[i].iterations > 1 && (
-                                  <span className="text-primary/70">{trustMap[i].iterations}× refined</span>
+                                  <span className="text-primary/70">Refined {trustMap[i].iterations}×</span>
                                 )}
                                 <button
                                   onClick={() => setExpandedProofs(prev => toggle(prev, i))}
-                                  className="flex items-center gap-1 hover:text-foreground/80 transition-colors ml-auto"
+                                  className="flex items-center gap-1.5 hover:text-foreground/80 transition-colors ml-auto"
                                 >
-                                  <Shield className="w-3 h-3" />
-                                  Proof
-                                  {expandedProofs.has(i) ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
+                                  <Shield className="w-3.5 h-3.5" />
+                                  Proof trail
+                                  {expandedProofs.has(i) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                 </button>
                               </div>
 
@@ -322,13 +319,13 @@ const OraclePage = () => {
                               <AnimatePresence>
                                 {expandedClaims.has(i) && (
                                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                    <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-4 space-y-2 max-h-72 overflow-y-auto">
+                                    <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-4 space-y-2 max-h-80 overflow-y-auto">
                                       {trustMap[i].claims.map((claim, ci) => (
-                                        <div key={ci} className={`flex items-start gap-2.5 rounded-lg p-2.5 ${GRADE_COLORS[claim.grade].bg} border ${GRADE_COLORS[claim.grade].border}`}>
-                                          <span className={`text-[10px] font-bold font-mono ${GRADE_COLORS[claim.grade].text} shrink-0 mt-px`}>{claim.grade}</span>
+                                        <div key={ci} className={`flex items-start gap-3 rounded-lg p-3 ${GRADE_COLORS[claim.grade].bg} border ${GRADE_COLORS[claim.grade].border}`}>
+                                          <span className={`text-xs font-bold font-mono ${GRADE_COLORS[claim.grade].text} shrink-0 mt-0.5`}>{claim.grade}</span>
                                           <div className="min-w-0">
-                                            <p className="text-[12px] text-foreground/85 leading-relaxed">{claim.text}</p>
-                                            <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">{claim.source}</p>
+                                            <p className="text-sm text-foreground/85 leading-relaxed">{claim.text}</p>
+                                            <p className="text-xs text-muted-foreground/50 mt-1">{claim.source}</p>
                                           </div>
                                         </div>
                                       ))}
@@ -342,23 +339,23 @@ const OraclePage = () => {
                                 {expandedProofs.has(i) && trustMap[i].proof && (
                                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                     <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-4">
-                                      <div className="space-y-2.5">
+                                      <div className="space-y-3">
                                         {[
-                                          { label: "Query", detail: `${trustMap[i].proof!.premisesCount} terms → ring elements` },
-                                          { label: "Scaffold", detail: `${trustMap[i].proof!.constraintsCount} constraints derived` },
-                                          { label: "Response", detail: `${trustMap[i].claims.length} claims extracted` },
-                                          { label: "Verify", detail: `${trustMap[i].proof!.stepsCount} steps, curvature ${(trustMap[i].curvature * 100).toFixed(1)}%` },
-                                          { label: "Grade", detail: `${GRADE_LABELS[trustMap[i].grade]}${trustMap[i].proof!.certified ? ", certified" : ""}` },
+                                          { label: "Query", detail: `${trustMap[i].proof!.premisesCount} key terms extracted` },
+                                          { label: "Scaffold", detail: `${trustMap[i].proof!.constraintsCount} verification constraints built` },
+                                          { label: "Response", detail: `${trustMap[i].claims.length} individual claims identified` },
+                                          { label: "Verify", detail: `${trustMap[i].proof!.stepsCount} checks, ${(trustMap[i].curvature * 100).toFixed(1)}% alignment` },
+                                          { label: "Result", detail: `${GRADE_LABELS[trustMap[i].grade]}${trustMap[i].proof!.certified ? ", certified" : ""}` },
                                         ].map((step, si) => (
                                           <div key={si} className="flex items-center gap-3">
-                                            <div className={`w-1 h-1 rounded-full ${si === 4 ? GRADE_COLORS[trustMap[i].grade].fill : "bg-primary/40"}`} />
-                                            <span className="text-[11px] font-medium text-foreground/70 w-16 shrink-0">{step.label}</span>
-                                            <span className="text-[11px] text-muted-foreground/50">{step.detail}</span>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${si === 4 ? GRADE_COLORS[trustMap[i].grade].fill : "bg-primary/40"}`} />
+                                            <span className="text-sm font-medium text-foreground/70 w-20 shrink-0">{step.label}</span>
+                                            <span className="text-sm text-muted-foreground/60">{step.detail}</span>
                                           </div>
                                         ))}
                                       </div>
-                                      <div className="mt-3 pt-2 border-t border-border/10 text-[9px] font-mono text-muted-foreground/30">
-                                        {trustMap[i].proof!.proofId.slice(0, 28)} · q{trustMap[i].proof!.quantum} · {trustMap[i].proof!.state}
+                                      <div className="mt-3 pt-2 border-t border-border/10 text-xs font-mono text-muted-foreground/30">
+                                        {trustMap[i].proof!.proofId.slice(0, 28)}
                                       </div>
                                     </div>
                                   </motion.div>
@@ -381,11 +378,11 @@ const OraclePage = () => {
                   {/* Verification status */}
                   <AnimatePresence>
                     {(verifying || refiningIteration !== null) && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-[11px] text-muted-foreground/50 py-1">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-xs text-muted-foreground/60 py-1">
                         {refiningIteration !== null ? (
-                          <><RefreshCw className="w-3 h-3 animate-spin text-primary/60" /><span>Refining <span className="text-primary/70 font-mono">{refiningIteration + 1}/3</span></span></>
+                          <><RefreshCw className="w-3.5 h-3.5 animate-spin text-primary/60" /><span>Improving answer <span className="text-primary/70 font-mono">{refiningIteration + 1}/3</span></span></>
                         ) : (
-                          <><Loader2 className="w-3 h-3 animate-spin" /><span>Verifying claims...</span></>
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Verifying claims...</span></>
                         )}
                       </motion.div>
                     )}
@@ -416,57 +413,66 @@ const OraclePage = () => {
             </div>
 
             {/* ══════════════════ SIDEBAR ══════════════════ */}
-            <div className="hidden lg:flex flex-col gap-3 w-[260px] shrink-0">
+            <div className="hidden lg:flex flex-col gap-3 w-[280px] shrink-0">
 
               {/* Controls */}
-              <div className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-4 space-y-4">
+              <div className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-5 space-y-5">
                 {/* Precision */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-medium text-foreground/80">Precision</span>
-                    <span className="text-[10px] font-mono text-muted-foreground/50">
-                      {precision < 30 ? "Balanced" : precision < 70 ? "Focused" : "Maximum"}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-foreground/80">Answer precision</span>
+                    <span className="text-xs font-mono text-muted-foreground/60">
+                      {precision < 30 ? "Creative" : precision < 70 ? "Balanced" : "Exact"}
                     </span>
                   </div>
                   <input
                     type="range" min={0} max={100} value={precision}
                     onChange={(e) => setPrecision(Number(e.target.value))}
-                    className="w-full h-1 bg-muted/40 rounded-full appearance-none cursor-pointer accent-primary"
+                    className="w-full h-1.5 bg-muted/40 rounded-full appearance-none cursor-pointer accent-primary"
                   />
+                  <p className="text-xs text-muted-foreground/40 mt-1.5">Controls how focused the response will be</p>
                 </div>
 
                 {/* Auto-Refine */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <RefreshCw className="w-3 h-3 text-primary/60" />
-                    <span className="text-[11px] font-medium text-foreground/80">Auto-Refine</span>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4 text-primary/60" />
+                      <span className="text-sm font-medium text-foreground/80">Self-improve</span>
+                    </div>
+                    <button
+                      onClick={() => setAutoRefine(!autoRefine)}
+                      className={`w-9 h-5 rounded-full transition-colors relative ${autoRefine ? "bg-primary/80" : "bg-muted/50"}`}
+                    >
+                      <span className={`absolute top-[3px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${autoRefine ? "left-[18px]" : "left-[3px]"}`} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setAutoRefine(!autoRefine)}
-                    className={`w-8 h-[18px] rounded-full transition-colors relative ${autoRefine ? "bg-primary/80" : "bg-muted/50"}`}
-                  >
-                    <span className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${autoRefine ? "left-[15px]" : "left-[2px]"}`} />
-                  </button>
+                  <p className="text-xs text-muted-foreground/40 mt-1.5">Automatically re-checks and improves weak answers</p>
                 </div>
 
                 {/* Scrutiny */}
                 <div>
-                  <span className="text-[11px] font-medium text-foreground/80 mb-1.5 block">Scrutiny</span>
-                  <div className="flex gap-1">
-                    {["Lenient", "Standard", "Strict"].map((label, li) => (
+                  <span className="text-sm font-medium text-foreground/80 mb-2 block">Verification strictness</span>
+                  <div className="flex gap-1.5">
+                    {[
+                      { label: "Relaxed", desc: "Broader tolerance" },
+                      { label: "Standard", desc: "Default checks" },
+                      { label: "Strict", desc: "Maximum rigor" },
+                    ].map(({ label }, li) => (
                       <button
                         key={label}
                         onClick={() => setScrutinyIdx(li)}
-                        className={`flex-1 py-1 rounded-md text-[10px] font-mono transition-all ${
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
                           scrutinyIdx === li
                             ? "bg-primary/12 text-primary border border-primary/20"
-                            : "text-muted-foreground/40 hover:text-muted-foreground/60"
+                            : "text-muted-foreground/50 hover:text-muted-foreground/70"
                         }`}
                       >
                         {label}
                       </button>
                     ))}
                   </div>
+                  <p className="text-xs text-muted-foreground/40 mt-1.5">How strictly each claim is evaluated</p>
                 </div>
               </div>
 
@@ -476,33 +482,34 @@ const OraclePage = () => {
                   key={latestTrust.grade + latestTrust.curvature}
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-4"
+                  className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-5"
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold ${GRADE_COLORS[latestTrust.grade].bg} ${GRADE_COLORS[latestTrust.grade].text} border ${GRADE_COLORS[latestTrust.grade].border}`}>
+                  <p className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wider mb-3">Latest result</p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`w-11 h-11 rounded-lg flex items-center justify-center text-lg font-bold ${GRADE_COLORS[latestTrust.grade].bg} ${GRADE_COLORS[latestTrust.grade].text} border ${GRADE_COLORS[latestTrust.grade].border}`}>
                       {latestTrust.grade}
                     </span>
                     <div>
                       <p className="text-foreground text-sm font-semibold">{GRADE_LABELS[latestTrust.grade]}</p>
-                      <p className="text-muted-foreground/50 text-[10px]">
-                        {latestTrust.claims.filter(c => c.grade <= "B").length}/{latestTrust.claims.length} grounded
+                      <p className="text-muted-foreground/50 text-xs">
+                        {latestTrust.claims.filter(c => c.grade <= "B").length} of {latestTrust.claims.length} claims grounded
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-[11px]">
+                  <div className="space-y-2 text-sm">
                     {[
-                      ["Curvature", `${(latestTrust.curvature * 100).toFixed(1)}%`],
-                      ["Convergence", latestTrust.converged ? "✓" : "○"],
+                      ["Alignment", `${(latestTrust.curvature * 100).toFixed(1)}%`],
+                      ["Converged", latestTrust.converged ? "Yes" : "No"],
                       ["Iterations", `${latestTrust.iterations}`],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between">
-                        <span className="text-muted-foreground/40">{k}</span>
-                        <span className="font-mono text-foreground/60">{v}</span>
+                        <span className="text-muted-foreground/50">{k}</span>
+                        <span className="font-mono text-foreground/70">{v}</span>
                       </div>
                     ))}
                   </div>
                   {/* Mini distribution */}
-                  <div className="flex gap-[2px] mt-3 h-1 rounded-full overflow-hidden">
+                  <div className="flex gap-[2px] mt-4 h-1.5 rounded-full overflow-hidden">
                     {(["A", "B", "C", "D"] as const).map(g => {
                       const count = latestTrust.claims.filter(c => c.grade === g).length;
                       if (!count) return null;
@@ -512,18 +519,19 @@ const OraclePage = () => {
                 </motion.div>
               )}
 
-              {/* Features */}
-              <div className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-4 space-y-3">
+              {/* How it works */}
+              <div className="rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm p-5 space-y-4">
+                <p className="text-xs font-medium text-muted-foreground/50 uppercase tracking-wider">How it works</p>
                 {[
-                  { icon: Eye, label: "Claim-level grading", sub: "Each sentence verified independently" },
-                  { icon: RefreshCw, label: "Self-correcting", sub: "Low-grade answers auto-improve" },
-                  { icon: Shield, label: "Proof trail", sub: "Machine-verifiable audit for every answer" },
+                  { icon: Eye, label: "Individual claim grading", sub: "Every sentence is verified on its own" },
+                  { icon: RefreshCw, label: "Answers that self-improve", sub: "Weak responses are automatically refined" },
+                  { icon: Shield, label: "Full proof trail", sub: "A verifiable audit for every answer" },
                 ].map(({ icon: Icon, label, sub }) => (
-                  <div key={label} className="flex items-start gap-2.5">
-                    <Icon className="w-3.5 h-3.5 text-primary/50 shrink-0 mt-0.5" />
+                  <div key={label} className="flex items-start gap-3">
+                    <Icon className="w-4 h-4 text-primary/50 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[11px] text-foreground/70 font-medium leading-tight">{label}</p>
-                      <p className="text-[10px] text-muted-foreground/35 leading-tight">{sub}</p>
+                      <p className="text-sm text-foreground/75 font-medium leading-snug">{label}</p>
+                      <p className="text-xs text-muted-foreground/45 leading-snug mt-0.5">{sub}</p>
                     </div>
                   </div>
                 ))}
