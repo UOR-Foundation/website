@@ -17,7 +17,7 @@ const pipelineSteps: { level: MaturityLevel; description: string; count: number 
 
 const EcosystemSection = () => {
   return (
-    <section className="py-section-md bg-section-dark section-depth">
+    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
