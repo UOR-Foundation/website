@@ -1,69 +1,103 @@
 
 
-# Simplify UOR Resolve to Two Things: Address ↔ Content
+# UOR Resolve — The Google for the Semantic Web
 
-## The Problem
+## Vision
 
-The current Resolve page is cluttered with Identity cards, WASM Ring Verification grids, N-Quads sections, and multiple panels. The user wants a Google-search experience: **one input, one answer**. Two things only:
+Transform the Resolve page from a functional tool into a **brand experience** that instantly communicates UOR's value proposition: "Google indexes information. UOR indexes meaning." The current page works, but it feels like a developer tool. We want it to feel like Google circa 2004 — breathtakingly simple, instantly understood, quietly powerful.
 
-1. **The Address** (triword)
-2. **The Content** (the data that lives at that address)
+## What Changes
 
-Everything else is noise.
+**Single file: `src/modules/oracle/pages/ResolvePage.tsx`** — refined, not rewritten. The logic is solid; the UX needs elevation.
 
-## The Design
+### 1. Brand the empty state like Google's homepage
 
-A single-screen experience with no scrolling needed. Like Google: a search bar at the top, the result below. Bidirectional:
+Replace the cryptic Braille glyphs (`⠕⠗⠁⠉⠇⠑`) with a proper brand moment:
+- **UOR** in large, elegant serif type (like Google's wordmark)
+- Tagline beneath: *"The universal encoder"* in muted small text
+- The search input becomes a single-line `<input>` (not textarea) for the address mode — clean, rounded, with a subtle shadow on focus. Only expands to textarea when JSON is detected.
+- Replace the generic search icon button with an **"I'm Feeling Lucky"**-style secondary action: a small "Encode" link beneath the input that hints at the reverse direction
 
-- **Address → Content**: Paste a triword (or CID) → see the original data
-- **Content → Address**: Paste JSON → see its deterministic address
+### 2. Smoother input transitions
+
+- Single-line input by default (like Google). When the user starts typing `{` or `[`, it smoothly expands into a multi-line textarea
+- The mode label ("Address → Content" / "Content → Address") animates between states instead of snapping
+- Auto-focus the input on page load
+
+### 3. Result state mirrors Google's SERP
+
+When a result appears, transition to a "results page" layout:
+- The search bar **moves to the top** (like Google's results page) with the current query shown, editable
+- Below it, the result card appears with the Address as a bold "title" and Content as the "snippet"
+- The triword becomes a clickable breadcrumb-style element at the top
+- The CID appears as a subtle URL-like element under the triword (like Google shows green URLs under results)
+
+### 4. Subtle footer with stats
+
+Below the search bar in empty state, show a single line:
+> *16,777,216 addresses · WASM ✓ · deterministic*
+
+This communicates scale and trust, like Google's "Searching X billion pages."
+
+### 5. Loading state
+
+Replace the spinner with a Google-style progress bar — a thin animated line at the top of the page.
+
+## Technical Details
+
+- All existing WASM pipeline (`computeAndRegister`, `lookupReceipt`, `singleProofHash`) stays identical
+- No new files, no new dependencies
+- The `looksLikeJson` detection stays but drives a smoother input type transition
+- Auto-focus via `inputRef.current?.focus()` on mount
+- Result state: search bar repositions to top via conditional layout (not animation of position, just two layouts toggled by `result` state)
+
+## Layout
 
 ```text
+EMPTY STATE (Google homepage):
 ┌──────────────────────────────────────────────────┐
+│  ← Resolve                          ● wasm ✓    │
+│──────────────────────────────────────────────────│
 │                                                  │
-│              ⠕⠗⠁⠉⠇⠑                             │
+│                                                  │
+│                    U O R                          │
+│             The universal encoder                │
 │                                                  │
 │   ┌──────────────────────────────────────────┐   │
-│   │  meadow.steep.keep                    ⏎  │   │
+│   │  Search by address or paste content…   🔍│   │
 │   └──────────────────────────────────────────┘   │
 │                                                  │
-│   Address → Content  |  Content → Address        │
+│      16,777,216 addresses · deterministic        │
 │                                                  │
-│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+└──────────────────────────────────────────────────┘
+
+RESULT STATE (Google SERP):
+┌──────────────────────────────────────────────────┐
+│  ← ┌─meadow.steep.keep──────────────────┐ ● wasm│
+│    └─────────────────────────────────────┘       │
+│──────────────────────────────────────────────────│
 │                                                  │
 │   ADDRESS                                        │
-│   Meadow · Steep · Keep                          │
-│   bafy2bzace…                        ● WASM ✓   │
-│                                                  │
-│   CONTENT                                        │
+│   Meadow · Steep · Keep                     📋   │
+│   bafy2bzace…xk3q                           📋   │
+│   ● wasm ✓ 0.1.5                                │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   CONTENT                                   📋   │
 │   ┌────────────────────────────────────────┐     │
 │   │ {                                      │     │
 │   │   "@type": "oracle:Claim",             │     │
-│   │   "oracle:text": "Memory involves…",   │     │
-│   │   "oracle:grade": "A"                  │     │
+│   │   "oracle:text": "Memory involves…"    │     │
 │   │ }                                      │     │
 │   └────────────────────────────────────────┘     │
+│                                                  │
+│   ↻ Verify determinism   ✓ Identical             │
 │                                                  │
 └──────────────────────────────────────────────────┘
 ```
 
-## What Changes
+## Files Changed
 
-**File: `src/modules/oracle/pages/ResolvePage.tsx`** — Complete rewrite to ~200 lines:
-
-- Remove: Identity card (CID/Derivation/Glyph/IPv6 rows), WASM Ring Verification grid, N-Quads section, VerifyCell component, IdentityRow component
-- Keep: Search bar, resolve/encode logic, WASM loading, registry lookup, `computeAndRegister` (all WASM-anchored)
-- Result view becomes two simple blocks:
-  - **ADDRESS**: Triword (large, beautiful), CID below it in small mono text, tiny WASM verified badge
-  - **CONTENT**: Pretty-printed JSON of the source object in a clean code block
-- The mode toggle ("Address → Content" / "Content → Address") replaces the current Resolve/Encode tabs — same functionality, clearer labels
-- Single input field that auto-detects: if it looks like JSON → encode mode; if it looks like an address → resolve mode
-- Re-derive button stays as a subtle link at the bottom ("Verify determinism")
-- Everything fits on one screen without scrolling
-
-## Technical
-
-- All encoding still goes through `computeAndRegister()` → `singleProofHash()` → WASM bridge
-- Registry lookup unchanged
-- No new dependencies, no new files — just a dramatic simplification of ResolvePage.tsx
+| File | Change |
+|------|--------|
+| `src/modules/oracle/pages/ResolvePage.tsx` | Elevate UX — brand wordmark, single-line input that expands, result-state search bar at top, stats footer, loading bar |
 
