@@ -226,13 +226,23 @@ const PrimeConstellationBg = () => {
   const scrollRef = useRef(0);
   const timeRef = useRef(0);
 
-  const draw = useCallback(() => {
+  const lastFrameRef = useRef(0);
+  const FRAME_INTERVAL = 1000 / 30; // 30fps cap
+
+  const draw = useCallback((now: number = 0) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     if (document.hidden) {
       rafRef.current = requestAnimationFrame(draw);
       return;
     }
+
+    const elapsed = now - lastFrameRef.current;
+    if (elapsed < FRAME_INTERVAL) {
+      rafRef.current = requestAnimationFrame(draw);
+      return;
+    }
+    lastFrameRef.current = now - (elapsed % FRAME_INTERVAL);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
