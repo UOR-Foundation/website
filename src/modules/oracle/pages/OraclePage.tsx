@@ -274,10 +274,18 @@ const OraclePage = () => {
       </header>
 
       {/* ── Message area ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto oracle-scroll-area">
-        <div className="flex flex-col justify-end min-h-full">
-          {/* Empty state — centered presets */}
-          {messages.length === 0 && (
+      <div className="flex-1 overflow-hidden relative">
+        {/* Focus-fade overlays */}
+        {messages.length > 0 && (
+          <>
+            <div className="oracle-fade-top" />
+            <div className="oracle-fade-bottom" />
+          </>
+        )}
+        <div ref={scrollRef} className="h-full overflow-y-auto oracle-scroll-area">
+          <div className="flex flex-col justify-end min-h-full">
+            {/* Empty state — centered presets */}
+            {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center flex-1 text-center px-6 py-10">
               <p className="text-foreground font-display font-semibold text-xl mb-2">Ask anything</p>
               <p className="text-muted-foreground/60 text-sm mb-8 max-w-sm leading-relaxed">
