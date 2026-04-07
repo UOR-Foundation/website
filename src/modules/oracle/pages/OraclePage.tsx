@@ -325,237 +325,227 @@ const OraclePage = () => {
                       {trustMap[i] && (
                         <button
                           onClick={() => setXrayOpen(prev => toggle(prev, i))}
-                          className={`absolute -right-2 top-0 z-10 flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-all ${
+                          className={`absolute -right-2 top-0 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all ${
                             xrayOpen.has(i)
                               ? "bg-primary/15 text-primary border border-primary/25"
                               : "text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-muted/20"
                           }`}
-                          title="X-Ray: reveal what's behind this answer"
+                          title="Reveal what's behind this answer"
                         >
-                          <Layers className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">X-Ray</span>
+                          <Layers className="w-4 h-4" />
+                          <span className="hidden sm:inline">{xrayOpen.has(i) ? "Close" : "X-Ray"}</span>
                         </button>
                       )}
 
-                      {/* Response bubbles — dim when X-Ray is open */}
-                      <div className={`flex flex-col gap-1.5 transition-opacity duration-300 ${xrayOpen.has(i) ? "opacity-15 pointer-events-none" : ""}`}>
-                      {(() => {
-                        const chunks = msg.content.split(/\n\n+/).filter(Boolean);
-                        return chunks.map((chunk, ci) => (
-                          <motion.div
-                            key={`${i}-${ci}-${chunk.slice(0, 20)}`}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.28,
-                              delay: i < messages.length - 1 ? 0 : ci * 0.15,
-                              ease: [0.25, 0.1, 0.25, 1],
-                            }}
-                            className="oracle-bubble"
-                          >
-                            <div className="oracle-prose">
-                              <ReactMarkdown>{chunk}</ReactMarkdown>
-                            </div>
-                          </motion.div>
-                        ));
-                      })()}
-                      </div>
-
-                      {/* ── X-Ray Panel ── */}
-                      <AnimatePresence>
-                        {xrayOpen.has(i) && trustMap[i] && (() => {
-                          const t = trustMap[i];
-                          const CONSTRAINT_COLORS: Record<string, string> = {
-                            factual: "bg-blue-500/15 text-blue-400 border-blue-500/25",
-                            logical: "bg-purple-500/15 text-purple-400 border-purple-500/25",
-                            causal: "bg-amber-500/15 text-amber-400 border-amber-500/25",
-                            definitional: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
-                          };
-                          const curvPct = Math.min(t.curvature * 100, 100);
-                          const curvLabel = curvPct < 20 ? "Closely aligned" : curvPct < 50 ? "Moderate drift" : "Significant drift";
-                          const curvColor = curvPct < 20 ? "text-emerald-400" : curvPct < 50 ? "text-amber-400" : "text-red-400";
-
-                          // Ring fingerprint from WASM
-                          const compositeRing = t.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
-                          const partition = bridge.classifyByte(compositeRing);
-                          const popcount = bridge.bytePopcount(compositeRing);
-                          const factors = bridge.factorize(compositeRing);
-                          const critHolds = bridge.verifyCriticalIdentity(compositeRing);
-
-                          return (
+                      {/* Shared container: bubbles and X-Ray occupy the same space */}
+                      <div className="relative">
+                        {/* Response bubbles */}
+                        <div
+                          className="flex flex-col gap-1.5 transition-all duration-500 ease-out"
+                          style={{
+                            opacity: xrayOpen.has(i) ? 0 : 1,
+                            filter: xrayOpen.has(i) ? "blur(8px)" : "none",
+                            transform: xrayOpen.has(i) ? "scale(0.98)" : "scale(1)",
+                            pointerEvents: xrayOpen.has(i) ? "none" : "auto",
+                            ...(xrayOpen.has(i) ? { position: "absolute" as const, inset: 0, zIndex: 0 } : {}),
+                          }}
+                        >
+                        {(() => {
+                          const chunks = msg.content.split(/\n\n+/).filter(Boolean);
+                          return chunks.map((chunk, ci) => (
                             <motion.div
-                              initial={{ opacity: 0, y: 12 }}
+                              key={`${i}-${ci}-${chunk.slice(0, 20)}`}
+                              initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -8 }}
-                              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                              className="oracle-xray-panel rounded-xl border border-primary/15 bg-background/80 backdrop-blur-sm p-4 space-y-5"
+                              transition={{
+                                duration: 0.28,
+                                delay: i < messages.length - 1 ? 0 : ci * 0.15,
+                                ease: [0.25, 0.1, 0.25, 1],
+                              }}
+                              className="oracle-bubble"
                             >
-                              {/* Header */}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Layers className="w-4 h-4 text-primary/70" />
-                                  <span className="text-sm font-display font-semibold text-foreground/90">X-Ray</span>
-                                  <span className="text-xs text-muted-foreground/40">— what's behind this answer</span>
-                                </div>
-                                <button
-                                  onClick={() => setXrayOpen(prev => toggle(prev, i))}
-                                  className="p-1 rounded-lg text-muted-foreground/40 hover:text-foreground transition-colors"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
+                              <div className="oracle-prose">
+                                <ReactMarkdown>{chunk}</ReactMarkdown>
                               </div>
+                            </motion.div>
+                          ));
+                        })()}
+                        </div>
 
-                              {/* 1. What You Asked */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
-                              >
-                                <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">What you asked</h4>
-                                <p className="text-xs text-muted-foreground/40 mb-2">How the engine interpreted your question</p>
-                                <div className="flex flex-wrap gap-1.5 mb-2">
-                                  {t.constraints.map((c, ci) => (
-                                    <span key={ci} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${CONSTRAINT_COLORS[c.type] || "bg-muted/20 text-muted-foreground border-border/20"}`}>
-                                      {c.type}: {c.description}
-                                    </span>
-                                  ))}
-                                  {t.constraints.length === 0 && <span className="text-xs text-muted-foreground/30">No specific constraints detected</span>}
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {t.termMap.map((tm, ti) => (
-                                    <span key={ti} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs bg-muted/15 text-foreground/60 border border-border/15 font-mono">
-                                      {tm.term}
-                                      <span className="text-muted-foreground/30">0x{tm.ringValue.toString(16).padStart(2, "0")}</span>
-                                    </span>
-                                  ))}
-                                </div>
-                              </motion.div>
+                        {/* X-Ray: revealed in the same position */}
+                        <AnimatePresence>
+                          {xrayOpen.has(i) && trustMap[i] && (() => {
+                            const t = trustMap[i];
+                            const curvPct = Math.min(t.curvature * 100, 100);
+                            const curvLabel = curvPct < 20 ? "Closely aligned" : curvPct < 50 ? "Some drift" : "Significant drift";
+                            const curvColor = curvPct < 20 ? "text-emerald-400" : curvPct < 50 ? "text-amber-400" : "text-red-400";
 
-                              {/* 2. What's Grounded */}
+                            const compositeRing = t.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
+                            const partition = bridge.classifyByte(compositeRing);
+                            const popcount = bridge.bytePopcount(compositeRing);
+                            const factors = bridge.factorize(compositeRing);
+                            const critHolds = bridge.verifyCriticalIdentity(compositeRing);
+
+                            const backedCount = t.claims.filter(c => c.grade <= "B").length;
+
+                            return (
                               <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0, filter: "blur(4px)" }}
+                                transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
+                                className="oracle-xray-panel relative z-10 space-y-6"
                               >
-                                <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">What's grounded</h4>
-                                <p className="text-xs text-muted-foreground/40 mb-2">Which parts of the answer have evidence behind them</p>
-                                <div className="space-y-1 max-h-48 overflow-y-auto">
-                                  {t.claims.map((claim, ci) => {
-                                    const gc = GRADE_COLORS[claim.grade];
-                                    const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
-                                    return (
-                                      <div key={ci} className={`flex items-start gap-2 rounded-lg px-3 py-2 ${gc.bg} border ${gc.border} group/claim`}>
-                                        <span className={`text-[10px] font-bold shrink-0 mt-0.5 w-5 text-center ${gc.text}`}>{claim.grade}</span>
-                                        <p className="text-sm text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
+                                {/* ── Understanding ── */}
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.08, duration: 0.35 }}
+                                  className="oracle-bubble"
+                                >
+                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Understanding</p>
+                                  <p className="text-base text-foreground/70 mb-3">How the engine interpreted your question:</p>
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    {t.constraints.map((c, ci) => (
+                                      <span key={ci} className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border ${
+                                        c.type === "factual" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                                        c.type === "logical" ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
+                                        c.type === "causal" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                      }`}>
+                                        {c.description}
+                                      </span>
+                                    ))}
+                                    {t.constraints.length === 0 && <span className="text-sm text-muted-foreground/40">General knowledge query</span>}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {t.termMap.map((tm, ti) => (
+                                      <span key={ti} className="px-2.5 py-1 rounded-lg text-sm bg-muted/10 text-foreground/50 border border-border/15">
+                                        {tm.term}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </motion.div>
+
+                                {/* ── Evidence ── */}
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.16, duration: 0.35 }}
+                                  className="oracle-bubble"
+                                >
+                                  <div className="flex items-center justify-between mb-3">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Evidence</p>
+                                    <span className="text-sm text-muted-foreground/40">{backedCount} of {t.claims.length} backed</span>
+                                  </div>
+                                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                                    {t.claims.map((claim, ci) => {
+                                      const gc = GRADE_COLORS[claim.grade];
+                                      const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
+                                      return (
                                         <a
+                                          key={ci}
                                           href={searchUrl}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="shrink-0 flex items-center gap-0.5 text-[10px] text-muted-foreground/30 hover:text-primary/70 opacity-0 group-hover/claim:opacity-100 transition-opacity mt-0.5"
-                                          title="Verify this claim"
+                                          className={`flex items-start gap-3 rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} hover:brightness-110 transition-all group/claim cursor-pointer`}
                                         >
-                                          Verify <ExternalLink className="w-2.5 h-2.5" />
+                                          <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
+                                          <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
+                                          <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-1.5 text-muted-foreground/20 group-hover/claim:text-muted-foreground/60 transition-colors" />
                                         </a>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground/30">
-                                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400/60" /> A/B = Backed</span>
-                                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400/60" /> C = Plausible</span>
-                                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400/60" /> D = Unverified</span>
-                                </div>
-                              </motion.div>
-
-                              {/* 3. How Far It Drifted */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.15 }}
-                              >
-                                <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">How far it drifted</h4>
-                                <p className="text-xs text-muted-foreground/40 mb-2">Did the answer stay on track or wander from what you asked?</p>
-                                <div className="flex items-center gap-3">
-                                  <div className="oracle-xray-gauge flex-1 h-2 rounded-full overflow-hidden relative">
-                                    <motion.div
-                                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-foreground border-2 border-background shadow-md z-10"
-                                      initial={{ left: "0%" }}
-                                      animate={{ left: `${curvPct}%` }}
-                                      transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-                                      style={{ marginLeft: "-6px" }}
-                                    />
+                                      );
+                                    })}
                                   </div>
-                                  <span className={`text-xs font-mono font-semibold ${curvColor} min-w-[4rem] text-right`}>
-                                    {t.curvature.toFixed(2)}
-                                  </span>
-                                </div>
-                                <p className={`text-xs mt-1 ${curvColor}`}>{curvLabel}</p>
-                              </motion.div>
+                                </motion.div>
 
-                              {/* 4. How It Was Built */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                              >
-                                <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">How it was built</h4>
-                                <p className="text-xs text-muted-foreground/40 mb-3">The reasoning process that produced this answer</p>
-                                <div className="flex items-center gap-0">
-                                  {[
-                                    { label: "Deductive", detail: `${t.proof?.constraintsCount ?? 0} constraints`, color: "bg-blue-400" },
-                                    { label: "Inductive", detail: `${t.claims.length} claims`, color: "bg-purple-400" },
-                                    { label: "Abductive", detail: t.converged ? "Converged ✓" : "Open", color: t.converged ? "bg-emerald-400" : "bg-amber-400" },
-                                  ].map((step, si) => (
-                                    <div key={si} className="flex items-center">
-                                      <div className="flex flex-col items-center">
-                                        <div className={`w-2.5 h-2.5 rounded-full ${step.color}`} />
-                                        <span className="text-[10px] font-medium text-foreground/60 mt-1">{step.label}</span>
-                                        <span className="text-[9px] text-muted-foreground/40">{step.detail}</span>
+                                {/* ── Alignment + Reasoning (side by side on wider screens) ── */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {/* Alignment */}
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.24, duration: 0.35 }}
+                                    className="oracle-bubble"
+                                  >
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Alignment</p>
+                                    <p className="text-base text-foreground/70 mb-3">How closely the answer followed your question.</p>
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <div className="oracle-xray-gauge flex-1 h-2.5 rounded-full overflow-hidden relative">
+                                        <motion.div
+                                          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-foreground border-2 border-background shadow-lg z-10"
+                                          initial={{ left: "0%" }}
+                                          animate={{ left: `${curvPct}%` }}
+                                          transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
+                                          style={{ marginLeft: "-7px" }}
+                                        />
                                       </div>
-                                      {si < 2 && <div className="w-8 h-[1px] bg-border/30 mx-1 mb-6" />}
                                     </div>
-                                  ))}
-                                </div>
-                                {t.iterations > 1 && (
-                                  <p className="text-xs text-primary/60 mt-2">
-                                    <RefreshCw className="w-3 h-3 inline mr-1" />
-                                    Refined {t.iterations - 1}× to improve quality
-                                  </p>
-                                )}
-                              </motion.div>
+                                    <p className={`text-base font-medium ${curvColor}`}>{curvLabel}</p>
+                                  </motion.div>
 
-                              {/* 5. Ring Fingerprint */}
-                              <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.25 }}
-                              >
-                                <h4 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">Ring fingerprint</h4>
-                                <p className="text-xs text-muted-foreground/40 mb-2">Unique mathematical signature of this query→response pair (WASM-verified)</p>
-                                <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-                                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary/80 border border-primary/15">
-                                    0x{compositeRing.toString(16).padStart(2, "0")}
-                                  </span>
-                                  <span className="text-muted-foreground/30">·</span>
-                                  <span className="text-foreground/60">{partition}</span>
-                                  <span className="text-muted-foreground/30">·</span>
-                                  <span className="text-foreground/60">popcount {popcount}</span>
-                                  {factors.length > 0 && (
-                                    <>
-                                      <span className="text-muted-foreground/30">·</span>
-                                      <span className="text-foreground/60">{factors.join(" × ")}</span>
-                                    </>
-                                  )}
-                                  <span className="text-muted-foreground/30">·</span>
-                                  <span className={critHolds ? "text-emerald-400/70" : "text-amber-400/70"}>
-                                    identity {critHolds ? "✓" : "—"}
-                                  </span>
+                                  {/* Reasoning */}
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.32, duration: 0.35 }}
+                                    className="oracle-bubble"
+                                  >
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Reasoning</p>
+                                    <div className="space-y-2.5">
+                                      {[
+                                        { label: "Extracted constraints", value: `${t.proof?.constraintsCount ?? 0}`, color: "bg-blue-400" },
+                                        { label: "Claims generated", value: `${t.claims.length}`, color: "bg-purple-400" },
+                                        { label: "Verification", value: t.converged ? "Converged" : "Open", color: t.converged ? "bg-emerald-400" : "bg-amber-400" },
+                                      ].map((step, si) => (
+                                        <div key={si} className="flex items-center gap-3">
+                                          <div className={`w-2 h-2 rounded-full ${step.color} shrink-0`} />
+                                          <span className="text-base text-foreground/70 flex-1">{step.label}</span>
+                                          <span className="text-base text-foreground/50 font-medium">{step.value}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {t.iterations > 1 && (
+                                      <p className="text-sm text-primary/60 mt-3">
+                                        Refined {t.iterations - 1}× to improve quality
+                                      </p>
+                                    )}
+                                  </motion.div>
                                 </div>
+
+                                {/* ── Signature ── */}
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.4, duration: 0.35 }}
+                                  className="oracle-bubble"
+                                >
+                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-2">Signature</p>
+                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the ring engine.</p>
+                                  <div className="flex flex-wrap items-center gap-3 text-base">
+                                    <span className="px-3 py-1.5 rounded-lg bg-primary/8 text-primary/80 border border-primary/12 font-mono">
+                                      0x{compositeRing.toString(16).padStart(2, "0")}
+                                    </span>
+                                    <span className="text-foreground/50">{partition}</span>
+                                    <span className="text-muted-foreground/30">·</span>
+                                    <span className="text-foreground/50">weight {popcount}</span>
+                                    {factors.length > 0 && (
+                                      <>
+                                        <span className="text-muted-foreground/30">·</span>
+                                        <span className="text-foreground/50">{factors.join(" × ")}</span>
+                                      </>
+                                    )}
+                                    <span className="text-muted-foreground/30">·</span>
+                                    <span className={critHolds ? "text-emerald-400/70" : "text-amber-400/70"}>
+                                      {critHolds ? "verified ✓" : "unverified"}
+                                    </span>
+                                  </div>
+                                </motion.div>
                               </motion.div>
-                            </motion.div>
-                          );
-                        })()}
-                      </AnimatePresence>
+                            );
+                          })()}
+                        </AnimatePresence>
+                      </div>
 
                       {/* ── Trust bar + controls ── */}
                       {trustMap[i] && (
