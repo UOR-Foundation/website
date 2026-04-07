@@ -52,7 +52,9 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 alt="UOR Foundation"
                 className="w-10 h-10 md:w-[clamp(2.25rem,2.6vw,3.25rem)] md:h-[clamp(2.25rem,2.6vw,3.25rem)] object-contain invert brightness-[300] contrast-[1.5] drop-shadow-[0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300"
               />
-              {/* Hide wordmark on mobile for minimal 47G-style look */}
+              <span className="md:hidden font-display text-[13px] font-semibold tracking-[0.18em] uppercase text-foreground">
+                Foundation
+              </span>
               <span className="hidden md:inline font-display text-[clamp(16px,1.25vw,22px)] font-semibold tracking-[0.18em] uppercase text-foreground">
                 The UOR Foundation
               </span>
@@ -96,13 +98,13 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             </Link>
           </div>
 
-          {/* Mobile: MENU / CLOSE text toggle (47G style) */}
+          {/* Mobile: Hamburger / X icon toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden font-mono text-[11px] font-medium uppercase tracking-[0.25em] text-foreground/70 active:text-foreground transition-colors duration-200 relative z-[60] py-2"
+            className="md:hidden text-foreground/70 active:text-foreground transition-colors duration-200 relative z-[60] p-2"
             aria-label="Toggle menu"
           >
-            {mobileOpen ? "Close" : "Menu"}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </header>
