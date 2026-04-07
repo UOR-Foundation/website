@@ -3,6 +3,7 @@ import Layout from "@/modules/core/components/Layout";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { executeExpression, extractWasmBlocks, type SymbolicResult } from "@/modules/oracle/lib/symbolic-engine";
+import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 import { ArrowRight, Copy, Check, Cpu, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
