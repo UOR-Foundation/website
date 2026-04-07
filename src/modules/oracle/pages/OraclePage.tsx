@@ -231,9 +231,7 @@ const OraclePage = () => {
       const grade = result ? result.overallGrade : overallGrade(report.annotations);
       const proofData = result?.proof ?? report.proof;
 
-      setTrustMap(prev => ({
-        ...prev,
-        [msgIndex]: {
+      const trustEntry: TrustData = {
           grade, claims: report.annotations, curvature: report.overallCurvature,
           converged: report.converged, iterations: iteration + 1,
           constraints: scaffold.constraints.map(c => ({ id: c.id, type: c.type, description: c.description, ringValue: c.ringValue })),
@@ -244,8 +242,73 @@ const OraclePage = () => {
             constraintsCount: scaffold.constraints.length, quantum: proofData.quantum,
             certified: proofData.certificate !== null,
           },
-        },
-      }));
+      };
+
+      setTrustMap(prev => ({ ...prev, [msgIndex]: trustEntry }));
+
+      // Compute UOR canonical receipts asynchronously (non-blocking)
+      (async () => {
+        try {
+          const receiptMap: Record<string, UorReceipt> = {};
+
+          // Receipt for the full proof
+          const proofReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:ReasoningProof",
+            "oracle:proofId": proofData.proofId,
+            "oracle:grade": grade,
+            "oracle:curvature": report.overallCurvature,
+            "oracle:converged": report.converged,
+            "oracle:claimCount": report.annotations.length,
+            "oracle:quantum": proofData.quantum,
+          });
+          receiptMap["proof"] = { cid: proofReceipt.cid, derivationId: proofReceipt.derivationId, uorAddress: proofReceipt.uorAddress };
+
+          // Receipt for the scaffold/query interpretation
+          const scaffoldReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:QueryScaffold",
+            "oracle:constraints": scaffold.constraints.map(c => ({ type: c.type, description: c.description, ring: c.ringValue })),
+            "oracle:terms": scaffold.termMap.map(t => ({ term: t.term, ring: t.ringValue })),
+          });
+          receiptMap["scaffold"] = { cid: scaffoldReceipt.cid, derivationId: scaffoldReceipt.derivationId, uorAddress: scaffoldReceipt.uorAddress };
+
+          // Receipt for each claim (batch in parallel)
+          const claimReceipts = await Promise.all(
+            report.annotations.map((claim, idx) =>
+              singleProofHash({
+                "@context": { "oracle": "https://uor.foundation/oracle/" },
+                "@type": "oracle:Claim",
+                "oracle:index": idx,
+                "oracle:text": claim.text,
+                "oracle:grade": claim.grade,
+                "oracle:proofId": proofData.proofId,
+              })
+            )
+          );
+          claimReceipts.forEach((r, idx) => {
+            receiptMap[`claim-${idx}`] = { cid: r.cid, derivationId: r.derivationId, uorAddress: r.uorAddress };
+          });
+
+          // Receipt for the composite ring signature
+          const compositeRing = scaffold.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
+          const sigReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:RingSignature",
+            "oracle:compositeRing": compositeRing,
+            "oracle:proofId": proofData.proofId,
+            "oracle:certified": proofData.certificate !== null,
+          });
+          receiptMap["signature"] = { cid: sigReceipt.cid, derivationId: sigReceipt.derivationId, uorAddress: sigReceipt.uorAddress };
+
+          setTrustMap(prev => ({
+            ...prev,
+            [msgIndex]: { ...prev[msgIndex], receipts: receiptMap },
+          }));
+        } catch (e) {
+          console.warn("UOR receipt generation failed:", e);
+        }
+      })();
 
       if (autoRefine && refinementPrompt && (grade === "C" || grade === "D") && iteration < 2) {
         setRefiningIteration(iteration + 1);
