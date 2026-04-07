@@ -15,8 +15,8 @@ import {
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
-import { singleProofHash } from "@/lib/uor-canonical";
-import { computeAndRegister, enrichWithWasm, type EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { encode, type EnrichedReceipt } from "@/lib/uor-codec";
+import { enrichWithWasm } from "@/modules/oracle/lib/receipt-registry";
 import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -332,14 +332,11 @@ const OraclePage = () => {
         try {
           const receiptMap: Record<string, UorReceipt> = {};
 
-          /** Helper: compute receipt, enrich with WASM ring, register in global registry */
+          /** Helper: compute receipt via universal codec, register in global registry */
           const makeReceipt = async (source: Record<string, unknown>): Promise<UorReceipt> => {
-            const proof = await singleProofHash(source);
-            const enriched = enrichWithWasm(proof);
-            // Register in global receipt registry for /resolve page lookup
-            await computeAndRegister(source);
+            const enriched = await encode(source);
             return {
-              cid: proof.cid,
+              cid: enriched.cid,
               derivationId: proof.derivationId,
               uorAddress: proof.uorAddress,
               ring: {

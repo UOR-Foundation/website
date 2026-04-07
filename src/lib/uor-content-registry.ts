@@ -4,7 +4,7 @@
  * making every significant content structure content-addressed and verifiable.
  */
 
-import { singleProofHash } from "./uor-canonical";
+import { encode } from "@/lib/uor-codec";
 import { generateCertificate, type UorCertificate } from "./uor-certificate";
 
 // Data imports

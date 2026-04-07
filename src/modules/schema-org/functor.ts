@@ -16,7 +16,7 @@
  * @module schema-org/functor
  */
 
-import { singleProofHash } from "@/lib/uor-canonical";
+import { encode } from "@/lib/uor-codec";
 import type { FunctorResult, SchemaOrgUorIdentity } from "./types";
 import { SCHEMA_ORG_HIERARCHY, getAncestorChain } from "./vocabulary";
 
@@ -96,16 +96,16 @@ export async function addressType(typeName: string): Promise<SchemaOrgUorIdentit
     "uor:hierarchyDepth": ancestorChain.length - 1,
   };
 
-  const proof = await singleProofHash(typeDefinition);
+  const enriched = await encode(typeDefinition);
 
   const identity: SchemaOrgUorIdentity = {
     schemaType: typeName,
-    derivationId: proof.derivationId,
-    cid: proof.cid,
-    hashHex: proof.hashHex,
-    uorAddress: proof.uorAddress,
-    ipv6Address: proof.ipv6Address,
-    nquads: proof.nquads,
+    derivationId: enriched.derivationId,
+    cid: enriched.cid,
+    hashHex: enriched.hashHex,
+    uorAddress: { "u:glyph": enriched.glyph, "u:length": enriched.glyph.length },
+    ipv6Address: { "u:ipv6": enriched.ipv6, "u:ipv6Prefix": "fd00:0075:6f72::/48", "u:ipv6PrefixLength": 48, "u:contentBits": 80 },
+    nquads: enriched.nquads,
   };
 
   typeIdentityCache.set(typeName, identity);
@@ -136,18 +136,18 @@ export async function schemaToUor(
     "@context": DUAL_CONTEXT,
   };
 
-  // Content-address the instance
-  const proof = await singleProofHash(dualJsonLd);
+  // Content-address the instance via universal codec
+  const enriched = await encode(dualJsonLd);
 
   return {
     schemaType,
-    derivationId: proof.derivationId,
-    cid: proof.cid,
-    hashHex: proof.hashHex,
-    uorAddress: proof.uorAddress,
-    ipv6Address: proof.ipv6Address,
+    derivationId: enriched.derivationId,
+    cid: enriched.cid,
+    hashHex: enriched.hashHex,
+    uorAddress: { "u:glyph": enriched.glyph, "u:length": enriched.glyph.length },
+    ipv6Address: { "u:ipv6": enriched.ipv6, "u:ipv6Prefix": "fd00:0075:6f72::/48", "u:ipv6PrefixLength": 48, "u:contentBits": 80 },
     dualJsonLd,
-    nquads: proof.nquads,
+    nquads: enriched.nquads,
   };
 }
 
