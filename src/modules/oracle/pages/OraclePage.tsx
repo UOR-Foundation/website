@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Layout from "@/modules/core/components/Layout";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
+import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import {
   buildScaffold,
   processResponse,
@@ -66,6 +67,10 @@ const OraclePage = () => {
   const [refiningIteration, setRefiningIteration] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const proseContainerRef = useRef<HTMLDivElement>(null);
+  const streamMsgRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToStream = useRef(false);
+  const tokenBufferRef = useRef<TokenBuffer | null>(null);
+  const [showTypingDots, setShowTypingDots] = useState(false);
   const [wasmReady, setWasmReady] = useState(false);
 
   // Controls
@@ -80,9 +85,17 @@ const OraclePage = () => {
   const temperature = 0.7 - (precision / 100) * 0.5;
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+
+  // Scroll to the TOP of the new assistant message once, then stop
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, trustMap]);
+    if (!hasScrolledToStream.current && streamMsgRef.current && isStreaming) {
+      hasScrolledToStream.current = true;
+      // Small delay so the DOM has the element
+      requestAnimationFrame(() => {
+        streamMsgRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [messages, isStreaming]);
 
   const toggle = (set: Set<number>, idx: number) => {
     const s = new Set(set);
