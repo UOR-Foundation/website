@@ -30,7 +30,7 @@ function CopyBtn({ onClick, copied, size = 12, label }: {
   );
 }
 
-const ResolvePage = () => {
+const SearchPage = () => {
   const [contentMode, setContentMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -244,6 +244,11 @@ const ResolvePage = () => {
                   I'm Feeling Lucky
                 </button>
               </div>
+
+              {/* Address space count */}
+              <p className="text-[13px] text-muted-foreground/40 mt-6">
+                Searching across <span className="text-foreground/60 font-medium">340,282,366,920,938,463,463,374,607,431,768,211,456</span> possible addresses
+              </p>
             </div>
           )}
 
@@ -326,4 +331,4 @@ const ResolvePage = () => {
   );
 };
 
-export default ResolvePage;
+export default SearchPage;
