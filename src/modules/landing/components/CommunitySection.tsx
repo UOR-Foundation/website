@@ -54,10 +54,10 @@ const CommunitySection = () => {
             loading="lazy"
           />
         </div>
-        <p className="font-display font-bold text-foreground md:text-foreground leading-tight text-[13px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
+        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[13px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
           {member.name.split(" ")[0]}
         </p>
-        <p className="font-body text-foreground/65 md:text-foreground/50 leading-snug mt-0.5 text-[11px] md:text-base">
+        <p className="font-body text-black/55 md:text-foreground/50 leading-snug mt-0.5 text-[11px] md:text-base">
           {member.role}
         </p>
       </a>
