@@ -1,5 +1,5 @@
 /**
- * UOR Resolve — The Google for the Semantic Web.
+ * UOR Search — The address IS the content.
  *
  * Google indexes information. UOR indexes meaning.
  * One input, one answer. Address ↔ Content.
@@ -47,17 +47,14 @@ const ResolvePage = () => {
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
-
-  // Auto-focus on mount
   useEffect(() => { if (!result) inputRef.current?.focus(); }, [result]);
 
-  // Auto-resolve from URL params
   useEffect(() => {
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
-    if (addr) { setInput(addr); handleResolve(addr); }
+    if (addr) { setInput(addr); handleSearch(addr); }
   }, [searchParams]);
 
-  const handleResolve = async (address: string) => {
+  const handleSearch = async (address: string) => {
     const trimmed = address.trim();
     if (!trimmed) return;
     setLoading(true); setResult(null); setRederived(false);
@@ -66,9 +63,9 @@ const ResolvePage = () => {
       if (entry) {
         setResult({ source: entry.source, receipt: entry.receipt });
       } else {
-        toast("Address not in session. Paste JSON to create an entry.", { icon: "📝" });
+        toast("Address not found. Paste content to create an entry.", { icon: "📝" });
       }
-    } catch { toast.error("Failed to resolve."); }
+    } catch { toast.error("Search failed."); }
     finally { setLoading(false); }
   };
 
@@ -85,7 +82,7 @@ const ResolvePage = () => {
 
   const submit = () => {
     if (looksLikeJson) handleEncode(input);
-    else handleResolve(input); // handles triword, CID, derivationId, and IPv6
+    else handleSearch(input);
   };
 
   const rederive = async () => {
@@ -134,108 +131,94 @@ const ResolvePage = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              className="w-full bg-muted/5 border border-border/15 rounded-full px-4 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
+              className="w-full bg-[hsl(var(--muted)/0.08)] border border-border/15 rounded-full px-4 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
             />
             <button onClick={() => { clearResult(); setTimeout(submit, 50); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground/60 transition-colors">
               <Search className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className={`w-1.5 h-1.5 rounded-full ${wasmReady ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
-            <span className="text-[10px] text-muted-foreground/30 font-mono hidden sm:inline">wasm</span>
-          </div>
         </header>
-      ) : (
-        <header className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-border/15 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="text-muted-foreground/50 hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <span className="font-display font-bold text-foreground text-base tracking-tight">Resolve</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${wasmReady ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
-            <span className="text-[11px] text-muted-foreground/40 hidden sm:inline font-mono">
-              {wasmReady ? `wasm · ${crateVersion() ?? "ok"}` : "loading…"}
-            </span>
-          </div>
-        </header>
-      )}
+      ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-xl mx-auto px-4 md:px-6">
+        <div className="max-w-2xl mx-auto px-4 md:px-6">
 
-          {/* ══════════════ EMPTY STATE — Google Homepage ══════════════ */}
+          {/* ══════════════ EMPTY STATE — Google-style Homepage ══════════════ */}
           {!result && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center pt-[18vh]"
+            <div
+              className="flex flex-col items-center"
+              style={{ paddingTop: "38.2vh" }}
             >
-              {/* Brand wordmark */}
-              <h1 className="font-serif text-5xl md:text-6xl font-medium tracking-[0.25em] text-foreground mb-2 select-none">
+              {/* Brand wordmark — large, crisp, centered */}
+              <h1
+                className="font-display font-medium tracking-[0.12em] text-foreground select-none leading-none"
+                style={{ fontSize: "clamp(4rem, 8vw, 7rem)" }}
+              >
                 UOR
               </h1>
-              <p className="text-sm text-muted-foreground/30 mb-10 tracking-wide">
-                The universal encoder
-              </p>
 
-              {/* Search input */}
-              <div className="w-full relative group">
+              {/* Search bar — Google style */}
+              <div
+                className="w-full relative group"
+                style={{ marginTop: "calc(3.5rem * 0.618)" }}
+              >
                 {looksLikeJson ? (
                   <textarea
                     ref={textareaRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-                    placeholder="Paste JSON content…"
+                    placeholder="Paste content…"
                     rows={6}
-                    className="w-full bg-muted/5 border border-border/20 rounded-2xl px-5 py-4 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/20 resize-none focus:outline-none focus:border-primary/20 focus:shadow-[0_2px_12px_-4px_hsl(var(--primary)/0.12)] transition-all"
+                    className="w-full bg-[hsl(0_0%_19%)] border border-transparent rounded-3xl px-5 py-4 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-border/30 transition-all"
                     autoFocus
                   />
                 ) : (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
-                    placeholder="Search by triword, IPv6, CID, or paste content…"
-                    className="w-full bg-muted/5 border border-border/20 rounded-full px-6 py-3.5 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/20 focus:shadow-[0_2px_12px_-4px_hsl(var(--primary)/0.12)] transition-all"
-                  />
+                  <div className="relative">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/30" />
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+                      placeholder=""
+                      className="w-full bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_22%)] border border-transparent rounded-full pl-12 pr-5 py-3.5 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:bg-[hsl(0_0%_22%)] focus:border-border/30 focus:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)] transition-all"
+                    />
+                  </div>
                 )}
+              </div>
+
+              {/* Dual buttons — Google style */}
+              <div
+                className="flex items-center gap-3"
+                style={{ marginTop: "calc(2rem * 0.618)" }}
+              >
                 <button
                   onClick={submit}
                   disabled={!input.trim() || loading}
-                  className={`absolute right-3 ${looksLikeJson ? "top-3" : "top-1/2 -translate-y-1/2"} p-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-15 hover:bg-primary/90 transition-colors`}
+                  className="px-5 py-2.5 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-border/20 border border-transparent text-sm font-medium text-foreground/90 transition-all disabled:opacity-30"
                 >
-                  <Search className="w-4 h-4" />
+                  UOR Search
+                </button>
+                <button
+                  onClick={() => {
+                    if (!input.trim()) {
+                      const example = { "@type": "Thing", name: "Hello World" };
+                      setInput(JSON.stringify(example, null, 2));
+                    } else {
+                      submit();
+                    }
+                  }}
+                  className="px-5 py-2.5 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-border/20 border border-transparent text-sm font-medium text-foreground/90 transition-all"
+                >
+                  I'm Feeling Lucky
                 </button>
               </div>
-
-              {/* Mode indicator */}
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={looksLikeJson ? "encode" : "resolve"}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-xs text-muted-foreground/25 mt-4"
-                >
-                  {looksLikeJson ? "Content → Address" : "Address → Content"}
-                </motion.p>
-              </AnimatePresence>
-
-              {/* Stats footer */}
-              <p className="text-[11px] text-muted-foreground/20 mt-8 tracking-wide">
-                16,777,216 addresses · {wasmReady ? "WASM ✓" : "loading…"} · deterministic
-              </p>
-            </motion.div>
+            </div>
           )}
 
-          {/* ══════════════ RESULT STATE — Google SERP ══════════════ */}
+          {/* ══════════════ RESULT STATE — SERP ══════════════ */}
           <AnimatePresence>
             {result && (
               <motion.div
@@ -249,7 +232,7 @@ const ResolvePage = () => {
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-3">
                   <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Address</p>
                   <div className="flex items-baseline gap-3">
-                    <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground tracking-wide leading-tight">
+                    <h2 className="text-2xl md:text-3xl font-display font-medium text-foreground tracking-wide leading-tight">
                       {result.receipt.triwordFormatted}
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
