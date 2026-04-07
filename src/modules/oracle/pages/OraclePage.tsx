@@ -337,8 +337,8 @@ const OraclePage = () => {
             const enriched = await encode(source);
             return {
               cid: enriched.cid,
-              derivationId: proof.derivationId,
-              uorAddress: proof.uorAddress,
+              derivationId: enriched.derivationId,
+              uorAddress: { "u:glyph": enriched.glyph, "u:length": enriched.glyph.length },
               ring: {
                 byte: enriched.ringByte,
                 partition: enriched.ringPartition,
