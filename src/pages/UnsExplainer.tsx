@@ -350,7 +350,7 @@ const same   = decode(receipt.triword); // ✓ triword
         {/* CTA */}
         <section className="text-center space-y-4 pb-8">
           <Link
-            to="/resolve"
+            to="/search"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors"
           >
             Try the Resolve engine <ArrowRight size={16} />
