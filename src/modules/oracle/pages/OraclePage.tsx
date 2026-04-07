@@ -43,7 +43,7 @@ const GRADE_LABELS = { A: "Proven", B: "Verified", C: "Plausible", D: "Unverifie
 interface UorReceipt {
   cid: string;
   derivationId: string;
-  uorAddress: string;
+  uorAddress: unknown;
 }
 
 interface TrustData {
