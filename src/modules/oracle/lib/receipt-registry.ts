@@ -108,25 +108,40 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
   const proof = await singleProofHash(source);
   const enriched = enrichWithWasm(proof);
 
-  registry.set(enriched.cid, {
-    source,
-    receipt: enriched,
-    createdAt: Date.now(),
-  });
+  const entry: RegistryEntry = { source, receipt: enriched, createdAt: Date.now() };
 
-  // Also index by derivationId for lookup flexibility
-  registry.set(enriched.derivationId, {
-    source,
-    receipt: enriched,
-    createdAt: Date.now(),
-  });
+  // Index by CID, derivationId, and triword for flexible lookup
+  registry.set(enriched.cid, entry);
+  registry.set(enriched.derivationId, entry);
+  registry.set(enriched.triword, entry);
 
   return enriched;
 }
 
-/** Look up a registry entry by CID or derivation ID */
+/**
+ * Look up a registry entry by CID, derivation ID, or triword.
+ * Accepts any of the three formats.
+ */
 export function lookupReceipt(key: string): RegistryEntry | undefined {
-  return registry.get(key);
+  // Direct lookup first
+  const direct = registry.get(key);
+  if (direct) return direct;
+
+  // Try as triword (normalized lowercase dot-separated)
+  const normalized = key.toLowerCase().replace(/\s*[·]\s*/g, ".").replace(/\s+/g, ".").trim();
+  if (normalized !== key) {
+    const triwordMatch = registry.get(normalized);
+    if (triwordMatch) return triwordMatch;
+  }
+
+  // Check if it's a valid triword and scan by prefix match
+  if (isValidTriword(normalized)) {
+    for (const entry of registry.values()) {
+      if (entry.receipt.triword === normalized) return entry;
+    }
+  }
+
+  return undefined;
 }
 
 /** Get all registered entries */
