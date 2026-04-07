@@ -1235,9 +1235,25 @@
   color: hsl(var(--foreground));
 }
 
-/* ── Paragraphs: chunked for working memory ── */
+/* ── Chat bubble container ── */
+.oracle-bubble {
+  background: hsl(var(--muted) / 0.08);
+  border: 1px solid hsl(var(--border) / 0.08);
+  border-radius: 1.1rem;
+  border-bottom-left-radius: 0.35rem;
+  padding: 0.85em 1.15em;
+  backdrop-filter: blur(2px);
+}
+.oracle-bubble:first-child {
+  border-top-left-radius: 1.1rem;
+}
+.oracle-bubble:last-child {
+  border-bottom-left-radius: 1.1rem;
+}
+
+/* ── Paragraphs inside bubbles ── */
 .oracle-prose p {
-  margin-bottom: 1.4em;
+  margin-bottom: 0.6em;
 }
 .oracle-prose p:last-child {
   margin-bottom: 0;
