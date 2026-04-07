@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles } from "lucide-react";
 import { loadWasm, engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 import { encode, decode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { toast } from "sonner";
