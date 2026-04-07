@@ -12,8 +12,9 @@ import {
   type NeuroSymbolicConfig,
 } from "@/modules/ring-core/neuro-symbolic";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
-import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink } from "lucide-react";
+import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
@@ -39,6 +40,12 @@ const GRADE_LABELS = { A: "Proven", B: "Verified", C: "Plausible", D: "Unverifie
 
 /* ── Types ── */
 
+interface UorReceipt {
+  cid: string;
+  derivationId: string;
+  uorAddress: unknown;
+}
+
 interface TrustData {
   grade: EpistemicGrade;
   claims: AnnotatedClaim[];
@@ -56,6 +63,8 @@ interface TrustData {
   };
   constraints: Array<{ id: string; type: string; description: string; ringValue: number }>;
   termMap: Array<{ term: string; ringValue: number }>;
+  /** UOR canonical receipts keyed by label */
+  receipts?: Record<string, UorReceipt>;
 }
 
 /* ── Page ── */
@@ -222,9 +231,7 @@ const OraclePage = () => {
       const grade = result ? result.overallGrade : overallGrade(report.annotations);
       const proofData = result?.proof ?? report.proof;
 
-      setTrustMap(prev => ({
-        ...prev,
-        [msgIndex]: {
+      const trustEntry: TrustData = {
           grade, claims: report.annotations, curvature: report.overallCurvature,
           converged: report.converged, iterations: iteration + 1,
           constraints: scaffold.constraints.map(c => ({ id: c.id, type: c.type, description: c.description, ringValue: c.ringValue })),
@@ -235,8 +242,73 @@ const OraclePage = () => {
             constraintsCount: scaffold.constraints.length, quantum: proofData.quantum,
             certified: proofData.certificate !== null,
           },
-        },
-      }));
+      };
+
+      setTrustMap(prev => ({ ...prev, [msgIndex]: trustEntry }));
+
+      // Compute UOR canonical receipts asynchronously (non-blocking)
+      (async () => {
+        try {
+          const receiptMap: Record<string, UorReceipt> = {};
+
+          // Receipt for the full proof
+          const proofReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:ReasoningProof",
+            "oracle:proofId": proofData.proofId,
+            "oracle:grade": grade,
+            "oracle:curvature": report.overallCurvature,
+            "oracle:converged": report.converged,
+            "oracle:claimCount": report.annotations.length,
+            "oracle:quantum": proofData.quantum,
+          });
+          receiptMap["proof"] = { cid: proofReceipt.cid, derivationId: proofReceipt.derivationId, uorAddress: proofReceipt.uorAddress };
+
+          // Receipt for the scaffold/query interpretation
+          const scaffoldReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:QueryScaffold",
+            "oracle:constraints": scaffold.constraints.map(c => ({ type: c.type, description: c.description, ring: c.ringValue })),
+            "oracle:terms": scaffold.termMap.map(t => ({ term: t.term, ring: t.ringValue })),
+          });
+          receiptMap["scaffold"] = { cid: scaffoldReceipt.cid, derivationId: scaffoldReceipt.derivationId, uorAddress: scaffoldReceipt.uorAddress };
+
+          // Receipt for each claim (batch in parallel)
+          const claimReceipts = await Promise.all(
+            report.annotations.map((claim, idx) =>
+              singleProofHash({
+                "@context": { "oracle": "https://uor.foundation/oracle/" },
+                "@type": "oracle:Claim",
+                "oracle:index": idx,
+                "oracle:text": claim.text,
+                "oracle:grade": claim.grade,
+                "oracle:proofId": proofData.proofId,
+              })
+            )
+          );
+          claimReceipts.forEach((r, idx) => {
+            receiptMap[`claim-${idx}`] = { cid: r.cid, derivationId: r.derivationId, uorAddress: r.uorAddress };
+          });
+
+          // Receipt for the composite ring signature
+          const compositeRing = scaffold.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
+          const sigReceipt = await singleProofHash({
+            "@context": { "oracle": "https://uor.foundation/oracle/" },
+            "@type": "oracle:RingSignature",
+            "oracle:compositeRing": compositeRing,
+            "oracle:proofId": proofData.proofId,
+            "oracle:certified": proofData.certificate !== null,
+          });
+          receiptMap["signature"] = { cid: sigReceipt.cid, derivationId: sigReceipt.derivationId, uorAddress: sigReceipt.uorAddress };
+
+          setTrustMap(prev => ({
+            ...prev,
+            [msgIndex]: { ...prev[msgIndex], receipts: receiptMap },
+          }));
+        } catch (e) {
+          console.warn("UOR receipt generation failed:", e);
+        }
+      })();
 
       if (autoRefine && refinementPrompt && (grade === "C" || grade === "D") && iteration < 2) {
         setRefiningIteration(iteration + 1);
@@ -387,6 +459,24 @@ const OraclePage = () => {
                             const critHolds = bridge.verifyCriticalIdentity(compositeRing);
 
                             const backedCount = t.claims.filter(c => c.grade <= "B").length;
+                            const r = t.receipts ?? {};
+
+                            /** Compact CID receipt badge */
+                            const ReceiptBadge = ({ receiptKey, label }: { receiptKey: string; label?: string }) => {
+                              const receipt = r[receiptKey];
+                              if (!receipt) return null;
+                              const shortCid = receipt.cid.slice(0, 12) + "…" + receipt.cid.slice(-4);
+                              return (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono bg-primary/8 text-primary/60 border border-primary/12 hover:bg-primary/15 hover:text-primary/80 transition-colors cursor-default select-all"
+                                  title={`UOR Receipt: ${receipt.derivationId}\nCID: ${receipt.cid}`}
+                                >
+                                  <Link2 className="w-3 h-3 shrink-0" />
+                                  {label ? <span className="font-sans text-muted-foreground/50 mr-0.5">{label}</span> : null}
+                                  {shortCid}
+                                </span>
+                              );
+                            };
 
                             return (
                               <motion.div
@@ -403,7 +493,10 @@ const OraclePage = () => {
                                   transition={{ delay: 0.08, duration: 0.35 }}
                                   className="oracle-bubble"
                                 >
-                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Understanding</p>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Understanding</p>
+                                    <ReceiptBadge receiptKey="scaffold" />
+                                  </div>
                                   <p className="text-base text-foreground/70 mb-3">How the engine interpreted your question:</p>
                                   <div className="flex flex-wrap gap-2 mb-3">
                                     {t.constraints.map((c, ci) => (
@@ -442,24 +535,37 @@ const OraclePage = () => {
                                     {t.claims.map((claim, ci) => {
                                       const gc = GRADE_COLORS[claim.grade];
                                       const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
+                                      const claimReceipt = r[`claim-${ci}`];
                                       return (
-                                        <a
+                                        <div
                                           key={ci}
-                                          href={searchUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className={`flex items-start gap-3 rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} hover:brightness-110 transition-all group/claim cursor-pointer`}
+                                          className={`rounded-lg px-3.5 py-2.5 ${gc.bg} border ${gc.border} group/claim`}
                                         >
-                                          <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
-                                          <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
-                                          <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-1.5 text-muted-foreground/20 group-hover/claim:text-muted-foreground/60 transition-colors" />
-                                        </a>
+                                          <div className="flex items-start gap-3">
+                                            <span className={`text-xs font-bold shrink-0 mt-1 w-5 text-center ${gc.text}`}>{claim.grade}</span>
+                                            <p className="text-base text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
+                                            <a
+                                              href={searchUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="shrink-0 mt-1.5 text-muted-foreground/20 hover:text-muted-foreground/60 transition-colors"
+                                              title="Verify externally"
+                                            >
+                                              <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                          </div>
+                                          {claimReceipt && (
+                                            <div className="mt-1.5 ml-8">
+                                              <ReceiptBadge receiptKey={`claim-${ci}`} />
+                                            </div>
+                                          )}
+                                        </div>
                                       );
                                     })}
                                   </div>
                                 </motion.div>
 
-                                {/* ── Alignment + Reasoning (side by side on wider screens) ── */}
+                                {/* ── Alignment + Reasoning ── */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   {/* Alignment */}
                                   <motion.div
@@ -491,7 +597,10 @@ const OraclePage = () => {
                                     transition={{ delay: 0.32, duration: 0.35 }}
                                     className="oracle-bubble"
                                   >
-                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">Reasoning</p>
+                                    <div className="flex items-center justify-between mb-3">
+                                      <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Reasoning</p>
+                                      <ReceiptBadge receiptKey="proof" />
+                                    </div>
                                     <div className="space-y-2.5">
                                       {[
                                         { label: "Extracted constraints", value: `${t.proof?.constraintsCount ?? 0}`, color: "bg-blue-400" },
@@ -520,8 +629,11 @@ const OraclePage = () => {
                                   transition={{ delay: 0.4, duration: 0.35 }}
                                   className="oracle-bubble"
                                 >
-                                  <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider mb-2">Signature</p>
-                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the ring engine.</p>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-sm font-semibold text-muted-foreground/50 uppercase tracking-wider">Signature</p>
+                                    <ReceiptBadge receiptKey="signature" />
+                                  </div>
+                                  <p className="text-base text-foreground/70 mb-3">Unique algebraic identity for this exchange, verified by the WASM ring engine.</p>
                                   <div className="flex flex-wrap items-center gap-3 text-base">
                                     <span className="px-3 py-1.5 rounded-lg bg-primary/8 text-primary/80 border border-primary/12 font-mono">
                                       0x{compositeRing.toString(16).padStart(2, "0")}
@@ -540,6 +652,11 @@ const OraclePage = () => {
                                       {critHolds ? "verified ✓" : "unverified"}
                                     </span>
                                   </div>
+                                  {r["signature"] && (
+                                    <p className="text-xs text-muted-foreground/30 mt-3 font-mono break-all">
+                                      derivation: {r["signature"].derivationId}
+                                    </p>
+                                  )}
                                 </motion.div>
                               </motion.div>
                             );
