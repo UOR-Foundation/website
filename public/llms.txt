@@ -4,6 +4,15 @@
 
 The UOR Framework is a unified computational substrate for agentic AI. It provides a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence.
 
+## Source of Truth
+
+The canonical implementation is the Rust crate `uor-foundation`.
+All API endpoints, MCP tools, schemas, and type definitions are projections of this crate.
+
+- Crate: https://crates.io/crates/uor-foundation
+- API docs: https://docs.rs/uor-foundation
+- Install: cargo add uor-foundation
+
 ## Documentation
 
 - Full agent guide (start here): https://uor.foundation/llms.md

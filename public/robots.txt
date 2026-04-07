@@ -10,6 +10,10 @@ Allow: /
 # === AI Agent Discovery ===
 # START HERE → https://uor.foundation/llms.md
 #
+# Source of Truth (Rust crate): https://crates.io/crates/uor-foundation
+# Crate API Docs: https://docs.rs/uor-foundation
+# Install: cargo add uor-foundation
+#
 # Machine-readable discovery:
 # https://uor.foundation/llms.txt
 # https://uor.foundation/.well-known/uor.json

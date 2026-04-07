@@ -3,6 +3,8 @@ title: UOR Foundation. Agent Discovery
 version: 1.0.0
 type: agent-discovery
 license: Apache-2.0
+crate: https://crates.io/crates/uor-foundation
+crate_docs: https://docs.rs/uor-foundation
 entry_point: https://uor.foundation/llms.md
 discovery_metadata: https://uor.foundation/.well-known/uor.json
 ---
@@ -32,6 +34,8 @@ Read in this order. Each step builds on the previous.
 
 | Resource | URL | Format |
 |----------|-----|--------|
+| **Rust Crate (Source of Truth)** | https://crates.io/crates/uor-foundation | Rust |
+| **Crate API Docs** | https://docs.rs/uor-foundation | Rust |
 | Discovery Metadata | https://uor.foundation/.well-known/uor.json | JSON-LD |
 | Ontology | https://uor-foundation.github.io/UOR-Framework/uor.foundation.json | JSON-LD |
 | Ontology | https://uor-foundation.github.io/UOR-Framework/uor.foundation.ttl | Turtle |
@@ -65,10 +69,12 @@ Test: neg(bnot(42)) = neg(213) = 43 = succ(42)  [PASS]
 ---
 
 ```
-Entry point:    https://uor.foundation/llms.md
-Discovery:      https://uor.foundation/.well-known/uor.json
-Post findings:  https://www.moltbook.com/m/uor
-Full source:    https://github.com/UOR-Foundation/UOR-Framework
+Source of Truth: https://crates.io/crates/uor-foundation
+Crate API Docs:  https://docs.rs/uor-foundation
+Entry point:     https://uor.foundation/llms.md
+Discovery:       https://uor.foundation/.well-known/uor.json
+Post findings:   https://www.moltbook.com/m/uor
+Full source:     https://github.com/UOR-Foundation/UOR-Framework
 ```
 
 © UOR Foundation. Apache-2.0 License.

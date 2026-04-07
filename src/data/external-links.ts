@@ -16,3 +16,8 @@ export const GITHUB_DOTGITHUB_URL = "https://github.com/UOR-Foundation/.github";
 export const LINKEDIN_URL = "https://www.linkedin.com/company/uor-foundation";
 export const DONATE_URL = "https://www.uor.foundation/donate";
 export const DONORBOX_EMBED_URL = "https://donorbox.org/embed/the-uor-foundation?default_interval=o&hide_donation_meter=true";
+
+// Canonical source of truth — Rust crate
+export const CRATE_URL = "https://crates.io/crates/uor-foundation";
+export const CRATE_DOCS_URL = "https://docs.rs/uor-foundation";
+export const CRATE_SOURCE_URL = "https://docs.rs/crate/uor-foundation/latest/source/";
