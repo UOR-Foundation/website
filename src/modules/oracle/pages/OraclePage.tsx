@@ -399,21 +399,20 @@ const OraclePage = () => {
                                     <div className="mt-3 rounded-xl border border-border/20 bg-background/30 p-4">
                                       <div className="space-y-3">
                                         {[
-                                          { label: "Query", detail: `${trustMap[i].proof!.premisesCount} key terms extracted` },
-                                          { label: "Scaffold", detail: `${trustMap[i].proof!.constraintsCount} verification constraints built` },
-                                          { label: "Response", detail: `${trustMap[i].claims.length} individual claims identified` },
-                                          { label: "Verify", detail: `${trustMap[i].proof!.stepsCount} checks, ${(trustMap[i].curvature * 100).toFixed(1)}% alignment` },
+                                          { label: "Parse", detail: `${trustMap[i].proof!.premisesCount} key topics identified` },
+                                          { label: "Check", detail: `${trustMap[i].claims.length} individual claims found` },
+                                          { label: "Verify", detail: `${trustMap[i].proof!.stepsCount} checks performed` },
                                           { label: "Result", detail: `${GRADE_LABELS[trustMap[i].grade]}${trustMap[i].proof!.certified ? ", certified" : ""}` },
                                         ].map((step, si) => (
                                           <div key={si} className="flex items-center gap-3">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${si === 4 ? GRADE_COLORS[trustMap[i].grade].fill : "bg-primary/40"}`} />
-                                            <span className="text-sm font-medium text-foreground/70 w-20 shrink-0">{step.label}</span>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${si === 3 ? GRADE_COLORS[trustMap[i].grade].fill : "bg-primary/40"}`} />
+                                            <span className="text-sm font-medium text-foreground/70 w-16 shrink-0">{step.label}</span>
                                             <span className="text-sm text-muted-foreground/60">{step.detail}</span>
                                           </div>
                                         ))}
                                       </div>
-                                      <div className="mt-3 pt-2 border-t border-border/10 text-xs font-mono text-muted-foreground/30">
-                                        {trustMap[i].proof!.proofId.slice(0, 28)}
+                                      <div className="mt-3 pt-2 border-t border-border/10 text-xs text-muted-foreground/30">
+                                        Verified automatically
                                       </div>
                                     </div>
                                   </motion.div>
@@ -568,9 +567,7 @@ const OraclePage = () => {
                   </div>
                   <div className="space-y-2 text-sm">
                     {[
-                      ["Alignment", `${(latestTrust.curvature * 100).toFixed(1)}%`],
-                      ["Converged", latestTrust.converged ? "Yes" : "No"],
-                      ["Iterations", `${latestTrust.iterations}`],
+                      ["Checks run", `${latestTrust.iterations}`],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between">
                         <span className="text-muted-foreground/50">{k}</span>
