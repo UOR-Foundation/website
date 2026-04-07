@@ -1,95 +1,69 @@
 
 
-# Top 3 UOR-Unique Features for the Oracle
+# Cognitively Optimized Oracle Typography
 
-## Analysis: What Makes UOR Genuinely Novel
+## Research Foundations Applied
 
-After auditing the full WASM-Rust implementation, the ring-core reasoning engine, and the neuro-symbolic pipeline, here are the three capabilities that no other AI interface offers. Each is grounded in the Z/256Z ring arithmetic running in WASM, demonstrable in real-time, and explainable without jargon.
+Drawing from established findings in reading science and cognitive load theory:
 
----
+1. **Optimal line length**: 50-75 characters per line (Dyson & Haselgrove, 2001). Current 68ch is good, but body text size needs increase for comfortable reading at screen distance.
 
-## Feature 1: Claim-by-Claim Trust Grades (Epistemic X-Ray)
+2. **Line spacing (leading)**: 1.5-1.8x font size reduces saccade errors (Kolers et al., 1981). Bump to 1.8 for body, 1.5 for lists.
 
-**What it is**: Every sentence in every answer gets an individual trust grade (A through D) computed by the WASM ring engine. Not a vague "confidence score" on the whole response — each claim is independently measured.
+3. **Paragraph spacing**: Full line-height gap between paragraphs (not half) creates clear "chunking" boundaries that align with working memory capacity (Miller, 1956). Current 1.1em is too tight.
 
-**Why it is unique**: No chatbot grades individual claims. ChatGPT, Claude, Gemini — they give you a wall of text and you have to trust all of it or none of it. UOR decomposes the response into atomic claims and runs each one through curvature measurement against the ring-derived scaffold. The user can see exactly which parts are well-grounded and which are speculative.
+4. **F-pattern scanning**: Users scan in an F-shape (Nielsen, 2006). Bold key terms and use left-aligned headings to anchor scan paths. First sentence of each paragraph carries the most weight.
 
-**How it works under the hood**: `measureCurvatureAndAnnotate()` splits the response into sentences, computes term coverage against the scaffold's `termMap` (ring-hashed), checks constraint satisfaction, and measures `abductiveCurvature` via the WASM bridge. Each sentence gets a grade based on its curvature distance from the scaffold constraints.
+5. **Semantic grouping (Gestalt proximity)**: Related content needs tighter spacing; unrelated content needs clear separation. Headings should be closer to their content than to preceding content (2:1 ratio).
 
-**How to showcase it**: Below each assistant message, show an expandable "Trust Map" — a visual bar of colored segments (green/blue/amber/red) representing the grade of each claim. Tap any segment to highlight that sentence and see its grade + reasoning. Label: **"See exactly which claims are verified."**
+6. **Contrast and luminance**: Body text at 85-90% opacity (not 100%) reduces glare fatigue on dark backgrounds. Strong/bold at 100% creates natural emphasis anchors.
 
----
+7. **Font size hierarchy**: Minimum 16px body on screens (Legge & Bigelow, 2011). Current clamp tops at 16.5px which is borderline. Bump to 15.5-17.5px range.
 
-## Feature 2: Self-Correcting Answers (Auto-Refine Loop)
+8. **Word spacing**: Slight increase (0.01em) aids word boundary detection in sans-serif faces.
 
-**What it is**: When an answer scores below a trust threshold, the system automatically sends it back to the LLM with specific constraint violations identified by the WASM engine. The answer improves itself — visibly, in front of the user.
+9. **Hanging punctuation and optical margin alignment**: Bullet points and quotation marks should "hang" outside the text block for cleaner visual edges.
 
-**Why it is unique**: No AI self-corrects against algebraic constraints. Existing "retry" buttons just re-roll the dice. UOR's D-I-A (Deductive-Inductive-Abductive) loop identifies *exactly what went wrong* — which claims violated which constraints — and sends a targeted `buildRefinementPrompt()` back. The user watches the trust grade climb from C to B to A across iterations. This is the full reasoning cycle from `reasoning.ts`: deductive constraint propagation, inductive Hamming similarity, abductive curvature measurement — all running through WASM.
+10. **First-line emphasis**: The opening sentence of an AI response is the "topic sentence." Slightly larger or bolder first line aids comprehension anchoring.
 
-**How to showcase it**: When Auto-Refine is ON and a response grades C or D, show a subtle animation: "Refining... (iteration 2/3)" with the trust grade visibly updating. After convergence, show the before/after grades. Label: **"Answers that improve themselves."**
+## Changes
 
----
+### `src/index.css` — Rewrite `.oracle-prose`
 
-## Feature 3: Full Proof Trace (Reasoning Receipt)
+- Increase base font size: `clamp(15.5px, 1.05vw, 17.5px)`
+- Line height to `1.82` (cognitive sweet spot)
+- Word spacing `0.01em`
+- Paragraph margin to `1.4em` (full visual separation between chunks)
+- Heading proximity: `margin-top: 2em`, `margin-bottom: 0.5em` (Gestalt: heading belongs to what follows)
+- First paragraph after heading: slightly reduced top margin for cohesion
+- List item spacing: `0.45em` between items, `1.5` line-height within items
+- Nested list indentation reduced slightly for cognitive nesting depth limit
+- Blockquote: 3px left border, slightly larger padding, warmer muted color
+- Code blocks: slightly more padding, softer background
+- `::first-line` pseudo-element on first paragraph: `font-weight: 500` for topic-sentence anchoring
+- `::selection` styling for pleasant highlight color
+- Smooth `font-feature-settings` for ligatures and proportional numerals
+- Add `text-wrap: pretty` for better line-break decisions (supported in modern browsers)
+- Horizontal rules: more breathing room (2.5em margin)
+- Table cells: more generous padding
 
-**What it is**: Every answer produces a content-addressed proof object (`ReasoningProof` from `proof-machine.ts`) that records every deductive, inductive, and abductive step. The user can expand it and trace exactly how each claim was derived and verified — from the original query constraints through the ring arithmetic to the final grade.
+### `src/modules/oracle/pages/OraclePage.tsx` — Minor prose container tweaks
 
-**Why it is unique**: This is true interpretability, not a "chain of thought" that the LLM narrates about itself. The proof is computed independently by the WASM engine on the client side. It includes: scaffold constraints (ring-mapped terms), fiber budget allocations, Hamming distances, curvature values, and convergence status. It is a mathematical receipt that proves the verification actually happened. No other AI system provides a machine-verifiable audit trail for its answers.
+- No structural changes needed. The `.oracle-prose` class handles everything.
+- Potentially add `selection:bg-primary/20` to the prose container for branded text selection.
 
-**How to showcase it**: A small "Proof" button on each response that expands to show a clean, minimal timeline: Query → Scaffold (N constraints) → Response (M claims) → Verification (curvature X%) → Grade. Each step is expandable for detail. Label: **"Every answer leaves a proof trail."**
+### Summary of cognitive principles mapped to CSS properties
 
----
-
-## Implementation Plan
-
-### New UI: Three controls in the sidebar + enhanced per-message display
-
-**Sidebar controls** (above the Trust Surface card):
-
-1. **Precision slider** — "Balanced → Maximum"
-   - Maps to LLM temperature: 0.7 → 0.2
-   - Passed via `streamOracle` → edge function
-   - One-liner: "How precise should the answer be?"
-
-2. **Auto-Refine toggle** — ON/OFF
-   - When ON: if grade is C or D, automatically runs `buildRefinementPrompt()` and re-sends (up to 3 iterations)
-   - Shows iteration progress in real-time
-   - One-liner: "Automatically improve low-trust answers"
-
-3. **Scrutiny selector** — Lenient / Standard / Strict
-   - Controls convergence epsilon: 0.1 / 0.01 / 0.001
-   - Affects how strictly claims are graded
-   - One-liner: "How strict should claim verification be?"
-
-**Per-message enhancements**:
-
-- **Trust Map**: Visual bar of colored segments below each response (always visible, compact)
-- **Proof Trail**: Expandable panel showing the full D→I→A trace
-- Clicking a claim segment highlights it in the response and shows its individual grade + source
-
-### Files to change
-
-| File | Change |
-|------|--------|
-| `src/modules/oracle/pages/OraclePage.tsx` | Add precision/auto-refine/scrutiny controls to sidebar. Implement auto-refinement loop (call `buildRefinementPrompt`, re-stream, re-verify). Add Trust Map and Proof Trail per message. Pass temperature to `streamOracle`. |
-| `src/modules/oracle/lib/stream-oracle.ts` | Accept `temperature` parameter and pass to edge function |
-| `supabase/functions/uor-oracle/index.ts` | Accept optional `temperature` from request body |
-
-### How the auto-refine loop works in code
-
-```text
-send(query)
-  → buildScaffold(query)
-  → streamOracle(messages, scaffold.promptFragment, temperature)
-  → onDone: processResponse(scaffold, response, iteration=0)
-  → if grade <= "B" or !autoRefine → done, show results
-  → if grade >= "C" and autoRefine and iteration < maxIterations:
-      → buildRefinementPrompt(violations, curvature, iteration)
-      → append refinement as user message
-      → streamOracle again with same scaffold
-      → onDone: processResponse(scaffold, newResponse, iteration=1)
-      → repeat until converged or maxIterations
-```
-
-Each iteration updates the trust display in real-time so the user sees the grade improving.
+| Principle | Property | Value |
+|-----------|----------|-------|
+| Optimal reading speed | `font-size` | 15.5-17.5px |
+| Reduced saccade errors | `line-height` | 1.82 |
+| Working memory chunking | `p margin-bottom` | 1.4em |
+| Gestalt proximity (headings) | `h* margin-top/bottom` | 2em / 0.5em |
+| F-pattern scan anchoring | `strong color` | 100% foreground |
+| Topic sentence emphasis | `::first-line` | weight 500 |
+| Word boundary detection | `word-spacing` | 0.01em |
+| Line-break quality | `text-wrap` | pretty |
+| Cognitive nesting limit | List indent | 1.3em max |
+| Glare reduction | Body opacity | 0.88 |
 
