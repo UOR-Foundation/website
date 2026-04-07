@@ -12,7 +12,7 @@ import {
   type NeuroSymbolicConfig,
 } from "@/modules/ring-core/neuro-symbolic";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
-import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers } from "lucide-react";
+import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink } from "lucide-react";
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -442,10 +442,20 @@ const OraclePage = () => {
                                 <div className="space-y-1 max-h-48 overflow-y-auto">
                                   {t.claims.map((claim, ci) => {
                                     const gc = GRADE_COLORS[claim.grade];
+                                    const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
                                     return (
-                                      <div key={ci} className={`flex items-start gap-2 rounded-lg px-3 py-2 ${gc.bg} border ${gc.border}`}>
+                                      <div key={ci} className={`flex items-start gap-2 rounded-lg px-3 py-2 ${gc.bg} border ${gc.border} group/claim`}>
                                         <span className={`text-[10px] font-bold shrink-0 mt-0.5 w-5 text-center ${gc.text}`}>{claim.grade}</span>
                                         <p className="text-sm text-foreground/80 leading-relaxed flex-1">{claim.text}</p>
+                                        <a
+                                          href={searchUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="shrink-0 flex items-center gap-0.5 text-[10px] text-muted-foreground/30 hover:text-primary/70 opacity-0 group-hover/claim:opacity-100 transition-opacity mt-0.5"
+                                          title="Verify this claim"
+                                        >
+                                          Verify <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
                                       </div>
                                     );
                                   })}
@@ -665,11 +675,19 @@ const OraclePage = () => {
                                                             <div className="space-y-1.5 max-h-48 overflow-y-auto">
                                                               {t.claims.map((claim, ci) => {
                                                                 const backed = claim.grade <= "B";
+                                                                const searchUrl = `https://scholar.google.com/scholar?q=${encodeURIComponent(claim.text.slice(0, 120))}`;
                                                                 return (
-                                                                  <div key={ci} className={`flex items-center gap-2 rounded-lg p-2 text-sm ${backed ? "text-emerald-400/80" : "text-muted-foreground/40"}`}>
+                                                                  <a
+                                                                    key={ci}
+                                                                    href={searchUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className={`flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-muted/15 transition-colors group/ev ${backed ? "text-emerald-400/80" : "text-muted-foreground/40"}`}
+                                                                  >
                                                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${backed ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
-                                                                    <span className="truncate">{claim.text}</span>
-                                                                  </div>
+                                                                    <span className="truncate flex-1">{claim.text}</span>
+                                                                    <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover/ev:opacity-60 transition-opacity" />
+                                                                  </a>
                                                                 );
                                                               })}
                                                             </div>
