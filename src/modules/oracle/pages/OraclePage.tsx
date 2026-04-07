@@ -426,12 +426,24 @@ const OraclePage = () => {
                     </div>
                   ))}
 
-                  {/* Streaming indicator */}
-                  {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-                    <div className="flex justify-start py-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary/50" />
-                    </div>
-                  )}
+                  {/* Typing indicator — WhatsApp-style dots */}
+                  <AnimatePresence>
+                    {showTypingDots && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.25 }}
+                        className="flex items-center gap-1.5 py-3 px-1"
+                      >
+                        <div className="flex gap-[5px] items-center bg-muted/30 rounded-2xl px-4 py-2.5">
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "0ms" }} />
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "160ms" }} />
+                          <span className="typing-dot w-[7px] h-[7px] rounded-full bg-muted-foreground/40" style={{ animationDelay: "320ms" }} />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Verification status */}
                   <AnimatePresence>
