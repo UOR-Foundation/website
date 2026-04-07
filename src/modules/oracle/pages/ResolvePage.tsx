@@ -1,8 +1,8 @@
 /**
  * UOR Resolve — Content-Addressed Proof Lookup & Universal Encoder/Decoder.
  *
- * Paste a CID or derivation ID → see the original data, all four identity
- * forms, and WASM ring verification. Or paste raw JSON to encode it live.
+ * Paste a CID, derivation ID, or three-word address → see the original data,
+ * all five identity forms, and WASM ring verification. Or paste raw JSON to encode it live.
  *
  * Every computation passes through the WASM Rust ring engine
  * (uor-foundation crate) for algebraic verification.
@@ -11,10 +11,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, CheckCircle2, XCircle, Copy, RotateCcw, Layers, Cpu, Hash, Globe, Braces } from "lucide-react";
+import { Search, ArrowLeft, CheckCircle2, XCircle, Copy, RotateCcw, Layers, Cpu, Hash, Globe, Braces, MapPin } from "lucide-react";
 import { loadWasm, engineType, crateVersion, classifyByte, factorize, verifyCriticalIdentity, bytePopcount, byteBasis } from "@/lib/wasm/uor-bridge";
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
 import { lookupReceipt, computeAndRegister, type EnrichedReceipt, type RegistryEntry } from "@/modules/oracle/lib/receipt-registry";
+import { canonicalToTriword, formatTriword, triwordBreakdown, isValidTriword, triwordToPrefix } from "@/lib/uor-triword";
 import { toast } from "sonner";
 
 /* ── Types ── */
@@ -32,7 +33,7 @@ const ResolvePage = () => {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const [query, setQuery] = useState(searchParams.get("cid") ?? searchParams.get("id") ?? "");
+  const [query, setQuery] = useState(searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id") ?? "");
   const [result, setResult] = useState<ResolveResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [wasmReady, setWasmReady] = useState(false);
@@ -42,16 +43,16 @@ const ResolvePage = () => {
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
 
-  // Auto-resolve if CID was passed via URL
+  // Auto-resolve if address was passed via URL
   useEffect(() => {
-    const cid = searchParams.get("cid") ?? searchParams.get("id");
-    if (cid) {
-      setQuery(cid);
-      resolve(cid);
+    const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
+    if (addr) {
+      setQuery(addr);
+      resolve(addr);
     }
   }, [searchParams]);
 
-  /** Resolve a CID or derivation ID */
+  /** Resolve a CID, derivation ID, or triword */
   const resolve = async (input: string) => {
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -60,14 +61,24 @@ const ResolvePage = () => {
     setRederived(false);
 
     try {
-      // Check registry first
+      // Check registry (handles CID, derivationId, triword)
       const entry = lookupReceipt(trimmed);
       if (entry) {
         setResult({ source: entry.source, receipt: entry.receipt, fromRegistry: true });
       } else {
-        // Not found — tell user to try encoding
-        setMode("encode");
-        toast.info("Address not found in session. Paste JSON below to encode it.");
+        // Check if it's a valid triword even if not in registry
+        const normalized = trimmed.toLowerCase().replace(/\s*[·]\s*/g, ".").replace(/\s+/g, ".").trim();
+        if (isValidTriword(normalized)) {
+          const prefix = triwordToPrefix(normalized);
+          const breakdown = triwordBreakdown(normalized);
+          toast.info(
+            `Triword "${formatTriword(normalized)}" maps to hash prefix 0x${prefix?.toUpperCase()}. Not yet in session registry — encode an object to claim this address.`
+          );
+          setMode("encode");
+        } else {
+          setMode("encode");
+          toast.info("Address not found in session. Paste JSON below to encode it.");
+        }
       }
     } catch (e) {
       console.error("Resolve error:", e);
@@ -87,8 +98,8 @@ const ResolvePage = () => {
       const parsed = JSON.parse(jsonStr);
       const receipt = await computeAndRegister(parsed);
       setResult({ source: parsed, receipt, fromRegistry: false });
-      setQuery(receipt.cid);
-      toast.success("Encoded successfully via " + (receipt.engine === "wasm" ? "WASM Rust" : "TypeScript") + " engine.");
+      setQuery(receipt.triword);
+      toast.success(`Encoded → ${receipt.triwordFormatted} (${receipt.engine === "wasm" ? "WASM Rust" : "TypeScript"} engine)`);
     } catch (e) {
       console.error("Encode error:", e);
       toast.error("Invalid JSON. Please check your input.");
@@ -185,7 +196,7 @@ const ResolvePage = () => {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); resolve(query); } }}
-                      placeholder="Paste a CID or derivation ID…"
+                      placeholder="Paste a CID, derivation ID, or triword (e.g. meadow.steep.keep)…"
                       rows={2}
                       className="resolve-search-input w-full bg-muted/8 border border-border/25 rounded-2xl px-5 py-4 pr-14 text-base text-foreground font-mono placeholder:text-muted-foreground/25 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
                     />
@@ -198,7 +209,7 @@ const ResolvePage = () => {
                     </button>
                   </div>
                   <p className="text-sm text-muted-foreground/30 mt-4">
-                    Resolve any content-addressed proof. Every address is deterministic.
+                    Resolve any content-addressed proof by CID, derivation ID, or three-word address.
                   </p>
                 </>
               ) : (
@@ -220,7 +231,7 @@ const ResolvePage = () => {
                     </button>
                   </div>
                   <p className="text-sm text-muted-foreground/30 mt-4">
-                    Object → URDNA2015 → SHA-256 → CID · Glyph · IPv6 · Ring Signature
+                    Object → URDNA2015 → SHA-256 → Triword · CID · Glyph · IPv6 · Ring
                   </p>
                 </>
               )}
@@ -256,6 +267,38 @@ const ResolvePage = () => {
                   <Search className="w-3.5 h-3.5" /> New lookup
                 </button>
 
+                {/* ── Triword Hero ── */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.02 }}
+                  className="resolve-identity-card rounded-2xl border border-primary/15 bg-primary/5 p-6 text-center space-y-3"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary/50" />
+                    <p className="text-xs font-semibold text-primary/50 uppercase tracking-wider">UOR Address</p>
+                  </div>
+                  <p className="text-2xl md:text-3xl font-serif font-medium text-foreground tracking-wide">
+                    {result.receipt.triwordFormatted}
+                  </p>
+                  <p className="text-sm font-mono text-muted-foreground/40">{result.receipt.triword}</p>
+                  {result.receipt.triwordDimensions && (
+                    <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/40 pt-1">
+                      <span><span className="text-primary/50">Observer:</span> {result.receipt.triwordDimensions.observer}</span>
+                      <span className="opacity-30">·</span>
+                      <span><span className="text-primary/50">Observable:</span> {result.receipt.triwordDimensions.observable}</span>
+                      <span className="opacity-30">·</span>
+                      <span><span className="text-primary/50">Context:</span> {result.receipt.triwordDimensions.context}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => copyToClipboard(result.receipt.triword, "Triword address")}
+                    className="inline-flex items-center gap-1.5 text-xs text-primary/40 hover:text-primary/70 transition-colors mt-1"
+                  >
+                    <Copy className="w-3 h-3" /> Copy address
+                  </button>
+                </motion.div>
+
                 {/* ── Identity Card ── */}
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
@@ -273,6 +316,13 @@ const ResolvePage = () => {
                   </div>
 
                   <div className="space-y-4">
+                    {/* Triword */}
+                    <IdentityRow
+                      label="Triword"
+                      value={result.receipt.triwordFormatted}
+                      icon={<MapPin className="w-3.5 h-3.5 text-primary/50" />}
+                      onCopy={() => copyToClipboard(result.receipt.triword, "Triword")}
+                    />
                     {/* CID */}
                     <IdentityRow
                       label="CID"
@@ -444,7 +494,7 @@ function IdentityRow({ label, value, mono, icon, onCopy }: {
       <span className="text-xs text-muted-foreground/40 uppercase tracking-wider w-20 shrink-0 pt-1">{label}</span>
       <div className="flex items-start gap-2 flex-1 min-w-0">
         {icon}
-        <span className={`text-sm text-foreground/80 break-all ${mono ? "font-mono" : ""}`}>{value}</span>
+        <span className={`text-sm text-foreground/80 break-all ${mono ? "font-mono" : "font-serif"}`}>{value}</span>
       </div>
       <button
         onClick={onCopy}

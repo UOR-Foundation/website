@@ -17,6 +17,7 @@ import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Se
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { computeAndRegister, enrichWithWasm, type EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
