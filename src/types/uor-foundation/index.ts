@@ -1,8 +1,12 @@
 /**
- * UOR Foundation v2.0.0. Barrel Export
+ * UOR Foundation v2.0.0 — TypeScript Projection
  *
- * Single entry point for all interfaces, 5 enums, and named individuals.
- * Transcribed 1:1 from the Rust uor-foundation crate.
+ * Canonical source of truth: https://crates.io/crates/uor-foundation (Rust)
+ * API documentation: https://docs.rs/uor-foundation
+ *
+ * These TypeScript types are a projection of the authoritative Rust crate's
+ * trait definitions. The crate is the single source of truth for all
+ * namespaces, classes, properties, and named individuals in the UOR ontology.
  *
  * 14 canonical namespaces across Tri-Space:
  *   Kernel (3):  u/, schema/, op/
@@ -10,6 +14,7 @@
  *   User   (3):  type/, morphism/, state/
  *
  * @version 2.0.0
+ * @see https://crates.io/crates/uor-foundation
  * @see https://github.com/UOR-Foundation/UOR-Framework
  */
 

@@ -3,6 +3,8 @@ title: UOR Framework - Agent Entry Point
 version: 2.0.0
 type: agent-discovery
 license: Apache-2.0
+crate: https://crates.io/crates/uor-foundation
+crate_docs: https://docs.rs/uor-foundation
 spec: https://github.com/UOR-Foundation/UOR-Framework
 ontology: https://uor-foundation.github.io/UOR-Framework/uor.foundation.json
 api: https://api.uor.foundation/v1
@@ -44,6 +46,20 @@ The framework provides six composable layers:
 | **Partition** | Analysis | Decomposes objects into irreducible components for quality scoring |
 | **Observable** | Measurement | Computes distance, similarity, and coherence metrics |
 | **Certificate** | Verification | Issues cryptographic proofs of correctness |
+
+## Source of Truth
+
+The canonical implementation of the UOR Framework is the Rust crate [`uor-foundation`](https://crates.io/crates/uor-foundation). All API endpoints, MCP tools, TypeScript types, and website content are projections of this crate. The crate is the single authority — every schema, namespace, and algebraic identity traces back to its trait definitions.
+
+```
+cargo add uor-foundation
+```
+
+- Crate: https://crates.io/crates/uor-foundation
+- API docs: https://docs.rs/uor-foundation
+- Source: https://docs.rs/crate/uor-foundation/latest/source/
+
+---
 
 ## How To Use It
 
@@ -134,6 +150,8 @@ Send any text to `POST /v1/bridge/partition`. The `partition:density` score indi
 
 | Resource | URL |
 |----------|-----|
+| **Rust Crate (Source of Truth)** | https://crates.io/crates/uor-foundation |
+| **Crate API Docs** | https://docs.rs/uor-foundation |
 | GitHub | https://github.com/UOR-Foundation/UOR-Framework |
 | Ontology (JSON-LD) | https://uor-foundation.github.io/UOR-Framework/uor.foundation.json |
 | API Base | https://api.uor.foundation/v1 |

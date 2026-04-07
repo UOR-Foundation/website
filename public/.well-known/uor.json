@@ -1,4 +1,16 @@
 {
+  "source_of_truth": {
+    "type": "rust-crate",
+    "name": "uor-foundation",
+    "crate": "https://crates.io/crates/uor-foundation",
+    "docs": "https://docs.rs/uor-foundation",
+    "source": "https://docs.rs/crate/uor-foundation/latest/source/",
+    "repository": "https://github.com/UOR-Foundation/UOR-Framework",
+    "install": "cargo add uor-foundation",
+    "no_std": true,
+    "license": "Apache-2.0",
+    "relationship": "All API endpoints, MCP tools, TypeScript types, and website content are projections of this crate. The crate is the single canonical authority."
+  },
   "uor_version": "1.0.0",
   "phase": "2",
   "phase_label": "KG Integration",

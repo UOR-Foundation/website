@@ -20,7 +20,10 @@
     "x-discovery-metadata": "https://uor.foundation/.well-known/uor.json",
     "x-community": "https://www.moltbook.com/m/uor",
     "x-ontology-source": "https://github.com/UOR-Foundation/UOR-Framework",
-    "x-conformance-suite": "cargo run --bin uor-conformance"
+    "x-conformance-suite": "cargo run --bin uor-conformance",
+    "x-source-crate": "https://crates.io/crates/uor-foundation",
+    "x-source-docs": "https://docs.rs/uor-foundation",
+    "x-source-install": "cargo add uor-foundation"
   },
   "servers": [
     {

@@ -56,6 +56,13 @@ const UorMetadata = () => {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:ModuleGraph",
       "uor:specification": "1.0.0",
+      "uor:sourceOfTruth": {
+        "type": "rust-crate",
+        "name": "uor-foundation",
+        "crate": "https://crates.io/crates/uor-foundation",
+        "docs": "https://docs.rs/uor-foundation",
+        "relationship": "All modules in this graph are projections of the canonical Rust crate",
+      },
       modules: moduleGraph,
       contentCertificates: contentGraph,
     };
