@@ -11,49 +11,53 @@ const HeroSection = () => {
       {/* Living prime number field. desktop only */}
       {!isMobile && <PrimeGrid />}
 
-      {/* Mobile: stacked layout — tighter, more cinematic */}
+      {/* Mobile: golden-ratio balanced layout */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
-        <div className="flex-[0.55]" />
+        {/* Top spacer — φ ratio (1.618 parts top vs 1 part bottom) pushes content slightly above center */}
+        <div className="flex-[1]" />
 
-        {/* Galaxy orb */}
+        {/* Galaxy orb — sized for visual weight without dominating */}
         <div
-          className="w-[min(60vw,250px)] h-[min(60vw,250px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
+          className="w-[min(56vw,230px)] h-[min(56vw,230px)] rounded-full overflow-hidden animate-fade-in opacity-0 shrink-0"
           style={{ animationDelay: "0.13s" }}
         >
           <GalaxyAnimation />
         </div>
 
-        <div className="h-[clamp(2rem,5vw,3rem)] shrink-0" />
+        {/* Spacing: orb → text (golden minor) */}
+        <div className="h-[clamp(1.5rem,4vw,2.25rem)] shrink-0" />
 
         <h1
-          className="font-display font-bold leading-[1.12] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block"
+          className="font-display font-bold leading-[1.1] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-4 inline-block"
           style={{ animationDelay: "0.29s" }}
         >
-           <span className="text-[clamp(1.75rem,7vw,2.5rem)] block">Make Data Identity</span>
-           <span className="text-[clamp(2.1rem,8.5vw,3.25rem)] flex justify-between w-full" aria-label="Universal">
+           <span className="text-[clamp(1.65rem,6.8vw,2.4rem)] block">Make Data Identity</span>
+           <span className="text-[clamp(2rem,8.2vw,3rem)] flex justify-between w-full mt-0.5" aria-label="Universal">
              {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
            </span>
         </h1>
 
+        {/* Spacing: text → CTA (golden minor) */}
         <div
-          className="mt-[clamp(1.75rem,5vw,3rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
+          className="mt-[clamp(1.25rem,3.5vw,2rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.47s" }}
         >
           <a
             href="/projects"
-            className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/40 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
+            className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/30 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
           >
             Explore Projects
             <ArrowRight size={14} />
           </a>
         </div>
 
-        <div className="flex-[0.6]" />
+        {/* Bottom spacer — φ reciprocal (1 part) to balance with top */}
+        <div className="flex-[1.618]" />
 
-        {/* Stats bar */}
-        <div className="w-4/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.6s" }} />
+        {/* Stats bar — generous, well-spaced */}
+        <div className="w-3/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/12 to-transparent mb-5 animate-fade-in-up opacity-0" style={{ animationDelay: "0.6s" }} />
         <div
-          className="w-full grid grid-cols-3 gap-6 px-6 pb-[max(2.5rem,calc(env(safe-area-inset-bottom,1rem)+2rem))] animate-fade-in-up opacity-0 pointer-events-none"
+          className="w-full grid grid-cols-3 gap-8 px-8 pb-[max(2rem,calc(env(safe-area-inset-bottom,1rem)+1.5rem))] animate-fade-in-up opacity-0 pointer-events-none"
           style={{ animationDelay: "0.65s" }}
         >
           {[
@@ -62,8 +66,8 @@ const HeroSection = () => {
             { value: "Open", label: "Governance" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display font-bold text-foreground text-[clamp(1.75rem,7vw,2.25rem)] leading-none">{stat.value}</p>
-              <p className="font-mono text-foreground/60 text-[11px] uppercase tracking-[0.14em] mt-3 leading-tight">{stat.label}</p>
+              <p className="font-display font-bold text-foreground text-[clamp(1.5rem,6.5vw,2rem)] leading-none">{stat.value}</p>
+              <p className="font-mono text-foreground/55 text-[10px] uppercase tracking-[0.16em] mt-2 leading-tight">{stat.label}</p>
             </div>
           ))}
         </div>
