@@ -44,6 +44,7 @@ const ResolvePage = () => {
   const [rederived, setRederived] = useState(false);
 
   const looksLikeJson = input.trimStart().startsWith("{") || input.trimStart().startsWith("[");
+  const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
 
@@ -84,7 +85,7 @@ const ResolvePage = () => {
 
   const submit = () => {
     if (looksLikeJson) handleEncode(input);
-    else handleResolve(input);
+    else handleResolve(input); // handles triword, CID, derivationId, and IPv6
   };
 
   const rederive = async () => {
@@ -200,7 +201,7 @@ const ResolvePage = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
-                    placeholder="Search by address or paste content…"
+                    placeholder="Search by triword, IPv6, CID, or paste content…"
                     className="w-full bg-muted/5 border border-border/20 rounded-full px-6 py-3.5 pr-14 text-sm text-foreground font-mono placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/20 focus:shadow-[0_2px_12px_-4px_hsl(var(--primary)/0.12)] transition-all"
                   />
                 )}
@@ -245,7 +246,7 @@ const ResolvePage = () => {
                 className="py-8 space-y-5"
               >
                 {/* ADDRESS */}
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-2">
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-3">
                   <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Address</p>
                   <div className="flex items-baseline gap-3">
                     <h2 className="text-2xl md:text-3xl font-serif font-medium text-foreground tracking-wide leading-tight">
@@ -253,12 +254,25 @@ const ResolvePage = () => {
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
                   </div>
+
+                  {/* IPv6 — base address */}
                   <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-primary/40 font-semibold shrink-0">IPv6</span>
+                    <code className="text-[12px] font-mono text-primary/70 tracking-wide">
+                      {result.receipt.ipv6}
+                    </code>
+                    <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} size={10} />
+                  </div>
+
+                  {/* CID — interop */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/30 font-semibold shrink-0">CID</span>
                     <code className="text-[11px] font-mono text-muted-foreground/30 break-all leading-relaxed">
                       {result.receipt.cid}
                     </code>
                     <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} size={10} />
                   </div>
+
                   <div className="flex items-center gap-1.5 pt-0.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-amber-400"}`} />
                     <span className="text-[10px] text-muted-foreground/30 font-mono">

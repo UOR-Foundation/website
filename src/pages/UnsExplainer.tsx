@@ -1,53 +1,50 @@
 /**
  * UNS Explainer — DNS for Meaning
  *
- * Explains how the Universal Name System works:
- *   - Content-based vs location-based addressing
- *   - Triword human-readable addresses
- *   - The encode/decode cycle
- *   - Live interactive demo
+ * Positions IPv6 as the base addressing layer with triwords
+ * as the human-readable shorthand. Includes UNS services roadmap.
  */
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Globe, Hash, Fingerprint, Network, Zap, Search, Copy, Check } from "lucide-react";
-import { encode, decode, isEncoded, type EnrichedReceipt } from "@/lib/uor-codec";
+import {
+  ArrowLeft, ArrowRight, Globe, Hash, Fingerprint, Network, Zap,
+  Search, Copy, Check, Shield, Database, Cpu, Lock, Radio, Bot, Layers,
+} from "lucide-react";
+import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
 import { loadWasm, engineType } from "@/lib/wasm/uor-bridge";
 
 /* ── Comparison data ── */
 const DNS_VS_UNS = [
-  {
-    aspect: "Resolves",
-    dns: "Names → IP addresses",
-    uns: "Meaning → Content addresses",
-  },
-  {
-    aspect: "Identity",
-    dns: "Location (where it lives)",
-    uns: "Content (what it is)",
-  },
-  {
-    aspect: "Mutability",
-    dns: "A record can point anywhere",
-    uns: "Address is derived from content — change content, change address",
-  },
-  {
-    aspect: "Verification",
-    dns: "Trust the registrar",
-    uns: "Verify yourself — recompute the hash",
-  },
-  {
-    aspect: "Human layer",
-    dns: "Domain names (google.com)",
-    uns: "Triwords (meadow · steep · keep)",
-  },
-  {
-    aspect: "Machine layer",
-    dns: "IPv4/IPv6",
-    uns: "CIDv1 + IPv6 ULA + derivation ID",
-  },
+  { aspect: "Resolves", dns: "Names → IP addresses", uns: "Meaning → IPv6 content addresses" },
+  { aspect: "Identity", dns: "Location (where it lives)", uns: "Content (what it is)" },
+  { aspect: "Base address", dns: "IPv4 / IPv6 (location-assigned)", uns: "IPv6 ULA (content-derived)" },
+  { aspect: "Human layer", dns: "Domain names (google.com)", uns: "Triwords (meadow · steep · keep)" },
+  { aspect: "Mutability", dns: "A record can point anywhere", uns: "Change content → change address" },
+  { aspect: "Verification", dns: "Trust the registrar", uns: "Verify yourself — recompute the hash" },
+  { aspect: "Interop", dns: "CNAME, MX, TXT records", uns: "CIDv1 (IPFS), derivation ID (UOR)" },
 ];
+
+/* ── UNS Services Roadmap ── */
+const UNS_SERVICES = [
+  { icon: Search, name: "Resolver", status: "live", desc: "Triword / IPv6 / CID → content. The universal decoder." },
+  { icon: Shield, name: "Shield", status: "foundation", desc: "WASM ring algebra for content verification and tamper detection." },
+  { icon: Database, name: "Cache", status: "planned", desc: "Content-addressed caching — same CID, same data, no stale entries." },
+  { icon: Cpu, name: "Compute", status: "planned", desc: "Verifiable computation receipts for every encode() operation." },
+  { icon: Layers, name: "Store", status: "partial", desc: "Persistent content-addressed storage with backend integration." },
+  { icon: Lock, name: "Trust", status: "partial", desc: "Certificate generation and WASM-anchored ring verification." },
+  { icon: Radio, name: "Conduit", status: "planned", desc: "Secure content routing between UNS nodes." },
+  { icon: Network, name: "Mesh", status: "planned", desc: "Decentralized peer discovery and content replication." },
+  { icon: Bot, name: "Agent", status: "planned", desc: "Autonomous agents with content-addressed identity and memory." },
+];
+
+const statusColors: Record<string, string> = {
+  live: "bg-emerald-400/20 text-emerald-400",
+  partial: "bg-amber-400/20 text-amber-400",
+  foundation: "bg-primary/20 text-primary",
+  planned: "bg-muted-foreground/10 text-muted-foreground/60",
+};
 
 const UnsExplainer = () => {
   const navigate = useNavigate();
@@ -116,11 +113,57 @@ const UnsExplainer = () => {
             DNS for <em className="text-primary">meaning</em>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-base leading-relaxed">
-            DNS maps names to locations. UNS maps content to addresses.
-            The address <em>is</em> the content — change one byte and the address changes.
+            DNS maps names to locations. UNS maps content to IPv6 addresses.
+            Every resource gets a real, routable IPv6 address derived from its content.
             No registrar. No trust assumptions. Just math.
           </p>
         </motion.section>
+
+        {/* ── IPv6: The Base Layer ── */}
+        <section className="space-y-8">
+          <h3 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+            <Globe size={18} className="text-primary/60" />
+            IPv6: the base addressing layer
+          </h3>
+          <div className="border border-border/20 rounded-xl p-6 bg-card/30 space-y-5">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Every UOR address is rooted in an <strong className="text-foreground">IPv6 Unique Local Address</strong> under
+              the <code className="text-primary/80 text-xs">fd00:0075:6f72::/48</code> prefix.
+              80 bits of the SHA-256 hash fill the host portion — yielding <strong className="text-foreground">2<sup>80</sup> ≈ 1.2 quintillion</strong> unique addresses.
+            </p>
+
+            {/* Visual: IPv6 → Triword relationship */}
+            <div className="bg-background/60 border border-border/15 rounded-xl p-5 space-y-4">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-semibold">Address hierarchy</p>
+              <div className="space-y-3">
+                {/* IPv6 */}
+                <div className="flex items-start gap-3">
+                  <span className="text-[10px] uppercase tracking-wider text-primary/50 font-semibold w-20 pt-0.5 shrink-0">Base (IPv6)</span>
+                  <code className="font-mono text-sm text-primary/80">fd00:0075:6f72:<span className="text-primary font-bold">a3b1</span>:<span className="text-primary font-bold">7f2e</span>:<span className="text-primary font-bold">c9d4</span>:<span className="text-primary font-bold">5e8a</span>:<span className="text-primary font-bold">1b3c</span></code>
+                </div>
+                {/* Arrow */}
+                <div className="flex items-center gap-3 pl-20">
+                  <span className="text-muted-foreground/20">↑ first 3 bytes →</span>
+                </div>
+                {/* Triword */}
+                <div className="flex items-start gap-3">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-semibold w-20 pt-0.5 shrink-0">Human</span>
+                  <span className="font-mono text-sm text-foreground">
+                    <span className="text-primary">meadow</span>
+                    <span className="text-muted-foreground/30"> · </span>
+                    <span className="text-primary">steep</span>
+                    <span className="text-muted-foreground/30"> · </span>
+                    <span className="text-primary">keep</span>
+                  </span>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground/40 leading-relaxed">
+                The triword is a human-readable projection of the first 24 bits of the IPv6 content section.
+                Like saying "San Francisco" instead of "37.7749° N, 122.4194° W."
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* DNS vs UNS comparison */}
         <section className="space-y-8">
@@ -152,9 +195,9 @@ const UnsExplainer = () => {
           </h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: Hash, title: "1. Canonicalize", desc: "Your content is serialized into URDNA2015 N-Quads — a deterministic, order-independent representation." },
-              { icon: Zap, title: "2. Hash", desc: "SHA-256 produces a 256-bit fingerprint. Same content always yields the same hash, everywhere, forever." },
-              { icon: Globe, title: "3. Derive", desc: "From the hash, four identity forms emerge: CID (IPFS), IPv6 (network), Braille (visual), and Triword (human)." },
+              { icon: Hash, title: "1. Canonicalize", desc: "Content is serialized into URDNA2015 N-Quads — a deterministic, order-independent representation." },
+              { icon: Zap, title: "2. Hash", desc: "SHA-256 (Web Crypto, hardware-accelerated) produces a 256-bit fingerprint. Same content → same hash, everywhere." },
+              { icon: Globe, title: "3. Derive", desc: "From the hash: IPv6 ULA (base address), Triword (human layer), CID (IPFS interop), and Braille glyph (visual)." },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="border border-border/20 rounded-xl p-5 space-y-3 bg-card/30">
                 <Icon size={20} className="text-primary/50" />
@@ -165,27 +208,30 @@ const UnsExplainer = () => {
           </div>
         </section>
 
-        {/* Triword addressing */}
-        <section className="space-y-6">
+        {/* ── UNS Services Roadmap ── */}
+        <section className="space-y-8">
           <h3 className="text-lg font-semibold tracking-tight flex items-center gap-2">
-            <Search size={18} className="text-primary/60" />
-            Triword addresses
+            <Layers size={18} className="text-primary/60" />
+            UNS services
           </h3>
-          <div className="border border-border/20 rounded-xl p-6 bg-card/30 space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Every UOR address has a human-readable form: three words derived from the first three bytes of the SHA-256 hash,
-              mapped through the UOR triality: <strong>Observer · Observable · Context</strong>.
-            </p>
-            <div className="flex items-center justify-center gap-2 py-4">
-              <span className="font-mono text-lg text-primary">meadow</span>
-              <span className="text-muted-foreground/30">·</span>
-              <span className="font-mono text-lg text-primary">steep</span>
-              <span className="text-muted-foreground/30">·</span>
-              <span className="font-mono text-lg text-primary">keep</span>
-            </div>
-            <p className="text-xs text-muted-foreground/60 text-center">
-              16,777,216 unique addresses · deterministic · human-memorable
-            </p>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            UNS is not a single service — it's a constellation of composable services, each operating over content-addressed IPv6 space.
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {UNS_SERVICES.map(({ icon: Icon, name, status, desc }) => (
+              <div key={name} className="border border-border/20 rounded-xl p-4 space-y-2 bg-card/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon size={16} className="text-primary/50" />
+                    <span className="font-semibold text-sm">{name}</span>
+                  </div>
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider ${statusColors[status]}`}>
+                    {status}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{desc}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -199,7 +245,7 @@ const UnsExplainer = () => {
           {/* Encode */}
           <div className="border border-border/20 rounded-xl p-6 bg-card/30 space-y-4">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground/50 font-semibold">
-              Encode: Content → Address
+              Encode: Content → IPv6 Address
             </p>
             <textarea
               value={demoInput}
@@ -219,19 +265,19 @@ const UnsExplainer = () => {
             {demoResult && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
                 <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-primary/50 font-semibold w-16">IPv6</span>
+                  <span className="font-mono text-sm text-primary">{demoResult.ipv6}</span>
+                  <CopyBtn text={demoResult.ipv6} k="ipv6" />
+                </div>
+                <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 w-16">Triword</span>
-                  <span className="font-mono text-sm text-primary">{demoResult.triwordFormatted}</span>
+                  <span className="font-mono text-sm text-foreground">{demoResult.triwordFormatted}</span>
                   <CopyBtn text={demoResult.triword} k="tw" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 w-16">CID</span>
                   <span className="font-mono text-[11px] text-muted-foreground truncate max-w-[300px]">{demoResult.cid}</span>
                   <CopyBtn text={demoResult.cid} k="cid" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 w-16">IPv6</span>
-                  <span className="font-mono text-[11px] text-muted-foreground">{demoResult.ipv6}</span>
-                  <CopyBtn text={demoResult.ipv6} k="ipv6" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 w-16">Glyph</span>
@@ -257,7 +303,7 @@ const UnsExplainer = () => {
                 value={decodeInput}
                 onChange={(e) => setDecodeInput(e.target.value)}
                 className="flex-1 bg-background/60 border border-border/30 rounded-lg px-4 py-2.5 font-mono text-xs text-foreground focus:outline-none focus:border-primary/40"
-                placeholder="Paste a triword, CID, or derivation ID…"
+                placeholder="Paste a triword, IPv6, CID, or derivation ID…"
                 onKeyDown={(e) => e.key === "Enter" && handleDecode()}
               />
               <button
@@ -282,21 +328,22 @@ const UnsExplainer = () => {
           </div>
         </section>
 
-        {/* The codec */}
+        {/* Developer snippet */}
         <section className="space-y-6">
           <h3 className="text-lg font-semibold tracking-tight">For developers</h3>
           <div className="border border-border/20 rounded-xl p-6 bg-card/30">
             <pre className="font-mono text-xs text-foreground/70 leading-relaxed overflow-x-auto">{`import { encode, decode } from "@/lib/uor-codec";
 
-// Content → Address (deterministic, WASM-anchored)
+// Content → IPv6 Address (deterministic, WASM-anchored)
 const receipt = await encode({ name: "Ada Lovelace" });
-console.log(receipt.triword);  // "meadow.steep.keep"
-console.log(receipt.cid);      // "bafy2bzace…"
-console.log(receipt.ipv6);     // "fd00:0075:6f72:…"
+console.log(receipt.ipv6);     // "fd00:0075:6f72:…"  ← base address
+console.log(receipt.triword);  // "meadow.steep.keep"  ← human shorthand
+console.log(receipt.cid);      // "bafy2bzace…"        ← IPFS interop
 
 // Address → Content (lossless round-trip)
-const source = decode(receipt.triword);
-// source === { name: "Ada Lovelace" }  ✓`}</pre>
+const source = decode(receipt.ipv6);    // ✓ IPv6
+const same   = decode(receipt.triword); // ✓ triword
+// source === { name: "Ada Lovelace" }`}</pre>
           </div>
         </section>
 
