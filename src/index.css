@@ -1379,3 +1379,18 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* ── Typing dots animation (WhatsApp-style) ── */
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 0.9;
+    transform: translateY(-4px);
+  }
+}
+.typing-dot {
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
