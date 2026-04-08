@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -20,7 +20,8 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
+import { AddressSocialStats, AddressDiscussion, AddressProvenance } from "@/modules/oracle/components/AddressCommunity";
+import { useAuth } from "@/hooks/use-auth";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -290,6 +291,12 @@ const SearchPage = () => {
   const [inscribing, setInscribing] = useState(false);
   const [inscribeResult, setInscribeResult] = useState<{ ipfsHash: string; gatewayUrl: string } | null>(null);
 
+  // Fork state
+  const [forkModalOpen, setForkModalOpen] = useState(false);
+  const [forkNote, setForkNote] = useState("");
+  const [forking, setForking] = useState(false);
+  const { user } = useAuth();
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -436,7 +443,52 @@ const SearchPage = () => {
     setTimeout(() => setCopied(null), 1500);
   }, []);
 
-  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); };
+  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); setForkModalOpen(false); setForkNote(""); };
+
+  /** Fork the current result */
+  const handleFork = async () => {
+    if (!result || !user || forking) return;
+    setForking(true);
+    try {
+      const src = result.source as Record<string, unknown>;
+      const forkObj = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:Fork",
+        "uor:forkedFrom": {
+          "uor:cid": result.receipt.cid,
+          "uor:triword": result.receipt.triword,
+          "uor:forkedAt": new Date().toISOString(),
+        },
+        "uor:content": src,
+        ...(forkNote.trim() ? { "uor:forkNote": forkNote.trim() } : {}),
+      };
+
+      const forkReceipt = await encode(forkObj);
+
+      // Record fork relationship
+      const { error } = await supabase.functions.invoke("address-social", {
+        method: "POST",
+        body: { action: "fork", parentCid: result.receipt.cid, childCid: forkReceipt.cid, note: forkNote.trim() || null },
+      });
+      if (error) throw error;
+
+      setForkModalOpen(false);
+      setForkNote("");
+
+      // Navigate to the new fork
+      setResult({ source: forkObj, receipt: forkReceipt, isConfirmed: false });
+      setInput(forkReceipt.triword);
+      navigate(`/search?w=${encodeURIComponent(forkReceipt.triword)}`, { replace: true });
+
+      confetti({ particleCount: 40, spread: 45, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)"] });
+      toast("Fork created.", { description: forkReceipt.triwordFormatted, icon: "⑂" });
+    } catch (err) {
+      console.error("[Fork] Failed:", err);
+      toast.error("Fork failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setForking(false);
+    }
+  };
 
   /** Inscribe the current result to IPFS via Pinata */
   const inscribeToIpfs = async () => {
@@ -1400,6 +1452,39 @@ const SearchPage = () => {
                   </div>
                 </motion.div>
 
+                {/* ═══ PROVENANCE BANNER (if this is a fork) ═══ */}
+                {typeRaw === "Fork" && (src as Record<string, unknown>)?.["uor:forkedFrom"] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.04 }}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-primary/15 bg-primary/5"
+                    style={{ marginTop: "calc(0.75rem * 1.618)" }}
+                  >
+                    <GitFork className="w-4 h-4 text-primary/50 shrink-0" />
+                    <span className="text-sm text-foreground/60">
+                      Forked from{" "}
+                      <button
+                        onClick={() => {
+                          const parent = ((src as Record<string, unknown>)?.["uor:forkedFrom"] as Record<string, unknown>);
+                          const parentTriword = parent?.["uor:triword"] as string;
+                          const parentCid = parent?.["uor:cid"] as string;
+                          const addr = parentTriword || parentCid;
+                          if (addr) { setInput(addr); clearResult(); setTimeout(() => handleSearch(addr), 50); }
+                        }}
+                        className="font-mono text-primary/80 hover:text-primary transition-colors"
+                      >
+                        {(() => {
+                          const parent = ((src as Record<string, unknown>)?.["uor:forkedFrom"] as Record<string, unknown>);
+                          const tw = parent?.["uor:triword"] as string;
+                          if (tw) return tw.split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
+                          return (parent?.["uor:cid"] as string)?.slice(0, 20) + "…";
+                        })()}
+                      </button>
+                    </span>
+                  </motion.div>
+                )}
+
                 {/* ═══ 2. SOCIAL STATS + REACTIONS ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
@@ -1408,7 +1493,7 @@ const SearchPage = () => {
                   className="border-t border-b border-border/10 py-5"
                   style={{ marginTop: "calc(1.5rem * 1.618)" }}
                 >
-                  <AddressSocialStats cid={result.receipt.cid} />
+                  <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
 
                 {/* ═══ 3. IDENTITY CARD ═══ */}
@@ -1523,6 +1608,25 @@ const SearchPage = () => {
                       <Check className="w-3.5 h-3.5" /> Identical
                     </motion.span>
                   )}
+
+                  {/* Fork */}
+                  <button
+                    onClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/20 text-sm font-medium text-foreground/60 hover:text-foreground/80 hover:border-border/35 transition-all"
+                  >
+                    <GitFork className="w-4 h-4" />
+                    Fork
+                  </button>
+                </motion.div>
+
+                {/* ═══ PROVENANCE TREE ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.13 }}
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                >
+                  <AddressProvenance cid={result.receipt.cid} onNavigate={(cid) => { setInput(cid); clearResult(); setTimeout(() => handleSearch(cid), 50); }} />
                 </motion.div>
 
                 {/* ═══ 5. CONTENT ═══ */}
@@ -1683,6 +1787,75 @@ const SearchPage = () => {
         </div>
       </div>
       </div>{/* end main content wrapper */}
+
+      {/* ══════════════ FORK MODAL ══════════════ */}
+      <AnimatePresence>
+        {forkModalOpen && result && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) { setForkModalOpen(false); setForkNote(""); } }}
+          >
+            <div className="absolute inset-0 bg-[hsl(0_0%_4%/0.85)] backdrop-blur-md" />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              className="relative z-10 w-full border border-[hsl(0_0%_18%/0.6)] bg-[hsl(0_0%_7%/0.97)] backdrop-blur-xl rounded-2xl shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+              style={{ maxWidth: "min(560px, 92vw)" }}
+            >
+              <div className="p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <GitFork className="w-5 h-5 text-primary/70" />
+                    <h2 className="text-lg font-display font-semibold text-foreground/90 tracking-wide">Fork Address</h2>
+                  </div>
+                  <button onClick={() => { setForkModalOpen(false); setForkNote(""); }} className="text-muted-foreground/40 hover:text-foreground/70 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Source</p>
+                  <div className="px-4 py-3 rounded-xl border border-border/15 bg-muted/5">
+                    <p className="text-sm font-mono text-foreground/60 truncate">{result.receipt.triword}</p>
+                    <p className="text-xs text-muted-foreground/30 font-mono mt-1 truncate">{result.receipt.cid}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Fork Note <span className="normal-case font-normal text-muted-foreground/30">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={forkNote}
+                    onChange={(e) => setForkNote(e.target.value)}
+                    placeholder="e.g. remixed for research, adapted for…"
+                    maxLength={500}
+                    className="w-full px-4 py-2.5 rounded-xl bg-muted/5 border border-border/15 text-sm text-foreground/70 placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 transition-colors"
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground/35 leading-relaxed">
+                  Forking creates a new content-addressed object that wraps the original with provenance metadata. The parent link is cryptographically baked into the new CID — provenance is inseparable from the fork.
+                </p>
+
+                <button
+                  onClick={handleFork}
+                  disabled={forking}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/25 hover:border-primary/40 text-sm font-semibold text-foreground/85 transition-all shadow-[0_0_16px_-6px_hsl(var(--primary)/0.15)] disabled:opacity-40"
+                >
+                  <GitFork className="w-4 h-4 text-primary" />
+                  {forking ? "Forking…" : "Create Fork"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ══════════════ ENCODE OVERLAY ══════════════ */}
       <AnimatePresence>

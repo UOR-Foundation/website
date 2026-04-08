@@ -33,10 +33,12 @@ Deno.serve(async (req) => {
       );
 
       // Fetch counts
-      const [visitsRes, reactionsRes, commentsRes] = await Promise.all([
+      const [visitsRes, reactionsRes, commentsRes, forksRes, forkedFromRes] = await Promise.all([
         supabase.from("address_visits").select("id", { count: "exact", head: true }).eq("address_cid", cid),
         supabase.from("address_reactions").select("reaction").eq("address_cid", cid),
         supabase.from("address_comments").select("id, user_id, content, parent_id, created_at").eq("address_cid", cid).order("created_at", { ascending: true }),
+        supabase.from("address_forks").select("id", { count: "exact", head: true }).eq("parent_cid", cid),
+        supabase.from("address_forks").select("parent_cid, fork_note, created_at").eq("child_cid", cid).maybeSingle(),
       ]);
 
       // Aggregate reactions by type
@@ -63,15 +65,30 @@ Deno.serve(async (req) => {
         author: profiles[c.user_id] || { display_name: null, avatar_url: null, uor_glyph: null },
       }));
 
+      // Get child forks list (up to 20)
+      let childForks: Array<{ child_cid: string; fork_note: string | null; created_at: string }> = [];
+      if ((forksRes.count ?? 0) > 0) {
+        const { data: forkData } = await supabase
+          .from("address_forks")
+          .select("child_cid, fork_note, created_at")
+          .eq("parent_cid", cid)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        childForks = forkData ?? [];
+      }
+
       return json({
         visitCount: visitsRes.count ?? 0,
         reactions: reactionCounts,
         totalReactions: (reactionsRes.data ?? []).length,
         comments,
+        forkCount: forksRes.count ?? 0,
+        forkedFrom: forkedFromRes.data ?? null,
+        childForks,
       });
     }
 
-    // POST — react or comment
+    // POST — react, comment, or fork
     if (req.method === "POST") {
       const body = await req.json();
       const action = body.action;
@@ -137,6 +154,26 @@ Deno.serve(async (req) => {
 
         if (error) return json({ error: error.message }, 500);
         return json({ success: true, comment: data });
+      }
+
+      if (action === "fork") {
+        const { parentCid, childCid, note } = body;
+        if (!parentCid || !childCid) return json({ error: "Missing parentCid or childCid" }, 400);
+        if (parentCid === childCid) return json({ error: "Cannot fork to same CID" }, 400);
+        if (note && note.length > 500) return json({ error: "Fork note too long (max 500 chars)" }, 400);
+
+        const { data, error } = await supabase.from("address_forks").insert({
+          parent_cid: parentCid,
+          child_cid: childCid,
+          user_id: user.id,
+          fork_note: note?.trim() || null,
+        }).select("id, created_at").single();
+
+        if (error) {
+          if (error.code === "23505") return json({ error: "Fork relationship already exists" }, 409);
+          return json({ error: error.message }, 500);
+        }
+        return json({ success: true, fork: data });
       }
 
       if (action === "get_my_reaction") {
