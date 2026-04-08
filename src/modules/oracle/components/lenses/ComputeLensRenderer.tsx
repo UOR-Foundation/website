@@ -10,6 +10,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, ChevronDown, ChevronRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { queryWolfram, isComputableQuery, type WolframPod, type WolframResult } from "@/modules/oracle/lib/wolfram-client";
+import { normalizeSource } from "../../lib/citation-parser";
 import SourcesPills from "../SourcesPills";
 import type { MediaData } from "../../lib/stream-knowledge";
 
@@ -246,7 +247,7 @@ export default function ComputeLensRenderer({
       {/* Sources */}
       {sources.length > 0 && (
         <div className="mt-6">
-          <SourcesPills sources={sources} />
+          <SourcesPills sources={sources.map(s => normalizeSource(s))} />
         </div>
       )}
 
