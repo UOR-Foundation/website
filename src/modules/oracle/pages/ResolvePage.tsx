@@ -1475,11 +1475,30 @@ const SearchPage = () => {
                 />
               </div>
             ) : (
+              /* ── DESKTOP ── */
+              immersiveMode ? (
+                <ImmersiveSearchView
+                  onSearch={(q) => { setInput(q); handleSearch(q); }}
+                  onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); }}
+                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); setTimeout(() => setEncodeMode(true), 100); }}
+                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); setTimeout(() => setAiMode(true), 100); }}
+                />
+              ) : (
               /* ── DESKTOP: Original layout ── */
             <div
               className="relative flex flex-col items-center"
               style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
             >
+              {/* Immersive toggle — top right */}
+              <button
+                onClick={() => { setImmersiveMode(true); localStorage.setItem("uor-immersive", "true"); }}
+                className="absolute top-5 right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/10 hover:bg-muted/20 border border-border/15 hover:border-border/30 text-muted-foreground/50 hover:text-foreground/70 transition-all text-xs font-medium z-20"
+                title="Switch to immersive mode"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Immersive</span>
+              </button>
+
               {/* Logo + Title — stacked, centered, φ gap */}
               <div className="flex flex-col items-center" style={{ gap: "calc(1rem * 1.618)" }}>
                 <img
@@ -1655,7 +1674,7 @@ const SearchPage = () => {
                 address space.
               </p>
             </div>
-            )
+            ))
           )}
 
           {/* ══════════════ AI MODE — Oracle ══════════════ */}
