@@ -13,6 +13,8 @@ export class TokenBuffer {
   private rafId: number | null = null;
   private lastFlush = 0;
   private onFlush: (text: string) => void;
+  /** Optional callback for layout height prediction (Pretext integration) */
+  private onHeightHint: ((text: string) => void) | null;
 
   /** Base interval between flushes (ms). Randomised ±15 ms each tick. */
   private baseInterval: number;
@@ -21,9 +23,12 @@ export class TokenBuffer {
   /** Instant-flush mode: first N chars flush with zero delay */
   private rushChars: number;
   private totalFlushed = 0;
+  /** Throttle height hints to avoid excessive calls */
+  private lastHeightHint = 0;
 
-  constructor(onFlush: (text: string) => void, opts?: { baseInterval?: number; sentencePause?: number; rushChars?: number }) {
+  constructor(onFlush: (text: string) => void, opts?: { baseInterval?: number; sentencePause?: number; rushChars?: number; onHeightHint?: (text: string) => void }) {
     this.onFlush = onFlush;
+    this.onHeightHint = opts?.onHeightHint ?? null;
     this.baseInterval = opts?.baseInterval ?? 22;
     this.sentencePause = opts?.sentencePause ?? 120;
     this.rushChars = opts?.rushChars ?? 250;
