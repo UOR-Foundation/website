@@ -1279,51 +1279,55 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
-        <header className="flex items-center justify-between px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
-          {/* Left: UOR Logo */}
+        <header className="flex items-center px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
+          {/* Left: UOR Logo — fixed width for symmetry */}
           <button
             onClick={clearResult}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2.5 shrink-0 group w-[220px]"
             title="Back to search"
           >
-            <img src={uorHexagon} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
-            <span className="hidden md:inline text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/50 group-hover:text-muted-foreground/80 transition-colors uppercase whitespace-nowrap">UNIVERSAL OBJECT REFERENCE</span>
+            <img src={uorHexagon} alt="UOR" className="w-7 h-7 brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+            <span className="hidden md:inline text-[11px] font-bold tracking-[0.18em] text-foreground/70 group-hover:text-foreground/90 transition-colors uppercase whitespace-nowrap">Universal Object Reference</span>
           </button>
 
-          {/* Center: Pronounced search bar */}
-          <div className="flex-1 max-w-2xl mx-6 relative">
-            <button
-              onClick={clearResult}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
-              title="Back to search"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              placeholder="Search an address or paste a URL…"
-              className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
-            />
-            <button
-              onClick={() => { clearResult(); setTimeout(submit, 50); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
-              title="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+          {/* Center: Search bar — truly centered */}
+          <div className="flex-1 flex justify-center">
+            <div className="w-full max-w-2xl relative">
+              <button
+                onClick={clearResult}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
+                title="Back to search"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
+                placeholder="Search an address or paste a URL…"
+                className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
+              />
+              <button
+                onClick={() => { clearResult(); setTimeout(submit, 50); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
+                title="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Right: Sovereign Identity avatar */}
-          <button
-            onClick={() => setIdentityPanelOpen(true)}
-            className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
-            title="Sovereign Identity"
-          >
-            <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
-          </button>
+          {/* Right: Sovereign Identity avatar — fixed width for symmetry */}
+          <div className="w-[220px] flex justify-end">
+            <button
+              onClick={() => setIdentityPanelOpen(true)}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
+              title="Sovereign Identity"
+            >
+              <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
+            </button>
+          </div>
         </header>
       ) : null}
 
