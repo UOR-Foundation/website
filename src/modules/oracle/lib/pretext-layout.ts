@@ -33,6 +33,20 @@ export const FONTS = {
   dmSansH2: "700 24px 'DM Sans', system-ui, sans-serif",
   /** Pull-quote */
   georgiaPullQuote: "italic 22px Georgia, 'Times New Roman', serif",
+  /** OS: Desktop clock (largest) */
+  osClock: "700 80px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Desktop clock (medium fallback) */
+  osClockMd: "700 56px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Desktop clock (small fallback) */
+  osClockSm: "700 40px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Greeting line */
+  osGreeting: "500 24px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Greeting (small) */
+  osGreetingSm: "500 18px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Tab bar labels */
+  osTabLabel: "500 12px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Spotlight search text */
+  osSpotlight: "500 15px 'DM Sans', -apple-system, sans-serif",
 } as const;
 
 /* ── Caching layer ───────────────────────────────────────────────────── */
