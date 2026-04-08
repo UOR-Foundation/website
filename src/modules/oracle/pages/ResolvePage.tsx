@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
@@ -953,7 +953,7 @@ const SearchPage = () => {
             className="flex items-center gap-2 shrink-0 group"
             title="Back to search"
           >
-            <img src={uorHexPng} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <img src={uorHexagon} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
           </button>
 
           {/* Center: Pronounced search bar */}
