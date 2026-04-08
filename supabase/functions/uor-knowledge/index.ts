@@ -308,6 +308,154 @@ async function fetchWikipedia(term: string) {
   }
 }
 
+/* ── High-trust auxiliary source fetchers (no API key required) ──────── */
+
+/** DuckDuckGo Instant Answers — structured knowledge snippets */
+async function fetchDDGInstant(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://api.duckduckgo.com/?q=${encodeURIComponent(term)}&format=json&no_html=1&skip_disambig=1`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const abstract = data.Abstract || data.AbstractText;
+    if (!abstract || abstract.length < 40) return null;
+    const source = data.AbstractSource || "DuckDuckGo";
+    const url = data.AbstractURL || `https://duckduckgo.com/?q=${encodeURIComponent(term)}`;
+    return {
+      url,
+      title: `${term} — ${source}`,
+      description: abstract.slice(0, 300),
+      domain: (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return source.toLowerCase(); } })(),
+      type: "institutional",
+      score: getDomainReputation((() => { try { return new URL(url).hostname; } catch { return "duckduckgo.com"; } })()),
+      markdown: abstract.slice(0, 1500),
+    };
+  } catch { return null; }
+}
+
+/** Britannica — search via their public school/topic endpoint */
+async function fetchBritannica(term: string): Promise<RankedSource | null> {
+  try {
+    const slug = term.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const url = `https://www.britannica.com/topic/${slug}`;
+    // Use a HEAD request to check if the topic page exists (fast, no body download)
+    const head = await fetch(url, {
+      method: "HEAD",
+      redirect: "follow",
+      signal: AbortSignal.timeout(1500),
+    });
+    if (!head.ok) {
+      // Try /science/ prefix for scientific topics
+      const sciUrl = `https://www.britannica.com/science/${slug}`;
+      const head2 = await fetch(sciUrl, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(1500) });
+      if (!head2.ok) return null;
+      return {
+        url: sciUrl,
+        title: `${term} — Encyclopædia Britannica`,
+        description: `Authoritative Britannica article on ${term}`,
+        domain: "britannica.com",
+        type: "institutional",
+        score: 95,
+      };
+    }
+    return {
+      url,
+      title: `${term} — Encyclopædia Britannica`,
+      description: `Authoritative Britannica article on ${term}`,
+      domain: "britannica.com",
+      type: "institutional",
+      score: 95,
+    };
+  } catch { return null; }
+}
+
+/** Stanford Encyclopedia of Philosophy — check if entry exists */
+async function fetchSEP(term: string): Promise<RankedSource | null> {
+  try {
+    const slug = term.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const url = `https://plato.stanford.edu/entries/${slug}/`;
+    const head = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(1500) });
+    if (!head.ok) return null;
+    return {
+      url,
+      title: `${term} — Stanford Encyclopedia of Philosophy`,
+      description: `Peer-reviewed academic entry on ${term}`,
+      domain: "plato.stanford.edu",
+      type: "academic",
+      score: 96,
+    };
+  } catch { return null; }
+}
+
+/** Library of Congress — search via their JSON API */
+async function fetchLOC(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://www.loc.gov/search/?q=${encodeURIComponent(term)}&fo=json&c=5`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const results = data.results;
+    if (!results || results.length === 0) return null;
+    const top = results[0];
+    const title = typeof top.title === "string" ? top.title : (Array.isArray(top.title) ? top.title[0] : term);
+    const desc = typeof top.description === "string" ? top.description :
+                 (Array.isArray(top.description) ? top.description[0] : `Library of Congress resource on ${term}`);
+    const url = top.url || top.id || `https://www.loc.gov/search/?q=${encodeURIComponent(term)}`;
+    return {
+      url,
+      title: `${title} — Library of Congress`,
+      description: (desc || "").slice(0, 300),
+      domain: "loc.gov",
+      type: "institutional",
+      score: 94,
+    };
+  } catch { return null; }
+}
+
+/** PubMed — search for biomedical topics */
+async function fetchPubMed(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmax=1&retmode=json`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const ids = data.esearchresult?.idlist;
+    if (!ids || ids.length === 0) return null;
+    const count = parseInt(data.esearchresult?.count || "0", 10);
+    if (count < 5) return null; // Not enough results = probably not a biomedical topic
+    return {
+      url: `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(term)}`,
+      title: `${term} — PubMed (${count.toLocaleString()} papers)`,
+      description: `${count.toLocaleString()} peer-reviewed biomedical papers found`,
+      domain: "pubmed.ncbi.nlm.nih.gov",
+      type: "academic",
+      score: 96,
+    };
+  } catch { return null; }
+}
+
+/** Fetch all high-trust auxiliary sources in parallel with timeout */
+async function fetchAuxiliarySources(term: string): Promise<RankedSource[]> {
+  const results = await Promise.allSettled([
+    fetchDDGInstant(term),
+    fetchBritannica(term),
+    fetchSEP(term),
+    fetchLOC(term),
+    fetchPubMed(term),
+  ]);
+  const sources: RankedSource[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) sources.push(r.value);
+  }
+  return sources.sort((a, b) => b.score - a.score);
+}
+
 /* ── Wikidata structured facts ───────────────────────────────────────── */
 
 const WIKIDATA_PROPS: Record<string, string> = {
@@ -1015,9 +1163,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // ── Fire Wikipedia + Firecrawl in parallel, but don't wait for Firecrawl ──
+    // ── Fire Wikipedia + Firecrawl + auxiliary high-trust sources in parallel ──
     const wikiPromise = fetchWikipedia(term);
     const firecrawlPromise = fetchTopSources(term);
+    const auxPromise = fetchAuxiliarySources(term);
 
     // Await Wikipedia immediately — this is the critical path
     const wiki = await wikiPromise;
@@ -1031,22 +1180,51 @@ serve(async (req) => {
       ]);
     } catch { /* proceed without firecrawl */ }
 
-    // Build enriched sources list
+    // Auxiliary high-trust sources — give them up to 2s (they started in parallel with wiki)
+    let auxSources: RankedSource[] = [];
+    try {
+      auxSources = await Promise.race([
+        auxPromise,
+        new Promise<RankedSource[]>((resolve) => setTimeout(() => resolve([]), 2000)),
+      ]);
+    } catch { /* proceed without aux */ }
+
+    // Build enriched sources list — deduplicate by domain
     const sources: Array<{ url: string; title: string; type: string; score?: number }> = [];
-    if (wiki?.pageUrl) sources.push({ url: wiki.pageUrl, title: wiki.pageTitle || term, type: "wikipedia", score: 98 });
-    if (wiki?.qid) sources.push({ url: `https://www.wikidata.org/wiki/${wiki.qid}`, title: `${term} — Wikidata`, type: "wikidata", score: 95 });
-    for (const s of topSources) {
-      sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+    const seenDomains = new Set<string>();
+
+    if (wiki?.pageUrl) { sources.push({ url: wiki.pageUrl, title: wiki.pageTitle || term, type: "wikipedia", score: 98 }); seenDomains.add("wikipedia.org"); }
+    if (wiki?.qid) { sources.push({ url: `https://www.wikidata.org/wiki/${wiki.qid}`, title: `${term} — Wikidata`, type: "wikidata", score: 95 }); seenDomains.add("wikidata.org"); }
+
+    // Merge auxiliary sources (high-trust, no API key needed)
+    for (const s of auxSources) {
+      if (!seenDomains.has(s.domain)) {
+        sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+        seenDomains.add(s.domain);
+      }
     }
 
-    console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl, waited ≤500ms)`);
+    // Merge Firecrawl sources
+    for (const s of topSources) {
+      if (!seenDomains.has(s.domain)) {
+        sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+        seenDomains.add(s.domain);
+      }
+    }
+
+    // Combine all ranked sources for the AI prompt (auxiliary + firecrawl)
+    const allRankedSources = [...auxSources, ...topSources]
+      .filter((s, i, arr) => arr.findIndex(x => x.domain === s.domain) === i)
+      .sort((a, b) => b.score - a.score);
+
+    console.log(`Sources for "${term}": ${sources.length} total (${auxSources.length} auxiliary, ${topSources.length} from Firecrawl)`);
 
     // Build AI prompt — use blueprint params if available, otherwise use lens ID
     const systemPrompt = blueprintParams
       ? buildBlueprintPrompt(blueprintParams, userContext, sources.length)
       : buildLensPrompt(activeLens, userContext, sources.length);
 
-    const userMessage = buildUserMessage(term, activeLens, wiki, topSources);
+    const userMessage = buildUserMessage(term, activeLens, wiki, allRankedSources);
 
     // Determine temperature and max tokens from params or lens
     const effectiveDepth = blueprintParams?.depth || (activeLens === "expert" ? "exhaustive" : "standard");
