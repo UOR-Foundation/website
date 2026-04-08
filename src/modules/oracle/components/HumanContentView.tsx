@@ -112,6 +112,9 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
   const [viewMode, setViewMode] = useState<"original" | "readable">(rawHtmlVal ? "original" : "readable");
 
+  const rawType = isObj && typeof src["@type"] === "string" ? src["@type"].replace(/^uor:/, "") : null;
+  const isKnowledgeCard = rawType === "KnowledgeCard";
+
   if (!isObj) {
     return (
       <p style={{ fontSize: 17, lineHeight: 1.75, fontFamily: "Georgia, 'Times New Roman', serif" }}
