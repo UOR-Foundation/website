@@ -20,16 +20,17 @@ import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
 const TYPE_STYLES: Record<string, { color: string; bg: string }> = {
-  Concept:     { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
-  Fork:        { color: "hsl(270 60% 65%)",             bg: "hsl(270 60% 65% / 0.08)" },
-  Query:       { color: "hsl(210 80% 60%)",             bg: "hsl(210 80% 60% / 0.08)" },
-  Response:    { color: "hsl(160 60% 50%)",             bg: "hsl(160 60% 50% / 0.08)" },
-  Chain:       { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
-  ChainLink:   { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
-  Datum:       { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
-  Observable:  { color: "hsl(190 70% 50%)",             bg: "hsl(190 70% 50% / 0.08)" },
-  Derivation:  { color: "hsl(340 60% 55%)",             bg: "hsl(340 60% 55% / 0.08)" },
-  WebPage:     { color: "hsl(200 70% 55%)",             bg: "hsl(200 70% 55% / 0.08)" },
+  Concept:       { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
+  Fork:          { color: "hsl(270 60% 65%)",             bg: "hsl(270 60% 65% / 0.08)" },
+  Query:         { color: "hsl(210 80% 60%)",             bg: "hsl(210 80% 60% / 0.08)" },
+  Response:      { color: "hsl(160 60% 50%)",             bg: "hsl(160 60% 50% / 0.08)" },
+  Chain:         { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
+  ChainLink:     { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
+  Datum:         { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
+  Observable:    { color: "hsl(190 70% 50%)",             bg: "hsl(190 70% 50% / 0.08)" },
+  Derivation:    { color: "hsl(340 60% 55%)",             bg: "hsl(340 60% 55% / 0.08)" },
+  WebPage:       { color: "hsl(200 70% 55%)",             bg: "hsl(200 70% 55% / 0.08)" },
+  KnowledgeCard: { color: "hsl(38 90% 55%)",              bg: "hsl(38 90% 55% / 0.08)" },
 };
 
 const DEFAULT_STYLE = { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.15)" };
@@ -68,6 +69,8 @@ const LABEL_MAP: Record<string, string> = {
   "uor:semanticWebLayers": "Semantic Web Layers",
   "uor:wikidata": "",
   "uor:rawHtml": "",
+  "uor:sources": "Sources",
+  "uor:synthesizedAt": "Synthesized At",
 };
 
 function humanLabel(key: string): string {
@@ -84,7 +87,7 @@ function humanLabel(key: string): string {
 const META_KEYS = new Set([
   "uor:timestamp", "uor:position", "uor:chainLength",
   "uor:proofAddress", "uor:proofCid", "uor:scrapedAt",
-  "uor:language",
+  "uor:language", "uor:synthesizedAt",
 ]);
 
 /* ── Title keys (rendered as the main heading) ───────────────────────── */
