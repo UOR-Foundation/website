@@ -259,8 +259,9 @@ const SearchPage = () => {
   // Count assistant messages with proofs
   const proofCount = aiMessages.filter(m => m.role === "assistant" && m.proof).length;
 
-  const encodeChain = async () => {
-    if (selectedProofIndices.size === 0) return;
+  const encodeChain = async (overrideIndices?: Set<number>) => {
+    const indices = overrideIndices ?? selectedProofIndices;
+    if (indices.size === 0) return;
     setChainEncoding(true);
     try {
       // Get all assistant messages with proofs, map by their position among proof-bearing messages
@@ -268,7 +269,7 @@ const SearchPage = () => {
         .map((m, i) => ({ msg: m, originalIdx: i }))
         .filter(({ msg }) => msg.role === "assistant" && msg.proof);
 
-      const selected = [...selectedProofIndices].sort().map(i => proofMessages[i]);
+      const selected = [...indices].sort().map(i => proofMessages[i]);
       if (selected.length === 0) return;
 
       // Find the user query preceding each assistant message
