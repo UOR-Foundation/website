@@ -1,5 +1,5 @@
 /**
- * DesktopMenuBar — macOS-inspired top status bar with frosted glass.
+ * DesktopMenuBar — Slim, crisp macOS-inspired top status bar.
  */
 
 import { useState, useEffect } from "react";
@@ -34,20 +34,28 @@ export default function DesktopMenuBar({ activeWindowId, windows }: Props) {
   });
 
   return (
-    <div className="fixed top-0 inset-x-0 z-[200] h-7 flex items-center justify-between px-4 frosted-glass border-b border-white/[0.08] select-none">
+    <div
+      className="fixed top-0 inset-x-0 z-[200] h-7 flex items-center justify-between px-4 select-none"
+      style={{
+        background: "rgba(20,20,20,0.65)",
+        backdropFilter: "blur(48px) saturate(1.5)",
+        WebkitBackdropFilter: "blur(48px) saturate(1.5)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
       {/* Left — Logo + Active app */}
       <div className="flex items-center gap-3">
-        <span className="text-[13px] font-bold text-white/90 tracking-tight">⬡ UOR</span>
-        <span className="text-[13px] font-semibold text-white/70">
+        <span className="text-[13px] font-bold text-white/85 tracking-tight">⬡ UOR</span>
+        <span className="text-[13px] font-semibold text-white/50">
           {activeApp?.label || "Finder"}
         </span>
       </div>
 
       {/* Right — Status icons + Clock */}
       <div className="flex items-center gap-3">
-        <Volume2 className="w-3.5 h-3.5 text-white/50" />
-        <Wifi className="w-3.5 h-3.5 text-white/50" />
-        <span className="text-[12px] text-white/70 font-medium tabular-nums">
+        <Volume2 className="w-3.5 h-3.5 text-white/35" />
+        <Wifi className="w-3.5 h-3.5 text-white/35" />
+        <span className="text-[12px] text-white/55 font-medium tabular-nums">
           {formatted}&ensp;{clock}
         </span>
       </div>
