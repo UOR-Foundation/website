@@ -166,9 +166,22 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
 
   // Semantic Web Tower data
   const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
+  const existingSemantics = src["uor:existingSemantics"] as { jsonLd?: unknown[]; openGraph?: Record<string, string>; meta?: Record<string, string>; hasStructuredData?: boolean } | undefined;
   const isWebPage = rawType === "WebPage";
   const sources = Array.isArray(src["uor:sources"]) ? (src["uor:sources"] as string[]) : [];
   const contentMarkdown = typeof src["uor:content"] === "string" ? (src["uor:content"] as string) : null;
+
+  // Compute tower layers: use explicit layers for WebPage, derive for all other types
+  const towerLayers: Record<string, string> = semanticWebLayers || {
+    L0: "content-addressed",
+    L1: "json-ld-1.1",
+    L2: "urdna2015",
+    L3: wikidata?.qid ? `wikidata:${wikidata.qid}` : "none",
+    L4: "canonical-reduction",
+    L5: "singleProofHash",
+    L6: "deterministic-trust",
+    Signature: "CIDv1",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
