@@ -5,7 +5,6 @@
  *
  * Uses Pretext canvas measurement for adaptive clock sizing and
  * orphan-free greeting text — no CSS clamp() hacks.
- * All proportions governed by the golden ratio (φ = 1.618).
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -17,7 +16,6 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
 import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
-import { CONTENT, SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
 
 interface Props {
   windows: WindowState[];
