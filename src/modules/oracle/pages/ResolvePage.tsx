@@ -776,7 +776,7 @@ const SearchPage = () => {
                       });
                     }
                   }}
-                  className="text-primary font-semibold hover:text-primary/90 underline decoration-primary/30 underline-offset-4 hover:decoration-primary/60 transition-all cursor-pointer"
+                  className="text-primary font-semibold hover:text-primary/90 transition-colors cursor-pointer"
                   title="Resolve the canonical definition of near-infinite addressing"
                 >
                   near-infinite
