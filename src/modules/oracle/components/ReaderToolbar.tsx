@@ -4,17 +4,9 @@
  */
 
 import React from "react";
-import { ArrowLeft, BookOpen, Info } from "lucide-react";
+import { ArrowLeft, Info, BookOpen as ReaderIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { KNOWLEDGE_LENSES, type KnowledgeLens } from "@/modules/oracle/lib/knowledge-lenses";
-
-const LENS_ICONS: Record<string, React.FC<{ className?: string }>> = {
-  BookOpen: require("lucide-react").BookOpen,
-  Newspaper: require("lucide-react").Newspaper,
-  Baby: require("lucide-react").Baby,
-  GraduationCap: require("lucide-react").GraduationCap,
-  BookText: require("lucide-react").BookText,
-};
+import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
 
 interface ReaderToolbarProps {
   triwordDisplay: string;
