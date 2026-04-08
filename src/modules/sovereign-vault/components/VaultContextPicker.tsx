@@ -46,9 +46,9 @@ export default function VaultContextPicker({
   const [filter, setFilter] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close on outside click (skip when inline)
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onOpenChange(false);
@@ -56,7 +56,7 @@ export default function VaultContextPicker({
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, inline]);
 
   const filtered = vault.documents.filter((d) => {
     if (!filter.trim()) return true;
