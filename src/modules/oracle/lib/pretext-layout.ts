@@ -205,6 +205,114 @@ export function predictSectionHeight(
 }
 
 /**
+ * Smart truncation — find the longest text prefix that fits within
+ * `maxLines` lines, truncating at a natural word boundary with "…".
+ */
+export function smartTruncate(
+  text: string,
+  font: string,
+  containerWidth: number,
+  lineHeight: number,
+  maxLines: number
+): string {
+  if (!text.trim()) return text;
+  const lines = measureLineCount(text, font, containerWidth, lineHeight);
+  if (lines <= maxLines) return text;
+
+  // Binary search for the longest prefix that fits
+  const words = text.split(/\s+/);
+  let lo = 1;
+  let hi = words.length;
+  let best = 1;
+
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const candidate = words.slice(0, mid).join(" ") + "…";
+    const cl = measureLineCount(candidate, font, containerWidth, lineHeight);
+    if (cl <= maxLines) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+
+  return words.slice(0, best).join(" ") + "…";
+}
+
+/**
+ * Layout with an exclusion rectangle — computes per-line available widths
+ * by subtracting the exclusion rect's horizontal intersection with each
+ * line's vertical band. Returns line data for custom rendering.
+ */
+export interface ExclusionLine {
+  text: string;
+  indent: number;
+  width: number;
+  y: number;
+}
+
+export function layoutWithExclusion(
+  text: string,
+  font: string,
+  containerWidth: number,
+  lineHeight: number,
+  exclusionRect: { x: number; y: number; w: number; h: number }
+): ExclusionLine[] {
+  if (!text.trim()) return [];
+  const prepared = getPreparedWithSegments(text, font);
+  const lines: ExclusionLine[] = [];
+  let y = 0;
+
+  walkLineRanges(prepared, containerWidth, (range: { start: number; end: number }) => {
+    const lineTop = y;
+    const lineBottom = y + lineHeight;
+    const exTop = exclusionRect.y;
+    const exBottom = exclusionRect.y + exclusionRect.h;
+
+    let indent = 0;
+    let availableWidth = containerWidth;
+
+    // Check vertical overlap
+    if (lineBottom > exTop && lineTop < exBottom) {
+      const exLeft = exclusionRect.x;
+      const exRight = exclusionRect.x + exclusionRect.w;
+
+      // Exclusion is on the left side — indent text
+      if (exLeft <= 0) {
+        indent = Math.min(exRight, containerWidth * 0.5);
+        availableWidth = containerWidth - indent;
+      }
+      // Exclusion is on the right side — reduce width
+      else if (exRight >= containerWidth) {
+        availableWidth = Math.max(exLeft, containerWidth * 0.5);
+      }
+      // Exclusion is in the middle — push to widest side
+      else {
+        const leftSpace = exLeft;
+        const rightSpace = containerWidth - exRight;
+        if (leftSpace >= rightSpace) {
+          availableWidth = leftSpace;
+        } else {
+          indent = exRight;
+          availableWidth = rightSpace;
+        }
+      }
+    }
+
+    lines.push({
+      text: text.slice(range.start, range.end),
+      indent,
+      width: availableWidth,
+      y: lineTop,
+    });
+    y += lineHeight;
+  });
+
+  return lines;
+}
+
+/**
  * Clear internal caches (e.g., on unmount or large navigation).
  */
 export function clearLayoutCache() {
