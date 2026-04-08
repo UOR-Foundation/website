@@ -1089,12 +1089,14 @@ const SearchPage = () => {
               {/* Messages area */}
               <div ref={aiScrollRef} className="flex-1 overflow-y-auto space-y-6 pb-4 min-h-0">
                 {aiMessages.length === 0 && (
-                  <div className="flex flex-col items-center justify-center pt-[20vh] text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                      <Sparkles className="w-6 h-6 text-primary/60" />
+                  <div className="flex flex-col items-center justify-center text-center" style={{ paddingTop: "calc(100dvh * 0.236)" }}>
+                    <div className="rounded-2xl bg-primary/10 flex items-center justify-center" style={{ width: "calc(1rem * 1.618 * 1.618 * 1.618)", height: "calc(1rem * 1.618 * 1.618 * 1.618)", marginBottom: "calc(1rem * 1.618)" }}>
+                      <Sparkles className="w-8 h-8 text-primary/60" />
                     </div>
-                    <h2 className="text-lg font-display font-medium text-foreground/80 mb-2">Ask the Oracle</h2>
-                    <p className="text-sm text-muted-foreground/40 max-w-sm">
+                    <h2 className="font-display font-semibold text-foreground/80 tracking-[0.06em] uppercase" style={{ fontSize: "clamp(1.4rem, 3vw, 1.8rem)", marginBottom: "calc(0.5rem * 1.618)" }}>
+                      Ask the Oracle
+                    </h2>
+                    <p className="text-base text-muted-foreground/45 leading-relaxed" style={{ maxWidth: "min(480px, 75vw)" }}>
                       Ask anything. The Oracle reasons through your question with epistemic rigor and content-addressable proofs.
                     </p>
                   </div>
@@ -1280,26 +1282,37 @@ const SearchPage = () => {
                 )}
               </AnimatePresence>
 
-              {/* AI input bar — fixed at bottom */}
-              <div className="shrink-0 pb-6 pt-3">
-                <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
-                  <input
-                    ref={aiInputRef}
-                    type="text"
-                    value={aiInput}
-                    onChange={(e) => setAiInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAiMessage(); } }}
-                    placeholder="Ask the Oracle anything…"
-                    className="flex-1 bg-transparent py-[14px] pl-5 pr-2 text-base text-foreground placeholder:text-muted-foreground/30 focus:outline-none"
-                    autoFocus
+              {/* AI input bar — styled to match search bar */}
+              <div className="shrink-0 pt-3" style={{ paddingBottom: "calc(1rem * 1.618 * 1.618)" }}>
+                <div className="relative group">
+                  {/* Animated border glow — same as search bar */}
+                  <div
+                    className="absolute -inset-[1px] rounded-full blur-[0.5px] group-hover:blur-[1px] group-focus-within:blur-[1px] transition-opacity duration-700"
+                    style={{
+                      background: "conic-gradient(from var(--search-glow-angle, 0deg), transparent 0%, hsl(var(--primary) / 0.4) 10%, transparent 20%, hsl(var(--primary) / 0.15) 40%, transparent 50%, hsl(45 80% 60% / 0.3) 60%, transparent 70%, hsl(var(--primary) / 0.25) 85%, transparent 100%)",
+                      animation: "searchGlowRotate 6s linear infinite",
+                      opacity: 0.25,
+                    }}
                   />
-                  <button
-                    onClick={sendAiMessage}
-                    disabled={!aiInput.trim() || aiStreaming}
-                    className="mr-2 p-2 rounded-full bg-primary/20 hover:bg-primary/30 text-foreground/70 transition-all disabled:opacity-20"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                  <div className="relative z-10 flex items-center bg-[hsl(0_0%_11%/0.92)] backdrop-blur-xl border border-[hsl(0_0%_22%/0.5)] hover:border-[hsl(0_0%_35%/0.7)] transition-all duration-500 focus-within:border-primary/25 shadow-[0_4px_40px_-10px_hsl(0_0%_0%/0.6),inset_0_1px_0_0_hsl(0_0%_100%/0.05),inset_0_-1px_0_0_hsl(0_0%_0%/0.2)] rounded-full">
+                    <input
+                      ref={aiInputRef}
+                      type="text"
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAiMessage(); } }}
+                      placeholder="Ask the Oracle anything…"
+                      className="flex-1 bg-transparent py-[17px] pl-[28px] pr-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
+                      autoFocus
+                    />
+                    <button
+                      onClick={sendAiMessage}
+                      disabled={!aiInput.trim() || aiStreaming}
+                      className="mr-[17px] p-[10px] rounded-full text-foreground/60 hover:text-foreground/90 transition-all disabled:opacity-20"
+                    >
+                      <Send className="w-[18px] h-[18px]" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
