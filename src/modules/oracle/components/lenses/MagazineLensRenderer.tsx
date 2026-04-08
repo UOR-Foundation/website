@@ -167,8 +167,8 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
       {/* Content with inline images woven between sections */}
       {sections.length > 1 ? (
         sections.map((section, idx) => {
-          const inlineImg = inlinePool[idx % inlinePool.length];
-          const showInline = idx > 0 && idx <= 3 && inlineImg && !synthesizing;
+          const inlineImg = inlineImageMap.get(idx);
+          const showInline = idx > 0 && inlineImg && !synthesizing;
           return (
             <React.Fragment key={idx}>
               <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
