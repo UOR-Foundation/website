@@ -1011,7 +1011,7 @@ const SearchPage = () => {
 
     await streamKnowledge({
       keyword,
-      context: recentContext,
+      context: enrichedContext,
       lens: lensOverride || activeLens,
       signal: abortController.signal,
       onWiki: (streamWiki, sources, provenance) => {
