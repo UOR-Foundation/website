@@ -967,6 +967,16 @@ const SearchPage = () => {
 
     // ── Resolve context in background ──
     const [recentContext, history] = await contextPromise;
+    const vaultHits = await vaultPromise;
+    
+    // Inject vault context into recent context for LLM personalization
+    const vaultContext = vaultHits.length > 0
+      ? vaultHits.map(h => `[Personal: ${h.document.filename}] ${h.chunk.text.slice(0, 200)}`).join("\n")
+      : "";
+    const enrichedContext = vaultContext
+      ? [...recentContext, `__vault_context__:${vaultContext}`]
+      : recentContext;
+    
     setContextKeywords(recentContext);
     const coherence = computeCoherence(keyword, history);
     setCoherenceState(coherence);
