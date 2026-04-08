@@ -34,50 +34,55 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const [isGuest, setIsGuest] = useState(false);
+
   const generateToken = useCallback(async () => {
     setLoading(true);
     setError(null);
     setExpired(false);
     setSecondsLeft(PORTAL_TTL);
     setQrDataUrl(null);
+    setIsGuest(false);
 
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
-      if (!accessToken) {
-        setError("Sign in to use Portal");
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/portal-transfer`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({
-            target_url: targetUrl,
-            target_lens: targetLens,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || "Failed to create portal");
-      }
-
-      const { token } = await res.json();
-
-      // Build the QR URL pointing to the app
       const appOrigin = window.location.origin;
-      const portalUrl = `${appOrigin}/search?portal=${token}`;
+      let portalUrl: string;
+
+      if (!accessToken) {
+        // Guest mode: generate a direct link QR (no session transfer)
+        setIsGuest(true);
+        const params = new URLSearchParams({ lens: targetLens });
+        portalUrl = `${appOrigin}${targetUrl}?${params.toString()}`;
+      } else {
+        // Authenticated mode: create encrypted session transfer
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/portal-transfer`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({
+              target_url: targetUrl,
+              target_lens: targetLens,
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.error || "Failed to create portal");
+        }
+
+        const { token } = await res.json();
+        portalUrl = `${appOrigin}/search?portal=${token}`;
+      }
 
       const dataUrl = await QRCode.toDataURL(portalUrl, {
         width: 240,
@@ -91,7 +96,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
 
       setQrDataUrl(dataUrl);
 
-      // Start countdown
+      // Start countdown (even guest links expire visually for consistency)
       if (timerRef.current) clearInterval(timerRef.current);
       const start = Date.now();
       timerRef.current = setInterval(() => {
@@ -377,9 +382,9 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                 <div className="flex items-center gap-1.5 mt-1">
                   <Lock
                     className={`w-3 h-3 ${
-                      immersive
-                        ? "text-emerald-400/50"
-                        : "text-emerald-500/50"
+                      isGuest
+                        ? immersive ? "text-amber-400/50" : "text-amber-500/50"
+                        : immersive ? "text-emerald-400/50" : "text-emerald-500/50"
                     }`}
                   />
                   <span
@@ -387,7 +392,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                       immersive ? "text-white/25" : "text-muted-foreground/25"
                     }`}
                   >
-                    Encrypted one-time session transfer
+                    {isGuest ? "Direct link — sign in for encrypted transfer" : "Encrypted one-time session transfer"}
                   </span>
                 </div>
               </>
