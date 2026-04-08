@@ -160,7 +160,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  return (
+  const panelContent = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -169,9 +169,11 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
+          className="fixed z-[9999] rounded-2xl overflow-hidden"
           style={{
             width: "min(340px, 90vw)",
+            top: anchorPos ? `${anchorPos.top}px` : "60px",
+            right: anchorPos ? `${anchorPos.right}px` : "16px",
             background: immersive
               ? "rgba(10, 14, 20, 0.96)"
               : "hsl(var(--background) / 0.97)",
@@ -363,6 +365,9 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
       )}
     </AnimatePresence>
   );
+
+  // Render via portal to escape overflow-auto clipping
+  return createPortal(panelContent, document.body);
 };
 
 export default QrPortalPanel;
