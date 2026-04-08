@@ -192,18 +192,28 @@ export function getHourlyFallback(): string {
   return HOURLY_FALLBACK[new Date().getHours()];
 }
 
+const ALL_PHASES: SolarPhase[] = [
+  "deep_night", "pre_dawn", "dawn", "sunrise", "golden_morning",
+  "bright_morning", "midday", "afternoon", "golden_hour",
+  "sunset", "dusk", "twilight", "night",
+];
+
 /** Preload the likely next phase's photo */
 export function preloadNextPhasePhoto(): void {
-  const phases: SolarPhase[] = [
-    "deep_night", "pre_dawn", "dawn", "sunrise", "golden_morning",
-    "bright_morning", "midday", "afternoon", "golden_hour",
-    "sunset", "dusk", "twilight", "night",
-  ];
   const current = getCurrentPhase();
-  const idx = phases.indexOf(current);
-  const next = phases[(idx + 1) % phases.length];
+  const idx = ALL_PHASES.indexOf(current);
+  const next = ALL_PHASES[(idx + 1) % ALL_PHASES.length];
   const img = new Image();
   img.src = photoForPhase(next);
+}
+
+/** Preload the current phase's photo (call on mount for instant display) */
+export function preloadCurrentPhasePhoto(): void {
+  const img = new Image();
+  img.src = photoForPhase(getCurrentPhase());
+  // Also preload the hourly fallback
+  const fb = new Image();
+  fb.src = HOURLY_FALLBACK[new Date().getHours()];
 }
 
 // ── Backward-compatible aliases ──
