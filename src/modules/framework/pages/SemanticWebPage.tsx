@@ -246,7 +246,7 @@ const SemanticWebPage = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Link
-              to="/search?q=https://en.wikipedia.org/wiki/Semantic_Web"
+              to="/os?q=https://en.wikipedia.org/wiki/Semantic_Web"
               className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
             >
               <span className="text-lg mb-2 block">🌐</span>
@@ -254,7 +254,7 @@ const SemanticWebPage = () => {
               <p className="text-xs text-muted-foreground leading-relaxed">Absorb the Semantic Web article into UOR space</p>
             </Link>
             <Link
-              to="/search?q=semantic+web"
+              to="/os?q=semantic+web"
               className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
             >
               <span className="text-lg mb-2 block">🔮</span>
@@ -262,7 +262,7 @@ const SemanticWebPage = () => {
               <p className="text-xs text-muted-foreground leading-relaxed">Generate a KnowledgeCard with full W3C layer mapping</p>
             </Link>
             <Link
-              to="/search"
+              to="/os"
               className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
             >
               <span className="text-lg mb-2 block">🔗</span>
@@ -284,7 +284,7 @@ const SemanticWebPage = () => {
             The same semantic surface serves humans and AI agents alike.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/search" className="btn-primary inline-flex items-center gap-2">
+            <Link to="/os" className="btn-primary inline-flex items-center gap-2">
               Enter the Rendered Web <ArrowRight className="w-4 h-4" />
             </Link>
             <Link to="/framework" className="btn-outline inline-flex items-center gap-2">

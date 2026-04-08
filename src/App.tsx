@@ -69,12 +69,13 @@ const App = () => {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/donate" element={<DonatePage />} />
               <Route path="/oracle" element={<OraclePage />} />
-              <Route path="/search" element={<DesktopSearch />} />
+              <Route path="/os" element={<DesktopSearch />} />
               <Route path="/resolve" element={<SearchPage />} />
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
               <Route path="/library" element={<LibraryPage />} />
-              <Route path="/desktop" element={<Navigate to="/search" replace />} />
+              <Route path="/desktop" element={<Navigate to="/os" replace />} />
+              <Route path="/search" element={<Navigate to="/os" replace />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
