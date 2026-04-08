@@ -158,4 +158,13 @@ export class TokenBuffer {
 
     return Math.max(18, base);
   }
+
+  /** Emit height hint callback, throttled to every 200ms */
+  private emitHeightHint() {
+    if (!this.onHeightHint) return;
+    const now = performance.now();
+    if (now - this.lastHeightHint < 200) return;
+    this.lastHeightHint = now;
+    this.onHeightHint(this.accumulated);
+  }
 }
