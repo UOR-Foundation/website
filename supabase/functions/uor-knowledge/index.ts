@@ -313,6 +313,7 @@ interface MediaImage {
   caption: string;
   uorHash: string;
   source: string;
+  relevance?: number;
 }
 
 interface MediaVideo {
