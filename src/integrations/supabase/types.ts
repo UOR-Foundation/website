@@ -669,6 +669,45 @@ export type Database = {
         }
         Relationships: []
       }
+      book_summaries: {
+        Row: {
+          author: string | null
+          cover_url: string | null
+          created_at: string
+          domain: string | null
+          id: string
+          source_url: string | null
+          summary_markdown: string | null
+          tags: string[] | null
+          title: string
+          uor_hash: string | null
+        }
+        Insert: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          source_url?: string | null
+          summary_markdown?: string | null
+          tags?: string[] | null
+          title: string
+          uor_hash?: string | null
+        }
+        Update: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          source_url?: string | null
+          summary_markdown?: string | null
+          tags?: string[] | null
+          title?: string
+          uor_hash?: string | null
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           all_day: boolean
