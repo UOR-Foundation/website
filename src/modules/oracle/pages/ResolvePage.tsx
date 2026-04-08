@@ -748,6 +748,11 @@ const SearchPage = () => {
 
     toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
 
+    // ── Prepare AbortController for live mode cancel-on-resume ──
+    if (liveAbortRef.current) liveAbortRef.current.abort();
+    const abortController = new AbortController();
+    liveAbortRef.current = abortController;
+
     // ── Stream AI synthesis (wiki metadata arrives via SSE) ──
     let accumulatedSynthesis = "";
     let wiki: WikiMeta | null = null;
@@ -758,6 +763,7 @@ const SearchPage = () => {
       keyword,
       context: recentContext,
       lens: lensOverride || activeLens,
+      signal: abortController.signal,
       onWiki: (streamWiki, sources, provenance) => {
         // Normalize rich source objects to URL strings
         const normalizedSources = sources.map((s: string | { url: string }) =>
@@ -1655,24 +1661,34 @@ const SearchPage = () => {
                     ref={inputRef}
                     type="text"
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => { setInput(e.target.value); setShowPrefetch(true); }}
                     onKeyDown={(e) => {
                       if (showSuggestions && suggestions.length > 0) {
                         if (e.key === "ArrowDown") { e.preventDefault(); setSelectedSuggIdx(prev => Math.min(prev + 1, suggestions.length - 1)); return; }
                         if (e.key === "ArrowUp") { e.preventDefault(); setSelectedSuggIdx(prev => Math.max(prev - 1, -1)); return; }
                         if (e.key === "Enter" && selectedSuggIdx >= 0) { e.preventDefault(); pickSuggestion(suggestions[selectedSuggIdx].triword); return; }
-                        if (e.key === "Escape") { setShowSuggestions(false); return; }
+                        if (e.key === "Escape") { setShowSuggestions(false); setShowPrefetch(false); return; }
                       }
-                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); submit(); }
+                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); setShowPrefetch(false); submit(); }
                     }}
-                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); else if (prefetchResult) setShowPrefetch(true); }}
+                    onBlur={() => { setTimeout(() => { setShowSuggestions(false); setShowPrefetch(false); }, 200); }}
                     placeholder=""
                     className="flex-1 bg-transparent py-[17px] px-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
                   />
 
-                  {/* Right side — separator + AI Mode pill */}
-                  <div className="flex items-center gap-[10px] pr-[17px] shrink-0">
+                  {/* Right side — Voice + Live toggle + separator + AI Mode pill */}
+                  <div className="flex items-center gap-[8px] pr-[17px] shrink-0">
+                    <VoiceInput
+                      onTranscript={handleVoiceTranscript}
+                      onSpeechEnd={() => { if (input.trim().length >= 2) { setShowPrefetch(false); handleSearch(input.trim()); }}}
+                      size="sm"
+                    />
+                    <LiveSearchToggle
+                      active={liveMode}
+                      onToggle={toggleLiveMode}
+                      streaming={!!result?.synthesizing}
+                    />
                     <div className="w-px h-[28px] bg-[hsl(0_0%_30%)]" />
                     <button
                       onClick={() => setAiMode(true)}
@@ -1683,6 +1699,11 @@ const SearchPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Live preview card (prefetch) */}
+                {!showSuggestions && !encodeMode && (
+                  <LivePreviewCard prefetch={prefetchResult} visible={showPrefetch && !result} />
+                )}
 
                 {/* Autocomplete suggestions dropdown */}
                 <AnimatePresence>
