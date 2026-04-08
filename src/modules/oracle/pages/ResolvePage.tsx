@@ -1625,6 +1625,126 @@ const SearchPage = () => {
         </div>
       </div>
       </div>{/* end main content wrapper */}
+
+      {/* ══════════════ ENCODE OVERLAY ══════════════ */}
+      <AnimatePresence>
+        {encodeMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) { setEncodeMode(false); setEncodeText(""); } }}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-[hsl(0_0%_4%/0.85)] backdrop-blur-md" />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              className="relative z-10 w-full border border-[hsl(0_0%_18%/0.6)] bg-[hsl(0_0%_8%/0.95)] backdrop-blur-xl rounded-2xl shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8),inset_0_1px_0_0_hsl(0_0%_100%/0.04)]"
+              style={{ maxWidth: "min(720px, 90vw)", maxHeight: "85vh" }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-8 pt-7 pb-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary/50" />
+                  <h2 className="text-base font-display font-semibold text-foreground/85 tracking-wide uppercase" style={{ letterSpacing: "0.08em" }}>
+                    Encode
+                  </h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-mono text-muted-foreground/30">
+                    WASM · URDNA2015 · SHA-256
+                  </span>
+                  <button
+                    onClick={() => { setEncodeMode(false); setEncodeText(""); }}
+                    className="text-muted-foreground/40 hover:text-foreground/70 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="px-8 pt-3 text-sm text-muted-foreground/40 leading-relaxed">
+                Paste any content — text, markdown, JSON-LD, or raw data. The WASM engine will canonicalize it via URDNA2015, compute its SHA-256 hash, and derive a unique, deterministic address.
+              </p>
+
+              {/* Editor area */}
+              <div className="px-8 pt-5 pb-2">
+                {/* Line numbers + textarea */}
+                <div className="relative rounded-xl border border-[hsl(0_0%_16%/0.8)] bg-[hsl(0_0%_6%)] overflow-hidden">
+                  <div className="flex">
+                    {/* Line numbers */}
+                    <div className="shrink-0 select-none pt-5 pb-5 pl-4 pr-3 border-r border-[hsl(0_0%_14%)]" aria-hidden>
+                      {Array.from({ length: Math.max((encodeText.split("\n").length), 12) }, (_, i) => (
+                        <div key={i} className="text-[11px] font-mono text-muted-foreground/20 leading-[1.7] text-right" style={{ minWidth: "1.5rem" }}>
+                          {i + 1}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Textarea */}
+                    <textarea
+                      ref={encodeRef}
+                      value={encodeText}
+                      onChange={(e) => setEncodeText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleEncode(); }
+                        if (e.key === "Escape") { setEncodeMode(false); setEncodeText(""); }
+                        // Tab inserts 2 spaces
+                        if (e.key === "Tab") {
+                          e.preventDefault();
+                          const start = e.currentTarget.selectionStart;
+                          const end = e.currentTarget.selectionEnd;
+                          const val = e.currentTarget.value;
+                          setEncodeText(val.substring(0, start) + "  " + val.substring(end));
+                          setTimeout(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2; }, 0);
+                        }
+                      }}
+                      placeholder="Paste or type content here…"
+                      spellCheck={false}
+                      className="flex-1 bg-transparent p-5 text-sm font-mono text-foreground/80 placeholder:text-muted-foreground/20 focus:outline-none resize-none leading-[1.7] caret-primary"
+                      style={{ minHeight: "calc(12 * 1.7 * 0.875rem + 2.5rem)" }}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-8 py-5">
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-mono text-muted-foreground/30">
+                    {encodeText.length > 0 ? `${encodeText.length} chars · ${encodeText.split("\n").length} lines` : "⌘+Enter to encode"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setEncodeMode(false); setEncodeText(""); }}
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/50 hover:text-foreground/70 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEncode}
+                    disabled={!encodeText.trim() || loading}
+                    className="flex items-center gap-2.5 rounded-lg bg-primary/90 hover:bg-primary text-primary-foreground font-semibold text-sm tracking-wide transition-all disabled:opacity-30 shadow-[0_0_24px_-4px_hsl(var(--primary)/0.35)]"
+                    style={{ paddingInline: "calc(1rem * 1.618)", paddingBlock: "calc(0.5rem * 1.618)" }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Encode Address
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
