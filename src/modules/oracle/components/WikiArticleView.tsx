@@ -523,9 +523,6 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         >
           {title}
         </BalancedHeading>
-        <p className="text-muted-foreground/50" style={{ fontSize: 12, fontStyle: "italic", margin: "4px 0 8px" }}>
-          From UOR Knowledge, the universal encyclopedia
-        </p>
         <SourcesPills sources={sourceMetas} />
 
         {/* ── Two-column grid ── */}
@@ -594,17 +591,6 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         {title}
       </BalancedHeading>
 
-      {/* ── Tagline ── */}
-      <p
-        className="text-muted-foreground/50"
-        style={{
-          fontSize: 12,
-          fontStyle: "italic",
-          margin: "4px 0 8px",
-        }}
-      >
-        From UOR Knowledge, the universal encyclopedia
-      </p>
 
       {/* ── Source pills ── */}
       <SourcesPills sources={sourceMetas} />
