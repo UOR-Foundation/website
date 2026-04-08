@@ -122,7 +122,7 @@ function DesktopShellInner() {
             />
           ))}
 
-        <DesktopThemeDots />
+        <DesktopThemeDots windows={wm.windows} />
 
         <SpotlightSearch
           open={spotlightOpen}
