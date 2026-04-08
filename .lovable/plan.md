@@ -1,78 +1,93 @@
 
 
-# Infinite Improbability Drive — Particle-to-Wave Pre-Transition
+# Chain of Proofs — Selectable Multi-Proof Addressing
 
-## What changes
+## Concept
 
-Add a **pre-phase** before the overlay appears: the existing search page elements dissolve from "particles" (sharp, solid) into "waves" (blurred, wavy, fading), then the improbability overlay takes over. On exit, the reverse happens — the result materializes from wave back to particle (crisp).
+Each Oracle response already produces a **Proof of Thought** (individual UOR address). This feature adds a **Chain of Proofs** layer: the user can select any combination of proofs in a conversation — consecutive or not — and encode them into a single composite UOR address. That address can be searched to reveal exactly the selected chain segment.
 
-## Revised Sequence (~5s total)
+## UX Design
 
-```text
-Phase 0 — PARTICLE → WAVE (0–800ms)  [NEW]
-  The main page content (search bar, buttons, background) gets:
-  - CSS filter: blur ramps from 0 → 12px
-  - A subtle wave distortion via CSS transform (translateY sine wobble)
-  - Opacity fades from 1 → 0.3
-  This creates the feeling of matter dissolving into a wave function.
-  After 800ms the overlay fades in on top.
+### Visual Chain Indicator
 
-Phase 1 — FLATLAND (800–1800ms)
-  Same as current: overlay appears, 1D line → 2D square, exponent counter.
-  But overlay initial opacity starts from 0.3 (smoother handoff from the blur).
+A thin vertical line connects all Proof of Thought cards in the conversation, with small chain-link nodes at each proof. This makes the "chain" metaphor visible.
 
-Phase 2 — SCRAMBLE (1800–3600ms)
-  Same as current: 3D cube → singularity, side-effect text cycling.
+### Selection Mode
 
-Phase 3 — UNSCRAMBLE (3600–4800ms)
-  DON'T PANIC, confetti, result picked.
+- A small **"Chain"** toggle button appears in the Oracle header bar (next to the close button). Clicking it enters **chain selection mode**.
+- In this mode, each Proof of Thought card gets a checkbox overlay. The user taps/clicks the proofs they want to include (any combination — consecutive or not).
+- A floating bottom bar appears showing: the count of selected proofs, a "Copy Chain Address" button, and a "Cancel" button.
+- When the user clicks "Copy Chain Address":
+  1. A composite JSON-LD object is built containing all selected proofs (ordered by conversation position).
+  2. `encode()` produces a single UOR address for the composite.
+  3. The triword is copied to clipboard with a toast confirmation.
+  4. The composite is registered in the receipt registry, so searching that triword reveals the chain.
 
-Phase 4 — WAVE → PARTICLE (4800–5200ms)  [NEW]
-  Overlay dissolves. The result page materializes:
-  - Blur ramps from 8px → 0
-  - Opacity from 0.5 → 1
-  - A brief "crystallizing" feel as content snaps into focus.
+### Search Resolution
+
+When the chain address is looked up via UOR Search, the result card shows:
+- A "Chain of Proofs" label (instead of single proof)
+- The individual proofs listed in order, each with its own triword
+- The original query/response pairs for each link
+
+## Technical Plan
+
+### 1. New state in ResolvePage.tsx
+
+```typescript
+const [chainSelectMode, setChainSelectMode] = useState(false);
+const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
 ```
 
-## Implementation Details
+### 2. Chain toggle in Oracle header
 
-### New state: `drivePrePhase` (boolean)
-- Set `true` at t=0, triggers blur/wave on the main content wrapper.
-- Set `false` at t=800ms when overlay activates.
+Add a `Link` icon button next to the close button. Toggles `chainSelectMode`. Only visible when there are 2+ proofs in the conversation.
 
-### New state: `drivePostPhase` (boolean)  
-- Set `true` when overlay dissolves, applies reverse blur on result.
-- Set `false` after 400ms, content is crisp.
+### 3. Proof card checkbox overlay
 
-### Main content wrapper gets conditional classes
-- When `drivePrePhase`: `filter: blur(12px)`, `opacity: 0.3`, `transform: scale(1.02)`, plus a CSS `@keyframes waveWobble` (gentle vertical sine oscillation).
-- When `drivePostPhase`: `filter: blur(8px)` → animates to `blur(0)` via transition.
-- Both use `transition: filter 0.8s ease, opacity 0.8s ease, transform 0.8s ease`.
+When `chainSelectMode` is true, each Proof of Thought card renders a small circular checkbox (left side). Tapping toggles that index in `selectedProofIndices`. Selected cards get a subtle emerald border highlight.
 
-### Timing adjustments in `fireImprobabilityDrive`
-- t=0: Set `drivePrePhase = true` (page blurs/waves)
-- t=800ms: Set `drivePrePhase = false`, `improbabilityActive = true`, `improbPhase = 1`
-- t=1800ms: Phase 2
-- t=3600ms: Phase 3 + confetti
-- t=4800ms: `improbabilityActive = false`, `drivePostPhase = true`, show result
-- t=5200ms: `drivePostPhase = false` (snap to crisp)
+### 4. Floating selection bar
 
-### New CSS keyframe: `waveWobble`
-```css
-@keyframes waveWobble {
-  0%, 100% { transform: translateY(0) scale(1); }
-  25% { transform: translateY(-3px) scale(1.01); }
-  50% { transform: translateY(2px) scale(1.02); }
-  75% { transform: translateY(-2px) scale(1.015); }
+When `selectedProofIndices.size > 0`, a bottom bar slides up with:
+- `"{n} proofs selected"` label
+- "Generate Chain Address" button (primary style)
+- Cancel / clear button
+
+### 5. Chain encoding function
+
+```typescript
+async function encodeChain(indices: Set<number>) {
+  const selected = [...indices].sort().map(i => aiMessages[i]);
+  const chainSource = {
+    "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+    "@type": "uor:ChainOfProofs",
+    "uor:links": selected.map((msg, idx) => ({
+      "@type": "uor:ProofOfThought",
+      "uor:position": idx,
+      "uor:query": aiMessages[/* find preceding user msg */].content,
+      "uor:response": msg.content,
+      "uor:proofAddress": msg.proof?.triword,
+    })),
+    "uor:chainLength": selected.length,
+    "uor:timestamp": new Date().toISOString(),
+  };
+  const receipt = await encode(chainSource);
+  return receipt;
 }
 ```
 
-### Overlay opacity now opaque
-The overlay `bg-background` is fully opaque (no transparency issue the user flagged). The blur pre-phase handles the transition from visible page to overlay, so there's no moment where you see both simultaneously.
+### 6. Search result rendering for chains
 
-## File
+When `result.source["@type"] === "uor:ChainOfProofs"`, render a special chain view showing each link with its triword, query, and response — instead of raw JSON.
+
+### 7. Connecting line between proof cards
+
+In the messages list, when there are multiple proof cards, render a thin `border-l border-primary/15` line connecting them, with small dot nodes. This is purely cosmetic — always visible, not just in selection mode.
+
+## Files
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Add `drivePrePhase`/`drivePostPhase` states, apply blur+wave CSS to main content wrapper, make overlay fully opaque, adjust timing to ~5s total, add `waveWobble` keyframe |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Add chain selection mode, floating bar, chain encode, visual chain connector, chain result rendering |
 
