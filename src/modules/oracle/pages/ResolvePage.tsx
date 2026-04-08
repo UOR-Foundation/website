@@ -31,6 +31,7 @@ import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/componen
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
+import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-history";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
