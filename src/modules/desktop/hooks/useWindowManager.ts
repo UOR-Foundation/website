@@ -148,7 +148,7 @@ export function useWindowManager() {
   const focusWindow = useCallback((id: string) => {
     setWindows(prev => {
       const z = ++nextZ.current;
-      const next = prev.map(w => w.id === id ? { ...w, zIndex: z } : w);
+      const next = prev.map(w => w.id === id ? { ...w, zIndex: z, minimized: false } : w);
       saveWindows(next);
       return next;
     });
