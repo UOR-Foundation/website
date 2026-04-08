@@ -398,7 +398,7 @@ const SearchPage = () => {
   const [readerMode, setReaderMode] = useState(true);
 
   // Sync immersive mode with fullscreen API (user may press Esc to exit)
-  React.useEffect(() => {
+  useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && immersiveMode) {
         setImmersiveMode(false);
