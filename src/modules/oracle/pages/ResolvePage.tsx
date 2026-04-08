@@ -220,21 +220,21 @@ const SearchPage = () => {
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
             <div
-              className="flex flex-col items-center justify-center"
-              style={{ minHeight: "100dvh", paddingBottom: "10vh" }}
+              className="relative flex flex-col items-center"
+              style={{ minHeight: "100dvh", paddingTop: "38.2vh" }}
             >
               {/* Brand wordmark — single confident line */}
               <h1
-                className="font-display font-semibold tracking-[0.04em] text-foreground select-none leading-none whitespace-nowrap"
-                style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
+                className="font-display font-bold tracking-[0.025em] text-foreground select-none leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(2.6rem, 5.5vw, 4rem)" }}
               >
                 UOR Semantic Web Search
               </h1>
 
               {/* Search bar — golden ratio spacing from title */}
               <div
-                className="w-full max-w-[680px] relative group"
-                style={{ marginTop: "calc(3.6rem * 0.618)" }}
+                className="w-full relative group"
+                style={{ maxWidth: "min(720px, 85vw)", marginTop: "calc(4rem * 0.618)" }}
               >
                 <div className="relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_2px_12px_0_hsl(0_0%_0%/0.4)]">
                   {/* Left + icon */}
@@ -269,7 +269,7 @@ const SearchPage = () => {
               {/* Dual buttons — golden ratio spacing */}
               <div
                 className="flex items-center gap-4"
-                style={{ marginTop: "calc(2.8rem * 0.618)" }}
+                style={{ marginTop: "1.85rem" }}
               >
                 <button
                   onClick={submit}
@@ -305,12 +305,12 @@ const SearchPage = () => {
                 </button>
               </div>
 
-              {/* Address space count — golden ratio spacing */}
+              {/* Tagline — pinned near bottom */}
               <p
-                className="text-[15px] text-muted-foreground/40 select-none"
-                style={{ marginTop: "calc(3.2rem * 0.618)" }}
+                className="absolute left-0 right-0 text-center text-[14px] text-muted-foreground/30 select-none"
+                style={{ bottom: "6vh" }}
               >
-                Searching a <span className="text-foreground/60 font-semibold">near-infinite</span> address space.
+                Searching a <span className="text-foreground/50 font-medium">near-infinite</span> address space.
               </p>
             </div>
           )}
