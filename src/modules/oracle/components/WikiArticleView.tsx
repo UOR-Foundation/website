@@ -89,8 +89,8 @@ const Infobox: React.FC<{
       className="bg-muted/20 border border-border/20"
       style={{
         float: "right",
-        width: 280,
-        marginLeft: 24,
+        width: window.innerWidth < 768 ? "100%" : 280,
+        marginLeft: window.innerWidth < 768 ? 0 : 24,
         marginBottom: 16,
         borderRadius: 8,
         overflow: "hidden",
@@ -271,8 +271,9 @@ const Infobox: React.FC<{
 
 const TableOfContents: React.FC<{
   entries: TocEntry[];
-}> = ({ entries }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  defaultCollapsed?: boolean;
+}> = ({ entries, defaultCollapsed = false }) => {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
   const handleClick = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -455,6 +456,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   synthesizing = false,
   media,
 }) => {
+  const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
@@ -502,7 +504,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       {wikidata && <Infobox title={title} wikidata={wikidata} />}
 
       {/* ── Table of Contents ── */}
-      <TableOfContents entries={toc} />
+      <TableOfContents entries={toc} defaultCollapsed={isMobileView} />
 
       {/* ── Lead paragraph ── */}
       {lead && (

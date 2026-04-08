@@ -349,6 +349,63 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
   );
 }
 
+/* ── Mobile Immersive Search Pill ── */
+function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus();
+  }, [expanded]);
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[60] flex justify-center pb-[env(safe-area-inset-bottom,16px)] px-4 pointer-events-none">
+      <AnimatePresence mode="wait">
+        {expanded ? (
+          <motion.div
+            key="expanded"
+            initial={{ width: 160, opacity: 0.8 }}
+            animate={{ width: "100%", opacity: 1 }}
+            exit={{ width: 160, opacity: 0.8 }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            className="pointer-events-auto rounded-full border border-white/[0.12] bg-black/70 backdrop-blur-xl shadow-[0_-4px_30px_-8px_rgba(0,0,0,0.6)] flex items-center gap-2 px-4 py-2"
+          >
+            <Search className="w-4 h-4 text-white/40 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && value.trim()) { onSearch(value.trim()); setExpanded(false); setValue(""); }
+                if (e.key === "Escape") { setExpanded(false); setValue(""); }
+              }}
+              placeholder="Search anything…"
+              className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/25 focus:outline-none caret-primary"
+            />
+            <button onClick={() => { setExpanded(false); setValue(""); }} className="p-1 text-white/30 hover:text-white/60">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        ) : (
+          <motion.button
+            key="collapsed"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={() => setExpanded(true)}
+            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl text-white/40 hover:text-white/60 transition-colors shadow-lg"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="text-[13px] font-medium">Search…</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 const SearchPage = () => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1428,7 +1485,7 @@ const SearchPage = () => {
       <div className={`flex-1 flex flex-col overflow-hidden ${immersiveMode ? "relative z-10" : ""}`}>
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
-      {result && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
+      {result && !(isMobile && immersiveMode) && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
         <header className={`flex items-center shrink-0 border-b border-border/10 ${immersiveMode ? "relative z-10" : ""} ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
           {isMobile ? (
             <>
@@ -2028,6 +2085,7 @@ const SearchPage = () => {
               const showReader = readerMode && isReadableType;
 
               if (showReader) {
+                const mobileImmersive = isMobile && immersiveMode;
                 return (
                   <motion.div
                     key="reader-mode"
@@ -2035,10 +2093,15 @@ const SearchPage = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex flex-col relative ${immersiveMode ? "text-white" : ""}`}
+                    className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
                     style={{ minHeight: "100dvh" }}
+                    onScroll={mobileImmersive ? (e) => {
+                      const el = e.currentTarget;
+                      const progress = Math.min(el.scrollTop / Math.max(el.scrollHeight - el.clientHeight, 1), 1);
+                      el.style.setProperty("--scroll-progress", String(progress));
+                    } : undefined}
                   >
-                    {immersiveMode && <ImmersiveBackground />}
+                    {immersiveMode && <ImmersiveBackground scrollProgress={0} />}
                     <div className="relative z-10 flex flex-col flex-1">
                       <ReaderToolbar
                         triwordDisplay={triwordDisplay}
@@ -2051,12 +2114,20 @@ const SearchPage = () => {
                         immersive={immersiveMode}
                       />
                       <div
-                        className={`flex-1 mx-auto w-full ${
-                          immersiveMode
-                            ? "bg-white/[0.04] backdrop-blur-xl border-x border-b border-white/[0.06] rounded-b-2xl shadow-[0_8px_60px_-12px_rgba(0,0,0,0.5)]"
-                            : ""
+                        className={`flex-1 w-full ${
+                          mobileImmersive
+                            ? "" // Full-bleed: no container chrome on mobile immersive
+                            : immersiveMode
+                              ? "mx-auto bg-white/[0.04] backdrop-blur-xl border-x border-b border-white/[0.06] rounded-b-2xl shadow-[0_8px_60px_-12px_rgba(0,0,0,0.5)]"
+                              : "mx-auto"
                         }`}
-                        style={{
+                        style={mobileImmersive ? {
+                          maxWidth: "100vw",
+                          paddingTop: 12,
+                          paddingBottom: 80,
+                          paddingLeft: 20,
+                          paddingRight: 20,
+                        } : {
                           maxWidth: "clamp(640px, 65vw, 860px)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
                           paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
@@ -2064,7 +2135,7 @@ const SearchPage = () => {
                           paddingRight: "clamp(1.5rem, 4vw, 4rem)",
                         }}
                       >
-                        <div className={immersiveMode ? "[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50" : ""}>
+                        <div className={immersiveMode ? `[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50 ${mobileImmersive ? "[&_p]:!text-[17px] [&_p]:!leading-[1.85] [&_li]:!text-[17px]" : ""}` : ""}>
                           <HumanContentView
                             source={result.source}
                             synthesizing={result.synthesizing}
@@ -2075,6 +2146,13 @@ const SearchPage = () => {
                           />
                         </div>
                       </div>
+
+                      {/* Floating compact search pill for mobile immersive reader */}
+                      {mobileImmersive && (
+                        <MobileImmersiveSearchPill
+                          onSearch={(q) => { setInput(q); clearResult(); setTimeout(() => handleSearch(q), 100); }}
+                        />
+                      )}
                     </div>
                   </motion.div>
                 );
