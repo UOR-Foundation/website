@@ -100,6 +100,7 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
   const [reacting, setReacting] = useState(false);
 
   const load = useCallback(async () => {
+    if (!cid) return;
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -114,6 +115,7 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
   }, [cid, sort]);
 
   useEffect(() => {
+    if (!cid) return;
     load();
 
     if (user) {

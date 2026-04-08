@@ -222,6 +222,7 @@ export default function ProvenanceTree({ cid, onNavigate }: Props) {
   const [showTree, setShowTree] = useState(true);
 
   useEffect(() => {
+    if (!cid) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
     setError(null);
