@@ -198,6 +198,9 @@ const SearchPage = () => {
               >
                 UOR
               </h1>
+              <p className="text-[13px] text-muted-foreground/35 tracking-[0.08em] mt-2 select-none">
+                Semantic Web Search
+              </p>
 
               {/* Search bar */}
               <div
