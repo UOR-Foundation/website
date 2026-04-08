@@ -824,14 +824,12 @@ serve(async (req) => {
     const maxTokens = effectiveDepth === "exhaustive" ? 3200 : effectiveDepth === "deep" ? 2800 : 2400;
     const temperature = (effectiveTone === "poetic" || effectiveTone === "vivid" || activeLens === "storyteller" || activeLens === "magazine") ? 0.6 : 0.3;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+    const tier = typeof latencyTier === "string" && TIER_MODELS[latencyTier] ? latencyTier : "balanced";
+
+    const { response: aiResponse, model: actualModel } = await fetchWithCascade(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      LOVABLE_API_KEY,
+      {
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -839,8 +837,11 @@ serve(async (req) => {
         max_tokens: maxTokens,
         temperature,
         stream: true,
-      }),
-    });
+      },
+      tier,
+    );
+
+    console.log(`uor-knowledge: tier=${tier} model=${actualModel}`);
 
     const isPersonalized = userContext.length > 0;
 
@@ -904,7 +905,7 @@ serve(async (req) => {
             wiki: wiki ? { ...wiki, facts: wikidataFacts } : null,
             sources,
             keyword: term,
-            model: "uor-synthesis",
+            model: actualModel,
             personalized: isPersonalized,
             personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
           })}\n\n`)
