@@ -381,7 +381,9 @@ const SynthesizingSkeleton: React.FC = () => (
 
 /* ── Custom markdown components with Wikipedia styling ───────────────── */
 
-function createMarkdownComponents() {
+function createMarkdownComponents(immersive = false) {
+  const bodySize = immersive ? 18 : 16;
+  const bodyLineHeight = immersive ? 1.9 : 1.8;
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
       const text = typeof children === "string" ? children : String(children);
@@ -389,15 +391,16 @@ function createMarkdownComponents() {
       return (
         <h2
           id={id}
-          className="text-foreground border-b border-border/25"
+          className="text-foreground"
           style={{
-            fontSize: "1.35rem",
+            fontSize: immersive ? "1.5rem" : "1.35rem",
             fontWeight: 600,
             fontFamily: "Georgia, 'Times New Roman', serif",
             paddingBottom: 4,
             marginTop: "1.8rem",
             marginBottom: "0.6rem",
             lineHeight: 1.3,
+            borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
           }}
           {...props}
         >
@@ -409,8 +412,8 @@ function createMarkdownComponents() {
       <p
         className="text-foreground/85"
         style={{
-          fontSize: 16,
-          lineHeight: 1.8,
+          fontSize: bodySize,
+          lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
           marginBottom: "0.7em",
         }}
@@ -430,8 +433,8 @@ function createMarkdownComponents() {
           paddingLeft: 24,
           marginBottom: "0.7em",
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 16,
-          lineHeight: 1.8,
+          fontSize: bodySize,
+          lineHeight: bodyLineHeight,
         }}
         className="text-foreground/85"
         {...props}
