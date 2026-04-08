@@ -1,13 +1,11 @@
 /**
- * DesktopWidgets — Perplexity-inspired home view for the desktop OS.
- * Crisp search bar, greeting, clock, quick actions.
- * Fades out when any window is maximized.
+ * DesktopWidgets — Minimal home: clock, greeting, search bar.
+ * Nothing else. Trust the user.
  */
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Sparkles, BookOpen, MessageCircle, ArrowRight } from "lucide-react";
-import ImmersiveQuote from "@/modules/oracle/components/ImmersiveQuote";
+import { Search, ArrowRight } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 
 interface Props {
@@ -24,7 +22,7 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) {
+export default function DesktopWidgets({ windows, onSearch }: Props) {
   const [time, setTime] = useState(new Date());
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,39 +45,33 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
     }
   };
 
-  const quickActions = [
-    { id: "oracle", label: "Oracle", icon: Sparkles },
-    { id: "library", label: "Library", icon: BookOpen },
-    { id: "messenger", label: "Messenger", icon: MessageCircle },
-  ];
-
   return (
     <motion.div
       className="fixed inset-0 z-[5] flex flex-col items-center justify-center pointer-events-none"
       animate={{ opacity: hasMaximized ? 0 : 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="pointer-events-auto w-full max-w-[640px] px-6 flex flex-col items-center">
+      <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
         {/* Clock */}
         <motion.div
-          className="text-center mb-6"
-          animate={{ opacity: hasAnyWindows ? 0.4 : 1, scale: hasAnyWindows ? 0.9 : 1 }}
+          className="text-center mb-8"
+          animate={{ opacity: hasAnyWindows ? 0.3 : 1, scale: hasAnyWindows ? 0.92 : 1 }}
           transition={{ duration: 0.5 }}
         >
           <h1
-            className="text-white/80 font-bold tracking-tight leading-none"
+            className="text-white/75 font-bold tracking-tight leading-none"
             style={{
-              fontSize: "clamp(56px, 9vw, 100px)",
+              fontSize: "clamp(64px, 10vw, 108px)",
               fontFamily: "'DM Sans', -apple-system, sans-serif",
-              textShadow: "0 2px 20px rgba(0,0,0,0.25)",
+              textShadow: "0 2px 24px rgba(0,0,0,0.3)",
             }}
           >
             {hours}:{minutes}
           </h1>
           <p
-            className="text-white/35 font-medium tracking-wide mt-1"
+            className="text-white/30 font-medium tracking-wide mt-2"
             style={{
-              fontSize: "clamp(14px, 1.6vw, 18px)",
+              fontSize: "clamp(14px, 1.5vw, 17px)",
               fontFamily: "'DM Sans', -apple-system, sans-serif",
             }}
           >
@@ -87,18 +79,18 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
           </p>
         </motion.div>
 
-        {/* Search bar — Perplexity style */}
-        <form onSubmit={handleSubmit} className="w-full mb-5">
+        {/* Search bar */}
+        <form onSubmit={handleSubmit} className="w-full">
           <div
             className="relative flex items-center w-full rounded-2xl transition-all duration-200"
             style={{
               background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.07)",
               boxShadow: "0 4px 24px -8px rgba(0,0,0,0.3)",
             }}
           >
             <div className="flex items-center pl-4 pr-2">
-              <Search className="w-[18px] h-[18px] text-white/25" />
+              <Search className="w-[16px] h-[16px] text-white/20" />
             </div>
             <input
               ref={inputRef}
@@ -106,7 +98,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask anything..."
-              className="flex-1 bg-transparent text-[15px] text-white/90 placeholder:text-white/25 py-3.5 pr-2 outline-none font-medium"
+              className="flex-1 bg-transparent text-[15px] text-white/90 placeholder:text-white/20 py-3.5 pr-2 outline-none font-medium"
               style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}
             />
             {query.trim() ? (
@@ -117,39 +109,12 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
                 <ArrowRight className="w-4 h-4 text-white/60" />
               </button>
             ) : (
-              <button
-                type="button"
-                className="mr-3 p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] transition-colors"
-                aria-label="Add context"
-              >
-                <Plus className="w-4 h-4 text-white/30" />
-              </button>
+              <kbd className="mr-3 text-[10px] text-white/15 font-medium px-1.5 py-0.5 rounded border border-white/[0.05] bg-white/[0.02]">
+                ⌘K
+              </kbd>
             )}
           </div>
         </form>
-
-        {/* Quick actions */}
-        <div className="flex items-center gap-2">
-          {quickActions.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => onOpenApp?.(id)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-medium text-white/35 hover:text-white/60 transition-all duration-200"
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <Icon className="w-3 h-3" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Quote — subtle */}
-        <div className="mt-10 opacity-40">
-          <ImmersiveQuote />
-        </div>
       </div>
     </motion.div>
   );
