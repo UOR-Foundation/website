@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useState, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
+// AnimatePresence removed — windows use CSS transitions now (Revolut-style)
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
