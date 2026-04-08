@@ -10,6 +10,7 @@ import {
   prepareWithSegments,
   layout,
   layoutWithLines,
+  walkLineRanges,
   type PreparedText,
   type PreparedTextWithSegments,
   type LayoutResult,
