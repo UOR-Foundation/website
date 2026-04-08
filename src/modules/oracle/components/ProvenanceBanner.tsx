@@ -1,6 +1,6 @@
 /**
  * ProvenanceBanner — Transparent "how this was generated" provenance bar.
- * Perplexity-style: subtle badges showing sources, AI model, and personalization.
+ * Perplexity-style: subtle badges showing sources, personalization, and UOR synthesis.
  * Expandable for full provenance explanation.
  */
 
@@ -15,15 +15,11 @@ interface ProvenanceBannerProps {
 
 const ProvenanceBanner: React.FC<ProvenanceBannerProps> = ({
   sourceCount,
-  model,
+  model: _model,
   personalized = false,
   personalizedTopics = [],
 }) => {
   const [expanded, setExpanded] = useState(false);
-
-  const modelLabel = model
-    ? model.replace("google/", "").replace("openai/", "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : "AI";
 
   return (
     <div
@@ -43,10 +39,10 @@ const ProvenanceBanner: React.FC<ProvenanceBannerProps> = ({
 
         <span className="text-border/30">·</span>
 
-        {/* AI model */}
+        {/* UOR Synthesis */}
         <span className="inline-flex items-center gap-1 text-muted-foreground/60">
           <span style={{ fontSize: 12 }}>⚙</span>
-          <span className="font-medium">{modelLabel}</span>
+          <span className="font-medium">UOR Synthesis</span>
         </span>
 
         {/* Personalized */}
@@ -72,7 +68,7 @@ const ProvenanceBanner: React.FC<ProvenanceBannerProps> = ({
           style={{ fontSize: 11, lineHeight: 1.6, paddingTop: 8 }}
         >
           <p>
-            This article was synthesized by <strong className="text-muted-foreground/70">{modelLabel}</strong> using{" "}
+            This article was synthesized by <strong className="text-muted-foreground/70">UOR</strong> using{" "}
             <strong className="text-muted-foreground/70">{sourceCount} web source{sourceCount !== 1 ? "s" : ""}</strong>
             {" "}(Wikipedia, Wikidata){personalized && personalizedTopics.length > 0 && (
               <> and personalized based on your recent exploration of{" "}
