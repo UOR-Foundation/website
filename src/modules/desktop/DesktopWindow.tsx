@@ -1,0 +1,197 @@
+/**
+ * DesktopWindow — Draggable, resizable window with macOS traffic-light buttons.
+ */
+
+import { useRef, useCallback, Suspense, type PointerEvent as ReactPointerEvent } from "react";
+import { motion } from "framer-motion";
+import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
+import { getApp } from "@/modules/desktop/lib/desktop-apps";
+import "@/modules/desktop/desktop.css";
+
+interface Props {
+  win: WindowState;
+  isActive: boolean;
+  onClose: (id: string) => void;
+  onMinimize: (id: string) => void;
+  onMaximize: (id: string) => void;
+  onFocus: (id: string) => void;
+  onMove: (id: string, pos: { x: number; y: number }) => void;
+  onResize: (id: string, size: { w: number; h: number }) => void;
+}
+
+const MENU_BAR_H = 28;
+
+export default function DesktopWindow({
+  win,
+  isActive,
+  onClose,
+  onMinimize,
+  onMaximize,
+  onFocus,
+  onMove,
+  onResize,
+}: Props) {
+  const app = getApp(win.appId);
+  const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
+
+  // Drag handlers
+  const onDragStart = useCallback((e: ReactPointerEvent) => {
+    if ((e.target as HTMLElement).closest(".traffic-light")) return;
+    onFocus(win.id);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      winX: win.position.x,
+      winY: win.position.y,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [win.id, win.position, onFocus]);
+
+  const onDragMove = useCallback((e: ReactPointerEvent) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    onMove(win.id, {
+      x: dragRef.current.winX + dx,
+      y: Math.max(MENU_BAR_H, dragRef.current.winY + dy),
+    });
+  }, [win.id, onMove]);
+
+  const onDragEnd = useCallback(() => {
+    dragRef.current = null;
+  }, []);
+
+  // Resize handlers
+  const onResizeStart = useCallback((e: ReactPointerEvent) => {
+    e.stopPropagation();
+    onFocus(win.id);
+    resizeRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      winW: win.size.w,
+      winH: win.size.h,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [win.id, win.size, onFocus]);
+
+  const onResizeMove = useCallback((e: ReactPointerEvent) => {
+    if (!resizeRef.current) return;
+    const dx = e.clientX - resizeRef.current.startX;
+    const dy = e.clientY - resizeRef.current.startY;
+    onResize(win.id, {
+      w: resizeRef.current.winW + dx,
+      h: resizeRef.current.winH + dy,
+    });
+  }, [win.id, onResize]);
+
+  const onResizeEnd = useCallback(() => {
+    resizeRef.current = null;
+  }, []);
+
+  if (win.minimized) return null;
+
+  const AppComponent = app?.component;
+
+  const style = win.maximized
+    ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px - 68px)` }
+    : {
+        top: win.position.y,
+        left: win.position.x,
+        width: win.size.w,
+        height: win.size.h,
+      };
+
+  return (
+    <motion.div
+      initial={{ scale: 0.92, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.92, opacity: 0 }}
+      transition={{ type: "spring", damping: 28, stiffness: 400, duration: 0.25 }}
+      className={`desktop-window-chrome fixed ${isActive ? "active" : ""}`}
+      style={{
+        ...style,
+        zIndex: win.zIndex,
+      }}
+      onPointerDown={() => onFocus(win.id)}
+    >
+      {/* Glass background */}
+      <div className="absolute inset-0 frosted-glass rounded-xl" />
+
+      {/* Border overlay */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          border: `1px solid ${isActive ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)"}`,
+        }}
+      />
+
+      {/* Title bar */}
+      <div
+        className="relative h-10 flex items-center px-3 gap-2 cursor-default select-none"
+        onPointerDown={onDragStart}
+        onPointerMove={onDragMove}
+        onPointerUp={onDragEnd}
+        onDoubleClick={() => onMaximize(win.id)}
+      >
+        {/* Traffic lights */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            className="traffic-light traffic-close"
+            onClick={(e) => { e.stopPropagation(); onClose(win.id); }}
+          />
+          <button
+            className="traffic-light traffic-minimize"
+            onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
+          />
+          <button
+            className="traffic-light traffic-maximize"
+            onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
+          />
+        </div>
+
+        {/* Title */}
+        <span className="text-[12px] font-medium text-white/60 truncate flex-1 text-center pr-12">
+          {win.title}
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className="relative overflow-auto" style={{ height: "calc(100% - 40px)" }}>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full">
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+            </div>
+          }
+        >
+          {AppComponent && <AppComponent />}
+        </Suspense>
+      </div>
+
+      {/* Resize handle (bottom-right) */}
+      {!win.maximized && (
+        <>
+          <div
+            className="resize-handle resize-handle-se"
+            onPointerDown={onResizeStart}
+            onPointerMove={onResizeMove}
+            onPointerUp={onResizeEnd}
+          />
+          <div
+            className="resize-handle resize-handle-e"
+            onPointerDown={onResizeStart}
+            onPointerMove={onResizeMove}
+            onPointerUp={onResizeEnd}
+          />
+          <div
+            className="resize-handle resize-handle-s"
+            onPointerDown={onResizeStart}
+            onPointerMove={onResizeMove}
+            onPointerUp={onResizeEnd}
+          />
+        </>
+      )}
+    </motion.div>
+  );
+}
