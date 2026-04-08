@@ -1180,7 +1180,8 @@ const SearchPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
-      {!result && !aiMode && <SearchConstellationBg />}
+      {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
+      {immersiveMode && (result || aiMode) && <ImmersiveBackground />}
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
         {improbabilityActive && (
@@ -1436,8 +1437,8 @@ const SearchPage = () => {
                 <ImmersiveSearchView
                   onSearch={(q) => { setInput(q); handleSearch(q); }}
                   onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }}
-                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setEncodeMode(true), 100); }}
-                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setAiMode(true), 100); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
                 />
               ) : (
               /* ── MOBILE: Perplexity-style portal ── */
@@ -1504,8 +1505,8 @@ const SearchPage = () => {
                 <ImmersiveSearchView
                   onSearch={(q) => { setInput(q); handleSearch(q); }}
                   onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }}
-                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setEncodeMode(true), 100); }}
-                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setAiMode(true), 100); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
                 />
               ) : (
               /* ── DESKTOP: Original layout ── */
