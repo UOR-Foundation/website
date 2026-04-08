@@ -433,6 +433,7 @@ function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) =
 
 const SearchPage = () => {
   const inWindow = useIsInsideWindow();
+  const windowInitialQuery = useWindowInitialQuery();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
