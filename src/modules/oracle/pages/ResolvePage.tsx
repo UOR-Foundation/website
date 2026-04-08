@@ -1056,8 +1056,19 @@ const SearchPage = () => {
                     onClick={() => {
                       const src = result.source as Record<string, unknown> | null;
                       const isOracle = src?.["@type"] === "uor:OracleExchange";
+                      const isChain = src?.["@type"] === "uor:ChainOfProofs";
 
-                      if (isOracle) {
+                      if (isChain) {
+                        const links = (src?.["uor:links"] as Array<Record<string, unknown>>) ?? [];
+                        const restored: Msg[] = [];
+                        for (const link of links) {
+                          const q = (link["uor:query"] as string) ?? "";
+                          const r = (link["uor:response"] as string) ?? "";
+                          if (q) restored.push({ role: "user", content: q });
+                          if (r) restored.push({ role: "assistant", content: r });
+                        }
+                        setAiMessages(restored);
+                      } else if (isOracle) {
                         const query = (src?.["uor:query"] as string) ?? "";
                         const response = (src?.["uor:response"] as string) ?? "";
                         setAiMessages([
@@ -1082,24 +1093,83 @@ const SearchPage = () => {
                     className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/15 hover:border-primary/30 hover:from-primary/25 hover:to-primary/15 text-foreground/85 font-semibold text-sm tracking-wide transition-all group"
                   >
                     <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
-                      ? "Continue in Oracle →"
-                      : "Discuss in Oracle →"}
+                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs"
+                      ? "Continue Chain in Oracle →"
+                      : (result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
+                        ? "Continue in Oracle →"
+                        : "Discuss in Oracle →"}
                   </button>
                 </motion.div>
 
                 <div className="border-t border-border/10" />
 
-                {/* CONTENT */}
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Content</p>
-                    <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
-                  </div>
-                  <pre className="text-sm font-mono text-foreground/65 bg-muted/5 rounded-xl p-5 overflow-x-auto max-h-[45vh] overflow-y-auto border border-border/10 leading-relaxed whitespace-pre-wrap break-words">
-                    {JSON.stringify(result.source, null, 2)}
-                  </pre>
-                </motion.div>
+                {/* CONTENT — Chain of Proofs special rendering */}
+                {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs" ? (
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Link2 className="w-3.5 h-3.5 text-primary/60" />
+                      <p className="text-[10px] font-semibold text-primary/50 uppercase tracking-[0.15em]">Chain of Proofs</p>
+                      <span className="text-[10px] text-muted-foreground/30 font-mono">
+                        {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
+                      </span>
+                    </div>
+
+                    <div className="space-y-0">
+                      {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
+                        <div key={idx} className="flex items-stretch gap-0">
+                          {/* Chain connector column */}
+                          <div className="flex flex-col items-center w-6 shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/25 mt-3 shrink-0" />
+                            {idx < arr.length - 1 && (
+                              <div className="flex-1 w-px bg-primary/10" style={{ minHeight: 12 }} />
+                            )}
+                          </div>
+                          {/* Link card */}
+                          <div className="flex-1 border border-border/10 rounded-lg p-3 mb-2 space-y-1.5 bg-muted/5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-semibold text-muted-foreground/30 uppercase tracking-wider">Link {idx + 1}</span>
+                              {link["uor:proofAddress"] && (
+                                <button
+                                  onClick={() => {
+                                    setInput(link["uor:proofAddress"] as string);
+                                    clearResult();
+                                    setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50);
+                                  }}
+                                  className="text-[9px] text-primary/50 hover:text-primary/80 transition-colors font-mono"
+                                >
+                                  {link["uor:proofAddress"] as string}
+                                </button>
+                              )}
+                            </div>
+                            {link["uor:query"] && (
+                              <p className="text-xs text-foreground/60 line-clamp-2">
+                                <span className="text-muted-foreground/30 font-semibold mr-1">Q:</span>
+                                {link["uor:query"] as string}
+                              </p>
+                            )}
+                            {link["uor:response"] && (
+                              <p className="text-xs text-foreground/45 line-clamp-3">
+                                <span className="text-muted-foreground/30 font-semibold mr-1">A:</span>
+                                {(link["uor:response"] as string).slice(0, 200)}…
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Standard content */
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Content</p>
+                      <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
+                    </div>
+                    <pre className="text-sm font-mono text-foreground/65 bg-muted/5 rounded-xl p-5 overflow-x-auto max-h-[45vh] overflow-y-auto border border-border/10 leading-relaxed whitespace-pre-wrap break-words">
+                      {JSON.stringify(result.source, null, 2)}
+                    </pre>
+                  </motion.div>
+                )}
 
                 {/* Verify */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-3 pt-1">
