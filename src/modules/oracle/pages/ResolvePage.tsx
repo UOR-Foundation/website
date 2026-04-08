@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import uorLogo from "@/assets/uor-logo-white.png";
+import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2 } from "lucide-react";
@@ -584,21 +584,21 @@ const SearchPage = () => {
               className="relative flex flex-col items-center"
               style={{ minHeight: "100dvh", paddingTop: "28vh" }}
             >
-              {/* Logo */}
-              <img
-                src={uorLogo}
-                alt="UOR"
-                className="w-20 h-20 md:w-24 md:h-24 mb-5 select-none"
-                draggable={false}
-              />
-
-              {/* Title */}
-              <h1
-                className="font-display font-bold tracking-[0.02em] text-foreground select-none leading-none whitespace-nowrap"
-                style={{ fontSize: "clamp(2.4rem, 5.5vw, 3.8rem)" }}
-              >
-                The Universal Object Reference
-              </h1>
+              {/* Title row with icon */}
+              <div className="flex items-center gap-4 md:gap-5">
+                <img
+                  src={uorHexagon}
+                  alt="UOR"
+                  className="w-12 h-12 md:w-14 md:h-14 select-none opacity-90"
+                  draggable={false}
+                />
+                <h1
+                  className="font-display font-bold tracking-[0.02em] text-foreground select-none leading-none whitespace-nowrap"
+                  style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
+                >
+                  The Universal Object Reference
+                </h1>
+              </div>
 
               {/* Search bar — golden ratio spacing from title */}
               <div
