@@ -67,6 +67,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [editValue, setEditValue] = useState("");
   const historyRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
+  const portalBtnRef = useRef<HTMLButtonElement>(null);
 
   const threeWords = triwordDisplay; // Already in "Cricket.Risen.Keep" format
 
