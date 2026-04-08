@@ -641,7 +641,7 @@ const SearchPage = () => {
   };
 
   /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
-  const handleKeywordResolve = async (keyword: string) => {
+  const handleKeywordResolve = async (keyword: string, lensOverride?: string) => {
     // ── Fetch user context for personalization ──
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
@@ -2072,7 +2072,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
