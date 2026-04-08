@@ -1181,7 +1181,7 @@ const SearchPage = () => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
-      {immersiveMode && (result || aiMode) && <ImmersiveBackground />}
+      {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
         {improbabilityActive && (
