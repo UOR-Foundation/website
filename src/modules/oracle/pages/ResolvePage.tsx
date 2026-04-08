@@ -975,7 +975,7 @@ const SearchPage = () => {
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-8 md:px-12 lg:px-16">
+        <div className="profile-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
