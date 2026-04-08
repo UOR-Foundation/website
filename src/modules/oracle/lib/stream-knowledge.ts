@@ -6,6 +6,31 @@
 
 const KNOWLEDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-knowledge`;
 
+export interface MediaImage {
+  url: string;
+  caption?: string;
+  uorHash: string;
+  source: string;
+}
+
+export interface MediaVideo {
+  youtubeId: string;
+  title: string;
+  uorHash: string;
+}
+
+export interface MediaAudio {
+  url: string;
+  title: string;
+  uorHash: string;
+}
+
+export interface MediaData {
+  images: MediaImage[];
+  videos: MediaVideo[];
+  audio?: MediaAudio[];
+}
+
 export interface WikiMeta {
   qid: string | null;
   thumbnail: string | null;
@@ -26,6 +51,7 @@ export async function streamKnowledge({
   context,
   lens,
   onWiki,
+  onMedia,
   onDelta,
   onDone,
   onError,
@@ -40,6 +66,8 @@ export async function streamKnowledge({
     sources: Array<string | { url: string; title?: string; type?: string }>,
     provenance?: ProvenanceMeta
   ) => void;
+  /** Called when multimedia data arrives (images, videos, audio from Wikimedia Commons) */
+  onMedia?: (media: MediaData) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
@@ -127,6 +155,8 @@ export async function streamKnowledge({
               personalizedTopics: parsed.personalizedTopics,
             }
           );
+        } else if (parsed.type === "media" && parsed.media) {
+          onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }
@@ -158,6 +188,8 @@ export async function streamKnowledge({
               personalizedTopics: parsed.personalizedTopics,
             }
           );
+        } else if (parsed.type === "media" && parsed.media) {
+          onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }

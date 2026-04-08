@@ -7,8 +7,10 @@
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
+import { ImageGallery, VideoEmbed } from "../MediaGallery";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
+import type { MediaData } from "../../lib/stream-knowledge";
 
 interface LensRendererProps {
   title: string;
@@ -16,6 +18,7 @@ interface LensRendererProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }
 
 function createStoryComponents() {
@@ -122,6 +125,7 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
   contentMarkdown,
   sources,
   synthesizing = false,
+  media,
 }) => {
   const components = useMemo(() => createStoryComponents(), []);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
@@ -178,6 +182,11 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
       {/* Source pills */}
       <SourcesPills sources={sourceMetas} />
 
+      {/* Scene-setting image */}
+      {media && media.images.length > 0 && (
+        <ImageGallery images={media.images} layout="hero" maxImages={1} className="my-6" />
+      )}
+
       {/* Content with inline citations */}
       <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
 
@@ -188,9 +197,16 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
 
       {/* End mark */}
       {!synthesizing && contentMarkdown.trim().length > 100 && (
-        <div className="text-center mt-12 mb-4">
-          <span className="text-primary/30" style={{ fontSize: 20 }}>◼</span>
-        </div>
+        <>
+          {media && media.videos.length > 0 && (
+            <div className="mt-8 mb-6">
+              <VideoEmbed video={media.videos[0]} />
+            </div>
+          )}
+          <div className="text-center mt-12 mb-4">
+            <span className="text-primary/30" style={{ fontSize: 20 }}>◼</span>
+          </div>
+        </>
       )}
 
       {/* References footer */}

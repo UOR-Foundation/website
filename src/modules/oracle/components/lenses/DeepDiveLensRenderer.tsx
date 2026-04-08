@@ -7,8 +7,10 @@ import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
+import { ExpertMedia } from "../MediaGallery";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
+import type { MediaData } from "../../lib/stream-knowledge";
 
 interface LensRendererProps {
   title: string;
@@ -16,6 +18,7 @@ interface LensRendererProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }
 
 function slugify(text: string): string {
@@ -152,6 +155,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   contentMarkdown,
   sources,
   synthesizing = false,
+  media,
 }) => {
   const { abstract, rest } = useMemo(() => extractAbstract(contentMarkdown), [contentMarkdown]);
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
@@ -260,6 +264,9 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         )}
       </div>
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+
+      {/* Supplementary Materials */}
+      {media && !synthesizing && <ExpertMedia media={media} />}
 
       {/* References (journal style) */}
       {sourceMetas.length > 0 && (

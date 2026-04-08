@@ -7,8 +7,10 @@
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
+import { ImageGallery, VideoEmbed } from "../MediaGallery";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
+import type { MediaData } from "../../lib/stream-knowledge";
 
 interface LensRendererProps {
   title: string;
@@ -16,6 +18,7 @@ interface LensRendererProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }
 
 function slugify(text: string): string {
@@ -149,6 +152,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
   contentMarkdown,
   sources,
   synthesizing = false,
+  media,
 }) => {
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
   const components = useMemo(() => createSimpleComponents(sectionCounter), [sectionCounter]);
@@ -197,6 +201,16 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 
       {/* Content with inline citations */}
       <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
+
+      {/* Playful media */}
+      {media && media.images.length > 0 && !synthesizing && (
+        <ImageGallery images={media.images} layout="playful" maxImages={3} className="my-6" />
+      )}
+
+      {/* Video */}
+      {media && media.videos.length > 0 && !synthesizing && (
+        <VideoEmbed video={media.videos[0]} variant="playful" className="my-4" />
+      )}
 
       {synthesizing && (
         <span className="inline-block bg-primary/70" style={{ width: 2, height: 20, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />

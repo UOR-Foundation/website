@@ -7,8 +7,10 @@
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
+import { ImageGallery, VideoEmbed } from "../MediaGallery";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
+import type { MediaData } from "../../lib/stream-knowledge";
 
 interface LensRendererProps {
   title: string;
@@ -16,6 +18,7 @@ interface LensRendererProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }
 
 function slugify(text: string): string {
@@ -148,6 +151,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
   contentMarkdown,
   sources,
   synthesizing = false,
+  media,
 }) => {
   const pullQuote = useMemo(() => extractPullQuote(contentMarkdown), [contentMarkdown]);
   const isFirstParagraph = useMemo(() => ({ current: true }), [contentMarkdown]);
@@ -242,6 +246,14 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         />
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+
+      {/* Video embed */}
+      {media && media.videos.length > 0 && !synthesizing && (
+        <div className="mt-8 mb-4">
+          <p className="text-muted-foreground/40 text-xs uppercase tracking-widest font-semibold mb-3">Watch More</p>
+          <VideoEmbed video={media.videos[0]} />
+        </div>
+      )}
 
       {/* References footer */}
       {sourceMetas.length > 0 && !synthesizing && (

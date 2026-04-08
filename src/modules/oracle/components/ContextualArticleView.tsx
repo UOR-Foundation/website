@@ -7,6 +7,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText } from "lucide-react";
+import type { MediaData } from "@/modules/oracle/lib/stream-knowledge";
 import WikiArticleView from "./WikiArticleView";
 import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
 import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
@@ -29,6 +30,7 @@ const LENS_RENDERERS: Record<string, React.FC<{
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }>> = {
   encyclopedia: WikiArticleView,
   magazine: MagazineLensRenderer,
@@ -54,6 +56,8 @@ interface ContextualArticleViewProps {
     personalized?: boolean;
     personalizedTopics?: string[];
   };
+  /** Multimedia data from Wikimedia Commons */
+  media?: MediaData;
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -67,6 +71,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   onLensChange,
   isReaderMode = false,
   provenance,
+  media,
 }) => {
   const navigate = useNavigate();
 
@@ -158,6 +163,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
             wikidata={wikidata}
             sources={sources}
             synthesizing={synthesizing}
+            media={media}
           />
         );
       })()}
