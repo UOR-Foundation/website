@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from "react";
+import BalancedHeading from "../BalancedHeading";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
 import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections } from "../InlineMedia";
@@ -143,9 +144,15 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
       )}
 
       {/* Title */}
-      <h1 className="text-foreground" style={{ fontSize: "clamp(2.2rem, 5vw, 3.2rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 12 }}>
+      <BalancedHeading
+        font="800 32px 'DM Sans', system-ui, sans-serif"
+        lineHeight={35}
+        as="h1"
+        className="text-foreground"
+        style={{ fontSize: "clamp(2.2rem, 5vw, 3.2rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 12 }}
+      >
         {title}
-      </h1>
+      </BalancedHeading>
 
       <p className="text-muted-foreground/40" style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 500, marginBottom: pullQuote ? 20 : 32 }}>
         UOR Knowledge · Feature

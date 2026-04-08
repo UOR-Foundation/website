@@ -5,6 +5,7 @@
 
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import BalancedHeading from "../BalancedHeading";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
 import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections } from "../InlineMedia";
@@ -106,9 +107,16 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ margin: "0 auto" }}>
-      <h1 className="text-foreground" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}>
+      <BalancedHeading
+        font="700 28px 'DM Sans', system-ui, sans-serif"
+        lineHeight={34}
+        as="h1"
+        center
+        className="text-foreground"
+        style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}
+      >
         {title}
-      </h1>
+      </BalancedHeading>
 
       <p className="text-muted-foreground/40 text-center" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace", letterSpacing: "0.06em", marginBottom: 12 }}>
         UOR Knowledge · Technical Review

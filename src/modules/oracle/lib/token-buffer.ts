@@ -13,6 +13,8 @@ export class TokenBuffer {
   private rafId: number | null = null;
   private lastFlush = 0;
   private onFlush: (text: string) => void;
+  /** Optional callback for layout height prediction (Pretext integration) */
+  private onHeightHint: ((text: string) => void) | null;
 
   /** Base interval between flushes (ms). Randomised ±15 ms each tick. */
   private baseInterval: number;
@@ -21,9 +23,12 @@ export class TokenBuffer {
   /** Instant-flush mode: first N chars flush with zero delay */
   private rushChars: number;
   private totalFlushed = 0;
+  /** Throttle height hints to avoid excessive calls */
+  private lastHeightHint = 0;
 
-  constructor(onFlush: (text: string) => void, opts?: { baseInterval?: number; sentencePause?: number; rushChars?: number }) {
+  constructor(onFlush: (text: string) => void, opts?: { baseInterval?: number; sentencePause?: number; rushChars?: number; onHeightHint?: (text: string) => void }) {
     this.onFlush = onFlush;
+    this.onHeightHint = opts?.onHeightHint ?? null;
     this.baseInterval = opts?.baseInterval ?? 22;
     this.sentencePause = opts?.sentencePause ?? 120;
     this.rushChars = opts?.rushChars ?? 250;
@@ -88,6 +93,7 @@ export class TokenBuffer {
     this.totalFlushed += batch.length;
     this.lastFlush = performance.now();
     this.onFlush(this.accumulated);
+    this.emitHeightHint();
     // If still in rush mode and running, stay ready
     if (this.running && this.totalFlushed >= this.rushChars && this.queue.length > 0) {
       this.scheduleFlush();
@@ -125,6 +131,7 @@ export class TokenBuffer {
       this.totalFlushed += batch.length;
       this.lastFlush = now;
       this.onFlush(this.accumulated);
+      this.emitHeightHint();
 
       if (this.queue.length > 0 || this.running) {
         this.scheduleFlush();
@@ -150,5 +157,14 @@ export class TokenBuffer {
     }
 
     return Math.max(18, base);
+  }
+
+  /** Emit height hint callback, throttled to every 200ms */
+  private emitHeightHint() {
+    if (!this.onHeightHint) return;
+    const now = performance.now();
+    if (now - this.lastHeightHint < 200) return;
+    this.lastHeightHint = now;
+    this.onHeightHint(this.accumulated);
   }
 }
