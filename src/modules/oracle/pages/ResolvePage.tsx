@@ -749,6 +749,21 @@ const SearchPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {proofCount >= 2 && (
+                    <button
+                      onClick={() => {
+                        const all = new Set<number>();
+                        for (let i = 0; i < proofCount; i++) all.add(i);
+                        setSelectedProofIndices(all);
+                        setTimeout(() => encodeChain(all), 50);
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20 transition-all"
+                      title="Encode entire conversation as a single chain address"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      Chain All
+                    </button>
+                  )}
                   <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
                     <X className="w-4 h-4" />
                   </button>
