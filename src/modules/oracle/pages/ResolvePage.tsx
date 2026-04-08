@@ -24,6 +24,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
+import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
@@ -864,7 +865,7 @@ const SearchPage = () => {
     };
 
     // Placeholder receipt — encode deferred to after stream completes
-    const placeholderReceipt: EnrichedReceipt = {
+    const placeholderReceipt = {
       derivationId: "",
       cid: "",
       ipv6: "",
@@ -873,6 +874,16 @@ const SearchPage = () => {
       glyph: "",
       ringPartition: "pending",
       engine: "deferred",
+      hashHex: "",
+      nquads: "",
+      ringByte: 0,
+      ringFactors: [],
+      ringLabel: "",
+      wasmAvailable: false,
+      wasmEnriched: false,
+      ringFamily: "",
+      ringOrder: 0,
+      idempotent: false,
     } as EnrichedReceipt;
 
     setResult({
