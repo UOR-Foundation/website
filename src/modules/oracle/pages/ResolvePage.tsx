@@ -1292,6 +1292,27 @@ const SearchPage = () => {
     setSelectedProofIndices(new Set());
   };
 
+  /** Render an Oracle response as a full rendered knowledge page */
+  const renderOracleResponse = useCallback((query: string, content: string) => {
+    const label = query.charAt(0).toUpperCase() + query.slice(1);
+    // Build a knowledge card from the Oracle response and stream it as rendered content
+    exitAiMode();
+    setOracleOverlayOpen(false);
+    // Use the keyword resolve flow which will re-stream with full media
+    setInput(query);
+    handleKeywordResolve(query);
+  }, []);
+
+  /** Expand oracle overlay to full Oracle mode */
+  const expandOverlayToOracle = useCallback((overlayMessages: Msg[]) => {
+    setOracleOverlayOpen(false);
+    setAiMessages(overlayMessages);
+    setResult(null);
+    setRederived(false);
+    setAiMode(true);
+    setTimeout(() => aiInputRef.current?.focus(), 150);
+  }, []);
+
   const toggleProofIndex = (idx: number) => {
     setSelectedProofIndices(prev => {
       const next = new Set(prev);
