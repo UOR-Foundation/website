@@ -1,67 +1,71 @@
 
 
-## Sovereign Context Board — Inline Vault Picker
+## Full-Width, Golden-Ratio Article Layout Overhaul
 
-### What We're Building
+### Problem
+The article reader view wastes screen space with narrow hardcoded max-widths (640–740px) in every lens renderer, plus the outer container adds its own constraints. Headings are inconsistently styled across lenses. The result feels cramped with large margins on wider screens.
 
-A beautiful **"+" button** on the left side of the search input (both desktop immersive view and mobile search bar) that opens a compact **Context Picker** sheet. This lets users select vault documents as context for their search — like attaching files to a message. Selected documents appear as small pills below the search bar, and their content is passed along with the query.
+### Design Approach
+Apply a responsive, Golden-Ratio-informed layout that uses the full viewport width intelligently — like The New York Times, Medium, or National Geographic online. Text columns stay at an optimal reading width (~680–720px for body text — research-backed for readability), but media, headings, and structural elements break out to fill the available space.
 
-### User Flow
+### Changes
 
-1. User taps the **+** button (left of search input)
-2. A slide-up sheet appears showing:
-   - Their vault documents as a selectable list (checkbox-style)
-   - A quick "Import" button (file or URL) at the bottom
-   - A compact search bar to filter documents
-3. User taps documents to toggle selection → pills appear below search input
-4. User types their query and submits — selected vault docs are included as context
-5. Tapping a pill removes it from context
+**1. Outer content container (`ResolvePage.tsx`, ~line 2107–2127)**
+- Widen the non-immersive reader container from `clamp(640px, 65vw, 860px)` → `clamp(720px, 75vw, 1100px)`
+- Widen the immersive container from `min(1200px, 92vw)` → `min(1400px, 95vw)`
+- Reduce horizontal padding to reclaim space on smaller screens
 
-### File Changes
+**2. Magazine lens (`MagazineLensRenderer.tsx`)**
+- Remove `maxWidth: 680` on `<article>` — let it fill the parent
+- Body text paragraphs: keep at optimal 720px via `max-width` on `<p>` and lists (reading-width constraint)
+- Headings (`h2`): full-width, larger font size (1.75rem → 2rem), tighter letter-spacing
+- Hero image: truly full-bleed with negative margins
+- Pull-quotes: wider, centered with max-width ~900px
+- Title: scale up to `clamp(2.2rem, 5vw, 3.2rem)` with display font
 
-**1. New component: `src/modules/sovereign-vault/components/VaultContextPicker.tsx`**
-- A slide-up sheet/popover triggered by the + button
-- Shows list of vault documents with checkboxes, file icons, and truncated CIDs
-- Filter input at top to narrow down documents
-- "Import file" and "Import URL" quick-actions at the bottom
-- Uses `useVault()` for data, `AnimatePresence` for smooth transitions
-- Returns selected document IDs via an `onSelectionChange` callback
-- If not authenticated, shows a gentle "Sign in to use your Sovereign Vault" prompt
+**3. Encyclopedia lens (`WikiArticleView.tsx`)**
+- Two-column layout: widen grid from `1fr 300px` → `1fr 320px` with φ-based gap
+- Single-column: remove implicit narrow constraint, let text flow to ~720px via paragraph-level max-width
+- Title: use fluid `clamp(1.8rem, 4vw, 2.6rem)`
+- Infobox: use `min(320px, 38.2%)` width (φ complement)
 
-**2. New component: `src/modules/sovereign-vault/components/ContextPills.tsx`**
-- Renders selected vault documents as small, dismissible pills below the search bar
-- Each pill shows a Shield icon + truncated filename + X to remove
-- Subtle primary/10 background with primary text — matches existing VaultContextBadge style
+**4. Simple lens (`SimpleLensRenderer.tsx`)**
+- Remove `maxWidth: 700` → full parent width
+- Body text constrained at paragraph level to ~740px
+- Title: larger, playful — `clamp(2rem, 5vw, 3rem)`
 
-**3. Modify: `src/modules/oracle/components/ImmersiveSearchView.tsx`**
-- Replace the existing top-bar "Encode" button with the new + button positioned **inside the search input**, on the left side
-- Add state: `selectedVaultDocs: string[]` (array of document IDs)
-- Render `VaultContextPicker` as a popover anchored to the + button
-- Render `ContextPills` between the search input and the vault badge
-- Pass selected doc IDs through `onSearch` (extend to include context)
+**5. Deep Dive lens (`DeepDiveLensRenderer.tsx`)**
+- Remove `maxWidth: 740` → full width
+- Paragraph-level text max-width: 720px
+- Section headers: full-width
 
-**4. Modify: `src/modules/oracle/components/MobileSearchBar.tsx`**
-- Replace the existing `onEncode` Plus button with the vault context picker trigger
-- Same popover/sheet pattern, opening upward on mobile
-- Render `ContextPills` in a row above the input bar when docs are selected
+**6. Story lens (`StoryLensRenderer.tsx`)**
+- Remove `maxWidth: 640` → full width
+- Body paragraphs: max-width 680px (tighter for narrative immersion)
+- Hero image: full-bleed
+- Title: cinematic scale `clamp(2.4rem, 6vw, 3.6rem)`
 
-**5. Modify: `src/modules/sovereign-vault/components/VaultImportDialog.tsx`**
-- Add an `embedded` prop variant for inline use within the context picker (compact mode, no Dialog wrapper)
+**7. Consistent heading hierarchy (all lenses)**
+Apply a unified typographic scale based on Golden Ratio:
+- `h1` (title): `clamp(2rem, 5vw, 3rem)`, weight 700–800
+- `h2` (section): `clamp(1.4rem, 3vw, 2rem)`, weight 700, with adequate top margin (`3rem`)
+- `h3` (subsection): `clamp(1.1rem, 2vw, 1.4rem)`, weight 600
+- All headings: consistent `letter-spacing: -0.02em`, line-height: 1.2
 
-### Design Details
+**8. Responsive breakpoints**
+- Mobile (<768px): text fills to ~95vw with 16px padding, no side margins wasted
+- Tablet (768–1024px): text at ~85vw
+- Desktop (>1024px): text paragraphs at optimal 720px, structural elements at full container width
+- Hero images and media: always full-bleed (negative margins to escape text column)
 
-- **+ button**: 36×36px rounded-full, `bg-white/10` on immersive, `bg-white/[0.06]` on mobile, with a smooth scale animation on tap
-- **Sheet**: Rounded-2xl, backdrop-blur-xl, max-height 50vh, scrollable document list
-- **Document rows**: 48px height, file icon + filename + chunk count + checkbox on right
-- **Context pills**: 28px height, rounded-full, Shield icon + filename truncated to 12 chars + X button
-- **Import actions**: Compact row at bottom of sheet with Upload and Link2 icons
-- **Empty state**: Friendly message with Shield icon when vault is empty
-- **Auth gate**: If not signed in, show a soft prompt to sign in
+### Files Modified
+1. `src/modules/oracle/pages/ResolvePage.tsx` — widen outer container
+2. `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` — full-width article, paragraph-level text constraint
+3. `src/modules/oracle/components/WikiArticleView.tsx` — wider layout, fluid headings
+4. `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` — same pattern
+5. `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` — same pattern
+6. `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` — same pattern
 
-### Technical Notes
-
-- The vault is already linked to the user's sovereign identity via `useAuth()` → `user.id` — persistence across devices is handled by the existing database layer
-- No database changes needed — `sovereign_documents` table and RLS policies already exist
-- Selected context will be stored in component state (not persisted) — it's per-search-session
-- The `onSearch` callback signature doesn't change externally; context doc IDs are passed as a second parameter or via a shared context provider
+### Result
+Content fills the screen naturally like a modern editorial website. Body text stays at the scientifically optimal reading width, while headings, images, and structural elements use the full available space. The experience is consistent across all screen sizes and all five lens renderers.
 
