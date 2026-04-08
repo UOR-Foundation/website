@@ -248,13 +248,46 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
         <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
       )}
 
-      {/* ── Body entries ── */}
-      {bodyEntries.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {bodyEntries.map(([key, value]) => (
-            <EntryRenderer key={key} entryKey={key} value={value} />
+      {/* ── View mode toggle (Original / Readable) for WebPages with rawHtml ── */}
+      {isWebPage && rawHtml && (
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {(["original", "readable"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              style={{
+                fontSize: 11,
+                fontWeight: viewMode === mode ? 600 : 400,
+                padding: "4px 14px",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                textTransform: "capitalize",
+              }}
+              className={viewMode === mode
+                ? "bg-primary/15 text-primary"
+                : "bg-transparent text-muted-foreground/50 hover:text-muted-foreground/70"
+              }
+            >
+              {mode}
+            </button>
           ))}
         </div>
+      )}
+
+      {/* ── Original fidelity view (Shadow DOM) ── */}
+      {isWebPage && rawHtml && viewMode === "original" ? (
+        <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
+      ) : (
+        /* ── Body entries (Readable mode) ── */
+        bodyEntries.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {bodyEntries.map(([key, value]) => (
+              <EntryRenderer key={key} entryKey={key} value={value} />
+            ))}
+          </div>
+        )
       )}
 
       {/* ── Semantic Web Tower (WebPage only) ── */}
