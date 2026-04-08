@@ -827,7 +827,7 @@ const SearchPage = () => {
               {/* Search bar — golden ratio spacing from title */}
               <div
                 className="w-full relative group"
-                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(3rem * 0.618)" }}
+                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(2.5rem * 0.618)" }}
               >
                 {/* Animated border glow — rotating conic gradient, always subtly alive */}
                 <div
@@ -850,11 +850,11 @@ const SearchPage = () => {
                   {/* Left + / × icon */}
                   <button
                     onClick={() => { setEncodeMode(!encodeMode); setEncodeText(""); setTimeout(() => { if (!encodeMode) encodeRef.current?.focus(); else inputRef.current?.focus(); }, 100); }}
-                    className="pl-5 pr-2 py-[18px] text-muted-foreground/50 hover:text-foreground/70 transition-all shrink-0"
+                    className="pl-[28px] pr-[10px] py-[17px] text-muted-foreground/50 hover:text-foreground/70 transition-all shrink-0"
                     title={encodeMode ? "Back to search" : "Encode content"}
                   >
                     <motion.div animate={{ rotate: encodeMode ? 135 : 0 }} transition={{ duration: 0.25, ease: "easeInOut" }}>
-                      <Plus className="w-6 h-6" />
+                      <Plus className="w-5 h-5" />
                     </motion.div>
                   </button>
 
@@ -878,7 +878,7 @@ const SearchPage = () => {
                           onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                           onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
                           placeholder=""
-                          className="flex-1 bg-transparent py-[18px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
+                          className="flex-1 bg-transparent py-[17px] px-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
                         />
                       </motion.div>
                     ) : (
@@ -888,7 +888,7 @@ const SearchPage = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex-1 flex items-center py-[18px] px-2"
+                        className="flex-1 flex items-center py-[17px] px-[6px]"
                       >
                         <span className="text-base text-primary/70 font-medium tracking-wide select-none">Encode</span>
                       </motion.div>
@@ -897,14 +897,14 @@ const SearchPage = () => {
 
                   {/* Right side — separator + AI Mode pill */}
                   {!encodeMode && (
-                    <div className="flex items-center gap-3 pr-3 shrink-0">
-                      <div className="w-px h-7 bg-[hsl(0_0%_30%)]" />
+                    <div className="flex items-center gap-[10px] pr-[17px] shrink-0">
+                      <div className="w-px h-[28px] bg-[hsl(0_0%_30%)]" />
                       <button
                         onClick={() => setAiMode(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
+                        className="flex items-center gap-[6px] px-[17px] py-[10px] rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
                       >
-                        <Sparkles className="w-4 h-4 text-primary/70" />
-                        <span className="text-base font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
+                        <Sparkles className="w-[14px] h-[14px] text-primary/70" />
+                        <span className="text-sm font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
                       </button>
                     </div>
                   )}
