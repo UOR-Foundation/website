@@ -454,6 +454,7 @@ const SearchPage = () => {
   const [aiMessages, setAiMessages] = useState<Msg[]>([]);
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
+  const [streamProgress, setStreamProgress] = useState(0);
 
   // Voice shortcut (Ctrl+Shift+V)
   const voiceShortcut = useVoiceShortcut();
@@ -1071,6 +1072,9 @@ const SearchPage = () => {
       onDelta: (text) => {
         accumulatedSynthesis += text;
         tokenBuffer.push(text);
+        // Estimate progress: typical articles are ~3000 chars, cap at 0.95 until done
+        const estimated = Math.min(accumulatedSynthesis.length / 3200, 0.95);
+        setStreamProgress(estimated);
       },
       onDone: async () => {
         // Flush remaining buffered tokens
@@ -1759,18 +1763,7 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Loading / streaming progress bar */}
-      <AnimatePresence>
-        {(loading || aiStreaming || result?.synthesizing) && (
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: result?.synthesizing ? 12 : 1.5, ease: "easeOut" }}
-            className="absolute top-0 left-0 right-0 h-0.5 bg-primary/60 origin-left z-[60]"
-          />
-        )}
-      </AnimatePresence>
+      {/* Progress bar removed — now integrated into ReaderToolbar border */}
 
       {/* Main content wrapper */}
       <div className={`flex-1 flex flex-col overflow-hidden ${immersiveMode ? "relative z-10" : ""}`}>
