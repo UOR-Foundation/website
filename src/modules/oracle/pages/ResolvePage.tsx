@@ -116,6 +116,11 @@ const SearchPage = () => {
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
 
+  // Encode mode state
+  const [encodeMode, setEncodeMode] = useState(false);
+  const [encodeText, setEncodeText] = useState("");
+  const encodeRef = useRef<HTMLTextAreaElement>(null);
+
   // Infinite Improbability Drive state
   const [improbabilityActive, setImprobabilityActive] = useState(false);
   const [improbPhase, setImprobPhase] = useState(0);
