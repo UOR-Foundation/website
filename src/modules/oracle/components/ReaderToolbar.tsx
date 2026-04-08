@@ -52,6 +52,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
+  const [portalOpen, setPortalOpen] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
 
   const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
