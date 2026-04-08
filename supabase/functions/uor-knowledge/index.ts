@@ -1163,9 +1163,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // ── Fire Wikipedia + Firecrawl in parallel, but don't wait for Firecrawl ──
+    // ── Fire Wikipedia + Firecrawl + auxiliary high-trust sources in parallel ──
     const wikiPromise = fetchWikipedia(term);
     const firecrawlPromise = fetchTopSources(term);
+    const auxPromise = fetchAuxiliarySources(term);
 
     // Await Wikipedia immediately — this is the critical path
     const wiki = await wikiPromise;
@@ -1179,15 +1180,44 @@ serve(async (req) => {
       ]);
     } catch { /* proceed without firecrawl */ }
 
-    // Build enriched sources list
+    // Auxiliary high-trust sources — give them up to 2s (they started in parallel with wiki)
+    let auxSources: RankedSource[] = [];
+    try {
+      auxSources = await Promise.race([
+        auxPromise,
+        new Promise<RankedSource[]>((resolve) => setTimeout(() => resolve([]), 2000)),
+      ]);
+    } catch { /* proceed without aux */ }
+
+    // Build enriched sources list — deduplicate by domain
     const sources: Array<{ url: string; title: string; type: string; score?: number }> = [];
-    if (wiki?.pageUrl) sources.push({ url: wiki.pageUrl, title: wiki.pageTitle || term, type: "wikipedia", score: 98 });
-    if (wiki?.qid) sources.push({ url: `https://www.wikidata.org/wiki/${wiki.qid}`, title: `${term} — Wikidata`, type: "wikidata", score: 95 });
-    for (const s of topSources) {
-      sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+    const seenDomains = new Set<string>();
+
+    if (wiki?.pageUrl) { sources.push({ url: wiki.pageUrl, title: wiki.pageTitle || term, type: "wikipedia", score: 98 }); seenDomains.add("wikipedia.org"); }
+    if (wiki?.qid) { sources.push({ url: `https://www.wikidata.org/wiki/${wiki.qid}`, title: `${term} — Wikidata`, type: "wikidata", score: 95 }); seenDomains.add("wikidata.org"); }
+
+    // Merge auxiliary sources (high-trust, no API key needed)
+    for (const s of auxSources) {
+      if (!seenDomains.has(s.domain)) {
+        sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+        seenDomains.add(s.domain);
+      }
     }
 
-    console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl, waited ≤500ms)`);
+    // Merge Firecrawl sources
+    for (const s of topSources) {
+      if (!seenDomains.has(s.domain)) {
+        sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
+        seenDomains.add(s.domain);
+      }
+    }
+
+    // Combine all ranked sources for the AI prompt (auxiliary + firecrawl)
+    const allRankedSources = [...auxSources, ...topSources]
+      .filter((s, i, arr) => arr.findIndex(x => x.domain === s.domain) === i)
+      .sort((a, b) => b.score - a.score);
+
+    console.log(`Sources for "${term}": ${sources.length} total (${auxSources.length} auxiliary, ${topSources.length} from Firecrawl)`);
 
     // Build AI prompt — use blueprint params if available, otherwise use lens ID
     const systemPrompt = blueprintParams
