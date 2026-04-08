@@ -1058,9 +1058,21 @@ const SearchPage = () => {
                 className="space-y-0"
                 style={{ paddingTop: "calc(100vh * 0.06)" }}
               >
-                {/* ADDRESS */}
+                {/* ADDRESS + Verify Integrity */}
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-4">
-                  <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-2.5">
+                      <button onClick={rederive} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
+                        <RotateCcw className="w-3.5 h-3.5" /> Verify Integrity
+                      </button>
+                      {rederived && (
+                        <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-emerald-400/70 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" /> Identical
+                        </motion.span>
+                      )}
+                    </motion.div>
+                  </div>
                   <div className="flex items-baseline gap-3">
                     <h2 className="text-3xl md:text-4xl font-display font-medium text-foreground tracking-wide leading-tight">
                       {result.receipt.triwordFormatted}
@@ -1343,17 +1355,8 @@ const SearchPage = () => {
                   </motion.div>
                 )}
 
-                {/* Verify Integrity */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-3" style={{ paddingTop: "calc(1rem * 1.618)" }}>
-                  <button onClick={rederive} disabled={loading} className="flex items-center gap-2 text-base text-foreground/50 hover:text-foreground/80 transition-colors disabled:opacity-20">
-                    <RotateCcw className="w-4 h-4" /> Verify Integrity
-                  </button>
-                  {rederived && (
-                    <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-base text-emerald-400/70 flex items-center gap-1.5">
-                      <Check className="w-4 h-4" /> Identical
-                    </motion.span>
-                  )}
-                </motion.div>
+
+
               </motion.div>
             )}
           </AnimatePresence>
