@@ -105,7 +105,11 @@ interface HumanContentViewProps {
 
 const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const src = source as Record<string, unknown> | null;
-  if (!src || typeof src !== "object") {
+  const isObj = !!src && typeof src === "object";
+  const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
+  const [viewMode, setViewMode] = useState<"original" | "readable">(rawHtmlVal ? "original" : "readable");
+
+  if (!isObj) {
     return (
       <p style={{ fontSize: 17, lineHeight: 1.75, fontFamily: "Georgia, 'Times New Roman', serif" }}
         className="text-foreground/80">
