@@ -1990,6 +1990,39 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_objects: {
+        Row: {
+          cid: string
+          created_at: string | null
+          derivation_id: string
+          id: string
+          ipv6: string
+          receipt: Json
+          source: Json
+          triword: string
+        }
+        Insert: {
+          cid: string
+          created_at?: string | null
+          derivation_id: string
+          id?: string
+          ipv6: string
+          receipt: Json
+          source: Json
+          triword: string
+        }
+        Update: {
+          cid?: string
+          created_at?: string | null
+          derivation_id?: string
+          id?: string
+          ipv6?: string
+          receipt?: Json
+          source?: Json
+          triword?: string
+        }
+        Relationships: []
+      }
       uor_observables: {
         Row: {
           context_id: string | null

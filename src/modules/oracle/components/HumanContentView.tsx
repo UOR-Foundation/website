@@ -104,9 +104,11 @@ const LONG_TEXT_KEYS = new Set([
 
 interface HumanContentViewProps {
   source: unknown;
+  /** When true, show a shimmer skeleton for the AI content section */
+  synthesizing?: boolean;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -283,7 +285,48 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
       )}
 
       {/* ── KnowledgeCard synthesis view ── */}
-      {isKnowledgeCard && contentMarkdown ? (
+      {isKnowledgeCard && synthesizing ? (
+        /* Shimmer skeleton while AI synthesis loads */
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div
+            style={{
+              borderLeft: "3px solid hsl(38 90% 55% / 0.3)",
+              paddingLeft: 24,
+            }}
+            className="space-y-3"
+          >
+            {[100, 92, 96, 60, 88, 95, 72, 50].map((w, i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded"
+                style={{
+                  height: 14,
+                  width: `${w}%`,
+                  background: "hsl(var(--muted-foreground) / 0.08)",
+                }}
+              />
+            ))}
+            <div style={{ height: 8 }} />
+            {[85, 90, 78, 65].map((w, i) => (
+              <div
+                key={`b${i}`}
+                className="animate-pulse rounded"
+                style={{
+                  height: 14,
+                  width: `${w}%`,
+                  background: "hsl(var(--muted-foreground) / 0.06)",
+                }}
+              />
+            ))}
+          </div>
+          <p
+            style={{ fontSize: 11, fontStyle: "italic" }}
+            className="text-muted-foreground/40"
+          >
+            Synthesizing AI article…
+          </p>
+        </div>
+      ) : isKnowledgeCard && contentMarkdown ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* AI-synthesized article with accent border */}
           <div

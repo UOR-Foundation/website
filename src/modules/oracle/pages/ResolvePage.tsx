@@ -20,7 +20,7 @@ import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
-import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib/receipt-registry";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
@@ -99,6 +99,8 @@ interface Result {
   confirmations?: number;
   /** When the content was first discovered (ms since epoch) */
   originalTimestamp?: number;
+  /** Whether AI synthesis is still loading (progressive rendering) */
+  synthesizing?: boolean;
 }
 
 /* ── Human-readable content renderer ── */
@@ -568,87 +570,149 @@ const SearchPage = () => {
         return;
       }
 
-      // 2. Free keyword → resolve via knowledge bases
+      // 2. Check database for persistent rehydration
+      const dbEntry = await rehydrateFromDb(trimmed);
+      if (dbEntry) {
+        const upgraded = await ensureWasmReceipt(dbEntry.source, dbEntry.receipt);
+        setResult({ source: dbEntry.source, receipt: upgraded, isConfirmed: true });
+        toast.success("Rehydrated from address.", {
+          description: dbEntry.receipt.triwordFormatted,
+        });
+        return;
+      }
+
+      // 3. Free keyword → resolve via knowledge bases
       await handleKeywordResolve(trimmed);
     } catch { toast.error("Search failed."); }
     finally { setLoading(false); }
   };
 
-  /** Resolve a plain keyword into a multi-source knowledge card */
+  /** Resolve a plain keyword into a multi-source knowledge card (progressive) */
   const handleKeywordResolve = async (keyword: string) => {
-    toast("Synthesizing knowledge…", { icon: "✨", id: "keyword-resolve" });
+    // ── Phase 1: Instant Wikipedia metadata (~200ms) ──
+    const wikiPromise = fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword.trim())}`,
+      { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
+    ).then(async (r) => {
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (d.type !== "standard") return null;
+      return {
+        qid: d.wikibase_item || null,
+        thumbnail: d.thumbnail?.source || d.originalimage?.source || null,
+        description: d.description || null,
+        extract: d.extract || null,
+        pageUrl: d.content_urls?.desktop?.page || null,
+      };
+    }).catch(() => null);
 
+    // Show partial card immediately when wiki resolves
+    const wiki = await wikiPromise;
+
+    // Build a partial source for instant display
+    const partialSource: Record<string, unknown> = {
+      "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+      "@type": "uor:KnowledgeCard",
+      "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
+      "uor:description": wiki?.description || "",
+      "uor:content": wiki?.extract || "Synthesizing knowledge…",
+      ...(wiki ? {
+        "uor:wikidata": {
+          qid: wiki.qid,
+          thumbnail: wiki.thumbnail,
+          description: wiki.description,
+        },
+      } : {}),
+      "uor:sources": wiki?.pageUrl ? [wiki.pageUrl] : [],
+    };
+
+    // Encode the partial source to get an instant address
+    const partialReceipt = await encode(partialSource);
+    setResult({
+      source: { ...partialSource, "uor:synthesizedAt": new Date().toISOString() },
+      receipt: partialReceipt,
+      isConfirmed: false,
+      synthesizing: true,
+    });
+    setInput(partialReceipt.triword);
+    setLoading(false);
+
+    toast("Synthesizing AI article…", { icon: "✨", id: "keyword-resolve" });
+
+    // ── Phase 2: AI synthesis in background ──
     try {
       const { data, error } = await supabase.functions.invoke("uor-knowledge", {
         body: { keyword },
       });
 
-      if (error || data?.error) {
-        const msg = data?.error || error?.message || "Knowledge synthesis failed.";
-        if (msg.includes("Rate limited")) {
-          toast.error("Rate limited — please try again in a moment.", { id: "keyword-resolve" });
-        } else if (msg.includes("Credits exhausted")) {
-          toast.error("AI credits exhausted. Please add funds.", { id: "keyword-resolve" });
+      if (!error && !data?.error && data?.synthesis) {
+        // Build final canonical object with full synthesis
+        const sources: string[] = data.sources || [];
+        if (wiki?.pageUrl && !sources.includes(wiki.pageUrl)) sources.unshift(wiki.pageUrl);
+        if (wiki?.qid) {
+          const wdUrl = `https://www.wikidata.org/wiki/${wiki.qid}`;
+          if (!sources.includes(wdUrl)) sources.push(wdUrl);
+        }
+
+        const finalSource: Record<string, unknown> = {
+          "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+          "@type": "uor:KnowledgeCard",
+          "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
+          "uor:description": wiki?.description || data.wiki?.description || "",
+          "uor:content": data.synthesis,
+          ...(wiki || data.wiki ? {
+            "uor:wikidata": {
+              qid: wiki?.qid || data.wiki?.qid,
+              thumbnail: wiki?.thumbnail || data.wiki?.thumbnail,
+              description: wiki?.description || data.wiki?.description,
+            },
+          } : {}),
+          "uor:sources": sources,
+        };
+
+        const finalReceipt = await encode(finalSource);
+
+        setResult({
+          source: { ...finalSource, "uor:synthesizedAt": new Date().toISOString() },
+          receipt: finalReceipt,
+          isConfirmed: false,
+          synthesizing: false,
+        });
+        setInput(finalReceipt.triword);
+
+        confetti({
+          particleCount: 80,
+          spread: 65,
+          origin: { y: 0.6 },
+          colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
+        });
+
+        toast.success("Knowledge synthesized.", {
+          description: finalReceipt.triwordFormatted,
+          id: "keyword-resolve",
+        });
+      } else {
+        // AI failed but we already have wiki content — just mark as done
+        setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
+        if (wiki?.extract) {
+          toast.success("Wikipedia content loaded.", { id: "keyword-resolve" });
         } else {
-          // Fallback: try web search via Firecrawl
+          // Try Firecrawl fallback
           toast("Falling back to web search…", { icon: "🌐", id: "keyword-resolve" });
           try {
             const searchResult = await firecrawlApi.search(keyword, 1);
             if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
-              setLoading(false);
               return handleWebEncode(searchResult.data[0].url);
             }
           } catch { /* ignore */ }
-          toast.error("No results found. Try a URL or different keyword.", { id: "keyword-resolve" });
+          toast.error("No results found.", { id: "keyword-resolve" });
         }
-        return;
       }
-
-      toast("Encoding knowledge card…", { icon: "⚛️", id: "keyword-resolve" });
-
-      // Build the canonical KnowledgeCard object
-      const wiki = data.wiki;
-      const canonicalObj: Record<string, unknown> = {
-        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-        "@type": "uor:KnowledgeCard",
-        "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
-        "uor:description": wiki?.description || "",
-        "uor:content": data.synthesis || wiki?.extract || "",
-        ...(wiki ? {
-          "uor:wikidata": {
-            qid: wiki.qid,
-            thumbnail: wiki.thumbnail,
-            description: wiki.description,
-          },
-        } : {}),
-        "uor:sources": data.sources || [],
-      };
-
-      const receipt = await encode(canonicalObj);
-
-      // Add volatile metadata for display
-      const sourceObj: Record<string, unknown> = {
-        ...canonicalObj,
-        "uor:synthesizedAt": new Date().toISOString(),
-      };
-
-      setResult({ source: sourceObj, receipt, isConfirmed: false });
-      setInput(receipt.triword);
-
-      confetti({
-        particleCount: 80,
-        spread: 65,
-        origin: { y: 0.6 },
-        colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
-      });
-
-      toast.success("Knowledge synthesized.", {
-        description: receipt.triwordFormatted,
-        id: "keyword-resolve",
-      });
     } catch (err) {
-      console.error("[KeywordResolve] Failed:", err);
-      toast.error("Knowledge synthesis failed: " + (err instanceof Error ? err.message : String(err)), { id: "keyword-resolve" });
+      console.error("[KeywordResolve] AI synthesis failed:", err);
+      // Partial result is already displayed, just mark as done
+      setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
+      toast.dismiss("keyword-resolve");
     }
   };
 
@@ -1918,7 +1982,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
