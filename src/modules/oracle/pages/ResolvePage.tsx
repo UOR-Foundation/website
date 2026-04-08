@@ -43,6 +43,8 @@ import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-his
 import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
+import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
+import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
@@ -431,6 +433,9 @@ const SearchPage = () => {
   const [aiMessages, setAiMessages] = useState<Msg[]>([]);
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
+
+  // Voice shortcut (Ctrl+Shift+V)
+  const voiceShortcut = useVoiceShortcut();
 
   // Encode mode state
   const [encodeMode, setEncodeMode] = useState(false);
@@ -1390,6 +1395,13 @@ const SearchPage = () => {
     <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+
+      {/* Voice overlay (Ctrl+Shift+V) */}
+      <VoiceOverlay
+        open={voiceShortcut.active}
+        onClose={voiceShortcut.close}
+        onSubmit={(text) => { setInput(text); setShowPrefetch(false); handleSearch(text); }}
+      />
 
       {/* ── Coherence indicator (ambient session quality) ── */}
       {coherenceState && result && <CoherenceIndicator coherence={coherenceState.sessionCoherence} />}

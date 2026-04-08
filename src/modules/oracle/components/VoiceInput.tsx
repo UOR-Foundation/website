@@ -1,16 +1,13 @@
 /**
- * VoiceInput — Web Speech API microphone button for voice-to-search.
- * Shows interim transcription in real time; auto-triggers search on speech end.
+ * VoiceInput — Unified STT microphone button.
+ * Uses HologramSttEngine (Whisper ONNX local → native cloud fallback).
+ * Shows privacy indicator: green dot (local) / amber dot (cloud).
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff } from "lucide-react";
-
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
+import { getHologramStt } from "@/modules/uns/core/hologram/stt-engine";
 
 interface Props {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -19,66 +16,42 @@ interface Props {
   size?: "sm" | "md";
 }
 
-const SpeechRecognition = typeof window !== "undefined"
-  ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-  : null;
-
 export default function VoiceInput({ onTranscript, onSpeechEnd, className = "", size = "md" }: Props) {
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const handleRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
+  const stt = getHologramStt();
 
-  const isSupported = !!SpeechRecognition;
+  const isSupported = stt.whisperAvailable || stt.nativeAvailable;
+  const privacy = stt.privacy;
 
   const start = useCallback(() => {
-    if (!SpeechRecognition || listening) return;
+    if (listening) return;
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-    recognition.maxAlternatives = 1;
+    stt.autoSelect();
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = "";
-      let final = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += transcript;
-        } else {
-          interim += transcript;
-        }
-      }
+    const handle = stt.startContinuousNative({
+      onInterim: (text) => onTranscript(text, false),
+      onFinal: (text) => onTranscript(text, true),
+      onEnd: (finalText) => {
+        setListening(false);
+        if (finalText) onTranscript(finalText, true);
+        onSpeechEnd?.();
+      },
+      onError: () => setListening(false),
+    });
 
-      if (final) {
-        onTranscript(final, true);
-      } else if (interim) {
-        onTranscript(interim, false);
-      }
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-      onSpeechEnd?.();
-    };
-
-    recognition.onerror = () => {
-      setListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    handleRef.current = handle;
     setListening(true);
-  }, [listening, onTranscript, onSpeechEnd]);
+  }, [listening, onTranscript, onSpeechEnd, stt]);
 
   const stop = useCallback(() => {
-    recognitionRef.current?.stop();
+    handleRef.current?.stop();
+    handleRef.current = null;
     setListening(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => { recognitionRef.current?.stop(); };
+    return () => { handleRef.current?.abort(); };
   }, []);
 
   if (!isSupported) return null;
@@ -97,8 +70,16 @@ export default function VoiceInput({ onTranscript, onSpeechEnd, className = "", 
         }
         ${className}
       `}
-      title={listening ? "Stop listening" : "Voice search"}
+      title={listening ? "Stop listening" : `Voice search (${navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}+Shift+V)`}
     >
+      {/* Privacy indicator dot */}
+      <span
+        className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${
+          privacy === "local" ? "bg-emerald-400" : "bg-amber-400"
+        } ${listening ? "opacity-100" : "opacity-0"} transition-opacity`}
+        title={privacy === "local" ? "On-device (private)" : "Cloud speech"}
+      />
+
       {/* Pulsing ring when listening */}
       <AnimatePresence>
         {listening && (
