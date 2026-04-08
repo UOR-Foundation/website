@@ -338,6 +338,7 @@ const SearchPage = () => {
   const [improbabilityActive, setImprobabilityActive] = useState(false);
   const [improbPhase, setImprobPhase] = useState(0);
   const [improbExponent, setImprobExponent] = useState(0);
+  const [identityPanelOpen, setIdentityPanelOpen] = useState(false);
   const [improbSideEffect, setImprobSideEffect] = useState("");
   const [drivePrePhase, setDrivePrePhase] = useState(false);
   const [drivePostPhase, setDrivePostPhase] = useState(false);
