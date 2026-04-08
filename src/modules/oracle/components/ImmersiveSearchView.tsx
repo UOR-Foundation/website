@@ -7,7 +7,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getHourlyPhoto, getCurrentHour, preloadNextHourPhoto } from "@/modules/oracle/lib/immersive-photos";
+import { getPhasePhoto, getCurrentPhase, preloadNextPhasePhoto, initLocation } from "@/modules/oracle/lib/immersive-photos";
+import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
@@ -38,20 +39,28 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const [query, setQuery] = useState("");
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [photoUrl, setPhotoUrl] = useState(() => getHourlyPhoto());
-  const hourRef = useRef(getCurrentHour());
+  const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
+  const phaseRef = useRef<SolarPhase>(getCurrentPhase());
 
-  // Hourly photo update
+  // Solar-phase photo update (checked every 60s)
   useEffect(() => {
-    preloadNextHourPhoto();
-    const interval = setInterval(() => {
-      const now = getCurrentHour();
-      if (now !== hourRef.current) {
-        hourRef.current = now;
-        setPhotoUrl(getHourlyPhoto());
-        preloadNextHourPhoto();
+    initLocation().then(() => {
+      const phase = getCurrentPhase();
+      if (phase !== phaseRef.current) {
+        phaseRef.current = phase;
+        setPhotoUrl(getPhasePhoto());
       }
-    }, 30_000);
+      preloadNextPhasePhoto();
+    });
+
+    const interval = setInterval(() => {
+      const phase = getCurrentPhase();
+      if (phase !== phaseRef.current) {
+        phaseRef.current = phase;
+        setPhotoUrl(getPhasePhoto());
+        preloadNextPhasePhoto();
+      }
+    }, 60_000);
     return () => clearInterval(interval);
   }, []);
 
