@@ -1483,3 +1483,15 @@
 .typing-dot {
   animation: typing-bounce 1.2s ease-in-out infinite;
 }
+
+/* ── Search bar alive glow — rotating conic gradient ─────────────── */
+@property --search-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes searchGlowRotate {
+  from { --search-glow-angle: 0deg; }
+  to   { --search-glow-angle: 360deg; }
+}
