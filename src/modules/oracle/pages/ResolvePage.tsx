@@ -837,7 +837,10 @@ const SearchPage = () => {
 
       // 3. Free keyword → resolve via knowledge bases
       await handleKeywordResolve(trimmed);
-    } catch { toast.error("Search failed."); }
+    } catch (err) {
+      console.error("[Search] failed:", err);
+      toast.error(err instanceof Error ? err.message : "Search failed. Please try again.");
+    }
     finally { setLoading(false); }
   };
 
