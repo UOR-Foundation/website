@@ -1332,7 +1332,7 @@ const SearchPage = () => {
       </AnimatePresence>
 
       {/* Main content wrapper */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${immersiveMode ? "relative z-10" : ""}`}>
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
