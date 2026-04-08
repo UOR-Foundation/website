@@ -1427,7 +1427,7 @@ const SearchPage = () => {
         </header>
       ) : null}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${immersiveMode ? "relative z-10" : ""}`}>
         <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
