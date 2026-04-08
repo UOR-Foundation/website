@@ -153,7 +153,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml" && key !== "uor:sources"
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml" && key !== "uor:sources" && key !== "uor:media"
   );
 
   const rawHtml = rawHtmlVal;
