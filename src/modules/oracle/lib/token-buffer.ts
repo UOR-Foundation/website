@@ -93,6 +93,7 @@ export class TokenBuffer {
     this.totalFlushed += batch.length;
     this.lastFlush = performance.now();
     this.onFlush(this.accumulated);
+    this.emitHeightHint();
     // If still in rush mode and running, stay ready
     if (this.running && this.totalFlushed >= this.rushChars && this.queue.length > 0) {
       this.scheduleFlush();
