@@ -133,6 +133,7 @@ const SearchPage = () => {
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
   const [chainViewMode, setChainViewMode] = useState<"human" | "machine">("human");
+  const [contentViewMode, setContentViewMode] = useState<"human" | "machine">("human");
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
