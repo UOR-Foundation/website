@@ -1,7 +1,6 @@
 /**
  * ReaderToolbar — Browser-like address bar for the immersive reader.
- * Desktop immersive: auto-hides after 3s of mouse inactivity, mouse-to-top reveals.
- * Designed to feel like a native browser chrome for seamless familiarity.
+ * Always visible. Includes copy-address and search history actions.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -14,13 +13,16 @@ import {
   Star,
   Share2,
   Info,
-  Maximize2,
-  Minimize2,
   Lock,
+  Copy,
+  Check,
+  Clock,
+  X,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getSearchHistory, type SearchHistoryEntry } from "@/modules/oracle/lib/search-history";
 
 interface ReaderToolbarProps {
   triwordDisplay: string;
@@ -31,12 +33,8 @@ interface ReaderToolbarProps {
   onToggleDetails: () => void;
   synthesizing?: boolean;
   immersive?: boolean;
+  onSearchHistoryJump?: (keyword: string) => void;
 }
-
-const MOBILE_HIDE_DELAY = 2500;
-const MOBILE_REVEAL_DURATION = 3000;
-const DESKTOP_HIDE_DELAY = 3000;
-const DESKTOP_REVEAL_ZONE = 80;
 
 const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   triwordDisplay,
@@ -47,80 +45,55 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   onToggleDetails,
   synthesizing = false,
   immersive = false,
+  onSearchHistoryJump,
 }) => {
   const isMobile = useIsMobile();
-  const mobileAutoHide = isMobile && immersive;
-  const desktopAutoHide = !isMobile && immersive;
-  const [visible, setVisible] = useState(true);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
+  const historyRef = useRef<HTMLDivElement>(null);
 
-  const clearTimer = useCallback(() => {
-    if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
-  }, []);
+  const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
 
-  const startHideTimer = useCallback((delay: number) => {
-    clearTimer();
-    hideTimer.current = setTimeout(() => setVisible(false), delay);
-  }, [clearTimer]);
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(uorAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback
+      const ta = document.createElement("textarea");
+      ta.value = uorAddress;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [uorAddress]);
 
-  // ── Mobile: tap-to-reveal ──
-  const resetMobileTimer = useCallback(() => {
-    if (!mobileAutoHide) return;
-    clearTimer();
-    setVisible(true);
-    hideTimer.current = setTimeout(() => setVisible(false), MOBILE_REVEAL_DURATION);
-  }, [mobileAutoHide, clearTimer]);
+  const handleHistoryToggle = useCallback(async () => {
+    if (historyOpen) {
+      setHistoryOpen(false);
+      return;
+    }
+    const entries = await getSearchHistory(15);
+    setHistory(entries);
+    setHistoryOpen(true);
+  }, [historyOpen]);
 
+  // Close history on outside click
   useEffect(() => {
-    if (!mobileAutoHide) return;
-    startHideTimer(MOBILE_HIDE_DELAY);
-    return clearTimer;
-  }, [mobileAutoHide, startHideTimer, clearTimer]);
-
-  useEffect(() => {
-    if (!mobileAutoHide) return;
-    const handler = () => { if (!visible) resetMobileTimer(); };
-    document.addEventListener("touchstart", handler, { passive: true });
-    return () => document.removeEventListener("touchstart", handler);
-  }, [mobileAutoHide, visible, resetMobileTimer]);
-
-  // ── Desktop: mouse-aware auto-hide ──
-  useEffect(() => {
-    if (!desktopAutoHide) { setVisible(true); return; }
-    startHideTimer(DESKTOP_HIDE_DELAY);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY < DESKTOP_REVEAL_ZONE) {
-        clearTimer();
-        setVisible(true);
-      } else if (visible) {
-        startHideTimer(DESKTOP_HIDE_DELAY);
+    if (!historyOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) {
+        setHistoryOpen(false);
       }
     };
-
-    document.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      clearTimer();
-    };
-  }, [desktopAutoHide]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Hidden state: mobile shows pull-tab, desktop shows nothing ──
-  if ((mobileAutoHide || desktopAutoHide) && !visible) {
-    if (mobileAutoHide) {
-      return (
-        <div className="sticky top-0 z-40 flex justify-center pt-[env(safe-area-inset-top,0px)]">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-10 h-1 rounded-full bg-white/20 mt-2 mb-1"
-            onClick={resetMobileTimer}
-          />
-        </div>
-      );
-    }
-    return null;
-  }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [historyOpen]);
 
   /* ── Shared icon button ── */
   const IconBtn = ({
@@ -150,168 +123,186 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     </button>
   );
 
-  // ── Compact mobile immersive toolbar ──
-  if (mobileAutoHide) {
+  /* ── Search history dropdown ── */
+  const HistoryDropdown = () => (
+    <AnimatePresence>
+      {historyOpen && (
+        <motion.div
+          ref={historyRef}
+          initial={{ opacity: 0, y: -6, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -6, scale: 0.97 }}
+          transition={{ duration: 0.15 }}
+          className="absolute right-0 top-full mt-1.5 z-50 rounded-xl overflow-hidden"
+          style={{
+            width: "min(320px, 90vw)",
+            background: immersive ? "rgba(10,14,18,0.92)" : "hsl(var(--background) / 0.95)",
+            border: immersive ? "1px solid rgba(255,255,255,0.1)" : "1px solid hsl(var(--border) / 0.15)",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div className="flex items-center justify-between px-3.5 py-2.5 border-b"
+            style={{ borderColor: immersive ? "rgba(255,255,255,0.06)" : "hsl(var(--border) / 0.1)" }}
+          >
+            <span className={`text-[11px] font-semibold uppercase tracking-[0.1em] ${immersive ? "text-white/50" : "text-muted-foreground/50"}`}>
+              Recent Searches
+            </span>
+            <button onClick={() => setHistoryOpen(false)} className={`p-0.5 rounded ${immersive ? "text-white/30 hover:text-white/60" : "text-muted-foreground/30 hover:text-muted-foreground/60"} transition-colors`}>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="max-h-[280px] overflow-y-auto py-1">
+            {history.length === 0 ? (
+              <p className={`text-center py-6 text-xs ${immersive ? "text-white/25" : "text-muted-foreground/30"}`}>
+                No recent searches
+              </p>
+            ) : (
+              history.map((entry, i) => (
+                <button
+                  key={`${entry.keyword}-${i}`}
+                  onClick={() => {
+                    setHistoryOpen(false);
+                    onSearchHistoryJump?.(entry.keyword);
+                  }}
+                  className={`w-full text-left px-3.5 py-2 flex items-center gap-2.5 transition-colors ${
+                    immersive
+                      ? "hover:bg-white/[0.06] text-white/70 hover:text-white/90"
+                      : "hover:bg-muted/10 text-foreground/70 hover:text-foreground/90"
+                  }`}
+                >
+                  <Clock className={`w-3 h-3 shrink-0 ${immersive ? "text-white/20" : "text-muted-foreground/25"}`} />
+                  <span className="text-[13px] truncate flex-1">{entry.keyword}</span>
+                  {entry.searched_at && (
+                    <span className={`text-[10px] shrink-0 ${immersive ? "text-white/20" : "text-muted-foreground/20"}`}>
+                      {formatTimeAgo(entry.searched_at)}
+                    </span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // ── Compact mobile toolbar (always visible now) ──
+  if (isMobile) {
     return (
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="sticky top-0 z-40 flex items-center gap-1 px-2 py-1.5 backdrop-blur-2xl border-b border-white/[0.04]"
+        className="sticky top-0 z-40 flex items-center gap-1 px-2 py-1.5 backdrop-blur-2xl border-b"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          paddingTop: "max(6px, env(safe-area-inset-top, 6px))",
+          background: immersive ? "rgba(255,255,255,0.06)" : "hsl(var(--background) / 0.82)",
+          borderColor: immersive ? "rgba(255,255,255,0.04)" : "hsl(var(--border) / 0.05)",
+          paddingTop: immersive ? "max(6px, env(safe-area-inset-top, 6px))" : undefined,
         }}
       >
         <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
 
         {/* Address bar */}
         <div className="flex-1 flex items-center gap-1.5 min-w-0 h-8 rounded-full px-3"
-          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{
+            background: immersive ? "rgba(255,255,255,0.08)" : "hsl(var(--muted) / 0.15)",
+            border: immersive ? "1px solid rgba(255,255,255,0.06)" : "1px solid hsl(var(--border) / 0.12)",
+          }}
         >
           <Lock className="w-3 h-3 text-emerald-400/70 shrink-0" />
-          <span className="text-[13px] font-display truncate text-white/70 flex-1 min-w-0">
+          <span className={`text-[13px] font-display truncate flex-1 min-w-0 ${immersive ? "text-white/70" : "text-foreground/70"}`}>
             {triwordDisplay}
           </span>
         </div>
 
+        <IconBtn onClick={handleCopy} title="Copy address">
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+        </IconBtn>
         <IconBtn onClick={onToggleDetails} title="Details"><Info className="w-3.5 h-3.5" /></IconBtn>
       </motion.div>
     );
   }
 
-  // ── Desktop immersive toolbar (browser-style chrome) ──
-  if (desktopAutoHide) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl border-b border-white/[0.06]"
-        style={{ background: "rgba(10,14,18,0.75)" }}
-      >
-        {/* ── Browser chrome row ── */}
-        <div className="flex items-center gap-1.5 px-4 py-1.5">
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-0.5 mr-1">
-            <IconBtn onClick={onBack} title="Back (Alt+←)"><ArrowLeft className="w-4 h-4" /></IconBtn>
-            <IconBtn disabled title="Forward (Alt+→)"><ArrowRight className="w-4 h-4" /></IconBtn>
-            <IconBtn onClick={onBack} title="Reload"><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
-            <IconBtn onClick={onBack} title="Home"><Home className="w-4 h-4" /></IconBtn>
-          </div>
-
-          {/* ── Address bar ── */}
-          <div
-            className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 cursor-text group transition-all"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "inset 0 1px 2px rgba(0,0,0,0.15)",
-            }}
-            title="Click to search"
-            onClick={onBack}
-          >
-            <Lock className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
-            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-              <span className="text-[13px] text-white/40 shrink-0 select-none">uor://</span>
-              <span className="text-[13px] font-display tracking-wide text-white/80 truncate">
-                {triwordDisplay}
-              </span>
-              <span className="shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] bg-white/[0.06] text-white/35 border border-white/[0.06] ml-1">
-                {typeLabel}
-              </span>
-            </div>
-            <Shield className="w-3.5 h-3.5 text-white/25 shrink-0 group-hover:text-white/40 transition-colors" />
-          </div>
-
-          {/* ── Right-side actions ── */}
-          <div className="flex items-center gap-0.5 ml-1">
-            <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
-            <IconBtn title="Share" onClick={() => {}}><Share2 className="w-3.5 h-3.5" /></IconBtn>
-            <IconBtn onClick={onToggleDetails} title="Page info">
-              <Info className="w-4 h-4" />
-            </IconBtn>
-          </div>
-        </div>
-
-        {/* ── Lens bar (tab-like row beneath address bar) ── */}
-        <div className="flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
-          {KNOWLEDGE_LENSES.map((lens) => {
-            const isActive = lens.id === activeLens;
-            return (
-              <button
-                key={lens.id}
-                onClick={() => !isActive && onLensChange(lens.id)}
-                disabled={synthesizing && isActive}
-                title={lens.description}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all border ${
-                  isActive
-                    ? "bg-white/[0.12] text-white/90 border-white/[0.15]"
-                    : "text-white/35 hover:text-white/65 hover:bg-white/[0.06] border-transparent"
-                } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
-              >
-                {lens.label}
-              </button>
-            );
-          })}
-        </div>
-      </motion.div>
-    );
-  }
-
-  // ── Default toolbar (desktop non-immersive — also browser-style) ──
+  // ── Desktop toolbar (always visible, browser-style chrome) ──
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-      className="sticky top-0 z-40 backdrop-blur-2xl border-b border-border/5"
-      style={{ background: "hsl(var(--background) / 0.82)" }}
+      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+      className={`sticky top-0 z-40 backdrop-blur-2xl border-b ${immersive ? "border-white/[0.06]" : "border-border/5"}`}
+      style={{ background: immersive ? "rgba(10,14,18,0.75)" : "hsl(var(--background) / 0.82)" }}
     >
+      {/* ── Browser chrome row ── */}
       <div className="flex items-center gap-1.5 px-4 py-1.5">
-        {/* Navigation */}
+        {/* Navigation buttons */}
         <div className="flex items-center gap-0.5 mr-1">
-          <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
-          <IconBtn disabled title="Forward"><ArrowRight className="w-4 h-4" /></IconBtn>
+          <IconBtn onClick={onBack} title="Back (Alt+←)"><ArrowLeft className="w-4 h-4" /></IconBtn>
+          <IconBtn disabled title="Forward (Alt+→)"><ArrowRight className="w-4 h-4" /></IconBtn>
           <IconBtn onClick={onBack} title="Reload"><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
           <IconBtn onClick={onBack} title="Home"><Home className="w-4 h-4" /></IconBtn>
         </div>
 
-        {/* Address bar */}
+        {/* ── Address bar ── */}
         <div
-          className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 cursor-text group transition-all"
+          className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 group transition-all"
           style={{
-            background: "hsl(var(--muted) / 0.15)",
-            border: "1px solid hsl(var(--border) / 0.12)",
-            boxShadow: "inset 0 1px 2px hsl(var(--background) / 0.3)",
+            background: immersive ? "rgba(255,255,255,0.07)" : "hsl(var(--muted) / 0.15)",
+            border: immersive ? "1px solid rgba(255,255,255,0.08)" : "1px solid hsl(var(--border) / 0.12)",
+            boxShadow: immersive ? "inset 0 1px 2px rgba(0,0,0,0.15)" : "inset 0 1px 2px hsl(var(--background) / 0.3)",
           }}
-          onClick={onBack}
         >
-          <Lock className="w-3.5 h-3.5 text-emerald-500/70 shrink-0" />
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-            <span className="text-[13px] text-muted-foreground/40 shrink-0 select-none">uor://</span>
-            <span className="text-[13px] font-display tracking-wide text-foreground/75 truncate">
+          <Lock className={`w-3.5 h-3.5 shrink-0 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={onBack}>
+            <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/40" : "text-muted-foreground/40"}`}>uor://</span>
+            <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
               {triwordDisplay}
             </span>
-            <span className="shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] bg-accent/10 text-accent-foreground/50 border border-accent/10 ml-1">
+            <span className={`shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] ml-1 ${
+              immersive
+                ? "bg-white/[0.06] text-white/35 border border-white/[0.06]"
+                : "bg-accent/10 text-accent-foreground/50 border border-accent/10"
+            }`}>
               {typeLabel}
             </span>
           </div>
-          <Shield className="w-3.5 h-3.5 text-muted-foreground/25 shrink-0 group-hover:text-muted-foreground/40 transition-colors" />
+
+          {/* Copy address button (inside bar) */}
+          <button
+            onClick={handleCopy}
+            title={copied ? "Copied!" : "Copy address"}
+            className={`p-1 rounded transition-all shrink-0 ${
+              immersive
+                ? "text-white/30 hover:text-white/70 hover:bg-white/[0.08]"
+                : "text-muted-foreground/30 hover:text-foreground/60 hover:bg-muted/10"
+            }`}
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+
+          <Shield className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+            immersive
+              ? "text-white/25 group-hover:text-white/40"
+              : "text-muted-foreground/25 group-hover:text-muted-foreground/40"
+          }`} />
         </div>
 
-        {/* Right-side */}
-        <div className="flex items-center gap-0.5 ml-1">
-          <IconBtn title="Bookmark"><Star className="w-4 h-4" /></IconBtn>
-          <IconBtn title="Share"><Share2 className="w-3.5 h-3.5" /></IconBtn>
-          <IconBtn onClick={onToggleDetails} title="Page info"><Info className="w-4 h-4" /></IconBtn>
+        {/* ── Right-side actions ── */}
+        <div className="flex items-center gap-0.5 ml-1 relative">
+          <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
+          <IconBtn title="Share" onClick={() => {}}><Share2 className="w-3.5 h-3.5" /></IconBtn>
+          <IconBtn onClick={handleHistoryToggle} title="Search history">
+            <Clock className={`w-4 h-4 ${historyOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
+          </IconBtn>
+          <IconBtn onClick={onToggleDetails} title="Page info">
+            <Info className="w-4 h-4" />
+          </IconBtn>
+          <HistoryDropdown />
         </div>
       </div>
 
-      {/* Lens bar */}
-      <div className="hidden md:flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
+      {/* ── Lens bar (tab-like row beneath address bar) ── */}
+      <div className="flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
         {KNOWLEDGE_LENSES.map((lens) => {
           const isActive = lens.id === activeLens;
           return (
@@ -322,8 +313,12 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               title={lens.description}
               className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all border ${
                 isActive
-                  ? "bg-primary/12 text-primary border-primary/20"
-                  : "text-muted-foreground/35 hover:text-foreground/55 hover:bg-muted/10 border-transparent"
+                  ? immersive
+                    ? "bg-white/[0.12] text-white/90 border-white/[0.15]"
+                    : "bg-primary/12 text-primary border-primary/20"
+                  : immersive
+                    ? "text-white/35 hover:text-white/65 hover:bg-white/[0.06] border-transparent"
+                    : "text-muted-foreground/35 hover:text-foreground/55 hover:bg-muted/10 border-transparent"
               } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
             >
               {lens.label}
@@ -334,5 +329,18 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     </motion.div>
   );
 };
+
+/** Format a timestamp to relative time (e.g. "2h ago", "3d ago") */
+function formatTimeAgo(isoStr: string): string {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return `${Math.floor(days / 7)}w`;
+}
 
 export default ReaderToolbar;
