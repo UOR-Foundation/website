@@ -46,10 +46,11 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
 import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
-import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
+import { computeCoherence, recordDwell, recordLensSwitch, dismissLensSuggestion, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
 import CoherenceIndicator from "@/modules/oracle/components/CoherenceIndicator";
 import LensSuggestion from "@/modules/oracle/components/LensSuggestion";
+import type { LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
