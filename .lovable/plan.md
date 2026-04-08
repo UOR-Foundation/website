@@ -1,78 +1,108 @@
 
 
-## Immersive Reader Cleanup: Full-Screen, Zero-Duplication, Flow-State Reading
+## Inline Citation System — Perplexity-Style, UOR-Anchored
 
-### Problems Identified
+### What Perplexity Does
 
-From the screenshot and code analysis:
+Perplexity's citation model has three key elements:
+1. **Inline numbered markers** — superscript `[1]`, `[2]` etc. appear directly in the text next to the claim they support
+2. **Hover/click reveals source** — each marker shows a tooltip or popover with the source URL, title, and favicon
+3. **Sources bar at top** — a horizontal row of source cards (favicon + domain) appears above the answer, giving instant credibility before the user even reads
 
-1. **Duplicate lens switcher** — The ReaderToolbar (top bar) has lens pills AND ContextualArticleView renders its own lens pills below. Two identical controls competing for attention.
-2. **Redundant context banner** — "Personalized for your exploration" banner adds visual noise between the toolbar and the actual content.
-3. **Narrow content + dead margins** — Content is capped at `max-width: min(720px, 90vw)` inside a `max-w-[1100px]` container inside `profile-container`, creating three layers of width constraints and wasted side margins.
-4. **Container is not truly full-width** — The result is wrapped in `profile-container max-w-[1100px]` which adds unnecessary side padding on large screens.
-5. **Reader mode still shows the top search header bar** — The conditional at line 1334 hides it for KnowledgeCard/WebPage in reader mode, but the logic is convoluted and fragile.
+### Current State
 
-### Design Principles Applied
+Our system has sources but they're **disconnected from the text**:
+- Sources are collected from Wikipedia/Wikidata URLs only
+- They're displayed as a flat list at the bottom of the article
+- The AI is explicitly told "Do NOT add citations or reference brackets"
+- No claim-level anchoring exists — the reader has no way to know which statement came from which source
 
-- **Single point of control** — One lens switcher (the toolbar), no duplication
-- **Content is king** — Remove everything that isn't the content itself
-- **Full-bleed immersion** — Reader content should breathe and use available space
-- **Responsive intelligence** — Wider content area on large screens, still readable on small ones
-- **Flow state** — Minimize cognitive interruptions; the reading surface should feel like a window into knowledge
+### Design
 
-### Changes
+**Three-layer citation architecture:**
 
-#### 1. `ContextualArticleView.tsx` — Remove lens switcher and context banner in reader mode
+1. **Source Pills (top)** — Before the article, show a compact row of source cards with favicons and domain names. Familiar Perplexity pattern. Clicking scrolls to the sources footer.
 
-Add an `isReaderMode` prop. When true:
-- Skip rendering the lens switcher pills (toolbar already provides this)
-- Skip rendering the context banner ("Personalized for your exploration")
-- Only render the lens-routed article content
+2. **Inline Citation Markers** — Superscript numbered badges `¹` `²` appear inline after key claims. Hovering shows a micro-popover with the source title/URL. These are subtle (muted color, small) so they don't break reading flow.
 
-This eliminates duplication without removing the lens UI from non-reader contexts.
+3. **Sources Footer (enhanced)** — The existing footer gets numbered to match inline markers, with richer metadata (title extraction from URL, favicon, domain).
 
-#### 2. `HumanContentView.tsx` — Pass `isReaderMode` through
+**UOR Anchoring:** Each source gets a lightweight UOR content-address (fnv1a hash of the URL) displayed as a tiny monospace badge in the popover. This visually signals that every source is anchored in the UOR identity space — not just a random link.
 
-Thread the new prop from HumanContentView → ContextualArticleView so reader mode can suppress the duplicate UI.
+### Implementation
 
-#### 3. `ResolvePage.tsx` — Reader mode layout overhaul
+#### 1. Update AI prompts to include inline citations
 
-**Remove the outer `profile-container max-w-[1100px]` constraint** for reader mode content. The reader view should break out of the generic container and go full-width, with its own internal max-width for optimal reading.
+**File:** `supabase/functions/uor-knowledge/index.ts`
 
-Update the reader content area (lines ~1900-1949):
-- Remove the intermediate container constraints
-- Let the content panel use `max-width` responsive to screen size: `clamp(640px, 65vw, 860px)` — wider on big screens, still readable
-- Center with `mx-auto`
-- More generous horizontal padding (`px-6 sm:px-10 lg:px-16`) for breathing room
-- In immersive mode: the glass card should also use this wider responsive width
+Change the system prompts for `encyclopedia` and `expert` lenses to request inline citation markers. The AI will output `[1]`, `[2]` etc. after factual claims, referencing the sources list.
 
-**Remove the duplicate `<div className="profile-container max-w-[1100px]...">`** wrapper around reader content — let it go full-bleed within the viewport.
+The edge function will also emit a richer `sources` array in the SSE `wiki` event — each source as `{ url, domain, type }` instead of just a string.
 
-#### 4. Responsive content width strategy
+Magazine, storyteller, and explain-like-5 lenses stay citation-free (their prompts already say "no citations") to preserve narrative flow.
 
-Instead of a fixed `720px` cap:
-- **< 768px**: Full width minus padding (mobile)
-- **768px–1280px**: `max-width: 720px` (standard reading width)
-- **1280px+**: `max-width: clamp(720px, 55vw, 860px)` — scales up on large screens for Magazine and Deep Dive lenses that benefit from wider layouts
-- Story and Simple lenses keep their own internal `max-width` (640px and 680px respectively) which naturally constrains within the wider container
+#### 2. Create `InlineCitation` component
 
-#### 5. Clean up ReaderToolbar visual weight
+**File:** `src/modules/oracle/components/InlineCitation.tsx` (new)
 
-Reduce the toolbar's visual presence slightly:
-- Drop border opacity to almost invisible (`border-border/5`)
-- Slightly reduce padding
-- This lets the content feel more dominant
+A tiny superscript badge component:
+- Renders as `¹` `²` etc. in a subtle colored badge
+- On hover: shows a micro-popover with source URL, domain, and UOR hash
+- On click: opens source in new tab
+- Fully accessible (aria-label, keyboard focusable)
+
+#### 3. Create `SourcesPills` component
+
+**File:** `src/modules/oracle/components/SourcesPills.tsx` (new)
+
+A horizontal row of source cards shown above the article:
+- Each pill: favicon (via Google's favicon service) + domain name + type badge (Wikipedia, Wikidata, Web)
+- Compact, horizontally scrollable on mobile
+- Shows immediately when wiki event arrives (before article text streams)
+
+#### 4. Create citation-aware markdown renderer
+
+**File:** `src/modules/oracle/lib/citation-parser.ts` (new)
+
+A utility that:
+- Detects `[1]`, `[2]` etc. in the streamed markdown text
+- Maps them to the sources array by index
+- Returns React elements with `InlineCitation` components replacing the raw `[N]` markers
+- Generates UOR content-address for each source URL using fnv1a
+
+#### 5. Update `WikiArticleView` and `DeepDiveLensRenderer`
+
+**Files:** `WikiArticleView.tsx`, `DeepDiveLensRenderer.tsx`
+
+- Import and use the citation parser to transform markdown content before rendering
+- Add `SourcesPills` above the article body
+- Pass the sources array to the citation parser
+- The existing sources footer stays but gets numbered markers to match inline citations
+
+#### 6. Update stream types
+
+**File:** `src/modules/oracle/lib/stream-knowledge.ts`
+
+Expand the `sources` type from `string[]` to `Array<string | { url: string; domain: string; type: string }>` with backward compatibility.
+
+### What the User Sees
+
+1. **Article loads** → Source pills appear immediately at top: `🌐 Wikipedia · 🔗 Wikidata`
+2. **Text streams in** → Inline markers appear naturally: "Quantum mechanics is a fundamental theory...¹"
+3. **Hover on ¹** → Popover: "Wikipedia: Quantum mechanics | en.wikipedia.org | uor:a3f2b1c0"
+4. **Click** → Opens Wikipedia article in new tab
+5. **Scroll to bottom** → Numbered sources footer with full URLs
+6. **Magazine/Story lenses** → No inline citations (clean narrative), but source pills still visible at top
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/components/ContextualArticleView.tsx` | Add `isReaderMode` prop; skip lens pills + context banner when true |
-| `src/modules/oracle/components/HumanContentView.tsx` | Pass `isReaderMode` prop through to ContextualArticleView |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Reader mode: break out of `profile-container`, responsive width, pass `isReaderMode`, reduce chrome |
-| `src/modules/oracle/components/ReaderToolbar.tsx` | Subtle visual refinement (lighter border, tighter padding) |
-
-### Result
-
-The reader experience becomes a single continuous canvas: one slim toolbar at top, then pure content filling the screen beautifully. No duplicate controls, no wasted margins, no distracting banners. The content breathes on every screen size, and the immersive glass mode wraps the wider content area seamlessly.
+| `supabase/functions/uor-knowledge/index.ts` | Update encyclopedia + expert prompts to include `[N]` citations; enrich sources event |
+| `src/modules/oracle/components/InlineCitation.tsx` | **New** — superscript citation badge with hover popover |
+| `src/modules/oracle/components/SourcesPills.tsx` | **New** — horizontal source cards above article |
+| `src/modules/oracle/lib/citation-parser.ts` | **New** — parse `[N]` markers → React citation elements |
+| `src/modules/oracle/components/WikiArticleView.tsx` | Add SourcesPills + citation-parsed text |
+| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | Add SourcesPills + citation-parsed text |
+| `src/modules/oracle/lib/stream-knowledge.ts` | Expand sources type for richer metadata |
 
