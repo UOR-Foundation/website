@@ -99,7 +99,7 @@ const HUMAN_LABEL_MAP: Record<string, string> = {
   "uor:label": "Label",
   "uor:definition": "Definition",
   "uor:content": "Content",
-  "uor:encodedAt": "Encoded At",
+  
   "uor:query": "Query",
   "uor:response": "Response",
   "uor:timestamp": "Timestamp",
