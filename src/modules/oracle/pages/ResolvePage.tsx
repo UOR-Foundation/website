@@ -210,6 +210,65 @@ const SearchPage = () => {
     setAiInput("");
   };
 
+  /* ── Infinite Improbability Drive sequence ── */
+  const fireImprobabilityDrive = () => {
+    const entries = allEntries();
+    if (entries.length === 0) {
+      toast("Nothing mapped yet. Search something first!", { icon: "🫧" });
+      return;
+    }
+
+    setImprobabilityActive(true);
+    setImprobPhase(1);
+    setImprobExponent(0);
+    setImprobSideEffect("");
+
+    // Phase 1: tick exponent counter
+    let expIdx = 0;
+    const expInterval = setInterval(() => {
+      expIdx++;
+      if (expIdx < IMPROBABILITY_EXPONENTS.length) {
+        setImprobExponent(expIdx);
+      } else {
+        clearInterval(expInterval);
+      }
+    }, 85);
+
+    // Phase 2 at 600ms: cycle side effects
+    setTimeout(() => {
+      setImprobPhase(2);
+      let effectIdx = 0;
+      const effectInterval = setInterval(() => {
+        setImprobSideEffect(
+          IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
+        );
+        effectIdx++;
+      }, 300);
+
+      // Phase 3 at 1800ms: DON'T PANIC + pick result
+      setTimeout(() => {
+        clearInterval(effectInterval);
+        setImprobPhase(3);
+
+        const pick = entries[Math.floor(Math.random() * entries.length)];
+        const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
+        confetti({ particleCount: 160, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 35, gravity: 0.7, ticks: 150 });
+        setTimeout(() => confetti({ particleCount: 60, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 20, gravity: 0.5, ticks: 120 }), 150);
+
+        // At 2500ms: dissolve overlay, show result
+        setTimeout(() => {
+          setImprobabilityActive(false);
+          setImprobPhase(0);
+          setInput(pick.receipt.triword);
+          setResult({ source: pick.source, receipt: pick.receipt });
+
+          const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
+          toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
+        }, 700);
+      }, 1200);
+    }, 600);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
       {/* Loading bar */}
