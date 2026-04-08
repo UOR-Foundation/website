@@ -144,14 +144,13 @@ export default function TabBar({
             <button
               key={win.id}
               className={`chrome-tab group relative flex items-center gap-1.5 min-w-[120px] max-w-[220px] px-3 
-                text-[12px] font-medium whitespace-nowrap shrink-0`}
-              style={{
-                height: TAB_H,
-                transition: `all ${TIMING.fast}ms ease-out`,
+                text-[12px] font-medium whitespace-nowrap shrink-0
                 ${isActive ? tabTextActive : isMini ? tabTextMuted : tabText}
                 ${isActive ? "chrome-tab-active" : ""}
               `}
               style={{
+                height: TAB_H,
+                transition: `all ${TIMING.fast}ms ease-out`,
                 background: isActive ? activeBg : "transparent",
                 borderRadius: "8px 8px 0 0",
                 marginBottom: 0,
