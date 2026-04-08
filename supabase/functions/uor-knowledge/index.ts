@@ -313,6 +313,7 @@ interface MediaImage {
   caption: string;
   uorHash: string;
   source: string;
+  relevance?: number;
 }
 
 interface MediaVideo {
@@ -340,7 +341,7 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
   try {
     const wikiTitle = encodeURIComponent(term);
     const r = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&imlimit=10&format=json&origin=*`,
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&imlimit=15&format=json&origin=*`,
       { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
     );
     if (r.ok) {
@@ -351,7 +352,8 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
         for (const img of page.images) {
           const filename = img.title;
           if (/\.(svg|ico)$/i.test(filename)) continue;
-          if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram|Ambox|Edit-|Question_book|Text_document/i.test(filename)) continue;
+          // Aggressive filtering: reject decorative/UI images
+          if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram|Ambox|Edit-|Question_book|Text_document|Nuvola|Crystal_|Gnome-|P_|Disambig|Folder_|Lock-|Semi-protection|Portal-|Wikiquote|Wikisource|Wiktionary|Wikinews|Wikibooks|Wikiversity|Wikispecies|Wikivoyage|Logo|Button|Banner|Arrow|Cquote|Information_icon/i.test(filename)) continue;
 
           try {
             const infoR = await fetch(
@@ -366,35 +368,72 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
                 if (!info) continue;
                 const imgUrl = info.thumburl || info.url;
                 if (!imgUrl) continue;
-                const caption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 200) ||
+                const rawCaption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 200) ||
                   filename.replace(/^File:/, "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
+                
+                // Compute relevance score: how well does this image relate to the search term?
+                const captionLower = rawCaption.toLowerCase();
+                const filenameLower = filename.toLowerCase().replace(/_/g, " ");
+                const termLower = term.toLowerCase();
+                const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
+                
+                let relevance = 0;
+                // Exact term match in caption or filename
+                if (captionLower.includes(termLower)) relevance += 50;
+                if (filenameLower.includes(termLower)) relevance += 40;
+                // Individual word matches
+                for (const w of termWords) {
+                  if (captionLower.includes(w)) relevance += 15;
+                  if (filenameLower.includes(w)) relevance += 10;
+                }
+                // Penalize generic images
+                if (/map|location|locator/i.test(filename) && !/^map/i.test(term)) relevance -= 10;
+                if (/coat.of.arms|seal.of|emblem/i.test(filename)) relevance -= 20;
+
                 images.push({
                   url: imgUrl,
-                  caption,
+                  caption: rawCaption,
                   uorHash: fnv1a(imgUrl),
                   source: "wikimedia-commons",
+                  relevance,
                 });
               }
             }
           } catch { /* skip this image */ }
 
-          if (images.length >= 8) break;
+          if (images.length >= 12) break;
         }
       }
     }
   } catch { /* commons fetch failed */ }
 
-  // ── YouTube videos via Invidious ──
+  // Sort by relevance and keep top images
+  images.sort((a, b) => ((b as any).relevance || 0) - ((a as any).relevance || 0));
+  // Remove the relevance field before sending to client (it's internal)
+  const topImages = images.slice(0, 8).map(({ relevance, ...rest }: any) => rest);
+  images.length = 0;
+  images.push(...topImages);
+
+  // ── YouTube videos — search with topic-specific terms ──
   try {
-    const searchTerm = encodeURIComponent(`${term} explained documentary`);
+    // Use the exact term for more relevant results instead of generic "explained documentary"
+    const searchTerm = encodeURIComponent(`${term}`);
     const invidiousR = await fetch(
       `https://vid.puffyan.us/api/v1/search?q=${searchTerm}&type=video&sort_by=relevance&page=1`,
       { headers: { "User-Agent": "UOR-Framework/1.0" }, signal: AbortSignal.timeout(4000) }
     );
     if (invidiousR.ok) {
       const results = await invidiousR.json();
+      const termLower = term.toLowerCase();
       const validVideos = (results as Array<{ videoId?: string; title?: string; lengthSeconds?: number }>)
         .filter((v) => v.videoId && v.title && (v.lengthSeconds || 0) > 60 && (v.lengthSeconds || 0) < 3600)
+        .map(v => ({
+          ...v,
+          // Score: how relevant is the video title to the term?
+          relevance: (v.title!.toLowerCase().includes(termLower) ? 50 : 0) +
+            term.toLowerCase().split(/\s+/).filter(w => w.length > 2 && v.title!.toLowerCase().includes(w)).length * 15,
+        }))
+        .sort((a, b) => b.relevance - a.relevance)
         .slice(0, 3);
       for (const v of validVideos) {
         videos.push({
@@ -409,21 +448,30 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
   // ── Fallback YouTube via piped.video ──
   if (videos.length === 0) {
     try {
-      const searchTerm = encodeURIComponent(`${term} explained`);
+      const searchTerm = encodeURIComponent(`${term}`);
       const pipedR = await fetch(
         `https://pipedapi.kavin.rocks/search?q=${searchTerm}&filter=videos`,
         { headers: { "User-Agent": "UOR-Framework/1.0" }, signal: AbortSignal.timeout(4000) }
       );
       if (pipedR.ok) {
         const data = await pipedR.json();
+        const termLower = term.toLowerCase();
         const items = (data.items || []) as Array<{ url?: string; title?: string; duration?: number }>;
-        for (const item of items.slice(0, 3)) {
-          if (!item.url || !item.title) continue;
-          const match = item.url.match(/\/watch\?v=([^&]+)/);
+        const scored = items
+          .filter(item => item.url && item.title)
+          .map(item => ({
+            ...item,
+            relevance: (item.title!.toLowerCase().includes(termLower) ? 50 : 0) +
+              term.toLowerCase().split(/\s+/).filter(w => w.length > 2 && item.title!.toLowerCase().includes(w)).length * 15,
+          }))
+          .sort((a, b) => b.relevance - a.relevance)
+          .slice(0, 3);
+        for (const item of scored) {
+          const match = item.url!.match(/\/watch\?v=([^&]+)/);
           if (match) {
             videos.push({
               youtubeId: match[1],
-              title: item.title,
+              title: item.title!,
               uorHash: fnv1a(match[1]),
             });
           }
