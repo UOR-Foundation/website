@@ -1326,6 +1326,46 @@ const SearchPage = () => {
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
                   </div>
+
+                  {/* Discovered / Confirmed status badge */}
+                  {result.isConfirmed !== undefined && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.12 }}
+                      className="flex items-center gap-3 mt-3"
+                    >
+                      {result.isConfirmed ? (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-primary/10 text-primary/80 border border-primary/20">
+                            <Check className="w-3 h-3" />
+                            Confirmed
+                          </span>
+                          {result.confirmations && result.confirmations > 1 && (
+                            <span className="text-sm text-muted-foreground/40 font-mono">
+                              {result.confirmations} time{result.confirmations > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {result.originalTimestamp && (
+                            <span className="text-sm text-muted-foreground/35">
+                              · First discovered {(() => {
+                                const diff = Date.now() - result.originalTimestamp;
+                                if (diff < 60000) return "just now";
+                                if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+                                if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+                                return `${Math.floor(diff / 86400000)}d ago`;
+                              })()}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
+                          <Sparkles className="w-3 h-3" />
+                          Discovered
+                        </span>
+                      )}
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* ── Continue / Discuss in Oracle CTA — prominent at top ── */}
