@@ -2235,8 +2235,20 @@ const SearchPage = () => {
                             <LensSuggestion
                               suggestedLens={coherenceState.suggestedLens}
                               reason={coherenceState.suggestedLensReason || ""}
-                              onAccept={() => handleLensChange(coherenceState.suggestedLens!)}
-                              onDismiss={() => setLensSuggestionDismissed(true)}
+                              onAccept={() => {
+                                if (coherenceState.suggestedBlueprint) {
+                                  handleBlueprintApply(coherenceState.suggestedBlueprint);
+                                } else {
+                                  handleLensChange(coherenceState.suggestedLens!);
+                                }
+                              }}
+                              onDismiss={() => {
+                                setLensSuggestionDismissed(true);
+                                if (coherenceState.suggestedBlueprint) {
+                                  dismissLensSuggestion(coherenceState.suggestedBlueprint.id);
+                                }
+                              }}
+                              blueprint={coherenceState.suggestedBlueprint}
                             />
                           )}
                           <HumanContentView
@@ -2248,6 +2260,8 @@ const SearchPage = () => {
                             isReaderMode
                             novelty={coherenceState?.novelty || null}
                             immersive={immersiveMode}
+                            suggestedBlueprint={coherenceState?.suggestedBlueprint}
+                            onBlueprintApply={handleBlueprintApply}
                           />
                         </div>
                       </div>
