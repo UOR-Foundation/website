@@ -809,73 +809,127 @@ const SearchPage = () => {
                   </div>
                 )}
 
-                {aiMessages.map((msg, i) => (
-                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div className={`max-w-[85%] ${
-                      msg.role === "user"
-                        ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
-                        : "prose prose-invert prose-sm max-w-none"
-                    }`}>
-                      {msg.role === "user" ? (
-                        <p className="text-sm text-foreground/90">{msg.content}</p>
-                      ) : (
-                        <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
-                          <ReactMarkdown>
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
+                {(() => {
+                  // Track proof index for chain selection
+                  let proofIdx = -1;
+                  return aiMessages.map((msg, i) => {
+                    const hasProof = msg.role === "assistant" && !!msg.proof;
+                    if (hasProof) proofIdx++;
+                    const currentProofIdx = proofIdx;
+                    const isSelected = hasProof && selectedProofIndices.has(currentProofIdx);
 
-                    {/* UOR Proof Card — appears below each completed assistant message */}
-                    {msg.role === "assistant" && msg.proof && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                        className="mt-2 max-w-[85%] w-full"
-                      >
-                        <div className="border border-primary/10 rounded-xl bg-primary/[0.03] px-4 py-3 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
-                            <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
-                          </div>
+                    // Check if the next assistant message also has a proof (for chain connector)
+                    const nextProofExists = hasProof && aiMessages.slice(i + 1).some(m => m.role === "assistant" && m.proof);
 
-                          {/* Triword address */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-display text-foreground/80 tracking-wide">
-                              {msg.proof.triwordFormatted}
-                            </span>
-                            <CopyBtn
-                              onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
-                              copied={copied === `proof-triword-${i}`}
-                              size={10}
-                            />
-                          </div>
-
-                          {/* IPv6 address */}
-                          {msg.proof.ipv6 && (
-                            <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
-                              {msg.proof.ipv6}
-                            </p>
+                    return (
+                      <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                        <div className={`max-w-[85%] ${
+                          msg.role === "user"
+                            ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
+                            : "prose prose-invert prose-sm max-w-none"
+                        }`}>
+                          {msg.role === "user" ? (
+                            <p className="text-sm text-foreground/90">{msg.content}</p>
+                          ) : (
+                            <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
+                              <ReactMarkdown>
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
                           )}
-
-                          {/* Clickable to navigate to full proof */}
-                          <button
-                            onClick={() => {
-                              setInput(msg.proof!.triword);
-                              exitAiMode();
-                              setTimeout(() => handleSearch(msg.proof!.triword), 100);
-                            }}
-                            className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
-                          >
-                            View full proof →
-                          </button>
                         </div>
-                      </motion.div>
-                    )}
-                  </div>
-                ))}
+
+                        {/* UOR Proof Card — appears below each completed assistant message */}
+                        {hasProof && msg.proof && (
+                          <div className="relative mt-2 max-w-[85%] w-full">
+                            <motion.div
+                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                              className="flex items-stretch gap-0"
+                            >
+                              {/* Chain connector + checkbox column */}
+                              {proofCount >= 2 && (
+                                <div className="flex flex-col items-center w-8 shrink-0 pt-1">
+                                  {/* Chain node / checkbox */}
+                                  {chainSelectMode ? (
+                                    <button
+                                      onClick={() => toggleProofIndex(currentProofIdx)}
+                                      className="transition-all"
+                                      aria-label={isSelected ? "Deselect proof" : "Select proof"}
+                                    >
+                                      {isSelected ? (
+                                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                                      ) : (
+                                        <Circle className="w-4 h-4 text-muted-foreground/25 hover:text-muted-foreground/50" />
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <div className="w-2 h-2 rounded-full bg-primary/20 border border-primary/15 mt-1" />
+                                  )}
+                                  {/* Connector line to next proof */}
+                                  {nextProofExists && (
+                                    <div className="flex-1 w-px bg-primary/10 mt-1" style={{ minHeight: 24 }} />
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Proof card */}
+                              <div className={`flex-1 border rounded-xl px-4 py-3 space-y-2 transition-all ${
+                                isSelected
+                                  ? "border-primary/30 bg-primary/[0.06]"
+                                  : "border-primary/10 bg-primary/[0.03]"
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
+                                  <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
+                                </div>
+
+                                {/* Triword address */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-display text-foreground/80 tracking-wide">
+                                    {msg.proof.triwordFormatted}
+                                  </span>
+                                  <CopyBtn
+                                    onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
+                                    copied={copied === `proof-triword-${i}`}
+                                    size={10}
+                                  />
+                                </div>
+
+                                {/* IPv6 address */}
+                                {msg.proof.ipv6 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
+                                      {msg.proof.ipv6}
+                                    </p>
+                                    <CopyBtn
+                                      onClick={() => copy(msg.proof!.ipv6, `proof-ipv6-${i}`)}
+                                      copied={copied === `proof-ipv6-${i}`}
+                                      size={10}
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Clickable to navigate to full proof */}
+                                <button
+                                  onClick={() => {
+                                    setInput(msg.proof!.triword);
+                                    exitAiMode();
+                                    setTimeout(() => handleSearch(msg.proof!.triword), 100);
+                                  }}
+                                  className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
+                                >
+                                  View full proof →
+                                </button>
+                              </div>
+                            </motion.div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
 
                 {aiStreaming && aiMessages[aiMessages.length - 1]?.role !== "assistant" && (
                   <div className="flex justify-start">
