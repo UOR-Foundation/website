@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { firecrawlApi } from "@/lib/api/firecrawl";
-import { extractSemantics } from "@/modules/oracle/lib/semantic-extract";
+import { extractSemantics, parseWikipediaUrl, fetchWikiSummary, extractWikiInfobox } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -476,15 +476,34 @@ const SearchPage = () => {
         "Signature": "CIDv1",
       };
 
+      // Wikipedia enrichment — detect and fetch structured metadata
+      let wikidata: Record<string, unknown> | null = null;
+      const wikiInfo = parseWikipediaUrl(normalizedUrl);
+      if (wikiInfo) {
+        toast("Fetching Wikipedia metadata…", { icon: "📚", id: "web-encode" });
+        const summary = await fetchWikiSummary(wikiInfo.lang, wikiInfo.title);
+        if (summary) {
+          const taxonomy = extractWikiInfobox(markdown);
+          wikidata = {
+            qid: summary.qid,
+            thumbnail: summary.thumbnail,
+            extract: summary.extract,
+            description: summary.description,
+            ...(Object.keys(taxonomy).length > 0 ? { taxonomy } : {}),
+          };
+        }
+      }
+
       const canonicalObj: Record<string, unknown> = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:WebPage",
         "uor:sourceUrl": normalizedUrl,
-        "uor:title": metadata.title || existingSemantics.meta.title || normalizedUrl,
-        "uor:description": metadata.description || existingSemantics.meta.description || existingSemantics.openGraph["og:description"] || "",
+        "uor:title": (wikidata?.description ? wikiInfo?.title : null) || metadata.title || existingSemantics.meta.title || normalizedUrl,
+        "uor:description": (wikidata?.description as string) || metadata.description || existingSemantics.meta.description || existingSemantics.openGraph["og:description"] || "",
         "uor:content": markdown,
         "uor:existingSemantics": existingSemantics,
         "uor:semanticWebLayers": semanticWebLayers,
+        ...(wikidata ? { "uor:wikidata": wikidata } : {}),
       };
 
       toast("Encoding into UOR space…", { icon: "⚛️", id: "web-encode" });
