@@ -113,21 +113,15 @@ interface HumanContentViewProps {
   contextKeywords?: string[];
   /** Active rendering lens ID */
   activeLens?: string;
-  /** Callback when user switches lens */
-  onLensChange?: (lensId: string) => void;
   /** When true, suppress duplicate controls (lens pills, context banner) */
   isReaderMode?: boolean;
   /** Novelty result from the coherence engine */
   novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
   /** Whether we're in immersive full-screen mode */
   immersive?: boolean;
-  /** AI-suggested lens blueprint from coherence engine */
-  suggestedBlueprint?: import("@/modules/oracle/lib/knowledge-lenses").LensBlueprint | null;
-  /** Callback when user applies a full blueprint */
-  onBlueprintApply?: (bp: import("@/modules/oracle/lib/knowledge-lenses").LensBlueprint) => void;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false, novelty = null, immersive = false, suggestedBlueprint, onBlueprintApply }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, isReaderMode = false, novelty = null, immersive = false }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -315,13 +309,10 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           synthesizing={synthesizing}
           contextKeywords={contextKeywords}
           activeLens={activeLens}
-          onLensChange={onLensChange}
           isReaderMode={isReaderMode}
           provenance={isObj && src["uor:provenance"] ? (src["uor:provenance"] as { model?: string; personalized?: boolean; personalizedTopics?: string[] }) : undefined}
           media={src["uor:media"] as import("@/modules/oracle/lib/stream-knowledge").MediaData | undefined}
           immersive={immersive}
-          suggestedBlueprint={suggestedBlueprint}
-          onBlueprintApply={onBlueprintApply}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
