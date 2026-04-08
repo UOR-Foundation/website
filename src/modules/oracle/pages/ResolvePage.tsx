@@ -2081,11 +2081,11 @@ const SearchPage = () => {
                     className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
                     style={{
                       minHeight: "100dvh",
-                      /* Break out of parent container to span full viewport without scrollbar gap */
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      width: "100%",
+                      /* Break out of parent max-w container — use fixed positioning trick to avoid scrollbar gap */
+                      width: "100vw",
+                      maxWidth: "100vw",
+                      marginLeft: "calc(-50vw + 50%)",
+                      overflowX: "hidden",
                     }}
                     onScroll={mobileImmersive ? (e) => {
                       const el = e.currentTarget;
