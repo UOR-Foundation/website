@@ -1,6 +1,6 @@
 /**
  * DesktopShell — UOR OS shell.
- * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones.
+ * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
  */
 
 import { Suspense, useCallback, useState, useMemo } from "react";
@@ -13,13 +13,16 @@ import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
 import DesktopContextMenu from "@/modules/desktop/DesktopContextMenu";
 import SnapOverlay from "@/modules/desktop/SnapOverlay";
+import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
+import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
 
-export default function DesktopShell() {
+function DesktopShellInner() {
   const wm = useWindowManager();
+  const { theme } = useDesktopTheme();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ open: boolean; x: number; y: number }>({ open: false, x: 0, y: 0 });
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
@@ -56,12 +59,14 @@ export default function DesktopShell() {
     setCtxMenu({ open: true, x: e.clientX, y: e.clientY });
   }, []);
 
+  const shellBg = theme === "light" ? "bg-white" : "bg-black";
+
   return (
     <div
-      className="fixed inset-0 overflow-hidden bg-black select-none"
+      className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}
       onContextMenu={handleContextMenu}
     >
-      <ImmersiveBackground />
+      {theme === "immersive" && <ImmersiveBackground />}
 
       <DesktopWidgets
         windows={wm.windows}
@@ -75,7 +80,6 @@ export default function DesktopShell() {
         onSpotlight={() => setSpotlightOpen(true)}
       />
 
-      {/* Snap preview overlay */}
       <SnapOverlay zone={snapPreview} />
 
       <AnimatePresence>
@@ -98,6 +102,7 @@ export default function DesktopShell() {
           ))}
       </AnimatePresence>
 
+      <DesktopThemeDots />
       <DesktopDock windows={wm.windows} onOpenApp={wm.openApp} />
 
       <SpotlightSearch
@@ -115,5 +120,13 @@ export default function DesktopShell() {
         onSpotlight={() => setSpotlightOpen(true)}
       />
     </div>
+  );
+}
+
+export default function DesktopShell() {
+  return (
+    <DesktopThemeProvider>
+      <DesktopShellInner />
+    </DesktopThemeProvider>
   );
 }

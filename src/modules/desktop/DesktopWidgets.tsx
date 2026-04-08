@@ -1,12 +1,12 @@
 /**
- * DesktopWidgets — Minimal home: clock, greeting, search bar.
- * Nothing else. Trust the user.
+ * DesktopWidgets — Minimal home: clock, greeting, search bar. Theme-aware.
  */
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Search, ArrowRight } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
+import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 
 interface Props {
   windows: WindowState[];
@@ -26,6 +26,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const [time, setTime] = useState(new Date());
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isLight } = useDesktopTheme();
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
 
@@ -45,6 +46,20 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     }
   };
 
+  const clockColor = isLight ? "text-black/60" : "text-white/75";
+  const greetingColor = isLight ? "text-black/25" : "text-white/30";
+  const clockShadow = isLight ? "0 2px 24px rgba(0,0,0,0.06)" : "0 2px 24px rgba(0,0,0,0.3)";
+  const searchBg = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)";
+  const searchBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.07)";
+  const searchShadow = isLight ? "0 4px 24px -8px rgba(0,0,0,0.08)" : "0 4px 24px -8px rgba(0,0,0,0.3)";
+  const searchIconColor = isLight ? "text-black/20" : "text-white/20";
+  const inputTextColor = isLight ? "text-black/80 placeholder:text-black/20" : "text-white/90 placeholder:text-white/20";
+  const btnBg = isLight ? "bg-black/[0.06] hover:bg-black/[0.10]" : "bg-white/[0.08] hover:bg-white/[0.14]";
+  const btnIcon = isLight ? "text-black/50" : "text-white/60";
+  const kbdStyle = isLight
+    ? "text-black/15 border-black/[0.05] bg-black/[0.02]"
+    : "text-white/15 border-white/[0.05] bg-white/[0.02]";
+
   return (
     <motion.div
       className="fixed inset-0 z-[5] flex flex-col items-center justify-center pointer-events-none"
@@ -52,24 +67,23 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
       transition={{ duration: 0.4 }}
     >
       <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
-        {/* Clock */}
         <motion.div
           className="text-center mb-8"
           animate={{ opacity: hasAnyWindows ? 0.3 : 1, scale: hasAnyWindows ? 0.92 : 1 }}
           transition={{ duration: 0.5 }}
         >
           <h1
-            className="text-white/75 font-bold tracking-tight leading-none"
+            className={`${clockColor} font-bold tracking-tight leading-none`}
             style={{
               fontSize: "clamp(64px, 10vw, 108px)",
               fontFamily: "'DM Sans', -apple-system, sans-serif",
-              textShadow: "0 2px 24px rgba(0,0,0,0.3)",
+              textShadow: clockShadow,
             }}
           >
             {hours}:{minutes}
           </h1>
           <p
-            className="text-white/30 font-medium tracking-wide mt-2"
+            className={`${greetingColor} font-medium tracking-wide mt-2`}
             style={{
               fontSize: "clamp(14px, 1.5vw, 17px)",
               fontFamily: "'DM Sans', -apple-system, sans-serif",
@@ -79,18 +93,13 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           </p>
         </motion.div>
 
-        {/* Search bar */}
         <form onSubmit={handleSubmit} className="w-full">
           <div
             className="relative flex items-center w-full rounded-2xl transition-all duration-200"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              boxShadow: "0 4px 24px -8px rgba(0,0,0,0.3)",
-            }}
+            style={{ background: searchBg, border: `1px solid ${searchBorder}`, boxShadow: searchShadow }}
           >
             <div className="flex items-center pl-4 pr-2">
-              <Search className="w-[16px] h-[16px] text-white/20" />
+              <Search className={`w-[16px] h-[16px] ${searchIconColor}`} />
             </div>
             <input
               ref={inputRef}
@@ -98,20 +107,15 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask anything..."
-              className="flex-1 bg-transparent text-[15px] text-white/90 placeholder:text-white/20 py-3.5 pr-2 outline-none font-medium"
+              className={`flex-1 bg-transparent text-[15px] ${inputTextColor} py-3.5 pr-2 outline-none font-medium`}
               style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}
             />
             {query.trim() ? (
-              <button
-                type="submit"
-                className="mr-3 p-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] transition-colors"
-              >
-                <ArrowRight className="w-4 h-4 text-white/60" />
+              <button type="submit" className={`mr-3 p-1.5 rounded-lg ${btnBg} transition-colors`}>
+                <ArrowRight className={`w-4 h-4 ${btnIcon}`} />
               </button>
             ) : (
-              <kbd className="mr-3 text-[10px] text-white/15 font-medium px-1.5 py-0.5 rounded border border-white/[0.05] bg-white/[0.02]">
-                ⌘K
-              </kbd>
+              <kbd className={`mr-3 text-[10px] ${kbdStyle} font-medium px-1.5 py-0.5 rounded border`}>⌘K</kbd>
             )}
           </div>
         </form>

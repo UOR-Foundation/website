@@ -1,5 +1,5 @@
 /**
- * DesktopWindow — Draggable/resizable window with snap zones.
+ * DesktopWindow — Draggable/resizable window with snap zones. Theme-aware.
  */
 
 import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import type { WindowState, SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
+import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import "@/modules/desktop/desktop.css";
 
 interface Props {
@@ -28,6 +29,7 @@ export default function DesktopWindow({
   win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
 }: Props) {
   const app = getApp(win.appId);
+  const { isLight } = useDesktopTheme();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -48,7 +50,6 @@ export default function DesktopWindow({
       x: dragRef.current.winX + dx,
       y: Math.max(MENU_BAR_H, dragRef.current.winY + dy),
     });
-    // Detect snap zone
     const zone = detectSnapZone(e.clientX, e.clientY);
     onSnapPreview(zone);
   }, [win.id, onMove, onSnapPreview]);
@@ -56,9 +57,7 @@ export default function DesktopWindow({
   const onDragEnd = useCallback((e: ReactPointerEvent) => {
     if (dragRef.current) {
       const zone = detectSnapZone(e.clientX, e.clientY);
-      if (zone) {
-        onSnap(win.id, zone);
-      }
+      if (zone) onSnap(win.id, zone);
     }
     dragRef.current = null;
     setIsDragging(false);
@@ -90,6 +89,16 @@ export default function DesktopWindow({
     ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px - 68px)` }
     : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
+  const glassBg = isLight ? "rgba(245,245,245,0.92)" : "rgba(26,26,26,0.85)";
+  const borderColor = isActive
+    ? (isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.10)")
+    : (isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)");
+  const titleColor = isActive
+    ? (isLight ? "text-black/60" : "text-white/65")
+    : (isLight ? "text-black/35" : "text-white/40");
+  const contentBg = isLight ? "#f5f5f5" : "#191919";
+  const spinnerBorder = isLight ? "border-black/10 border-t-black/40" : "border-white/15 border-t-white/50";
+
   return (
     <motion.div
       initial={{ scale: 0.88, opacity: 0, y: 50 }}
@@ -100,23 +109,14 @@ export default function DesktopWindow({
       style={{ ...style, zIndex: win.zIndex }}
       onPointerDown={() => onFocus(win.id)}
     >
-      {/* Glass background */}
-      <div
-        className="absolute inset-0 rounded-xl"
-        style={{
-          background: "rgba(26,26,26,0.85)",
-          backdropFilter: "blur(48px) saturate(1.4)",
-          WebkitBackdropFilter: "blur(48px) saturate(1.4)",
-        }}
-      />
+      <div className="absolute inset-0 rounded-xl" style={{
+        background: glassBg,
+        backdropFilter: "blur(48px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+      }} />
 
-      {/* Border */}
-      <div
-        className="absolute inset-0 rounded-xl pointer-events-none"
-        style={{ border: `1px solid ${isActive ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)"}` }}
-      />
+      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ border: `1px solid ${borderColor}` }} />
 
-      {/* Title bar */}
       <div
         className="relative h-10 flex items-center px-3 gap-2 cursor-default select-none"
         onPointerDown={onDragStart}
@@ -129,25 +129,21 @@ export default function DesktopWindow({
           <button className="traffic-light traffic-minimize" onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }} />
           <button className="traffic-light traffic-maximize" onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }} />
         </div>
-        <span className={`text-[12px] font-medium truncate flex-1 text-center pr-12 ${isActive ? "text-white/65" : "text-white/40"}`}>
+        <span className={`text-[12px] font-medium truncate flex-1 text-center pr-12 ${titleColor}`}>
           {win.title}
         </span>
       </div>
 
-      {/* Content */}
-      <div className="relative overflow-auto rounded-b-xl" style={{ height: "calc(100% - 40px)", background: "#191919" }}>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-full">
-              <div className="w-5 h-5 border-2 border-white/15 border-t-white/50 rounded-full animate-spin" />
-            </div>
-          }
-        >
+      <div className="relative overflow-auto rounded-b-xl" style={{ height: "calc(100% - 40px)", background: contentBg }}>
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full">
+            <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
+          </div>
+        }>
           {AppComponent && <AppComponent />}
         </Suspense>
       </div>
 
-      {/* Resize handles */}
       {!win.maximized && (
         <>
           <div className="resize-handle resize-handle-se" onPointerDown={onResizeStart} onPointerMove={onResizeMove} onPointerUp={onResizeEnd} />
