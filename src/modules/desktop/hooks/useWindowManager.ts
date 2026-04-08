@@ -108,27 +108,30 @@ export function useWindowManager() {
     saveWindows(ws);
   };
 
-  const openApp = useCallback((appId: string, title: string, defaultSize?: { w: number; h: number }) => {
+  const openApp = useCallback((appId: string, title: string, defaultSize?: { w: number; h: number }, options?: { maximized?: boolean }) => {
     setWindows(prev => {
       const existing = prev.find(w => w.appId === appId);
       if (existing) {
         const z = ++nextZ.current;
         const next = prev.map(w =>
-          w.id === existing.id ? { ...w, title, minimized: false, zIndex: z } : w
+          w.id === existing.id ? { ...w, title, minimized: false, zIndex: z, maximized: options?.maximized ?? w.maximized } : w
         );
         saveWindows(next);
         return next;
       }
       const offsetIndex = prev.length % 8;
+      const shouldMaximize = options?.maximized ?? false;
       const newWin: WindowState = {
         id: `${appId}-${Date.now()}`,
         appId,
         title,
-        position: { x: 80 + offsetIndex * 30, y: 60 + offsetIndex * 30 },
-        size: defaultSize || { w: 800, h: 540 },
+        position: shouldMaximize ? { x: 0, y: MENU_BAR_H } : { x: 80 + offsetIndex * 30, y: 60 + offsetIndex * 30 },
+        size: shouldMaximize
+          ? { w: window.innerWidth, h: window.innerHeight - MENU_BAR_H - DOCK_H }
+          : (defaultSize || { w: 800, h: 540 }),
         zIndex: ++nextZ.current,
         minimized: false,
-        maximized: false,
+        maximized: shouldMaximize,
         preSnap: null,
       };
       const next = [...prev, newWin];
