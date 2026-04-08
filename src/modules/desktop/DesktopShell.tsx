@@ -126,7 +126,6 @@ function DesktopShellInner() {
         />
       </div>
     </DesktopContextMenu>
-    </>
   );
 }
 
