@@ -370,27 +370,9 @@ const SearchPage = () => {
                   UOR Search
                 </button>
                 <button
-                  onClick={() => {
-                    const entries = allEntries();
-                    if (entries.length === 0) {
-                      toast("Nothing mapped yet. Search something first!", { icon: "🫧" });
-                      return;
-                    }
-                    const pick = entries[Math.floor(Math.random() * entries.length)];
-
-                    const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
-                    confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors, startVelocity: 30, gravity: 0.8, ticks: 120 });
-                    setTimeout(() => confetti({ particleCount: 40, spread: 120, origin: { y: 0.5 }, colors, startVelocity: 15, gravity: 0.6, ticks: 100 }), 200);
-
-                    const msg = SURPRISE_MESSAGES[Math.floor(Math.random() * SURPRISE_MESSAGES.length)];
-                    toast(msg, { description: pick.receipt.triwordFormatted });
-
-                    setTimeout(() => {
-                      setInput(pick.receipt.triword);
-                      setResult({ source: pick.source, receipt: pick.receipt });
-                    }, 400);
-                  }}
-                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all"
+                  onClick={fireImprobabilityDrive}
+                  disabled={improbabilityActive}
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
                 >
                   Surprise Me
                 </button>
