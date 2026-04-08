@@ -326,7 +326,7 @@ const SearchPage = () => {
     }
   };
 
-  /* ── Infinite Improbability Drive sequence — gentle & magical ── */
+  /* ── Infinite Improbability Drive — playful & light ── */
   const fireImprobabilityDrive = () => {
     const entries = allEntries();
     if (entries.length === 0) {
@@ -336,83 +336,80 @@ const SearchPage = () => {
 
     const pick = entries[Math.floor(Math.random() * entries.length)];
 
-    // Phase 0: gently fade content away
-    setDrivePrePhase(true);
+    // Immediately show overlay (covers search screen completely)
     setImprobExponent(0);
     setImprobSideEffect("");
+    setImprobabilityActive(true);
+    setImprobPhase(1);
 
-    // At 600ms: overlay takes over, pre-phase ends
+    // Phase 1 (0–800ms): improbability counter ticking
+    let expIdx = 0;
+    const expInterval = setInterval(() => {
+      expIdx++;
+      if (expIdx < IMPROBABILITY_EXPONENTS.length) {
+        setImprobExponent(expIdx);
+      } else {
+        clearInterval(expInterval);
+      }
+    }, 110);
+
+    // Phase 2 at 800ms: side effects
     setTimeout(() => {
-      setDrivePrePhase(false);
-      setImprobabilityActive(true);
-      setImprobPhase(1);
+      setImprobPhase(2);
+      let effectIdx = 0;
+      const effectInterval = setInterval(() => {
+        setImprobSideEffect(
+          IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
+        );
+        effectIdx++;
+      }, 700);
 
-      // Phase 1 (0–1000ms): tick exponent counter with geometric shapes
-      let expIdx = 0;
-      const expInterval = setInterval(() => {
-        expIdx++;
-        if (expIdx < IMPROBABILITY_EXPONENTS.length) {
-          setImprobExponent(expIdx);
-        } else {
-          clearInterval(expInterval);
-        }
-      }, 140);
-
-      // Phase 2 at 1000ms: cycle side effects
+      // Phase 3 at 2400ms: DON'T PANIC
       setTimeout(() => {
-        setImprobPhase(2);
-        let effectIdx = 0;
-        const effectInterval = setInterval(() => {
-          setImprobSideEffect(
-            IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
-          );
-          effectIdx++;
-        }, 600);
+        clearInterval(effectInterval);
+        setImprobPhase(3);
 
-        // Phase 3 at 2800ms: DON'T PANIC reveal
+        // Gentle confetti
+        const root = document.documentElement;
+        const cs = getComputedStyle(root);
+        const toHex = (v: string) => {
+          const el = document.createElement("div");
+          el.style.color = `hsl(${v})`;
+          document.body.appendChild(el);
+          const c = getComputedStyle(el).color;
+          el.remove();
+          return c;
+        };
+        const colors = [
+          toHex(cs.getPropertyValue("--primary").trim()),
+          toHex(cs.getPropertyValue("--accent").trim()),
+          toHex(cs.getPropertyValue("--foreground").trim()),
+        ];
+        confetti({ particleCount: 50, spread: 90, origin: { y: 0.45 }, colors, startVelocity: 18, gravity: 0.5, ticks: 120 });
+
+        // At 1200ms: set result BEHIND the still-opaque overlay, then fade out
         setTimeout(() => {
-          clearInterval(effectInterval);
-          setImprobPhase(3);
+          setInput(pick.receipt.triword);
+          setResult({ source: pick.source, receipt: pick.receipt });
 
-          // Gentle confetti
-          const root = document.documentElement;
-          const cs = getComputedStyle(root);
-          const toHex = (v: string) => {
-            const el = document.createElement("div");
-            el.style.color = `hsl(${v})`;
-            document.body.appendChild(el);
-            const c = getComputedStyle(el).color;
-            el.remove();
-            return c;
-          };
-          const colors = [
-            toHex(cs.getPropertyValue("--primary").trim()),
-            toHex(cs.getPropertyValue("--accent").trim()),
-            toHex(cs.getPropertyValue("--foreground").trim()),
-          ];
-          confetti({ particleCount: 70, spread: 100, origin: { y: 0.45 }, colors, startVelocity: 20, gravity: 0.5, ticks: 140 });
+          // Brief pause so React renders the result underneath
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setImprobPhase(4); // triggers fade-out
 
-          // At 1400ms after DON'T PANIC: set result BEHIND overlay, then fade overlay out
-          setTimeout(() => {
-            // Set the result while overlay is still fully visible
-            setInput(pick.receipt.triword);
-            setResult({ source: pick.source, receipt: pick.receipt });
+              const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
+              toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
 
-            // Phase 4: overlay fades out to reveal the result already rendered underneath
-            setImprobPhase(4);
-
-            const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
-            toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
-
-            // At 900ms after result set: clean up
-            setTimeout(() => {
-              setImprobabilityActive(false);
-              setImprobPhase(0);
-            }, 900);
-          }, 1400);
-        }, 1800);
-      }, 1000);
-    }, 600);
+              // Cleanup after fade completes
+              setTimeout(() => {
+                setImprobabilityActive(false);
+                setImprobPhase(0);
+              }, 700);
+            });
+          });
+        }, 1200);
+      }, 1600);
+    }, 800);
   };
 
   return (
