@@ -1,42 +1,78 @@
 
 
-## Time-of-Day Immersive Backgrounds
+## Immersive Reader Cleanup: Full-Screen, Zero-Duplication, Flow-State Reading
 
-### Problem
-Currently `getDailyPhoto()` picks one photo per calendar day from a flat 10-image array. The photo doesn't reflect the user's local time — a sunset image might appear at 8am, breaking the immersive illusion.
+### Problems Identified
 
-### Design
-Replace the single flat array with **5 time-of-day buckets**, each containing 4-5 curated Unsplash landscape photos. The function picks the bucket based on the current hour, then rotates within that bucket by day so users don't see the same image every morning.
+From the screenshot and code analysis:
 
-| Period | Hours | Mood | Example Scenes |
-|--------|-------|------|----------------|
-| Dawn | 5–7 | Soft pink/gold, misty | Misty lake sunrise, golden meadow, mountain dawn |
-| Morning | 7–12 | Bright, crisp, blue sky | Sunlit valley, dewy forest, clear mountain lake |
-| Afternoon | 12–17 | Warm, vibrant, full light | Rolling hills, coastal cliffs, alpine panorama |
-| Evening | 17–20 | Golden hour, amber/orange | Sunset over ocean, golden fields, twilight mountains |
-| Night | 20–5 | Deep blue, stars, moonlit | Starry sky, moonlit lake, aurora, night desert |
+1. **Duplicate lens switcher** — The ReaderToolbar (top bar) has lens pills AND ContextualArticleView renders its own lens pills below. Two identical controls competing for attention.
+2. **Redundant context banner** — "Personalized for your exploration" banner adds visual noise between the toolbar and the actual content.
+3. **Narrow content + dead margins** — Content is capped at `max-width: min(720px, 90vw)` inside a `max-w-[1100px]` container inside `profile-container`, creating three layers of width constraints and wasted side margins.
+4. **Container is not truly full-width** — The result is wrapped in `profile-container max-w-[1100px]` which adds unnecessary side padding on large screens.
+5. **Reader mode still shows the top search header bar** — The conditional at line 1334 hides it for KnowledgeCard/WebPage in reader mode, but the logic is convoluted and fragile.
 
-### Implementation
+### Design Principles Applied
 
-**File:** `src/modules/oracle/lib/immersive-photos.ts`
+- **Single point of control** — One lens switcher (the toolbar), no duplication
+- **Content is king** — Remove everything that isn't the content itself
+- **Full-bleed immersion** — Reader content should breathe and use available space
+- **Responsive intelligence** — Wider content area on large screens, still readable on small ones
+- **Flow state** — Minimize cognitive interruptions; the reading surface should feel like a window into knowledge
 
-- Replace `UNSPLASH_PHOTOS` flat array with a `TIME_PHOTOS` object keyed by period
-- Each period has 4-5 hand-picked Unsplash URLs matching that time-of-day mood
-- Update `getDailyPhoto()` → `getTimeOfDayPhoto()`:
-  1. Get current hour from `new Date().getHours()`
-  2. Map hour to period (dawn/morning/afternoon/evening/night)
-  3. Pick from that period's array using day-of-year rotation
-- Keep the old export name (`getDailyPhoto`) as an alias pointing to the new function for backward compatibility
+### Changes
 
-**No other files change** — `ImmersiveSearchView`, `ImmersiveBackground`, and `ResolvePage` all import `getDailyPhoto` and will automatically get time-appropriate photos.
+#### 1. `ContextualArticleView.tsx` — Remove lens switcher and context banner in reader mode
 
-### Photo Selection (Unsplash, no API key needed)
+Add an `isReaderMode` prop. When true:
+- Skip rendering the lens switcher pills (toolbar already provides this)
+- Skip rendering the context banner ("Personalized for your exploration")
+- Only render the lens-routed article content
 
-All photos use the static `images.unsplash.com/photo-{id}?w=1920&q=80` pattern. Each will be a curated, high-resolution landscape that matches the time-of-day mood — dawn mists, bright morning skies, warm afternoon light, golden-hour sunsets, and starry nights.
+This eliminates duplication without removing the lens UI from non-reader contexts.
+
+#### 2. `HumanContentView.tsx` — Pass `isReaderMode` through
+
+Thread the new prop from HumanContentView → ContextualArticleView so reader mode can suppress the duplicate UI.
+
+#### 3. `ResolvePage.tsx` — Reader mode layout overhaul
+
+**Remove the outer `profile-container max-w-[1100px]` constraint** for reader mode content. The reader view should break out of the generic container and go full-width, with its own internal max-width for optimal reading.
+
+Update the reader content area (lines ~1900-1949):
+- Remove the intermediate container constraints
+- Let the content panel use `max-width` responsive to screen size: `clamp(640px, 65vw, 860px)` — wider on big screens, still readable
+- Center with `mx-auto`
+- More generous horizontal padding (`px-6 sm:px-10 lg:px-16`) for breathing room
+- In immersive mode: the glass card should also use this wider responsive width
+
+**Remove the duplicate `<div className="profile-container max-w-[1100px]...">`** wrapper around reader content — let it go full-bleed within the viewport.
+
+#### 4. Responsive content width strategy
+
+Instead of a fixed `720px` cap:
+- **< 768px**: Full width minus padding (mobile)
+- **768px–1280px**: `max-width: 720px` (standard reading width)
+- **1280px+**: `max-width: clamp(720px, 55vw, 860px)` — scales up on large screens for Magazine and Deep Dive lenses that benefit from wider layouts
+- Story and Simple lenses keep their own internal `max-width` (640px and 680px respectively) which naturally constrains within the wider container
+
+#### 5. Clean up ReaderToolbar visual weight
+
+Reduce the toolbar's visual presence slightly:
+- Drop border opacity to almost invisible (`border-border/5`)
+- Slightly reduce padding
+- This lets the content feel more dominant
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/lib/immersive-photos.ts` | Replace flat array with 5 time-of-day buckets; update selection logic |
+| `src/modules/oracle/components/ContextualArticleView.tsx` | Add `isReaderMode` prop; skip lens pills + context banner when true |
+| `src/modules/oracle/components/HumanContentView.tsx` | Pass `isReaderMode` prop through to ContextualArticleView |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Reader mode: break out of `profile-container`, responsive width, pass `isReaderMode`, reduce chrome |
+| `src/modules/oracle/components/ReaderToolbar.tsx` | Subtle visual refinement (lighter border, tighter padding) |
+
+### Result
+
+The reader experience becomes a single continuous canvas: one slim toolbar at top, then pure content filling the screen beautifully. No duplicate controls, no wasted margins, no distracting banners. The content breathes on every screen size, and the immersive glass mode wraps the wider content area seamlessly.
 
