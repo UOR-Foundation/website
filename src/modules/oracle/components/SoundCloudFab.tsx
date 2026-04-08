@@ -13,8 +13,11 @@
  * Default playlist: Ben Böhmer — Begin Again
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls, type PanInfo } from "framer-motion";
 import { X } from "lucide-react";
+
+const DRAG_THRESHOLD = 5; // px — movement beyond this counts as drag, not click
+const POSITION_KEY = "uor-vinyl-pos";
 
 const SC_PLAYLIST = "https://soundcloud.com/ben-bohmer/sets/begin-again";
 const SC_PLAYLIST_ENCODED = encodeURIComponent(SC_PLAYLIST);

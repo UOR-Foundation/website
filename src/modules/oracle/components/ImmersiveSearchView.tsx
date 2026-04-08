@@ -9,6 +9,7 @@ import { ArrowRight, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getDailyPhoto } from "@/modules/oracle/lib/immersive-photos";
 import VoiceInput from "./VoiceInput";
+import SoundCloudFab from "./SoundCloudFab";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -196,9 +197,12 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           <span className="text-white/40 text-xs font-medium tracking-wide">
             Universal Object Reference
           </span>
-          <span className="text-white/40 text-xs">
-            Photo · Unsplash
-          </span>
+          <div className="flex items-center gap-4">
+            <SoundCloudFab />
+            <span className="text-white/40 text-xs">
+              Photo · Unsplash
+            </span>
+          </div>
         </div>
       </div>
     </motion.div>
