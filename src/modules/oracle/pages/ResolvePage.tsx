@@ -492,6 +492,18 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
+      {/* Main content wrapper — applies particle↔wave transitions */}
+      <div
+        className="flex-1 flex flex-col overflow-hidden"
+        style={{
+          filter: drivePrePhase ? "blur(12px)" : drivePostPhase ? "blur(8px)" : "blur(0px)",
+          opacity: drivePrePhase ? 0.3 : drivePostPhase ? 0.5 : 1,
+          transform: drivePrePhase ? "scale(1.02)" : "scale(1)",
+          animation: drivePrePhase ? "waveWobble 0.6s ease-in-out infinite" : undefined,
+          transition: "filter 0.8s ease, opacity 0.8s ease, transform 0.8s ease",
+        }}
+      >
+
       {/* ── RESULT STATE: Search bar in header ── */}
       {result ? (
         <header className="flex items-center gap-3 px-4 md:px-6 h-14 border-b border-border/15 shrink-0">
