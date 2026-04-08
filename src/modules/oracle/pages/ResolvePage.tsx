@@ -805,7 +805,7 @@ const SearchPage = () => {
           {!result && !aiMode && (
             <div
               className="relative flex flex-col items-center"
-              style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.236)" }}
+              style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.18)" }}
             >
               {/* Logo + Title — stacked, centered, golden ratio */}
               <div className="flex flex-col items-center" style={{ gap: "calc(1.5rem * 0.618)" }}>
