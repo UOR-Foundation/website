@@ -224,7 +224,7 @@ export default function SoundCloudFab() {
               <iframe
                 ref={iframeRef}
                 width="100%"
-                height="166"
+                height="120"
                 scrolling="no"
                 frameBorder="no"
                 allow="autoplay"
@@ -232,6 +232,7 @@ export default function SoundCloudFab() {
                 style={{
                   borderRadius: 10,
                   border: "1px solid hsl(0 0% 100% / 0.05)",
+                  background: "hsl(220 20% 12%)",
                 }}
                 title="SoundCloud Player"
               />
