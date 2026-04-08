@@ -40,6 +40,8 @@ interface ReaderToolbarProps {
   streamProgress?: number;
   immersive?: boolean;
   onSearchHistoryJump?: (keyword: string) => void;
+  /** Whether the details/sidebar panel is currently open */
+  detailsOpen?: boolean;
 }
 
 /**
