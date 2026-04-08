@@ -19,6 +19,8 @@ interface Props {
   /** Position anchor — "above" for mobile, "below" for desktop */
   anchor?: "above" | "below";
   className?: string;
+  /** When true, renders inline without AnimatePresence wrapper and outside-click handler */
+  inline?: boolean;
 }
 
 function truncateCid(cid: string, len = 8): string {
