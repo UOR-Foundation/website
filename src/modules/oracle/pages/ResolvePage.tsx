@@ -143,7 +143,28 @@ const SearchPage = () => {
           return [...prev, { role: "assistant", content: assistantSoFar }];
         });
       },
-      onDone: () => setAiStreaming(false),
+      onDone: async () => {
+        setAiStreaming(false);
+        // Compute UOR proof for this Q&A exchange
+        try {
+          const proofSource = {
+            "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+            "@type": "uor:OracleExchange",
+            "uor:query": trimmed,
+            "uor:response": assistantSoFar,
+            "uor:timestamp": new Date().toISOString(),
+          };
+          const receipt = await encode(proofSource);
+          // Attach proof to the last assistant message
+          setAiMessages(prev => prev.map((m, i) =>
+            i === prev.length - 1 && m.role === "assistant"
+              ? { ...m, proof: receipt }
+              : m
+          ));
+        } catch (e) {
+          console.warn("[Oracle] Proof generation failed:", e);
+        }
+      },
       onError: (err) => {
         toast.error(err);
         setAiStreaming(false);
