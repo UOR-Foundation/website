@@ -81,6 +81,7 @@ const Infobox: React.FC<{
   title: string;
   wikidata: Record<string, unknown>;
 }> = ({ title, wikidata }) => {
+  const { isNarrow } = useContainerWidth();
   const thumbnail = wikidata.thumbnail as string | undefined;
   const description = wikidata.description as string | undefined;
   const qid = wikidata.qid as string | undefined;
@@ -92,8 +93,8 @@ const Infobox: React.FC<{
       className="bg-muted/20 border border-border/20"
       style={{
         float: "right",
-        width: window.innerWidth < 768 ? "100%" : "min(320px, 38.2%)",
-        marginLeft: window.innerWidth < 768 ? 0 : 24,
+        width: isNarrow ? "100%" : "min(320px, 38.2%)",
+        marginLeft: isNarrow ? 0 : 24,
         marginBottom: 16,
         borderRadius: 8,
         overflow: "hidden",
