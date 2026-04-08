@@ -755,7 +755,7 @@ const SearchPage = () => {
                 className="absolute left-0 right-0 text-center text-[14px] text-muted-foreground/30 select-none"
                 style={{ bottom: "6vh" }}
               >
-                Searching a <span className="text-foreground/50 font-medium">near-infinite</span> address space.
+                Search the semantic web using <span className="text-foreground/50 font-medium">UOR</span>!
               </p>
             </div>
           )}
