@@ -1473,9 +1473,9 @@ const SearchPage = () => {
               immersiveMode ? (
                 <ImmersiveSearchView
                   onSearch={(q) => { setInput(q); handleSearch(q); }}
-                  onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); }}
-                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); setTimeout(() => setEncodeMode(true), 100); }}
-                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); setTimeout(() => setAiMode(true), 100); }}
+                  onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }}
+                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setEncodeMode(true), 100); }}
+                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setAiMode(true), 100); }}
                 />
               ) : (
               /* ── DESKTOP: Original layout ── */
@@ -1485,7 +1485,7 @@ const SearchPage = () => {
             >
               {/* Immersive toggle — top right */}
               <button
-                onClick={() => { setImmersiveMode(true); localStorage.setItem("uor-immersive", "true"); }}
+                onClick={() => { setImmersiveMode(true); localStorage.setItem("uor-immersive", "true"); document.documentElement.requestFullscreen?.().catch(() => {}); }}
                 className="absolute top-5 right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/10 hover:bg-muted/20 border border-border/15 hover:border-border/30 text-muted-foreground/50 hover:text-foreground/70 transition-all text-xs font-medium z-20"
                 title="Switch to immersive mode"
               >
