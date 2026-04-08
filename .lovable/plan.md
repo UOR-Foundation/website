@@ -1,34 +1,58 @@
 
 
-# "Surprise Me" — Random Address with Confetti
+# Golden Ratio Search Page — Crisp, Confident Layout
 
-## What happens
+## What changes
 
-When the user clicks **"Surprise Me"**, the app picks a random entry from the global receipt registry (all content-addressed objects), triggers a playful confetti burst, and navigates to show that entry's result — complete with a fun transition animation.
+Restructure the homepage empty state to use the full viewport with true golden ratio positioning, placing elements with mathematical precision and pushing the tagline to the bottom of the screen.
+
+## Layout — Golden Ratio Vertical Distribution
+
+The viewport is split using φ (0.618). The title sits at the golden section point (~38% from top), the search bar follows with φ-proportioned gaps, buttons below that, and the tagline anchors to the bottom of the viewport.
+
+```text
+┌─────────────────────────────────┐
+│                                 │
+│          38.2% of vh            │
+│                                 │
+│   UOR SEMANTIC WEB SEARCH       │  ← at golden section point
+│                                 │
+│        [ search bar ]           │  ← gap = title size × φ
+│                                 │
+│    [UOR Search] [Surprise Me]   │  ← gap = bar height × φ
+│                                 │
+│                                 │
+│                                 │
+│  Searching a near-infinite      │  ← pinned near bottom
+│       address space.            │
+└─────────────────────────────────┘
+```
 
 ## Changes — Single file: `src/modules/oracle/pages/ResolvePage.tsx`
 
-### 1. Add confetti library
-Install `canvas-confetti` (lightweight, ~6KB). Import it in the page.
+### 1. Restructure empty state layout
+- Switch from `flex justify-center` (vertically centered) to a `relative` container filling `100dvh`
+- Position the content group (title + search + buttons) using `paddingTop: 38.2vh` (golden section from top)
+- Position the tagline absolutely at `bottom: 6vh`, centered, so it floats near the page bottom
 
-### 2. "Surprise Me" button logic
-- Import `allEntries` from `@/modules/oracle/lib/receipt-registry`
-- On click: grab all entries, pick one at random
-- Fire a confetti burst (gold/purple/blue particles, spread from center)
-- Brief delay (~400ms) for the confetti to land, then display the result
-- Show a playful toast like "✨ You landed on..." or a fun random phrase from a small pool of delightful messages (e.g. "Look what the universe found!", "This one's special.", "Your cosmic address awaits…")
+### 2. Increase title confidence
+- Bump font size to `clamp(2.6rem, 5.5vw, 4rem)` — larger, bolder
+- Change to `font-bold` (from `font-semibold`)
+- Tighten letter-spacing to `0.025em` for a crisper feel
 
-### 3. Transition animation
-- The result fades in with a gentle scale-up + slight bounce (spring physics via framer-motion)
-- The wordmark ("UOR") shrinks up and away before the result appears — a satisfying "whoosh" feeling
+### 3. Refine search bar
+- Increase max-width to `min(720px, 85vw)` for better screen fill
+- Keep input height and padding as-is (already generous at `py-[18px]`)
 
-### 4. Edge case
-- If registry is empty (no entries yet), show a friendly toast: "Nothing mapped yet — search something first!"
+### 4. Button spacing
+- Gap between search bar and buttons: `calc(button-height × 0.618)` ≈ `1.85rem`
 
-## Files changed
+### 5. Tagline at bottom
+- Remove inline `marginTop` from the tagline `<p>`
+- Position it absolutely at `bottom: 6vh` with `left: 0; right: 0; text-align: center`
+- Slightly reduce opacity for a whisper-quiet footer feel
 
 | File | Change |
 |------|--------|
-| `package.json` | Add `canvas-confetti` dependency |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Import confetti + `allEntries`, wire "Surprise Me" to random pick with confetti + playful toast + spring transition |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Restructure empty state: golden-section vertical positioning, tagline pinned near bottom, bolder title, wider search bar |
 
