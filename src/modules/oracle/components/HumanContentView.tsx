@@ -67,6 +67,7 @@ const LABEL_MAP: Record<string, string> = {
   "uor:existingSemantics": "Existing Semantics",
   "uor:semanticWebLayers": "Semantic Web Layers",
   "uor:wikidata": "",
+  "uor:rawHtml": "",
 };
 
 function humanLabel(key: string): string {
@@ -131,8 +132,13 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata"
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml"
   );
+
+  // Raw HTML for original fidelity rendering
+  const rawHtml = typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
+  const sourceUrl = typeof src["uor:sourceUrl"] === "string" ? (src["uor:sourceUrl"] as string) : undefined;
+  const [viewMode, setViewMode] = useState<"original" | "readable">(rawHtml ? "original" : "readable");
 
   // Wikipedia data
   const wikidata = src["uor:wikidata"] as Record<string, unknown> | undefined;
