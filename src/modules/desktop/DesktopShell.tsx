@@ -5,7 +5,7 @@
 
 import { useCallback, useState, useMemo } from "react";
 // AnimatePresence removed — windows use CSS transitions now (Revolut-style)
-import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
+import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
 // DesktopDock removed — tabs handle app switching now
@@ -78,7 +78,7 @@ function DesktopShellInner() {
       <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}>
         {theme === "immersive" && (
           <>
-            <ImmersiveBackground />
+            <DesktopImmersiveWallpaper />
             <div className="fixed bottom-8 left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
               <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
               <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
