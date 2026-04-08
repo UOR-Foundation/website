@@ -396,10 +396,10 @@ const SearchPage = () => {
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35 }}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20, mass: 0.8 }}
                 className="py-8 space-y-5"
               >
                 {/* ADDRESS */}
