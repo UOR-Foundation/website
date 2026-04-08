@@ -1406,14 +1406,14 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Loading bar */}
+      {/* Loading / streaming progress bar */}
       <AnimatePresence>
-        {(loading || aiStreaming) && (
+        {(loading || aiStreaming || result?.synthesizing) && (
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: result?.synthesizing ? 12 : 1.5, ease: "easeOut" }}
             className="absolute top-0 left-0 right-0 h-0.5 bg-primary/60 origin-left z-[60]"
           />
         )}
