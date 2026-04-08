@@ -1,6 +1,8 @@
 /**
  * DeepDiveLensRenderer — Nature / arXiv / Scientific Journal style.
  * Abstract block, §-numbered sections, compact layout, inline figures with captions.
+ *
+ * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
 import React, { useMemo } from "react";
@@ -12,6 +14,7 @@ import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections }
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
+import { useContainerWidth } from "../AdaptiveContentContainer";
 
 interface LensRendererProps {
   title: string;
@@ -41,7 +44,7 @@ function splitIntoSections(md: string): string[] {
   return parts.map((p) => p.trim()).filter(Boolean);
 }
 
-function createDeepDiveComponents(sectionCounter: { current: number }) {
+function createDeepDiveComponents(sectionCounter: { current: number }, bodyMaxWidth: number) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
       const text = typeof children === "string" ? children : String(children);
@@ -57,7 +60,7 @@ function createDeepDiveComponents(sectionCounter: { current: number }) {
       <h3 className="text-foreground/85" style={{ fontSize: "clamp(0.95rem, 2vw, 1.15rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic", lineHeight: 1.2 }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const, maxWidth: 720 }} {...props}>{children}</p>
+      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const, maxWidth: bodyMaxWidth }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
       <blockquote className="bg-muted/20 border-l-2 border-primary/30" style={{ margin: "1rem 0", padding: "8px 14px", fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }} {...props}>{children}</blockquote>
@@ -69,13 +72,19 @@ function createDeepDiveComponents(sectionCounter: { current: number }) {
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65, maxWidth: 720 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65, maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 3 }} {...props}>{children}</li>
     ),
   };
 }
+
+const TITLE_FONT_SIZES = [
+  { font: "700 30px 'DM Sans', system-ui, sans-serif", lineHeight: 36, fontSize: "2.4rem" },
+  { font: "700 28px 'DM Sans', system-ui, sans-serif", lineHeight: 34, fontSize: "2rem" },
+  { font: "700 24px 'DM Sans', system-ui, sans-serif", lineHeight: 30, fontSize: "1.6rem" },
+];
 
 const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   title,
@@ -84,9 +93,10 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   synthesizing = false,
   media,
 }) => {
+  const { bodyMaxWidth, isWide } = useContainerWidth();
   const { abstract, rest } = useMemo(() => extractAbstract(contentMarkdown), [contentMarkdown]);
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
-  const components = useMemo(() => createDeepDiveComponents(sectionCounter), [sectionCounter]);
+  const components = useMemo(() => createDeepDiveComponents(sectionCounter, bodyMaxWidth), [sectionCounter, bodyMaxWidth]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const bodySections = useMemo(() => splitIntoSections(rest || contentMarkdown), [rest, contentMarkdown]);
   const inlineImageMap = useMemo(
@@ -113,7 +123,9 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         as="h1"
         center
         className="text-foreground"
-        style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}
+        style={{ fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}
+        fontSizes={TITLE_FONT_SIZES}
+        maxLines={3}
       >
         {title}
       </BalancedHeading>
@@ -126,7 +138,6 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         <SourcesPills sources={sourceMetas} />
       </div>
 
-      {/* Abstract */}
       {abstract && (
         <div className="bg-muted/15 border border-border/15" style={{ borderRadius: 6, padding: "14px 18px", marginBottom: 28 }}>
           <span className="text-foreground/60" style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>Abstract</span>
@@ -138,8 +149,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         </div>
       )}
 
-      {/* Body with inline figures */}
-      <div style={{ columnCount: 1, columnGap: 32 }} className="lg:[column-count:2]">
+      <div style={{ columnCount: isWide ? 2 : 1, columnGap: 32 }}>
         {bodySections.length > 1 ? (
           bodySections.map((section, idx) => {
             const fig = inlineImageMap.get(idx);
@@ -170,7 +180,6 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       </div>
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* Supplementary Materials */}
       {media && (media.videos.length > 0 || (media.audio && media.audio.length > 0)) && !synthesizing && (
         <details className="border border-border/15 rounded-md mt-6 group">
           <summary className="px-4 py-3 cursor-pointer text-foreground/60 text-xs font-bold uppercase tracking-wider select-none">
@@ -187,7 +196,6 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         </details>
       )}
 
-      {/* References (journal style) */}
       {sourceMetas.length > 0 && (
         <div className="border-t border-border/15 mt-8 pt-4">
           <span className="text-foreground/50 text-[11px] uppercase tracking-[0.1em] font-bold">References</span>

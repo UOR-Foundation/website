@@ -92,6 +92,21 @@ export function predictHeight(
 }
 
 /**
+ * Count lines text would occupy at a given font and width.
+ */
+export function measureLineCount(
+  text: string,
+  font: string,
+  containerWidth: number,
+  lineHeight: number
+): number {
+  if (!text.trim()) return 0;
+  const prepared = getPrepared(text, font);
+  const result: LayoutResult = layout(prepared, containerWidth, lineHeight);
+  return result.lineCount;
+}
+
+/**
  * Get full line-break data: each line's text, width, and position.
  */
 export function getLines(

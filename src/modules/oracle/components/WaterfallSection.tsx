@@ -1,11 +1,13 @@
 /**
  * WaterfallSection — Animates each section entrance with a staggered reveal.
  * Uses Pretext height prediction for layout-shift-free streaming.
+ * Now reads container width from AdaptiveContentContainer context.
  */
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { predictSectionHeight, FONTS } from "../lib/pretext-layout";
+import { useContainerWidth } from "./AdaptiveContentContainer";
 
 interface Props {
   sectionKey: string;
@@ -28,30 +30,30 @@ const WaterfallSection: React.FC<Props> = ({
   isPartial = false,
   markdown,
   font = FONTS.dmSansBody,
-  lineHeightPx = 31, // 17px * 1.85 line-height
+  lineHeightPx = 31,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [predictedHeight, setPredictedHeight] = useState<number | undefined>(undefined);
+  const { bodyMaxWidth } = useContainerWidth();
 
   const computeHeight = useCallback(() => {
     if (!markdown || !isPartial) {
       setPredictedHeight(undefined);
       return;
     }
+    // Use container-aware width, fall back to element width, then bodyMaxWidth
     const el = containerRef.current;
-    const width = el?.clientWidth ?? 720;
+    const width = el?.clientWidth || bodyMaxWidth || 720;
     if (width < 100) return;
 
     const h = predictSectionHeight(markdown, font, width, lineHeightPx);
-    // Only set if predicted is larger than current to avoid shrinking during stream
     setPredictedHeight((prev) => (prev && h < prev ? prev : h));
-  }, [markdown, font, lineHeightPx, isPartial]);
+  }, [markdown, font, lineHeightPx, isPartial, bodyMaxWidth]);
 
   useEffect(() => {
     computeHeight();
   }, [computeHeight]);
 
-  // Clear predicted height once streaming is done
   useEffect(() => {
     if (!isPartial) {
       setPredictedHeight(undefined);

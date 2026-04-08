@@ -1,6 +1,8 @@
 /**
  * StoryLensRenderer — Longreads / Medium longform style.
  * Cinematic hero image, inline scene-setting images, immersive narrative flow.
+ *
+ * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
 import React, { useMemo } from "react";
@@ -11,6 +13,7 @@ import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections }
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
+import { useContainerWidth } from "../AdaptiveContentContainer";
 
 interface LensRendererProps {
   title: string;
@@ -26,7 +29,7 @@ function splitIntoSections(md: string): string[] {
   return parts.map((p) => p.trim()).filter(Boolean);
 }
 
-function createStoryComponents() {
+function createStoryComponents(bodyMaxWidth: number) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
       <h2 className="text-foreground/70" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: "3rem", marginBottom: "1rem", lineHeight: 1.2, letterSpacing: "-0.02em" }} {...props}>{children}</h2>
@@ -35,10 +38,10 @@ function createStoryComponents() {
       <h3 className="text-foreground/65" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", lineHeight: 1.2, textTransform: "uppercase" as const }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em", maxWidth: 680 }} {...props}>{children}</p>
+      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em", maxWidth: bodyMaxWidth }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)", maxWidth: 900 }} {...props}>{children}</blockquote>
+      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)", maxWidth: Math.min(900, bodyMaxWidth * 1.25) }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
@@ -47,7 +50,7 @@ function createStoryComponents() {
       <em style={{ fontStyle: "italic" }} {...props}>{children}</em>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9, maxWidth: 680 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9, maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 8 }} {...props}>{children}</li>
@@ -58,6 +61,13 @@ function createStoryComponents() {
   };
 }
 
+const TITLE_FONT_SIZES = [
+  { font: "400 40px Georgia, 'Times New Roman', serif", lineHeight: 44, fontSize: "3.6rem" },
+  { font: "400 36px Georgia, 'Times New Roman', serif", lineHeight: 40, fontSize: "3rem" },
+  { font: "400 30px Georgia, 'Times New Roman', serif", lineHeight: 36, fontSize: "2.4rem" },
+  { font: "400 26px Georgia, 'Times New Roman', serif", lineHeight: 32, fontSize: "2rem" },
+];
+
 const StoryLensRenderer: React.FC<LensRendererProps> = ({
   title,
   contentMarkdown,
@@ -65,7 +75,8 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
   synthesizing = false,
   media,
 }) => {
-  const components = useMemo(() => createStoryComponents(), []);
+  const { bodyMaxWidth } = useContainerWidth();
+  const components = useMemo(() => createStoryComponents(bodyMaxWidth), [bodyMaxWidth]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
   const heroImage = media?.images?.[0];
@@ -90,23 +101,22 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ margin: "0 auto" }}>
-      {/* Cinematic hero image */}
       {heroImage && !synthesizing && (
         <InlineFigure image={heroImage} variant="full-width" className="mb-10 -mx-6 sm:-mx-4 md:mx-0 rounded-none sm:rounded-lg" />
       )}
 
-      {/* Large serif display title */}
       <BalancedHeading
         font="400 36px Georgia, 'Times New Roman', serif"
         lineHeight={40}
         as="h1"
         className="text-foreground"
-        style={{ fontSize: "clamp(2.4rem, 6vw, 3.6rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}
+        style={{ fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}
+        fontSizes={TITLE_FONT_SIZES}
+        maxLines={3}
       >
         {title}
       </BalancedHeading>
 
-      {/* Byline */}
       <div style={{ marginBottom: 24 }}>
         <p className="text-muted-foreground/50" style={{ fontSize: 14, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }}>
           A UOR Knowledge Story
@@ -116,12 +126,10 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
 
       <SourcesPills sources={sourceMetas} />
 
-      {/* Audio */}
       {media?.audio && media.audio.length > 0 && !synthesizing && (
         <InlineAudio audio={media.audio[0]} className="my-6" />
       )}
 
-      {/* Content with inline scene-setting images */}
       {sections.length > 1 ? (
         sections.map((section, idx) => {
           const img = inlineImageMap.get(idx);
@@ -144,7 +152,6 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* End mark + video */}
       {!synthesizing && contentMarkdown.trim().length > 100 && (
         <>
           {media && media.videos.length > 0 && (
@@ -161,7 +168,6 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
         </>
       )}
 
-      {/* References footer */}
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/10 mt-8 pt-5">
           <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>

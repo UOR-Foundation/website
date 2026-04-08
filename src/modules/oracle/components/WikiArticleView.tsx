@@ -18,6 +18,7 @@ import { EncyclopediaMedia } from "./MediaGallery";
 import { normalizeSource } from "../lib/citation-parser";
 import type { SourceMeta } from "../lib/citation-parser";
 import type { MediaData } from "../lib/stream-knowledge";
+import { useContainerWidth } from "./AdaptiveContentContainer";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
@@ -80,6 +81,7 @@ const Infobox: React.FC<{
   title: string;
   wikidata: Record<string, unknown>;
 }> = ({ title, wikidata }) => {
+  const { isNarrow } = useContainerWidth();
   const thumbnail = wikidata.thumbnail as string | undefined;
   const description = wikidata.description as string | undefined;
   const qid = wikidata.qid as string | undefined;
@@ -91,8 +93,8 @@ const Infobox: React.FC<{
       className="bg-muted/20 border border-border/20"
       style={{
         float: "right",
-        width: window.innerWidth < 768 ? "100%" : "min(320px, 38.2%)",
-        marginLeft: window.innerWidth < 768 ? 0 : 24,
+        width: isNarrow ? "100%" : "min(320px, 38.2%)",
+        marginLeft: isNarrow ? 0 : 24,
         marginBottom: 16,
         borderRadius: 8,
         overflow: "hidden",
@@ -382,7 +384,7 @@ const SynthesizingSkeleton: React.FC = () => (
 
 /* ── Custom markdown components with Wikipedia styling ───────────────── */
 
-function createMarkdownComponents(immersive = false) {
+function createMarkdownComponents(immersive = false, bodyMaxWidth = 720) {
   const bodySize = immersive ? 18 : 16;
   const bodyLineHeight = immersive ? 1.9 : 1.8;
   return {
@@ -418,7 +420,7 @@ function createMarkdownComponents(immersive = false) {
           lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
           marginBottom: "0.7em",
-          maxWidth: 720,
+          maxWidth: bodyMaxWidth,
         }}
         {...props}
       >
@@ -438,7 +440,7 @@ function createMarkdownComponents(immersive = false) {
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: bodySize,
           lineHeight: bodyLineHeight,
-          maxWidth: 720,
+          maxWidth: bodyMaxWidth,
         }}
         className="text-foreground/85"
         {...props}
@@ -465,11 +467,12 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   media,
   immersive = false,
 }) => {
-  const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
-  const isWideImmersive = immersive && typeof window !== "undefined" && window.innerWidth >= 1024;
+  const { bodyMaxWidth, isWide, isNarrow, width: containerWidth } = useContainerWidth();
+  const isMobileView = isNarrow;
+  const isWideImmersive = immersive && isWide;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
-  const markdownComponents = useMemo(() => createMarkdownComponents(immersive), [immersive]);
+  const markdownComponents = useMemo(() => createMarkdownComponents(immersive, bodyMaxWidth), [immersive, bodyMaxWidth]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   // Show skeleton only when synthesizing AND no content yet

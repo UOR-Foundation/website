@@ -1,6 +1,8 @@
 /**
  * SimpleLensRenderer — Children's textbook / Kurzgesagt style.
  * Large friendly type, emoji markers, playful inline images and videos.
+ *
+ * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
 import React, { useMemo } from "react";
@@ -11,6 +13,7 @@ import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
+import { useContainerWidth } from "../AdaptiveContentContainer";
 
 interface LensRendererProps {
   title: string;
@@ -32,7 +35,7 @@ function splitIntoSections(md: string): string[] {
   return parts.map((p) => p.trim()).filter(Boolean);
 }
 
-function createSimpleComponents(sectionCounter: { current: number }) {
+function createSimpleComponents(sectionCounter: { current: number }, bodyMaxWidth: number) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
       const text = typeof children === "string" ? children : String(children);
@@ -53,14 +56,14 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       const isWow = text.startsWith("!") || /did you know/i.test(text) || /fun fact/i.test(text) || /imagine/i.test(text);
       if (isWow) {
         return (
-          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: 740 }}>
+          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: bodyMaxWidth }}>
             <span style={{ marginRight: 8, fontSize: "1.2em" }}>✨</span>
             <span className="text-foreground/85">{text.replace(/^!\s*/, "")}</span>
           </div>
         );
       }
       return (
-        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em", maxWidth: 740 }} {...props}>{children}</p>
+        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em", maxWidth: bodyMaxWidth }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
@@ -73,13 +76,19 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '", maxWidth: 740 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '", maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 6 }} {...props}>{children}</li>
     ),
   };
 }
+
+const TITLE_FONT_SIZES = [
+  { font: "800 36px 'DM Sans', system-ui, sans-serif", lineHeight: 40, fontSize: "3rem" },
+  { font: "800 32px 'DM Sans', system-ui, sans-serif", lineHeight: 37, fontSize: "2.5rem" },
+  { font: "800 28px 'DM Sans', system-ui, sans-serif", lineHeight: 33, fontSize: "2rem" },
+];
 
 const SimpleLensRenderer: React.FC<LensRendererProps> = ({
   title,
@@ -88,8 +97,9 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
   synthesizing = false,
   media,
 }) => {
+  const { bodyMaxWidth } = useContainerWidth();
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
-  const components = useMemo(() => createSimpleComponents(sectionCounter), [sectionCounter]);
+  const components = useMemo(() => createSimpleComponents(sectionCounter, bodyMaxWidth), [sectionCounter, bodyMaxWidth]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
   const images = media?.images || [];
@@ -112,7 +122,9 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         lineHeight={37}
         as="h1"
         className="text-foreground"
-        style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 8 }}
+        style={{ fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 8 }}
+        fontSizes={TITLE_FONT_SIZES}
+        maxLines={3}
       >
         {title}
       </BalancedHeading>
@@ -123,7 +135,6 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 
       <SourcesPills sources={sourceMetas} />
 
-      {/* Fun hero image */}
       {images.length > 0 && !synthesizing && (
         <div className="my-6 bg-primary/[0.04] border border-primary/10 rounded-2xl overflow-hidden">
           <img src={images[0].url} alt={images[0].caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 240 }} />
@@ -135,10 +146,9 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         </div>
       )}
 
-      {/* Content with playful inline images */}
       {sections.length > 1 ? (
         sections.map((section, idx) => {
-          const img = images[idx + 1]; // +1 because hero used [0]
+          const img = images[idx + 1];
           const showImg = img && idx > 0 && idx <= 3 && !synthesizing;
           return (
             <React.Fragment key={idx}>
@@ -160,7 +170,6 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
       )}
 
-      {/* Video */}
       {media && media.videos.length > 0 && !synthesizing && (
         <div className="my-6 bg-accent/[0.06] border border-accent/15 rounded-2xl overflow-hidden p-3">
           <p className="text-foreground/70 text-sm font-semibold flex items-center gap-2 mb-2">🎬 Watch and Learn!</p>
@@ -168,7 +177,6 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         </div>
       )}
 
-      {/* Audio */}
       {media?.audio && media.audio.length > 0 && !synthesizing && (
         <InlineAudio audio={media.audio[0]} className="my-4" />
       )}
@@ -178,7 +186,6 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* References */}
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
           <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
