@@ -60,9 +60,42 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
   const [portalOpen, setPortalOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
   const historyRef = useRef<HTMLDivElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
+
+  const handleAddressClick = useCallback(() => {
+    setEditing(true);
+    setEditValue(triwordDisplay);
+    // Focus and select all on next tick
+    setTimeout(() => {
+      addressInputRef.current?.focus();
+      addressInputRef.current?.select();
+    }, 0);
+  }, [triwordDisplay]);
+
+  const handleAddressSubmit = useCallback(() => {
+    const query = editValue.trim();
+    setEditing(false);
+    if (query && query !== triwordDisplay) {
+      // Strip uor:// prefix if user pasted a full address
+      const cleaned = query.replace(/^uor:\/\//, "").replace(/\./g, " ");
+      onSearchHistoryJump?.(cleaned);
+    }
+  }, [editValue, triwordDisplay, onSearchHistoryJump]);
+
+  const handleAddressKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddressSubmit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setEditing(false);
+    }
+  }, [handleAddressSubmit]);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -217,11 +250,24 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             background: immersive ? "rgba(255,255,255,0.08)" : "hsl(var(--muted) / 0.15)",
             border: immersive ? "1px solid rgba(255,255,255,0.06)" : "1px solid hsl(var(--border) / 0.12)",
           }}
+          onClick={!editing ? handleAddressClick : undefined}
         >
           <Lock className="w-3 h-3 text-emerald-400/70 shrink-0" />
-          <span className={`text-[13px] font-display truncate flex-1 min-w-0 ${immersive ? "text-white/70" : "text-foreground/70"}`}>
-            {triwordDisplay}
-          </span>
+          {editing ? (
+            <input
+              ref={addressInputRef}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={handleAddressKeyDown}
+              onBlur={() => setEditing(false)}
+              className={`text-[13px] font-display flex-1 min-w-0 bg-transparent outline-none ${immersive ? "text-white/90 placeholder:text-white/30" : "text-foreground/90 placeholder:text-muted-foreground/30"}`}
+              placeholder="Search or enter address…"
+            />
+          ) : (
+            <span className={`text-[13px] font-display truncate flex-1 min-w-0 cursor-text ${immersive ? "text-white/70" : "text-foreground/70"}`}>
+              {triwordDisplay}
+            </span>
+          )}
         </div>
 
         <IconBtn onClick={handleCopy} title="Copy address">
@@ -276,12 +322,27 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           }}
         >
           <Lock className={`w-3.5 h-3.5 shrink-0 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={onBack}>
-            <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
-            <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
-              {triwordDisplay}
-            </span>
-          </div>
+          {editing ? (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+              <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
+              <input
+                ref={addressInputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleAddressKeyDown}
+                onBlur={() => setEditing(false)}
+                className={`text-[13px] font-display tracking-wide flex-1 min-w-0 bg-transparent outline-none ${immersive ? "text-white/90 placeholder:text-white/30" : "text-foreground/90 placeholder:text-muted-foreground/30"}`}
+                placeholder="Search or type address…"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={handleAddressClick}>
+              <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
+              <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
+                {triwordDisplay}
+              </span>
+            </div>
+          )}
 
           {/* Copy address */}
           <button
