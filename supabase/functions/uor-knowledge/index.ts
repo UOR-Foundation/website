@@ -398,6 +398,84 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
 
 /* ── Lens system prompts ─────────────────────────────────────────────── */
 
+/** Build a dynamic prompt from blueprint params (new adaptive system) */
+function buildBlueprintPrompt(params: {
+  tone?: string;
+  depth?: string;
+  audience?: string;
+  structure?: string;
+  citationDensity?: string;
+  focusAreas?: string[];
+  excludeAreas?: string[];
+}, context?: string[], sourceCount?: number): string {
+  const totalSources = sourceCount || 2;
+  const citationNote = totalSources > 2
+    ? `Use [1] for Wikipedia, [2] for Wikidata, and [3]-[${totalSources}] for additional sources.`
+    : `Use [1] for Wikipedia and [2] for Wikidata.`;
+
+  const toneMap: Record<string, string> = {
+    neutral: "Write in a neutral, encyclopedic tone. No first person, no hedging.",
+    vivid: "Write in a vivid, cinematic style with dramatic flair and sensory language.",
+    technical: "Write in a precise, rigorous, scholarly tone using domain-specific terminology.",
+    conversational: "Write in a warm, accessible, conversational tone using simple everyday language.",
+    poetic: "Write in a lyrical, evocative style that finds beauty and drama in the subject.",
+  };
+
+  const depthMap: Record<string, string> = {
+    overview: "Write 500-800 words. Give a clear high-level overview without excessive detail.",
+    standard: "Write 1000-1500 words. Be comprehensive but concise.",
+    deep: "Write 1500-2200 words. Provide substantial depth and technical detail.",
+    exhaustive: "Write 2000-3000 words. Leave no significant aspect uncovered.",
+  };
+
+  const audienceMap: Record<string, string> = {
+    beginner: "Explain for someone with no background. Use analogies to everyday things. Define all terms.",
+    curious: "Write for an intelligent general reader. Explain specialized terms briefly.",
+    informed: "Assume the reader has basic domain knowledge. Focus on insights rather than definitions.",
+    expert: "Write for domain experts. Use technical terminology without over-explaining.",
+  };
+
+  const structureMap: Record<string, string> = {
+    sections: "Structure with ## headings for 6-12 organized sections.",
+    narrative: "Structure as a narrative arc: setup → discovery → implications → reflection.",
+    qa: "Structure as a series of compelling questions and thorough answers.",
+    timeline: "Structure chronologically, tracing the evolution of the topic over time.",
+    comparison: "Structure around comparisons: different perspectives, approaches, or schools of thought.",
+  };
+
+  const citMap: Record<string, string> = {
+    minimal: "Add only 2-4 citation markers for the most critical claims.",
+    moderate: "Add citation markers after key factual claims. " + citationNote,
+    thorough: "Add citation markers after every significant factual claim. " + citationNote,
+  };
+
+  const parts: string[] = [
+    "You are a world-class knowledge writer. Write a comprehensive article about the given topic.",
+    "",
+    `TONE: ${toneMap[params.tone || "neutral"] || toneMap.neutral}`,
+    `DEPTH: ${depthMap[params.depth || "standard"] || depthMap.standard}`,
+    `AUDIENCE: ${audienceMap[params.audience || "curious"] || audienceMap.curious}`,
+    `STRUCTURE: ${structureMap[params.structure || "sections"] || structureMap.sections}`,
+    `CITATIONS: ${citMap[params.citationDensity || "moderate"] || citMap.moderate}`,
+    "",
+    "Bold the subject on first mention using **Subject**.",
+    "Do NOT use ### sub-headings — only ## level.",
+  ];
+
+  if (params.focusAreas && params.focusAreas.length > 0) {
+    parts.push(`\nFOCUS AREAS: Emphasize these aspects: ${params.focusAreas.join(", ")}.`);
+  }
+  if (params.excludeAreas && params.excludeAreas.length > 0) {
+    parts.push(`\nEXCLUDE: Do not cover or minimize these aspects: ${params.excludeAreas.join(", ")}.`);
+  }
+
+  if (context && context.length > 0) {
+    parts.push(`\nCONTEXTUAL PERSONALIZATION: The user has recently explored: [${context.slice(0, 10).join(", ")}]. Where relevant, emphasize connections. Include a ## Connections section near the end.`);
+  }
+
+  return parts.join("\n");
+}
+
 function buildLensPrompt(lens: string, context?: string[], sourceCount?: number): string {
   const totalSources = sourceCount || 2;
   const citationNote = totalSources > 2
