@@ -1,109 +1,80 @@
 
 
-## Lens-Specific Rendering: Distinct Visual Experiences per Lens
+## Persistent Immersive Mode — Glass-Like Reading Experience
 
-### Concept
+### What Changes
 
-Each lens transforms the entire visual experience, not just the text. Switching lenses should feel like opening the same article in a completely different publication.
+When immersive mode is toggled ON, it persists across the entire flow — from search to rendered content. The reader mode gains a glass-like, translucent aesthetic with the same Unsplash background photo softly blurred behind the content, creating one continuous, delightful experience rather than snapping back to a dark UI when content loads.
 
-### Lens → Template Mapping
+### Design
 
-| Lens | Template Inspiration | Visual Identity |
-|------|---------------------|-----------------|
-| Encyclopedia | Wikipedia | Serif body (Georgia), right-floated infobox, ToC, section dividers, neutral white/cream. Current `WikiArticleView` unchanged. |
-| Magazine | The Atlantic / National Geographic | Sans-serif body (system sans), massive hero pull-quote, drop cap on first paragraph, two-column feel on wide screens, accent-colored section dividers, generous whitespace. |
-| Simple | Children's textbook / Kurzgesagt | Rounded, warm aesthetic. Larger font (19px), playful section emoji markers, pastel accent cards for "Wow!" facts, generous line-height (2.0), no ToC. |
-| Deep Dive | Nature / arXiv / scientific journal | Monospaced section numbers (§1, §2), compact sans-serif body (15px), dense two-column layout on wide screens, footnote-style metadata, abstract block at top, equation-friendly styling. |
-| Story | Longreads / Medium longform | Large serif title, author byline, full-bleed opening paragraph, no ToC, generous paragraph spacing, pull-quotes styled as large italic blocks with left accent, immersive single-column reading. |
+**Immersive Reader** (when `immersiveMode + readerMode` are both true):
+- The daily Unsplash photo stays as a **fixed, heavily blurred background** behind the article content
+- A frosted-glass content panel floats over it: `backdrop-blur-xl`, `bg-white/[0.04]`, subtle `border border-white/[0.08]`
+- The `ReaderToolbar` becomes glass-styled: translucent with `bg-white/[0.06] backdrop-blur-2xl`
+- Text remains crisp and legible against the frosted surface — white/90 for headings, white/75 for body
+- The transition from immersive search → immersive reader is seamless (background stays, content fades in)
+
+**Immersive Profile Mode** (when `immersiveMode` is on but reader is toggled to details):
+- Same glass treatment applies to the profile/details layout
+- Cover image, avatar, and metadata cards get glass styling with `backdrop-blur` and translucent borders
 
 ### Implementation
 
-#### 1. Create five lens renderer components
+#### 1. Extract shared daily photo utility
+Move `getDailyPhoto()` and `UNSPLASH_PHOTOS` from `ImmersiveSearchView.tsx` into a small shared file `src/modules/oracle/lib/immersive-photos.ts` so both the search view and the reader can use the same photo.
 
-**New files** in `src/modules/oracle/components/lenses/`:
+#### 2. Create `ImmersiveBackground` component
+**File:** `src/modules/oracle/components/ImmersiveBackground.tsx` (new)
 
-- `WikiLensRenderer.tsx` — Re-export of existing `WikiArticleView` (no change needed, just aliased)
-- `MagazineLensRenderer.tsx` — Atlantic/NatGeo style: drop cap, pull-quote hero, wide section dividers, sans-serif
-- `SimpleLensRenderer.tsx` — Warm, playful: large type, emoji section markers, "Did you know?" callout cards
-- `DeepDiveLensRenderer.tsx` — Journal style: abstract block, numbered sections (§1), dense layout, compact type
-- `StoryLensRenderer.tsx` — Longreads/Medium: large title, byline, full-bleed paragraphs, pull-quote blocks
+A fixed full-viewport background layer:
+- Renders the daily Unsplash photo at full bleed
+- Applies a heavy Gaussian blur (20-30px) + dark overlay (`bg-black/40`)
+- Fades in with `opacity` transition
+- Used as a shared background in both search and reader when immersive mode is active
 
-Each component receives the same props: `{ title, contentMarkdown, wikidata?, sources, synthesizing? }` and applies its own markdown component overrides and layout.
+#### 3. Create `ImmersiveReaderToolbar` variant
+**File:** `src/modules/oracle/components/ReaderToolbar.tsx` (update)
 
-#### 2. Update `ContextualArticleView.tsx`
+Add an `immersive` prop. When true:
+- Background becomes `bg-white/[0.06] backdrop-blur-2xl border-white/[0.06]`
+- Text colors shift to `text-white/70`, `text-white/90` for active elements
+- Lens pills get glass styling: `bg-white/[0.08]` active, `text-white/50` inactive
 
-Replace the static `<WikiArticleView>` call with a lens router:
+#### 4. Update `ResolvePage.tsx` — immersive reader path
 
-```
-const LensRenderer = LENS_RENDERERS[activeLens] ?? WikiArticleView;
-return <LensRenderer title={...} contentMarkdown={...} ... />;
-```
+Pass `immersiveMode` into the reader rendering path:
+- When `immersiveMode && showReader`: render `<ImmersiveBackground />` behind the content
+- The content column gets glass card styling: `bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.06] shadow-2xl`
+- Pass `immersive` prop to `ReaderToolbar`
+- The content text needs to remain readable — the lens renderers already use `text-foreground/80` which works
 
-This is the single switching point. When the user clicks a lens pill, the entire article re-renders with the new visual identity instantly.
+When `immersiveMode && !showReader` (profile/details view):
+- Same `<ImmersiveBackground />` behind profile layout
+- Profile card gets glass treatment
 
-#### 3. Lens-specific markdown component factories
+#### 5. Update `ImmersiveSearchView` to share the photo module
 
-Each renderer creates its own `createMarkdownComponents()` with distinct:
-- **Font families**: Serif (encyclopedia, story), Sans-serif (magazine, deep-dive), Rounded sans (simple)
-- **Font sizes**: 16px (encyclopedia), 17px (magazine), 19px (simple), 15px (deep-dive), 18px (story)
-- **Heading styles**: Underlined (encyclopedia), accent-bar (magazine), emoji-prefixed (simple), numbered §N (deep-dive), no-border italic (story)
-- **Paragraph rhythm**: Standard (encyclopedia), alternating short/long (magazine), spacious (simple), dense (deep-dive), generous (story)
-- **Special blocks**: Infobox (encyclopedia), pull-quotes (magazine, story), callout cards (simple), abstract (deep-dive)
-
-#### 4. Visual identity details
-
-**Magazine** (`MagazineLensRenderer`):
-- First letter of first paragraph gets CSS `::first-letter` drop cap treatment (3-line, bold, primary color)
-- Section dividers: thin horizontal rule with centered diamond ornament
-- Pull-quote: extract first blockquote or strong sentence, render large (24px) italic with left accent bar
-- Background: very subtle warm tint
-- Max-width: 680px centered
-
-**Simple** (`SimpleLensRenderer`):
-- Section headings get emoji prefixes mapped from content keywords
-- "Wow!" facts (lines starting with "!" or containing "Did you know") rendered in pastel accent cards with rounded corners
-- Larger body text (19px), 2.0 line-height
-- No ToC, no infobox
-- Warm, rounded UI feel
-
-**Deep Dive** (`DeepDiveLensRenderer`):
-- Abstract block at top: gray background, smaller text, summarizing first paragraph
-- Sections numbered §1, §2, §3 with compact sans-serif headings
-- Body at 15px, line-height 1.65, tighter spacing
-- Monospaced inline code styling for technical terms
-- Two-column layout on screens > 1024px (CSS columns)
-- Footnote-style metadata at bottom
-
-**Story** (`StoryLensRenderer`):
-- Large display title (2.5rem serif)
-- Subtitle/byline: "A UOR Knowledge Story"
-- No ToC, no infobox
-- First paragraph full-width, slightly larger (18px)
-- Blockquotes rendered as large pull-quotes (22px italic, left accent)
-- Extra paragraph spacing (2em between paragraphs)
-- Single column, max-width 640px
+Refactor to import from `immersive-photos.ts` instead of defining its own array.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` | **New** |
-| `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` | **New** |
-| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | **New** |
-| `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` | **New** |
-| `src/modules/oracle/components/ContextualArticleView.tsx` | Route to lens-specific renderer instead of always WikiArticleView |
-
-### No edge function changes needed
-
-The current system prompts already produce lens-appropriate markdown (magazine headers, story arcs, expert sections, etc.). The renderers simply style the same markdown differently. The content adapts via the AI prompt; the visual identity adapts via the renderer.
+| `src/modules/oracle/lib/immersive-photos.ts` | **New** — shared photo array + `getDailyPhoto()` |
+| `src/modules/oracle/components/ImmersiveBackground.tsx` | **New** — fixed blurred photo backdrop |
+| `src/modules/oracle/components/ImmersiveSearchView.tsx` | Import from shared photo module |
+| `src/modules/oracle/components/ReaderToolbar.tsx` | Add `immersive` prop for glass styling |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Render `ImmersiveBackground` behind reader + profile when immersive is on; pass `immersive` to toolbar |
 
 ### User Experience
 
-1. Search a topic. Article renders in Encyclopedia (Wikipedia) style by default.
-2. Click "Magazine" pill. Instantly: drop cap appears, pull-quote emerges, typography shifts to sans-serif, section dividers change to ornamental rules. Same content, completely different publication.
-3. Click "Deep Dive". Layout compresses, abstract block appears, sections get §N numbering, font shrinks, density increases. Feels like reading a journal paper.
-4. Click "Story". Title grows large, byline appears, paragraphs breathe, pull-quotes float. Feels like Longreads.
-5. Click "Simple". Font grows, emoji markers appear, callout cards highlight fun facts. Feels like a children's science book.
-
-Each transition is instant and visceral. The framework routes the same canonical content through different visual projections, a direct embodiment of the holographic lens principle.
+1. Toggle "Immersive" on the search page — stunning photo fills the screen
+2. Search "quantum mechanics" — the photo softly blurs and stays as a fixed backdrop
+3. The article appears on a frosted-glass panel floating over the landscape
+4. The toolbar is translucent glass with lens pills glowing subtly
+5. Switch lenses — the glass panel updates instantly, background stays serene
+6. Click "Details" — profile view also floats on glass over the same backdrop
+7. Navigate back to search — the photo is still there, continuous and seamless
+8. Toggle immersive off — returns to the standard dark UI instantly
 
