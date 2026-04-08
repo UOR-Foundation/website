@@ -107,3 +107,76 @@ function extractMeta(html: string): Record<string, string> {
 
   return meta;
 }
+
+/* ── Wikipedia helpers ────────────────────────────────────────────────── */
+
+/** Detect if a URL is a Wikipedia article and extract the title slug. */
+export function parseWikipediaUrl(url: string): { lang: string; title: string } | null {
+  const match = url.match(/^https?:\/\/([a-z]{2,3})\.wikipedia\.org\/wiki\/([^#?]+)/i);
+  if (!match) return null;
+  return { lang: match[1], title: decodeURIComponent(match[2]) };
+}
+
+/** Wikipedia REST API summary response (subset of fields we use). */
+export interface WikiSummary {
+  qid: string;
+  thumbnail: string | null;
+  extract: string;
+  description: string;
+  revision: string;
+  timestamp: string;
+}
+
+/**
+ * Fetch structured metadata from the Wikipedia REST API.
+ * Pure client-side — no auth required.
+ */
+export async function fetchWikiSummary(lang: string, title: string): Promise<WikiSummary | null> {
+  try {
+    const res = await fetch(
+      `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
+      { headers: { "Api-User-Agent": "UOR-Foundation/1.0 (https://uor.foundation)" } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      qid: data.wikibase_item || "",
+      thumbnail: data.thumbnail?.source || null,
+      extract: data.extract || "",
+      description: data.description || "",
+      revision: String(data.revision || ""),
+      timestamp: data.timestamp || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract infobox-style key/value pairs from Wikipedia markdown.
+ * Parses the taxonomy/classification table that Firecrawl returns as markdown tables.
+ */
+export function extractWikiInfobox(markdown: string): Record<string, string> {
+  const infobox: Record<string, string> = {};
+  // Match markdown table rows like "| Kingdom | Animalia |"
+  const rows = markdown.match(/^\|[^|]+\|[^|]+\|$/gm);
+  if (!rows) return infobox;
+
+  const taxonomyKeys = new Set([
+    "kingdom", "phylum", "class", "order", "family", "genus", "species",
+    "domain", "clade", "suborder", "infraorder", "superfamily", "subfamily",
+    "tribe", "subtribe", "subphylum", "subclass", "superorder",
+  ]);
+
+  for (const row of rows) {
+    const cells = row.split("|").map(c => c.trim()).filter(Boolean);
+    if (cells.length >= 2) {
+      const key = cells[0].replace(/\*+/g, "").replace(/\[.*?\]/g, "").trim();
+      const val = cells[1].replace(/\*+/g, "").replace(/\[.*?\]/g, "").trim();
+      if (key && val && taxonomyKeys.has(key.toLowerCase())) {
+        infobox[key] = val;
+      }
+    }
+  }
+  return infobox;
+}
