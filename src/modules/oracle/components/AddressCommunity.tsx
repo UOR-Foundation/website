@@ -356,7 +356,7 @@ function CommentNodeView({
   onReply: (parentId: string) => void;
   replyingTo: string | null;
   setReplyingTo: (id: string | null) => void;
-  onSubmitReply: (parentId: string, content: string) => Promise<void>;
+  onSubmitReply: (parentId: string, content: string, guestName?: string) => Promise<void>;
   user: any;
 }) {
   const isCollapsed = collapsed.has(node.id);
