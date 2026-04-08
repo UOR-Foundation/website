@@ -11,6 +11,10 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import CitedMarkdown from "./CitedMarkdown";
+import SourcesPills from "./SourcesPills";
+import { normalizeSource } from "../lib/citation-parser";
+import type { SourceMeta } from "../lib/citation-parser";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
@@ -450,6 +454,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
+  const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   // Show skeleton only when synthesizing AND no content yet
   if (synthesizing && !contentMarkdown.trim()) {
@@ -480,11 +485,14 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         style={{
           fontSize: 12,
           fontStyle: "italic",
-          margin: "6px 0 20px",
+          margin: "6px 0 12px",
         }}
       >
         From UOR Knowledge, the universal encyclopedia
       </p>
+
+      {/* ── Source pills ── */}
+      <SourcesPills sources={sourceMetas} />
 
       {/* ── Infobox (floated right) ── */}
       {wikidata && <Infobox title={title} wikidata={wikidata} />}
@@ -495,13 +503,13 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       {/* ── Lead paragraph ── */}
       {lead && (
         <div style={{ marginBottom: 16 }}>
-          <ReactMarkdown components={markdownComponents}>{lead}</ReactMarkdown>
+          <CitedMarkdown markdown={lead} sources={sourceMetas} components={markdownComponents} />
         </div>
       )}
 
       {/* ── Body sections ── */}
       <div>
-        <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
+        <CitedMarkdown markdown={body} sources={sourceMetas} components={markdownComponents} />
         {/* Typing cursor while streaming */}
         {synthesizing && (
           <span
@@ -542,28 +550,32 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
               fontWeight: 600,
             }}
           >
-            Sources
+            References
           </span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {sources.map((url, i) => (
-              <a
+          <ol className="mt-2 space-y-1 list-decimal list-inside">
+            {sourceMetas.map((s, i) => (
+              <li
                 key={i}
-                href={url.startsWith("http") ? url : `https://${url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground/60 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors"
-                style={{
-                  fontSize: 11,
-                  padding: "3px 10px",
-                  borderRadius: 6,
-                  textDecoration: "none",
-                  border: "1px solid hsl(var(--border) / 0.15)",
-                }}
+                className="text-muted-foreground/50"
+                style={{ fontSize: 12 }}
               >
-                {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </a>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20"
+                >
+                  {s.domain}
+                </a>
+                <span
+                  className="text-muted-foreground/30 ml-2"
+                  style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}
+                >
+                  uor:{s.uorHash}
+                </span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       )}
     </article>

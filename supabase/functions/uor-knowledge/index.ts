@@ -126,7 +126,7 @@ function buildLensPrompt(lens: string, context?: string[]): string {
 6. Reference key theoretical frameworks, seminal papers (by author name and year), and competing hypotheses.
 7. Discuss limitations, edge cases, and where current understanding breaks down.
 8. Maintain a scholarly but readable tone — not dry, but authoritative.
-9. Do NOT add citation brackets [1] or reference lists — mention authors inline.
+9. Add inline citation markers [1], [2] etc. after key factual claims to reference the source list. Use [1] for Wikipedia-sourced facts and [2] for Wikidata-sourced facts. Place markers right after the relevant sentence, before the period when mid-sentence or after the period for whole-paragraph claims.
 10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
 
     case "storyteller":
@@ -153,7 +153,7 @@ function buildLensPrompt(lens: string, context?: string[]): string {
    - For non-biological topics adapt: Overview, History, Characteristics, Types/Variants, Applications, Impact, Notable examples, Contemporary relevance
 3. Write 1000-1500 words total. Be encyclopedic: precise, neutral, factual.
 4. Use concrete numbers, dates, proper nouns, and specific details throughout.
-5. Do NOT add citations, reference brackets [1], annotation tags, or "Sources" sections.
+5. Add inline citation markers [1], [2] etc. after key factual claims to reference the source list. Use [1] for Wikipedia-sourced facts and [2] for Wikidata-sourced facts. Place markers right after the relevant claim.
 6. Do NOT use ### sub-headings — only ## level.
 7. Write in a neutral, encyclopedic tone. No first person, no hedging, no filler phrases.
 8. Each section should be 2-4 paragraphs of substantive content.${contextSuffix}`;
