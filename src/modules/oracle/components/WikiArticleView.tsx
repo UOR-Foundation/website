@@ -640,9 +640,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         )}
       </div>
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
-
-      {/* ── Clear float ── */}
-      <div style={{ clear: "both" }} />
+        </>
+      )}
 
       {/* ── Media section ── */}
       {media && !synthesizing && <EncyclopediaMedia media={media} />}
