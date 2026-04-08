@@ -129,8 +129,12 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key)
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers"
   );
+
+  // Semantic Web Tower data
+  const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
+  const isWebPage = rawType === "WebPage";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
