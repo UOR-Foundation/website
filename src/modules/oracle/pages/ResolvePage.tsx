@@ -644,7 +644,7 @@ const SearchPage = () => {
                     onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                     onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
                     placeholder=""
-                    className="flex-1 bg-transparent py-[18px] px-2 text-lg text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
+                    className="flex-1 bg-transparent py-[18px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
                   />
 
                   {/* Right side — separator + AI Mode pill */}
@@ -655,7 +655,7 @@ const SearchPage = () => {
                       className="flex items-center gap-2 px-4 py-2 rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
                     >
                       <Sparkles className="w-4 h-4 text-primary/70" />
-                      <span className="text-sm font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
+                      <span className="text-base font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
                     </button>
                   </div>
                 </div>
@@ -706,14 +706,14 @@ const SearchPage = () => {
                 <button
                   onClick={submit}
                   disabled={!input.trim() || loading}
-                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all disabled:opacity-30"
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-30"
                 >
                   UOR Search
                 </button>
                 <button
                   onClick={fireImprobabilityDrive}
                   disabled={improbabilityActive || drivePrePhase}
-                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
                 >
                   Surprise Me
                 </button>
@@ -721,10 +721,10 @@ const SearchPage = () => {
 
               {/* Tagline — pinned near bottom */}
               <p
-                className="absolute left-0 right-0 text-center text-[14px] text-muted-foreground/30 select-none"
+                className="absolute left-0 right-0 text-center text-base text-muted-foreground/30 select-none"
                 style={{ bottom: "6vh" }}
               >
-                Search the semantic web using <span className="text-foreground/50 font-medium">UOR</span>!
+                Searching a near-infinite address space.
               </p>
             </div>
           )}
