@@ -39,6 +39,10 @@ import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-history";
+import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
+import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
+import VoiceInput from "@/modules/oracle/components/VoiceInput";
+import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -396,6 +400,13 @@ const SearchPage = () => {
   const { user } = useAuth();
   const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
   const [readerMode, setReaderMode] = useState(true);
+
+  // Live mode + voice + prefetch state
+  const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
+  const [prefetchResult, setPrefetchResult] = useState<PrefetchResult | null>(null);
+  const [showPrefetch, setShowPrefetch] = useState(false);
+  const liveAbortRef = useRef<AbortController | null>(null);
+  const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync immersive mode with fullscreen API (user may press Esc to exit)
   useEffect(() => {
