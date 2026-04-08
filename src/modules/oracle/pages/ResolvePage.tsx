@@ -24,6 +24,7 @@ import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib
 import { singleProofHash } from "@/lib/uor-canonical";
 import { isValidTriword } from "@/lib/uor-triword";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
+import { streamKnowledge, type WikiMeta } from "@/modules/oracle/lib/stream-knowledge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
@@ -634,35 +635,36 @@ const SearchPage = () => {
     finally { setLoading(false); }
   };
 
-  /** Resolve a plain keyword into a multi-source knowledge card (progressive) */
+  /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
   const handleKeywordResolve = async (keyword: string) => {
     // ── Phase 1: Instant Wikipedia metadata (~200ms) ──
-    const wikiPromise = fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword.trim())}`,
-      { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
-    ).then(async (r) => {
-      if (!r.ok) return null;
-      const d = await r.json();
-      if (d.type !== "standard") return null;
-      return {
-        qid: d.wikibase_item || null,
-        thumbnail: d.thumbnail?.source || d.originalimage?.source || null,
-        description: d.description || null,
-        extract: d.extract || null,
-        pageUrl: d.content_urls?.desktop?.page || null,
-      };
-    }).catch(() => null);
+    let wiki: WikiMeta | null = null;
+    try {
+      const r = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword.trim())}`,
+        { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        if (d.type === "standard") {
+          wiki = {
+            qid: d.wikibase_item || null,
+            thumbnail: d.thumbnail?.source || d.originalimage?.source || null,
+            description: d.description || null,
+            extract: d.extract || null,
+            pageUrl: d.content_urls?.desktop?.page || null,
+          };
+        }
+      }
+    } catch { /* wiki fetch failed */ }
 
-    // Show partial card immediately when wiki resolves
-    const wiki = await wikiPromise;
-
-    // Build a partial source for instant display
+    // Show partial card immediately
     const partialSource: Record<string, unknown> = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:KnowledgeCard",
       "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
       "uor:description": wiki?.description || "",
-      "uor:content": wiki?.extract || "Synthesizing knowledge…",
+      "uor:content": "",
       ...(wiki ? {
         "uor:wikidata": {
           qid: wiki.qid,
@@ -673,7 +675,6 @@ const SearchPage = () => {
       "uor:sources": wiki?.pageUrl ? [wiki.pageUrl] : [],
     };
 
-    // Encode the partial source to get an instant address
     const partialReceipt = await encode(partialSource);
     setResult({
       source: { ...partialSource, "uor:synthesizedAt": new Date().toISOString() },
@@ -684,83 +685,97 @@ const SearchPage = () => {
     setInput(partialReceipt.triword);
     setLoading(false);
 
-    toast("Synthesizing AI article…", { icon: "✨", id: "keyword-resolve" });
+    toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
 
-    // ── Phase 2: AI synthesis in background ──
-    try {
-      const { data, error } = await supabase.functions.invoke("uor-knowledge", {
-        body: { keyword },
-      });
+    // ── Phase 2: Stream AI synthesis ──
+    let accumulatedSynthesis = "";
+    let streamSources: string[] = wiki?.pageUrl ? [wiki.pageUrl] : [];
 
-      if (!error && !data?.error && data?.synthesis) {
-        // Build final canonical object with full synthesis
-        const sources: string[] = data.sources || [];
-        if (wiki?.pageUrl && !sources.includes(wiki.pageUrl)) sources.unshift(wiki.pageUrl);
-        if (wiki?.qid) {
-          const wdUrl = `https://www.wikidata.org/wiki/${wiki.qid}`;
-          if (!sources.includes(wdUrl)) sources.push(wdUrl);
+    await streamKnowledge({
+      keyword,
+      onWiki: (streamWiki, sources) => {
+        // Update wiki metadata if the stream provides it (and we didn't get it already)
+        if (streamWiki && !wiki) {
+          wiki = streamWiki;
         }
-
-        const finalSource: Record<string, unknown> = {
-          "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-          "@type": "uor:KnowledgeCard",
-          "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
-          "uor:description": wiki?.description || data.wiki?.description || "",
-          "uor:content": data.synthesis,
-          ...(wiki || data.wiki ? {
-            "uor:wikidata": {
-              qid: wiki?.qid || data.wiki?.qid,
-              thumbnail: wiki?.thumbnail || data.wiki?.thumbnail,
-              description: wiki?.description || data.wiki?.description,
-            },
-          } : {}),
-          "uor:sources": sources,
-        };
-
-        const finalReceipt = await encode(finalSource);
-
-        setResult({
-          source: { ...finalSource, "uor:synthesizedAt": new Date().toISOString() },
-          receipt: finalReceipt,
-          isConfirmed: false,
-          synthesizing: false,
+        if (sources.length > 0) streamSources = sources;
+      },
+      onDelta: (text) => {
+        accumulatedSynthesis += text;
+        // Update result progressively with streaming content
+        setResult(prev => {
+          if (!prev) return prev;
+          const src = prev.source as Record<string, unknown>;
+          return {
+            ...prev,
+            source: { ...src, "uor:content": accumulatedSynthesis },
+            synthesizing: true,
+          };
         });
-        setInput(finalReceipt.triword);
+      },
+      onDone: async () => {
+        try {
+          // Build final canonical object
+          const sources = [...streamSources];
+          if (wiki?.pageUrl && !sources.includes(wiki.pageUrl)) sources.unshift(wiki.pageUrl);
+          if (wiki?.qid) {
+            const wdUrl = `https://www.wikidata.org/wiki/${wiki.qid}`;
+            if (!sources.includes(wdUrl)) sources.push(wdUrl);
+          }
 
-        confetti({
-          particleCount: 80,
-          spread: 65,
-          origin: { y: 0.6 },
-          colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
-        });
+          const finalSource: Record<string, unknown> = {
+            "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+            "@type": "uor:KnowledgeCard",
+            "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
+            "uor:description": wiki?.description || "",
+            "uor:content": accumulatedSynthesis,
+            ...(wiki ? {
+              "uor:wikidata": {
+                qid: wiki.qid,
+                thumbnail: wiki.thumbnail,
+                description: wiki.description,
+              },
+            } : {}),
+            "uor:sources": sources,
+          };
 
-        toast.success("Knowledge synthesized.", {
-          description: finalReceipt.triwordFormatted,
-          id: "keyword-resolve",
-        });
-      } else {
-        // AI failed but we already have wiki content — just mark as done
+          const finalReceipt = await encode(finalSource);
+
+          setResult({
+            source: { ...finalSource, "uor:synthesizedAt": new Date().toISOString() },
+            receipt: finalReceipt,
+            isConfirmed: false,
+            synthesizing: false,
+          });
+          setInput(finalReceipt.triword);
+
+          confetti({
+            particleCount: 80,
+            spread: 65,
+            origin: { y: 0.6 },
+            colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
+          });
+
+          toast.success("Knowledge synthesized.", {
+            description: finalReceipt.triwordFormatted,
+            id: "keyword-resolve",
+          });
+        } catch (err) {
+          console.error("[KeywordResolve] finalization failed:", err);
+          setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
+          toast.dismiss("keyword-resolve");
+        }
+      },
+      onError: (error) => {
+        console.error("[KeywordResolve] stream error:", error);
         setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
         if (wiki?.extract) {
           toast.success("Wikipedia content loaded.", { id: "keyword-resolve" });
         } else {
-          // Try Firecrawl fallback
-          toast("Falling back to web search…", { icon: "🌐", id: "keyword-resolve" });
-          try {
-            const searchResult = await firecrawlApi.search(keyword, 1);
-            if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
-              return handleWebEncode(searchResult.data[0].url);
-            }
-          } catch { /* ignore */ }
-          toast.error("No results found.", { id: "keyword-resolve" });
+          toast.error(error, { id: "keyword-resolve" });
         }
-      }
-    } catch (err) {
-      console.error("[KeywordResolve] AI synthesis failed:", err);
-      // Partial result is already displayed, just mark as done
-      setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
-      toast.dismiss("keyword-resolve");
-    }
+      },
+    });
   };
 
   const submit = () => {

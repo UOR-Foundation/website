@@ -402,7 +402,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
 
-  if (synthesizing) {
+  // Show skeleton only when synthesizing AND no content yet
+  if (synthesizing && !contentMarkdown.trim()) {
     return <SynthesizingSkeleton />;
   }
 
@@ -452,7 +453,21 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       {/* ── Body sections ── */}
       <div>
         <ReactMarkdown components={markdownComponents}>{body}</ReactMarkdown>
+        {/* Typing cursor while streaming */}
+        {synthesizing && (
+          <span
+            className="inline-block bg-primary/70"
+            style={{
+              width: 2,
+              height: 18,
+              verticalAlign: "text-bottom",
+              marginLeft: 2,
+              animation: "blink-cursor 0.8s steps(2) infinite",
+            }}
+          />
+        )}
       </div>
+      <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
       {/* ── Clear float ── */}
       <div style={{ clear: "both" }} />
