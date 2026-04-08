@@ -1982,6 +1982,16 @@ const SearchPage = () => {
 
                       {/* Actions — right-aligned on desktop */}
                       <div className="flex items-center gap-2 sm:ml-auto shrink-0">
+                        {isReadableType && (
+                          <button
+                            onClick={() => setReaderMode(true)}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-border/20 text-xs font-semibold text-foreground/70 hover:text-foreground/90 hover:border-border/35 transition-all"
+                            title="Switch to reader mode"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Reader</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             const isOracle = src?.["@type"] === "uor:OracleExchange";
