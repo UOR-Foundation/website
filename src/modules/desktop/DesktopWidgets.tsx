@@ -341,10 +341,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                 ref={plusBtnRef}
                 type="button"
                 onClick={() => setContextMenuOpen((o) => !o)}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-all relative"
+                className="flex items-center justify-center transition-all relative p-1"
                 style={{
-                  background: btnBgStyle,
-                  border: btnBorderStyle,
                   color: isImmersive ? "hsl(0 0% 100% / 0.5)" : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.4)",
                 }}
                 title="Add context"
