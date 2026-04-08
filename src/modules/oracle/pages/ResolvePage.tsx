@@ -46,6 +46,7 @@ import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
 import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
+import OracleOverlay from "@/modules/oracle/components/OracleOverlay";
 import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 import { computeCoherence, recordDwell, recordLensSwitch, dismissLensSuggestion, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
@@ -358,8 +359,8 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
   );
 }
 
-/* ── Mobile Immersive Search Pill ── */
-function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void }) {
+/* ── Reader Floating Bar — search + Oracle access from reader ── */
+function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) => void; onOracleOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -374,9 +375,9 @@ function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void
         {expanded ? (
           <motion.div
             key="expanded"
-            initial={{ width: 160, opacity: 0.8 }}
+            initial={{ width: 200, opacity: 0.8 }}
             animate={{ width: "100%", opacity: 1 }}
-            exit={{ width: 160, opacity: 0.8 }}
+            exit={{ width: 200, opacity: 0.8 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             className="pointer-events-auto rounded-full border border-white/[0.12] bg-black/70 backdrop-blur-xl shadow-[0_-4px_30px_-8px_rgba(0,0,0,0.6)] flex items-center gap-2 px-4 py-2"
           >
@@ -398,17 +399,30 @@ function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void
             </button>
           </motion.div>
         ) : (
-          <motion.button
+          <motion.div
             key="collapsed"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            onClick={() => setExpanded(true)}
-            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl text-white/40 hover:text-white/60 transition-colors shadow-lg"
+            className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl shadow-lg"
           >
-            <Search className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-medium">Search…</span>
-          </motion.button>
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-2 px-5 py-2.5 text-white/40 hover:text-white/60 transition-colors"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="text-[13px] font-medium">Search…</span>
+            </button>
+            <div className="w-px h-5 bg-white/10" />
+            <button
+              onClick={onOracleOpen}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-white/40 hover:text-white/60 transition-colors"
+              title="Ask Oracle"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[13px] font-medium">Oracle</span>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
@@ -475,6 +489,7 @@ const SearchPage = () => {
     return window.innerWidth < 768;
   });
   const [readerMode, setReaderMode] = useState(true);
+  const [oracleOverlayOpen, setOracleOverlayOpen] = useState(false);
 
   // Live mode + voice + prefetch state
   const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
@@ -1289,6 +1304,27 @@ const SearchPage = () => {
     setAiInput("");
     setSelectedProofIndices(new Set());
   };
+
+  /** Render an Oracle response as a full rendered knowledge page */
+  const renderOracleResponse = useCallback((query: string, content: string) => {
+    const label = query.charAt(0).toUpperCase() + query.slice(1);
+    // Build a knowledge card from the Oracle response and stream it as rendered content
+    exitAiMode();
+    setOracleOverlayOpen(false);
+    // Use the keyword resolve flow which will re-stream with full media
+    setInput(query);
+    handleKeywordResolve(query);
+  }, []);
+
+  /** Expand oracle overlay to full Oracle mode */
+  const expandOverlayToOracle = useCallback((overlayMessages: Msg[]) => {
+    setOracleOverlayOpen(false);
+    setAiMessages(overlayMessages);
+    setResult(null);
+    setRederived(false);
+    setAiMode(true);
+    setTimeout(() => aiInputRef.current?.focus(), 150);
+  }, []);
 
   const toggleProofIndex = (idx: number) => {
     setSelectedProofIndices(prev => {
@@ -2110,6 +2146,23 @@ const SearchPage = () => {
                             }}
                           />
                         )}
+
+                        {/* Render as rendered internet page */}
+                        {msg.role === "assistant" && !aiStreaming && msg.content.length > 100 && (
+                          <motion.button
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            onClick={() => {
+                              const userQuery = aiMessages.slice(0, i).reverse().find(m => m.role === "user")?.content || "Oracle Response";
+                              renderOracleResponse(userQuery, msg.content);
+                            }}
+                            className="mt-2.5 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-primary/70 hover:text-primary border border-primary/15 hover:border-primary/30 bg-primary/[0.04] hover:bg-primary/[0.08] transition-all group"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                            Render as page
+                          </motion.button>
+                        )}
                       </div>
                     );
                   });
@@ -2308,12 +2361,51 @@ const SearchPage = () => {
                         </div>
                       </div>
 
-                      {/* Floating compact search pill for immersive reader */}
+                      {/* Floating search + Oracle pill for reader */}
                       {(mobileImmersive || immersiveMode) && (
-                        <MobileImmersiveSearchPill
+                        <ReaderFloatingBar
                           onSearch={(q) => { setInput(q); clearResult(); setTimeout(() => handleSearch(q), 100); }}
+                          onOracleOpen={() => setOracleOverlayOpen(true)}
                         />
                       )}
+
+                      {/* Non-immersive: show a subtle Oracle FAB */}
+                      {!immersiveMode && !mobileImmersive && (
+                        <div className="fixed bottom-6 right-6 z-[60]">
+                          <motion.button
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 24 }}
+                            onClick={() => setOracleOverlayOpen(true)}
+                            className="w-12 h-12 rounded-full bg-primary/15 border border-primary/25 hover:bg-primary/25 hover:border-primary/40 flex items-center justify-center shadow-[0_4px_24px_-4px_hsl(var(--primary)/0.25)] transition-all group"
+                            title="Ask Oracle about this content"
+                          >
+                            <Sparkles className="w-5 h-5 text-primary/80 group-hover:text-primary transition-colors" />
+                          </motion.button>
+                        </div>
+                      )}
+
+                      {/* Oracle overlay panel */}
+                      <OracleOverlay
+                        open={oracleOverlayOpen}
+                        onClose={() => setOracleOverlayOpen(false)}
+                        contextLabel={(() => {
+                          const s = result?.source as Record<string, unknown> | null;
+                          return (typeof s?.["uor:label"] === "string" ? s["uor:label"] : typeof s?.["uor:title"] === "string" ? s["uor:title"] : "") as string;
+                        })()}
+                        contextContent={(() => {
+                          const s = result?.source as Record<string, unknown> | null;
+                          return (typeof s?.["uor:content"] === "string" ? s["uor:content"].slice(0, 1200) : "") as string;
+                        })()}
+                        onExpandToOracle={expandOverlayToOracle}
+                        onRenderAsPage={(query) => {
+                          setOracleOverlayOpen(false);
+                          setInput(query);
+                          clearResult();
+                          setTimeout(() => handleSearch(query), 100);
+                        }}
+                        immersive={immersiveMode}
+                      />
                     </div>
                   </motion.div>
                 );
