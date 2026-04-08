@@ -765,6 +765,13 @@ const SearchPage = () => {
             colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
           });
 
+          // Record search to history for future context personalization
+          recordSearch({
+            keyword,
+            cid: finalReceipt.cid,
+            wiki_qid: wiki?.qid || null,
+          }).catch(() => {}); // silent
+
           toast.success("Knowledge synthesized.", {
             description: finalReceipt.triwordFormatted,
             id: "keyword-resolve",
