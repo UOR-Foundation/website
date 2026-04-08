@@ -2134,8 +2134,21 @@ const SearchPage = () => {
                         triwordDisplay={triwordDisplay}
                         typeLabel={typeRaw}
                         activeLens={activeLens}
-                        onLensChange={(id) => setActiveLens(id)}
+                        onLensChange={(lensId) => {
+                          setActiveLens(lensId);
+                          const src = result?.source as Record<string, unknown> | null;
+                          const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+                          if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
+                            handleKeywordResolve(keyword, lensId);
+                          }
+                        }}
                         onBack={clearResult}
+                        onHome={() => { clearResult(); setInput(""); }}
+                        onReload={() => {
+                          const src = result?.source as Record<string, unknown> | null;
+                          const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+                          if (keyword) handleKeywordResolve(keyword, activeLens);
+                        }}
                         onToggleDetails={() => setReaderMode(false)}
                         synthesizing={result.synthesizing}
                         streamProgress={streamProgress}
