@@ -1,65 +1,98 @@
 
 
-## Social Layer for UOR Addresses
+## Address Profile Redesign
 
-Every UOR address becomes a living place — somewhere people visit, react to, and discuss. The metaphor: addresses are locations in a universal coordinate space, and this makes them natural gathering points.
+Transform the result view from a technical SERP into a social-network-style identity profile. Every address — whether it represents a human, an AI agent, or raw data — gets the same standardized profile layout.
 
-### Database Tables
+### Layout Structure
 
-**1. `address_visits`** — Track visitors per address
-- `id`, `address_cid` (text), `visitor_fingerprint` (text, anonymous hash), `visited_at` (timestamptz)
-- No auth required — public addresses, public visits
-- A simple view counter with unique visitor deduplication
+```text
+┌─────────────────────────────────────────────┐
+│  [← search bar]                             │
+├─────────────────────────────────────────────┤
+│                                             │
+│     ┌──────┐                                │
+│     │ GLYPH│   Entity Name / Triword        │
+│     │avatar│   @type badge · engine badge    │
+│     └──────┘   "First discovered 3h ago"    │
+│                                             │
+│  ─────────────────────────────────────────  │
+│  47 visitors · 12 reactions · 3 comments    │
+│  [✦ Resonates 4] [◆ Useful 2] [◇] [★]      │
+│  ─────────────────────────────────────────  │
+│                                             │
+│  IDENTITY CARD                              │
+│  ┌─────────────────────────────────────┐    │
+│  │ IPv6    fd00:0075:6f72:...    [copy]│    │
+│  │ CID     bafyrei...            [copy]│    │
+│  │ Triword alpha·bravo·charlie   [copy]│    │
+│  │ Engine  wasm · v0.3.0               │    │
+│  └─────────────────────────────────────┘    │
+│                                             │
+│  ACTIONS                                    │
+│  [🔮 Discuss in Oracle] [🌐 Inscribe IPFS] │
+│  [🔄 Verify Integrity]                     │
+│                                             │
+│  CONTENT                    [Human|Machine] │
+│  ┌─────────────────────────────────────┐    │
+│  │  (content block, same as today)     │    │
+│  └─────────────────────────────────────┘    │
+│                                             │
+│  DISCUSSION                                 │
+│  (comments thread, expanded by default)     │
+│                                             │
+└─────────────────────────────────────────────┘
+```
 
-**2. `address_reactions`** — Lightweight sentiment (like a star rating but more expressive)
-- `id`, `address_cid`, `user_id` (uuid, references auth.users), `reaction` (text — e.g. "resonates", "useful", "elegant", "surprising"), `created_at`
-- Authenticated users only
-- Unique constraint on (address_cid, user_id) — one reaction per user per address
+### What Changes
 
-**3. `address_comments`** — Threaded discussion at each address
-- `id`, `address_cid`, `user_id` (uuid), `content` (text), `parent_id` (uuid, nullable — for replies), `created_at`
-- Authenticated users only
-- RLS: anyone can read, only author can insert
+**1. Profile Header (new)**
+- Large circular avatar derived from the Braille glyph (first 2 chars, rendered in a colored circle with a subtle glow)
+- Triword as the "display name" in large display font
+- `@type` shown as a colored badge (e.g. "User Content", "Oracle Exchange", "Chain of Proofs", "Concept")
+- Discovered/Confirmed status integrated inline
+- Timestamp shown as "First seen X ago"
 
-### UI Design
+**2. Social Stats + Reactions (promoted)**
+- Visitor count, reaction count, comment count on a single prominent line directly under the header
+- Reaction buttons immediately below — always visible, not tucked away
+- This becomes the emotional center of the profile
 
-Below the existing metadata block on the result page, add a new **"Community"** section:
+**3. Identity Card (consolidated)**
+- All technical identifiers (IPv6, CID, triword, engine) grouped in a clean bordered card
+- Each row: label, monospace value, copy button
+- Replaces the scattered metadata that currently sits in different spots
 
-**Visitor Counter** — A subtle line: "47 visitors · 12 reactions" with a small animated eye icon. Updates on each view (fires a lightweight insert on result load). No auth needed.
+**4. Action Bar (consolidated)**
+- "Discuss in Oracle", "Inscribe on IPFS", "Verify Integrity" grouped as a row of action buttons
+- Cleaner than current scattered placement
+- IPFS status shown inline when already inscribed
 
-**Reaction Bar** — Four curated reaction buttons in a horizontal row, similar to GitHub's reaction picker but simpler:
-- ✦ Resonates — "this makes sense to me"
-- ◆ Useful — "I can use this"  
-- ◇ Elegant — "beautifully structured"
-- ★ Surprising — "unexpected"
+**5. Content Section (kept, moved down)**
+- Human/Machine toggle and content view stays the same
+- Positioned lower — profile identity comes first, content is "what this entity contains"
 
-Each shows a count. Clicking toggles your reaction (requires auth). Feels like emoji reactions on Slack/GitHub — instantly familiar.
+**6. Discussion Thread (always visible)**
+- Comments section shown expanded by default (no toggle needed)
+- Positioned at the bottom like a social feed
+- Comment input always visible
 
-**Comments Thread** — A clean, minimal comment thread below reactions. Each comment shows the user's display name (or anonymous glyph), relative timestamp, and content. Reply support via `parent_id`. A simple text input at the bottom with "Share a thought…" placeholder.
+### Files to Modify
 
-### Implementation
+- **`src/modules/oracle/pages/ResolvePage.tsx`** — Restructure the result block (lines ~1326–1784) into the profile layout described above. Consolidate scattered elements into organized sections.
+- **`src/modules/oracle/components/AddressCommunity.tsx`** — Update to show comments expanded by default, remove the collapsible toggle, and accept a `prominent` prop for the header-level stats display.
 
-**Edge function: `address-social`**
-- `GET ?cid=...` — Returns visit count, reactions summary, and comments for an address. Also records a visit.
-- `POST /react` — Toggle a reaction (auth required)
-- `POST /comment` — Add a comment (auth required)
+### What Gets Removed
+- The "Address" label at the top (replaced by profile header)
+- Scattered metadata placement (consolidated into Identity Card)
+- Comments toggle chevron (always expanded now)
+- Redundant spacing between sections
 
-**Frontend changes: `ResolvePage.tsx`**
-- New `<AddressCommunity cid={result.receipt.cid} />` component rendered after the metadata block
-- Uses `useEffect` to fetch social data on mount (which also records the visit)
-- Reaction buttons with optimistic UI updates
-- Comment thread with auto-refresh
-
-**Realtime** — Enable `supabase_realtime` on `address_comments` so new comments appear live, reinforcing the "gathering place" feeling.
-
-### Files to create/modify
-
-- **New migration**: Create `address_visits`, `address_reactions`, `address_comments` tables with RLS
-- **New edge function**: `supabase/functions/address-social/index.ts`
-- **New component**: `src/modules/oracle/components/AddressCommunity.tsx`
-- **Modified**: `src/modules/oracle/pages/ResolvePage.tsx` — integrate the community component
-
-### Why this works
-
-The reactions are not generic likes — they're curated to reflect how people relate to *ideas and structures* (resonates, useful, elegant, surprising). This makes every address feel like a small plaza in the coordinate space where people naturally congregate around shared meaning.
+### Design Principles
+- Every address looks like visiting someone's profile on a social network
+- The glyph avatar + triword name creates instant recognition
+- Social signals (visitors, reactions) are the first thing you see after the name
+- Technical identity (CID, IPv6) is present but secondary — in a card, not scattered
+- Content is "what this entity is about" — like a bio section
+- Discussion is natural — like a comment section on any social post
 
