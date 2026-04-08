@@ -11,6 +11,7 @@ import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
+import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
@@ -337,6 +338,7 @@ const SearchPage = () => {
   const [improbabilityActive, setImprobabilityActive] = useState(false);
   const [improbPhase, setImprobPhase] = useState(0);
   const [improbExponent, setImprobExponent] = useState(0);
+  const [identityPanelOpen, setIdentityPanelOpen] = useState(false);
   const [improbSideEffect, setImprobSideEffect] = useState("");
   const [drivePrePhase, setDrivePrePhase] = useState(false);
   const [drivePostPhase, setDrivePostPhase] = useState(false);
@@ -984,6 +986,7 @@ const SearchPage = () => {
 
           {/* Right: Sovereign Identity avatar */}
           <button
+            onClick={() => setIdentityPanelOpen(true)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
             title="Sovereign Identity"
           >
@@ -1938,6 +1941,7 @@ const SearchPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <SovereignIdentityPanel open={identityPanelOpen} onClose={() => setIdentityPanelOpen(false)} />
     </div>
   );
 };
