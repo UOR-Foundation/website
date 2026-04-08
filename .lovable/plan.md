@@ -1,112 +1,123 @@
 
 
-## Perplexity-Style Provenance and Citation System — UOR-Anchored
+## Multimodal Lens Enhancement — UOR-Anchored Media Integration
 
-### Problem
+### Overview
 
-The current citation system is minimal: only `encyclopedia` and `expert` lenses emit `[N]` markers referencing just Wikipedia + Wikidata (2 sources max). Magazine, storyteller, and explain-like-5 lenses have zero citations. There is no indication of where content comes from — whether it's AI-generated, sourced from the web, or influenced by user context. The reader has no intuitive way to verify claims or open original sources quickly.
+Enrich each knowledge lens with contextual multimedia (images, video, audio) pulled from free public APIs. Each media asset is content-addressed via UOR (fnv1a hash) and rendered per-lens with distinct visual treatments. The approach: the edge function fetches multimedia metadata alongside Wikipedia/Wikidata, emits it in the SSE stream, and each lens renderer integrates media appropriate to its character.
 
-Perplexity solves this elegantly: every claim is marked, every source is one click away, and the UI never overwhelms the reading experience.
+### Media Sources (No API Key Required)
 
-### Design Principles
+| Source | Data | API |
+|--------|------|-----|
+| **Wikimedia Commons** | High-res images, diagrams, maps | `commons.wikimedia.org/w/api.php` (free, no key) |
+| **Wikipedia page images** | Already have thumbnail via REST API; extend to get all page images |
+| **Wikidata P18** | Main image property — already fetched but only as text. Resolve to Wikimedia Commons URL |
+| **YouTube** | Relevant educational videos | `www.youtube.com/oembed` for embedding (no key for oembed) |
 
-1. **Always accessible, never in the way** — Citations are subtle inline superscripts. The detail layer (popover, source drawer) only appears on interaction.
-2. **Three-tier provenance** — Every piece of content is labeled as one of: `Web Source` (Wikipedia, Wikidata, external), `AI Synthesized` (LLM-generated), or `Personalized` (shaped by user context). This is the transparency guarantee.
-3. **One-tap source access** — Tapping any citation opens the original source instantly. The popover shows a preview; the click goes to the URL.
-4. **UOR-anchored** — Every source gets an fnv1a content-address. The provenance metadata is part of the UOR identity space.
-
-### Implementation
-
-#### 1. Enrich all lens prompts with citations (not just encyclopedia/expert)
-
-**File:** `supabase/functions/uor-knowledge/index.ts`
-
-Add citation instructions to `magazine`, `explain-like-5`, and `storyteller` lenses. Currently they say "Do NOT add citations." Change to: add `[N]` markers after factual claims, but keep them minimal (3-5 per article for narrative lenses vs 8-15 for encyclopedia/expert). The rule changes from "no citations" to "light citations that don't break narrative flow."
-
-Update the sources array to include richer metadata. Currently sources are just URL strings. Emit them as `{ url, title, type }` objects in the SSE `wiki` event. Add a `title` field extracted from the Wikipedia API response (`data.titles.display`). This gives the citation popover a proper title instead of just a domain.
-
-#### 2. Add a provenance banner — transparent "how this was made"
-
-**File:** `src/modules/oracle/components/ProvenanceBanner.tsx` (new)
-
-A slim, collapsible banner below the SourcesPills that states exactly how this content was generated. Shows three provenance signals as tiny labeled badges:
+### Architecture
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ 🌐 Wikipedia · Wikidata    ⚙ Gemini 2.5 Flash    👤 3 topics │
-│ ▸ How this was generated                                       │
-└──────────────────────────────────────────────────────────┘
+Edge Function (uor-knowledge)
+  ├── fetchWikipedia()        ← existing
+  ├── fetchWikidataFacts()    ← existing, enhance P18 → image URL
+  ├── fetchCommonsMedia()     ← NEW: images, audio, video from Commons
+  └── SSE stream
+       └── wiki event now includes:
+           media: {
+             images: [{ url, caption, uorHash, source }],
+             videos: [{ youtubeId, title, uorHash }],
+             audio?: [{ url, title, uorHash }]
+           }
 ```
 
-- **Web sources** badge: count of external sources used
-- **AI model** badge: which model synthesized the content (from edge function metadata)
-- **User context** badge: if personalization was active, shows "Personalized · N topics" — clicking reveals which recent searches influenced the article
+### Changes
 
-Collapsed by default (just the badges). Expandable to show a 2-3 line explanation: "This article was synthesized by Gemini 2.5 Flash using 2 web sources (Wikipedia, Wikidata) and personalized based on your recent exploration of [quantum mechanics, photosynthesis]. All facts marked with [N] link to their original source."
+#### 1. Edge function: `supabase/functions/uor-knowledge/index.ts`
 
-#### 3. Enhance InlineCitation popover with richer metadata
+**New function `fetchCommonsMedia(term, qid)`:**
+- Query Wikimedia Commons API for images related to the topic: `action=query&generator=images` on the Wikipedia page
+- Also resolve Wikidata P18 (Image) property to a full Wikimedia Commons URL via the standard filename→URL formula
+- Return up to 4-6 images with captions and URLs
+- Query YouTube oembed for 1-2 relevant educational videos (search term + "explained" or "documentary")
 
-**File:** `src/modules/oracle/components/InlineCitation.tsx`
+**Updated SSE `wiki` event:** Add `media` field containing `images[]`, `videos[]`, and optionally `audio[]`. Each entry has a `uorHash` (fnv1a of URL) for content-addressing.
 
-Upgrade the popover to include:
-- **Source title** (not just domain) — e.g., "Quantum mechanics - Wikipedia" 
-- **Source type badge** — color-coded pill: `Wikipedia` (blue), `Wikidata` (green), `Web` (gray)
-- **"Open source" button** — explicit button text instead of relying on the user knowing to click the URL
-- **UOR hash** stays as the subtle anchor at the bottom
+#### 2. New component: `src/modules/oracle/components/MediaGallery.tsx`
 
-Also add touch support: on mobile, tap toggles the popover (currently only hover works).
+Shared component for rendering media across lenses:
+- **ImageGallery**: Responsive grid of images with captions, lazy loading, lightbox on click. Each image shows a subtle `uor:hash` badge on hover
+- **VideoEmbed**: YouTube iframe embed with privacy-enhanced mode, 16:9 aspect ratio, rounded corners
+- **AudioPlayer**: Simple HTML5 audio player for Wikimedia audio clips (pronunciation, etc.)
 
-#### 4. Extend SourceMeta with title field
+#### 3. Lens-specific media integration
 
-**File:** `src/modules/oracle/lib/citation-parser.ts`
+Each lens gets media placed differently, matching its character:
 
-Add `title?: string` to `SourceMeta`. Update `normalizeSource` to accept and pass through the title when available. This flows from edge function → SSE → client → popover.
+| Lens | Media Treatment |
+|------|----------------|
+| **Encyclopedia** | Infobox already has thumbnail. Add a "Media" section after the article body with a 2-3 column image grid and video embed. Scholarly, caption-heavy |
+| **Magazine** | Full-bleed hero image at top (largest Commons image). Mid-article image breaks between sections. Video at end as "Watch More" |
+| **Storyteller** | Cinematic: large images between story chapters as "scene breaks". Video as an epilogue |
+| **Explain-like-5** | Fun: images with emoji-decorated captions in pastel callout cards. Video as "Watch and Learn! 🎬" |
+| **Expert** | Compact: small figure thumbnails in the margin/inline. Diagrams preferred. Video in a collapsible "Supplementary Materials" section |
 
-#### 5. Update stream-knowledge to carry richer source metadata
+#### 4. Update `stream-knowledge.ts`
 
-**File:** `src/modules/oracle/lib/stream-knowledge.ts`
+Extend `WikiMeta` interface to include `media` field. Pass through to renderers.
 
-The `onWiki` callback currently receives `sources: string[]`. Update to accept `sources: Array<string | { url: string; title?: string; type?: string }>` and normalize them in the handler. Backward compatible — plain strings still work.
+#### 5. Update `LensRendererProps` interface
 
-#### 6. Add SourcesPills + ProvenanceBanner to narrative lenses
+Add optional `media` prop to all lens renderers. Each renderer checks for available media and renders it in its lens-appropriate style.
 
-**Files:** `MagazineLensRenderer.tsx`, `StoryLensRenderer.tsx`, `SimpleLensRenderer.tsx`
+#### 6. Update `ContextualArticleView.tsx` and `HumanContentView.tsx`
 
-These lenses currently have zero citation UI. Add:
-- `SourcesPills` at the top (same as encyclopedia/expert)
-- Citations via `CitedMarkdown` instead of raw `ReactMarkdown`
-- A compact references footer at the bottom
+Pass `media` data from the wiki metadata through to the active lens renderer.
 
-The narrative lenses keep their visual identity — the citations are subtle superscripts that don't break the magazine/story/simple reading flow.
+### Per-Lens Media Placement Detail
 
-#### 7. Edge function: emit model metadata in wiki event
+**Magazine** — The most media-rich:
+- Hero image below title/above pull-quote (full width, 400px max height, cover crop)
+- Section break images after every 2nd `## heading` (alternating left/right float)
+- Video embed before References footer
 
-**File:** `supabase/functions/uor-knowledge/index.ts`
+**Storyteller** — Cinematic scene breaks:
+- Large centered image after 1st chapter heading (captioned as "scene setter")
+- Subsequent images as full-width dividers between chapters
+- No video inline (would break narrative); optional at end
 
-Add `model: "gemini-2.5-flash"` and `personalized: boolean` fields to the SSE `wiki` event payload. The client uses these to populate the ProvenanceBanner.
+**Simple (ELI5)** — Playful integration:
+- Images in colorful rounded cards with fun captions ("Look at this! 👀")
+- Video in a "Watch and Learn" card with play button overlay
+- Max 2-3 images to keep it focused
 
-### What the User Sees
+**Expert** — Minimal, reference-style:
+- Small figure thumbnails (150px) floated right with "Fig. N" labels
+- Collapsible "Supplementary Media" section at end
 
-1. **Sources appear instantly** at top — favicon pills showing Wikipedia, Wikidata
-2. **Provenance banner** below sources: "🌐 2 sources · ⚙ AI synthesized · 👤 Personalized" — one line, always visible, expandable for details
-3. **Text streams with subtle citations** — superscript markers after factual claims, even in magazine/story lenses (but fewer, tasteful)
-4. **Tap/hover any marker** → popover with source title, type badge, one-tap "Open source" link, UOR hash
-5. **Context transparency** — if personalized, the banner shows which recent searches influenced the content
-6. **References footer** — numbered list at bottom of every lens, with source titles and UOR hashes
-7. **Never overwhelming** — the provenance layer is opt-in depth. The default reading experience is clean. Citations are 0.7em superscript, provenance banner is one line.
+**Encyclopedia** — Already has infobox thumbnail. Add:
+- Additional images in a grid below the article
+- Video embed in a "Media" section
+
+### UOR Framework Integration
+
+Every media asset gets:
+- `uorHash`: fnv1a content-address of the URL
+- `source`: provenance tag ("wikimedia-commons", "wikidata-p18", "youtube")
+- These are displayed as subtle badges on hover, maintaining the UOR identity space
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/uor-knowledge/index.ts` | Add citations to all lenses; emit title + model metadata in SSE |
-| `src/modules/oracle/components/ProvenanceBanner.tsx` | **New** — provenance transparency banner |
-| `src/modules/oracle/components/InlineCitation.tsx` | Richer popover with title, type badge, open button, touch support |
-| `src/modules/oracle/lib/citation-parser.ts` | Add `title` to SourceMeta |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Accept richer source objects |
-| `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` | Add SourcesPills, CitedMarkdown, references footer |
-| `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` | Add SourcesPills, CitedMarkdown, references footer |
-| `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` | Add SourcesPills, CitedMarkdown, references footer |
-| `src/modules/oracle/components/WikiArticleView.tsx` | Add ProvenanceBanner |
-| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | Add ProvenanceBanner |
+| `supabase/functions/uor-knowledge/index.ts` | Add `fetchCommonsMedia()`, resolve P18 images, YouTube oembed; emit `media` in SSE |
+| `src/modules/oracle/components/MediaGallery.tsx` | **New** — ImageGallery, VideoEmbed, AudioPlayer components |
+| `src/modules/oracle/lib/stream-knowledge.ts` | Extend `WikiMeta` with `media` field |
+| `src/modules/oracle/components/WikiArticleView.tsx` | Add media section after article body |
+| `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` | Hero image, section break images, video |
+| `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` | Cinematic scene-break images |
+| `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` | Playful image cards, video card |
+| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | Figure thumbnails, supplementary section |
+| `src/modules/oracle/components/ContextualArticleView.tsx` | Pass media to lens renderers |
+| `src/modules/oracle/components/HumanContentView.tsx` | Extract and pass media from wiki metadata |
 
