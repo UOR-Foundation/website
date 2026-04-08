@@ -146,13 +146,19 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target) &&
+          !(anchorRef?.current && anchorRef.current.contains(target))) {
         onClose();
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, onClose]);
+    // Delay to avoid catching the opening click
+    const timer = setTimeout(() => document.addEventListener("mousedown", handler), 50);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [open, onClose, anchorRef]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
