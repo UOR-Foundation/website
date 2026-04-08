@@ -120,6 +120,9 @@ const HUMAN_LABEL_MAP: Record<string, string> = {
   "uor:position": "Position",
   "uor:proofAddress": "Proof Address",
   "uor:proofCid": "Proof CID",
+  "uor:sources": "Sources",
+  "uor:synthesizedAt": "Synthesized",
+  "uor:description": "Description",
 };
 
 function humanLabel(key: string): string {
