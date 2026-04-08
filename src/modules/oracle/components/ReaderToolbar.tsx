@@ -1,13 +1,13 @@
 /**
  * ReaderToolbar — Minimal floating toolbar for full-screen reader mode.
- * Shows back button, triword label, type badge, lens switcher, and details toggle.
- * Supports `immersive` prop for glass-like translucent styling.
+ * On mobile + immersive: auto-hides after 2s, tap to reveal, compact layout.
  */
 
-import React from "react";
-import { ArrowLeft, Info } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ArrowLeft, Info, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ReaderToolbarProps {
   triwordDisplay: string;
@@ -20,6 +20,9 @@ interface ReaderToolbarProps {
   immersive?: boolean;
 }
 
+const AUTO_HIDE_DELAY = 2500;
+const REVEAL_DURATION = 3000;
+
 const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   triwordDisplay,
   typeLabel,
@@ -30,6 +33,88 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   synthesizing = false,
   immersive = false,
 }) => {
+  const isMobile = useIsMobile();
+  const shouldAutoHide = isMobile && immersive;
+  const [visible, setVisible] = useState(true);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetHideTimer = useCallback(() => {
+    if (!shouldAutoHide) return;
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setVisible(true);
+    hideTimer.current = setTimeout(() => setVisible(false), REVEAL_DURATION);
+  }, [shouldAutoHide]);
+
+  // Initial auto-hide
+  useEffect(() => {
+    if (!shouldAutoHide) { setVisible(true); return; }
+    hideTimer.current = setTimeout(() => setVisible(false), AUTO_HIDE_DELAY);
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current); };
+  }, [shouldAutoHide]);
+
+  // Tap-to-reveal handler on the page
+  useEffect(() => {
+    if (!shouldAutoHide) return;
+    const handler = () => {
+      if (!visible) resetHideTimer();
+    };
+    document.addEventListener("touchstart", handler, { passive: true });
+    return () => document.removeEventListener("touchstart", handler);
+  }, [shouldAutoHide, visible, resetHideTimer]);
+
+  // Mobile immersive: show a minimal pull-down indicator when hidden
+  if (shouldAutoHide && !visible) {
+    return (
+      <div className="sticky top-0 z-40 flex justify-center pt-[env(safe-area-inset-top,0px)]">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-10 h-1 rounded-full bg-white/20 mt-2 mb-1"
+          onClick={resetHideTimer}
+        />
+      </div>
+    );
+  }
+
+  // Compact mobile immersive toolbar
+  if (shouldAutoHide) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className="sticky top-0 z-40 flex items-center gap-2 px-3 py-1.5 backdrop-blur-2xl border-b border-white/[0.04]"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          paddingTop: "max(6px, env(safe-area-inset-top, 6px))",
+        }}
+      >
+        {/* Back */}
+        <button
+          onClick={onBack}
+          className="p-1.5 rounded-lg text-white/50 hover:text-white/90 hover:bg-white/10 transition-all shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+
+        {/* Triword only — no badge on mobile */}
+        <span className="text-sm font-display font-medium truncate tracking-wide text-white/70 flex-1 min-w-0">
+          {triwordDisplay}
+        </span>
+
+        {/* Details toggle */}
+        <button
+          onClick={onToggleDetails}
+          className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all shrink-0"
+        >
+          <Info className="w-3.5 h-3.5" />
+        </button>
+      </motion.div>
+    );
+  }
+
+  // Default toolbar (desktop or non-immersive)
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
