@@ -20,6 +20,7 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AddressCommunity } from "@/modules/oracle/components/AddressCommunity";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -1774,6 +1775,9 @@ const SearchPage = () => {
                 )}
 
 
+
+                {/* ── Community Social Layer ── */}
+                <AddressCommunity cid={result.receipt.cid} />
 
               </motion.div>
             )}
