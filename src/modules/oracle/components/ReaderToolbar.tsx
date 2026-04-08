@@ -488,6 +488,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             </div>
           );
         })}
+      </div>
 
       {/* ── Details toggle — anchored at bottom-right, top flush with toolbar bottom ── */}
       <button
