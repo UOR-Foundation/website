@@ -8,8 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ArrowRight, Plus, Lock } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Plus } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useAuth } from "@/hooks/use-auth";
