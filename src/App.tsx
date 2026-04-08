@@ -33,6 +33,7 @@ const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage")
 const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
 const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
+const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
