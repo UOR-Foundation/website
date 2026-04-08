@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useIsInsideWindow } from "@/modules/desktop/WindowContext";
+import { useIsInsideWindow, useWindowInitialQuery } from "@/modules/desktop/WindowContext";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 import { extractSemantics, parseWikipediaUrl, fetchWikiSummary, extractWikiInfobox } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
@@ -433,6 +433,7 @@ function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) =
 
 const SearchPage = () => {
   const inWindow = useIsInsideWindow();
+  const windowInitialQuery = useWindowInitialQuery();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
@@ -643,6 +644,13 @@ const SearchPage = () => {
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
     if (addr) { setInput(addr); handleSearch(addr); }
   }, [searchParams, wasmReady]);
+
+  // When opened inside a desktop window with a query, trigger search automatically
+  useEffect(() => {
+    if (!wasmReady || !inWindow || !windowInitialQuery) return;
+    const q = windowInitialQuery.trim();
+    if (q) { setInput(q); handleSearch(q); }
+  }, [wasmReady, inWindow, windowInitialQuery]);
 
   // Portal redemption: handle ?portal= param
   useEffect(() => {

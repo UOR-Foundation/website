@@ -1,12 +1,30 @@
 import { createContext, useContext } from "react";
 
-const WindowContext = createContext(false);
+interface WindowContextValue {
+  insideWindow: boolean;
+  initialQuery?: string;
+}
 
-export const WindowContextProvider = ({ children }: { children: React.ReactNode }) => (
-  <WindowContext.Provider value={true}>{children}</WindowContext.Provider>
+const WindowContext = createContext<WindowContextValue>({ insideWindow: false });
+
+export const WindowContextProvider = ({
+  children,
+  initialQuery,
+}: {
+  children: React.ReactNode;
+  initialQuery?: string;
+}) => (
+  <WindowContext.Provider value={{ insideWindow: true, initialQuery }}>
+    {children}
+  </WindowContext.Provider>
 );
 
 /** Returns true when the component is rendered inside a DesktopWindow. */
 export function useIsInsideWindow() {
-  return useContext(WindowContext);
+  return useContext(WindowContext).insideWindow;
+}
+
+/** Returns the initial query passed to the window when it was opened. */
+export function useWindowInitialQuery() {
+  return useContext(WindowContext).initialQuery;
 }
