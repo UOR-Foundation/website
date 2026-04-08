@@ -49,6 +49,33 @@ export type Database = {
           },
         ]
       }
+      address_forks: {
+        Row: {
+          child_cid: string
+          created_at: string
+          fork_note: string | null
+          id: string
+          parent_cid: string
+          user_id: string
+        }
+        Insert: {
+          child_cid: string
+          created_at?: string
+          fork_note?: string | null
+          id?: string
+          parent_cid: string
+          user_id: string
+        }
+        Update: {
+          child_cid?: string
+          created_at?: string
+          fork_note?: string | null
+          id?: string
+          parent_cid?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       address_reactions: {
         Row: {
           address_cid: string
