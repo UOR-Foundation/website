@@ -2198,6 +2198,15 @@ const SearchPage = () => {
                         }}
                       >
                         <div className={immersiveMode ? `[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50 ${mobileImmersive ? "[&_p]:!text-[17px] [&_p]:!leading-[1.85] [&_li]:!text-[17px]" : ""}` : ""}>
+                          {/* Lens suggestion from coherence engine */}
+                          {coherenceState?.suggestedLens && coherenceState.suggestedLens !== activeLens && !lensSuggestionDismissed && (
+                            <LensSuggestion
+                              suggestedLens={coherenceState.suggestedLens}
+                              reason={coherenceState.suggestedLensReason || ""}
+                              onAccept={() => handleLensChange(coherenceState.suggestedLens!)}
+                              onDismiss={() => setLensSuggestionDismissed(true)}
+                            />
+                          )}
                           <HumanContentView
                             source={result.source}
                             synthesizing={result.synthesizing}
@@ -2205,6 +2214,7 @@ const SearchPage = () => {
                             activeLens={activeLens}
                             onLensChange={handleLensChange}
                             isReaderMode
+                            novelty={coherenceState?.novelty || null}
                           />
                         </div>
                       </div>
