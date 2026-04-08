@@ -1,50 +1,31 @@
 
 
-## Fix: Remove Lens Toggles from Resolved Address Pages
+## Expand Encyclopedia Lens with High-Trust Sources
 
-### The Insight
+### Context
 
-You are correct. Each lens produces fundamentally different content (different text, different structure), which means each lens output hashes to a **different UOR address**. A lens toggle on a resolved address page is architecturally wrong — it mutates the content behind a supposedly immutable address.
+The encyclopedia lens currently lists only two `recommendedSources`: Wikipedia and Britannica. These entries serve as source-quality metadata and search domain hints. The change is a single-file edit to `knowledge-lenses.ts`.
 
-The correct model: the lens is chosen at **generation time** (in the search bar or as a parameter), and the resulting content gets its own permanent address. Once you're viewing a resolved address, you're viewing one specific content object. The only valid toggle is **presentation format** (Human vs Machine vs Copy) — which changes how you *see* the same bytes, not the bytes themselves.
+### Curated Sources to Add
 
-### What Changes
+All selected sources are free/open-access or have publicly queryable APIs, editorially reviewed, and widely cited in academic and reference contexts:
 
-1. **Remove lens tabs from the Oracle/profile page** (`ContextualArticleView.tsx`)
-   - Remove the entire lens switcher row (Encyclopedia, Magazine, Simple, Deep Dive, Story, Compute, etc.)
-   - Remove the lens inspector button and the LensInspector panel
-   - Keep only the content rendering — always use the lens that was active when the content was generated
+| Domain | Reason | Quality Score | Notes |
+|--------|--------|--------------|-------|
+| `plato.stanford.edu` | Stanford Encyclopedia of Philosophy — peer-reviewed by subject experts | 96 | Gold-standard for humanities/philosophy |
+| `scholar.google.com` | Broad academic search across all disciplines | 93 | Aggregates peer-reviewed papers |
+| `pubmed.ncbi.nlm.nih.gov` | US National Library of Medicine — biomedical research | 96 | Government-backed, comprehensive |
+| `worldcat.org` | World's largest library catalog (OCLC) | 90 | Authoritative bibliographic data |
+| `loc.gov` | US Library of Congress — primary sources and reference | 94 | Government institution, archival authority |
+| `jstor.org` | Digital library of academic journals and books | 92 | Scholarly, peer-reviewed content |
 
-2. **Remove lens tabs from the Reader toolbar** (`ReaderToolbar.tsx`)
-   - Remove the "Lenses" label and the row of lens pill buttons at the bottom of the toolbar
-   - The toolbar keeps: back, address/triword, copy, type badge, and the details toggle
+### File Change
 
-3. **Keep the Human / Machine / Copy toggle** (already exists in the Oracle profile view at lines 2563-2574 of `ResolvePage.tsx`)
-   - This is the correct abstraction: same content, different presentation format
+**`src/modules/oracle/lib/knowledge-lenses.ts`** — Add 6 entries to the encyclopedia blueprint's `recommendedSources` array (lines 74-77), bringing total from 2 to 8.
 
-4. **Move lens selection to the search/generation phase** (no code change needed now)
-   - `handleLensChange` currently re-streams content — this will be removed
-   - The `activeLens` will be set once at search time (defaulting to "encyclopedia") and locked thereafter
-   - Future: the search bar could offer a lens picker *before* generating
+### What This Does NOT Change
 
-5. **Clean up related state** in `ResolvePage.tsx`
-   - Remove `handleLensChange` callback and stop passing it to child components
-   - `activeLens` stays as internal state for the initial generation, but is no longer changeable post-resolve
-   - Remove coherence engine's `recordLensSwitch` calls
-
-### Files Affected
-
-| File | Change |
-|------|--------|
-| `ReaderToolbar.tsx` | Remove lens pill row (~lines 456-510) |
-| `ContextualArticleView.tsx` | Remove lens switcher (~lines 137-189), inspector panel, related props |
-| `HumanContentView.tsx` | Remove `activeLens` / `onLensChange` prop forwarding |
-| `ResolvePage.tsx` | Remove `handleLensChange`, stop passing `onLensChange` to children |
-
-### What This Preserves
-
-- The lens system itself (blueprints, renderers) — still used during generation
-- The Human/Machine/Copy presentation toggle on the profile page
-- The `activeLens` state for controlling which renderer displays the already-generated content
-- All existing address computation and identity logic
+- No new API integrations or edge functions — these are metadata/hints used by the search and rendering pipeline
+- Other lenses remain unchanged
+- The `lens-intelligence.ts` domain-specific sources are separate and unaffected
 
