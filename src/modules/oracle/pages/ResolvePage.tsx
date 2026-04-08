@@ -12,6 +12,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
@@ -1650,7 +1651,7 @@ const SearchPage = () => {
                     <AnimatePresence mode="wait">
                       {contentViewMode === "human" ? (
                         <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-xl p-6 border border-border/15 space-y-4 max-h-[60vh] overflow-y-auto">
-                          {renderHumanView(result.source)}
+                          <HumanContentView source={result.source} />
                         </motion.div>
                       ) : (
                         <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
