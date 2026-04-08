@@ -27,6 +27,7 @@ interface WikiArticleViewProps {
   sources: string[];
   synthesizing?: boolean;
   media?: MediaData;
+  immersive?: boolean;
 }
 
 interface TocEntry {
@@ -455,11 +456,13 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   sources,
   synthesizing = false,
   media,
+  immersive = false,
 }) => {
   const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
+  const isWideImmersive = immersive && typeof window !== "undefined" && window.innerWidth >= 1024;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
-  const markdownComponents = useMemo(() => createMarkdownComponents(), []);
+  const markdownComponents = useMemo(() => createMarkdownComponents(immersive), [immersive]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   // Show skeleton only when synthesizing AND no content yet
