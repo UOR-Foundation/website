@@ -17,6 +17,7 @@ export interface WikiMeta {
 export async function streamKnowledge({
   keyword,
   context,
+  lens,
   onWiki,
   onDelta,
   onDone,
@@ -25,6 +26,8 @@ export async function streamKnowledge({
   keyword: string;
   /** Recent search keywords for contextual personalization */
   context?: string[];
+  /** Rendering lens ID (e.g. "encyclopedia", "magazine", "expert") */
+  lens?: string;
   onWiki: (wiki: WikiMeta | null, sources: string[]) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
@@ -36,7 +39,11 @@ export async function streamKnowledge({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ keyword, context: context?.length ? context : undefined }),
+    body: JSON.stringify({
+      keyword,
+      context: context?.length ? context : undefined,
+      lens: lens || undefined,
+    }),
   });
 
   if (!resp.ok || !resp.body) {

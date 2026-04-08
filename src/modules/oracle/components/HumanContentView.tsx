@@ -109,9 +109,13 @@ interface HumanContentViewProps {
   synthesizing?: boolean;
   /** Recent search keywords for contextual personalization */
   contextKeywords?: string[];
+  /** Active rendering lens ID */
+  activeLens?: string;
+  /** Callback when user switches lens */
+  onLensChange?: (lensId: string) => void;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [] }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -299,6 +303,8 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           sources={sources}
           synthesizing={synthesizing}
           contextKeywords={contextKeywords}
+          activeLens={activeLens}
+          onLensChange={onLensChange}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />

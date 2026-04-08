@@ -25,6 +25,7 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { isValidTriword } from "@/lib/uor-triword";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { streamKnowledge, type WikiMeta } from "@/modules/oracle/lib/stream-knowledge";
+import { DEFAULT_LENS } from "@/modules/oracle/lib/knowledge-lenses";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
@@ -393,7 +394,7 @@ const SearchPage = () => {
 
   // Context personalization state
   const [contextKeywords, setContextKeywords] = useState<string[]>([]);
-
+  const [activeLens, setActiveLens] = useState(DEFAULT_LENS);
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   // Compute suggestions when input changes (triword only, not IPv6)
@@ -640,7 +641,7 @@ const SearchPage = () => {
   };
 
   /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
-  const handleKeywordResolve = async (keyword: string) => {
+  const handleKeywordResolve = async (keyword: string, lensOverride?: string) => {
     // ── Fetch user context for personalization ──
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
@@ -702,6 +703,7 @@ const SearchPage = () => {
     await streamKnowledge({
       keyword,
       context: recentContext,
+      lens: lensOverride || activeLens,
       onWiki: (streamWiki, sources) => {
         // Update wiki metadata if the stream provides it (and we didn't get it already)
         if (streamWiki && !wiki) {
@@ -793,6 +795,16 @@ const SearchPage = () => {
       },
     });
   };
+
+  /** Switch rendering lens — re-stream the current keyword with a new perspective */
+  const handleLensChange = useCallback((lensId: string) => {
+    setActiveLens(lensId);
+    const src = result?.source as Record<string, unknown> | null;
+    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
+      handleKeywordResolve(keyword, lensId);
+    }
+  }, [result]);
 
   const submit = () => {
     handleSearch(input);
@@ -2070,7 +2082,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
