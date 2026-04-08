@@ -39,6 +39,7 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
   const groupedApps = useMemo(() => {
     const groups: Record<string, typeof DESKTOP_APPS> = {};
     for (const app of DESKTOP_APPS) {
+      if (app.hidden) continue;
       const cat = app.category;
       const label = OS_TAXONOMY[cat]?.label ?? cat;
       if (!groups[label]) groups[label] = [];

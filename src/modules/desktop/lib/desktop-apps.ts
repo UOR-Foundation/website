@@ -13,6 +13,8 @@ export interface DesktopApp {
   color: string; // accent color for dock glow
   /** OS taxonomy category grounded in UOR v0.2.0 modules. */
   category: OsCategory;
+  /** If true, app is available via openApp but hidden from Spotlight/dock. */
+  hidden?: boolean;
 }
 
 export const DESKTOP_APPS: DesktopApp[] = [
@@ -24,6 +26,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 960, h: 620 },
     color: "hsl(210 80% 60%)",
     category: "RESOLVE",
+    hidden: true,
   },
   {
     id: "oracle",
