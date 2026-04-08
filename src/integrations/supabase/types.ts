@@ -2416,6 +2416,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_attention_profiles: {
+        Row: {
+          avg_novelty_score: number | null
+          context_journal: Json | null
+          created_at: string | null
+          domain_history: Json | null
+          id: string
+          lens_preferences: Json | null
+          session_count: number | null
+          total_dwell_seconds: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_novelty_score?: number | null
+          context_journal?: Json | null
+          created_at?: string | null
+          domain_history?: Json | null
+          id?: string
+          lens_preferences?: Json | null
+          session_count?: number | null
+          total_dwell_seconds?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_novelty_score?: number | null
+          context_journal?: Json | null
+          created_at?: string | null
+          domain_history?: Json | null
+          id?: string
+          lens_preferences?: Json | null
+          session_count?: number | null
+          total_dwell_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_data_bank: {
         Row: {
           byte_length: number

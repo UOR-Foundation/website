@@ -44,6 +44,10 @@ import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
+import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
+import { getSearchHistory } from "@/modules/oracle/lib/search-history";
+import CoherenceIndicator from "@/modules/oracle/components/CoherenceIndicator";
+import LensSuggestion from "@/modules/oracle/components/LensSuggestion";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -488,6 +492,28 @@ const SearchPage = () => {
   const [activeLens, setActiveLens] = useState(DEFAULT_LENS);
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
+  // Coherence engine state
+  const [coherenceState, setCoherenceState] = useState<CoherenceState | null>(null);
+  const [lensSuggestionDismissed, setLensSuggestionDismissed] = useState(false);
+  const dwellStartRef = useRef<number>(0);
+  const dwellTopicRef = useRef<string>("");
+
+  // Track dwell time when result changes
+  useEffect(() => {
+    if (result && !result.synthesizing) {
+      const src = result.source as Record<string, unknown>;
+      const topic = (typeof src["uor:label"] === "string" ? src["uor:label"] : typeof src["uor:title"] === "string" ? src["uor:title"] : input) as string;
+      dwellStartRef.current = Date.now();
+      dwellTopicRef.current = topic;
+      return () => {
+        if (dwellStartRef.current && dwellTopicRef.current) {
+          const seconds = (Date.now() - dwellStartRef.current) / 1000;
+          if (seconds >= 3) recordDwell(dwellTopicRef.current, seconds);
+        }
+      };
+    }
+  }, [result?.receipt?.cid, result?.synthesizing]);
+
   // Compute suggestions when input changes (triword only, not IPv6)
   useEffect(() => {
     const trimmed = input.trim().toLowerCase();
@@ -808,6 +834,12 @@ const SearchPage = () => {
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
 
+    // ── Compute coherence for this topic ──
+    const history = await getSearchHistory(50);
+    const coherence = computeCoherence(keyword, history);
+    setCoherenceState(coherence);
+    setLensSuggestionDismissed(false);
+
     // ── Seed from speculative prefetch if available ──
     const cached = getCachedPrefetch(keyword);
     const seedContent = cached?.extract || "";
@@ -982,12 +1014,18 @@ const SearchPage = () => {
   /** Switch rendering lens — re-stream the current keyword with a new perspective */
   const handleLensChange = useCallback((lensId: string) => {
     setActiveLens(lensId);
+    setLensSuggestionDismissed(true);
     const src = result?.source as Record<string, unknown> | null;
     const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (keyword) {
+      // Record lens switch for coherence engine
+      const domain = coherenceState?.novelty?.domain || "general";
+      recordLensSwitch(keyword, lensId, domain);
+    }
     if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
       handleKeywordResolve(keyword, lensId);
     }
-  }, [result]);
+  }, [result, coherenceState]);
 
   const submit = () => {
     handleSearch(input);
@@ -1352,6 +1390,9 @@ const SearchPage = () => {
     <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+
+      {/* ── Coherence indicator (ambient session quality) ── */}
+      {coherenceState && result && <CoherenceIndicator coherence={coherenceState.sessionCoherence} />}
 
       {/* ── SoundCloud Music FAB (immersive only) ── */}
       {immersiveMode && <SoundCloudFab />}
@@ -2160,6 +2201,15 @@ const SearchPage = () => {
                         }}
                       >
                         <div className={immersiveMode ? `[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50 ${mobileImmersive ? "[&_p]:!text-[17px] [&_p]:!leading-[1.85] [&_li]:!text-[17px]" : ""}` : ""}>
+                          {/* Lens suggestion from coherence engine */}
+                          {coherenceState?.suggestedLens && coherenceState.suggestedLens !== activeLens && !lensSuggestionDismissed && (
+                            <LensSuggestion
+                              suggestedLens={coherenceState.suggestedLens}
+                              reason={coherenceState.suggestedLensReason || ""}
+                              onAccept={() => handleLensChange(coherenceState.suggestedLens!)}
+                              onDismiss={() => setLensSuggestionDismissed(true)}
+                            />
+                          )}
                           <HumanContentView
                             source={result.source}
                             synthesizing={result.synthesizing}
@@ -2167,6 +2217,7 @@ const SearchPage = () => {
                             activeLens={activeLens}
                             onLensChange={handleLensChange}
                             isReaderMode
+                            novelty={coherenceState?.novelty || null}
                           />
                         </div>
                       </div>
@@ -2502,7 +2553,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} novelty={coherenceState?.novelty || null} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

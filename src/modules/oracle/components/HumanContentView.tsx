@@ -17,6 +17,9 @@ import ContextualArticleView from "./ContextualArticleView";
 import SemanticWebTower from "./SemanticWebTower";
 import ExistingSemanticsBadge from "./ExistingSemanticsBadge";
 import InteropBadges from "./InteropBadges";
+import NoveltyBadge from "./NoveltyBadge";
+import SignalLeaders from "./SignalLeaders";
+import ContextJournal from "./ContextJournal";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
@@ -119,9 +122,11 @@ interface HumanContentViewProps {
   onLensChange?: (lensId: string) => void;
   /** When true, suppress duplicate controls (lens pills, context banner) */
   isReaderMode?: boolean;
+  /** Novelty result from the coherence engine */
+  novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false, novelty = null }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -189,25 +194,26 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
       {!isKnowledgeCard && (
         <>
           <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {rawType && typeStyle && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: "ui-monospace, 'SF Mono', monospace",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  color: typeStyle.color,
-                  background: typeStyle.bg,
-                  padding: "3px 10px",
-                  borderRadius: 6,
-                  alignSelf: "flex-start",
-                }}
-              >
-                {rawType}
-              </span>
-            )}
-
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {rawType && typeStyle && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "ui-monospace, 'SF Mono', monospace",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.15em",
+                    fontWeight: 600,
+                    color: typeStyle.color,
+                    background: typeStyle.bg,
+                    padding: "3px 10px",
+                    borderRadius: 6,
+                  }}
+                >
+                  {rawType}
+                </span>
+              )}
+              {novelty && <NoveltyBadge novelty={novelty} />}
+            </div>
             {wikidata ? (
               <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -358,6 +364,12 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
         objectType={rawType || undefined}
         hasWikidata={!!(wikidata?.qid)}
       />
+
+      {/* ── Signal Leaders — curated thought leaders for this domain ── */}
+      {novelty && <SignalLeaders domain={novelty.domain} />}
+
+      {/* ── Context Journal — transparent private context window ── */}
+      <ContextJournal />
 
       {/* ── Metadata footer ── */}
       {metaEntries.length > 0 && (
