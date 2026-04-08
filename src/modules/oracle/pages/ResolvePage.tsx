@@ -432,7 +432,7 @@ const SearchPage = () => {
                       </motion.div>
                     )}
                   </div>
-                })}
+                ))}
 
                 {aiStreaming && aiMessages[aiMessages.length - 1]?.role !== "assistant" && (
                   <div className="flex justify-start">
