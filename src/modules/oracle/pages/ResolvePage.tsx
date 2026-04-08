@@ -513,6 +513,48 @@ const SearchPage = () => {
                   </div>
                 </motion.div>
 
+                {/* ── Continue / Discuss in Oracle CTA ── */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.08 }}
+                >
+                  <button
+                    onClick={() => {
+                      const src = result.source as Record<string, unknown> | null;
+                      const isOracle = src?.["@type"] === "uor:OracleExchange";
+
+                      if (isOracle) {
+                        const query = (src?.["uor:query"] as string) ?? "";
+                        const response = (src?.["uor:response"] as string) ?? "";
+                        setAiMessages([
+                          { role: "user", content: query },
+                          { role: "assistant", content: response, proof: result.receipt },
+                        ]);
+                      } else {
+                        const summary = JSON.stringify(result.source, null, 2).slice(0, 600);
+                        setAiMessages([
+                          {
+                            role: "user",
+                            content: `I discovered this content-addressed object:\n\n\`\`\`json\n${summary}\n\`\`\`\n\nHelp me understand or build on it.`,
+                          },
+                        ]);
+                      }
+
+                      setResult(null);
+                      setRederived(false);
+                      setAiMode(true);
+                      setTimeout(() => aiInputRef.current?.focus(), 150);
+                    }}
+                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/15 hover:border-primary/30 hover:from-primary/25 hover:to-primary/15 text-foreground/85 font-semibold text-sm tracking-wide transition-all group"
+                  >
+                    <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
+                      ? "Continue in Oracle →"
+                      : "Discuss in Oracle →"}
+                  </button>
+                </motion.div>
+
                 <div className="border-t border-border/10" />
 
                 {/* CONTENT */}
