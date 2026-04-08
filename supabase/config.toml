@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.book-resonance]
 verify_jwt = false
+
+[functions.portal-transfer]
+verify_jwt = false
