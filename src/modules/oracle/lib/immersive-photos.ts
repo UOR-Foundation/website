@@ -33,7 +33,7 @@ const PHASE_PHOTOS: Record<SolarPhase, PhotoEntry[]> = {
   deep_night: [
     p("photo-1444703686981-a3abbc4d4fe3", "Starry night sky over a mountain range"),
     p("photo-1507400492013-162706c8c05e", "Stars scattered across a clear night sky"),
-    p("photo-1536431311719-398b6704d40e", "Milky Way arching over a desert landscape"),
+    p("photo-1532978379173-523e16f371f2", "Milky Way arching over a desert landscape"),
     p("photo-1489549132488-d00b7eee80f1", "Dark mountain silhouette under night sky"),
   ],
   pre_dawn: [
@@ -99,7 +99,7 @@ const PHASE_PHOTOS: Record<SolarPhase, PhotoEntry[]> = {
   night: [
     p("photo-1444703686981-a3abbc4d4fe3", "Starry night sky over a mountain range"),
     p("photo-1507400492013-162706c8c05e", "Stars scattered across a clear night sky"),
-    p("photo-1536431311719-398b6704d40e", "Milky Way arching over a desert landscape"),
+    p("photo-1532978379173-523e16f371f2", "Milky Way arching over a desert landscape"),
     p("photo-1489549132488-d00b7eee80f1", "Dark mountain silhouette under night sky"),
   ],
 };
@@ -111,7 +111,7 @@ const PHASE_PHOTOS: Record<SolarPhase, PhotoEntry[]> = {
  */
 const HOURLY_FALLBACK: string[] = [
   /* 00 */ u("photo-1444703686981-a3abbc4d4fe3"),  // midnight stars
-  /* 01 */ u("photo-1536431311719-398b6704d40e"),  // deep night milky way
+  /* 01 */ u("photo-1532978379173-523e16f371f2"),  // deep night milky way
   /* 02 */ u("photo-1489549132488-d00b7eee80f1"),  // dark mountain night
   /* 03 */ u("photo-1507400492013-162706c8c05e"),  // late night stars
   /* 04 */ u("photo-1504608524841-42fe6f032b4b"),  // pre-dawn deep blue
@@ -133,7 +133,7 @@ const HOURLY_FALLBACK: string[] = [
   /* 20 */ u("photo-1488866022504-f2584929ca5f"),  // twilight lake
   /* 21 */ u("photo-1519681393784-d120267933ba"),  // early night stars
   /* 22 */ u("photo-1444703686981-a3abbc4d4fe3"),  // night sky
-  /* 23 */ u("photo-1536431311719-398b6704d40e"),  // late night milky way
+  /* 23 */ u("photo-1532978379173-523e16f371f2"),  // late night milky way
 ];
 
 function dayOfYear(): number {
