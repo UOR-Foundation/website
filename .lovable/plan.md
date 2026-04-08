@@ -1,48 +1,40 @@
 
 
-# Encoder: Turn the "+" Button into a Text Encoder
+## Assessment: WASM vs TypeScript Fallback
 
-## What We're Building
+### What's happening
 
-The `+` icon on the left side of the search bar becomes the gateway to encoding. When clicked, it opens an elegant encode mode where users paste any text and receive a unique, deterministic address — like getting a passport for their data.
+The encoding pipeline is **working correctly**. The "ts fallback" badge you see means the WASM binary (`uor_wasm_shim_bg.wasm`) failed to load at runtime, so the system fell back to the TypeScript ring engine — which produces **mathematically identical results**.
 
-## User Experience Flow
+The pipeline is:
 
 ```text
-1. User clicks "+" → search bar transforms into encode mode
-2. A text area slides in below the search bar for pasting content
-3. User pastes/types text → clicks "Encode" (or presses Enter)
-4. Encoding animation plays briefly
-5. Result appears: the same SERP view showing the address + source content
-6. The encoded content is now permanently registered and searchable
+User Input → JSON-LD → URDNA2015 → SHA-256 → Ring Enrichment (WASM or TS) → Address
 ```
 
-## Design Details
+The WASM module only handles Step 5 (ring operations like `classifyByte`, `factorize`, `verifyCriticalIdentity`). Steps 1–4 (canonicalization, hashing, CID generation, IPv6 projection) are always done in TypeScript regardless. The address you got is **deterministically correct** either way.
 
-- **Encode mode toggle**: Clicking "+" morphs the search bar area. The `+` icon rotates to `×` (close). The input placeholder changes to "Paste your text…". A textarea expands below with a subtle entrance animation.
-- **Encode button**: Replaces "UOR Search" with an "Encode" button styled with the primary color — a clear call to action. Subtle shimmer or glow to convey "something is being created."
-- **Encoding animation**: Brief loading bar (reuses existing loading bar) + a small confetti burst on success to celebrate the identity creation.
-- **Result**: Transitions directly to the existing result/SERP view showing the triword address, CID, IPv6, glyph, and source content. Toast: "✨ Your data has its address."
-- **Source object**: The text is wrapped in a canonical JSON-LD envelope (`@type: "uor:UserContent"`) before encoding, ensuring deterministic identity.
+### Why WASM fails to load
 
-## Technical Changes
+The WASM binary exists at `public/wasm/uor_wasm_shim_bg.wasm` and is a valid 27KB WebAssembly module. However, in the Lovable preview environment, the fetch for `/wasm/uor_wasm_shim_bg.wasm` likely fails due to the preview server's MIME type or CORS configuration. When this happens, `loadWasm()` catches the error, sets `wasmFailed = true`, and all subsequent `bridge.*` calls route to the identical TypeScript implementations.
 
-### File: `src/modules/oracle/pages/ResolvePage.tsx`
+### Proposed plan
 
-1. **New state**: `encodeMode` (boolean), `encodeText` (string)
-2. **"+" button** (line 650): `onClick` toggles `encodeMode`. When active, icon rotates to `X`.
-3. **Conditional UI**: When `encodeMode` is true:
-   - Hide the main search input and right-side buttons
-   - Show a textarea (auto-focus, monospace, ~4 rows, expandable) with placeholder "Paste or type any text…"
-   - Show an "Encode" button below (primary styled, with a fingerprint/sparkle icon)
-4. **Encode handler**: 
-   - Wraps text in `{ "@context": "https://schema.uor.foundation/v1", "@type": "uor:UserContent", "uor:content": text, "uor:encodedAt": ISO timestamp }`
-   - Calls `encode(obj)` from `uor-codec`
-   - Sets `result` with the receipt → transitions to SERP view
-   - Fires small confetti + success toast
-   - Exits encode mode
-5. **Animation**: The textarea entrance uses framer-motion (slide down, fade in). The `+` to `×` rotation is a CSS transform transition.
+**No code changes are needed for correctness.** The TypeScript fallback is not a degraded mode — it is the same math. However, to improve transparency and reduce confusion, I propose:
 
-### No other files need changes
-The existing `encode()` pipeline, receipt registry, and result view handle everything. The encoder just provides a new entry point into the same system.
+1. **Improve the engine badge UX** — Instead of showing a yellow "ts fallback" dot (which implies something is wrong), show a neutral "TypeScript Engine" or "WASM Engine" label without alarm coloring. Both are first-class engines.
+
+2. **Add a retry mechanism** — When WASM fails on first load, try once more after a short delay. Some preview environments take a moment to serve static assets.
+
+3. **Log clearer diagnostics** — Surface the specific WASM load error in the encode overlay's status bar (e.g., "WASM unavailable: fetch 404") so developers can diagnose environment issues.
+
+### Technical details
+
+- File: `src/modules/oracle/pages/ResolvePage.tsx` — Update the engine badge styling from warning-yellow to neutral
+- File: `src/lib/wasm/uor-bridge.ts` — Add a one-time retry with 500ms delay before setting `wasmFailed = true`
+- File: `src/modules/oracle/lib/receipt-registry.ts` — No changes needed; `enrichWithWasm` already correctly delegates via `bridge.engineType()`
+
+### Key takeaway
+
+Your "hello world" encoding produced a **correct, deterministic UOR address**. The triword, CID, IPv6, and derivation ID are all valid and identical regardless of which engine computed the ring enrichment. The "ts fallback" label is informational, not an error.
 
