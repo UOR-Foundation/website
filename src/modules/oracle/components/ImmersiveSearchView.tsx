@@ -89,6 +89,17 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
     if (q) onSearch(q);
   }, [query, onSearch]);
 
+  const handleVaultDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!vault.ready) return;
+    const files = Array.from(e.dataTransfer.files);
+    for (const file of files) {
+      const doc = await vault.importFile(file);
+      if (doc) toast.success(`Imported to vault: ${doc.filename}`);
+    }
+  }, [vault]);
+
   const displayName = profile?.displayName || "Explorer";
   const greeting = getGreeting();
 
@@ -99,6 +110,9 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
       className="fixed inset-0 z-50 flex flex-col"
+      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleVaultDrop}
     >
       {/* Background image */}
       <div className="absolute inset-0">
