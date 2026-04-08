@@ -73,6 +73,8 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const vault = useVault();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
+  const detected = useMemo(() => detectAddress(query), [query]);
+  const isAddress = detected.kind !== null;
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
