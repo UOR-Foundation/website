@@ -1,11 +1,23 @@
 /**
- * ReaderToolbar — Minimal floating toolbar for full-screen reader mode.
- * Mobile immersive: auto-hides after 2s, tap to reveal.
+ * ReaderToolbar — Browser-like address bar for the immersive reader.
  * Desktop immersive: auto-hides after 3s of mouse inactivity, mouse-to-top reveals.
+ * Designed to feel like a native browser chrome for seamless familiarity.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  RotateCcw,
+  Home,
+  Shield,
+  Star,
+  Share2,
+  Info,
+  Maximize2,
+  Minimize2,
+  Lock,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +36,7 @@ interface ReaderToolbarProps {
 const MOBILE_HIDE_DELAY = 2500;
 const MOBILE_REVEAL_DURATION = 3000;
 const DESKTOP_HIDE_DELAY = 3000;
-const DESKTOP_REVEAL_ZONE = 80; // px from top
+const DESKTOP_REVEAL_ZONE = 80;
 
 const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   triwordDisplay,
@@ -59,7 +71,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     hideTimer.current = setTimeout(() => setVisible(false), MOBILE_REVEAL_DURATION);
   }, [mobileAutoHide, clearTimer]);
 
-  // Initial auto-hide (mobile)
   useEffect(() => {
     if (!mobileAutoHide) return;
     startHideTimer(MOBILE_HIDE_DELAY);
@@ -108,9 +119,36 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </div>
       );
     }
-    // Desktop: invisible — mouse-to-top reveals
     return null;
   }
+
+  /* ── Shared icon button ── */
+  const IconBtn = ({
+    onClick,
+    title,
+    children,
+    disabled = false,
+    className = "",
+  }: {
+    onClick?: () => void;
+    title: string;
+    children: React.ReactNode;
+    disabled?: boolean;
+    className?: string;
+  }) => (
+    <button
+      onClick={onClick}
+      title={title}
+      disabled={disabled}
+      className={`p-1.5 rounded-md transition-all shrink-0 ${
+        immersive
+          ? `text-white/40 hover:text-white/80 hover:bg-white/[0.08] ${disabled ? "opacity-20 cursor-default" : ""}`
+          : `text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/15 ${disabled ? "opacity-20 cursor-default" : ""}`
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
 
   // ── Compact mobile immersive toolbar ──
   if (mobileAutoHide) {
@@ -120,26 +158,30 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="sticky top-0 z-40 flex items-center gap-2 px-3 py-1.5 backdrop-blur-2xl border-b border-white/[0.04]"
+        className="sticky top-0 z-40 flex items-center gap-1 px-2 py-1.5 backdrop-blur-2xl border-b border-white/[0.04]"
         style={{
           background: "rgba(255,255,255,0.06)",
           paddingTop: "max(6px, env(safe-area-inset-top, 6px))",
         }}
       >
-        <button onClick={onBack} className="p-1.5 rounded-lg text-white/50 hover:text-white/90 hover:bg-white/10 transition-all shrink-0">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <span className="text-sm font-display font-medium truncate tracking-wide text-white/70 flex-1 min-w-0">
-          {triwordDisplay}
-        </span>
-        <button onClick={onToggleDetails} className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all shrink-0">
-          <Info className="w-3.5 h-3.5" />
-        </button>
+        <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
+
+        {/* Address bar */}
+        <div className="flex-1 flex items-center gap-1.5 min-w-0 h-8 rounded-full px-3"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <Lock className="w-3 h-3 text-emerald-400/70 shrink-0" />
+          <span className="text-[13px] font-display truncate text-white/70 flex-1 min-w-0">
+            {triwordDisplay}
+          </span>
+        </div>
+
+        <IconBtn onClick={onToggleDetails} title="Details"><Info className="w-3.5 h-3.5" /></IconBtn>
       </motion.div>
     );
   }
 
-  // ── Desktop immersive toolbar (transparent, auto-hiding) ──
+  // ── Desktop immersive toolbar (browser-style chrome) ──
   if (desktopAutoHide) {
     return (
       <motion.div
@@ -147,24 +189,55 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
         transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center gap-3 px-6 py-2.5 backdrop-blur-2xl border-b border-white/[0.06]"
-        style={{ background: "rgba(0,0,0,0.25)" }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl border-b border-white/[0.06]"
+        style={{ background: "rgba(10,14,18,0.75)" }}
       >
-        <button onClick={onBack} className="p-1.5 rounded-lg text-white/50 hover:text-white/90 hover:bg-white/10 transition-all shrink-0" title="Back to search">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
+        {/* ── Browser chrome row ── */}
+        <div className="flex items-center gap-1.5 px-4 py-1.5">
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-0.5 mr-1">
+            <IconBtn onClick={onBack} title="Back (Alt+←)"><ArrowLeft className="w-4 h-4" /></IconBtn>
+            <IconBtn disabled title="Forward (Alt+→)"><ArrowRight className="w-4 h-4" /></IconBtn>
+            <IconBtn onClick={onBack} title="Reload"><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
+            <IconBtn onClick={onBack} title="Home"><Home className="w-4 h-4" /></IconBtn>
+          </div>
 
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className="text-sm font-display font-medium truncate tracking-wide text-white/70">
-            {triwordDisplay}
-          </span>
-          <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.1em] border bg-white/[0.08] text-white/50 border-white/[0.08]">
-            {typeLabel}
-          </span>
+          {/* ── Address bar ── */}
+          <div
+            className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 cursor-text group transition-all"
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "inset 0 1px 2px rgba(0,0,0,0.15)",
+            }}
+            title="Click to search"
+            onClick={onBack}
+          >
+            <Lock className="w-3.5 h-3.5 text-emerald-400/80 shrink-0" />
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+              <span className="text-[13px] text-white/40 shrink-0 select-none">uor://</span>
+              <span className="text-[13px] font-display tracking-wide text-white/80 truncate">
+                {triwordDisplay}
+              </span>
+              <span className="shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] bg-white/[0.06] text-white/35 border border-white/[0.06] ml-1">
+                {typeLabel}
+              </span>
+            </div>
+            <Shield className="w-3.5 h-3.5 text-white/25 shrink-0 group-hover:text-white/40 transition-colors" />
+          </div>
+
+          {/* ── Right-side actions ── */}
+          <div className="flex items-center gap-0.5 ml-1">
+            <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
+            <IconBtn title="Share" onClick={() => {}}><Share2 className="w-3.5 h-3.5" /></IconBtn>
+            <IconBtn onClick={onToggleDetails} title="Page info">
+              <Info className="w-4 h-4" />
+            </IconBtn>
+          </div>
         </div>
 
-        {/* Lens switcher */}
-        <div className="flex items-center gap-1">
+        {/* ── Lens bar (tab-like row beneath address bar) ── */}
+        <div className="flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
           {KNOWLEDGE_LENSES.map((lens) => {
             const isActive = lens.id === activeLens;
             return (
@@ -173,10 +246,10 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
                 onClick={() => !isActive && onLensChange(lens.id)}
                 disabled={synthesizing && isActive}
                 title={lens.description}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border ${
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all border ${
                   isActive
                     ? "bg-white/[0.12] text-white/90 border-white/[0.15]"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.06] border-transparent"
+                    : "text-white/35 hover:text-white/65 hover:bg-white/[0.06] border-transparent"
                 } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
               >
                 {lens.label}
@@ -184,42 +257,61 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             );
           })}
         </div>
-
-        <button
-          onClick={onToggleDetails}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border text-white/50 hover:text-white/80 border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06] transition-all shrink-0"
-          title="Show full details"
-        >
-          <Info className="w-3.5 h-3.5" />
-          <span>Details</span>
-        </button>
       </motion.div>
     );
   }
 
-  // ── Default toolbar (desktop non-immersive) ──
+  // ── Default toolbar (desktop non-immersive — also browser-style) ──
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-      className="sticky top-0 z-40 flex items-center gap-3 px-4 sm:px-6 py-2 backdrop-blur-2xl border-b border-border/5"
+      className="sticky top-0 z-40 backdrop-blur-2xl border-b border-border/5"
       style={{ background: "hsl(var(--background) / 0.82)" }}
     >
-      <button onClick={onBack} className="p-1.5 rounded-lg transition-all shrink-0 text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/15" title="Back to search">
-        <ArrowLeft className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-1.5 px-4 py-1.5">
+        {/* Navigation */}
+        <div className="flex items-center gap-0.5 mr-1">
+          <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
+          <IconBtn disabled title="Forward"><ArrowRight className="w-4 h-4" /></IconBtn>
+          <IconBtn onClick={onBack} title="Reload"><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
+          <IconBtn onClick={onBack} title="Home"><Home className="w-4 h-4" /></IconBtn>
+        </div>
 
-      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <span className="text-sm font-display font-medium truncate tracking-wide text-foreground/70">
-          {triwordDisplay}
-        </span>
-        <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.1em] border bg-accent/10 text-accent-foreground/60 border-accent/10">
-          {typeLabel}
-        </span>
+        {/* Address bar */}
+        <div
+          className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 cursor-text group transition-all"
+          style={{
+            background: "hsl(var(--muted) / 0.15)",
+            border: "1px solid hsl(var(--border) / 0.12)",
+            boxShadow: "inset 0 1px 2px hsl(var(--background) / 0.3)",
+          }}
+          onClick={onBack}
+        >
+          <Lock className="w-3.5 h-3.5 text-emerald-500/70 shrink-0" />
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+            <span className="text-[13px] text-muted-foreground/40 shrink-0 select-none">uor://</span>
+            <span className="text-[13px] font-display tracking-wide text-foreground/75 truncate">
+              {triwordDisplay}
+            </span>
+            <span className="shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] bg-accent/10 text-accent-foreground/50 border border-accent/10 ml-1">
+              {typeLabel}
+            </span>
+          </div>
+          <Shield className="w-3.5 h-3.5 text-muted-foreground/25 shrink-0 group-hover:text-muted-foreground/40 transition-colors" />
+        </div>
+
+        {/* Right-side */}
+        <div className="flex items-center gap-0.5 ml-1">
+          <IconBtn title="Bookmark"><Star className="w-4 h-4" /></IconBtn>
+          <IconBtn title="Share"><Share2 className="w-3.5 h-3.5" /></IconBtn>
+          <IconBtn onClick={onToggleDetails} title="Page info"><Info className="w-4 h-4" /></IconBtn>
+        </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-1">
+      {/* Lens bar */}
+      <div className="hidden md:flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
         {KNOWLEDGE_LENSES.map((lens) => {
           const isActive = lens.id === activeLens;
           return (
@@ -228,10 +320,10 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               onClick={() => !isActive && onLensChange(lens.id)}
               disabled={synthesizing && isActive}
               title={lens.description}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border ${
+              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all border ${
                 isActive
                   ? "bg-primary/12 text-primary border-primary/20"
-                  : "text-muted-foreground/40 hover:text-foreground/60 hover:bg-muted/10 border-transparent"
+                  : "text-muted-foreground/35 hover:text-foreground/55 hover:bg-muted/10 border-transparent"
               } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
             >
               {lens.label}
@@ -239,15 +331,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           );
         })}
       </div>
-
-      <button
-        onClick={onToggleDetails}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all shrink-0 text-muted-foreground/50 hover:text-foreground/70 border-border/15 hover:border-border/30 hover:bg-muted/15"
-        title="Show full details (profile view)"
-      >
-        <Info className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">Details</span>
-      </button>
     </motion.div>
   );
 };
