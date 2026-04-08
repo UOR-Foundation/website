@@ -34,10 +34,11 @@ export function useContainerWidth(): ContainerContextValue {
   return useContext(ContainerContext);
 }
 
-/** Compute body max width with golden-ratio-inspired padding */
+/** Compute body max width with φ-proportioned padding tiers */
 function computeBodyMax(containerWidth: number): number {
-  const padding = containerWidth < 480 ? 32 : containerWidth < 768 ? 48 : 64;
-  return Math.min(720, containerWidth - padding);
+  // φ-scale padding: 24 (narrow) / 40 (medium) / 64 (wide)
+  const padding = containerWidth < 480 ? 24 : containerWidth < 768 ? 40 : 64;
+  return Math.min(680, containerWidth - padding); // 680px ≈ 66 chars at 17px
 }
 
 interface AdaptiveContentContainerProps {

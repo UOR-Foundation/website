@@ -44,10 +44,11 @@ export const InlineFigure: React.FC<{
 }> = ({ image, variant = "full-width", className = "" }) => {
   const [showLightbox, setShowLightbox] = useState(false);
 
+  // φ-proportioned float widths: 38.2% of container
   const wrapperStyle: React.CSSProperties = variant === "float-right"
-    ? { float: "right", width: 280, marginLeft: 24, marginBottom: 16, marginTop: 4 }
+    ? { float: "right", width: "38.2%", maxWidth: 320, marginLeft: 26, marginBottom: 16, marginTop: 4 }
     : variant === "pull-left"
-      ? { float: "left", width: 260, marginRight: 24, marginBottom: 16, marginTop: 4 }
+      ? { float: "left", width: "38.2%", maxWidth: 300, marginRight: 26, marginBottom: 16, marginTop: 4 }
       : {};
 
   return (
@@ -57,21 +58,22 @@ export const InlineFigure: React.FC<{
         style={{ margin: 0, ...wrapperStyle }}
         onClick={() => setShowLightbox(true)}
       >
-        <div className="relative overflow-hidden rounded-lg">
+        <div className="relative overflow-hidden" style={{ borderRadius: 10 }}>
           <img
             src={image.url}
             alt={image.caption || ""}
             loading="lazy"
             className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${
-              variant === "full-width" ? "max-h-[400px]" : "max-h-[220px]"
+              variant === "full-width" ? "" : "max-h-[220px]"
             }`}
+            style={variant === "full-width" ? { aspectRatio: "1.618 / 1", maxHeight: 420 } : undefined}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
         {(image.caption || image.source) && (
           <figcaption
-            className="text-muted-foreground/50 mt-2 leading-snug flex items-baseline gap-1.5 flex-wrap"
-            style={{ fontSize: 12, fontStyle: "italic" }}
+            className="text-muted-foreground/50 leading-snug flex items-baseline gap-1.5 flex-wrap"
+            style={{ fontSize: 12, fontStyle: "italic", marginTop: 10 }}
           >
             {image.caption && <span>{image.caption}</span>}
             {image.source && image.source !== "wikimedia-commons" && (
