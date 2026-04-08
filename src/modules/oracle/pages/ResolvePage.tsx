@@ -24,8 +24,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
-import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
+import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib/receipt-registry";
 import { singleProofHash } from "@/lib/uor-canonical";
@@ -841,21 +841,19 @@ const SearchPage = () => {
 
   /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
   const handleKeywordResolve = async (keyword: string, lensOverride?: string) => {
-    // ── Fetch user context for personalization ──
-    const recentContext = await getRecentKeywords(15);
-    setContextKeywords(recentContext);
+    // ── Fire context queries in background (don't block first paint) ──
+    const contextPromise = Promise.all([
+      getRecentKeywords(15),
+      getSearchHistory(50),
+    ]);
 
-    // ── Compute coherence for this topic ──
-    const history = await getSearchHistory(50);
-    const coherence = computeCoherence(keyword, history);
-    setCoherenceState(coherence);
     setLensSuggestionDismissed(false);
 
     // ── Seed from speculative prefetch if available ──
     const cached = getCachedPrefetch(keyword);
     const seedContent = cached?.extract || "";
 
-    // ── Show partial card immediately — seeded with Wikipedia extract if available ──
+    // ── Show partial card INSTANTLY — no WASM encode, placeholder receipt ──
     const partialSource: Record<string, unknown> = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:KnowledgeCard",
@@ -865,15 +863,31 @@ const SearchPage = () => {
       "uor:sources": [],
     };
 
-    const partialReceipt = await encode(partialSource);
+    // Placeholder receipt — encode deferred to after stream completes
+    const placeholderReceipt: EnrichedReceipt = {
+      derivationId: "",
+      cid: "",
+      ipv6: "",
+      triword: "loading.knowledge.card",
+      triwordFormatted: "Loading · Knowledge · Card",
+      glyph: "",
+      ringPartition: "pending",
+      engine: "deferred",
+    } as EnrichedReceipt;
+
     setResult({
       source: { ...partialSource, "uor:synthesizedAt": new Date().toISOString() },
-      receipt: partialReceipt,
+      receipt: placeholderReceipt,
       isConfirmed: false,
       synthesizing: true,
     });
-    setInput(partialReceipt.triword);
     setLoading(false);
+
+    // ── Resolve context in background ──
+    const [recentContext, history] = await contextPromise;
+    setContextKeywords(recentContext);
+    const coherence = computeCoherence(keyword, history);
+    setCoherenceState(coherence);
 
     toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
 
@@ -882,27 +896,39 @@ const SearchPage = () => {
     const abortController = new AbortController();
     liveAbortRef.current = abortController;
 
-    // ── Stream AI synthesis (wiki metadata arrives via SSE) ──
+    // ── Stream AI synthesis with TokenBuffer for smooth rendering ──
     let accumulatedSynthesis = "";
     let wiki: WikiMeta | null = null;
     let streamSources: string[] = [];
     let provenanceMeta: { model?: string; personalized?: boolean; personalizedTopics?: string[] } = {};
     let mediaData: MediaData | null = null;
+
+    // TokenBuffer batches token renders at ~30fps instead of per-token
+    const tokenBuffer = new TokenBuffer((text: string) => {
+      setResult(prev => {
+        if (!prev) return prev;
+        const src = prev.source as Record<string, unknown>;
+        return {
+          ...prev,
+          source: { ...src, "uor:content": text },
+          synthesizing: true,
+        };
+      });
+    });
+    tokenBuffer.start();
+
     await streamKnowledge({
       keyword,
       context: recentContext,
       lens: lensOverride || activeLens,
       signal: abortController.signal,
       onWiki: (streamWiki, sources, provenance) => {
-        // Normalize rich source objects to URL strings
         const normalizedSources = sources.map((s: string | { url: string }) =>
           typeof s === "string" ? s : s.url
         );
         if (provenance) provenanceMeta = provenance;
-        // Update wiki metadata when it arrives from the SSE stream
         if (streamWiki) {
           wiki = streamWiki;
-          // Update the card with wiki data immediately
           setResult(prev => {
             if (!prev) return prev;
             const src = prev.source as Record<string, unknown>;
@@ -937,18 +963,12 @@ const SearchPage = () => {
       },
       onDelta: (text) => {
         accumulatedSynthesis += text;
-        // Update result progressively with streaming content
-        setResult(prev => {
-          if (!prev) return prev;
-          const src = prev.source as Record<string, unknown>;
-          return {
-            ...prev,
-            source: { ...src, "uor:content": accumulatedSynthesis },
-            synthesizing: true,
-          };
-        });
+        tokenBuffer.push(text);
       },
       onDone: async () => {
+        // Flush remaining buffered tokens
+        tokenBuffer.stop();
+
         try {
           // Build final canonical object
           const sources = [...streamSources];
@@ -976,6 +996,7 @@ const SearchPage = () => {
             ...(mediaData ? { "uor:media": mediaData } : {}),
           };
 
+          // WASM encode only on completion — deferred from first paint
           const finalReceipt = await encode(finalSource);
 
           setResult({
@@ -985,13 +1006,6 @@ const SearchPage = () => {
             synthesizing: false,
           });
           setInput(finalReceipt.triword);
-
-          confetti({
-            particleCount: 80,
-            spread: 65,
-            origin: { y: 0.6 },
-            colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
-          });
 
           // Record search to history for future context personalization
           recordSearch({

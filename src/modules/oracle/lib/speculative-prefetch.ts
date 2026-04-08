@@ -35,7 +35,7 @@ export function getCachedPrefetch(query: string): PrefetchResult | null {
 export function speculativePrefetch(
   query: string,
   onResult: (result: PrefetchResult | null) => void,
-  delay = 600
+  delay = 350
 ) {
   cancelPrefetch();
 

@@ -685,11 +685,21 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // ── Fire Wikipedia + Firecrawl in parallel ──
+    // ── Fire Wikipedia + Firecrawl in parallel, but don't wait for Firecrawl ──
     const wikiPromise = fetchWikipedia(term);
     const firecrawlPromise = fetchTopSources(term);
 
-    const [wiki, topSources] = await Promise.all([wikiPromise, firecrawlPromise]);
+    // Await Wikipedia immediately — this is the critical path
+    const wiki = await wikiPromise;
+
+    // Give Firecrawl a 500ms head start; if it's not done, proceed without it
+    let topSources: RankedSource[] = [];
+    try {
+      topSources = await Promise.race([
+        firecrawlPromise,
+        new Promise<RankedSource[]>((resolve) => setTimeout(() => resolve([]), 500)),
+      ]);
+    } catch { /* proceed without firecrawl */ }
 
     // Build enriched sources list
     const sources: Array<{ url: string; title: string; type: string; score?: number }> = [];
@@ -699,7 +709,7 @@ serve(async (req) => {
       sources.push({ url: s.url, title: s.title, type: s.type, score: s.score });
     }
 
-    console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl)`);
+    console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl, waited ≤500ms)`);
 
     // Build AI prompt — use blueprint params if available, otherwise use lens ID
     const systemPrompt = blueprintParams
