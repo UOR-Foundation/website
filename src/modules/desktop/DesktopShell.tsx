@@ -69,8 +69,6 @@ function DesktopShellInner() {
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
 
   return (
-    <>
-    {booting && <BootSequence onComplete={() => setBooting(false)} />}
     <DesktopContextMenu
       onNewSearch={() => handleHomeSearch("")}
       onSpotlight={() => setSpotlightOpen(true)}
