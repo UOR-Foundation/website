@@ -13,8 +13,11 @@
  * Default playlist: Ben Böhmer — Begin Again
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls, type PanInfo } from "framer-motion";
 import { X } from "lucide-react";
+
+const DRAG_THRESHOLD = 5; // px — movement beyond this counts as drag, not click
+const POSITION_KEY = "uor-vinyl-pos";
 
 const SC_PLAYLIST = "https://soundcloud.com/ben-bohmer/sets/begin-again";
 const SC_PLAYLIST_ENCODED = encodeURIComponent(SC_PLAYLIST);
@@ -61,6 +64,9 @@ export default function SoundCloudFab() {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCountRef = useRef(0);
   const spinControls = useAnimationControls();
+  const dragRef = useRef<{ startX: number; startY: number } | null>(null);
+  const isDragging = useRef(false);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSCApi().then(() => {
@@ -115,7 +121,18 @@ export default function SoundCloudFab() {
     });
   }, []);
 
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    dragRef.current = { startX: e.clientX, startY: e.clientY };
+    isDragging.current = false;
+  }, []);
+
+  const handleDrag = useCallback((_: unknown, info: PanInfo) => {
+    const dist = Math.sqrt(info.offset.x ** 2 + info.offset.y ** 2);
+    if (dist > DRAG_THRESHOLD) isDragging.current = true;
+  }, []);
+
   const handleClick = useCallback(() => {
+    if (isDragging.current) return; // was a drag, not a click
     clickCountRef.current += 1;
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     clickTimerRef.current = setTimeout(() => {
@@ -131,7 +148,18 @@ export default function SoundCloudFab() {
   const half = DISC_SIZE / 2;
 
   return (
-    <div className="relative flex items-center" style={{ zIndex: 50 }}>
+    <>
+      {/* Invisible full-viewport drag constraints layer */}
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 49 }} />
+      <motion.div
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.08}
+        dragMomentum={false}
+        onDrag={handleDrag}
+        className="relative flex items-center cursor-grab active:cursor-grabbing"
+        style={{ zIndex: 50, touchAction: "none" }}
+      >
       {/* Hidden audio iframe */}
       <iframe
         ref={iframeRef}
@@ -161,6 +189,7 @@ export default function SoundCloudFab() {
 
       <button
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
         className="group relative flex items-center justify-center rounded-full focus:outline-none"
         style={{
           width: DISC_SIZE,
@@ -313,6 +342,7 @@ export default function SoundCloudFab() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </motion.div>
+    </>
   );
 }

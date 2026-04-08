@@ -45,6 +45,7 @@ import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
+import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
 import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 import { computeCoherence, recordDwell, recordLensSwitch, dismissLensSuggestion, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
@@ -1429,6 +1430,12 @@ const SearchPage = () => {
     <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+      {/* Floating vinyl disc in immersive reader mode */}
+      {immersiveMode && result && (
+        <div className="fixed bottom-5 right-6 z-[60]">
+          <SoundCloudFab />
+        </div>
+      )}
 
       {/* Voice overlay (Ctrl+Shift+V) */}
       <VoiceOverlay
