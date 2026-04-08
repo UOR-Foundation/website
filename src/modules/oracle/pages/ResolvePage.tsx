@@ -432,7 +432,11 @@ const SearchPage = () => {
                       </motion.div>
                     )}
                   </div>
-                ))
+                })}
+
+                {aiStreaming && aiMessages[aiMessages.length - 1]?.role !== "assistant" && (
+                  <div className="flex justify-start">
+                    <div className="flex items-center gap-1.5 px-3 py-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:150ms]" />
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:300ms]" />
