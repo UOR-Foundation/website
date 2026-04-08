@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
@@ -20,6 +20,8 @@ import { enrichWithWasm } from "@/modules/oracle/lib/receipt-registry";
 import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
+import { useIsInsideWindow } from "@/modules/desktop/WindowContext";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
 /* ── Constants ── */
@@ -438,8 +440,10 @@ const OraclePage = () => {
 
   /* ── Render ── */
 
+  const inWindow = useIsInsideWindow();
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
+    <div className={inWindow ? "relative flex flex-col bg-background w-full h-full" : "fixed inset-0 z-50 flex flex-col bg-background"} style={inWindow ? undefined : { height: "100dvh" }}>
       {/* ── Compact header ── */}
       <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-border/20 bg-background/80 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-3">
