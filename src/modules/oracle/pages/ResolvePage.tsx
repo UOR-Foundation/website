@@ -812,13 +812,13 @@ const SearchPage = () => {
                 <img
                   src={uorHexagon}
                   alt="UOR"
-                  className="w-20 h-20 md:w-24 md:h-24 select-none drop-shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
+                  className="w-24 h-24 md:w-32 md:h-32 select-none drop-shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
                   draggable={false}
                   style={{ filter: "none" }}
                 />
                 <h1
                   className="font-display font-bold tracking-[0.03em] text-foreground select-none leading-[1.1] text-center"
-                  style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", maxWidth: "min(520px, 80vw)" }}
+                  style={{ fontSize: "clamp(2.2rem, 5vw, 3.75rem)", maxWidth: "min(600px, 85vw)" }}
                 >
                   Universal Object Reference
                 </h1>
