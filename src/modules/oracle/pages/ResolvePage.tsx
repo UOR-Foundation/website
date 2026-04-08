@@ -2326,6 +2326,7 @@ const SearchPage = () => {
                 </motion.div>
 
               </motion.div>
+              </>
               );
             })()}
           </AnimatePresence>
