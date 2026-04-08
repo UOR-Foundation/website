@@ -51,6 +51,7 @@ export async function streamKnowledge({
   context,
   lens,
   onWiki,
+  onMedia,
   onDelta,
   onDone,
   onError,
