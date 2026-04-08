@@ -34,7 +34,7 @@ export interface RecommendedSource {
 export interface LensBlueprint {
   id: string;
   label: string;
-  icon: "BookOpen" | "Newspaper" | "Baby" | "GraduationCap" | "BookText" | "Sparkles" | "User";
+  icon: "BookOpen" | "Newspaper" | "Baby" | "GraduationCap" | "BookText" | "Sparkles" | "User" | "Calculator";
   description: string;
   isPreset: boolean;
   /** Human-readable reason for AI-generated lenses */
@@ -49,7 +49,7 @@ export interface LensBlueprint {
 export interface KnowledgeLens {
   id: string;
   label: string;
-  icon: "BookOpen" | "Newspaper" | "Baby" | "GraduationCap" | "BookText";
+  icon: "BookOpen" | "Newspaper" | "Baby" | "GraduationCap" | "BookText" | "Calculator";
   description: string;
 }
 
@@ -150,6 +150,25 @@ export const PRESET_BLUEPRINTS: LensBlueprint[] = [
     },
     recommendedSources: [
       { domain: "smithsonianmag.com", reason: "History and culture storytelling", qualityScore: 78, enabled: true },
+    ],
+  },
+  {
+    id: "compute",
+    label: "Compute",
+    icon: "Calculator",
+    description: "Wolfram Alpha-style computational pods — live calculations, properties, and data",
+    isPreset: true,
+    params: {
+      tone: "technical",
+      depth: "standard",
+      audience: "informed",
+      structure: "sections",
+      citationDensity: "moderate",
+      focusAreas: ["quantitative data", "computations", "properties", "comparisons"],
+      excludeAreas: ["narrative", "history"],
+    },
+    recommendedSources: [
+      { domain: "wolframalpha.com", reason: "Computational knowledge engine", qualityScore: 99, enabled: true },
     ],
   },
 ];

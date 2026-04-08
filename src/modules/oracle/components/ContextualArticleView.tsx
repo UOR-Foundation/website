@@ -9,7 +9,7 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText, User, Plus, Settings2 } from "lucide-react";
+import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText, User, Plus, Settings2, Calculator } from "lucide-react";
 import type { MediaData } from "@/modules/oracle/lib/stream-knowledge";
 import AdaptiveContentContainer from "./AdaptiveContentContainer";
 import WikiArticleView from "./WikiArticleView";
@@ -17,6 +17,7 @@ import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
 import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
 import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
+import ComputeLensRenderer from "./lenses/ComputeLensRenderer";
 import ProvenanceBanner from "./ProvenanceBanner";
 import LensInspector from "./LensInspector";
 import {
@@ -35,6 +36,7 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   BookText,
   Sparkles,
   User,
+  Calculator,
 };
 
 const LENS_RENDERERS: Record<string, React.FC<{
@@ -51,6 +53,7 @@ const LENS_RENDERERS: Record<string, React.FC<{
   "explain-like-5": SimpleLensRenderer,
   expert: DeepDiveLensRenderer,
   storyteller: StoryLensRenderer,
+  compute: ComputeLensRenderer,
 };
 
 interface ContextualArticleViewProps {
