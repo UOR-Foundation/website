@@ -1,84 +1,125 @@
 
 
-## Cross-Device Portal — QR Code Session Bridge
+## UOR-Native Secure Messaging Protocol (UMP)
 
 ### What It Does
 
-A "Portal" button integrated into the address bar generates a QR code that, when scanned on mobile, opens the exact same page with an authenticated session transfer token. The mobile device picks up where the desktop left off — same content, same lens, same view.
+A fully UOR-rooted, end-to-end encrypted messaging system where every conversation is protected by a unique, single-use cryptographic channel. Person-to-person and group chats each get their own content-addressed security token (a "Conduit Session") that can be independently revoked. The protocol composes the existing UOR primitives — no new cryptographic inventions.
 
-### Architecture
-
-The flow uses a short-lived, one-time session transfer token stored in the database:
+### Conceptual Architecture
 
 ```text
-Desktop clicks Portal icon (in address bar)
-  → Creates a session_transfer row in DB:
-      { token (random UUID), user_id, target_url, created_at, used: false }
-      (auto-expires after 5 minutes)
-  → Generates QR code pointing to:
-      https://{app}/resolve?portal={token}
-  → Shows QR in an animated dropdown panel from the address bar
-
-Mobile scans QR
-  → App loads, reads ?portal= param
-  → Edge function validates token (not expired, not used, marks used)
-  → Returns a new session for that user_id
-  → Mobile navigates to the target_url with active session
+┌─────────────────────────────────────────────────────────────────┐
+│ Layer 4: Messenger UI (ConversationView, ChatSidebar)           │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 3: UMP Session Manager                                     │
+│   - Creates/revokes per-conversation ConduitSessions             │
+│   - Group fan-out (one Kyber KEM per member)                     │
+│   - Message DAG for ordering + offline reconciliation            │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 2: TSP Envelopes (tsp.ts)                                  │
+│   - Sender/receiver VIDs, replay protection, content-addressing  │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 1: UNS Conduit (conduit.ts)                                │
+│   - Kyber-1024 KEM → per-session AES-256-GCM key                │
+│   - Dilithium-3 identity authentication                          │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 0: UOR Identity (identity.ts → URDNA2015 → SHA-256)       │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Database Migration
+### Core Design Principles (inspired by Any-Sync)
 
-New table `session_transfers`:
-- `id` (uuid, PK)
-- `token` (text, unique, indexed)
-- `user_id` (uuid, references auth.users)
-- `target_url` (text) — the current page path + search params
-- `target_lens` (text) — current active lens
-- `created_at` (timestamptz, default now())
-- `used` (boolean, default false)
-- RLS: users can only insert/read their own rows
+1. **One session token per conversation** — Each 1:1 chat creates an independent Kyber-1024 KEM handshake producing a unique AES-256-GCM key. Revoking the session = destroying the key. Other conversations are unaffected.
 
-### Edge Function: `portal-transfer`
+2. **Group = N pairwise sessions + shared content key** — A group generates one ephemeral content-encryption key (CEK). The CEK is Kyber-encapsulated individually to each member. Removing a member = re-key with remaining members only.
 
-- **POST** (create): Authenticated user creates a transfer token. Stores user_id, target URL, lens. Returns the token.
-- **GET** (redeem): Receives token, validates (< 5 min old, not used), marks used, generates a new auth session for that user via `supabase.auth.admin.generateLink()` or creates a magic link. Returns redirect URL with session.
+3. **Content-addressed message DAG** — Each message is a node in a directed acyclic graph (like Any-Sync's CRDT approach). Each message references its parent(s) by canonical hash, enabling offline reconciliation and cryptographic ordering verification.
 
-Since generating arbitrary sessions requires the service role key, the edge function handles this securely server-side.
+4. **TSP envelopes for every message** — Every message is wrapped in a TSP envelope (`sealEnvelope`), giving it a content-addressed identity, replay protection via nonce, and sender/receiver VID binding.
 
-### UI: QR Portal Panel in ReaderToolbar
+5. **Revocable session tokens** — Sessions are stored in a `conduit_sessions` table with `revoked_at` and `expires_at` fields. Revoking is instant — just set `revoked_at`. The symmetric key is derived client-side and never stored on the server.
 
-Replace the existing no-op `Share2` button with a Portal button (using `QrCode` icon from lucide). On click, it:
+### Database Schema
 
-1. Calls the edge function to create a transfer token
-2. Uses the existing `qrcode` library to generate a QR data URL
-3. Opens an animated dropdown panel (same style as the history dropdown) showing:
-   - The QR code with a subtle animated glow border
-   - "Scan to continue on mobile" label
-   - A 5-minute countdown timer
-   - A "Regenerate" button after expiry
-   - Small lock icon + "Encrypted session transfer" text for trust
+**Table: `conduit_sessions`** — Per-conversation security tokens
+- `id` (uuid PK)
+- `session_hash` (text, unique) — UOR canonical hash of the session handshake
+- `creator_id` (uuid, references auth.users)
+- `session_type` ('direct' | 'group')
+- `participants` (uuid[]) — all member user IDs
+- `created_at` (timestamptz)
+- `expires_at` (timestamptz, nullable) — optional TTL
+- `revoked_at` (timestamptz, nullable) — set to revoke
+- `metadata_cid` (text) — CID of session metadata (encrypted)
+- RLS: participants can read their own sessions
 
-The panel animates in with the same `motion.div` pattern as `HistoryDropdown`.
+**Table: `encrypted_messages`** — Encrypted message store
+- `id` (uuid PK)
+- `session_id` (uuid, references conduit_sessions)
+- `sender_id` (uuid, references auth.users)
+- `parent_hashes` (text[]) — DAG references to parent message(s)
+- `message_hash` (text, unique) — UOR canonical hash of the sealed envelope
+- `ciphertext` (text) — AES-256-GCM encrypted payload (base64)
+- `envelope_cid` (text) — TSP envelope content ID
+- `created_at` (timestamptz)
+- RLS: only session participants can insert/read
+- Realtime enabled for live message delivery
 
-### Files Changed
+**Table: `group_rekeys`** — Group re-keying events
+- `id` (uuid PK)
+- `session_id` (uuid, references conduit_sessions)
+- `new_session_id` (uuid, references conduit_sessions)
+- `reason` ('member_removed' | 'member_added' | 'scheduled' | 'manual')
+- `created_at` (timestamptz)
+
+### Protocol Module: `src/modules/uns/trust/messaging.ts`
+
+Core functions composing existing primitives:
+
+| Function | What It Does |
+|---|---|
+| `createDirectSession(myKeypair, peerVid)` | Kyber-1024 handshake → unique AES key → session hash → store in DB |
+| `createGroupSession(myKeypair, memberVids[])` | Generate CEK, Kyber-encapsulate to each member, store session |
+| `sealMessage(session, plaintext)` | Encrypt with session AES key → wrap in TSP envelope → compute message hash → return DAG node |
+| `openMessage(session, ciphertext)` | Verify TSP envelope → decrypt → verify DAG parent chain |
+| `revokeSession(sessionId)` | Set `revoked_at` → destroy local key material |
+| `rekeyGroup(sessionId, newMembers)` | Create new session → Kyber-encapsulate new CEK → link via group_rekeys |
+| `verifyMessageChain(messages[])` | Walk DAG, verify each parent hash matches content → detect tampering |
+
+Each function uses existing primitives:
+- `singleProofHash()` for all content addressing
+- `sealEnvelope()` / `verifyEnvelope()` for TSP framing
+- `kyberKeygen()` / `kyberEncapsulate()` / `kyberDecapsulate()` for key exchange
+- `aesGcmEncrypt()` / `aesGcmDecrypt()` for symmetric encryption
+- `signRecord()` / `verifyRecord()` for Dilithium-3 authentication
+
+### UI Integration
+
+Update the messenger to use real encrypted sessions:
 
 | File | Change |
 |---|---|
-| `supabase/functions/portal-transfer/index.ts` | New edge function — create and redeem session transfer tokens |
-| **DB migration** | New `session_transfers` table with RLS |
-| `src/modules/oracle/components/ReaderToolbar.tsx` | Add QR Portal button (replacing Share2), QR dropdown panel with countdown |
-| `src/modules/oracle/components/QrPortalPanel.tsx` | New component — QR display with glow animation, countdown timer, status states |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Handle `?portal=` query param on load — call redeem endpoint, set session, navigate to target |
+| `src/modules/messenger/lib/messaging-protocol.ts` | New — thin wrapper calling `uns/trust/messaging.ts`, manages local key cache |
+| `src/modules/messenger/lib/mock-data.ts` | Keep for fallback; real data from `encrypted_messages` table |
+| `src/modules/messenger/components/ConversationView.tsx` | Use protocol for send/receive; show encryption badge per session |
+| `src/modules/messenger/components/ChatSidebar.tsx` | Show session status (active/expired/revoked) per chat |
+| `src/modules/messenger/components/SessionBadge.tsx` | New — visual indicator showing session hash, expiry countdown, revoke button |
 
-### Security
+### Security Properties
 
-- Tokens are UUID v4 (unguessable)
-- 5-minute TTL enforced server-side
-- One-time use (marked `used` on redeem)
-- Service role key stays in the edge function — never exposed to client
-- RLS ensures users can only create tokens for themselves
+- **Post-quantum**: Kyber-1024 KEM + Dilithium-3 signatures (NIST PQC standards)
+- **Forward secrecy**: Each conversation has an independent ephemeral key; compromising one reveals nothing about others
+- **Zero server knowledge**: AES keys are derived client-side from Kyber shared secrets; the server stores only ciphertext
+- **Tamper evidence**: Message DAG with canonical hashes — any modification breaks the chain
+- **Instant revocation**: Set `revoked_at` on the session; clients check before decrypting
+- **Replay protection**: TSP envelope nonces + monotonic DAG ordering
 
-### Visual Design
+### Implementation Order
 
-The QR panel uses the same frosted glass / dark immersive styling as the history dropdown. The QR code itself renders with a subtle `conic-gradient` animated border (like a scanning beam) to feel magical and alive. The countdown shows as a thin progress arc around the QR.
+1. Database migration (3 tables + RLS)
+2. `src/modules/uns/trust/messaging.ts` (protocol core)
+3. `src/modules/messenger/lib/messaging-protocol.ts` (UI adapter)
+4. Update messenger components (ConversationView, ChatSidebar, new SessionBadge)
+5. Enable realtime on `encrypted_messages` for live delivery
 
