@@ -20,16 +20,17 @@ import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
 const TYPE_STYLES: Record<string, { color: string; bg: string }> = {
-  Concept:     { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
-  Fork:        { color: "hsl(270 60% 65%)",             bg: "hsl(270 60% 65% / 0.08)" },
-  Query:       { color: "hsl(210 80% 60%)",             bg: "hsl(210 80% 60% / 0.08)" },
-  Response:    { color: "hsl(160 60% 50%)",             bg: "hsl(160 60% 50% / 0.08)" },
-  Chain:       { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
-  ChainLink:   { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
-  Datum:       { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
-  Observable:  { color: "hsl(190 70% 50%)",             bg: "hsl(190 70% 50% / 0.08)" },
-  Derivation:  { color: "hsl(340 60% 55%)",             bg: "hsl(340 60% 55% / 0.08)" },
-  WebPage:     { color: "hsl(200 70% 55%)",             bg: "hsl(200 70% 55% / 0.08)" },
+  Concept:       { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
+  Fork:          { color: "hsl(270 60% 65%)",             bg: "hsl(270 60% 65% / 0.08)" },
+  Query:         { color: "hsl(210 80% 60%)",             bg: "hsl(210 80% 60% / 0.08)" },
+  Response:      { color: "hsl(160 60% 50%)",             bg: "hsl(160 60% 50% / 0.08)" },
+  Chain:         { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
+  ChainLink:     { color: "hsl(30 80% 55%)",              bg: "hsl(30 80% 55% / 0.08)" },
+  Datum:         { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
+  Observable:    { color: "hsl(190 70% 50%)",             bg: "hsl(190 70% 50% / 0.08)" },
+  Derivation:    { color: "hsl(340 60% 55%)",             bg: "hsl(340 60% 55% / 0.08)" },
+  WebPage:       { color: "hsl(200 70% 55%)",             bg: "hsl(200 70% 55% / 0.08)" },
+  KnowledgeCard: { color: "hsl(38 90% 55%)",              bg: "hsl(38 90% 55% / 0.08)" },
 };
 
 const DEFAULT_STYLE = { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.15)" };
@@ -68,6 +69,8 @@ const LABEL_MAP: Record<string, string> = {
   "uor:semanticWebLayers": "Semantic Web Layers",
   "uor:wikidata": "",
   "uor:rawHtml": "",
+  "uor:sources": "Sources",
+  "uor:synthesizedAt": "Synthesized At",
 };
 
 function humanLabel(key: string): string {
@@ -84,7 +87,7 @@ function humanLabel(key: string): string {
 const META_KEYS = new Set([
   "uor:timestamp", "uor:position", "uor:chainLength",
   "uor:proofAddress", "uor:proofCid", "uor:scrapedAt",
-  "uor:language",
+  "uor:language", "uor:synthesizedAt",
 ]);
 
 /* ── Title keys (rendered as the main heading) ───────────────────────── */
@@ -109,6 +112,9 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
   const [viewMode, setViewMode] = useState<"original" | "readable">(rawHtmlVal ? "original" : "readable");
 
+  const rawType = isObj && typeof src["@type"] === "string" ? src["@type"].replace(/^uor:/, "") : null;
+  const isKnowledgeCard = rawType === "KnowledgeCard";
+
   if (!isObj) {
     return (
       <p style={{ fontSize: 17, lineHeight: 1.75, fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -118,8 +124,6 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
     );
   }
 
-  // Extract type
-  const rawType = typeof src["@type"] === "string" ? src["@type"].replace(/^uor:/, "") : null;
   const typeStyle = rawType ? (TYPE_STYLES[rawType] ?? DEFAULT_STYLE) : null;
 
   // Extract title
@@ -136,7 +140,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml"
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml" && key !== "uor:sources"
   );
 
   const rawHtml = rawHtmlVal;
@@ -148,6 +152,8 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   // Semantic Web Tower data
   const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
   const isWebPage = rawType === "WebPage";
+  const sources = Array.isArray(src["uor:sources"]) ? (src["uor:sources"] as string[]) : [];
+  const contentMarkdown = typeof src["uor:content"] === "string" ? (src["uor:content"] as string) : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -276,8 +282,60 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
         </div>
       )}
 
-      {/* ── Original fidelity view (Shadow DOM) ── */}
-      {isWebPage && rawHtml && viewMode === "original" ? (
+      {/* ── KnowledgeCard synthesis view ── */}
+      {isKnowledgeCard && contentMarkdown ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* AI-synthesized article with accent border */}
+          <div
+            style={{
+              borderLeft: "3px solid hsl(38 90% 55% / 0.5)",
+              paddingLeft: 24,
+              maxHeight: 600,
+              overflowY: "auto",
+            }}
+            className="prose prose-sm dark:prose-invert max-w-none text-foreground/80"
+          >
+            <ReactMarkdown>{contentMarkdown}</ReactMarkdown>
+          </div>
+
+          {/* Sources footer */}
+          {sources.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  fontWeight: 600,
+                }}
+                className="text-muted-foreground/40"
+              >
+                Sources
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {sources.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url.startsWith("http") ? url : `https://${url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: 11,
+                      padding: "3px 10px",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      border: "1px solid hsl(var(--border) / 0.15)",
+                    }}
+                    className="text-muted-foreground/60 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors"
+                  >
+                    {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
       ) : (
         /* ── Body entries (Readable mode) ── */

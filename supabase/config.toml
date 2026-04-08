@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.address-social]
 verify_jwt = false
+
+[functions.uor-knowledge]
+verify_jwt = false

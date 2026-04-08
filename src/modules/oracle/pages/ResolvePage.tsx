@@ -120,6 +120,9 @@ const HUMAN_LABEL_MAP: Record<string, string> = {
   "uor:position": "Position",
   "uor:proofAddress": "Proof Address",
   "uor:proofCid": "Proof CID",
+  "uor:sources": "Sources",
+  "uor:synthesizedAt": "Synthesized",
+  "uor:description": "Description",
 };
 
 function humanLabel(key: string): string {
@@ -573,40 +576,80 @@ const SearchPage = () => {
 
   /** Resolve a plain keyword into a multi-source knowledge card */
   const handleKeywordResolve = async (keyword: string) => {
-    // Step 1: Try Wikipedia first (fast, structured, free)
-    toast("Searching knowledge bases…", { icon: "🔍", id: "keyword-resolve" });
+    toast("Synthesizing knowledge…", { icon: "✨", id: "keyword-resolve" });
+
     try {
-      const wikiRes = await fetch(
-        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword)}`,
-        { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
-      );
-      if (wikiRes.ok) {
-        const wikiData = await wikiRes.json();
-        if (wikiData.type === "standard" && wikiData.content_urls?.desktop?.page) {
-          toast("Found on Wikipedia — encoding…", { icon: "📚", id: "keyword-resolve" });
-          setLoading(false); // handleWebEncode sets its own loading
-          return handleWebEncode(wikiData.content_urls.desktop.page);
+      const { data, error } = await supabase.functions.invoke("uor-knowledge", {
+        body: { keyword },
+      });
+
+      if (error || data?.error) {
+        const msg = data?.error || error?.message || "Knowledge synthesis failed.";
+        if (msg.includes("Rate limited")) {
+          toast.error("Rate limited — please try again in a moment.", { id: "keyword-resolve" });
+        } else if (msg.includes("Credits exhausted")) {
+          toast.error("AI credits exhausted. Please add funds.", { id: "keyword-resolve" });
+        } else {
+          // Fallback: try web search via Firecrawl
+          toast("Falling back to web search…", { icon: "🌐", id: "keyword-resolve" });
+          try {
+            const searchResult = await firecrawlApi.search(keyword, 1);
+            if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
+              setLoading(false);
+              return handleWebEncode(searchResult.data[0].url);
+            }
+          } catch { /* ignore */ }
+          toast.error("No results found. Try a URL or different keyword.", { id: "keyword-resolve" });
         }
+        return;
       }
-    } catch (e) {
-      console.warn("[KeywordResolve] Wikipedia lookup failed:", e);
-    }
 
-    // Step 2: Fallback — web search via Firecrawl
-    toast("Searching the web…", { icon: "🌐", id: "keyword-resolve" });
-    try {
-      const searchResult = await firecrawlApi.search(keyword, 1);
-      if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
-        const topResult = searchResult.data[0];
-        toast(`Found: ${topResult.title || topResult.url} — encoding…`, { icon: "✨", id: "keyword-resolve" });
-        setLoading(false);
-        return handleWebEncode(topResult.url);
-      }
-    } catch (e) {
-      console.warn("[KeywordResolve] Web search failed:", e);
-    }
+      toast("Encoding knowledge card…", { icon: "⚛️", id: "keyword-resolve" });
 
-    toast("No results found. Try a URL or different keyword.", { icon: "📝", id: "keyword-resolve" });
+      // Build the canonical KnowledgeCard object
+      const wiki = data.wiki;
+      const canonicalObj: Record<string, unknown> = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:KnowledgeCard",
+        "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
+        "uor:description": wiki?.description || "",
+        "uor:content": data.synthesis || wiki?.extract || "",
+        ...(wiki ? {
+          "uor:wikidata": {
+            qid: wiki.qid,
+            thumbnail: wiki.thumbnail,
+            description: wiki.description,
+          },
+        } : {}),
+        "uor:sources": data.sources || [],
+      };
+
+      const receipt = await encode(canonicalObj);
+
+      // Add volatile metadata for display
+      const sourceObj: Record<string, unknown> = {
+        ...canonicalObj,
+        "uor:synthesizedAt": new Date().toISOString(),
+      };
+
+      setResult({ source: sourceObj, receipt, isConfirmed: false });
+      setInput(receipt.triword);
+
+      confetti({
+        particleCount: 80,
+        spread: 65,
+        origin: { y: 0.6 },
+        colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
+      });
+
+      toast.success("Knowledge synthesized.", {
+        description: receipt.triwordFormatted,
+        id: "keyword-resolve",
+      });
+    } catch (err) {
+      console.error("[KeywordResolve] Failed:", err);
+      toast.error("Knowledge synthesis failed: " + (err instanceof Error ? err.message : String(err)), { id: "keyword-resolve" });
+    }
   };
 
   const submit = () => {
