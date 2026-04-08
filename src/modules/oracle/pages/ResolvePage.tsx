@@ -20,7 +20,7 @@ import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
-import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib/receipt-registry";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
