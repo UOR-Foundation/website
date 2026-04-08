@@ -536,32 +536,70 @@ export function AddressDiscussion({ cid }: { cid: string }) {
     }
   }, [myVotes, cid, reload]);
 
-  const handleComment = useCallback(async (content: string) => {
-    if (!user) { toast("Sign in to comment", { icon: "🔒" }); return; }
-    try {
-      const { error } = await supabase.functions.invoke("address-social", {
-        method: "POST",
-        body: { action: "comment", cid, content },
-      });
-      if (error) throw error;
-    } catch {
-      toast.error("Failed to post comment");
+  const handleComment = useCallback(async (content: string, guestName?: string) => {
+    if (user) {
+      try {
+        const { error } = await supabase.functions.invoke("address-social", {
+          method: "POST",
+          body: { action: "comment", cid, content },
+        });
+        if (error) throw error;
+      } catch {
+        toast.error("Failed to post comment");
+      }
+    } else {
+      // Guest comment — no auth header
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/address-social`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: anonKey },
+            body: JSON.stringify({ action: "comment_guest", cid, content, guest_name: guestName || null }),
+          }
+        );
+        if (!res.ok) throw new Error("Failed");
+        reload();
+      } catch {
+        toast.error("Failed to post comment");
+      }
     }
-  }, [user, cid]);
+  }, [user, cid, reload]);
 
-  const handleReply = useCallback(async (parentId: string, content: string) => {
-    if (!user) return;
-    try {
-      const { error } = await supabase.functions.invoke("address-social", {
-        method: "POST",
-        body: { action: "comment", cid, content, parent_id: parentId },
-      });
-      if (error) throw error;
-      setReplyingTo(null);
-    } catch {
-      toast.error("Failed to post reply");
+  const handleReply = useCallback(async (parentId: string, content: string, guestName?: string) => {
+    if (user) {
+      try {
+        const { error } = await supabase.functions.invoke("address-social", {
+          method: "POST",
+          body: { action: "comment", cid, content, parent_id: parentId },
+        });
+        if (error) throw error;
+        setReplyingTo(null);
+      } catch {
+        toast.error("Failed to post reply");
+      }
+    } else {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/address-social`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: anonKey },
+            body: JSON.stringify({ action: "comment_guest", cid, content, parent_id: parentId, guest_name: guestName || null }),
+          }
+        );
+        if (!res.ok) throw new Error("Failed");
+        setReplyingTo(null);
+        reload();
+      } catch {
+        toast.error("Failed to post reply");
+      }
     }
-  }, [user, cid]);
+  }, [user, cid, reload]);
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed(prev => {
