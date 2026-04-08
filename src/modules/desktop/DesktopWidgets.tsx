@@ -19,6 +19,10 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
 import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
+import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/lib/search-suggestions";
+import { getSearchHistory } from "@/modules/oracle/lib/search-history";
+import { loadProfile as loadAttentionProfile } from "@/modules/oracle/lib/attention-tracker";
+import SearchSuggestions from "@/modules/desktop/SearchSuggestions";
 
 interface Props {
   windows: WindowState[];
@@ -79,6 +83,12 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const hasAnyWindows = windows.some(w => !w.minimized);
   const [containerWidth, setContainerWidth] = useState(580);
 
+  // Suggestion state
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const engineRef = useRef<ReturnType<typeof createSuggestionEngine> | null>(null);
+
   const detected = useMemo(() => detectAddress(query), [query]);
   const isAddress = detected.kind !== null;
 
@@ -86,6 +96,38 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Initialize suggestion engine
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const history = await getSearchHistory(30);
+      const attention = loadAttentionProfile();
+      const contextKeywords = ctx.contextItems.map(c => c.filename);
+      if (cancelled) return;
+      engineRef.current = createSuggestionEngine({
+        history,
+        contextKeywords,
+        domainHistory: attention.domainHistory,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [ctx.contextItems]);
+
+  // Drive suggestions on query change
+  useEffect(() => {
+    if (!query.trim() || isAddress) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    if (engineRef.current) {
+      setShowSuggestions(true);
+      setActiveIdx(-1);
+      engineRef.current.suggest(query, setSuggestions);
+    }
+    return () => engineRef.current?.cancel();
+  }, [query, isAddress]);
 
   // Track container width for Pretext measurements
   useEffect(() => {
@@ -136,8 +178,33 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     if (query.trim() && onSearch) {
       onSearch(query.trim());
       setQuery("");
+      setShowSuggestions(false);
     }
   }, [query, onSearch]);
+
+  const handleSuggestionSelect = useCallback((text: string) => {
+    setQuery(text);
+    setShowSuggestions(false);
+    if (onSearch) onSearch(text);
+    setQuery("");
+  }, [onSearch]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === "Enter" && activeIdx >= 0) {
+      e.preventDefault();
+      handleSuggestionSelect(suggestions[activeIdx].text);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  }, [showSuggestions, suggestions, activeIdx, handleSuggestionSelect]);
 
   // Theme-aware colors
   const isImmersive = theme === "immersive";
@@ -147,7 +214,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     : isLight ? "0 2px 24px rgba(0,0,0,0.06)" : "0 2px 24px rgba(0,0,0,0.3)";
   const greetingColor = isImmersive ? "text-white/90" : isLight ? "text-black/35" : "text-white/40";
 
-  // Search bar styles — no color change for address, just subtle text formatting
+  // Search bar styles
   const searchBg = isImmersive
     ? "hsl(200 15% 16% / 0.9)"
     : isLight
@@ -234,6 +301,9 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => { if (query.trim() && suggestions.length > 0) setShowSuggestions(true); }}
+              onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
               placeholder="What is your main focus today?"
               className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
               style={{
@@ -249,6 +319,20 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                 letterSpacing: isAddress ? "0.03em" : undefined,
                 fontWeight: isAddress ? 500 : undefined,
               }}
+              role="combobox"
+              aria-expanded={showSuggestions && suggestions.length > 0}
+              aria-autocomplete="list"
+              autoComplete="off"
+            />
+
+            {/* Suggestion dropdown */}
+            <SearchSuggestions
+              suggestions={suggestions}
+              visible={showSuggestions}
+              onSelect={handleSuggestionSelect}
+              onDismiss={() => setShowSuggestions(false)}
+              activeIndex={activeIdx}
+              onActiveIndexChange={setActiveIdx}
             />
 
             {/* + button */}
