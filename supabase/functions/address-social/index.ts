@@ -236,6 +236,7 @@ async function handleGuestComment(body: any, supabase: ReturnType<typeof createC
 }
 
 
+async function handleFork(body: any, userId: string, supabase: ReturnType<typeof createClient>) {
   const { parentCid, childCid, note } = body;
   if (!parentCid || !childCid) return json({ error: "Missing parentCid or childCid" }, 400);
   if (parentCid === childCid) return json({ error: "Cannot fork to same CID" }, 400);
