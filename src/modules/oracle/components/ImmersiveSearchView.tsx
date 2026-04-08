@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Minimize2, Sparkles, Plus } from "lucide-react";
+import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getHourlyPhoto, getCurrentHour, preloadNextHourPhoto } from "@/modules/oracle/lib/immersive-photos";
 import VoiceInput from "./VoiceInput";
