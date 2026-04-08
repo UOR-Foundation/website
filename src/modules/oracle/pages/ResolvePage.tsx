@@ -160,7 +160,7 @@ const SearchPage = () => {
     handleSearch(triword);
   };
 
-  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+  useEffect(() => { loadWasm().then(() => { setWasmReady(true); encode(NEAR_INFINITE_CONCEPT).catch(() => {}); }); }, []);
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
   useEffect(() => {
