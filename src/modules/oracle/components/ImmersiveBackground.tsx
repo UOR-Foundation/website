@@ -1,37 +1,50 @@
 /**
  * ImmersiveBackground — Fixed full-viewport blurred photo backdrop.
- * Crossfades to a new image every hour, matching natural daylight.
- * Preloads the next hour's image for seamless transitions.
+ * Crossfades when the solar phase changes (checked every 60s).
+ * Uses the user's geolocation + date to match real-world light conditions.
  */
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getHourlyPhoto, getCurrentHour, preloadNextHourPhoto } from "@/modules/oracle/lib/immersive-photos";
+import {
+  getPhasePhoto,
+  getCurrentPhase,
+  preloadNextPhasePhoto,
+  initLocation,
+} from "@/modules/oracle/lib/immersive-photos";
+import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 
 interface ImmersiveBackgroundProps {
   scrollProgress?: number;
 }
 
 export default function ImmersiveBackground({ scrollProgress = 0 }: ImmersiveBackgroundProps) {
-  const [photoUrl, setPhotoUrl] = useState(() => getHourlyPhoto());
-  const [key, setKey] = useState(() => getCurrentHour());
-  const hourRef = useRef(getCurrentHour());
+  const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
+  const [key, setKey] = useState(0);
+  const phaseRef = useRef<SolarPhase>(getCurrentPhase());
 
-  // Check every 30s if the hour changed; crossfade if so
   useEffect(() => {
-    // Preload next hour on mount
-    preloadNextHourPhoto();
-
-    const interval = setInterval(() => {
-      const now = getCurrentHour();
-      if (now !== hourRef.current) {
-        hourRef.current = now;
-        setPhotoUrl(getHourlyPhoto());
-        setKey(now);
-        // Preload the following hour
-        preloadNextHourPhoto();
+    // Resolve geolocation, then update photo with real coords
+    initLocation().then(() => {
+      const phase = getCurrentPhase();
+      if (phase !== phaseRef.current) {
+        phaseRef.current = phase;
+        setPhotoUrl(getPhasePhoto());
+        setKey((k) => k + 1);
       }
-    }, 30_000);
+      preloadNextPhasePhoto();
+    });
+
+    // Check every 60s if the solar phase changed
+    const interval = setInterval(() => {
+      const phase = getCurrentPhase();
+      if (phase !== phaseRef.current) {
+        phaseRef.current = phase;
+        setPhotoUrl(getPhasePhoto());
+        setKey((k) => k + 1);
+        preloadNextPhasePhoto();
+      }
+    }, 60_000);
 
     return () => clearInterval(interval);
   }, []);
