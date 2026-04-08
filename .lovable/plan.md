@@ -1,71 +1,109 @@
 
 
-## Full-Screen Content Reading Experience
+## Lens-Specific Rendering: Distinct Visual Experiences per Lens
 
-### Problem
+### Concept
 
-When content is rendered (e.g., a KnowledgeCard article or WebPage), it currently sits inside a social-profile layout: cover image, avatar, type badges, social stats, identity hub, and then the content in a `max-w-[1100px]` container with `max-h-[70vh] overflow-y-auto`. This fragments attention and wastes screen real estate. The user wants rendered content to fill the entire viewport as a beautiful, distraction-free reading experience.
+Each lens transforms the entire visual experience, not just the text. Switching lenses should feel like opening the same article in a completely different publication.
 
-### What Changes
+### Lens → Template Mapping
 
-Transform the result view into two modes:
-1. **Reader Mode** (default for KnowledgeCards and rendered content) — full-screen, content-first, minimal chrome
-2. **Profile Mode** (toggle) — the current social-profile layout for when you want metadata, provenance, discussion
-
-### Design: Reader Mode
-
-- **Full viewport**: Content spans the entire screen width (with golden-ratio margins)
-- **Floating minimal toolbar**: A thin, translucent bar at the top with: back arrow, triword name, lens switcher pills, and a "Details" toggle to switch to profile mode
-- **Content area**: The article/rendered content fills the viewport below the toolbar, using golden-ratio proportions for text column width (max ~720px centered, or ~65ch) with generous vertical spacing
-- **No cover image, avatar, social stats, or identity hub** in reader mode — those live in the "Details" view
-- **Remove the `max-h-[70vh]` constraint** on the content container in reader mode — let the page scroll naturally
-- **Typography**: Serif body at 17-18px, line-height 1.75, left-border accents — the existing WikiArticleView typography, but given room to breathe
+| Lens | Template Inspiration | Visual Identity |
+|------|---------------------|-----------------|
+| Encyclopedia | Wikipedia | Serif body (Georgia), right-floated infobox, ToC, section dividers, neutral white/cream. Current `WikiArticleView` unchanged. |
+| Magazine | The Atlantic / National Geographic | Sans-serif body (system sans), massive hero pull-quote, drop cap on first paragraph, two-column feel on wide screens, accent-colored section dividers, generous whitespace. |
+| Simple | Children's textbook / Kurzgesagt | Rounded, warm aesthetic. Larger font (19px), playful section emoji markers, pastel accent cards for "Wow!" facts, generous line-height (2.0), no ToC. |
+| Deep Dive | Nature / arXiv / scientific journal | Monospaced section numbers (§1, §2), compact sans-serif body (15px), dense two-column layout on wide screens, footnote-style metadata, abstract block at top, equation-friendly styling. |
+| Story | Longreads / Medium longform | Large serif title, author byline, full-bleed opening paragraph, no ToC, generous paragraph spacing, pull-quotes styled as large italic blocks with left accent, immersive single-column reading. |
 
 ### Implementation
 
-#### 1. Add `readerMode` state to ResolvePage
+#### 1. Create five lens renderer components
 
-**File:** `src/modules/oracle/pages/ResolvePage.tsx`
+**New files** in `src/modules/oracle/components/lenses/`:
 
-- Add `readerMode` state, default `true` for KnowledgeCard types, `false` for others
-- When `readerMode` is true, render a new minimal layout for the result:
-  - Skip the `ProfileCover`, avatar, social stats, identity hub sections
-  - Render `HumanContentView` in a full-width, centered reading column with golden-ratio margins
-  - Add a floating top toolbar with: back button, triword display (compact), lens pills, and a "Details" button to toggle to profile view
-- When `readerMode` is false, render the current profile layout as-is
-- Remove the `max-h-[70vh] overflow-y-auto` constraint from the content wrapper in reader mode
+- `WikiLensRenderer.tsx` — Re-export of existing `WikiArticleView` (no change needed, just aliased)
+- `MagazineLensRenderer.tsx` — Atlantic/NatGeo style: drop cap, pull-quote hero, wide section dividers, sans-serif
+- `SimpleLensRenderer.tsx` — Warm, playful: large type, emoji section markers, "Did you know?" callout cards
+- `DeepDiveLensRenderer.tsx` — Journal style: abstract block, numbered sections (§1), dense layout, compact type
+- `StoryLensRenderer.tsx` — Longreads/Medium: large title, byline, full-bleed paragraphs, pull-quote blocks
 
-#### 2. Create `ReaderToolbar` component
+Each component receives the same props: `{ title, contentMarkdown, wikidata?, sources, synthesizing? }` and applies its own markdown component overrides and layout.
 
-**File:** `src/modules/oracle/components/ReaderToolbar.tsx` (new)
+#### 2. Update `ContextualArticleView.tsx`
 
-A minimal, translucent fixed-position toolbar:
-- Left: back arrow (returns to search)
-- Center: compact triword label + type badge
-- Right: lens switcher (compact pills), "Details" toggle button
-- Styling: `backdrop-blur`, subtle border-bottom, auto-hides on scroll-down / shows on scroll-up (optional, can start simpler)
+Replace the static `<WikiArticleView>` call with a lens router:
 
-#### 3. Adjust content container proportions
+```
+const LensRenderer = LENS_RENDERERS[activeLens] ?? WikiArticleView;
+return <LensRenderer title={...} contentMarkdown={...} ... />;
+```
 
-In reader mode, the content column uses:
-- `max-width: min(720px, 90vw)` — optimal reading width based on ~65ch
-- Horizontal centering with `margin: 0 auto`
-- Vertical padding using golden ratio: `paddingTop: calc(1rem * φ²)`, `paddingBottom: calc(1rem * φ³)`
-- No card border, no background tint — just clean content on the page background
+This is the single switching point. When the user clicks a lens pill, the entire article re-renders with the new visual identity instantly.
+
+#### 3. Lens-specific markdown component factories
+
+Each renderer creates its own `createMarkdownComponents()` with distinct:
+- **Font families**: Serif (encyclopedia, story), Sans-serif (magazine, deep-dive), Rounded sans (simple)
+- **Font sizes**: 16px (encyclopedia), 17px (magazine), 19px (simple), 15px (deep-dive), 18px (story)
+- **Heading styles**: Underlined (encyclopedia), accent-bar (magazine), emoji-prefixed (simple), numbered §N (deep-dive), no-border italic (story)
+- **Paragraph rhythm**: Standard (encyclopedia), alternating short/long (magazine), spacious (simple), dense (deep-dive), generous (story)
+- **Special blocks**: Infobox (encyclopedia), pull-quotes (magazine, story), callout cards (simple), abstract (deep-dive)
+
+#### 4. Visual identity details
+
+**Magazine** (`MagazineLensRenderer`):
+- First letter of first paragraph gets CSS `::first-letter` drop cap treatment (3-line, bold, primary color)
+- Section dividers: thin horizontal rule with centered diamond ornament
+- Pull-quote: extract first blockquote or strong sentence, render large (24px) italic with left accent bar
+- Background: very subtle warm tint
+- Max-width: 680px centered
+
+**Simple** (`SimpleLensRenderer`):
+- Section headings get emoji prefixes mapped from content keywords
+- "Wow!" facts (lines starting with "!" or containing "Did you know") rendered in pastel accent cards with rounded corners
+- Larger body text (19px), 2.0 line-height
+- No ToC, no infobox
+- Warm, rounded UI feel
+
+**Deep Dive** (`DeepDiveLensRenderer`):
+- Abstract block at top: gray background, smaller text, summarizing first paragraph
+- Sections numbered §1, §2, §3 with compact sans-serif headings
+- Body at 15px, line-height 1.65, tighter spacing
+- Monospaced inline code styling for technical terms
+- Two-column layout on screens > 1024px (CSS columns)
+- Footnote-style metadata at bottom
+
+**Story** (`StoryLensRenderer`):
+- Large display title (2.5rem serif)
+- Subtitle/byline: "A UOR Knowledge Story"
+- No ToC, no infobox
+- First paragraph full-width, slightly larger (18px)
+- Blockquotes rendered as large pull-quotes (22px italic, left accent)
+- Extra paragraph spacing (2em between paragraphs)
+- Single column, max-width 640px
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/components/ReaderToolbar.tsx` | **New** — minimal floating toolbar for reader mode |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Add `readerMode` state, conditional layout for content-first vs. profile view |
+| `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` | **New** |
+| `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` | **New** |
+| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | **New** |
+| `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` | **New** |
+| `src/modules/oracle/components/ContextualArticleView.tsx` | Route to lens-specific renderer instead of always WikiArticleView |
 
-### What the User Experiences
+### No edge function changes needed
 
-1. Search "quantum mechanics" — article streams in full-screen with a thin toolbar at the top
-2. The entire viewport is the article: beautiful typography, golden-ratio margins, no distractions
-3. Lens switcher pills visible in the toolbar — switch perspectives without leaving the reading flow
-4. Click "Details" — switches to the current profile view with cover, avatar, provenance, discussion
-5. Click "Reader" — back to immersive content
-6. Works responsively — on mobile the content fills edge-to-edge with comfortable side padding
+The current system prompts already produce lens-appropriate markdown (magazine headers, story arcs, expert sections, etc.). The renderers simply style the same markdown differently. The content adapts via the AI prompt; the visual identity adapts via the renderer.
+
+### User Experience
+
+1. Search a topic. Article renders in Encyclopedia (Wikipedia) style by default.
+2. Click "Magazine" pill. Instantly: drop cap appears, pull-quote emerges, typography shifts to sans-serif, section dividers change to ornamental rules. Same content, completely different publication.
+3. Click "Deep Dive". Layout compresses, abstract block appears, sections get §N numbering, font shrinks, density increases. Feels like reading a journal paper.
+4. Click "Story". Title grows large, byline appears, paragraphs breathe, pull-quotes float. Feels like Longreads.
+5. Click "Simple". Font grows, emoji markers appear, callout cards highlight fun facts. Feels like a children's science book.
+
+Each transition is instant and visceral. The framework routes the same canonical content through different visual projections, a direct embodiment of the holographic lens principle.
 
