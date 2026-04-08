@@ -124,9 +124,11 @@ interface HumanContentViewProps {
   isReaderMode?: boolean;
   /** Novelty result from the coherence engine */
   novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
+  /** Whether we're in immersive full-screen mode */
+  immersive?: boolean;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false, novelty = null }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false, novelty = null, immersive = false }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -333,6 +335,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           isReaderMode={isReaderMode}
           provenance={isObj && src["uor:provenance"] ? (src["uor:provenance"] as { model?: string; personalized?: boolean; personalizedTopics?: string[] }) : undefined}
           media={src["uor:media"] as import("@/modules/oracle/lib/stream-knowledge").MediaData | undefined}
+          immersive={immersive}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />

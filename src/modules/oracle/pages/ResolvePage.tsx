@@ -2179,19 +2179,19 @@ const SearchPage = () => {
                         immersive={immersiveMode}
                       />
                       <div
-                        className={`flex-1 w-full ${
-                          mobileImmersive
-                            ? "" // Full-bleed: no container chrome on mobile immersive
-                            : immersiveMode
-                              ? "mx-auto bg-white/[0.04] backdrop-blur-xl border-x border-b border-white/[0.06] rounded-b-2xl shadow-[0_8px_60px_-12px_rgba(0,0,0,0.5)]"
-                              : "mx-auto"
-                        }`}
+                        className={`flex-1 w-full mx-auto`}
                         style={mobileImmersive ? {
                           maxWidth: "100vw",
                           paddingTop: 12,
                           paddingBottom: 80,
                           paddingLeft: 20,
                           paddingRight: 20,
+                        } : immersiveMode ? {
+                          maxWidth: "min(1200px, 92vw)",
+                          paddingTop: "calc(1rem * 1.618 * 1.618)",
+                          paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
+                          paddingLeft: "clamp(2rem, 5vw, 5rem)",
+                          paddingRight: "clamp(2rem, 5vw, 5rem)",
                         } : {
                           maxWidth: "clamp(640px, 65vw, 860px)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
@@ -2218,12 +2218,13 @@ const SearchPage = () => {
                             onLensChange={handleLensChange}
                             isReaderMode
                             novelty={coherenceState?.novelty || null}
+                            immersive={immersiveMode}
                           />
                         </div>
                       </div>
 
-                      {/* Floating compact search pill for mobile immersive reader */}
-                      {mobileImmersive && (
+                      {/* Floating compact search pill for immersive reader */}
+                      {(mobileImmersive || immersiveMode) && (
                         <MobileImmersiveSearchPill
                           onSearch={(q) => { setInput(q); clearResult(); setTimeout(() => handleSearch(q), 100); }}
                         />

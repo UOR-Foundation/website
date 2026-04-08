@@ -27,6 +27,7 @@ interface WikiArticleViewProps {
   sources: string[];
   synthesizing?: boolean;
   media?: MediaData;
+  immersive?: boolean;
 }
 
 interface TocEntry {
@@ -380,7 +381,9 @@ const SynthesizingSkeleton: React.FC = () => (
 
 /* ── Custom markdown components with Wikipedia styling ───────────────── */
 
-function createMarkdownComponents() {
+function createMarkdownComponents(immersive = false) {
+  const bodySize = immersive ? 18 : 16;
+  const bodyLineHeight = immersive ? 1.9 : 1.8;
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
       const text = typeof children === "string" ? children : String(children);
@@ -388,15 +391,16 @@ function createMarkdownComponents() {
       return (
         <h2
           id={id}
-          className="text-foreground border-b border-border/25"
+          className="text-foreground"
           style={{
-            fontSize: "1.35rem",
+            fontSize: immersive ? "1.5rem" : "1.35rem",
             fontWeight: 600,
             fontFamily: "Georgia, 'Times New Roman', serif",
             paddingBottom: 4,
             marginTop: "1.8rem",
             marginBottom: "0.6rem",
             lineHeight: 1.3,
+            borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
           }}
           {...props}
         >
@@ -408,8 +412,8 @@ function createMarkdownComponents() {
       <p
         className="text-foreground/85"
         style={{
-          fontSize: 16,
-          lineHeight: 1.8,
+          fontSize: bodySize,
+          lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
           marginBottom: "0.7em",
         }}
@@ -429,8 +433,8 @@ function createMarkdownComponents() {
           paddingLeft: 24,
           marginBottom: "0.7em",
           fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 16,
-          lineHeight: 1.8,
+          fontSize: bodySize,
+          lineHeight: bodyLineHeight,
         }}
         className="text-foreground/85"
         {...props}
@@ -455,16 +459,86 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   sources,
   synthesizing = false,
   media,
+  immersive = false,
 }) => {
   const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
+  const isWideImmersive = immersive && typeof window !== "undefined" && window.innerWidth >= 1024;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
-  const markdownComponents = useMemo(() => createMarkdownComponents(), []);
+  const markdownComponents = useMemo(() => createMarkdownComponents(immersive), [immersive]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   // Show skeleton only when synthesizing AND no content yet
   if (synthesizing && !contentMarkdown.trim()) {
     return <SynthesizingSkeleton />;
+  }
+
+  // Two-column layout: infobox as sticky sidebar on wide immersive screens
+  if (isWideImmersive && wikidata) {
+    return (
+      <article style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {/* ── Title ── */}
+        <h1
+          className="text-foreground"
+          style={{
+            fontSize: "2.2rem",
+            fontWeight: 400,
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            lineHeight: 1.2,
+            margin: 0,
+            paddingBottom: 6,
+            borderBottom: "1px solid rgba(255,255,255,0.12)",
+          }}
+        >
+          {title}
+        </h1>
+        <p className="text-muted-foreground/50" style={{ fontSize: 12, fontStyle: "italic", margin: "6px 0 12px" }}>
+          From UOR Knowledge, the universal encyclopedia
+        </p>
+        <SourcesPills sources={sourceMetas} />
+
+        {/* ── Two-column grid ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 32, marginTop: 8 }}>
+          {/* Main content column */}
+          <div style={{ minWidth: 0 }}>
+            <TableOfContents entries={toc} defaultCollapsed={false} />
+            {lead && (
+              <div style={{ marginBottom: 16 }}>
+                <CitedMarkdown markdown={lead} sources={sourceMetas} components={markdownComponents} />
+              </div>
+            )}
+            <div>
+              <CitedMarkdown markdown={body} sources={sourceMetas} components={markdownComponents} />
+              {synthesizing && (
+                <span className="inline-block bg-primary/70" style={{ width: 2, height: 18, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
+              )}
+            </div>
+            <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+          </div>
+
+          {/* Sidebar infobox column */}
+          <div style={{ position: "sticky", top: 80, alignSelf: "start" }}>
+            <Infobox title={title} wikidata={wikidata} />
+          </div>
+        </div>
+
+        {media && !synthesizing && <EncyclopediaMedia media={media} />}
+
+        {sources.length > 0 && (
+          <div className="border-t border-border/20" style={{ marginTop: 32, paddingTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <span className="text-muted-foreground/40" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>References</span>
+            <ol className="mt-2 space-y-1 list-decimal list-inside">
+              {sourceMetas.map((s, i) => (
+                <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">{s.domain}</a>
+                  <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}>uor:{s.uorHash}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </article>
+    );
   }
 
   return (
@@ -473,13 +547,13 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       <h1
         className="text-foreground"
         style={{
-          fontSize: "1.85rem",
+          fontSize: immersive ? "2.2rem" : "1.85rem",
           fontWeight: 400,
           fontFamily: "Georgia, 'Times New Roman', serif",
           lineHeight: 1.2,
           margin: 0,
           paddingBottom: 4,
-          borderBottom: "1px solid hsl(var(--border) / 0.25)",
+          borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
         }}
       >
         {title}
