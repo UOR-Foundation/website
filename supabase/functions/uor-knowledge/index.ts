@@ -390,13 +390,42 @@ const SOURCE_KEYWORDS: Record<string, RegExp> = {
   "loc": /\b(americ|president|civil.war|congress|constitution|jazz|blues|folk|baseball|lincoln|washington|jefferson|roosevelt|colonial|pioneer|immigration|suffrage|civil.rights|dust.bowl|great.depression|world.war|vietnam|korean.war|manifest.destiny)\b/i,
 };
 
+/* ── Off-topic penalty patterns ──────────────────────────────────────── */
+
+/** Domain-mismatch penalties: if a caption contains these patterns but the
+ *  search term doesn't, the image is likely off-topic */
+const OFFTOPIC_PENALTIES: Array<{ pattern: RegExp; domains: RegExp }> = [
+  // Ancient/archaeological artifacts showing up for modern topics
+  { pattern: /\b(ancient|archaeological|artifact|antiquit|hieroglyph|pharaoh|mummy|cuneiform|papyrus|tablet|stele|amphora|sarcophag)\b/i,
+    domains: /\b(sport|racing|formula|motor|car|tech|software|computer|digital|modern|contemporar)\b/i },
+  // Religious/mythological imagery for science/tech topics
+  { pattern: /\b(deity|worship|temple|altar|ritual|liturgical|reliquary|icon|devotional|biblical|scripture)\b/i,
+    domains: /\b(science|physics|chemistry|biology|engineering|tech|digital|computer|math)\b/i },
+  // Military/weapons for civilian topics
+  { pattern: /\b(weapon|sword|cannon|musket|bayonet|rifle|artillery|ammunition|warfare)\b/i,
+    domains: /\b(art|music|literature|philosophy|food|fashion|sport|entertainment)\b/i },
+];
+
+function computeOfftopicPenalty(caption: string, searchTerm: string): number {
+  let penalty = 0;
+  for (const { pattern, domains } of OFFTOPIC_PENALTIES) {
+    if (pattern.test(caption) && !pattern.test(searchTerm) && domains.test(searchTerm)) {
+      penalty += 30;
+    }
+  }
+  return penalty;
+}
+
 function selectSources(term: string): string[] {
   const sources = ["wikimedia"]; // Always query
   for (const [src, re] of Object.entries(SOURCE_KEYWORDS)) {
     if (re.test(term)) sources.push(src);
   }
-  // If no specialty matched, add Met Museum as a general cultural fallback
-  if (sources.length === 1) sources.push("met-museum");
+  // Only add Met Museum as fallback if the topic relates to art/culture
+  // NOT for generic topics (prevents random artifacts for e.g. "Formula 1")
+  if (sources.length === 1 && /\b(art|culture|histor|heritage|museum)\b/i.test(term)) {
+    sources.push("met-museum");
+  }
   return sources;
 }
 
