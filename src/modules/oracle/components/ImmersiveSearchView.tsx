@@ -1,6 +1,6 @@
 /**
  * ImmersiveSearchView — Full-screen photo portal with clock, greeting, and search.
- * Inspired by Momentum / new-tab experiences. Now with voice input and vault drop zone.
+ * Now with inline Sovereign Context Vault picker.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -12,7 +12,9 @@ import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
-import VaultContextBadge from "@/modules/sovereign-vault/components/VaultContextBadge";
+import VaultContextPicker from "@/modules/sovereign-vault/components/VaultContextPicker";
+import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
+import VaultImportDialog from "@/modules/sovereign-vault/components/VaultImportDialog";
 import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
 import { toast } from "sonner";
 
@@ -28,11 +30,10 @@ function formatClock(date: Date): string {
 }
 
 interface Props {
-  onSearch: (query: string) => void;
+  onSearch: (query: string, contextDocIds?: string[]) => void;
   onExit: () => void;
   onEncode?: () => void;
   onAiMode?: () => void;
-  /** Whether the browser is currently in fullscreen mode */
   isFullscreen?: boolean;
 }
 
@@ -47,7 +48,25 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
   const [dragOver, setDragOver] = useState(false);
 
-  // Solar-phase photo update (checked every 60s)
+  // Vault context state
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importTab, setImportTab] = useState<"file" | "url">("file");
+
+  const selectedDocs = vault.documents.filter((d) => selectedDocIds.includes(d.id));
+
+  const toggleDoc = useCallback((docId: string) => {
+    setSelectedDocIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
+    );
+  }, []);
+
+  const removeDoc = useCallback((docId: string) => {
+    setSelectedDocIds((prev) => prev.filter((id) => id !== docId));
+  }, []);
+
+  // Solar-phase photo update
   useEffect(() => {
     initLocation().then(() => {
       const phase = getCurrentPhase();
@@ -57,7 +76,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       }
       preloadNextPhasePhoto();
     });
-
     const interval = setInterval(() => {
       const phase = getCurrentPhase();
       if (phase !== phaseRef.current) {
@@ -75,8 +93,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
     return () => clearInterval(id);
   }, []);
 
-  // Don't auto-focus on mobile — let user tap to open keyboard
-  // On desktop, focus after a short delay for convenience
+  // Auto-focus on desktop
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) {
@@ -86,8 +103,8 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
 
   const handleSubmit = useCallback(() => {
     const q = query.trim();
-    if (q) onSearch(q);
-  }, [query, onSearch]);
+    if (q) onSearch(q, selectedDocIds.length > 0 ? selectedDocIds : undefined);
+  }, [query, onSearch, selectedDocIds]);
 
   const handleVaultDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -110,7 +127,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
       className="fixed inset-0 z-50 flex flex-col"
-      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleVaultDrop}
     >
@@ -123,7 +140,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           className={`w-full h-full object-cover transition-opacity duration-1000 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           draggable={false}
         />
-        {/* Dark overlay for legibility */}
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
       </div>
@@ -131,20 +147,9 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       {/* Content layer */}
       <div className="relative z-10 flex flex-col flex-1 text-white">
 
-        {/* ── Top bar ── */}
+        {/* Top bar */}
         <div className="flex items-center justify-between px-8 py-5">
-          {/* Left: quick actions */}
           <div className="flex items-center gap-4">
-            {onEncode && (
-              <button
-                onClick={onEncode}
-                className="flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors text-sm font-medium"
-                title="Encode content"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Encode</span>
-              </button>
-            )}
             {onAiMode && (
               <button
                 onClick={onAiMode}
@@ -157,7 +162,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             )}
           </div>
 
-          {/* Right: fullscreen toggle */}
           <button
             onClick={onExit}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white transition-all"
@@ -167,7 +171,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           </button>
         </div>
 
-        {/* ── Center: Clock + Greeting + Search ── */}
+        {/* Center: Clock + Greeting + Search */}
         <div className="flex-1 flex flex-col items-center justify-center px-8" style={{ paddingBottom: "5vh" }}>
           {/* Clock */}
           <motion.div
@@ -191,7 +195,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             {greeting}, {displayName}.
           </motion.p>
 
-          {/* Search prompt + input */}
+          {/* Search input */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -212,13 +216,44 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                   }
                 }}
                 placeholder="What is your main focus today?"
-                className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/35 focus:border-white/50 rounded-full px-6 py-4 text-white text-base placeholder:text-white/30 focus:outline-none transition-all shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]"
+                className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/35 focus:border-white/50 rounded-full pl-14 pr-24 py-4 text-white text-base placeholder:text-white/30 focus:outline-none transition-all shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]"
               />
+
+              {/* + button (vault context picker trigger) — left of input */}
+              <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setPickerOpen((p) => !p)}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                    pickerOpen || selectedDocIds.length > 0
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/15 border border-white/10"
+                  }`}
+                  title="Attach vault documents as context"
+                >
+                  <Plus className="w-4 h-4" />
+                </motion.button>
+
+                {/* Picker popover — anchored below the + button */}
+                <VaultContextPicker
+                  open={pickerOpen}
+                  onOpenChange={setPickerOpen}
+                  vault={vault}
+                  selectedIds={selectedDocIds}
+                  onToggle={toggleDoc}
+                  onImportFile={() => { setImportTab("file"); setImportDialogOpen(true); }}
+                  onImportUrl={() => { setImportTab("url"); setImportDialogOpen(true); }}
+                  anchor="below"
+                  className="top-12 left-0"
+                />
+              </div>
+
+              {/* Right-side actions */}
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                 <VoiceInput
                   onTranscript={(text, isFinal) => {
                     setQuery(text);
-                    if (isFinal && text.trim()) onSearch(text.trim());
+                    if (isFinal && text.trim()) onSearch(text.trim(), selectedDocIds.length > 0 ? selectedDocIds : undefined);
                   }}
                   size="sm"
                   className="text-white/60 hover:text-white/90 border-white/10 hover:border-white/25"
@@ -232,10 +267,11 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 </button>
               </div>
             </div>
-            {/* Vault context badge */}
-            {vault.count > 0 && (
+
+            {/* Context pills */}
+            {selectedDocs.length > 0 && (
               <div className="mt-3">
-                <VaultContextBadge count={vault.count} />
+                <ContextPills documents={selectedDocs} onRemove={removeDoc} />
               </div>
             )}
           </motion.div>
@@ -251,17 +287,20 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           </div>
         )}
 
-        {/* ── Bottom bar ── */}
+        {/* Bottom bar */}
         <div className="flex flex-col items-center px-8 py-6">
           <ImmersiveQuote />
         </div>
 
-        {/* ── Bottom-right: SoundCloud + attribution ── */}
+        {/* Bottom-right */}
         <div className="absolute bottom-4 right-4 flex items-center gap-3 z-10">
           <SoundCloudFab />
           <span className="text-white/40 text-xs">Photo · Unsplash</span>
         </div>
       </div>
+
+      {/* Import dialog */}
+      <VaultImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} vault={vault} />
     </motion.div>
   );
 }
