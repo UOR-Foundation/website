@@ -145,6 +145,7 @@ function extractBlindSpots(
 /* ── Page ── */
 
 const OraclePage = () => {
+  const inWindow = useIsInsideWindow();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
