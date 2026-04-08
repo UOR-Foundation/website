@@ -45,6 +45,26 @@ export type {
   RoyaltyReport,
 } from "./attribution";
 
+// ── UMP. UOR Messaging Protocol (Post-Quantum E2E) ────────────────────────
+export {
+  createDirectSession,
+  createGroupSession,
+  sealMessage,
+  openMessage,
+  revokeSession,
+  rekeyGroup,
+  verifyMessageChain,
+  isSessionActive,
+  getSessionSecurity,
+} from "./messaging";
+
+export type {
+  UmpSession,
+  UmpMessage,
+  UmpOpenResult,
+  UmpRekeyEvent,
+} from "./messaging";
+
 // ── TrustGraph. Social Attestation Layer ───────────────────────────────────
 export { UnsTrustGraph } from "./trust-graph";
 export type {

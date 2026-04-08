@@ -771,6 +771,42 @@ export type Database = {
         }
         Relationships: []
       }
+      conduit_sessions: {
+        Row: {
+          created_at: string
+          creator_id: string
+          expires_at: string | null
+          id: string
+          metadata_cid: string | null
+          participants: string[]
+          revoked_at: string | null
+          session_hash: string
+          session_type: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          metadata_cid?: string | null
+          participants?: string[]
+          revoked_at?: string | null
+          session_hash: string
+          session_type?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          metadata_cid?: string | null
+          participants?: string[]
+          revoked_at?: string | null
+          session_hash?: string
+          session_type?: string
+        }
+        Relationships: []
+      }
       discord_events: {
         Row: {
           calendar_date: string | null
@@ -809,6 +845,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      encrypted_messages: {
+        Row: {
+          ciphertext: string
+          created_at: string
+          envelope_cid: string
+          id: string
+          message_hash: string
+          parent_hashes: string[]
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          ciphertext: string
+          created_at?: string
+          envelope_cid: string
+          id?: string
+          message_hash: string
+          parent_hashes?: string[]
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          ciphertext?: string
+          created_at?: string
+          envelope_cid?: string
+          id?: string
+          message_hash?: string
+          parent_hashes?: string[]
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encrypted_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_rekeys: {
+        Row: {
+          created_at: string
+          id: string
+          new_session_id: string
+          reason: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_session_id: string
+          reason?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_session_id?: string
+          reason?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_rekeys_new_session_id_fkey"
+            columns: ["new_session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_rekeys_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_kernels: {
         Row: {
@@ -2666,6 +2782,10 @@ export type Database = {
           rank: number
           signup_count: number
         }[]
+      }
+      is_session_participant: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
       }
       lookup_invite_code: {
         Args: { lookup_code: string }
