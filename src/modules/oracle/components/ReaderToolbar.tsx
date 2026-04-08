@@ -393,9 +393,9 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       <div
         className="flex items-center gap-1 w-full"
         style={{
-          paddingLeft: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
-          paddingRight: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
-          paddingBottom: `${Math.round(TOOLBAR_PY * 0.8)}px`,
+          paddingLeft: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
+          paddingRight: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
+          paddingBottom: `${Math.round(TOOLBAR_PY * 0.618)}px`,
         }}
       >
         {KNOWLEDGE_LENSES.map((lens) => {
