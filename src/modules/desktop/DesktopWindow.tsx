@@ -89,7 +89,7 @@ export default function DesktopWindow({
   const AppComponent = app?.component;
 
   const style = win.maximized
-    ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px - 68px)` }
+    ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px)` }
     : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
   // Revolut-style: solid semi-opaque bg, reduced blur (20px vs 48px)
