@@ -410,7 +410,7 @@ const SearchPage = () => {
       }
     }, 180);
 
-    // Phase 2 at 800ms: side effects
+    // Phase 2 at 1400ms: side effects
     setTimeout(() => {
       setImprobPhase(2);
       let effectIdx = 0;
@@ -419,9 +419,9 @@ const SearchPage = () => {
           IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
         );
         effectIdx++;
-      }, 700);
+      }, 1200);
 
-      // Phase 3 at 2400ms: DON'T PANIC
+      // Phase 3 at 3800ms: DON'T PANIC
       setTimeout(() => {
         clearInterval(effectInterval);
         setImprobPhase(3);
@@ -444,7 +444,7 @@ const SearchPage = () => {
         ];
         confetti({ particleCount: 50, spread: 90, origin: { y: 0.45 }, colors, startVelocity: 18, gravity: 0.5, ticks: 120 });
 
-        // At 1200ms: set result BEHIND the still-opaque overlay, then fade out
+        // At 1800ms: set result BEHIND the still-opaque overlay, then fade out
         setTimeout(async () => {
           const upgraded = await ensureWasmReceipt(pick.source, pick.receipt);
           setInput(pick.receipt.triword);
@@ -465,9 +465,9 @@ const SearchPage = () => {
               }, 700);
             });
           });
-        }, 1200);
-      }, 1600);
-    }, 800);
+        }, 1800);
+      }, 2400);
+    }, 1400);
   };
 
   return (
