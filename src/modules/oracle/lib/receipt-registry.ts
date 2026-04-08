@@ -60,6 +60,8 @@ export interface RegistryEntry {
   receipt: EnrichedReceipt;
   /** Timestamp of creation */
   createdAt: number;
+  /** How many times this content has been confirmed (re-encoded) */
+  confirmations: number;
 }
 
 // ── Global Registry ────────────────────────────────────────────────────────
@@ -108,7 +110,7 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
   const proof = await singleProofHash(source);
   const enriched = enrichWithWasm(proof);
 
-  const entry: RegistryEntry = { source, receipt: enriched, createdAt: Date.now() };
+  const entry: RegistryEntry = { source, receipt: enriched, createdAt: Date.now(), confirmations: 1 };
 
   // Index by CID, derivationId, triword, and IPv6 for flexible lookup
   registry.set(enriched.cid, entry);

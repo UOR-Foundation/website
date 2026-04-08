@@ -15,7 +15,8 @@ import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
-import { allEntries } from "@/modules/oracle/lib/receipt-registry";
+import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 
@@ -82,6 +83,12 @@ const NEAR_INFINITE_CONCEPT = {
 interface Result {
   source: unknown;
   receipt: EnrichedReceipt;
+  /** Whether this content was already known (confirmed) vs newly discovered */
+  isConfirmed?: boolean;
+  /** How many times this content has been confirmed */
+  confirmations?: number;
+  /** When the content was first discovered (ms since epoch) */
+  originalTimestamp?: number;
 }
 
 /* ── Human-readable content renderer ── */
@@ -92,7 +99,7 @@ const HUMAN_LABEL_MAP: Record<string, string> = {
   "uor:label": "Label",
   "uor:definition": "Definition",
   "uor:content": "Content",
-  "uor:encodedAt": "Encoded At",
+  
   "uor:query": "Query",
   "uor:response": "Response",
   "uor:timestamp": "Timestamp",
@@ -364,15 +371,44 @@ const SearchPage = () => {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:UserContent",
         "uor:content": text,
-        "uor:encodedAt": new Date().toISOString(),
       };
-      const receipt = await encode(sourceObj);
-      setResult({ source: sourceObj, receipt });
-      setInput(receipt.triword);
-      setEncodeMode(false);
-      setEncodeText("");
-      confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
-      toast("✨ Your data has its address.", { description: receipt.triwordFormatted });
+
+      // Pre-check: does this content already have an address?
+      const proof = await singleProofHash(sourceObj);
+      const existing = lookupReceipt(proof.cid);
+
+      if (existing) {
+        // Content confirmed — same address, same content
+        existing.confirmations = (existing.confirmations || 1) + 1;
+        const upgraded = await ensureWasmReceipt(existing.source, existing.receipt);
+        setResult({
+          source: existing.source,
+          receipt: upgraded,
+          isConfirmed: true,
+          confirmations: existing.confirmations,
+          originalTimestamp: existing.createdAt,
+        });
+        setInput(existing.receipt.triword);
+        setEncodeMode(false);
+        setEncodeText("");
+        toast("Address confirmed.", {
+          description: "Same content, same address.",
+          icon: "✓",
+        });
+      } else {
+        // New content — address discovered
+        const receipt = await encode(sourceObj);
+        setResult({
+          source: sourceObj,
+          receipt,
+          isConfirmed: false,
+        });
+        setInput(receipt.triword);
+        setEncodeMode(false);
+        setEncodeText("");
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
+        toast("Address discovered.", { description: receipt.triwordFormatted, icon: "✨" });
+      }
     } catch (err) { console.error("[Encode] Failed:", err); toast.error("Encoding failed: " + (err instanceof Error ? err.message : String(err))); }
     finally { setLoading(false); }
   };
@@ -1290,6 +1326,46 @@ const SearchPage = () => {
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
                   </div>
+
+                  {/* Discovered / Confirmed status badge */}
+                  {result.isConfirmed !== undefined && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.12 }}
+                      className="flex items-center gap-3 mt-3"
+                    >
+                      {result.isConfirmed ? (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-primary/10 text-primary/80 border border-primary/20">
+                            <Check className="w-3 h-3" />
+                            Confirmed
+                          </span>
+                          {result.confirmations && result.confirmations > 1 && (
+                            <span className="text-sm text-muted-foreground/40 font-mono">
+                              {result.confirmations} time{result.confirmations > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {result.originalTimestamp && (
+                            <span className="text-sm text-muted-foreground/35">
+                              · First discovered {(() => {
+                                const diff = Date.now() - result.originalTimestamp;
+                                if (diff < 60000) return "just now";
+                                if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+                                if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+                                return `${Math.floor(diff / 86400000)}d ago`;
+                              })()}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
+                          <Sparkles className="w-3 h-3" />
+                          Discovered
+                        </span>
+                      )}
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* ── Continue / Discuss in Oracle CTA — prominent at top ── */}
