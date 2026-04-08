@@ -289,7 +289,8 @@ const SearchPage = () => {
             "uor:response": assistantSoFar,
             "uor:timestamp": new Date().toISOString(),
           };
-          const receipt = await encode(proofSource);
+          let receipt = await encode(proofSource);
+          receipt = await ensureWasmReceipt(proofSource, receipt);
           // Attach proof to the last assistant message
           setAiMessages(prev => prev.map((m, i) =>
             i === prev.length - 1 && m.role === "assistant"
