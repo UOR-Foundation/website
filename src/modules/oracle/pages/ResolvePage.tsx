@@ -963,8 +963,8 @@ const SearchPage = () => {
     // Placeholder receipt — encode deferred to after stream completes
     const placeholderReceipt = {
       derivationId: "", cid: "", ipv6: "",
-      triword: "loading.knowledge.card",
-      triwordFormatted: "Loading · Knowledge · Card",
+      triword: "",
+      triwordFormatted: "",
       glyph: "", ringPartition: "pending", engine: "deferred",
       hashHex: "", nquads: "", ringByte: 0, ringFactors: [],
       ringLabel: "", wasmAvailable: false, wasmEnriched: false,
