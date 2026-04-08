@@ -575,7 +575,7 @@ const SearchPage = () => {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 0.35, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="mt-8 text-center text-sm italic text-muted-foreground/35 max-w-sm px-6 z-10"
+                className="mt-10 text-center text-lg md:text-xl italic text-muted-foreground/45 max-w-md px-6 z-10"
               >
                 {improbSideEffect}
               </motion.p>
@@ -599,7 +599,7 @@ const SearchPage = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.35 }}
                   transition={{ delay: 0.2 }}
-                  className="text-xs text-muted-foreground/25 font-mono"
+                  className="text-base text-muted-foreground/35 font-mono"
                 >
                   Normality restoring…
                 </motion.p>
