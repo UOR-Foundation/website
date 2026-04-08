@@ -76,7 +76,7 @@ export default function MobileShell() {
         </div>
       </div>
 
-      <DesktopThemeDots />
+      <DesktopThemeDots windows={[]} />
 
       {/* App Drawer */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
