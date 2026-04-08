@@ -20,7 +20,6 @@ import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWind
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
-import BootSequence from "@/modules/desktop/BootSequence";
 import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
@@ -29,7 +28,7 @@ function DesktopShellInner() {
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
-  const [booting, setBooting] = useState(() => !sessionStorage.getItem("uor:booted"));
+  
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -70,8 +69,6 @@ function DesktopShellInner() {
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
 
   return (
-    <>
-    {booting && <BootSequence onComplete={() => setBooting(false)} />}
     <DesktopContextMenu
       onNewSearch={() => handleHomeSearch("")}
       onSpotlight={() => setSpotlightOpen(true)}
@@ -129,7 +126,6 @@ function DesktopShellInner() {
         />
       </div>
     </DesktopContextMenu>
-    </>
   );
 }
 
