@@ -102,7 +102,7 @@ const SearchPage = () => {
   // Chain of Proofs state
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
-  const [chainViewMode, setChainViewMode] = useState<"readable" | "raw">("readable");
+  const [chainViewMode, setChainViewMode] = useState<"human" | "machine">("human");
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
@@ -1119,34 +1119,34 @@ const SearchPage = () => {
                           {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
                         </span>
                       </div>
-                      {/* Readable / Raw toggle */}
+                      {/* Human / Machine toggle */}
                       <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
                         <button
-                          onClick={() => setChainViewMode("readable")}
+                          onClick={() => setChainViewMode("human")}
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            chainViewMode === "readable"
+                            chainViewMode === "human"
                               ? "bg-primary/15 text-foreground"
                               : "text-muted-foreground/40 hover:text-foreground/60"
                           }`}
                         >
                           <BookOpen className="w-3.5 h-3.5" />
-                          Readable
+                          Human
                         </button>
                         <button
-                          onClick={() => setChainViewMode("raw")}
+                          onClick={() => setChainViewMode("machine")}
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            chainViewMode === "raw"
+                            chainViewMode === "machine"
                               ? "bg-primary/15 text-foreground"
                               : "text-muted-foreground/40 hover:text-foreground/60"
                           }`}
                         >
                           <Code2 className="w-3.5 h-3.5" />
-                          Raw
+                          Machine
                         </button>
                       </div>
                     </div>
 
-                    {chainViewMode === "readable" ? (
+                    {chainViewMode === "human" ? (
                       <div className="space-y-0">
                         {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
                           <div key={idx} className="flex items-stretch gap-0">
@@ -1191,15 +1191,90 @@ const SearchPage = () => {
                         ))}
                       </div>
                     ) : (
-                      /* Raw JSON view */
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-end">
-                          <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "chain-json")} copied={copied === "chain-json"} label="Copy" />
-                        </div>
-                        <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[55vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
-                          {JSON.stringify(result.source, null, 2)}
-                        </pre>
-                      </div>
+                      /* Machine view — numbered markdown for AI agents */
+                      (() => {
+                        const src = result.source as Record<string, unknown>;
+                        const links = (src?.["uor:links"] as Array<Record<string, unknown>>) ?? [];
+                        const lines: string[] = [
+                          `# UOR Chain of Proofs`,
+                          ``,
+                          `> @type: ${src["@type"] ?? "uor:ChainOfProofs"}`,
+                          `> chain_length: ${src["uor:chainLength"] ?? links.length}`,
+                          `> proof_address: \`${src["uor:proofAddress"] ?? "—"}\``,
+                          ``,
+                          `---`,
+                          ``,
+                        ];
+                        links.forEach((link, idx) => {
+                          lines.push(`## Link ${idx + 1}`);
+                          lines.push(``);
+                          const fields: [string, unknown][] = Object.entries(link);
+                          for (const [key, val] of fields) {
+                            const k = key.replace(/^uor:/, "");
+                            if (typeof val === "string" && val.length > 300) {
+                              lines.push(`- **${k}**: "${val.slice(0, 280)}…"`);
+                            } else if (typeof val === "object" && val !== null) {
+                              lines.push(`- **${k}**: \`${JSON.stringify(val)}\``);
+                            } else {
+                              lines.push(`- **${k}**: ${typeof val === "string" ? `"${val}"` : String(val ?? "—")}`);
+                            }
+                          }
+                          lines.push(``);
+                        });
+                        lines.push(`---`);
+                        lines.push(`<!-- machine-readable UOR artifact • ${new Date().toISOString()} -->`);
+
+                        const markdown = lines.join("\n");
+
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-mono text-muted-foreground/40">.uor.md • {lines.length} lines</span>
+                              <CopyBtn onClick={() => copy(markdown, "chain-md")} copied={copied === "chain-md"} label="Copy Markdown" />
+                            </div>
+                            <div
+                              className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[55vh] overflow-y-auto"
+                              style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}
+                            >
+                              <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
+                                {lines.map((line, i) => (
+                                  <div key={i} className="contents group">
+                                    {/* Line number gutter */}
+                                    <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">
+                                      {i + 1}
+                                    </div>
+                                    {/* Line content */}
+                                    <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                      {line.startsWith("# ") ? (
+                                        <span className="text-primary/80 font-bold">{line}</span>
+                                      ) : line.startsWith("## ") ? (
+                                        <span className="text-primary/60 font-semibold">{line}</span>
+                                      ) : line.startsWith("> ") ? (
+                                        <span className="text-accent-foreground/50 italic">{line}</span>
+                                      ) : line.startsWith("- ") ? (
+                                        <span className="text-foreground/65">
+                                          <span className="text-muted-foreground/40">- </span>
+                                          {(() => {
+                                            const m = line.match(/^- \*\*(.+?)\*\*: (.+)$/);
+                                            if (m) return <><span className="text-primary/50 font-semibold">{m[1]}</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">{m[2]}</span></>;
+                                            return <span>{line.slice(2)}</span>;
+                                          })()}
+                                        </span>
+                                      ) : line.startsWith("---") ? (
+                                        <span className="text-border/30">{line}</span>
+                                      ) : line.startsWith("<!--") ? (
+                                        <span className="text-muted-foreground/20 italic">{line}</span>
+                                      ) : (
+                                        <span className="text-foreground/50">{line}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()
                     )}
                   </motion.div>
                 ) : (
