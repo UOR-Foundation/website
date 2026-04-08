@@ -179,49 +179,20 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
 
   return (
     <>
-      <div>
-        {/* ── Section Label ── */}
-        <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] mb-3">
-          Identity
-        </p>
-
-        {/* ── Primary Identity Card ── */}
-        <div className="rounded-2xl border border-border/15 bg-muted/5 overflow-hidden">
-          {/* IPv6 */}
-          <div className="px-5 py-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-semibold">
-                Network Address
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <code className="text-[15px] font-mono text-primary tracking-wide flex-1 truncate">
-                {receipt.ipv6}
-              </code>
-              <CopyBtn onClick={() => copyValue(receipt.ipv6, "ipv6-hero")} copied={copiedKey === "ipv6-hero"} />
-            </div>
-          </div>
-
-          {/* Triword */}
-          <div className="px-5 pb-4 -mt-1">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm italic text-muted-foreground/50 flex-1 truncate">
-                {receipt.triwordFormatted || receipt.triword}
-              </span>
-              <CopyBtn onClick={() => copyValue(receipt.triword, "triword-hero")} copied={copiedKey === "triword-hero"} />
-            </div>
-          </div>
-
-          {/* ── Open overlay button ── */}
-          <button
-            onClick={() => setOverlayOpen(true)}
-            className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 border-t border-border/10 text-sm font-medium text-primary/70 hover:text-primary hover:bg-primary/5 transition-all group"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>Share this address in {totalProjections} formats</span>
-            <ChevronRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
-          </button>
-        </div>
+      {/* ── Compact single-row identity bar ── */}
+      <div className="flex items-center gap-3 rounded-xl border border-border/12 bg-muted/5 px-4 py-2.5">
+        <code className="text-[13px] font-mono text-primary tracking-wide truncate flex-1">
+          {receipt.ipv6}
+        </code>
+        <CopyBtn onClick={() => copyValue(receipt.ipv6, "ipv6-hero")} copied={copiedKey === "ipv6-hero"} />
+        <button
+          onClick={() => setOverlayOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-medium text-primary/60 hover:text-primary transition-colors shrink-0"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{totalProjections} formats</span>
+          <ChevronRight className="w-3 h-3 opacity-40" />
+        </button>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════ */}
