@@ -34,6 +34,8 @@ interface ReaderToolbarProps {
   activeLens: string;
   onLensChange: (lensId: string) => void;
   onBack: () => void;
+  onHome?: () => void;
+  onReload?: () => void;
   onToggleDetails: () => void;
   synthesizing?: boolean;
   /** 0–1 streaming progress (actual character-based) */
@@ -57,6 +59,8 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   activeLens,
   onLensChange,
   onBack,
+  onHome,
+  onReload,
   onToggleDetails,
   synthesizing = false,
   streamProgress = 0,
