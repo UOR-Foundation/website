@@ -1,5 +1,5 @@
 /**
- * DesktopWindow — Crisp, Perplexity-dark draggable/resizable window.
+ * DesktopWindow — Crisp, draggable/resizable window with spatial entrance.
  */
 
 import { useRef, useCallback, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -22,14 +22,7 @@ interface Props {
 const MENU_BAR_H = 28;
 
 export default function DesktopWindow({
-  win,
-  isActive,
-  onClose,
-  onMinimize,
-  onMaximize,
-  onFocus,
-  onMove,
-  onResize,
+  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize,
 }: Props) {
   const app = getApp(win.appId);
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
@@ -38,54 +31,36 @@ export default function DesktopWindow({
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest(".traffic-light")) return;
     onFocus(win.id);
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      winX: win.position.x,
-      winY: win.position.y,
-    };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.position.x, winY: win.position.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, [win.id, win.position, onFocus]);
 
   const onDragMove = useCallback((e: ReactPointerEvent) => {
     if (!dragRef.current) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
     onMove(win.id, {
-      x: dragRef.current.winX + dx,
-      y: Math.max(MENU_BAR_H, dragRef.current.winY + dy),
+      x: dragRef.current.winX + (e.clientX - dragRef.current.startX),
+      y: Math.max(MENU_BAR_H, dragRef.current.winY + (e.clientY - dragRef.current.startY)),
     });
   }, [win.id, onMove]);
 
-  const onDragEnd = useCallback(() => {
-    dragRef.current = null;
-  }, []);
+  const onDragEnd = useCallback(() => { dragRef.current = null; }, []);
 
   const onResizeStart = useCallback((e: ReactPointerEvent) => {
     e.stopPropagation();
     onFocus(win.id);
-    resizeRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      winW: win.size.w,
-      winH: win.size.h,
-    };
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, winW: win.size.w, winH: win.size.h };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, [win.id, win.size, onFocus]);
 
   const onResizeMove = useCallback((e: ReactPointerEvent) => {
     if (!resizeRef.current) return;
-    const dx = e.clientX - resizeRef.current.startX;
-    const dy = e.clientY - resizeRef.current.startY;
     onResize(win.id, {
-      w: resizeRef.current.winW + dx,
-      h: resizeRef.current.winH + dy,
+      w: resizeRef.current.winW + (e.clientX - resizeRef.current.startX),
+      h: resizeRef.current.winH + (e.clientY - resizeRef.current.startY),
     });
   }, [win.id, onResize]);
 
-  const onResizeEnd = useCallback(() => {
-    resizeRef.current = null;
-  }, []);
+  const onResizeEnd = useCallback(() => { resizeRef.current = null; }, []);
 
   if (win.minimized) return null;
 
@@ -93,27 +68,19 @@ export default function DesktopWindow({
 
   const style = win.maximized
     ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px - 68px)` }
-    : {
-        top: win.position.y,
-        left: win.position.x,
-        width: win.size.w,
-        height: win.size.h,
-      };
+    : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
   return (
     <motion.div
-      initial={{ scale: 0.92, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.92, opacity: 0 }}
-      transition={{ type: "spring", damping: 28, stiffness: 400, duration: 0.25 }}
+      initial={{ scale: 0.85, opacity: 0, y: 60 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.85, opacity: 0, y: 40 }}
+      transition={{ type: "spring", damping: 26, stiffness: 350, duration: 0.3 }}
       className={`desktop-window-chrome fixed ${isActive ? "active" : ""}`}
-      style={{
-        ...style,
-        zIndex: win.zIndex,
-      }}
+      style={{ ...style, zIndex: win.zIndex }}
       onPointerDown={() => onFocus(win.id)}
     >
-      {/* Glass background — darker, crisper */}
+      {/* Glass background */}
       <div
         className="absolute inset-0 rounded-xl"
         style={{
@@ -123,12 +90,10 @@ export default function DesktopWindow({
         }}
       />
 
-      {/* Border overlay */}
+      {/* Border */}
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
-        style={{
-          border: `1px solid ${isActive ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)"}`,
-        }}
+        style={{ border: `1px solid ${isActive ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)"}` }}
       />
 
       {/* Title bar */}
@@ -139,33 +104,18 @@ export default function DesktopWindow({
         onPointerUp={onDragEnd}
         onDoubleClick={() => onMaximize(win.id)}
       >
-        {/* Traffic lights */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            className="traffic-light traffic-close"
-            onClick={(e) => { e.stopPropagation(); onClose(win.id); }}
-          />
-          <button
-            className="traffic-light traffic-minimize"
-            onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
-          />
-          <button
-            className="traffic-light traffic-maximize"
-            onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
-          />
+          <button className="traffic-light traffic-close" onClick={(e) => { e.stopPropagation(); onClose(win.id); }} />
+          <button className="traffic-light traffic-minimize" onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }} />
+          <button className="traffic-light traffic-maximize" onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }} />
         </div>
-
-        {/* Title */}
         <span className={`text-[12px] font-medium truncate flex-1 text-center pr-12 ${isActive ? "text-white/65" : "text-white/40"}`}>
           {win.title}
         </span>
       </div>
 
-      {/* Content — solid dark background for crispness */}
-      <div
-        className="relative overflow-auto rounded-b-xl"
-        style={{ height: "calc(100% - 40px)", background: "#191919" }}
-      >
+      {/* Content */}
+      <div className="relative overflow-auto rounded-b-xl" style={{ height: "calc(100% - 40px)", background: "#191919" }}>
         <Suspense
           fallback={
             <div className="flex items-center justify-center h-full">
@@ -180,24 +130,9 @@ export default function DesktopWindow({
       {/* Resize handles */}
       {!win.maximized && (
         <>
-          <div
-            className="resize-handle resize-handle-se"
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeMove}
-            onPointerUp={onResizeEnd}
-          />
-          <div
-            className="resize-handle resize-handle-e"
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeMove}
-            onPointerUp={onResizeEnd}
-          />
-          <div
-            className="resize-handle resize-handle-s"
-            onPointerDown={onResizeStart}
-            onPointerMove={onResizeMove}
-            onPointerUp={onResizeEnd}
-          />
+          <div className="resize-handle resize-handle-se" onPointerDown={onResizeStart} onPointerMove={onResizeMove} onPointerUp={onResizeEnd} />
+          <div className="resize-handle resize-handle-e" onPointerDown={onResizeStart} onPointerMove={onResizeMove} onPointerUp={onResizeEnd} />
+          <div className="resize-handle resize-handle-s" onPointerDown={onResizeStart} onPointerMove={onResizeMove} onPointerUp={onResizeEnd} />
         </>
       )}
     </motion.div>

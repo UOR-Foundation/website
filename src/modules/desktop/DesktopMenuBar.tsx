@@ -1,18 +1,19 @@
 /**
- * DesktopMenuBar — Slim, crisp macOS-inspired top status bar.
+ * DesktopMenuBar — Slim, crisp top status bar for UOR OS.
  */
 
 import { useState, useEffect } from "react";
-import { Wifi, Volume2 } from "lucide-react";
+import { Search, Wifi, Volume2 } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 
 interface Props {
   activeWindowId: string | null;
   windows: WindowState[];
+  onSpotlight?: () => void;
 }
 
-export default function DesktopMenuBar({ activeWindowId, windows }: Props) {
+export default function DesktopMenuBar({ activeWindowId, windows, onSpotlight }: Props) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function DesktopMenuBar({ activeWindowId, windows }: Props) {
 
   return (
     <div
+      data-menubar
       className="fixed top-0 inset-x-0 z-[200] h-7 flex items-center justify-between px-4 select-none"
       style={{
         background: "rgba(20,20,20,0.65)",
@@ -47,12 +49,19 @@ export default function DesktopMenuBar({ activeWindowId, windows }: Props) {
       <div className="flex items-center gap-3">
         <span className="text-[13px] font-bold text-white/85 tracking-tight">⬡ UOR</span>
         <span className="text-[13px] font-semibold text-white/50">
-          {activeApp?.label || "Finder"}
+          {activeApp?.label || "Desktop"}
         </span>
       </div>
 
-      {/* Right — Status icons + Clock */}
+      {/* Right — Status icons + Spotlight + Clock */}
       <div className="flex items-center gap-3">
+        <button
+          onClick={onSpotlight}
+          className="p-0.5 rounded hover:bg-white/[0.06] transition-colors group"
+          title="Spotlight (⌘K)"
+        >
+          <Search className="w-3 h-3 text-white/30 group-hover:text-white/55 transition-colors" />
+        </button>
         <Volume2 className="w-3.5 h-3.5 text-white/35" />
         <Wifi className="w-3.5 h-3.5 text-white/35" />
         <span className="text-[12px] text-white/55 font-medium tabular-nums">
