@@ -130,8 +130,6 @@ export function AddressSocialStats({ cid, onForkClick }: { cid: string; onForkCl
           {data.visitCount} visitor{data.visitCount !== 1 ? "s" : ""}
         </span>
         <span className="text-muted-foreground/20">·</span>
-        <span>{data.totalReactions} reaction{data.totalReactions !== 1 ? "s" : ""}</span>
-        <span className="text-muted-foreground/20">·</span>
         <span className="flex items-center gap-1.5">
           <MessageCircle className="w-3.5 h-3.5" />
           {data.comments.length} comment{data.comments.length !== 1 ? "s" : ""}
@@ -144,34 +142,6 @@ export function AddressSocialStats({ cid, onForkClick }: { cid: string; onForkCl
           <GitFork className="w-3.5 h-3.5" />
           {data.forkCount} fork{data.forkCount !== 1 ? "s" : ""}
         </button>
-      </div>
-
-      {/* Reactions */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {REACTIONS.map((r) => {
-          const count = data.reactions[r.key] || 0;
-          const isActive = myReaction === r.key;
-          return (
-            <button
-              key={r.key}
-              onClick={() => handleReaction(r.key)}
-              title={`${r.label} — ${r.desc}`}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                isActive
-                  ? "bg-primary/15 border-primary/30 text-primary shadow-[0_0_12px_-4px_hsl(var(--primary)/0.3)]"
-                  : "border-border/15 text-muted-foreground/40 hover:text-foreground/60 hover:border-border/30 hover:bg-muted/5"
-              }`}
-            >
-              <span className="text-base">{r.icon}</span>
-              <span>{r.label}</span>
-              {count > 0 && (
-                <span className={`text-xs font-mono ${isActive ? "text-primary/70" : "text-muted-foreground/30"}`}>
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
     </div>
   );
