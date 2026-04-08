@@ -2172,6 +2172,12 @@ const SearchPage = () => {
                           paddingBottom: 80,
                           paddingLeft: 16,
                           paddingRight: 16,
+                        } : inWindow ? {
+                          maxWidth: "100%",
+                          paddingTop: "calc(1rem * 1.618 * 1.618)",
+                          paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
+                          paddingLeft: "clamp(1rem, 3%, 2.5rem)",
+                          paddingRight: "clamp(1rem, 3%, 2.5rem)",
                         } : immersiveMode ? {
                           maxWidth: "min(1400px, 95vw)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
@@ -2179,7 +2185,7 @@ const SearchPage = () => {
                           paddingLeft: "clamp(1.5rem, 3vw, 3rem)",
                           paddingRight: "clamp(1.5rem, 3vw, 3rem)",
                         } : {
-                          maxWidth: "clamp(720px, 85vw, 1100px)",
+                          maxWidth: "100%",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
                           paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
                           paddingLeft: "clamp(1rem, 3vw, 2.5rem)",

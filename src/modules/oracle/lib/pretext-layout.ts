@@ -10,6 +10,7 @@ import {
   prepareWithSegments,
   layout,
   layoutWithLines,
+  walkLineRanges,
   type PreparedText,
   type PreparedTextWithSegments,
   type LayoutResult,
@@ -33,6 +34,20 @@ export const FONTS = {
   dmSansH2: "700 24px 'DM Sans', system-ui, sans-serif",
   /** Pull-quote */
   georgiaPullQuote: "italic 22px Georgia, 'Times New Roman', serif",
+  /** OS: Desktop clock (largest) */
+  osClock: "700 80px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Desktop clock (medium fallback) */
+  osClockMd: "700 56px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Desktop clock (small fallback) */
+  osClockSm: "700 40px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Greeting line */
+  osGreeting: "500 24px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Greeting (small) */
+  osGreetingSm: "500 18px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Tab bar labels */
+  osTabLabel: "500 12px 'DM Sans', -apple-system, sans-serif",
+  /** OS: Spotlight search text */
+  osSpotlight: "500 15px 'DM Sans', -apple-system, sans-serif",
 } as const;
 
 /* ── Caching layer ───────────────────────────────────────────────────── */
@@ -188,6 +203,110 @@ export function predictSectionHeight(
 ): number {
   const plain = stripMarkdown(markdown);
   return predictHeight(plain, font, containerWidth, lineHeight);
+}
+
+/**
+ * Smart truncation — find the longest text prefix that fits within
+ * `maxLines` lines, truncating at a natural word boundary with "…".
+ */
+export function smartTruncate(
+  text: string,
+  font: string,
+  containerWidth: number,
+  lineHeight: number,
+  maxLines: number
+): string {
+  if (!text.trim()) return text;
+  const lines = measureLineCount(text, font, containerWidth, lineHeight);
+  if (lines <= maxLines) return text;
+
+  // Binary search for the longest prefix that fits
+  const words = text.split(/\s+/);
+  let lo = 1;
+  let hi = words.length;
+  let best = 1;
+
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const candidate = words.slice(0, mid).join(" ") + "…";
+    const cl = measureLineCount(candidate, font, containerWidth, lineHeight);
+    if (cl <= maxLines) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+
+  return words.slice(0, best).join(" ") + "…";
+}
+
+/**
+ * Layout with an exclusion rectangle — computes per-line available widths
+ * by subtracting the exclusion rect's horizontal intersection with each
+ * line's vertical band. Returns line data for custom rendering.
+ */
+export interface ExclusionLine {
+  text: string;
+  indent: number;
+  width: number;
+  y: number;
+}
+
+export function layoutWithExclusion(
+  text: string,
+  font: string,
+  containerWidth: number,
+  lineHeight: number,
+  exclusionRect: { x: number; y: number; w: number; h: number }
+): ExclusionLine[] {
+  if (!text.trim()) return [];
+
+  // First, get the normal line layout to know text per line
+  const linesResult = getLines(text, font, containerWidth, lineHeight);
+  const result: ExclusionLine[] = [];
+
+  linesResult.lines.forEach((line, i) => {
+    const y = i * lineHeight;
+    const lineTop = y;
+    const lineBottom = y + lineHeight;
+    const exTop = exclusionRect.y;
+    const exBottom = exclusionRect.y + exclusionRect.h;
+
+    let indent = 0;
+    let availableWidth = containerWidth;
+
+    // Check vertical overlap
+    if (lineBottom > exTop && lineTop < exBottom) {
+      const exLeft = exclusionRect.x;
+      const exRight = exclusionRect.x + exclusionRect.w;
+
+      if (exLeft <= 0) {
+        indent = Math.min(exRight, containerWidth * 0.5);
+        availableWidth = containerWidth - indent;
+      } else if (exRight >= containerWidth) {
+        availableWidth = Math.max(exLeft, containerWidth * 0.5);
+      } else {
+        const leftSpace = exLeft;
+        const rightSpace = containerWidth - exRight;
+        if (leftSpace >= rightSpace) {
+          availableWidth = leftSpace;
+        } else {
+          indent = exRight;
+          availableWidth = rightSpace;
+        }
+      }
+    }
+
+    result.push({
+      text: line.text,
+      indent,
+      width: availableWidth,
+      y,
+    });
+  });
+
+  return result;
 }
 
 /**

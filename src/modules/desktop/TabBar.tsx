@@ -2,14 +2,16 @@
  * TabBar — Chrome-style tab strip replacing the macOS menu bar.
  * Each open window is a tab. Active tab blends into content below.
  * 
+ * Uses Pretext for smart word-boundary truncation instead of CSS truncate.
  * Revolut-inspired: reduced blur, no decorative icons, tight transitions.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Plus, Search } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { smartTruncate, FONTS } from "@/modules/oracle/lib/pretext-layout";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub,
@@ -28,6 +30,8 @@ interface Props {
 }
 
 const TAB_BAR_H = 38;
+const TAB_MAX_W = 220;
+const TAB_PADDING = 44; // icon + close button + padding
 
 export default function TabBar({
   activeWindowId, windows, onFocusWindow, onCloseWindow, onMinimizeWindow,
@@ -43,6 +47,22 @@ export default function TabBar({
 
   const formatted = time.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const clock = time.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+  // Pretext-based smart truncation for tab labels
+  const truncatedLabels = useMemo(() => {
+    const availableTextWidth = TAB_MAX_W - TAB_PADDING;
+    const map: Record<string, string> = {};
+    for (const win of windows) {
+      map[win.id] = smartTruncate(
+        win.title,
+        FONTS.osTabLabel,
+        availableTextWidth,
+        16,
+        1 // max 1 line
+      );
+    }
+    return map;
+  }, [windows]);
 
   // Theme colors — tighter contrast range, Revolut-style
   const stripBg = isLight ? "rgba(235,235,235,0.97)" : "rgba(28,28,30,0.97)";
@@ -116,6 +136,7 @@ export default function TabBar({
           const isMini = win.minimized;
           const app = getApp(win.appId);
           const Icon = app?.icon;
+          const label = truncatedLabels[win.id] || win.title;
 
           return (
             <button
@@ -148,7 +169,7 @@ export default function TabBar({
               )}
 
               {Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-60" />}
-              <span className="truncate flex-1 text-left">{win.title}</span>
+              <span className="flex-1 text-left overflow-hidden text-ellipsis">{label}</span>
               <span
                 className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150
                   opacity-0 group-hover:opacity-100 ${isActive ? "opacity-50" : ""}
@@ -174,7 +195,7 @@ export default function TabBar({
         </button>
       </div>
 
-      {/* Right: status — search + clock only (removed decorative wifi/volume) */}
+      {/* Right: status — search + clock only */}
       <div className="flex items-center gap-3 shrink-0 px-3 h-full">
         <button
           onClick={onSpotlight}
