@@ -1,72 +1,61 @@
 
 
-# Infinite Improbability Drive — "Surprise Me" Easter Egg
+# Infinite Improbability Drive — Theme Alignment & Dimensional Experience
 
-## Concept
+## What changes
 
-Transform the "Surprise Me" button into an **Infinite Improbability Drive** experience. When activated, the screen undergoes a brief "improbability field" sequence — the UI glitches, a rising improbability counter ticks through absurd numbers, hitchhiker-style narration appears, reality "snaps back" with the result, and a witty side-effect message is displayed. The whole thing takes ~2.5 seconds and feels like you just punched the Heart of Gold's drive.
+Rework the overlay in `ResolvePage.tsx` to use the site's own palette (midnight navy `--background`, gold `--primary`, warm purple `--accent`, muted foreground tones) instead of the current extreme saturated gradients. Slow the total sequence from ~2.5s to ~4s, and replace the flat phase transitions with a **dimensional transformation** narrative.
 
-## The Sequence
+## The Revised Sequence (~4s total)
 
 ```text
-Click "Surprise Me"
-    ↓
-Phase 1 (0–600ms): ENGAGING DRIVE
-  - Screen flashes white then inverts briefly
-  - Improbability counter appears, ticking up: "Improbability: 2^17...2^4096...2^276,709...∞"
-  - Background elements scramble (letters in title randomize briefly)
-  - Subtle screen shake via CSS transform
+Phase 1 — FLATLAND (0–1000ms)
+  Overlay fades in using bg-background. A single horizontal line draws across
+  the center (1D). Then it rotates/multiplies into a wireframe square (2D).
+  Improbability counter ticks in gold (text-primary), slower cadence (~150ms).
+  Gentle screen shake (1px, slower frequency).
+  Label: "Collapsing into one dimension…"
 
-Phase 2 (600–1800ms): PASSING THROUGH EVERY POINT
-  - Full-screen overlay with swirling gradient (gold → purple → teal)
-  - Random "side effects" flash on screen as text:
-    "A sperm whale just appeared above Magrathea"
-    "All molecules in your device leapt one foot to the left"
-    "239,000 lightly fried eggs materialized somewhere nearby"
-    "You have been briefly turned into a penguin"
-  - The improbability counter hits "∞" and freezes
+Phase 2 — SCRAMBLE (1000–2800ms)
+  Wireframe square extrudes into a rotating 3D cube (CSS perspective transform).
+  The cube "shatters" — fragments scatter outward, then reverse into a singularity
+  point at center (the black hole). Side-effect text cycles every 500ms.
+  Background shifts subtly: bg-background → a slightly lighter navy with a faint
+  radial glow of primary/10 at center.
+  Label: "Passing through every point in the universe…"
 
-Phase 3 (1800–2500ms): NORMALITY RESTORED
-  - Overlay dissolves, result appears with confetti
-  - Toast shows a witty Douglas Adams-style message
-  - Improbability counter fades with "DON'T PANIC" briefly visible
+Phase 3 — UNSCRAMBLE (2800–4000ms)
+  Singularity expands back out. "DON'T PANIC" appears in primary gold.
+  Confetti uses site palette colors. Overlay dissolves. Result + toast shown.
 ```
 
-## Implementation — Single file: `src/modules/oracle/pages/ResolvePage.tsx`
+## Visual Details — On-Brand
 
-### 1. New state & constants
-- Add `improbabilityActive` boolean state for the overlay
-- Add `IMPROBABILITY_SIDE_EFFECTS` array with ~8 absurd side-effect strings drawn from the books
-- Add `DON_T_PANIC_MESSAGES` array for the final toast (Douglas Adams-style wit)
+- **Backgrounds**: `hsl(var(--background))` with subtle radial glow of `hsl(var(--primary) / 0.08)` — no alien purples or teals
+- **Counter text**: `text-primary` (gold, `38 65% 55%`) instead of hardcoded `hsl(45 90% 60%)`
+- **"DON'T PANIC"**: `text-primary` with `font-display`
+- **Side effects text**: `text-muted-foreground/50` — already in the site's muted palette
+- **Confetti colors**: derived from `--primary`, `--accent`, `--foreground`
+- **Screen shake**: reduced to 1px translation, 0.12s interval (gentler)
 
-### 2. Improbability Drive overlay component
-- A full-screen `AnimatePresence` overlay that renders when `improbabilityActive` is true
-- Three animated phases using `motion.div` with staggered delays:
-  - Phase 1: Dark overlay + improbability counter (font-mono, gold text, counting up)
-  - Phase 2: Swirling gradient background + random side-effect text cycling every 300ms
-  - Phase 3: "DON'T PANIC" in large friendly letters, then fade out
-- CSS: radial gradient animation, subtle screen shake keyframe, text scramble effect
+## Dimensional Shapes (pure CSS/SVG)
 
-### 3. Rewrite "Surprise Me" onClick
-- Set `improbabilityActive = true`
-- After 600ms: start cycling side effects
-- After 1800ms: pick the random entry, fire confetti with extra intensity
-- After 2500ms: set `improbabilityActive = false`, show result + toast with Adams-style message
-- Rename button label to **"Infinite Improbability Drive"** (or keep "Surprise Me" with a subtle ∞ icon — user's current label works as a disguise for the Easter egg)
+The 1D→2D→3D transformation uses simple inline SVG `<line>` and `<rect>` elements plus a CSS `perspective` + `rotateY` cube — no external libraries. Lightweight, performant, thematic.
 
-### 4. Visual details
-- Improbability counter uses `font-mono` with gold color (`text-[#FFD700]`)
-- Side effects use `text-foreground/60` italic, appearing/disappearing with fade
-- "DON'T PANIC" uses `font-display font-bold text-4xl text-[#FFD700]` — large, friendly letters, per the book
-- Overlay background: animated gradient shifting through `hsl(280,60%,12%)` → `hsl(45,90%,50%)` → `hsl(180,50%,20%)`
-- Screen shake: 3px random translate jitter for 600ms via inline style animation
+## Timing Changes
 
-### 5. Keep it snappy
-- Total duration: ~2.5 seconds — long enough to delight, short enough to not annoy
-- If entries are empty, skip the drive and show the existing "Nothing mapped yet" toast
-- The drive is purely cosmetic — the actual random pick happens at the 1800ms mark
+| Interval | Current | New |
+|----------|---------|-----|
+| Total duration | ~2.5s | ~4s |
+| Exponent tick | 85ms | 150ms |
+| Side effect cycle | 300ms | 500ms |
+| Phase 1 duration | 600ms | 1000ms |
+| Phase 2 duration | 1200ms | 1800ms |
+| Phase 3 (DON'T PANIC visible) | 700ms | 1200ms |
+
+## File
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Replace Surprise Me handler with Infinite Improbability Drive sequence: full-screen overlay with phased animations, improbability counter, side-effect messages, "DON'T PANIC" reveal, then result |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Restyle overlay to site palette, slow timings, add 1D→2D→3D dimensional SVG/CSS shape morphing sequence, reduce shake intensity |
 
