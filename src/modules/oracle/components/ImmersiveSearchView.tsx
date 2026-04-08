@@ -149,6 +149,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           src={photoUrl}
           alt=""
           onLoad={() => setImgLoaded(true)}
+          onError={() => setPhotoUrl(getHourlyFallback())}
           className={`w-full h-full object-cover transition-opacity duration-1000 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           draggable={false}
         />
