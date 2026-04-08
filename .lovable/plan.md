@@ -1,79 +1,76 @@
 
-# Desktop Theme Switcher — Three Dots
 
-## Overview
+# Open-Source UX Components for UOR OS
 
-Add three small dots at the bottom of the desktop (between dock and screen edge) that toggle between three themes: Immersive (photo background), Dark (solid dark), and Light (solid white). All shell components adapt their colors accordingly.
+## Current State
 
-## Implementation
+Your project already uses: React 18, Tailwind CSS, Framer Motion, Radix UI (dialog, tooltip, toast), Lucide icons, Tabler icons, Monaco Editor, Sonner toasts, and dnd-kit. The desktop shell (windows, dock, menu bar, snap zones, Spotlight, theme switcher) is entirely custom-built.
 
-### 1. Theme Context — `src/modules/desktop/hooks/useDesktopTheme.ts`
+You do **not** have shadcn/ui installed despite the project being scaffolded from a shadcn template — the `src/components/ui` directory is empty.
 
-Create a React context + hook that stores the current theme in localStorage and provides it to all desktop components.
+## Recommendation
 
-- Three themes: `"immersive"` | `"dark"` | `"light"`
-- Persisted in `localStorage("uor:desktop-theme")`
-- Provides `{ theme, setTheme }` via context
-- Default: `"immersive"`
+Rather than pulling in a heavy "desktop OS" framework (most are outdated, poorly maintained, or clash with your custom shell), the best strategy is to layer **targeted, high-quality primitive libraries** that fill specific gaps. Your custom shell is already strong — these fill the interior of windows and system-level interactions.
 
-### 2. Theme Dots Component — `src/modules/desktop/DesktopThemeDots.tsx`
+### Tier 1 — Install Now (High Impact, Zero Risk)
 
-Three small dots rendered just above the dock. The active dot is slightly larger/brighter. Clicking a dot switches theme. Each dot has a subtle visual identity:
-- Dot 1 (immersive): gradient fill suggesting a photo
-- Dot 2 (dark): solid dark fill
-- Dot 3 (light): solid white fill with dark border
+| Library | What It Gives You | Why |
+|---------|------------------|-----|
+| **shadcn/ui** (already scaffolded) | Buttons, inputs, selects, dropdowns, sheets, tabs, scroll-area, resizable panels, command palette, context menu, menubar, avatar, badge, progress, skeleton, switch, slider | You already have the Radix dependencies. Running `npx shadcn-ui init` + cherry-picking components gives you a complete, accessible, theme-aware primitive set that matches your frosted-glass aesthetic with minimal CSS overrides. |
+| **cmdk** (Command Menu) | Replace your hand-rolled Spotlight with a battle-tested, keyboard-navigable command palette | Your current SpotlightSearch works but lacks accessibility (ARIA), fuzzy matching, and grouped sections. cmdk gives all of this in ~4KB. shadcn/ui wraps it as `<Command>`. |
+| **@radix-ui/react-context-menu** | Native-feeling right-click menus with submenus, keyboard nav, checkmarks | Replace your custom DesktopContextMenu with a fully accessible version that supports nested menus (e.g., "View > Grid / List") — something your current impl can't do. |
+| **@radix-ui/react-menubar** | A proper menu bar with dropdowns (File, Edit, View, Window, Help) | Your menu bar currently only shows the app name and clock. A real OS has dropdown menus — Radix Menubar gives you this with full keyboard support. |
+| **vaul** (Drawer) | Mobile-friendly bottom sheets | On mobile viewports, windows don't work. Vaul gives you swipeable drawers that can serve as the mobile equivalent of desktop windows. |
 
-Positioned fixed at the bottom, centered, just above the dock (~`bottom-[72px]`). Minimal and elegant.
+### Tier 2 — Add When Building Specific Apps
 
-### 3. Shell Integration — Modify `DesktopShell.tsx`
+| Library | For Which App Window | Why |
+|---------|---------------------|-----|
+| **@tanstack/react-table** (already have @tanstack/react-query) | Library, Vault, any data-heavy view | Virtualized, sortable, filterable tables. Essential for showing large datasets without DOM bloat. |
+| **react-resizable-panels** | Split-pane layouts inside windows | Like VS Code's panel splits. Useful for the Search app (results left, detail right) or Messenger (contacts + chat). |
+| **react-virtuoso** | Long scrolling lists | Virtualizes lists of 1000+ items with ~60fps. Critical for chat history in Messenger, search results, library items. |
+| **@floating-ui/react** | Tooltips, popovers, floating menus inside apps | More precise positioning than Radix tooltips, useful for inline annotations in the Oracle or Library apps. |
 
-- Wrap the shell in the theme provider
-- Conditionally render `ImmersiveBackground` only when theme is `"immersive"`
-- For `"dark"`: shell background becomes `bg-black` (already is)
-- For `"light"`: shell background becomes `bg-white`
-- Pass `theme` down to components that need color adaptation
-- Render `DesktopThemeDots` above the dock
+### Tier 3 — Visual Polish
 
-### 4. Component Adaptations
+| Library | Purpose |
+|---------|---------|
+| **react-spring** or keep **framer-motion** | You already use Framer Motion extensively — no need to switch. But for physics-based window dragging (rubber-band, momentum), react-spring's imperative API can be more performant. |
+| **@react-aria/focus** | Focus management across windows — ensures Tab key moves logically between the active window, dock, and menu bar. Critical for accessibility. |
 
-Each component reads the theme and adjusts colors:
+## What NOT to Use
 
-**DesktopMenuBar** — 
-- Immersive/dark: current dark glass style
-- Light: `rgba(245,245,245,0.85)` background, dark text, dark icons
+- **Full "web desktop" frameworks** (os.js, web-desktop-environment, ReactOS-web): Outdated, opinionated, would fight your existing architecture.
+- **Heavy component suites** (Ant Design, MUI, Chakra): Too opinionated, bundle-heavy, visual style clashes with your frosted-glass aesthetic.
+- **Electron-style libraries**: Not relevant — you're building in-browser, not wrapping a browser.
 
-**DesktopDock** —
-- Immersive/dark: current dark glass
-- Light: `rgba(255,255,255,0.7)` background, dark icon colors, dark indicator dots
+## Implementation Plan
 
-**DesktopWidgets** (clock + search) —
-- Immersive/dark: white text, dark glass search bar
-- Light: dark text (`text-black/75`), light glass search bar (`rgba(0,0,0,0.04)`)
+### Step 1 — Initialize shadcn/ui primitives
+Generate the shadcn/ui components you need most: `command`, `context-menu`, `menubar`, `dialog`, `scroll-area`, `tabs`, `button`, `input`, `badge`, `skeleton`, `avatar`, `dropdown-menu`, `sheet`, `resizable`. Override their CSS variables to match your three themes (immersive/dark/light).
 
-**DesktopWindow** —
-- Immersive/dark: current dark chrome
-- Light: `rgba(245,245,245,0.92)` chrome, dark title text, light content bg (`#f5f5f5`)
+### Step 2 — Replace Spotlight with shadcn Command
+Swap `SpotlightSearch.tsx` internals to use the `<Command>` component (wraps cmdk). Keep your existing open/close logic, animation wrapper, and theme-aware glass styling — just replace the list/input/keyboard handling with Command's built-in behavior. Gains: fuzzy search, ARIA, grouped results, extensible.
 
-**SpotlightSearch** —
-- Immersive/dark: current dark glass
-- Light: white glass panel, dark text
+### Step 3 — Upgrade Context Menu and Menu Bar
+Replace `DesktopContextMenu.tsx` with Radix ContextMenu. Add a proper `DesktopMenuBar` using Radix Menubar with dropdown menus per app (File, Edit, View, Window, Help). Each app can register its own menu items.
 
-**DesktopContextMenu** —
-- Same pattern as Spotlight
+### Step 4 — Add mobile drawer fallback
+Detect mobile via your existing `useIsMobile` hook. On mobile, instead of floating windows, open apps in a Vaul drawer (swipeable bottom sheet). The dock remains at the bottom.
 
-**SnapOverlay** —
-- Light: `rgba(0,0,0,0.06)` instead of `rgba(255,255,255,0.06)`
+### Step 5 — Wire up react-resizable-panels for split views
+Inside the Search and Messenger windows, use resizable panels for split-pane layouts.
 
-## Files to Create
-1. `src/modules/desktop/hooks/useDesktopTheme.ts` — context + hook
-2. `src/modules/desktop/DesktopThemeDots.tsx` — the three dots UI
+## Performance Notes
 
-## Files to Modify
-1. `src/modules/desktop/DesktopShell.tsx` — provider, conditional background, pass theme
-2. `src/modules/desktop/DesktopMenuBar.tsx` — theme-aware colors
-3. `src/modules/desktop/DesktopDock.tsx` — theme-aware colors
-4. `src/modules/desktop/DesktopWidgets.tsx` — theme-aware colors
-5. `src/modules/desktop/DesktopWindow.tsx` — theme-aware colors
-6. `src/modules/desktop/SpotlightSearch.tsx` — theme-aware colors
-7. `src/modules/desktop/DesktopContextMenu.tsx` — theme-aware colors
-8. `src/modules/desktop/SnapOverlay.tsx` — theme-aware colors
+All recommended libraries are tree-shakeable and under 10KB gzipped individually. shadcn/ui components are copy-pasted source (not a runtime dependency), so you only ship what you use. Radix primitives are the most performant accessible component library available — they use no global providers and render minimal DOM.
+
+## Files to Create/Modify
+
+- **New**: shadcn/ui component files in `src/components/ui/` (~15 files)
+- **Modify**: `SpotlightSearch.tsx` — swap to Command component
+- **Modify**: `DesktopContextMenu.tsx` — swap to Radix ContextMenu
+- **Modify**: `DesktopMenuBar.tsx` — add Radix Menubar dropdowns
+- **Modify**: `DesktopShell.tsx` — mobile drawer routing
+- **New**: `src/modules/desktop/MobileShell.tsx` — mobile layout with Vaul drawers
+
