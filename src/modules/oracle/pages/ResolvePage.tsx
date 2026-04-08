@@ -181,6 +181,17 @@ const SearchPage = () => {
     }
   }, [aiMessages]);
 
+  /** If a receipt was created with TS fallback but WASM is now ready, re-encode to upgrade */
+  const ensureWasmReceipt = async (source: unknown, receipt: EnrichedReceipt): Promise<EnrichedReceipt> => {
+    if (receipt.engine === "typescript" && wasmReady) {
+      try {
+        const upgraded = await encode(source);
+        if (upgraded.engine === "wasm") return upgraded;
+      } catch { /* keep original */ }
+    }
+    return receipt;
+  };
+
   const handleSearch = async (address: string) => {
     const trimmed = address.trim();
     if (!trimmed) return;
@@ -188,7 +199,8 @@ const SearchPage = () => {
     try {
       const entry = lookup(trimmed);
       if (entry) {
-        setResult({ source: entry.source, receipt: entry.receipt });
+        const upgraded = await ensureWasmReceipt(entry.source, entry.receipt);
+        setResult({ source: entry.source, receipt: upgraded });
       } else {
         toast("Address not found. Paste content to create an entry.", { icon: "📝" });
       }
