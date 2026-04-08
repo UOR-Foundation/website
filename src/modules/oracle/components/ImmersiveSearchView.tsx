@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Minimize2, Sparkles, Plus } from "lucide-react";
+import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getHourlyPhoto, getCurrentHour, preloadNextHourPhoto } from "@/modules/oracle/lib/immersive-photos";
 import VoiceInput from "./VoiceInput";
@@ -28,9 +28,11 @@ interface Props {
   onExit: () => void;
   onEncode?: () => void;
   onAiMode?: () => void;
+  /** Whether the browser is currently in fullscreen mode */
+  isFullscreen?: boolean;
 }
 
-export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode }: Props) {
+export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
   const { profile } = useAuth();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
@@ -127,13 +129,13 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             )}
           </div>
 
-          {/* Right: exit button */}
+          {/* Right: fullscreen toggle */}
           <button
             onClick={onExit}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white transition-all text-sm font-medium"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white transition-all"
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            <Minimize2 className="w-3.5 h-3.5" />
-            <span>Exit</span>
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
 
