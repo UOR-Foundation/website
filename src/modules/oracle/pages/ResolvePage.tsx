@@ -1076,7 +1076,7 @@ const SearchPage = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              placeholder="Search an address…"
+              placeholder="Search an address or paste a URL…"
               className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
             />
             <button
