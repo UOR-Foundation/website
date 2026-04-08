@@ -13,8 +13,10 @@ import React, { useMemo, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import CitedMarkdown from "./CitedMarkdown";
 import SourcesPills from "./SourcesPills";
+import { EncyclopediaMedia } from "./MediaGallery";
 import { normalizeSource } from "../lib/citation-parser";
 import type { SourceMeta } from "../lib/citation-parser";
+import type { MediaData } from "../lib/stream-knowledge";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
@@ -24,6 +26,7 @@ interface WikiArticleViewProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
+  media?: MediaData;
 }
 
 interface TocEntry {
@@ -450,6 +453,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   wikidata,
   sources,
   synthesizing = false,
+  media,
 }) => {
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
@@ -528,6 +532,9 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
 
       {/* ── Clear float ── */}
       <div style={{ clear: "both" }} />
+
+      {/* ── Media section ── */}
+      {media && !synthesizing && <EncyclopediaMedia media={media} />}
 
       {/* ── Sources footer ── */}
       {sources.length > 0 && (
