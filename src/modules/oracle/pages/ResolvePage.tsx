@@ -97,6 +97,11 @@ const SearchPage = () => {
   const [drivePrePhase, setDrivePrePhase] = useState(false);
   const [drivePostPhase, setDrivePostPhase] = useState(false);
 
+  // Chain of Proofs state
+  const [chainSelectMode, setChainSelectMode] = useState(false);
+  const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
+  const [chainEncoding, setChainEncoding] = useState(false);
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
