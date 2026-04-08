@@ -264,22 +264,26 @@ function CommentInput({
   onCancel,
   autoFocus = false,
   compact = false,
+  showGuestName = false,
 }: {
   placeholder: string;
-  onSubmit: (text: string) => Promise<void>;
+  onSubmit: (text: string, guestName?: string) => Promise<void>;
   onCancel?: () => void;
   autoFocus?: boolean;
   compact?: boolean;
+  showGuestName?: boolean;
 }) {
   const [text, setText] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
     if (!text.trim() || submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit(text.trim());
+      await onSubmit(text.trim(), showGuestName ? guestName.trim() || undefined : undefined);
       setText("");
+      setGuestName("");
     } finally {
       setSubmitting(false);
     }
@@ -287,6 +291,16 @@ function CommentInput({
 
   return (
     <div className="space-y-2">
+      {showGuestName && (
+        <input
+          type="text"
+          value={guestName}
+          onChange={e => setGuestName(e.target.value)}
+          placeholder="Name (optional)"
+          maxLength={50}
+          className="w-full px-4 py-2 rounded-lg bg-muted/5 border border-border/15 text-sm text-foreground/70 placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 transition-colors"
+        />
+      )}
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}
@@ -342,7 +356,7 @@ function CommentNodeView({
   onReply: (parentId: string) => void;
   replyingTo: string | null;
   setReplyingTo: (id: string | null) => void;
-  onSubmitReply: (parentId: string, content: string) => Promise<void>;
+  onSubmitReply: (parentId: string, content: string, guestName?: string) => Promise<void>;
   user: any;
 }) {
   const isCollapsed = collapsed.has(node.id);
@@ -401,10 +415,7 @@ function CommentNodeView({
           {/* Action bar */}
           <div className="flex items-center gap-3 mb-1">
             <button
-              onClick={() => {
-                if (!user) { toast("Sign in to reply", { icon: "🔒" }); return; }
-                onReply(node.id);
-              }}
+              onClick={() => onReply(node.id)}
               className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
             >
               <MessageSquare className="w-3 h-3" />
@@ -431,11 +442,12 @@ function CommentNodeView({
                 className="mb-2 overflow-hidden"
               >
                 <CommentInput
-                  placeholder={`Reply to ${node.author.display_name || "Anonymous"}…`}
-                  onSubmit={(text) => onSubmitReply(node.id, text)}
+                  placeholder={`Reply to ${node.author.display_name || "Guest"}…`}
+                  onSubmit={(text, guestName) => onSubmitReply(node.id, text, guestName)}
                   onCancel={() => setReplyingTo(null)}
                   autoFocus
                   compact
+                  showGuestName={!user}
                 />
               </motion.div>
             )}
@@ -522,32 +534,70 @@ export function AddressDiscussion({ cid }: { cid: string }) {
     }
   }, [myVotes, cid, reload]);
 
-  const handleComment = useCallback(async (content: string) => {
-    if (!user) { toast("Sign in to comment", { icon: "🔒" }); return; }
-    try {
-      const { error } = await supabase.functions.invoke("address-social", {
-        method: "POST",
-        body: { action: "comment", cid, content },
-      });
-      if (error) throw error;
-    } catch {
-      toast.error("Failed to post comment");
+  const handleComment = useCallback(async (content: string, guestName?: string) => {
+    if (user) {
+      try {
+        const { error } = await supabase.functions.invoke("address-social", {
+          method: "POST",
+          body: { action: "comment", cid, content },
+        });
+        if (error) throw error;
+      } catch {
+        toast.error("Failed to post comment");
+      }
+    } else {
+      // Guest comment — no auth header
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/address-social`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: anonKey },
+            body: JSON.stringify({ action: "comment_guest", cid, content, guest_name: guestName || null }),
+          }
+        );
+        if (!res.ok) throw new Error("Failed");
+        reload();
+      } catch {
+        toast.error("Failed to post comment");
+      }
     }
-  }, [user, cid]);
+  }, [user, cid, reload]);
 
-  const handleReply = useCallback(async (parentId: string, content: string) => {
-    if (!user) return;
-    try {
-      const { error } = await supabase.functions.invoke("address-social", {
-        method: "POST",
-        body: { action: "comment", cid, content, parent_id: parentId },
-      });
-      if (error) throw error;
-      setReplyingTo(null);
-    } catch {
-      toast.error("Failed to post reply");
+  const handleReply = useCallback(async (parentId: string, content: string, guestName?: string) => {
+    if (user) {
+      try {
+        const { error } = await supabase.functions.invoke("address-social", {
+          method: "POST",
+          body: { action: "comment", cid, content, parent_id: parentId },
+        });
+        if (error) throw error;
+        setReplyingTo(null);
+      } catch {
+        toast.error("Failed to post reply");
+      }
+    } else {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/address-social`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", apikey: anonKey },
+            body: JSON.stringify({ action: "comment_guest", cid, content, parent_id: parentId, guest_name: guestName || null }),
+          }
+        );
+        if (!res.ok) throw new Error("Failed");
+        setReplyingTo(null);
+        reload();
+      } catch {
+        toast.error("Failed to post reply");
+      }
     }
-  }, [user, cid]);
+  }, [user, cid, reload]);
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed(prev => {
@@ -583,9 +633,13 @@ export function AddressDiscussion({ cid }: { cid: string }) {
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border/10 bg-muted/3">
-          <MessageCircle className="w-4 h-4 text-muted-foreground/25" />
-          <span className="text-sm text-muted-foreground/30">Sign in to join the discussion</span>
+        <div className="flex gap-3">
+          <div className="w-8 h-8 rounded-full bg-muted/10 border border-border/15 flex items-center justify-center text-xs text-muted-foreground/40 shrink-0 mt-1">
+            ?
+          </div>
+          <div className="flex-1">
+            <CommentInput placeholder="Leave a comment as guest…" onSubmit={handleComment} showGuestName />
+          </div>
         </div>
       )}
 

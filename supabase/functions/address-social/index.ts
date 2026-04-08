@@ -57,7 +57,7 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
   // Fetch data in parallel
   const commentsQuery = supabase
     .from("address_comments")
-    .select("id, user_id, content, parent_id, created_at, score")
+    .select("id, user_id, content, parent_id, created_at, score, guest_name")
     .eq("address_cid", cid);
 
   // Apply primary sort
@@ -80,7 +80,7 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
   }
 
   // Fetch commenter profiles
-  const commentUserIds = [...new Set((commentsRes.data ?? []).map(c => c.user_id))];
+  const commentUserIds = [...new Set((commentsRes.data ?? []).filter(c => c.user_id).map(c => c.user_id))];
   let profiles: Record<string, { display_name: string | null; avatar_url: string | null; uor_glyph: string | null }> = {};
   if (commentUserIds.length > 0) {
     const { data: profileData } = await supabase
@@ -109,7 +109,10 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
 
   let comments = (commentsRes.data ?? []).map(c => ({
     ...c,
-    author: profiles[c.user_id] || { display_name: null, avatar_url: null, uor_glyph: null },
+    author: c.user_id
+      ? (profiles[c.user_id] || { display_name: null, avatar_url: null, uor_glyph: null })
+      : { display_name: c.guest_name || "Guest", avatar_url: null, uor_glyph: null },
+    is_guest: !c.user_id,
   }));
 
   // Controversial sort: re-sort by total votes with score near zero
@@ -152,6 +155,11 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
 async function handlePost(req: Request, supabase: ReturnType<typeof createClient>, supabaseUrl: string) {
   const body = await req.json();
   const action = body.action;
+
+  // Guest-allowed actions (no auth required)
+  if (action === "comment_guest") {
+    return handleGuestComment(body, supabase);
+  }
 
   const authHeader = req.headers.get("authorization");
   if (!authHeader) return json({ error: "Authentication required" }, 401);
@@ -212,6 +220,21 @@ async function handleComment(body: any, userId: string, supabase: ReturnType<typ
   if (error) return json({ error: error.message }, 500);
   return json({ success: true, comment: data });
 }
+
+async function handleGuestComment(body: any, supabase: ReturnType<typeof createClient>) {
+  const { cid, content, parent_id, guest_name } = body;
+  if (!cid || !content?.trim()) return json({ error: "Missing cid or content" }, 400);
+  if (content.length > 2000) return json({ error: "Comment too long (max 2000 chars)" }, 400);
+  const name = (guest_name?.trim() || "").slice(0, 50) || null;
+
+  const { data, error } = await supabase.from("address_comments").insert({
+    address_cid: cid, user_id: null, content: content.trim(), parent_id: parent_id || null, guest_name: name,
+  }).select("id, created_at, score").single();
+
+  if (error) return json({ error: error.message }, 500);
+  return json({ success: true, comment: data });
+}
+
 
 async function handleFork(body: any, userId: string, supabase: ReturnType<typeof createClient>) {
   const { parentCid, childCid, note } = body;
