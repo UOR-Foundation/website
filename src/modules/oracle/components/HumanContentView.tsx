@@ -282,8 +282,60 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
         </div>
       )}
 
-      {/* ── Original fidelity view (Shadow DOM) ── */}
-      {isWebPage && rawHtml && viewMode === "original" ? (
+      {/* ── KnowledgeCard synthesis view ── */}
+      {isKnowledgeCard && contentMarkdown ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* AI-synthesized article with accent border */}
+          <div
+            style={{
+              borderLeft: "3px solid hsl(38 90% 55% / 0.5)",
+              paddingLeft: 24,
+              maxHeight: 600,
+              overflowY: "auto",
+            }}
+            className="prose prose-sm dark:prose-invert max-w-none text-foreground/80"
+          >
+            <ReactMarkdown>{contentMarkdown}</ReactMarkdown>
+          </div>
+
+          {/* Sources footer */}
+          {sources.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  fontWeight: 600,
+                }}
+                className="text-muted-foreground/40"
+              >
+                Sources
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {sources.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url.startsWith("http") ? url : `https://${url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: 11,
+                      padding: "3px 10px",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      border: "1px solid hsl(var(--border) / 0.15)",
+                    }}
+                    className="text-muted-foreground/60 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors"
+                  >
+                    {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
       ) : (
         /* ── Body entries (Readable mode) ── */
