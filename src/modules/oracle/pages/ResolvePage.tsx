@@ -367,7 +367,133 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
   );
 }
 
-/* ── Reader Floating Bar — search + Oracle access from reader ── */
+/* ── Inline Social Stats (compact single-line) ── */
+function InlineSocialStats({ cid }: { cid: string }) {
+  const { data } = useSocialData(cid);
+  if (!data) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.06 }}
+      className="px-4 sm:px-8 mt-3"
+    >
+      <div className="flex items-center gap-3 text-xs text-muted-foreground/45">
+        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{data.visitCount} visitor{data.visitCount !== 1 ? "s" : ""}</span>
+        <span className="text-muted-foreground/20">·</span>
+        <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{data.comments.length} comment{data.comments.length !== 1 ? "s" : ""}</span>
+        <span className="text-muted-foreground/20">·</span>
+        <span className="flex items-center gap-1"><GitFork className="w-3 h-3" />{data.forkCount} fork{data.forkCount !== 1 ? "s" : ""}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Content Preview (Human view with truncation) ── */
+function ContentPreview({ source, synthesizing, contextKeywords, activeLens, novelty, isReadableType, onReadMore }: {
+  source: Record<string, unknown>;
+  synthesizing?: boolean;
+  contextKeywords?: string[];
+  activeLens?: LensBlueprint | null;
+  novelty?: number | null;
+  isReadableType: boolean;
+  onReadMore: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="space-y-3">
+      <div className={`bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 overflow-hidden transition-all ${expanded ? "max-h-[70vh] overflow-y-auto" : "max-h-[260px]"}`}>
+        <HumanContentView source={source} synthesizing={synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} novelty={novelty} />
+      </div>
+      {!expanded && (
+        <div className="flex items-center gap-3">
+          {isReadableType ? (
+            <button onClick={onReadMore} className="text-sm font-medium text-primary/70 hover:text-primary transition-colors flex items-center gap-1.5">
+              Read full article <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button onClick={() => setExpanded(true)} className="text-sm font-medium text-primary/70 hover:text-primary transition-colors flex items-center gap-1.5">
+              Show more <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Collapsible Section ── */
+function CollapsibleSection({ title, icon, defaultOpen = false, children, className = "", extra }: {
+  title: string;
+  icon?: React.ReactNode;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  extra?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={className}>
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full group">
+        {icon}
+        <span className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">{title}</span>
+        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground/30 transition-transform ${open ? "rotate-90" : ""}`} />
+        {extra && <div className="ml-auto" onClick={e => e.stopPropagation()}>{extra}</div>}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden mt-3"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Collapsible Discussion ── */
+function CollapsibleDiscussion({ cid }: { cid: string }) {
+  const { data } = useSocialData(cid);
+  const [open, setOpen] = useState(false);
+  const commentCount = data?.comments?.length ?? 0;
+
+  // Auto-expand if there are comments
+  useEffect(() => {
+    if (commentCount > 0) setOpen(true);
+  }, [commentCount]);
+
+  return (
+    <div className="space-y-3">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 w-full group">
+        <MessageCircle className="w-3.5 h-3.5 text-primary/50" />
+        <span className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">
+          {commentCount > 0 ? `Discussion · ${commentCount} comment${commentCount !== 1 ? "s" : ""}` : "Start a Discussion"}
+        </span>
+        <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground/30 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <AddressDiscussion cid={cid} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) => void; onOracleOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [value, setValue] = useState("");
