@@ -148,7 +148,18 @@ export default function SoundCloudFab() {
   const half = DISC_SIZE / 2;
 
   return (
-    <div className="relative flex items-center" style={{ zIndex: 50 }}>
+    <>
+      {/* Invisible full-viewport drag constraints layer */}
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 49 }} />
+      <motion.div
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.08}
+        dragMomentum={false}
+        onDrag={handleDrag}
+        className="relative flex items-center cursor-grab active:cursor-grabbing"
+        style={{ zIndex: 50, touchAction: "none" }}
+      >
       {/* Hidden audio iframe */}
       <iframe
         ref={iframeRef}
@@ -330,6 +341,7 @@ export default function SoundCloudFab() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </motion.div>
+    </>
   );
 }
