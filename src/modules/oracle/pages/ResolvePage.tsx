@@ -20,7 +20,7 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AddressCommunity } from "@/modules/oracle/components/AddressCommunity";
+import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -1325,107 +1325,143 @@ const SearchPage = () => {
 
           {/* ══════════════ RESULT STATE — SERP ══════════════ */}
           <AnimatePresence>
-            {result && (
+            {result && (() => {
+              const src = result.source as Record<string, unknown> | null;
+              const typeRaw = String(src?.["@type"] ?? "Unknown").replace(/^uor:/, "");
+              const glyphChars = result.receipt.glyph?.slice(0, 2) || "⠿⠿";
+              const triwordParts = result.receipt.triword.split(".");
+              const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
+
+              return (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20, mass: 0.8 }}
-                className="space-y-0"
-                style={{ paddingTop: "calc(100vh * 0.06)" }}
+                className="space-y-0 pb-24"
+                style={{ paddingTop: "calc(100vh * 0.04)" }}
               >
-                {/* ADDRESS + Verify Integrity */}
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-2.5">
-                      <button onClick={inscribeToIpfs} disabled={inscribing || !!inscribeResult} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
-                        <Globe className="w-3.5 h-3.5" /> {inscribing ? "Inscribing…" : inscribeResult ? "Inscribed ✓" : "Inscribe"}
-                      </button>
-                      {inscribeResult && (
-                        <a
-                          href={inscribeResult.gatewayUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary/60 hover:text-primary/90 transition-colors underline underline-offset-2"
-                        >
-                          View on IPFS →
-                        </a>
-                      )}
-                      <button onClick={rederive} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
-                        <RotateCcw className="w-3.5 h-3.5" /> Verify Integrity
-                      </button>
-                      {rederived && (
-                        <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-emerald-400/70 flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" /> Identical
-                        </motion.span>
-                      )}
-                    </motion.div>
-                  </div>
-                  <div className="flex items-baseline gap-3">
-                    <h2 className="text-4xl md:text-5xl font-display font-medium text-foreground tracking-wide leading-tight">
-                      {result.receipt.triwordFormatted}
-                    </h2>
-                    <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
+                {/* ═══ 1. PROFILE HEADER ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.03 }}
+                  className="flex items-start gap-5"
+                >
+                  {/* Glyph Avatar */}
+                  <div className="relative shrink-0">
+                    <div className="w-[72px] h-[72px] rounded-full bg-primary/8 border-2 border-primary/20 flex items-center justify-center shadow-[0_0_24px_-6px_hsl(var(--primary)/0.2)]">
+                      <span className="text-2xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
+                    </div>
+                    {/* Engine status dot */}
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
                   </div>
 
-                  {/* Discovered / Confirmed status badge */}
-                  {result.isConfirmed !== undefined && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.12 }}
-                      className="flex items-center gap-3 mt-3"
-                    >
-                      {result.isConfirmed ? (
-                        <>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-primary/10 text-primary/80 border border-primary/20">
+                  {/* Name + badges */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    {/* Triword display name */}
+                    <div className="flex items-baseline gap-3">
+                      <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground tracking-wide leading-tight truncate">
+                        {triwordDisplay}
+                      </h1>
+                      <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
+                    </div>
+
+                    {/* Type badge + status + timestamp */}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.1em] bg-accent/10 text-accent-foreground/70 border border-accent/15">
+                        {typeRaw}
+                      </span>
+                      {result.isConfirmed !== undefined && (
+                        result.isConfirmed ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.1em] bg-primary/10 text-primary/80 border border-primary/20">
                             <Check className="w-3 h-3" />
-                            Confirmed
+                            Confirmed{result.confirmations && result.confirmations > 1 ? ` × ${result.confirmations}` : ""}
                           </span>
-                          {result.confirmations && result.confirmations > 1 && (
-                            <span className="text-sm text-muted-foreground/40 font-mono">
-                              {result.confirmations} time{result.confirmations > 1 ? "s" : ""}
-                            </span>
-                          )}
-                          {result.originalTimestamp && (
-                            <span className="text-sm text-muted-foreground/35">
-                              · First discovered {(() => {
-                                const diff = Date.now() - result.originalTimestamp;
-                                if (diff < 60000) return "just now";
-                                if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-                                if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-                                return `${Math.floor(diff / 86400000)}d ago`;
-                              })()}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
-                          <Sparkles className="w-3 h-3" />
-                          Discovered
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.1em] bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
+                            <Sparkles className="w-3 h-3" />
+                            Discovered
+                          </span>
+                        )
+                      )}
+                      {result.originalTimestamp && (
+                        <span className="text-xs text-muted-foreground/35">
+                          First seen {(() => {
+                            const diff = Date.now() - result.originalTimestamp;
+                            if (diff < 60000) return "just now";
+                            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+                            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+                            return `${Math.floor(diff / 86400000)}d ago`;
+                          })()}
                         </span>
                       )}
-                    </motion.div>
-                  )}
+                    </div>
+                  </div>
                 </motion.div>
 
-                {/* ── Community Social Layer — prominent at top ── */}
-                <AddressCommunity cid={result.receipt.cid} />
-
-                {/* ── Continue / Discuss in Oracle CTA — prominent at top ── */}
+                {/* ═══ 2. SOCIAL STATS + REACTIONS ═══ */}
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.08 }}
-                  style={{ marginTop: "calc(2rem * 1.618)" }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.06 }}
+                  className="border-t border-b border-border/10 py-5"
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
                 >
+                  <AddressSocialStats cid={result.receipt.cid} />
+                </motion.div>
+
+                {/* ═══ 3. IDENTITY CARD ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.09 }}
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                >
+                  <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] mb-3">Identity</p>
+                  <div className="rounded-xl border border-border/15 bg-muted/5 divide-y divide-border/10 overflow-hidden">
+                    {/* IPv6 */}
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">IPv6</span>
+                      <code className="text-sm font-mono text-primary/80 flex-1 truncate mx-3">{result.receipt.ipv6}</code>
+                      <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} />
+                    </div>
+                    {/* CID */}
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">CID</span>
+                      <code className="text-sm font-mono text-foreground/55 flex-1 truncate mx-3">{result.receipt.cid}</code>
+                      <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} />
+                    </div>
+                    {/* Triword */}
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">Triword</span>
+                      <code className="text-sm font-mono text-foreground/55 flex-1 truncate mx-3">{result.receipt.triword}</code>
+                      <CopyBtn onClick={() => copy(result.receipt.triword, "triword2")} copied={copied === "triword2"} />
+                    </div>
+                    {/* Engine */}
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">Engine</span>
+                      <span className="text-sm font-mono text-foreground/45 flex-1 mx-3">
+                        {result.receipt.engine === "wasm" ? `wasm · ${result.receipt.crateVersion ?? ""}` : "typescript"}
+                      </span>
+                      <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/20"}`} />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ═══ 4. ACTION BAR ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.12 }}
+                  className="flex items-center gap-3 flex-wrap"
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                >
+                  {/* Discuss in Oracle */}
                   <button
                     onClick={() => {
-                      const src = result.source as Record<string, unknown> | null;
                       const isOracle = src?.["@type"] === "uor:OracleExchange";
                       const isChain = src?.["@type"] === "uor:ChainOfProofs";
-
                       if (isChain) {
                         const links = (src?.["uor:links"] as Array<Record<string, unknown>>) ?? [];
                         const restored: Msg[] = [];
@@ -1445,225 +1481,126 @@ const SearchPage = () => {
                         ]);
                       } else {
                         const summary = JSON.stringify(result.source, null, 2).slice(0, 600);
-                        setAiMessages([
-                          {
-                            role: "user",
-                            content: `I discovered this content-addressed object:\n\n\`\`\`json\n${summary}\n\`\`\`\n\nHelp me understand or build on it.`,
-                          },
-                        ]);
+                        setAiMessages([{ role: "user", content: `I discovered this content-addressed object:\n\n\`\`\`json\n${summary}\n\`\`\`\n\nHelp me understand or build on it.` }]);
                       }
-
                       setResult(null);
                       setRederived(false);
                       setAiMode(true);
                       setTimeout(() => aiInputRef.current?.focus(), 150);
                     }}
-                    className="w-full flex items-center justify-center gap-3 px-7 py-4 rounded-xl bg-gradient-to-r from-primary/25 to-primary/12 border border-primary/20 hover:border-primary/40 hover:from-primary/30 hover:to-primary/18 text-foreground font-bold text-base tracking-wide transition-all group shadow-[0_0_24px_-8px_hsl(var(--primary)/0.15)]"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/20 hover:border-primary/35 text-sm font-semibold text-foreground/85 transition-all shadow-[0_0_16px_-6px_hsl(var(--primary)/0.15)]"
                   >
-                    <Sparkles className="w-5 h-5 text-primary group-hover:text-primary transition-colors" />
-                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs"
-                      ? "Continue Chain in Oracle →"
-                      : (result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
-                        ? "Continue in Oracle →"
-                        : "Discuss in Oracle →"}
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    {src?.["@type"] === "uor:ChainOfProofs" ? "Continue Chain →" : src?.["@type"] === "uor:OracleExchange" ? "Continue in Oracle →" : "Discuss in Oracle →"}
                   </button>
+
+                  {/* Inscribe */}
+                  <button
+                    onClick={inscribeToIpfs}
+                    disabled={inscribing || !!inscribeResult}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/20 text-sm font-medium text-foreground/60 hover:text-foreground/80 hover:border-border/35 transition-all disabled:opacity-30"
+                  >
+                    <Globe className="w-4 h-4" />
+                    {inscribing ? "Inscribing…" : inscribeResult ? "Inscribed ✓" : "Inscribe on IPFS"}
+                  </button>
+                  {inscribeResult && (
+                    <a href={inscribeResult.gatewayUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary/60 hover:text-primary/90 transition-colors underline underline-offset-2">
+                      View on IPFS →
+                    </a>
+                  )}
+
+                  {/* Verify */}
+                  <button
+                    onClick={rederive}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/20 text-sm font-medium text-foreground/60 hover:text-foreground/80 hover:border-border/35 transition-all disabled:opacity-30"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Verify Integrity
+                  </button>
+                  {rederived && (
+                    <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-sm text-emerald-400/70 flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" /> Identical
+                    </motion.span>
+                  )}
                 </motion.div>
 
-                {/* Metadata block — IPv6, CID, engine */}
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="space-y-3"
-                  style={{ marginTop: "calc(2rem * 1.618)" }}
-                >
-                  {/* IPv6 */}
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-xs uppercase tracking-wider text-primary/60 font-semibold shrink-0">IPv6</span>
-                    <code className="text-lg font-mono text-primary tracking-wide">
-                      {result.receipt.ipv6}
-                    </code>
-                    <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} />
-                  </div>
-
-                  {/* CID */}
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold shrink-0">CID</span>
-                    <code className="text-lg font-mono text-foreground/60 break-all leading-relaxed">
-                      {result.receipt.cid}
-                    </code>
-                    <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} />
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-foreground/20"}`} />
-                    <span className="text-base text-foreground/40 font-mono">
-                      {result.receipt.engine === "wasm" ? `wasm · ${result.receipt.crateVersion ?? ""}` : "ts engine"}
-                    </span>
-                  </div>
-                </motion.div>
-
-                <div className="border-t border-border/10" style={{ marginTop: "calc(1.5rem * 1.618)" }} />
-
-                {/* CONTENT — Chain of Proofs special rendering */}
-                {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs" ? (
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-5" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
+                {/* ═══ 5. CONTENT ═══ */}
+                {src?.["@type"] === "uor:ChainOfProofs" ? (
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="space-y-5" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <Link2 className="w-4 h-4 text-primary/70" />
                         <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">Chain of Proofs</p>
                         <span className="text-base text-foreground/50 font-mono">
-                          {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
+                          {(src?.["uor:chainLength"] as number) ?? 0} links
                         </span>
                       </div>
-                      {/* Human / Machine toggle */}
                       <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
-                        <button
-                          onClick={() => setContentViewMode("human")}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            contentViewMode === "human"
-                              ? "bg-primary/15 text-foreground"
-                              : "text-muted-foreground/40 hover:text-foreground/60"
-                          }`}
-                        >
-                          <BookOpen className="w-3.5 h-3.5" />
-                          Human
+                        <button onClick={() => setContentViewMode("human")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${contentViewMode === "human" ? "bg-primary/15 text-foreground" : "text-muted-foreground/40 hover:text-foreground/60"}`}>
+                          <BookOpen className="w-3.5 h-3.5" /> Human
                         </button>
-                        <button
-                          onClick={() => setContentViewMode("machine")}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            contentViewMode === "machine"
-                              ? "bg-primary/15 text-foreground"
-                              : "text-muted-foreground/40 hover:text-foreground/60"
-                          }`}
-                        >
-                          <Code2 className="w-3.5 h-3.5" />
-                          Machine
+                        <button onClick={() => setContentViewMode("machine")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${contentViewMode === "machine" ? "bg-primary/15 text-foreground" : "text-muted-foreground/40 hover:text-foreground/60"}`}>
+                          <Code2 className="w-3.5 h-3.5" /> Machine
                         </button>
                       </div>
                     </div>
 
                     {contentViewMode === "human" ? (
                       <div className="space-y-0">
-                        {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
+                        {(((src?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
                           <div key={idx} className="flex items-stretch gap-0">
-                            {/* Chain connector column */}
                             <div className="flex flex-col items-center w-7 shrink-0">
                               <div className="w-3 h-3 rounded-full bg-primary/25 border border-primary/30 mt-3.5 shrink-0" />
-                              {idx < arr.length - 1 && (
-                                <div className="flex-1 w-px bg-primary/15" style={{ minHeight: 12 }} />
-                              )}
+                              {idx < arr.length - 1 && <div className="flex-1 w-px bg-primary/15" style={{ minHeight: 12 }} />}
                             </div>
-                            {/* Link card */}
                             <div className="flex-1 border border-border/15 rounded-lg p-4 mb-2.5 space-y-2.5 bg-muted/5">
                               <div className="flex items-center gap-2.5">
                                 <span className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Link {idx + 1}</span>
                                 {link["uor:proofAddress"] && (
-                                  <button
-                                    onClick={() => {
-                                      setInput(link["uor:proofAddress"] as string);
-                                      clearResult();
-                                      setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50);
-                                    }}
-                                    className="text-sm text-primary/60 hover:text-primary/90 transition-colors font-mono"
-                                  >
+                                  <button onClick={() => { setInput(link["uor:proofAddress"] as string); clearResult(); setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50); }} className="text-sm text-primary/60 hover:text-primary/90 transition-colors font-mono">
                                     {link["uor:proofAddress"] as string}
                                   </button>
                                 )}
                               </div>
-                              {link["uor:query"] && (
-                                <p className="text-base text-foreground/70 line-clamp-2">
-                                  <span className="text-foreground/40 font-semibold mr-1.5">Q:</span>
-                                  {link["uor:query"] as string}
-                                </p>
-                              )}
-                              {link["uor:response"] && (
-                                <p className="text-base text-foreground/55 line-clamp-3">
-                                  <span className="text-foreground/40 font-semibold mr-1.5">A:</span>
-                                  {(link["uor:response"] as string).slice(0, 200)}…
-                                </p>
-                              )}
+                              {link["uor:query"] && <p className="text-base text-foreground/70 line-clamp-2"><span className="text-foreground/40 font-semibold mr-1.5">Q:</span>{link["uor:query"] as string}</p>}
+                              {link["uor:response"] && <p className="text-base text-foreground/55 line-clamp-3"><span className="text-foreground/40 font-semibold mr-1.5">A:</span>{(link["uor:response"] as string).slice(0, 200)}…</p>}
                             </div>
                           </div>
-                        ))}
+                        )))}
                       </div>
                     ) : (
-                      /* Machine view — numbered markdown for AI agents */
                       (() => {
-                        const src = result.source as Record<string, unknown>;
                         const links = (src?.["uor:links"] as Array<Record<string, unknown>>) ?? [];
-                        const lines: string[] = [
-                          `# UOR Chain of Proofs`,
-                          ``,
-                          `> @type: ${src["@type"] ?? "uor:ChainOfProofs"}`,
-                          `> chain_length: ${src["uor:chainLength"] ?? links.length}`,
-                          `> proof_address: \`${src["uor:proofAddress"] ?? "—"}\``,
-                          ``,
-                          `---`,
-                          ``,
-                        ];
+                        const lines: string[] = [`# UOR Chain of Proofs`, ``, `> @type: ${src?.["@type"] ?? "uor:ChainOfProofs"}`, `> chain_length: ${src?.["uor:chainLength"] ?? links.length}`, ``, `---`, ``];
                         links.forEach((link, idx) => {
-                          lines.push(`## Link ${idx + 1}`);
-                          lines.push(``);
-                          const fields: [string, unknown][] = Object.entries(link);
-                          for (const [key, val] of fields) {
+                          lines.push(`## Link ${idx + 1}`, ``);
+                          for (const [key, val] of Object.entries(link)) {
                             const k = key.replace(/^uor:/, "");
-                            if (typeof val === "string" && val.length > 300) {
-                              lines.push(`- **${k}**: "${val.slice(0, 280)}…"`);
-                            } else if (typeof val === "object" && val !== null) {
-                              lines.push(`- **${k}**: \`${JSON.stringify(val)}\``);
-                            } else {
-                              lines.push(`- **${k}**: ${typeof val === "string" ? `"${val}"` : String(val ?? "—")}`);
-                            }
+                            if (typeof val === "string" && val.length > 300) lines.push(`- **${k}**: "${val.slice(0, 280)}…"`);
+                            else if (typeof val === "object" && val !== null) lines.push(`- **${k}**: \`${JSON.stringify(val)}\``);
+                            else lines.push(`- **${k}**: ${typeof val === "string" ? `"${val}"` : String(val ?? "—")}`);
                           }
                           lines.push(``);
                         });
-                        lines.push(`---`);
-                        lines.push(`<!-- machine-readable UOR artifact • ${new Date().toISOString()} -->`);
-
+                        lines.push(`---`, `<!-- machine-readable UOR artifact • ${new Date().toISOString()} -->`);
                         const markdown = lines.join("\n");
 
                         return (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-mono text-muted-foreground/40">.uor.md • {lines.length} lines</span>
+                              <span className="text-xs font-mono text-muted-foreground/40">.uor.md · {lines.length} lines</span>
                               <CopyBtn onClick={() => copy(markdown, "chain-md")} copied={copied === "chain-md"} label="Copy Markdown" />
                             </div>
-                            <div
-                              className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[55vh] overflow-y-auto"
-                              style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}
-                            >
+                            <div className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[55vh] overflow-y-auto" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}>
                               <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
                                 {lines.map((line, i) => (
                                   <div key={i} className="contents group">
-                                    {/* Line number gutter */}
-                                    <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">
-                                      {i + 1}
-                                    </div>
-                                    {/* Line content */}
+                                    <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">{i + 1}</div>
                                     <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                      {line.startsWith("# ") ? (
-                                        <span className="text-primary/80 font-bold">{line}</span>
-                                      ) : line.startsWith("## ") ? (
-                                        <span className="text-primary/60 font-semibold">{line}</span>
-                                      ) : line.startsWith("> ") ? (
-                                        <span className="text-accent-foreground/50 italic">{line}</span>
-                                      ) : line.startsWith("- ") ? (
-                                        <span className="text-foreground/65">
-                                          <span className="text-muted-foreground/40">- </span>
-                                          {(() => {
-                                            const m = line.match(/^- \*\*(.+?)\*\*: (.+)$/);
-                                            if (m) return <><span className="text-primary/50 font-semibold">{m[1]}</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">{m[2]}</span></>;
-                                            return <span>{line.slice(2)}</span>;
-                                          })()}
-                                        </span>
-                                      ) : line.startsWith("---") ? (
-                                        <span className="text-border/30">{line}</span>
-                                      ) : line.startsWith("<!--") ? (
-                                        <span className="text-muted-foreground/20 italic">{line}</span>
-                                      ) : (
-                                        <span className="text-foreground/50">{line}</span>
-                                      )}
+                                      {line.startsWith("# ") ? <span className="text-primary/80 font-bold">{line}</span> : line.startsWith("## ") ? <span className="text-primary/60 font-semibold">{line}</span> : line.startsWith("> ") ? <span className="text-accent-foreground/50 italic">{line}</span> : line.startsWith("- ") ? (
+                                        <span className="text-foreground/65"><span className="text-muted-foreground/40">- </span>{(() => { const m = line.match(/^- \*\*(.+?)\*\*: (.+)$/); if (m) return <><span className="text-primary/50 font-semibold">{m[1]}</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">{m[2]}</span></>; return <span>{line.slice(2)}</span>; })()}</span>
+                                      ) : line.startsWith("---") ? <span className="text-border/30">{line}</span> : line.startsWith("<!--") ? <span className="text-muted-foreground/20 italic">{line}</span> : <span className="text-foreground/50">{line}</span>}
                                     </div>
                                   </div>
                                 ))}
@@ -1675,34 +1612,17 @@ const SearchPage = () => {
                     )}
                   </motion.div>
                 ) : (
-                  /* Standard content — Human / Machine toggle */
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
+                  /* Standard content */
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="space-y-4" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Content</p>
+                      <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">Content</p>
                       <div className="flex items-center gap-3">
-                        {/* Human / Machine toggle */}
                         <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
-                          <button
-                            onClick={() => setContentViewMode("human")}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                              contentViewMode === "human"
-                                ? "bg-primary/15 text-foreground"
-                                : "text-muted-foreground/40 hover:text-foreground/60"
-                            }`}
-                          >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            Human
+                          <button onClick={() => setContentViewMode("human")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${contentViewMode === "human" ? "bg-primary/15 text-foreground" : "text-muted-foreground/40 hover:text-foreground/60"}`}>
+                            <BookOpen className="w-3.5 h-3.5" /> Human
                           </button>
-                          <button
-                            onClick={() => setContentViewMode("machine")}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                              contentViewMode === "machine"
-                                ? "bg-primary/15 text-foreground"
-                                : "text-muted-foreground/40 hover:text-foreground/60"
-                            }`}
-                          >
-                            <Code2 className="w-3.5 h-3.5" />
-                            Machine
+                          <button onClick={() => setContentViewMode("machine")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${contentViewMode === "machine" ? "bg-primary/15 text-foreground" : "text-muted-foreground/40 hover:text-foreground/60"}`}>
+                            <Code2 className="w-3.5 h-3.5" /> Machine
                           </button>
                         </div>
                         <CopyBtn onClick={() => copy(contentViewMode === "machine" ? JSON.stringify(result.source, null, 2) : renderHumanContent(result.source), "json")} copied={copied === "json"} label="Copy" />
@@ -1711,58 +1631,27 @@ const SearchPage = () => {
 
                     <AnimatePresence mode="wait">
                       {contentViewMode === "human" ? (
-                        <motion.div
-                          key="human-view"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="bg-muted/5 rounded-xl p-6 border border-border/15 space-y-4 max-h-[60vh] overflow-y-auto"
-                        >
+                        <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-xl p-6 border border-border/15 space-y-4 max-h-[60vh] overflow-y-auto">
                           {renderHumanView(result.source)}
                         </motion.div>
                       ) : (
-                        <motion.div
-                          key="machine-view"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
+                        <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
                           {(() => {
                             const raw = JSON.stringify(result.source, null, 2);
                             const lines = raw.split("\n");
                             return (
                               <div className="space-y-2">
                                 <span className="text-xs font-mono text-muted-foreground/40">.json · {lines.length} lines</span>
-                                <div
-                                  className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[60vh] overflow-y-auto"
-                                  style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}
-                                >
+                                <div className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[60vh] overflow-y-auto" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}>
                                   <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
                                     {lines.map((line, i) => (
                                       <div key={i} className="contents group">
-                                        <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">
-                                          {i + 1}
-                                        </div>
+                                        <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">{i + 1}</div>
                                         <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                          {line.includes('": "') ? (
-                                            (() => {
-                                              const m = line.match(/^(\s*)"(.+?)":\s*"(.*)"(,?)$/);
-                                              if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">"{m[3]}"</span><span className="text-muted-foreground/20">{m[4]}</span></span>;
-                                              return <span className="text-foreground/55">{line}</span>;
-                                            })()
-                                          ) : line.includes('": ') ? (
-                                            (() => {
-                                              const m = line.match(/^(\s*)"(.+?)":\s*(.+)$/);
-                                              if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-accent-foreground/60">{m[3]}</span></span>;
-                                              return <span className="text-foreground/55">{line}</span>;
-                                            })()
-                                          ) : line.trim() === "{" || line.trim() === "}" || line.trim() === "}," || line.trim() === "[" || line.trim() === "]" || line.trim() === "]," ? (
-                                            <span className="text-muted-foreground/30">{line}</span>
-                                          ) : (
-                                            <span className="text-foreground/50">{line}</span>
-                                          )}
+                                          {line.includes('": "') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*"(.*)"(,?)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">"{m[3]}"</span><span className="text-muted-foreground/20">{m[4]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
+                                          : line.includes('": ') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*(.+)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-accent-foreground/60">{m[3]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
+                                          : line.trim() === "{" || line.trim() === "}" || line.trim() === "}," || line.trim() === "[" || line.trim() === "]" || line.trim() === "]," ? <span className="text-muted-foreground/30">{line}</span>
+                                          : <span className="text-foreground/50">{line}</span>}
                                         </div>
                                       </div>
                                     ))}
@@ -1777,12 +1666,19 @@ const SearchPage = () => {
                   </motion.div>
                 )}
 
-
-
-
+                {/* ═══ 6. DISCUSSION ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                >
+                  <AddressDiscussion cid={result.receipt.cid} />
+                </motion.div>
 
               </motion.div>
-            )}
+              );
+            })()}
           </AnimatePresence>
         </div>
       </div>
