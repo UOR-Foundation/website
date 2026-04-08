@@ -1,27 +1,63 @@
 import { useState } from "react";
 import ChatSidebar from "../components/ChatSidebar";
 import ConversationView from "../components/ConversationView";
-import { contacts } from "../lib/mock-data";
+import NewConversationDialog from "../components/NewConversationDialog";
+import { useConversations } from "../lib/use-conversations";
+import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Lock } from "lucide-react";
+import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
 
 export default function MessengerPage() {
-  const [activeChatId, setActiveChatId] = useState<string | null>("1");
+  const { user, loading: authLoading } = useAuth();
+  const { conversations, loading: convosLoading, refetch } = useConversations();
+  const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
+  const [newChatOpen, setNewChatOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  const activeContact = contacts.find((c) => c.id === activeChatId);
+  const activeConvo = conversations.find((c) => c.id === activeConvoId);
 
-  const showList = isMobile ? !activeChatId : true;
-  const showConvo = isMobile ? !!activeChatId : true;
+  const showList = isMobile ? !activeConvoId : true;
+  const showConvo = isMobile ? !!activeConvoId : true;
+
+  // Auth gate
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-teal-400/30 border-t-teal-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center text-center px-8">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center mb-6">
+          <ShieldCheck size={28} className="text-teal-400/70" />
+        </div>
+        <h2 className="text-2xl text-white/90 font-light mb-3">UOR Messenger</h2>
+        <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-6">
+          Post-quantum encrypted messaging powered by the Universal Object Reference framework.
+          Sign in to access your conversations.
+        </p>
+        <div className="flex items-center gap-2 text-white/25 text-xs">
+          <Lock size={11} />
+          <span>Kyber-1024 + AES-256-GCM · ML-DSA-65</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen w-screen bg-[#0b141a] flex overflow-hidden" style={{ fontFamily: "'Segoe UI', Helvetica, Arial, sans-serif" }}>
+    <div className="h-screen w-screen bg-slate-950 flex overflow-hidden" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}>
       {/* Chat sidebar */}
       {showList && (
-        <div className={`${isMobile ? "w-full" : "w-[30%] min-w-[300px] max-w-[440px]"} h-full flex-shrink-0 border-r border-[#2a3942]`}>
+        <div className={`${isMobile ? "w-full" : "w-[320px] min-w-[280px] max-w-[380px]"} h-full flex-shrink-0 border-r border-white/[0.04]`}>
           <ChatSidebar
-            activeChatId={activeChatId}
-            onSelect={(id) => setActiveChatId(id)}
+            conversations={conversations}
+            activeId={activeConvoId}
+            onSelect={(id) => setActiveConvoId(id)}
+            onNewChat={() => setNewChatOpen(true)}
+            loading={convosLoading}
           />
         </div>
       )}
@@ -29,30 +65,44 @@ export default function MessengerPage() {
       {/* Conversation panel */}
       {showConvo && (
         <div className="flex-1 h-full min-w-0">
-          {activeContact ? (
+          {activeConvo ? (
             <ConversationView
-              contact={activeContact}
-              onBack={isMobile ? () => setActiveChatId(null) : undefined}
+              conversation={activeConvo}
+              onBack={isMobile ? () => setActiveConvoId(null) : undefined}
             />
           ) : (
-            /* Empty state */
-            <div className="h-full flex flex-col items-center justify-center text-center px-8">
-              <div className="w-[320px] h-[188px] mb-8 flex items-center justify-center">
-                <div className="text-[#00a884] text-8xl opacity-20">💬</div>
+            <div
+              className="h-full flex flex-col items-center justify-center text-center px-8"
+              style={{
+                background: "radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.04) 0%, transparent 70%)",
+              }}
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500/10 to-indigo-500/10 border border-white/[0.06] flex items-center justify-center mb-6">
+                <MessageSquare size={32} className="text-white/15" />
               </div>
-              <h2 className="text-[32px] text-[#e9edef] font-light mb-3">UOR Messenger</h2>
-              <p className="text-[14px] text-[#8696a0] max-w-[440px] leading-relaxed">
-                Send and receive messages powered by the Universal Object Reference framework.
-                Your conversations are content-addressed and coherence-verified.
+              <h2 className="text-2xl text-white/80 font-light mb-3">UOR Messenger</h2>
+              <p className="text-sm text-white/30 max-w-md leading-relaxed">
+                Select a conversation or start a new one.
+                All messages are content-addressed and coherence-verified.
               </p>
-              <div className="flex items-center gap-2 mt-8 text-[#8696a0] text-[13px]">
-                <Lock size={12} />
-                <span>End-to-end encrypted</span>
+              <div className="flex items-center gap-2 mt-6 text-white/20 text-xs">
+                <Lock size={11} />
+                <span>End-to-end encrypted · Post-quantum secure</span>
               </div>
             </div>
           )}
         </div>
       )}
+
+      {/* New conversation dialog */}
+      <NewConversationDialog
+        open={newChatOpen}
+        onClose={() => setNewChatOpen(false)}
+        onCreated={(id) => {
+          setActiveConvoId(id);
+          refetch();
+        }}
+      />
     </div>
   );
 }
