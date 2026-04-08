@@ -1173,6 +1173,7 @@ const SearchPage = () => {
     const abortController = new AbortController();
     refineAbortRef.current = abortController;
     setRefining(true);
+    setStreamProgress(0);
 
     // Re-stream with instruction appended as context
     const tokenBuffer = new TokenBuffer((text: string) => {
@@ -1191,7 +1192,7 @@ const SearchPage = () => {
       lens: activeLens,
       signal: abortController.signal,
       onWiki: () => {},
-      onDelta: (text) => { accum += text; tokenBuffer.push(text); },
+      onDelta: (text) => { accum += text; tokenBuffer.push(text); setStreamProgress(Math.min(accum.length / 3200, 0.95)); },
       onDone: () => {
         tokenBuffer.stop();
         setRefining(false);
