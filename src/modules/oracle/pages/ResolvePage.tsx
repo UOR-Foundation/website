@@ -94,6 +94,8 @@ const SearchPage = () => {
   const [improbPhase, setImprobPhase] = useState(0);
   const [improbExponent, setImprobExponent] = useState(0);
   const [improbSideEffect, setImprobSideEffect] = useState("");
+  const [drivePrePhase, setDrivePrePhase] = useState(false);
+  const [drivePostPhase, setDrivePostPhase] = useState(false);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
