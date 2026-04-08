@@ -361,7 +361,7 @@ const SearchPage = () => {
     setLoading(true);
     try {
       const sourceObj = {
-        "@context": "https://schema.uor.foundation/v1",
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:UserContent",
         "uor:content": text,
         "uor:encodedAt": new Date().toISOString(),
