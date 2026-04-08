@@ -16,15 +16,8 @@ export default function DesktopThemeDots() {
   const { theme, setTheme } = useDesktopTheme();
 
   return (
-    <div className="fixed bottom-5 inset-x-0 z-[195] flex justify-center pointer-events-none">
-      <div
-        className="pointer-events-auto flex items-center gap-2 py-1.5 px-3 rounded-full"
-        style={{
-          background: "rgba(128,128,128,0.10)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
-      >
+    <div className="fixed bottom-4 inset-x-0 z-[195] flex justify-center pointer-events-none">
+      <div className="pointer-events-auto flex items-center gap-2.5 py-1 px-2">
         {DOTS.map(dot => {
           const active = theme === dot.id;
           return (
@@ -33,15 +26,13 @@ export default function DesktopThemeDots() {
               onClick={() => setTheme(dot.id)}
               aria-label={dot.label}
               title={dot.label}
-              className="rounded-full transition-all duration-150 ease-out"
+              className="rounded-full transition-all duration-200 ease-out hover:opacity-80"
               style={{
-                width: active ? 12 : 10,
-                height: active ? 12 : 10,
-                background: dot.bg,
-                border: `1.5px solid ${dot.border || "transparent"}`,
-                opacity: active ? 1 : 0.5,
-                boxShadow: active ? "0 0 6px rgba(255,255,255,0.1)" : "none",
-                transform: active ? "scale(1)" : "scale(1)",
+                width: 7,
+                height: 7,
+                background: active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
+                border: "none",
+                transform: active ? "scale(1)" : "scale(0.85)",
               }}
             />
           );
