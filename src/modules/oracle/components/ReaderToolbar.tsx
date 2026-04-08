@@ -62,6 +62,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   streamProgress = 0,
   immersive = false,
   onSearchHistoryJump,
+  detailsOpen = false,
 }) => {
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
