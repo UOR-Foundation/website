@@ -140,7 +140,6 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
           />
         );
       })()}
-      />
     </div>
   );
 };
