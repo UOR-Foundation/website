@@ -58,22 +58,22 @@ export const InlineFigure: React.FC<{
         style={{ margin: 0, ...wrapperStyle }}
         onClick={() => setShowLightbox(true)}
       >
-        <div className="relative overflow-hidden" style={{ borderRadius: 10 }}>
+        <div className="relative overflow-hidden transition-shadow duration-300 group-hover:shadow-lg" style={{ borderRadius: 10 }}>
           <img
             src={image.url}
             alt={image.caption || ""}
             loading="lazy"
             className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ${
-              variant === "full-width" ? "" : "max-h-[220px]"
+              variant === "full-width" ? "" : "max-h-[260px]"
             }`}
-            style={variant === "full-width" ? { aspectRatio: "1.618 / 1", maxHeight: 420 } : undefined}
+            style={variant === "full-width" ? { aspectRatio: "1.618 / 1", maxHeight: 480 } : undefined}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
         {(image.caption || image.source) && (
           <figcaption
             className="text-muted-foreground/50 leading-snug flex items-baseline gap-1.5 flex-wrap"
-            style={{ fontSize: 12, fontStyle: "italic", marginTop: 10 }}
+            style={{ fontSize: 13, fontStyle: "italic", marginTop: 8 }}
           >
             {image.caption && <span>{image.caption}</span>}
             {image.source && image.source !== "wikimedia-commons" && (
@@ -113,7 +113,7 @@ export const InlineVideo: React.FC<{
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors rounded-lg">
             <div className={`rounded-full bg-white/90 flex items-center justify-center shadow-lg ${
-              variant === "compact" ? "w-12 h-12" : "w-16 h-16"
+              variant === "compact" ? "w-14 h-14" : "w-16 h-16"
             }`}>
               <Play className={`text-red-600 ml-0.5 ${variant === "compact" ? "w-6 h-6" : "w-8 h-8"}`} />
             </div>

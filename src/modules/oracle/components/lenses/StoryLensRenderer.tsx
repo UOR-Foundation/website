@@ -104,7 +104,7 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
   return (
     <article style={{ margin: "0 auto" }}>
       {heroImage && !synthesizing && (
-        <InlineFigure image={heroImage} variant="full-width" className="mb-10 -mx-6 sm:-mx-4 md:mx-0 rounded-none sm:rounded-lg" />
+        <InlineFigure image={heroImage} variant="full-width" className="mb-8 -mx-4 sm:mx-0 rounded-none sm:rounded-lg" />
       )}
 
       <BalancedHeading
@@ -112,7 +112,7 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
         lineHeight={40}
         as="h1"
         className="text-foreground"
-        style={{ fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: SPACE.lg - 2, letterSpacing: "-0.02em" }}
+        style={{ fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: SPACE.md, letterSpacing: "-0.02em" }}
         fontSizes={TITLE_FONT_SIZES}
         maxLines={3}
       >

@@ -141,7 +141,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       </div>
 
       {abstract && (
-        <div className="bg-muted/15 border border-border/15" style={{ borderRadius: RADIUS.sm, padding: `${SPACE.lg - 2}px ${SPACE.lg + 2}px`, marginBottom: SPACE.xl + 2 }}>
+        <div className="bg-muted/15 border border-border/15" style={{ borderRadius: RADIUS.sm, padding: `${SPACE.lg - 2}px ${SPACE.lg + 2}px`, marginBottom: SPACE.lg + 4 }}>
           <span className="text-foreground" style={{ fontSize: TYPE.caption, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: SPACE.sm, opacity: OPACITY.secondary }}>Abstract</span>
           <div className="text-foreground" style={{ fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic", opacity: 0.75 }}>
             <ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: 0 }}>{children}</p> }}>
@@ -151,7 +151,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         </div>
       )}
 
-      <div style={{ columnCount: isWide ? 2 : 1, columnGap: 32 }}>
+      <div style={{ columnCount: isWide ? 2 : 1, columnGap: 26 }}>
         {bodySections.length > 1 ? (
           bodySections.map((section, idx) => {
             const fig = inlineImageMap.get(idx);
@@ -162,7 +162,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
                 {showFig && (
                   <figure className="my-4 break-inside-avoid" style={{ margin: 0 }}>
                     <div className="overflow-hidden border border-border/15" style={{ borderRadius: RADIUS.sm }}>
-                      <img src={fig.url} alt={fig.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 180 }} />
+                      <img src={fig.url} alt={fig.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 220 }} />
                     </div>
                     <figcaption className="text-muted-foreground text-[11px] leading-snug" style={{ marginTop: SPACE.sm, opacity: OPACITY.secondary }}>
                       <span className="text-foreground font-medium" style={{ opacity: OPACITY.secondary }}>Fig. {idx}.</span> {fig.caption || ""}
