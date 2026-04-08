@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
+import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
 
 const SURPRISE_MESSAGES = [
@@ -1394,16 +1395,19 @@ const SearchPage = () => {
                 className="space-y-0 pb-24"
                 style={{ paddingTop: "calc(100vh * 0.04)" }}
               >
+                {/* ═══ 0. COVER IMAGE ═══ */}
+                <ProfileCover cid={result.receipt.cid} />
+
                 {/* ═══ 1. PROFILE HEADER ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.03 }}
-                  className="flex items-start gap-5"
+                  className="flex items-start gap-5 -mt-9"
                 >
                   {/* Glyph Avatar */}
-                  <div className="relative shrink-0">
-                    <div className="w-[72px] h-[72px] rounded-full bg-primary/8 border-2 border-primary/20 flex items-center justify-center shadow-[0_0_24px_-6px_hsl(var(--primary)/0.2)]">
+                  <div className="relative shrink-0 ml-4">
+                    <div className="w-[72px] h-[72px] rounded-full bg-primary/8 border-2 border-primary/20 flex items-center justify-center shadow-[0_0_24px_-6px_hsl(var(--primary)/0.2)] ring-4 ring-background">
                       <span className="text-2xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
                     </div>
                     {/* Engine status dot */}
