@@ -308,9 +308,9 @@ const SearchPage = () => {
               {/* Address space count — golden ratio spacing */}
               <p
                 className="text-[15px] text-muted-foreground/40 select-none"
-                style={{ marginTop: "calc(2rem * 0.618)" }}
+                style={{ marginTop: "calc(3.2rem * 0.618)" }}
               >
-                Searching across <span className="text-foreground/60 font-semibold">340 undecillion</span> possible addresses
+                Searching a <span className="text-foreground/60 font-semibold">near-infinite</span> address space.
               </p>
             </div>
           )}
