@@ -1,6 +1,7 @@
 /**
  * ReaderToolbar — Browser-like address bar for the immersive reader.
- * Always visible. Full-width, with golden-ratio proportions.
+ * Sticky full-width, with golden-ratio proportions and a details toggle
+ * anchored at the bottom-right of the bar.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -18,6 +19,8 @@ import {
   Clock,
   X,
   QrCode,
+  PanelRightOpen,
+  PanelRightClose,
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,6 +40,8 @@ interface ReaderToolbarProps {
   streamProgress?: number;
   immersive?: boolean;
   onSearchHistoryJump?: (keyword: string) => void;
+  /** Whether the details/sidebar panel is currently open */
+  detailsOpen?: boolean;
 }
 
 /**
@@ -57,6 +62,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   streamProgress = 0,
   immersive = false,
   onSearchHistoryJump,
+  detailsOpen = false,
 }) => {
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
@@ -483,6 +489,30 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           );
         })}
       </div>
+
+      {/* ── Details toggle — anchored at bottom-right, top flush with toolbar bottom ── */}
+      <button
+        onClick={onToggleDetails}
+        title={detailsOpen ? "Hide details panel" : "Show details panel"}
+        className={`absolute right-0 top-full z-50 flex items-center justify-center transition-all duration-200 rounded-bl-lg rounded-br-lg ${
+          immersive
+            ? detailsOpen
+              ? "bg-white/[0.12] text-white/70 hover:bg-white/[0.18] border-white/[0.08]"
+              : "bg-white/[0.06] text-white/35 hover:text-white/65 hover:bg-white/[0.1] border-white/[0.06]"
+            : detailsOpen
+              ? "bg-primary/10 text-primary/80 hover:bg-primary/15 border-border/15"
+              : "bg-muted/10 text-muted-foreground/35 hover:text-foreground/60 hover:bg-muted/20 border-border/10"
+        } border border-t-0`}
+        style={{
+          width: 36,
+          height: 28,
+        }}
+      >
+        {detailsOpen
+          ? <PanelRightClose className="w-4 h-4" />
+          : <PanelRightOpen className="w-4 h-4" />
+        }
+      </button>
     </motion.div>
   );
 };

@@ -2142,7 +2142,7 @@ const SearchPage = () => {
                       width: "100vw",
                       maxWidth: "100vw",
                       marginLeft: "calc(-50vw + 50%)",
-                      overflowX: "hidden",
+                      overflowX: "clip", // use clip instead of hidden to preserve sticky positioning
                     }}
                     onScroll={mobileImmersive ? (e) => {
                       const el = e.currentTarget;
