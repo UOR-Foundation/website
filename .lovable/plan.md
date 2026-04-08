@@ -1,93 +1,41 @@
 
 
-# Chain of Proofs — Selectable Multi-Proof Addressing
+# Streamlined Chain of Proofs — Zero-Mode Selection
 
-## Concept
+## Problem
+The current flow requires 3+ steps: toggle Chain mode → click checkboxes → click encode. The mode toggle is unintuitive and adds friction.
 
-Each Oracle response already produces a **Proof of Thought** (individual UOR address). This feature adds a **Chain of Proofs** layer: the user can select any combination of proofs in a conversation — consecutive or not — and encode them into a single composite UOR address. That address can be searched to reveal exactly the selected chain segment.
+## Solution: Always-Selectable Chain Dots
 
-## UX Design
+Remove the separate "Chain mode" entirely. The chain connector dots on each proof card **are** the selection affordance — always tappable, no mode switch needed.
 
-### Visual Chain Indicator
+### UX Flow
+1. Each proof card already shows a small dot on its left side. These dots become **always tappable**. One tap = select that proof (dot morphs into a filled checkmark). Another tap = deselect.
+2. As soon as ≥1 proof is selected, the floating bottom bar slides up with count + "Copy Chain Address" + "Select All" + clear.
+3. "Select All" button in the floating bar encodes the entire conversation chain in one click.
+4. Remove the "Chain" toggle button from the header entirely — it's no longer needed.
 
-A thin vertical line connects all Proof of Thought cards in the conversation, with small chain-link nodes at each proof. This makes the "chain" metaphor visible.
+### Visual Polish
+- Unselected dots: subtle `bg-primary/20` with a gentle hover glow to hint tappability
+- Selected dots: filled `CheckCircle2` in primary color with a micro spring animation
+- Selected proof cards get a soft `border-primary/25` highlight
+- Floating bar includes a "Select All" pill for the common "chain everything" case
 
-### Selection Mode
+### Technical Changes
 
-- A small **"Chain"** toggle button appears in the Oracle header bar (next to the close button). Clicking it enters **chain selection mode**.
-- In this mode, each Proof of Thought card gets a checkbox overlay. The user taps/clicks the proofs they want to include (any combination — consecutive or not).
-- A floating bottom bar appears showing: the count of selected proofs, a "Copy Chain Address" button, and a "Cancel" button.
-- When the user clicks "Copy Chain Address":
-  1. A composite JSON-LD object is built containing all selected proofs (ordered by conversation position).
-  2. `encode()` produces a single UOR address for the composite.
-  3. The triword is copied to clipboard with a toast confirmation.
-  4. The composite is registered in the receipt registry, so searching that triword reveals the chain.
+**Single file: `ResolvePage.tsx`**
 
-### Search Resolution
+1. **Remove** `chainSelectMode` state and `toggleChainSelect` function entirely
+2. **Remove** the "Chain" button from the Oracle header
+3. **Make chain dots always interactive** — the dot on every proof card becomes a button that calls `toggleProofIndex(idx)` directly (currently this only works in chain select mode)
+4. **Add hover states** to dots: `cursor-pointer`, subtle scale on hover
+5. **Add "Select All"** button to the floating bar that sets all proof indices
+6. The floating bar trigger changes from `chainSelectMode && selectedProofIndices.size > 0` to just `selectedProofIndices.size > 0`
+7. Update `exitAiMode` to just clear `selectedProofIndices` (no `chainSelectMode` to reset)
 
-When the chain address is looked up via UOR Search, the result card shows:
-- A "Chain of Proofs" label (instead of single proof)
-- The individual proofs listed in order, each with its own triword
-- The original query/response pairs for each link
-
-## Technical Plan
-
-### 1. New state in ResolvePage.tsx
-
-```typescript
-const [chainSelectMode, setChainSelectMode] = useState(false);
-const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
-```
-
-### 2. Chain toggle in Oracle header
-
-Add a `Link` icon button next to the close button. Toggles `chainSelectMode`. Only visible when there are 2+ proofs in the conversation.
-
-### 3. Proof card checkbox overlay
-
-When `chainSelectMode` is true, each Proof of Thought card renders a small circular checkbox (left side). Tapping toggles that index in `selectedProofIndices`. Selected cards get a subtle emerald border highlight.
-
-### 4. Floating selection bar
-
-When `selectedProofIndices.size > 0`, a bottom bar slides up with:
-- `"{n} proofs selected"` label
-- "Generate Chain Address" button (primary style)
-- Cancel / clear button
-
-### 5. Chain encoding function
-
-```typescript
-async function encodeChain(indices: Set<number>) {
-  const selected = [...indices].sort().map(i => aiMessages[i]);
-  const chainSource = {
-    "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-    "@type": "uor:ChainOfProofs",
-    "uor:links": selected.map((msg, idx) => ({
-      "@type": "uor:ProofOfThought",
-      "uor:position": idx,
-      "uor:query": aiMessages[/* find preceding user msg */].content,
-      "uor:response": msg.content,
-      "uor:proofAddress": msg.proof?.triword,
-    })),
-    "uor:chainLength": selected.length,
-    "uor:timestamp": new Date().toISOString(),
-  };
-  const receipt = await encode(chainSource);
-  return receipt;
-}
-```
-
-### 6. Search result rendering for chains
-
-When `result.source["@type"] === "uor:ChainOfProofs"`, render a special chain view showing each link with its triword, query, and response — instead of raw JSON.
-
-### 7. Connecting line between proof cards
-
-In the messages list, when there are multiple proof cards, render a thin `border-l border-primary/15` line connecting them, with small dot nodes. This is purely cosmetic — always visible, not just in selection mode.
-
-## Files
-
-| File | Change |
-|------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Add chain selection mode, floating bar, chain encode, visual chain connector, chain result rendering |
+### Result
+- **0 clicks** to enter selection — just tap any proof dot
+- **1 click** for "chain everything" via Select All in the floating bar
+- **2 clicks** minimum for any chain: tap a dot → Copy Chain Address
+- No mode switching, no cognitive overhead
 
