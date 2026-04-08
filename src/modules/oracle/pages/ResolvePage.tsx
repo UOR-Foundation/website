@@ -200,6 +200,28 @@ const SearchPage = () => {
     handleSearch(input);
   };
 
+  const handleEncode = async () => {
+    const text = encodeText.trim();
+    if (!text) return;
+    setLoading(true);
+    try {
+      const sourceObj = {
+        "@context": "https://schema.uor.foundation/v1",
+        "@type": "uor:UserContent",
+        "uor:content": text,
+        "uor:encodedAt": new Date().toISOString(),
+      };
+      const receipt = await encode(sourceObj);
+      setResult({ source: sourceObj, receipt });
+      setInput(receipt.triword);
+      setEncodeMode(false);
+      setEncodeText("");
+      confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
+      toast("✨ Your data has its address.", { description: receipt.triwordFormatted });
+    } catch { toast.error("Encoding failed."); }
+    finally { setLoading(false); }
+  };
+
   const rederive = async () => {
     if (!result?.source) return;
     setLoading(true);
