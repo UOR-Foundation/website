@@ -1423,6 +1423,57 @@ const SearchPage = () => {
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
+            isMobile ? (
+              /* ── MOBILE: Perplexity-style portal ── */
+              <div className="relative flex flex-col" style={{ minHeight: "100dvh" }}>
+                {/* Mobile header */}
+                <div className="flex items-center justify-between px-4 py-3 shrink-0">
+                  <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="p-1.5 text-muted-foreground/50 hover:text-foreground/70 transition-colors"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <img src={uorHexagon} alt="UOR" className="w-6 h-6 brightness-0 invert opacity-70" draggable={false} />
+                    <span className="text-xs font-bold tracking-[0.15em] text-foreground/60 uppercase">UOR</span>
+                  </div>
+                  <button
+                    onClick={() => setIdentityPanelOpen(true)}
+                    className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.1] flex items-center justify-center"
+                  >
+                    <Shield className="w-3 h-3 text-foreground/60" />
+                  </button>
+                </div>
+
+                {/* Centered hero text */}
+                <div className="flex-1 flex items-center justify-center px-8" style={{ paddingBottom: "120px" }}>
+                  <h1
+                    className="font-display font-bold text-foreground/90 text-center leading-[1.15] select-none"
+                    style={{ fontSize: "clamp(1.75rem, 7vw, 2.5rem)" }}
+                  >
+                    What do you want<br />to know?
+                  </h1>
+                </div>
+
+                {/* Bottom search bar */}
+                <MobileSearchBar
+                  onSubmit={(query) => { setInput(query); handleSearch(query); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
+                  loading={loading}
+                />
+
+                {/* Mobile menu */}
+                <MobileSearchMenu
+                  open={mobileMenuOpen}
+                  onClose={() => setMobileMenuOpen(false)}
+                  onAiMode={() => setAiMode(true)}
+                  onIdentity={() => setIdentityPanelOpen(true)}
+                />
+              </div>
+            ) : (
+              /* ── DESKTOP: Original layout ── */
             <div
               className="relative flex flex-col items-center"
               style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
@@ -1602,6 +1653,7 @@ const SearchPage = () => {
                 address space.
               </p>
             </div>
+            )
           )}
 
           {/* ══════════════ AI MODE — Oracle ══════════════ */}
