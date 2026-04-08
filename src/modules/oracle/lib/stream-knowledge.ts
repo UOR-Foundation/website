@@ -4,6 +4,8 @@
  * Emits wiki metadata instantly, then AI tokens as they arrive.
  */
 
+import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
+
 const KNOWLEDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-knowledge`;
 
 export interface MediaImage {
@@ -75,6 +77,9 @@ export async function streamKnowledge({
   /** Optional AbortSignal for cancelling the stream (live mode / cancel-on-resume) */
   signal?: AbortSignal;
 }) {
+  const ttft = createTTFTMeasure();
+  const latencyTier = getPreferredTier();
+
   const resp = await fetch(KNOWLEDGE_URL, {
     method: "POST",
     headers: {
@@ -85,6 +90,7 @@ export async function streamKnowledge({
       keyword,
       context: context?.length ? context : undefined,
       lens: lens || undefined,
+      latencyTier,
     }),
     signal,
   });
@@ -162,6 +168,7 @@ export async function streamKnowledge({
         } else if (parsed.type === "media" && parsed.media) {
           onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
+          ttft.markFirstToken();
           onDelta(parsed.content);
         }
       } catch {
@@ -195,6 +202,7 @@ export async function streamKnowledge({
         } else if (parsed.type === "media" && parsed.media) {
           onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
+          ttft.markFirstToken();
           onDelta(parsed.content);
         }
       } catch { /* ignore */ }

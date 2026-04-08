@@ -1,6 +1,58 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+/* ── Latency-driven model cascade ────────────────────────────────────── */
+
+const TIER_MODELS: Record<string, string> = {
+  quality: "google/gemini-3-flash-preview",
+  balanced: "google/gemini-2.5-flash",
+  fast: "google/gemini-2.5-flash-lite",
+};
+const FALLBACK_ORDER = ["quality", "balanced", "fast"];
+
+function tierModel(tier?: string): string {
+  return TIER_MODELS[tier || "balanced"] || TIER_MODELS.balanced;
+}
+function nextTier(tier: string): string | null {
+  const idx = FALLBACK_ORDER.indexOf(tier);
+  return idx >= 0 && idx < FALLBACK_ORDER.length - 1 ? FALLBACK_ORDER[idx + 1] : null;
+}
+
+async function fetchWithCascade(
+  url: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  tier: string,
+  timeoutMs = 3000,
+): Promise<{ response: Response; model: string }> {
+  const model = tierModel(tier);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, model }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (resp.ok) return { response: resp, model };
+    if (resp.status === 429 || resp.status === 402) return { response: resp, model };
+  } catch (e) {
+    clearTimeout(timer);
+    if (!(e instanceof DOMException && e.name === "AbortError")) throw e;
+  }
+  const next = nextTier(tier);
+  if (next) return fetchWithCascade(url, apiKey, body, next, timeoutMs);
+  const finalModel = TIER_MODELS.fast;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, model: finalModel }),
+  });
+  return { response: resp, model: finalModel };
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -137,7 +189,7 @@ async function handleIngest(sourceUrl: string) {
 
 /* ── FUSE action (Manual mode) — streaming ───────────────────────── */
 
-async function handleFuse(bookIds: string[]) {
+async function handleFuse(bookIds: string[], latencyTier?: string) {
   const { data: books, error } = await supabaseAdmin
     .from("book_summaries")
     .select("id, title, author, domain, summary_markdown")
@@ -174,11 +226,12 @@ Return ONLY the JSON array, no markdown fences.`;
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+  const tier = typeof latencyTier === "string" && TIER_MODELS[latencyTier] ? latencyTier : "balanced";
+
+  const { response } = await fetchWithCascade(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    LOVABLE_API_KEY,
+    {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Analyze these ${books.length} books and discover cross-domain invariant patterns:\n\n${bookContext}` },
@@ -186,8 +239,9 @@ Return ONLY the JSON array, no markdown fences.`;
       stream: true,
       max_tokens: 4096,
       temperature: 0.5,
-    }),
-  });
+    },
+    tier,
+  );
 
   if (!response.ok) {
     const status = response.status;
@@ -203,7 +257,7 @@ Return ONLY the JSON array, no markdown fences.`;
 
 /* ── DISCOVER action (Auto mode) — streaming ─────────────────────── */
 
-async function handleDiscover(userContext?: string) {
+async function handleDiscover(userContext?: string, latencyTier?: string) {
   const { data: books, error } = await supabaseAdmin
     .from("book_summaries")
     .select("id, title, author, domain, summary_markdown")
@@ -253,11 +307,12 @@ ${userContext ? `\n## User Context\nThe user's recent areas of interest: ${userC
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+  const tier = typeof latencyTier === "string" && TIER_MODELS[latencyTier] ? latencyTier : "balanced";
+
+  const { response } = await fetchWithCascade(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    LOVABLE_API_KEY,
+    {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Discover hidden cross-domain invariants across this library of ${books.length} books:\n\n${libraryContext}` },
@@ -265,8 +320,9 @@ ${userContext ? `\n## User Context\nThe user's recent areas of interest: ${userC
       stream: true,
       max_tokens: 6144,
       temperature: 0.6,
-    }),
-  });
+    },
+    tier,
+  );
 
   if (!response.ok) {
     const status = response.status;
@@ -301,7 +357,7 @@ serve(async (req) => {
     if (action === "fuse") {
       const { bookIds } = body;
       if (!bookIds?.length || bookIds.length < 2) return new Response(JSON.stringify({ error: "Select at least 2 books" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      const result = await handleFuse(bookIds);
+      const result = await handleFuse(bookIds, body.latencyTier);
       if (result instanceof Response) return result;
       // Shouldn't reach here but just in case
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -309,7 +365,7 @@ serve(async (req) => {
 
     if (action === "discover") {
       const { userContext } = body;
-      const result = await handleDiscover(userContext);
+      const result = await handleDiscover(userContext, body.latencyTier);
       if (result instanceof Response) return result;
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

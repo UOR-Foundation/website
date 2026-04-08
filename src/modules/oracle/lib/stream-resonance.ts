@@ -2,6 +2,8 @@
  * stream-resonance — SSE client for the book-resonance edge function.
  */
 
+import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
+
 const RESONANCE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/book-resonance`;
 
 export interface Invariant {
@@ -90,13 +92,16 @@ async function streamSSE(
   onDone: () => void,
   onError: (error: string) => void,
 ) {
+  const ttft = createTTFTMeasure();
+  const latencyTier = getPreferredTier();
+
   const resp = await fetch(RESONANCE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, latencyTier }),
   });
 
   if (!resp.ok || !resp.body) {
@@ -129,7 +134,7 @@ async function streamSSE(
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
+        if (content) { ttft.markFirstToken(); onDelta(content); }
       } catch {
         buffer = line + "\n" + buffer;
         break;
@@ -148,7 +153,7 @@ async function streamSSE(
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
+        if (content) { ttft.markFirstToken(); onDelta(content); }
       } catch { /* ignore */ }
     }
   }
