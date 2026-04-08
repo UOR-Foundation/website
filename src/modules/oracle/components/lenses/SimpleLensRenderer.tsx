@@ -1,10 +1,14 @@
 /**
  * SimpleLensRenderer — Children's textbook / Kurzgesagt style.
  * Large friendly type, emoji section markers, pastel callout cards, warm and playful.
+ * Now with Perplexity-style inline citations and source pills.
  */
 
 import React, { useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import CitedMarkdown from "../CitedMarkdown";
+import SourcesPills from "../SourcesPills";
+import { normalizeSource } from "../../lib/citation-parser";
+import type { SourceMeta } from "../../lib/citation-parser";
 
 interface LensRendererProps {
   title: string;
@@ -148,6 +152,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 }) => {
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
   const components = useMemo(() => createSimpleComponents(sectionCounter), [sectionCounter]);
+  const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -181,31 +186,40 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         style={{
           fontSize: 14,
           fontWeight: 600,
-          marginBottom: 28,
+          marginBottom: 20,
         }}
       >
         🌟 Explained simply
       </p>
 
-      {/* Content */}
-      <ReactMarkdown components={components}>{contentMarkdown}</ReactMarkdown>
+      {/* Source pills */}
+      <SourcesPills sources={sourceMetas} />
+
+      {/* Content with inline citations */}
+      <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
 
       {synthesizing && (
         <span className="inline-block bg-primary/70" style={{ width: 2, height: 20, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {sources.length > 0 && (
+      {/* References footer */}
+      {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
-          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">Sources</span>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {sources.map((url, i) => (
-              <a key={i} href={url.startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer"
-                className="text-muted-foreground/50 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors text-[11px] px-2.5 py-1 rounded-full border border-border/10">
-                {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </a>
+          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
+          <ol className="mt-2 space-y-1 list-decimal list-inside">
+            {sourceMetas.map((s, i) => (
+              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+                <a href={s.url} target="_blank" rel="noopener noreferrer"
+                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
+                  {s.title || s.domain}
+                </a>
+                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}>
+                  uor:{s.uorHash}
+                </span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       )}
     </article>

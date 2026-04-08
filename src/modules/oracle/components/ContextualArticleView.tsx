@@ -12,6 +12,7 @@ import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
 import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
 import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
+import ProvenanceBanner from "./ProvenanceBanner";
 import { KNOWLEDGE_LENSES, type KnowledgeLens } from "@/modules/oracle/lib/knowledge-lenses";
 
 const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> = {
@@ -47,6 +48,12 @@ interface ContextualArticleViewProps {
   onLensChange?: (lensId: string) => void;
   /** When true, suppress lens switcher and context banner (toolbar provides these) */
   isReaderMode?: boolean;
+  /** Provenance metadata from the edge function */
+  provenance?: {
+    model?: string;
+    personalized?: boolean;
+    personalizedTopics?: string[];
+  };
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -59,6 +66,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   activeLens = "encyclopedia",
   onLensChange,
   isReaderMode = false,
+  provenance,
 }) => {
   const navigate = useNavigate();
 
@@ -96,6 +104,16 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
             );
           })}
         </div>
+      )}
+
+      {/* ── Provenance Banner ── */}
+      {!synthesizing && contentMarkdown.trim().length > 50 && (
+        <ProvenanceBanner
+          sourceCount={sources.length}
+          model={provenance?.model}
+          personalized={provenance?.personalized}
+          personalizedTopics={provenance?.personalizedTopics}
+        />
       )}
 
       {/* ── Context Banner (hidden in reader mode) ── */}
