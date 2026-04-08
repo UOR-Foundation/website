@@ -57,7 +57,7 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
   // Fetch data in parallel
   const commentsQuery = supabase
     .from("address_comments")
-    .select("id, user_id, content, parent_id, created_at, score")
+    .select("id, user_id, content, parent_id, created_at, score, guest_name")
     .eq("address_cid", cid);
 
   // Apply primary sort
@@ -80,7 +80,7 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
   }
 
   // Fetch commenter profiles
-  const commentUserIds = [...new Set((commentsRes.data ?? []).map(c => c.user_id))];
+  const commentUserIds = [...new Set((commentsRes.data ?? []).filter(c => c.user_id).map(c => c.user_id))];
   let profiles: Record<string, { display_name: string | null; avatar_url: string | null; uor_glyph: string | null }> = {};
   if (commentUserIds.length > 0) {
     const { data: profileData } = await supabase
@@ -109,7 +109,10 @@ async function handleGet(req: Request, url: URL, supabase: ReturnType<typeof cre
 
   let comments = (commentsRes.data ?? []).map(c => ({
     ...c,
-    author: profiles[c.user_id] || { display_name: null, avatar_url: null, uor_glyph: null },
+    author: c.user_id
+      ? (profiles[c.user_id] || { display_name: null, avatar_url: null, uor_glyph: null })
+      : { display_name: c.guest_name || "Guest", avatar_url: null, uor_glyph: null },
+    is_guest: !c.user_id,
   }));
 
   // Controversial sort: re-sort by total votes with score near zero
