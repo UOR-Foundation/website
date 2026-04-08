@@ -24,6 +24,7 @@ import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib
 import { singleProofHash } from "@/lib/uor-canonical";
 import { isValidTriword } from "@/lib/uor-triword";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
+import { streamKnowledge, type WikiMeta } from "@/modules/oracle/lib/stream-knowledge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
