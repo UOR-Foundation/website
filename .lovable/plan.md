@@ -1,79 +1,78 @@
 
-## Dynamic Latency-Driven Model Selection
 
-### Problem
-All edge functions hardcode `google/gemini-3-flash-preview`. If that model is slow (cold starts, load spikes), users wait too long for first tokens. The goal is Google-Search-like TTFT (<400ms perceived).
+## Dynamic Contextual Quotes for Immersive Mode
 
-### Design
+### What we're building
 
-**Two-layer system: client-side latency tracker + server-side model cascade.**
+The immersive mode bottom bar currently shows a static "Universal Object Reference" label. We'll replace it with a rotating, personally curated quote system that draws from the user's search history, interaction patterns, and contextual signals to surface meaningful, attributed quotes. The system mixes resonant quotes (affirming strengths) with growth quotes (gently encouraging areas to develop), using UOR semantic categories to match quote themes to user context.
 
-#### 1. Client: Latency Tracker (`src/modules/oracle/lib/latency-tracker.ts`)
-
-A small module that:
-- Records TTFT (time from fetch start to first `onDelta` call) for every stream
-- Maintains a rolling window of the last 5 TTFTs in `localStorage`
-- Exposes `getPreferredTier()`: returns `"fast"`, `"balanced"`, or `"quality"` based on median TTFT
-  - Median TTFT < 800ms → `"quality"` (keep current model)
-  - Median TTFT 800ms–2000ms → `"balanced"` (downgrade one tier)
-  - Median TTFT > 2000ms → `"fast"` (use fastest model)
-- Exposes `recordTTFT(ms: number)` called by stream clients
-- On first visit (no history), defaults to `"balanced"`
-
-#### 2. Client: Pass tier hint in all stream requests
-
-Update `stream-knowledge.ts`, `stream-oracle.ts`, and `stream-resonance.ts` to:
-- Call `getPreferredTier()` and include `latencyTier` in the request body
-- Measure TTFT: capture `performance.now()` before fetch, call `recordTTFT()` on first `onDelta`
-
-#### 3. Server: Model cascade in edge functions
-
-Update `uor-knowledge`, `uor-oracle`, `book-resonance`, and `quantum-inference-stream` to read `latencyTier` from the request body and select model accordingly:
+### Architecture
 
 ```text
-Tier Map:
-  "quality"   → google/gemini-3-flash-preview    (current default)
-  "balanced"  → google/gemini-2.5-flash           (faster, slightly less capable)
-  "fast"      → google/gemini-2.5-flash-lite      (fastest, good for summaries)
+┌──────────────────────────────────────┐
+│  ImmersiveSearchView                 │
+│                                      │
+│  ┌────────────────────────────────┐  │
+│  │  ImmersiveQuote (new component)│  │
+│  │  - Fetches user context        │  │
+│  │  - Calls edge function         │  │
+│  │  - Fades between quotes        │  │
+│  └────────────────────────────────┘  │
+│                                      │
+│  Edge function: uor-oracle           │
+│  (new "quote" mode)                  │
+│  - Receives: recent searches,       │
+│    time of day, interaction count    │
+│  - Returns: {text, author, source,   │
+│    resonanceType: "affirm"|"grow"}   │
+└──────────────────────────────────────┘
 ```
 
-If `latencyTier` is missing, default to `"balanced"`.
+### Design philosophy
 
-#### 4. Server: Timeout-based automatic fallback
+Quotes are selected along two axes:
+- **Resonance quotes** (~60%): Align with what the user is actively exploring. If they've been searching philosophy, they get Seneca. Yachts? They get a quote about craftsmanship or the sea.
+- **Growth quotes** (~40%): Gently stretch into adjacent domains. A user deep in technical topics might receive a quote about patience, creativity, or perspective.
 
-Inside each edge function, add a **race** pattern:
-- Start the AI request with the selected model
-- If no response within 3 seconds, abort and retry with the next-faster model
-- This handles transient model slowness without waiting for client-side adaptation
+All quotes are real, attributed, and non-cheesy. The AI is instructed to draw from: literary authors, scientists, philosophers, practitioners, and domain experts. Never motivational poster material.
 
-```text
-Primary request (selected model)
-  ↓ no response body in 3s?
-Fallback request (one tier faster)
-  ↓ no response body in 3s?
-Final fallback (flash-lite, always fast)
-```
-
-#### 5. Provenance transparency
-
-The SSE `wiki` event from `uor-knowledge` already includes a `model` field. Ensure all functions emit the actual model used (not the requested one), so the client can display accurate provenance and the latency tracker records against the right model.
-
-### Files Changed
+### Files to create/modify
 
 | File | Change |
 |---|---|
-| `src/modules/oracle/lib/latency-tracker.ts` | New — rolling TTFT tracker + tier selector |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Add tier hint to request, measure TTFT |
-| `src/modules/oracle/lib/stream-oracle.ts` | Add tier hint to request, measure TTFT |
-| `src/modules/oracle/lib/stream-resonance.ts` | Add tier hint to request, measure TTFT |
-| `supabase/functions/uor-knowledge/index.ts` | Read `latencyTier`, model cascade + timeout fallback |
-| `supabase/functions/uor-oracle/index.ts` | Read `latencyTier`, model cascade + timeout fallback |
-| `supabase/functions/book-resonance/index.ts` | Read `latencyTier`, model cascade + timeout fallback |
-| `supabase/functions/quantum-inference-stream/index.ts` | Read `latencyTier`, model cascade + timeout fallback |
+| `src/modules/oracle/components/ImmersiveQuote.tsx` | **New.** Standalone component that fetches a contextual quote on mount, caches it for 15 minutes in sessionStorage, and renders with a gentle fade-in. Shows author and source. Rotates every ~45 seconds if the user stays on the screen. |
+| `src/modules/oracle/lib/quote-context.ts` | **New.** Gathers user context signals: recent search keywords (from `getRecentKeywords`), time of day, day of week, session count. Returns a compact context object for the edge function. |
+| `supabase/functions/uor-oracle/index.ts` | **Modify.** Add a `"quote"` mode branch. When `mode === "quote"`, use a curated system prompt to generate 3 quotes (mix of resonance/growth), each with `{text, author, source, resonanceType}`. Non-streaming, fast response. Uses `latencyTier` to pick model (flash-lite is fine for quotes). |
+| `src/modules/oracle/components/ImmersiveSearchView.tsx` | **Modify.** Replace the static bottom-left text with `<ImmersiveQuote />`. Style: italic serif, white/50 opacity, max-width ~60%, with author attribution in small caps. |
 
-### Key Details
+### Quote component behavior
 
-- **No new database tables** — latency history is per-device in `localStorage`
-- **Graceful degradation** — even if all models are slow, the fastest tier ensures *something* streams quickly
-- **Self-healing** — if latency improves (e.g. model warms up), the rolling window naturally shifts back to higher-quality models
-- **Zero user friction** — fully automatic, no UI controls needed (though the provenance badge already shows which model was used)
+- On mount: check `sessionStorage` for cached quotes (keyed by date + hour block)
+- If no cache: call `uor-oracle` with `mode: "quote"` and the user context object
+- Display first quote with a 1s fade-in
+- Every 45s, crossfade to next quote in the batch
+- If fetch fails, fall back to a small hardcoded set of timeless quotes (Borges, Feynman, Ada Lovelace)
+- Quotes render as: `"Quote text here." — Author Name`
+
+### Edge function prompt design
+
+The system prompt instructs the model to:
+1. Read the user's recent search topics and time context
+2. Select 3 real, verifiable quotes from known authors
+3. Tag each as `affirm` (resonates with current interests) or `grow` (adjacent virtue/perspective)
+4. Never use generic motivational content
+5. Prefer: working practitioners, literary voices, scientists, philosophers
+6. Each quote must include the actual source (book, speech, interview)
+
+### UOR anchoring
+
+Each quote response includes a `uor:category` tag derived from the semantic domain of the quote's theme, ensuring it maps into the same category encoding used across the rendered internet experience. The quote's `resonanceType` is itself a UOR epistemic signal: `affirm` maps to coherence (constructive interference), `grow` maps to expansion (adjacent domain bridging).
+
+### Visual treatment
+
+- Font: Georgia/serif, italic, ~15px on desktop, ~14px on mobile
+- Color: `text-white/50`, author in `text-white/35` small-caps
+- Transition: 800ms opacity crossfade
+- Position: Bottom-left of immersive view, replacing current static text
+- Max width: 60% of viewport to avoid cramping
+
