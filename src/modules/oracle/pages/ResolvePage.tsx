@@ -391,6 +391,9 @@ const SearchPage = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggIdx, setSelectedSuggIdx] = useState(-1);
 
+  // Context personalization state
+  const [contextKeywords, setContextKeywords] = useState<string[]>([]);
+
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   // Compute suggestions when input changes (triword only, not IPv6)
