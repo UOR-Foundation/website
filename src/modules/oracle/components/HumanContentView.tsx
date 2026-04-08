@@ -13,7 +13,7 @@
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import WikiArticleView from "./WikiArticleView";
+import ContextualArticleView from "./ContextualArticleView";
 import SemanticWebTower from "./SemanticWebTower";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
@@ -107,9 +107,11 @@ interface HumanContentViewProps {
   source: unknown;
   /** When true, show a shimmer skeleton for the AI content section */
   synthesizing?: boolean;
+  /** Recent search keywords for contextual personalization */
+  contextKeywords?: string[];
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [] }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -290,12 +292,13 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
 
       {/* ── KnowledgeCard — Wikipedia-style article ── */}
       {isKnowledgeCard ? (
-        <WikiArticleView
+        <ContextualArticleView
           title={title || ""}
           contentMarkdown={contentMarkdown || ""}
           wikidata={wikidata}
           sources={sources}
           synthesizing={synthesizing}
+          contextKeywords={contextKeywords}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />

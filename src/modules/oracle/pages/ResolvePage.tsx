@@ -31,6 +31,7 @@ import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/componen
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
+import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-history";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -390,6 +391,9 @@ const SearchPage = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggIdx, setSelectedSuggIdx] = useState(-1);
 
+  // Context personalization state
+  const [contextKeywords, setContextKeywords] = useState<string[]>([]);
+
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   // Compute suggestions when input changes (triword only, not IPv6)
@@ -637,6 +641,10 @@ const SearchPage = () => {
 
   /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
   const handleKeywordResolve = async (keyword: string) => {
+    // ── Fetch user context for personalization ──
+    const recentContext = await getRecentKeywords(15);
+    setContextKeywords(recentContext);
+
     // ── Phase 1: Instant Wikipedia metadata (~200ms) ──
     let wiki: WikiMeta | null = null;
     try {
@@ -693,6 +701,7 @@ const SearchPage = () => {
 
     await streamKnowledge({
       keyword,
+      context: recentContext,
       onWiki: (streamWiki, sources) => {
         // Update wiki metadata if the stream provides it (and we didn't get it already)
         if (streamWiki && !wiki) {
@@ -755,6 +764,13 @@ const SearchPage = () => {
             origin: { y: 0.6 },
             colors: ["hsl(38,90%,55%)", "hsl(30,80%,50%)", "hsl(45,85%,60%)"],
           });
+
+          // Record search to history for future context personalization
+          recordSearch({
+            keyword,
+            cid: finalReceipt.cid,
+            wiki_qid: wiki?.qid || null,
+          }).catch(() => {}); // silent
 
           toast.success("Knowledge synthesized.", {
             description: finalReceipt.triwordFormatted,
@@ -2054,7 +2070,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

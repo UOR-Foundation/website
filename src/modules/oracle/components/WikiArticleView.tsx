@@ -75,6 +75,7 @@ const Infobox: React.FC<{
   const description = wikidata.description as string | undefined;
   const qid = wikidata.qid as string | undefined;
   const taxonomy = wikidata.taxonomy as Record<string, string> | undefined;
+  const facts = wikidata.facts as Record<string, string> | undefined;
 
   return (
     <div
@@ -175,6 +176,54 @@ const Infobox: React.FC<{
                       fontSize: 12,
                       fontStyle: key === "Species" || key === "Genus" ? "italic" : "normal",
                     }}
+                  >
+                    {val}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Wikidata structured facts */}
+      {facts && Object.keys(facts).length > 0 && (
+        <div style={{ padding: "8px 14px 12px" }}>
+          <div
+            className="text-foreground/70"
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 8,
+              textAlign: "center",
+            }}
+          >
+            Quick facts
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <tbody>
+              {Object.entries(facts).map(([key, val]) => (
+                <tr
+                  key={key}
+                  className="border-b border-border/10"
+                  style={{ lineHeight: 1.5 }}
+                >
+                  <td
+                    className="text-muted-foreground/60"
+                    style={{
+                      padding: "4px 6px 4px 0",
+                      fontWeight: 600,
+                      fontSize: 12,
+                      verticalAlign: "top",
+                    }}
+                  >
+                    {key}
+                  </td>
+                  <td
+                    className="text-foreground/80"
+                    style={{ padding: "4px 0", fontSize: 12 }}
                   >
                     {val}
                   </td>
