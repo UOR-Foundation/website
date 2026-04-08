@@ -1,5 +1,6 @@
 /**
- * DesktopWindow — Draggable/resizable window with snap zones. Theme-aware.
+ * DesktopWindow — Draggable/resizable window without title bar (tabs handle that).
+ * Thin drag strip at top for repositioning. Theme-aware.
  */
 
 import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -24,7 +25,8 @@ interface Props {
   onSnapPreview: (zone: SnapZone | null) => void;
 }
 
-const MENU_BAR_H = 28;
+const MENU_BAR_H = 38;
+const DRAG_STRIP_H = 6; // thin invisible drag strip at top
 
 export default function DesktopWindow({
   win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
@@ -36,7 +38,6 @@ export default function DesktopWindow({
   const [isDragging, setIsDragging] = useState(false);
 
   const onDragStart = useCallback((e: ReactPointerEvent) => {
-    if ((e.target as HTMLElement).closest(".traffic-light")) return;
     onFocus(win.id);
     dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.position.x, winY: win.position.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -94,9 +95,6 @@ export default function DesktopWindow({
   const borderColor = isActive
     ? (isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.10)")
     : (isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)");
-  const titleColor = isActive
-    ? (isLight ? "text-black/60" : "text-white/65")
-    : (isLight ? "text-black/35" : "text-white/40");
   const contentBg = isLight ? "#f5f5f5" : "#191919";
   const spinnerBorder = isLight ? "border-black/10 border-t-black/40" : "border-white/15 border-t-white/50";
 
@@ -118,24 +116,17 @@ export default function DesktopWindow({
 
       <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ border: `1px solid ${borderColor}` }} />
 
+      {/* Thin drag strip at top — invisible but draggable */}
       <div
-        className="relative h-10 flex items-center px-3 gap-2 cursor-default select-none"
+        className="relative window-drag-strip"
+        style={{ height: DRAG_STRIP_H }}
         onPointerDown={onDragStart}
         onPointerMove={onDragMove}
         onPointerUp={onDragEnd}
         onDoubleClick={() => onMaximize(win.id)}
-      >
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button className="traffic-light traffic-close" onClick={(e) => { e.stopPropagation(); onClose(win.id); }} />
-          <button className="traffic-light traffic-minimize" onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }} />
-          <button className="traffic-light traffic-maximize" onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }} />
-        </div>
-        <span className={`text-[12px] font-medium truncate flex-1 text-center pr-12 ${titleColor}`}>
-          {win.title}
-        </span>
-      </div>
+      />
 
-      <div className="relative overflow-auto rounded-b-xl" style={{ height: "calc(100% - 40px)", background: contentBg }}>
+      <div className="relative overflow-auto rounded-b-xl" style={{ height: `calc(100% - ${DRAG_STRIP_H}px)`, background: contentBg }}>
         <WindowContextProvider>
           <Suspense fallback={
             <div className="flex items-center justify-center h-full">

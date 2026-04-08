@@ -7,7 +7,7 @@ import { useCallback, useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
-import DesktopMenuBar from "@/modules/desktop/DesktopMenuBar";
+import TabBar from "@/modules/desktop/TabBar";
 import DesktopDock from "@/modules/desktop/DesktopDock";
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
@@ -91,12 +91,13 @@ function DesktopShellInner() {
           onOpenApp={handleOpenApp}
         />
 
-        <DesktopMenuBar
+        <TabBar
           activeWindowId={wm.activeWindowId}
           windows={wm.windows}
+          onFocusWindow={wm.focusWindow}
+          onCloseWindow={wm.closeWindow}
+          onMinimizeWindow={wm.minimizeWindow}
           onSpotlight={() => setSpotlightOpen(true)}
-          onCloseWindow={handleCloseWindow}
-          onMinimizeWindow={handleMinimizeWindow}
           onHideAll={handleHideAll}
           onOpenApp={handleOpenApp}
         />
