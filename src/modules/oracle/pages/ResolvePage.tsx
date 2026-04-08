@@ -1014,12 +1014,18 @@ const SearchPage = () => {
   /** Switch rendering lens — re-stream the current keyword with a new perspective */
   const handleLensChange = useCallback((lensId: string) => {
     setActiveLens(lensId);
+    setLensSuggestionDismissed(true);
     const src = result?.source as Record<string, unknown> | null;
     const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (keyword) {
+      // Record lens switch for coherence engine
+      const domain = coherenceState?.novelty?.domain || "general";
+      recordLensSwitch(keyword, lensId, domain);
+    }
     if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
       handleKeywordResolve(keyword, lensId);
     }
-  }, [result]);
+  }, [result, coherenceState]);
 
   const submit = () => {
     handleSearch(input);
