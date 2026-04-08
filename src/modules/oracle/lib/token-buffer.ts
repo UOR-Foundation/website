@@ -18,6 +18,9 @@ export class TokenBuffer {
   private baseInterval = 35;
   /** Extra pause after sentence-ending punctuation (ms). */
   private sentencePause = 280;
+  /** Instant-flush mode: first N chars flush with zero delay */
+  private rushChars = 80;
+  private totalFlushed = 0;
 
   constructor(onFlush: (text: string) => void) {
     this.onFlush = onFlush;
@@ -26,7 +29,15 @@ export class TokenBuffer {
   /** Push a raw token from the SSE stream. */
   push(token: string) {
     this.queue.push(token);
-    if (this.running && !this.rafId) this.scheduleFlush();
+    if (!this.running) return;
+
+    // Rush mode: flush immediately for the first batch of chars
+    if (this.totalFlushed < this.rushChars) {
+      this.flushNow();
+      return;
+    }
+
+    if (!this.rafId) this.scheduleFlush();
   }
 
   /** Start the flush loop. */
@@ -34,6 +45,7 @@ export class TokenBuffer {
     this.running = true;
     this.accumulated = "";
     this.queue = [];
+    this.totalFlushed = 0;
     this.lastFlush = performance.now();
     this.scheduleFlush();
   }
@@ -59,6 +71,25 @@ export class TokenBuffer {
   }
 
   /* ── internals ── */
+
+  /** Flush all queued tokens immediately (rush mode). */
+  private flushNow() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    if (this.queue.length === 0) return;
+    const batch = this.queue.join("");
+    this.queue = [];
+    this.accumulated += batch;
+    this.totalFlushed += batch.length;
+    this.lastFlush = performance.now();
+    this.onFlush(this.accumulated);
+    // If still in rush mode and running, stay ready
+    if (this.running && this.totalFlushed >= this.rushChars && this.queue.length > 0) {
+      this.scheduleFlush();
+    }
+  }
 
   private scheduleFlush() {
     this.rafId = requestAnimationFrame((now) => {
@@ -88,6 +119,7 @@ export class TokenBuffer {
       }
 
       this.accumulated += batch;
+      this.totalFlushed += batch.length;
       this.lastFlush = now;
       this.onFlush(this.accumulated);
 

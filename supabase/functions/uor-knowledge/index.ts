@@ -182,16 +182,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // ── Phase 1: Wikipedia + Wikidata (fast, non-streaming) ──
-    const wiki = await fetchWikipedia(term);
-
-    let wikidataFacts: Record<string, string> = {};
-    if (wiki?.qid) {
-      wikidataFacts = await fetchWikidataFacts(wiki.qid);
-    }
-
-    // ── Phase 2: Stream AI synthesis via SSE ──
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // ── Fire Wikipedia + AI in parallel (TTFT optimization) ──
+    const wikiPromise = fetchWikipedia(term);
+    const aiPromise = fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -212,6 +205,14 @@ serve(async (req) => {
       }),
     });
 
+    // Wait for both — AI starts warming up while wiki fetches
+    const [wiki, aiResponse] = await Promise.all([wikiPromise, aiPromise]);
+
+    // Kick off Wikidata in background (don't block the stream)
+    const wikidataPromise = wiki?.qid
+      ? fetchWikidataFacts(wiki.qid)
+      : Promise.resolve({} as Record<string, string>);
+
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
@@ -227,6 +228,7 @@ serve(async (req) => {
       }
       console.error("AI gateway error:", aiResponse.status, await aiResponse.text());
 
+      const wikidataFacts = await wikidataPromise;
       if (wiki) {
         return new Response(JSON.stringify({
           keyword: term,
@@ -244,15 +246,27 @@ serve(async (req) => {
       });
     }
 
-    // Build sources list
+    // Build initial sources list (wikidata facts still loading)
     const sources: string[] = [];
     if (wiki?.pageUrl) sources.push(wiki.pageUrl);
     if (wiki?.qid) sources.push(`https://www.wikidata.org/wiki/${wiki.qid}`);
 
-    // Create SSE stream
+    // Create SSE stream — emit wiki immediately, then AI tokens
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        // Emit wiki event right away (wikidata facts may arrive later)
+        // Try to get wikidata within 150ms, otherwise emit without and update later
+        let wikidataFacts: Record<string, string> = {};
+        try {
+          wikidataFacts = await Promise.race([
+            wikidataPromise,
+            new Promise<Record<string, string>>((resolve) =>
+              setTimeout(() => resolve({}), 150)
+            ),
+          ]);
+        } catch { /* proceed without facts */ }
+
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({
             type: "wiki",
@@ -261,6 +275,24 @@ serve(async (req) => {
             keyword: term,
           })}\n\n`)
         );
+
+        // If wikidata was still loading, emit an update when it arrives
+        if (wiki?.qid && Object.keys(wikidataFacts).length === 0) {
+          wikidataPromise.then((facts) => {
+            if (Object.keys(facts).length > 0) {
+              try {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({
+                    type: "wiki",
+                    wiki: { ...wiki, facts },
+                    sources,
+                    keyword: term,
+                  })}\n\n`)
+                );
+              } catch { /* stream may be closed */ }
+            }
+          }).catch(() => {});
+        }
 
         if (!aiResponse.body) {
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
