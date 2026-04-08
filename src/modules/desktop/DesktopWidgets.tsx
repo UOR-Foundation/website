@@ -336,12 +336,12 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
             />
 
             {/* + button */}
-            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 relative">
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
               <button
                 ref={plusBtnRef}
                 type="button"
                 onClick={() => setContextMenuOpen((o) => !o)}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-all relative"
                 style={{
                   background: btnBgStyle,
                   border: btnBorderStyle,
