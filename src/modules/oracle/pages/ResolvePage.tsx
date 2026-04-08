@@ -12,8 +12,11 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown, Menu } from "lucide-react";
 import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
+import MobileSearchBar from "@/modules/oracle/components/MobileSearchBar";
+import MobileSearchMenu from "@/modules/oracle/components/MobileSearchMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
