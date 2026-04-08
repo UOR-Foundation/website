@@ -31,6 +31,7 @@ const LENS_RENDERERS: Record<string, React.FC<{
   sources: string[];
   synthesizing?: boolean;
   media?: MediaData;
+  immersive?: boolean;
 }>> = {
   encyclopedia: WikiArticleView,
   magazine: MagazineLensRenderer,
@@ -58,6 +59,8 @@ interface ContextualArticleViewProps {
   };
   /** Multimedia data from Wikimedia Commons */
   media?: MediaData;
+  /** Whether we're in immersive full-screen mode */
+  immersive?: boolean;
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -72,6 +75,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   isReaderMode = false,
   provenance,
   media,
+  immersive = false,
 }) => {
   const navigate = useNavigate();
 
@@ -164,6 +168,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
             sources={sources}
             synthesizing={synthesizing}
             media={media}
+            immersive={immersive}
           />
         );
       })()}
