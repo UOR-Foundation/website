@@ -239,7 +239,7 @@ const SearchPage = () => {
     setAiInput("");
   };
 
-  /* ── Infinite Improbability Drive sequence ── */
+  /* ── Infinite Improbability Drive sequence (~4s, themed) ── */
   const fireImprobabilityDrive = () => {
     const entries = allEntries();
     if (entries.length === 0) {
@@ -252,7 +252,7 @@ const SearchPage = () => {
     setImprobExponent(0);
     setImprobSideEffect("");
 
-    // Phase 1: tick exponent counter
+    // Phase 1 (0–1000ms): tick exponent counter slowly
     let expIdx = 0;
     const expInterval = setInterval(() => {
       expIdx++;
@@ -261,9 +261,9 @@ const SearchPage = () => {
       } else {
         clearInterval(expInterval);
       }
-    }, 85);
+    }, 150);
 
-    // Phase 2 at 600ms: cycle side effects
+    // Phase 2 at 1000ms: cycle side effects
     setTimeout(() => {
       setImprobPhase(2);
       let effectIdx = 0;
@@ -272,19 +272,34 @@ const SearchPage = () => {
           IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
         );
         effectIdx++;
-      }, 300);
+      }, 500);
 
-      // Phase 3 at 1800ms: DON'T PANIC + pick result
+      // Phase 3 at 2800ms: DON'T PANIC + pick result
       setTimeout(() => {
         clearInterval(effectInterval);
         setImprobPhase(3);
 
         const pick = entries[Math.floor(Math.random() * entries.length)];
-        const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
-        confetti({ particleCount: 160, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 35, gravity: 0.7, ticks: 150 });
-        setTimeout(() => confetti({ particleCount: 60, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 20, gravity: 0.5, ticks: 120 }), 150);
+        // Site-palette confetti
+        const root = document.documentElement;
+        const cs = getComputedStyle(root);
+        const toHex = (v: string) => {
+          const el = document.createElement("div");
+          el.style.color = `hsl(${v})`;
+          document.body.appendChild(el);
+          const c = getComputedStyle(el).color;
+          el.remove();
+          return c;
+        };
+        const colors = [
+          toHex(cs.getPropertyValue("--primary").trim()),
+          toHex(cs.getPropertyValue("--accent").trim()),
+          toHex(cs.getPropertyValue("--foreground").trim()),
+        ];
+        confetti({ particleCount: 120, spread: 110, origin: { y: 0.5 }, colors, startVelocity: 28, gravity: 0.6, ticks: 160 });
+        setTimeout(() => confetti({ particleCount: 50, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 16, gravity: 0.5, ticks: 130 }), 200);
 
-        // At 2500ms: dissolve overlay, show result
+        // At 4000ms: dissolve overlay, show result
         setTimeout(() => {
           setImprobabilityActive(false);
           setImprobPhase(0);
@@ -293,9 +308,9 @@ const SearchPage = () => {
 
           const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
           toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
-        }, 700);
-      }, 1200);
-    }, 600);
+        }, 1200);
+      }, 1800);
+    }, 1000);
   };
 
   return (
