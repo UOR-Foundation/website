@@ -258,13 +258,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
               {triwordDisplay}
             </span>
-            <span className={`shrink-0 inline-flex items-center px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-[0.08em] ml-1 ${
-              immersive
-                ? "bg-white/[0.06] text-white/35 border border-white/[0.06]"
-                : "bg-accent/10 text-accent-foreground/50 border border-accent/10"
-            }`}>
-              {typeLabel}
-            </span>
           </div>
 
           {/* Copy address button (inside bar) */}
