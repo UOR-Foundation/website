@@ -1,85 +1,47 @@
 
 
-## Fork & Provenance for UOR Addresses
+## Cover Image for Address Profiles
 
-### Concept
+Add a subtle, delightful cover image banner at the top of every address profile — like a social network cover photo. Ten pre-populated cover images are deterministically assigned based on the CID hash, so each address always gets the same cover.
 
-Every address profile gets a **"Fork"** button. When clicked, it creates a new content-addressed object that wraps the original source with provenance metadata — a `uor:Fork` type containing `uor:forkedFrom` (parent CID), `uor:forkedAt` (timestamp), and the user's modifications. Because the fork is itself content-addressed, changing anything produces a different CID, creating an **immutable chain of proofs** back to the origin — like Git/GitHub forks but without mining or consensus.
+### Approach
 
-The parent profile shows **fork count** and links to forks. The forked profile shows a **provenance banner** linking back to the parent. This is recursive — forks of forks build a tree.
+**1. Cover Images (10 abstract/geometric images)**
+Generate 10 abstract gradient/geometric cover images using the Lovable AI image generation model. Store them in `src/assets/covers/` as `cover-0.png` through `cover-9.png`. These will be abstract, dark-toned visuals that complement the existing dark UI — think nebula gradients, geometric meshes, topographic lines, crystalline patterns.
 
-### Database
+**2. Deterministic Assignment**
+Hash the CID string, take the last digit modulo 10 to pick which cover image each address gets. Same address always shows the same cover.
 
-**New table: `address_forks`**
-- `id` (uuid, PK)
-- `parent_cid` (text, NOT NULL) — the CID being forked
-- `child_cid` (text, NOT NULL) — the new forked CID
-- `user_id` (uuid, references auth.users) — who forked
-- `fork_note` (text) — optional annotation ("remixed for…")
-- `created_at` (timestamptz)
-- Unique constraint on `(parent_cid, child_cid)`
-- RLS: anyone can read, authenticated users can insert their own
+**3. Cover Banner Component**
+Insert a full-width rounded cover image container (roughly 180px tall on desktop, 120px on mobile) immediately above the Profile Header section (~line 1397 in `ResolvePage.tsx`). The glyph avatar will overlap the bottom edge of the cover (negative margin), creating the classic social profile look.
 
-Enable realtime for live fork count updates.
+**4. Future Editability**
+Add a subtle camera/edit icon overlay on the cover that shows on hover — disabled for now but wired for future upload functionality.
 
-### Fork Data Model
+### Layout Change
 
-When a user forks an address, the system creates a new JSON-LD object:
-
-```json
-{
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "uor:Fork",
-  "uor:forkedFrom": {
-    "uor:cid": "<parent-cid>",
-    "uor:triword": "<parent-triword>",
-    "uor:forkedAt": "<ISO timestamp>"
-  },
-  "uor:content": { /* clone of original source, user can modify */ },
-  "uor:forkNote": "remixed for..."
-}
+```text
+┌─────────────────────────────────────────┐
+│         COVER IMAGE (180px)             │
+│         (abstract gradient/pattern)     │
+│                                         │
+│   ┌──────┐                              │
+│   │ GLYPH│ ← overlaps bottom of cover  │
+└───┴──────┴──────────────────────────────┘
+    OWL · BOREAL · MILL
+    CONCEPT badge · Discovered
 ```
 
-This gets encoded via the existing `encode()` pipeline → new CID, new triword, new identity. The `uor:forkedFrom` field is part of the content, so it's **baked into the hash** — provenance is cryptographically inseparable from the fork.
+### Files to Modify
 
-### Edge Function Update
+- **`src/modules/oracle/pages/ResolvePage.tsx`** — Add cover image section before profile header, adjust avatar positioning with negative top margin to overlap the cover
+- **New: `src/assets/covers/`** — 10 generated abstract cover images
+- **New: `src/modules/oracle/components/ProfileCover.tsx`** — Small component that takes a CID, picks a cover, renders the banner with hover edit overlay
 
-Extend `address-social` with two new actions:
-- `POST { action: "fork", parentCid, childCid, note? }` — Record a fork relationship
-- `GET ?cid=...` response gains `forkCount` and `forkedFrom` (if this CID is itself a fork)
-
-### UI Changes
-
-**1. Fork Button in Action Bar** (`ResolvePage.tsx`)
-- New button: `⑂ Fork` alongside existing actions
-- Click opens a minimal modal: shows the source content (read-only), an optional "Fork note" text field, and a "Create Fork" button
-- On submit: clones source, wraps in `uor:Fork` envelope, encodes via `encode()`, records in `address_forks`, navigates to the new address profile
-
-**2. Provenance Banner** (`ResolvePage.tsx`)
-- If the resolved object has `@type: "uor:Fork"`, show a banner under the profile header:
-  `"⑂ Forked from Alpha · Bravo · Charlie"` with a clickable link to the parent
-- Recursive: if parent is also a fork, the chain is walkable
-
-**3. Fork Count in Social Stats** (`AddressCommunity.tsx`)
-- Add fork count to the stats line: `"47 visitors · 12 reactions · 3 forks"`
-- Clicking "3 forks" shows a dropdown listing child forks with their triwords
-
-**4. Provenance Tree** (new section on profile)
-- Below Identity Card, if forks exist, show a minimal tree:
-  ```
-  ⑂ Provenance
-  └─ Parent · Triword · Link  (if this is a fork)
-  └─ 3 forks: Child1, Child2, Child3  (if others forked this)
-  ```
-
-### Files to Create/Modify
-
-- **New migration**: `address_forks` table with RLS + realtime
-- **Modified**: `supabase/functions/address-social/index.ts` — add fork recording and fork count to GET response
-- **Modified**: `src/modules/oracle/pages/ResolvePage.tsx` — Fork button in action bar, provenance banner, fork modal
-- **Modified**: `src/modules/oracle/components/AddressCommunity.tsx` — fork count in stats line
-
-### Why This Works
-
-Content-addressing makes provenance **trustless** — the `uor:forkedFrom` field is hashed into the CID, so it cannot be added or removed after creation. Every fork is a cryptographic commitment to its parent. Walking the chain from any node back to the root requires no authority, no blockchain, no mining — just hash verification. The `address_forks` table is an index for convenience (fast fork counts), but the provenance itself lives in the content.
+### Technical Details
+- Images generated at ~1200x400px, compressed PNG
+- Deterministic selection: `cid.charCodeAt(cid.length - 1) % 10`
+- Rounded corners (`rounded-xl`) to match card aesthetic
+- Subtle gradient overlay at bottom for smooth transition to profile content
+- Avatar shifts up with `mt-[-36px]` to overlap the cover edge
 
