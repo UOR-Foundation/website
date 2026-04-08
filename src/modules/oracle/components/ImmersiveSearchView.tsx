@@ -288,7 +288,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
               <input
                 ref={inputRef}
                 type="text"
-                value={isAddress && detected.label ? detected.label : query}
+                value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
