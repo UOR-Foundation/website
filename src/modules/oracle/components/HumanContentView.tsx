@@ -8,10 +8,13 @@
  * - Type-aware headers (Concept, Fork, Query, Chain, etc.)
  * - Pull-quote treatment for definitions
  * - Progressive disclosure for nested objects
+ * - Semantic Web Tower visualization for WebPage types
  */
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import SemanticWebTower from "./SemanticWebTower";
+import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
@@ -78,7 +81,7 @@ function humanLabel(key: string): string {
 const META_KEYS = new Set([
   "uor:timestamp", "uor:position", "uor:chainLength",
   "uor:proofAddress", "uor:proofCid", "uor:scrapedAt",
-  "uor:language", "uor:semanticWebLayers",
+  "uor:language",
 ]);
 
 /* ── Title keys (rendered as the main heading) ───────────────────────── */
