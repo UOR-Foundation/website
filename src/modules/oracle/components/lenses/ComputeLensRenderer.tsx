@@ -236,9 +236,7 @@ export default function ComputeLensRenderer({
               lineHeight: 1.8,
               fontSize: 15,
             }}
-            dangerouslySetInnerHTML={{ __html: "" }}
           >
-            {/* Rendered via CitedMarkdown in a real integration — simplified here */}
             <p style={{ whiteSpace: "pre-wrap" }}>{contentMarkdown.slice(0, 2000)}</p>
           </div>
         </div>
