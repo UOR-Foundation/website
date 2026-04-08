@@ -1,6 +1,6 @@
 /**
  * ImmersiveSearchView — Full-screen photo portal with clock, greeting, and search.
- * Inspired by Momentum / new-tab experiences. Now with voice input.
+ * Inspired by Momentum / new-tab experiences. Now with voice input and vault drop zone.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -12,6 +12,9 @@ import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
+import VaultContextBadge from "@/modules/sovereign-vault/components/VaultContextBadge";
+import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
+import { toast } from "sonner";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -35,12 +38,14 @@ interface Props {
 
 export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
   const { profile } = useAuth();
+  const vault = useVault();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
+  const [dragOver, setDragOver] = useState(false);
 
   // Solar-phase photo update (checked every 60s)
   useEffect(() => {
