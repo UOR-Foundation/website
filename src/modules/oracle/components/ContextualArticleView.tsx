@@ -1,6 +1,9 @@
 /**
  * ContextualArticleView — Wraps WikiArticleView with context-aware personalization,
  * adaptive lens intelligence, and transparent lens inspector.
+ *
+ * Wraps all lens renderers in AdaptiveContentContainer so they receive
+ * container-aware width measurements instead of using viewport units.
  */
 
 import React, { useState, useMemo } from "react";
@@ -8,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText, User, Plus, Settings2 } from "lucide-react";
 import type { MediaData } from "@/modules/oracle/lib/stream-knowledge";
+import AdaptiveContentContainer from "./AdaptiveContentContainer";
 import WikiArticleView from "./WikiArticleView";
 import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
 import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
