@@ -259,7 +259,7 @@ const SearchPage = () => {
                   }}
                   className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all"
                 >
-                  I'm Feeling Lucky
+                  Surprise Me
                 </button>
               </div>
 
