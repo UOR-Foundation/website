@@ -1,15 +1,22 @@
 /**
- * ContextualArticleView — Wraps WikiArticleView with context-aware personalization.
- *
- * Shows a context banner linking to prior searches and renders the article
- * with connection highlights when the user has exploration history.
+ * ContextualArticleView — Wraps WikiArticleView with context-aware personalization
+ * and a lens switcher for changing rendering perspectives.
  */
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText } from "lucide-react";
 import WikiArticleView from "./WikiArticleView";
+import { KNOWLEDGE_LENSES, type KnowledgeLens } from "@/modules/oracle/lib/knowledge-lenses";
+
+const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> = {
+  BookOpen,
+  Newspaper,
+  Baby,
+  GraduationCap,
+  BookText,
+};
 
 interface ContextualArticleViewProps {
   title: string;
@@ -17,8 +24,9 @@ interface ContextualArticleViewProps {
   wikidata?: Record<string, unknown> | null;
   sources: string[];
   synthesizing?: boolean;
-  /** Recent search keywords that formed the context for this article */
   contextKeywords?: string[];
+  activeLens?: string;
+  onLensChange?: (lensId: string) => void;
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -28,16 +36,47 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   sources,
   synthesizing = false,
   contextKeywords = [],
+  activeLens = "encyclopedia",
+  onLensChange,
 }) => {
   const navigate = useNavigate();
 
-  // Filter out current topic from context keywords
   const relevantContext = contextKeywords.filter(
     (k) => k.toLowerCase() !== title.toLowerCase()
   ).slice(0, 5);
 
   return (
     <div>
+      {/* ── Lens Switcher ── */}
+      {onLensChange && (
+        <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+          {KNOWLEDGE_LENSES.map((lens) => {
+            const Icon = ICON_MAP[lens.icon];
+            const isActive = lens.id === activeLens;
+            return (
+              <button
+                key={lens.id}
+                onClick={() => !isActive && onLensChange(lens.id)}
+                disabled={synthesizing && isActive}
+                title={lens.description}
+                className={`
+                  inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+                  transition-all duration-200 border
+                  ${isActive
+                    ? "bg-primary/15 text-primary border-primary/25 shadow-sm"
+                    : "bg-muted/5 text-muted-foreground/50 border-border/10 hover:bg-muted/15 hover:text-foreground/70 hover:border-border/20"
+                  }
+                  ${synthesizing && !isActive ? "opacity-40 cursor-wait" : "cursor-pointer"}
+                `}
+              >
+                <Icon className="w-3 h-3" />
+                <span>{lens.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Context Banner ── */}
       {relevantContext.length > 0 && !synthesizing && contentMarkdown.trim().length > 100 && (
         <motion.div
