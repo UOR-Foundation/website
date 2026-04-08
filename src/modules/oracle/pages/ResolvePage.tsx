@@ -373,7 +373,7 @@ const SearchPage = () => {
       setEncodeText("");
       confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
       toast("✨ Your data has its address.", { description: receipt.triwordFormatted });
-    } catch { toast.error("Encoding failed."); }
+    } catch (err) { console.error("[Encode] Failed:", err); toast.error("Encoding failed: " + (err instanceof Error ? err.message : String(err))); }
     finally { setLoading(false); }
   };
 
