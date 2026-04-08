@@ -1,6 +1,6 @@
 /**
  * ImmersiveSearchView — Full-screen photo portal with clock, greeting, and search.
- * Inspired by Momentum / new-tab experiences.
+ * Inspired by Momentum / new-tab experiences. Now with voice input.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getDailyPhoto } from "@/modules/oracle/lib/immersive-photos";
+import VoiceInput from "./VoiceInput";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -165,13 +166,23 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 placeholder="Search the address space…"
                 className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/35 focus:border-white/50 rounded-full px-6 py-4 text-white text-base placeholder:text-white/30 focus:outline-none transition-all shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]"
               />
-              <button
-                onClick={handleSubmit}
-                disabled={!query.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 disabled:opacity-30 flex items-center justify-center transition-all"
-              >
-                <ArrowRight className="w-5 h-5 text-white" />
-              </button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <VoiceInput
+                  onTranscript={(text, isFinal) => {
+                    setQuery(text);
+                    if (isFinal && text.trim()) onSearch(text.trim());
+                  }}
+                  size="sm"
+                  className="text-white/60 hover:text-white/90 border-white/10 hover:border-white/25"
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={!query.trim()}
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 disabled:opacity-30 flex items-center justify-center transition-all"
+                >
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
