@@ -1452,6 +1452,39 @@ const SearchPage = () => {
                   </div>
                 </motion.div>
 
+                {/* ═══ PROVENANCE BANNER (if this is a fork) ═══ */}
+                {typeRaw === "Fork" && (src as Record<string, unknown>)?.["uor:forkedFrom"] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.04 }}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-primary/15 bg-primary/5"
+                    style={{ marginTop: "calc(0.75rem * 1.618)" }}
+                  >
+                    <GitFork className="w-4 h-4 text-primary/50 shrink-0" />
+                    <span className="text-sm text-foreground/60">
+                      Forked from{" "}
+                      <button
+                        onClick={() => {
+                          const parent = ((src as Record<string, unknown>)?.["uor:forkedFrom"] as Record<string, unknown>);
+                          const parentTriword = parent?.["uor:triword"] as string;
+                          const parentCid = parent?.["uor:cid"] as string;
+                          const addr = parentTriword || parentCid;
+                          if (addr) { setInput(addr); clearResult(); setTimeout(() => handleSearch(addr), 50); }
+                        }}
+                        className="font-mono text-primary/80 hover:text-primary transition-colors"
+                      >
+                        {(() => {
+                          const parent = ((src as Record<string, unknown>)?.["uor:forkedFrom"] as Record<string, unknown>);
+                          const tw = parent?.["uor:triword"] as string;
+                          if (tw) return tw.split(".").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
+                          return (parent?.["uor:cid"] as string)?.slice(0, 20) + "…";
+                        })()}
+                      </button>
+                    </span>
+                  </motion.div>
+                )}
+
                 {/* ═══ 2. SOCIAL STATS + REACTIONS ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
@@ -1460,7 +1493,7 @@ const SearchPage = () => {
                   className="border-t border-b border-border/10 py-5"
                   style={{ marginTop: "calc(1.5rem * 1.618)" }}
                 >
-                  <AddressSocialStats cid={result.receipt.cid} />
+                  <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
 
                 {/* ═══ 3. IDENTITY CARD ═══ */}
