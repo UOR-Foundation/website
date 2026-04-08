@@ -60,9 +60,42 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
   const [portalOpen, setPortalOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
   const historyRef = useRef<HTMLDivElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
+
+  const handleAddressClick = useCallback(() => {
+    setEditing(true);
+    setEditValue(triwordDisplay);
+    // Focus and select all on next tick
+    setTimeout(() => {
+      addressInputRef.current?.focus();
+      addressInputRef.current?.select();
+    }, 0);
+  }, [triwordDisplay]);
+
+  const handleAddressSubmit = useCallback(() => {
+    const query = editValue.trim();
+    setEditing(false);
+    if (query && query !== triwordDisplay) {
+      // Strip uor:// prefix if user pasted a full address
+      const cleaned = query.replace(/^uor:\/\//, "").replace(/\./g, " ");
+      onSearchHistoryJump?.(cleaned);
+    }
+  }, [editValue, triwordDisplay, onSearchHistoryJump]);
+
+  const handleAddressKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddressSubmit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setEditing(false);
+    }
+  }, [handleAddressSubmit]);
 
   const handleCopy = useCallback(async () => {
     try {
