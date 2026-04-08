@@ -311,6 +311,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           onLensChange={onLensChange}
           isReaderMode={isReaderMode}
           provenance={isObj && src["uor:provenance"] ? (src["uor:provenance"] as { model?: string; personalized?: boolean; personalizedTopics?: string[] }) : undefined}
+          media={src["uor:media"] as import("@/modules/oracle/lib/stream-knowledge").MediaData | undefined}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
