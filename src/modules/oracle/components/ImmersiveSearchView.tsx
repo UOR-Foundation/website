@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getPhasePhoto, getCurrentPhase, preloadNextPhasePhoto, initLocation } from "@/modules/oracle/lib/immersive-photos";
+import { getPhasePhoto, getCurrentPhase, preloadNextPhasePhoto, initLocation, getHourlyFallback } from "@/modules/oracle/lib/immersive-photos";
 import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
@@ -149,6 +149,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           src={photoUrl}
           alt=""
           onLoad={() => setImgLoaded(true)}
+          onError={() => setPhotoUrl(getHourlyFallback())}
           className={`w-full h-full object-cover transition-opacity duration-1000 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           draggable={false}
         />
