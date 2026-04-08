@@ -42,9 +42,13 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
     return () => clearInterval(id);
   }, []);
 
-  // Auto-focus input
+  // Don't auto-focus on mobile — let user tap to open keyboard
+  // On desktop, focus after a short delay for convenience
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 400);
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) {
+      setTimeout(() => inputRef.current?.focus(), 400);
+    }
   }, []);
 
   const handleSubmit = useCallback(() => {

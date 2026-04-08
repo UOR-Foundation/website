@@ -465,7 +465,12 @@ const SearchPage = () => {
   const [forkNote, setForkNote] = useState("");
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
-  const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
+  const [immersiveMode, setImmersiveMode] = useState(() => {
+    const stored = localStorage.getItem("uor-immersive");
+    if (stored !== null) return stored === "true";
+    // Default to immersive on mobile
+    return window.innerWidth < 768;
+  });
   const [readerMode, setReaderMode] = useState(true);
 
   // Live mode + voice + prefetch state
@@ -591,7 +596,7 @@ const SearchPage = () => {
   };
 
   useEffect(() => { loadWasm().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
-  useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
+  useEffect(() => { if (!result && !aiMode && window.innerWidth >= 768) inputRef.current?.focus(); }, [result, aiMode]);
 
   // Inject JSON-LD into <head> for AI agents and crawlers
   useEffect(() => {
