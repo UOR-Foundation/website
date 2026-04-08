@@ -980,6 +980,7 @@ const SearchPage = () => {
       synthesizing: true,
     });
     setLoading(false);
+    setStreamProgress(0);
 
     // ── Resolve context in background ──
     const [recentContext, history] = await contextPromise;
