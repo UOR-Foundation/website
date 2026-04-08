@@ -23,6 +23,22 @@ interface Category {
   keys: string[];
 }
 
+/** The 12 curated formats — the most valuable and interesting ones */
+const CURATED_KEYS = [
+  "cid",          // IPFS Content ID — the gold standard
+  "did",          // Decentralized ID — W3C standard
+  "glyph",        // Braille — visual, playful
+  "emoji",        // Emoji — fun, shareable
+  "ipv6",         // IPv6 — routing, practical
+  "jsonld",       // JSON-LD — semantic web
+  "nostr",        // Nostr — decentralized social
+  "atproto",      // Bluesky — social federation
+  "bitcoin",      // Bitcoin — on-chain anchor
+  "lightning",    // Lightning — instant payments
+  "webfinger",    // WebFinger — email-style sharing
+  "vc",           // Verifiable Credential — trust
+] as const;
+
 const CATEGORIES: Category[] = [
   {
     label: "Core Identifiers",
@@ -31,40 +47,22 @@ const CATEGORIES: Category[] = [
     keys: ["cid", "jsonld", "did", "vc"],
   },
   {
-    label: "Native Formats",
+    label: "Visual & Playful",
     description: "Visual and compact ways to represent this address",
     icon: "🔮",
     keys: ["ipv6", "glyph", "emoji"],
   },
   {
-    label: "Social & Federation",
+    label: "Social & Sharing",
     description: "Share across social networks and federated platforms",
     icon: "🌐",
-    keys: ["webfinger", "activitypub", "atproto"],
+    keys: ["webfinger", "atproto", "nostr"],
   },
   {
-    label: "Enterprise Systems",
-    description: "Use in business, supply chain, and organizational tools",
-    icon: "🏢",
-    keys: ["oidc", "gs1", "oci", "solid", "openbadges"],
-  },
-  {
-    label: "Infrastructure",
-    description: "Technical protocols for discovery and synchronization",
-    icon: "⚙️",
-    keys: ["scitt", "mls", "dnssd", "stac", "croissant", "crdt"],
-  },
-  {
-    label: "Blockchain & Crypto",
+    label: "Value & Trust",
     description: "Anchored on-chain for permanent, verifiable proof",
     icon: "⛓",
-    keys: ["bitcoin", "bitcoin-hashlock", "lightning", "zcash-transparent", "zcash-memo", "nostr", "nostr-note"],
-  },
-  {
-    label: "AI & Agents",
-    description: "Machine-readable identity for autonomous systems",
-    icon: "🤖",
-    keys: ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf", "onnx", "onnx-op"],
+    keys: ["bitcoin", "lightning"],
   },
 ];
 
