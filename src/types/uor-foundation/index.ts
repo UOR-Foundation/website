@@ -8,10 +8,15 @@
  * trait definitions. The crate is the single source of truth for all
  * namespaces, classes, properties, and named individuals in the UOR ontology.
  *
- * 14 canonical namespaces across Tri-Space:
- *   Kernel (3):  u/, schema/, op/
- *   Bridge (8):  query/, resolver/, partition/, observable/, proof/, derivation/, trace/, cert/
- *   User   (3):  type/, morphism/, state/
+ * 33 canonical namespaces across Tri-Space + Enforcement:
+ *   Kernel  (15+): u/, schema/, op/, carry/, cascade/, convergence/, division/,
+ *                  effect/, failure/, linear/, monoidal/, operad/, parallel/,
+ *                  predicate/, recursion/, reduction/, region/, stream/
+ *   Bridge  (13):  query/, resolver/, partition/, observable/, proof/, derivation/,
+ *                  trace/, cert/, audio/, boundary/, cohomology/, conformance/,
+ *                  homology/, interaction/
+ *   User    (3):   type/, morphism/, state/
+ *   Enforcement:   witnesses, builders, term, boundary
  *
  * @version 2.0.0
  * @see https://crates.io/crates/uor-foundation
@@ -28,7 +33,27 @@ export type {
   MetricAxis,
   FiberState,
   GeometricCharacter,
+  // v0.2.0 enums
+  AchievabilityStatus,
+  ComplexityClass,
+  ExecutionPolicyKind,
+  GroundingPhase,
+  MeasurementUnit,
+  PhaseBoundaryType,
+  ProofModality,
+  ProofStrategy,
+  QuantifierKind,
+  RewriteRule,
+  SessionBoundaryType,
+  SiteState,
+  TriadProjection,
+  ValidityScopeKind,
+  VarianceAnnotation,
+  VerificationDomain,
+  ViolationKind,
 } from "./enums";
+
+export type { WittLevel } from "./enums";
 
 // ── Kernel Space ───────────────────────────────────────────────────────────
 export type {
@@ -47,6 +72,22 @@ export type {
   IdentityOp,
   Group,
   DihedralGroup,
+  // v0.2.0 kernel types
+  CarryBit, CarryChain, CarryProfile, EncodingQuality,
+  CascadeMap, CascadeComposition, CascadeEpoch,
+  NormedDivisionAlgebra, HopfFibration, ConvergenceTower,
+  CayleyDicksonPair, MultiplicationTable, CayleyDicksonLevel,
+  Effect, PinEffect, UnbindEffect, EndomorphismEffect, EffectChain,
+  FailureKind, Failure, PartialResult, RecoveryStrategy,
+  LinearResource, Lease, LinearBudget,
+  MonoidalProduct, MonoidalUnit, MonoidalCategory,
+  OperadOperation, Operad,
+  ParallelTask, ParallelComposition, DisjointBudget,
+  Predicate, QuantifiedPredicate, DispatchTable, MatchArm, MatchExpression,
+  DescentMeasure, RecursionBound, RecursiveComputation,
+  ReductionRule, PhaseGate, ReductionEpoch, ReductionPipeline, ReductionStrategy,
+  Region, WorkingSet, RegionPartition,
+  StreamElement, Stream, StreamTransform,
 } from "./kernel";
 
 export { PI1, ZERO } from "./kernel/schema";
@@ -116,6 +157,12 @@ export type {
   AudioSegment as AudioSegmentType,
   AudioTrack as AudioTrackType,
   AudioLensProjection,
+  // v0.2.0 bridge types
+  Source, Sink, IngestEffect, EmitEffect, BoundarySession,
+  Cochain, CoboundaryMap, CochainComplex, CohomologyGroup, ObstructionClass,
+  Shape, PropertyShape, NodeShape, ConformanceReport, Violation,
+  Simplex, Chain, BoundaryOperator, SimplicialComplex, ChainComplex, HomologyGroup,
+  Participant, Interaction, Commutator, Associator, InteractionState,
 } from "./bridge";
 
 export type { ResolutionState } from "./bridge/resolver";
@@ -150,3 +197,33 @@ export type {
 } from "./user";
 
 export { CRITICAL_COMPOSITION } from "./user/morphism";
+
+// ── Enforcement Module (v0.2.0) ────────────────────────────────────────────
+export type {
+  EnforcementDatum,
+  Validated,
+  EnforcementDerivation,
+  EnforcementFiberBudget,
+  FreeRank,
+  DatumBuilder,
+  DerivationBuilder,
+  FiberBudgetBuilder,
+  TermBuilder,
+  AssertionBuilder,
+  BindingBuilder,
+  SourceDeclBuilder,
+  SinkDeclBuilder,
+  BoundarySessionBuilder,
+  TermKind,
+  EnforcementTerm,
+  TermArena,
+  TermList,
+  EnforcementBinding,
+  Assertion,
+  SourceDeclaration,
+  SinkDeclaration,
+  GroundedCoord,
+  GroundedTuple,
+  Grounding,
+  GroundedValue,
+} from "./enforcement";

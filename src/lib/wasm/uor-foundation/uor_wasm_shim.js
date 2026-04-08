@@ -28,6 +28,74 @@ export function succ(x) { const ret = wasm.succ(x); return ret; }
 export function verify_all_critical_identity() { const ret = wasm.verify_all_critical_identity(); return ret !== 0; }
 export function verify_critical_identity(x) { const ret = wasm.verify_critical_identity(x); return ret !== 0; }
 
+/* ── v0.2.0 additions (pure-JS until next WASM recompile) ─────────── */
+
+const V020_NAMESPACES = JSON.stringify([
+  "u/","schema/","op/",
+  "carry/","cascade/","convergence/","division/","effect/","failure/",
+  "linear/","monoidal/","operad/","parallel/","predicate/","recursion/",
+  "reduction/","region/","stream/",
+  "query/","resolver/","partition/","observable/","proof/","derivation/",
+  "trace/","cert/","boundary/","cohomology/","conformance/","homology/",
+  "interaction/","audio/",
+  "type/","morphism/","state/",
+  "enforcement/"
+]);
+
+const V020_ENUMS = JSON.stringify([
+  "Space","PrimitiveOp","MetricAxis","FiberState","GeometricCharacter",
+  "AchievabilityStatus","ComplexityClass","ExecutionPolicyKind","GroundingPhase",
+  "MeasurementUnit","PhaseBoundaryType","ProofModality","ProofStrategy",
+  "QuantifierKind","RewriteRule","SessionBoundaryType","SiteState",
+  "TriadProjection","ValidityScopeKind","VarianceAnnotation",
+  "VerificationDomain","ViolationKind"
+]);
+
+const V020_ENFORCEMENT = JSON.stringify([
+  "Datum","Validated","FiberBudget","FreeRank","TermArena","TermList",
+  "Binding","Assertion","SourceDeclaration","SinkDeclaration",
+  "BoundarySession","GroundedCoord","GroundedTuple",
+  "DatumBuilder","DerivationBuilder","FiberBudgetBuilder",
+  "TermBuilder","AssertionBuilder","BindingBuilder",
+  "SourceDeclBuilder","SinkDeclBuilder","BoundarySessionBuilder"
+]);
+
+export function list_enums() {
+  if (wasm && wasm.list_enums) {
+    let d0, d1; try { const ret = wasm.list_enums(); d0 = ret[0]; d1 = ret[1]; return getStringFromWasm0(ret[0], ret[1]); } finally { wasm.__wbindgen_free(d0, d1, 1); }
+  }
+  return V020_ENUMS;
+}
+
+export function list_enforcement_structs() {
+  if (wasm && wasm.list_enforcement_structs) {
+    let d0, d1; try { const ret = wasm.list_enforcement_structs(); d0 = ret[0]; d1 = ret[1]; return getStringFromWasm0(ret[0], ret[1]); } finally { wasm.__wbindgen_free(d0, d1, 1); }
+  }
+  return V020_ENFORCEMENT;
+}
+
+export function const_ring_eval_q0(op, a, b) {
+  if (wasm && wasm.const_ring_eval_q0) return wasm.const_ring_eval_q0(op, a, b);
+  const m = 256;
+  switch (op) {
+    case 0: return ((-a) & 0xFF) >>> 0;       // neg
+    case 1: return (~a & 0xFF) >>> 0;          // bnot
+    case 2: return ((a + 1) % m);              // succ
+    case 3: return ((a - 1 + m) % m);          // pred
+    case 4: return ((a + b) % m);              // add
+    case 5: return ((a - b + m) % m);          // sub
+    case 6: return ((a * b) % m);              // mul
+    case 7: return (a ^ b);                    // xor
+    case 8: return (a & b);                    // and
+    case 9: return (a | b);                    // or
+    default: return 0;
+  }
+}
+
+export function const_ring_eval_unary_q0(op, a) {
+  return const_ring_eval_q0(op, a, 0);
+}
+
 function __wbg_get_imports() {
     const import0 = { __proto__: null, __wbindgen_init_externref_table: function() { const table = wasm.__wbindgen_externrefs; const offset = table.grow(4); table.set(0, undefined); table.set(offset + 0, undefined); table.set(offset + 1, null); table.set(offset + 2, true); table.set(offset + 3, false); } };
     return { __proto__: null, "./uor_wasm_shim_bg.js": import0 };

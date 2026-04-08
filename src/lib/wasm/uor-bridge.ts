@@ -151,3 +151,51 @@ export function evaluateExpr(expr: string): number {
 export function listNamespaces(): string {
   return wasmModule?.list_namespaces() ?? "[]";
 }
+
+// ── v0.2.0 additions ────────────────────────────────────────────────
+
+/** List all v0.2.0 enum names as JSON array. */
+export function listEnums(): string {
+  if (wasmModule && typeof wasmModule.list_enums === "function") {
+    return wasmModule.list_enums();
+  }
+  // JS shim fallback handles this
+  const mod = wasmModule as any;
+  if (mod?.list_enums) return mod.list_enums();
+  return JSON.stringify([
+    "Space","PrimitiveOp","MetricAxis","FiberState","GeometricCharacter",
+  ]);
+}
+
+/** List all v0.2.0 enforcement struct names as JSON array. */
+export function listEnforcementStructs(): string {
+  if (wasmModule && typeof (wasmModule as any).list_enforcement_structs === "function") {
+    return (wasmModule as any).list_enforcement_structs();
+  }
+  return "[]";
+}
+
+/**
+ * Evaluate a ring operation by opcode in Z/256Z.
+ * Op codes: 0=neg, 1=bnot, 2=succ, 3=pred, 4=add, 5=sub, 6=mul, 7=xor, 8=and, 9=or
+ */
+export function constRingEvalQ0(op: number, a: number, b: number = 0): number {
+  if (wasmModule && typeof (wasmModule as any).const_ring_eval_q0 === "function") {
+    return (wasmModule as any).const_ring_eval_q0(op, a, b);
+  }
+  // Pure TS fallback
+  const m = 256;
+  switch (op) {
+    case 0: return ((-a) & 0xFF) >>> 0;
+    case 1: return (~a & 0xFF) >>> 0;
+    case 2: return ((a + 1) % m);
+    case 3: return ((a - 1 + m) % m);
+    case 4: return ((a + b) % m);
+    case 5: return ((a - b + m) % m);
+    case 6: return ((a * b) % m);
+    case 7: return (a ^ b);
+    case 8: return (a & b);
+    case 9: return (a | b);
+    default: return 0;
+  }
+}
