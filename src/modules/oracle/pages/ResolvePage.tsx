@@ -26,6 +26,32 @@ const SURPRISE_MESSAGES = [
   "💫 Every address tells a story.",
 ];
 
+/* ── Infinite Improbability Drive ── */
+const IMPROBABILITY_SIDE_EFFECTS = [
+  "A sperm whale just appeared above Magrathea",
+  "All molecules in your device leapt one foot to the left",
+  "239,000 lightly fried eggs materialized somewhere nearby",
+  "You have been briefly turned into a penguin",
+  "A small potted petunia thought \"Oh no, not again\"",
+  "Your probability of existing just became finite",
+  "Somewhere, a Vogon is reading poetry in your honor",
+  "The answer was 42 all along, but the question changed",
+];
+
+const DONT_PANIC_MESSAGES = [
+  "The Improbability Drive found this improbably relevant.",
+  "Reality has been restored. Mostly.",
+  "That was improbable. But then again, so is everything.",
+  "The universe is rarely what it seems. Neither is this address.",
+  "Don't panic — this result was always going to happen. Probably.",
+  "Normality has been restored. Whatever that means.",
+];
+
+const IMPROBABILITY_EXPONENTS = [
+  "2^17", "2^256", "2^4,096", "2^65,536", "2^276,709",
+  "2^1,048,576", "2^∞",
+];
+
 interface Result {
   source: unknown;
   receipt: EnrichedReceipt;
