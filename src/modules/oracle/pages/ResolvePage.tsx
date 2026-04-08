@@ -552,19 +552,19 @@ const SearchPage = () => {
                 transition={{ duration: 0.4 }}
                 className="flex flex-col items-center gap-5 z-10"
               >
-                <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground/30">
+                <p className="text-base md:text-lg font-mono uppercase tracking-[0.25em] text-muted-foreground/40">
                   {improbPhase === 1 ? "Folding dimensions…" : "Traversing the address space…"}
                 </p>
                 <motion.p
                   key={improbExponent}
                   initial={{ opacity: 0.5 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.1 }}
-                  className="font-mono text-2xl md:text-3xl font-bold text-primary/70"
+                  transition={{ duration: 0.15 }}
+                  className="font-mono text-4xl md:text-5xl font-bold text-primary/70"
                 >
                   {IMPROBABILITY_EXPONENTS[improbExponent] ?? "2^∞"}
                 </motion.p>
-                <p className="text-[9px] font-mono text-muted-foreground/18 tracking-widest">IMPROBABILITY FACTOR</p>
+                <p className="text-sm md:text-base font-mono text-muted-foreground/30 tracking-widest">IMPROBABILITY FACTOR</p>
               </motion.div>
             )}
 
