@@ -1,9 +1,10 @@
 /**
  * DesktopWidgets — Minimal home: clock, greeting, search bar. Theme-aware.
+ * 
+ * Revolut-inspired: no scale animations, opacity-only transitions, CSS over framer-motion.
  */
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
 import { Search, ArrowRight } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
@@ -60,18 +61,26 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     ? "text-black/15 border-black/[0.05] bg-black/[0.02]"
     : "text-white/15 border-white/[0.05] bg-white/[0.02]";
 
+  // Opacity-only transitions — no scale animations (Revolut principle)
+  const widgetOpacity = hasMaximized ? 0 : 1;
+  const clockOpacity = hasAnyWindows ? 0.4 : 1;
+
   return (
-    <motion.div
+    <div
       className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
-      style={{ paddingBottom: 60 }}
-      animate={{ opacity: hasMaximized ? 0 : 1 }}
-      transition={{ duration: 0.4 }}
+      style={{
+        paddingBottom: 60,
+        opacity: widgetOpacity,
+        transition: "opacity 300ms ease-out",
+      }}
     >
       <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "28vh" }}>
-        <motion.div
+        <div
           className="text-center mb-8"
-          animate={{ opacity: hasAnyWindows ? 0.3 : 1, scale: hasAnyWindows ? 0.92 : 1 }}
-          transition={{ duration: 0.5 }}
+          style={{
+            opacity: clockOpacity,
+            transition: "opacity 300ms ease-out",
+          }}
         >
           <h1
             className={`${clockColor} font-bold tracking-tight leading-none`}
@@ -92,11 +101,11 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           >
             {getGreeting()}
           </p>
-        </motion.div>
+        </div>
 
         <form onSubmit={handleSubmit} className="w-full">
           <div
-            className="relative flex items-center w-full rounded-2xl transition-all duration-200"
+            className="relative flex items-center w-full rounded-2xl transition-all duration-150"
             style={{ background: searchBg, border: `1px solid ${searchBorder}`, boxShadow: searchShadow }}
           >
             <div className="flex items-center pl-4 pr-2">
@@ -112,7 +121,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}
             />
             {query.trim() ? (
-              <button type="submit" className={`mr-3 p-1.5 rounded-lg ${btnBg} transition-colors`}>
+              <button type="submit" className={`mr-3 p-1.5 rounded-lg ${btnBg} transition-colors duration-150`}>
                 <ArrowRight className={`w-4 h-4 ${btnIcon}`} />
               </button>
             ) : (
@@ -121,6 +130,6 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           </div>
         </form>
       </div>
-    </motion.div>
+    </div>
   );
 }
