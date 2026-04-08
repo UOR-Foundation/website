@@ -124,8 +124,6 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
     );
   }
 
-  // Extract type
-  const rawType = typeof src["@type"] === "string" ? src["@type"].replace(/^uor:/, "") : null;
   const typeStyle = rawType ? (TYPE_STYLES[rawType] ?? DEFAULT_STYLE) : null;
 
   // Extract title
