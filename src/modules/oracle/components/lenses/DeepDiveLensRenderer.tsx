@@ -46,17 +46,17 @@ function createDeepDiveComponents(sectionCounter: { current: number }) {
       const text = typeof children === "string" ? children : String(children);
       sectionCounter.current++;
       return (
-        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "1.05rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.5rem", lineHeight: 1.3, textTransform: "uppercase", letterSpacing: "0.04em" }} {...props}>
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "3rem", marginBottom: "0.5rem", lineHeight: 1.2, textTransform: "uppercase", letterSpacing: "0.04em" }} {...props}>
           <span className="text-primary/50" style={{ fontFamily: "ui-monospace, monospace", marginRight: 8, fontWeight: 400 }}>§{sectionCounter.current}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/85" style={{ fontSize: "0.95rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic" }} {...props}>{children}</h3>
+      <h3 className="text-foreground/85" style={{ fontSize: "clamp(0.95rem, 2vw, 1.15rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic", lineHeight: 1.2 }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const }} {...props}>{children}</p>
+      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const, maxWidth: 720 }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
       <blockquote className="bg-muted/20 border-l-2 border-primary/30" style={{ margin: "1rem 0", padding: "8px 14px", fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }} {...props}>{children}</blockquote>
@@ -68,7 +68,7 @@ function createDeepDiveComponents(sectionCounter: { current: number }) {
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65, maxWidth: 720 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 3 }} {...props}>{children}</li>
@@ -105,8 +105,8 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   }
 
   return (
-    <article style={{ maxWidth: 740, margin: "0 auto" }}>
-      <h1 className="text-foreground" style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, marginBottom: 6, textAlign: "center" }}>
+    <article style={{ margin: "0 auto" }}>
+      <h1 className="text-foreground" style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}>
         {title}
       </h1>
 

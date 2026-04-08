@@ -46,11 +46,12 @@ function createMagazineComponents(isFirstParagraph: { current: boolean }) {
           id={slugify(text)}
           className="text-foreground"
           style={{
-            fontSize: "1.5rem",
+            fontSize: "clamp(1.4rem, 3vw, 2rem)",
             fontWeight: 700,
             fontFamily: "'DM Sans', system-ui, sans-serif",
             letterSpacing: "-0.02em",
-            marginTop: "2.8rem",
+            lineHeight: 1.2,
+            marginTop: "3rem",
             marginBottom: "1rem",
             paddingBottom: 12,
             borderBottom: "none",
@@ -66,23 +67,23 @@ function createMagazineComponents(isFirstParagraph: { current: boolean }) {
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/90" style={{ fontSize: "1.15rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "-0.01em" }} {...props}>{children}</h3>
+      <h3 className="text-foreground/90" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "-0.02em", lineHeight: 1.2 }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
       const isFirst = isFirstParagraph.current;
       if (isFirst) isFirstParagraph.current = false;
       return (
-        <p className={`text-foreground/80 ${isFirst ? "magazine-drop-cap" : ""}`} style={{ fontSize: 17, lineHeight: 1.85, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1.2em" }} {...props}>{children}</p>
+        <p className={`text-foreground/80 ${isFirst ? "magazine-drop-cap" : ""}`} style={{ fontSize: 17, lineHeight: 1.85, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1.2em", maxWidth: 720 }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="border-l-4 border-primary/30" style={{ margin: "2rem 0", padding: "1rem 1.5rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.65)" }} {...props}>{children}</blockquote>
+      <blockquote className="border-l-4 border-primary/30" style={{ margin: "2.5rem 0", padding: "1rem 1.5rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.65)", maxWidth: 900 }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.85 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.85, maxWidth: 720 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 6 }} {...props}>{children}</li>
@@ -122,7 +123,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
   }
 
   return (
-    <article style={{ maxWidth: 680, margin: "0 auto" }}>
+    <article style={{ margin: "0 auto" }}>
       <style>{`
         .magazine-drop-cap::first-letter {
           float: left;
@@ -138,11 +139,11 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
 
       {/* Hero image — full-bleed at top */}
       {heroImage && !synthesizing && (
-        <InlineFigure image={heroImage} variant="full-width" className="mb-8 -mx-4 sm:mx-0" />
+        <InlineFigure image={heroImage} variant="full-width" className="mb-8 -mx-6 sm:-mx-4 md:mx-0" />
       )}
 
       {/* Title */}
-      <h1 className="text-foreground" style={{ fontSize: "2.4rem", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 12 }}>
+      <h1 className="text-foreground" style={{ fontSize: "clamp(2.2rem, 5vw, 3.2rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 12 }}>
         {title}
       </h1>
 
