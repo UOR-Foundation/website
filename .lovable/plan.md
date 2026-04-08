@@ -1,61 +1,78 @@
 
 
-# Infinite Improbability Drive — Theme Alignment & Dimensional Experience
+# Infinite Improbability Drive — Particle-to-Wave Pre-Transition
 
 ## What changes
 
-Rework the overlay in `ResolvePage.tsx` to use the site's own palette (midnight navy `--background`, gold `--primary`, warm purple `--accent`, muted foreground tones) instead of the current extreme saturated gradients. Slow the total sequence from ~2.5s to ~4s, and replace the flat phase transitions with a **dimensional transformation** narrative.
+Add a **pre-phase** before the overlay appears: the existing search page elements dissolve from "particles" (sharp, solid) into "waves" (blurred, wavy, fading), then the improbability overlay takes over. On exit, the reverse happens — the result materializes from wave back to particle (crisp).
 
-## The Revised Sequence (~4s total)
+## Revised Sequence (~5s total)
 
 ```text
-Phase 1 — FLATLAND (0–1000ms)
-  Overlay fades in using bg-background. A single horizontal line draws across
-  the center (1D). Then it rotates/multiplies into a wireframe square (2D).
-  Improbability counter ticks in gold (text-primary), slower cadence (~150ms).
-  Gentle screen shake (1px, slower frequency).
-  Label: "Collapsing into one dimension…"
+Phase 0 — PARTICLE → WAVE (0–800ms)  [NEW]
+  The main page content (search bar, buttons, background) gets:
+  - CSS filter: blur ramps from 0 → 12px
+  - A subtle wave distortion via CSS transform (translateY sine wobble)
+  - Opacity fades from 1 → 0.3
+  This creates the feeling of matter dissolving into a wave function.
+  After 800ms the overlay fades in on top.
 
-Phase 2 — SCRAMBLE (1000–2800ms)
-  Wireframe square extrudes into a rotating 3D cube (CSS perspective transform).
-  The cube "shatters" — fragments scatter outward, then reverse into a singularity
-  point at center (the black hole). Side-effect text cycles every 500ms.
-  Background shifts subtly: bg-background → a slightly lighter navy with a faint
-  radial glow of primary/10 at center.
-  Label: "Passing through every point in the universe…"
+Phase 1 — FLATLAND (800–1800ms)
+  Same as current: overlay appears, 1D line → 2D square, exponent counter.
+  But overlay initial opacity starts from 0.3 (smoother handoff from the blur).
 
-Phase 3 — UNSCRAMBLE (2800–4000ms)
-  Singularity expands back out. "DON'T PANIC" appears in primary gold.
-  Confetti uses site palette colors. Overlay dissolves. Result + toast shown.
+Phase 2 — SCRAMBLE (1800–3600ms)
+  Same as current: 3D cube → singularity, side-effect text cycling.
+
+Phase 3 — UNSCRAMBLE (3600–4800ms)
+  DON'T PANIC, confetti, result picked.
+
+Phase 4 — WAVE → PARTICLE (4800–5200ms)  [NEW]
+  Overlay dissolves. The result page materializes:
+  - Blur ramps from 8px → 0
+  - Opacity from 0.5 → 1
+  - A brief "crystallizing" feel as content snaps into focus.
 ```
 
-## Visual Details — On-Brand
+## Implementation Details
 
-- **Backgrounds**: `hsl(var(--background))` with subtle radial glow of `hsl(var(--primary) / 0.08)` — no alien purples or teals
-- **Counter text**: `text-primary` (gold, `38 65% 55%`) instead of hardcoded `hsl(45 90% 60%)`
-- **"DON'T PANIC"**: `text-primary` with `font-display`
-- **Side effects text**: `text-muted-foreground/50` — already in the site's muted palette
-- **Confetti colors**: derived from `--primary`, `--accent`, `--foreground`
-- **Screen shake**: reduced to 1px translation, 0.12s interval (gentler)
+### New state: `drivePrePhase` (boolean)
+- Set `true` at t=0, triggers blur/wave on the main content wrapper.
+- Set `false` at t=800ms when overlay activates.
 
-## Dimensional Shapes (pure CSS/SVG)
+### New state: `drivePostPhase` (boolean)  
+- Set `true` when overlay dissolves, applies reverse blur on result.
+- Set `false` after 400ms, content is crisp.
 
-The 1D→2D→3D transformation uses simple inline SVG `<line>` and `<rect>` elements plus a CSS `perspective` + `rotateY` cube — no external libraries. Lightweight, performant, thematic.
+### Main content wrapper gets conditional classes
+- When `drivePrePhase`: `filter: blur(12px)`, `opacity: 0.3`, `transform: scale(1.02)`, plus a CSS `@keyframes waveWobble` (gentle vertical sine oscillation).
+- When `drivePostPhase`: `filter: blur(8px)` → animates to `blur(0)` via transition.
+- Both use `transition: filter 0.8s ease, opacity 0.8s ease, transform 0.8s ease`.
 
-## Timing Changes
+### Timing adjustments in `fireImprobabilityDrive`
+- t=0: Set `drivePrePhase = true` (page blurs/waves)
+- t=800ms: Set `drivePrePhase = false`, `improbabilityActive = true`, `improbPhase = 1`
+- t=1800ms: Phase 2
+- t=3600ms: Phase 3 + confetti
+- t=4800ms: `improbabilityActive = false`, `drivePostPhase = true`, show result
+- t=5200ms: `drivePostPhase = false` (snap to crisp)
 
-| Interval | Current | New |
-|----------|---------|-----|
-| Total duration | ~2.5s | ~4s |
-| Exponent tick | 85ms | 150ms |
-| Side effect cycle | 300ms | 500ms |
-| Phase 1 duration | 600ms | 1000ms |
-| Phase 2 duration | 1200ms | 1800ms |
-| Phase 3 (DON'T PANIC visible) | 700ms | 1200ms |
+### New CSS keyframe: `waveWobble`
+```css
+@keyframes waveWobble {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-3px) scale(1.01); }
+  50% { transform: translateY(2px) scale(1.02); }
+  75% { transform: translateY(-2px) scale(1.015); }
+}
+```
+
+### Overlay opacity now opaque
+The overlay `bg-background` is fully opaque (no transparency issue the user flagged). The blur pre-phase handles the transition from visible page to overlay, so there's no moment where you see both simultaneously.
 
 ## File
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Restyle overlay to site palette, slow timings, add 1D→2D→3D dimensional SVG/CSS shape morphing sequence, reduce shake intensity |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Add `drivePrePhase`/`drivePostPhase` states, apply blur+wave CSS to main content wrapper, make overlay fully opaque, adjust timing to ~5s total, add `waveWobble` keyframe |
 
