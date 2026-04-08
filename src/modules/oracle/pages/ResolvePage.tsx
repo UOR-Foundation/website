@@ -325,7 +325,7 @@ const SearchPage = () => {
     }
   };
 
-  /* ── Infinite Improbability Drive sequence (~5s, themed) ── */
+  /* ── Infinite Improbability Drive sequence — gentle & magical ── */
   const fireImprobabilityDrive = () => {
     const entries = allEntries();
     if (entries.length === 0) {
@@ -333,18 +333,20 @@ const SearchPage = () => {
       return;
     }
 
-    // Phase 0: particle → wave (blur the page content)
+    const pick = entries[Math.floor(Math.random() * entries.length)];
+
+    // Phase 0: gently fade content away
     setDrivePrePhase(true);
     setImprobExponent(0);
     setImprobSideEffect("");
 
-    // At 800ms: overlay activates, pre-phase ends
+    // At 600ms: overlay takes over, pre-phase ends
     setTimeout(() => {
       setDrivePrePhase(false);
       setImprobabilityActive(true);
       setImprobPhase(1);
 
-      // Phase 1 (800–1800ms): tick exponent counter
+      // Phase 1 (0–1000ms): tick exponent counter with geometric shapes
       let expIdx = 0;
       const expInterval = setInterval(() => {
         expIdx++;
@@ -353,9 +355,9 @@ const SearchPage = () => {
         } else {
           clearInterval(expInterval);
         }
-      }, 150);
+      }, 140);
 
-      // Phase 2 at 1800ms: cycle side effects
+      // Phase 2 at 1000ms: cycle side effects
       setTimeout(() => {
         setImprobPhase(2);
         let effectIdx = 0;
@@ -364,15 +366,14 @@ const SearchPage = () => {
             IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
           );
           effectIdx++;
-        }, 500);
+        }, 600);
 
-        // Phase 3 at 3600ms: DON'T PANIC + pick result
+        // Phase 3 at 2800ms: DON'T PANIC reveal
         setTimeout(() => {
           clearInterval(effectInterval);
           setImprobPhase(3);
 
-          const pick = entries[Math.floor(Math.random() * entries.length)];
-          // Site-palette confetti
+          // Gentle confetti
           const root = document.documentElement;
           const cs = getComputedStyle(root);
           const toHex = (v: string) => {
@@ -388,28 +389,29 @@ const SearchPage = () => {
             toHex(cs.getPropertyValue("--accent").trim()),
             toHex(cs.getPropertyValue("--foreground").trim()),
           ];
-          confetti({ particleCount: 120, spread: 110, origin: { y: 0.5 }, colors, startVelocity: 28, gravity: 0.6, ticks: 160 });
-          setTimeout(() => confetti({ particleCount: 50, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 16, gravity: 0.5, ticks: 130 }), 200);
+          confetti({ particleCount: 70, spread: 100, origin: { y: 0.45 }, colors, startVelocity: 20, gravity: 0.5, ticks: 140 });
 
-          // At 4800ms: dissolve overlay, enter post-phase (wave → particle)
+          // At 1400ms after DON'T PANIC: set result BEHIND overlay, then fade overlay out
           setTimeout(() => {
-            setImprobabilityActive(false);
-            setImprobPhase(0);
+            // Set the result while overlay is still fully visible
             setInput(pick.receipt.triword);
             setResult({ source: pick.source, receipt: pick.receipt });
-            setDrivePostPhase(true);
+
+            // Phase 4: overlay fades out to reveal the result already rendered underneath
+            setImprobPhase(4);
 
             const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
             toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
 
-            // At 5200ms: snap to crisp
+            // At 900ms after result set: clean up
             setTimeout(() => {
-              setDrivePostPhase(false);
-            }, 400);
-          }, 1200);
+              setImprobabilityActive(false);
+              setImprobPhase(0);
+            }, 900);
+          }, 1400);
         }, 1800);
       }, 1000);
-    }, 800);
+    }, 600);
   };
 
   return (
