@@ -6,6 +6,8 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { firecrawlApi } from "@/lib/api/firecrawl";
+import { extractSemantics } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -416,9 +418,111 @@ const SearchPage = () => {
     return receipt;
   };
 
+  /** Detect if input looks like a URL */
+  const isUrl = (s: string) => {
+    const t = s.trim();
+    if (t.startsWith("http://") || t.startsWith("https://")) return true;
+    // "example.com" pattern — has dot, no spaces, has TLD-like suffix
+    if (!t.includes(" ") && /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(t)) return true;
+    return false;
+  };
+
+  /** Encode a web page into UOR space */
+  const handleWebEncode = async (url: string) => {
+    let normalizedUrl = url.trim();
+    if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+      normalizedUrl = `https://${normalizedUrl}`;
+    }
+
+    setLoading(true);
+    setResult(null);
+    toast("Reading page…", { icon: "🌐", id: "web-encode" });
+
+    try {
+      const scrapeResult = await firecrawlApi.scrape(normalizedUrl, {
+        formats: ["markdown", "rawHtml", "links"],
+        onlyMainContent: true,
+      });
+
+      if (!scrapeResult.success || !scrapeResult.data) {
+        toast.error(scrapeResult.error || "Failed to read page.", { id: "web-encode" });
+        return;
+      }
+
+      const pageData = scrapeResult.data;
+      const markdown = pageData.markdown || pageData.data?.markdown || "";
+      const rawHtml = pageData.rawHtml || pageData.data?.rawHtml || "";
+      const links = pageData.links || pageData.data?.links || [];
+      const metadata = pageData.metadata || pageData.data?.metadata || {};
+
+      toast("Extracting semantics…", { icon: "🔬", id: "web-encode" });
+
+      // Extract existing structured data from the raw HTML
+      const existingSemantics = rawHtml ? extractSemantics(rawHtml) : {
+        jsonLd: [], openGraph: {}, meta: {}, hasStructuredData: false,
+      };
+
+      // Build canonical UOR WebPage document
+      const sourceObj: Record<string, unknown> = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:WebPage",
+        "uor:sourceUrl": normalizedUrl,
+        "uor:title": metadata.title || existingSemantics.meta.title || normalizedUrl,
+        "uor:description": metadata.description || existingSemantics.meta.description || existingSemantics.openGraph["og:description"] || "",
+        "uor:language": metadata.language || "en",
+        "uor:content": markdown,
+        "uor:linkedResources": (Array.isArray(links) ? links : []).slice(0, 50),
+        "uor:scrapedAt": new Date().toISOString(),
+        "uor:existingSemantics": existingSemantics,
+        "uor:semanticWebLayers": {
+          "L0": "content-addressed",
+          "L1": "json-ld",
+          "L2": "urdna2015",
+          "L3": existingSemantics.hasStructuredData ? "preserved" : "none",
+          "L5": "singleProofHash",
+          "L6": "deterministic-trust",
+        },
+      };
+
+      toast("Encoding into UOR space…", { icon: "⚛️", id: "web-encode" });
+
+      const receipt = await encode(sourceObj);
+
+      setResult({
+        source: sourceObj,
+        receipt,
+        isConfirmed: false,
+      });
+      setInput(receipt.triword);
+
+      confetti({
+        particleCount: 80,
+        spread: 65,
+        origin: { y: 0.6 },
+        colors: ["hsl(200,70%,55%)", "hsl(142,70%,45%)", "hsl(280,65%,60%)"],
+      });
+
+      toast.success("Page encoded into UOR space.", {
+        description: receipt.triwordFormatted,
+        id: "web-encode",
+      });
+    } catch (err) {
+      console.error("[WebEncode] Failed:", err);
+      toast.error("Web encoding failed: " + (err instanceof Error ? err.message : String(err)), { id: "web-encode" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearch = async (address: string) => {
     const trimmed = address.trim();
     if (!trimmed) return;
+
+    // URL detection — route to web encoding
+    if (isUrl(trimmed)) {
+      return handleWebEncode(trimmed);
+    }
+
     setLoading(true); setResult(null); setRederived(false);
     try {
       const entry = lookup(trimmed);
