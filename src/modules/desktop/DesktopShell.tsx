@@ -28,7 +28,7 @@ function DesktopShellInner() {
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
-  const [booting, setBooting] = useState(() => !sessionStorage.getItem("uor:booted"));
+  
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
