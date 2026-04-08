@@ -1653,6 +1653,33 @@ export type Database = {
           },
         ]
       }
+      search_history: {
+        Row: {
+          cid: string | null
+          id: string
+          keyword: string
+          searched_at: string
+          user_id: string
+          wiki_qid: string | null
+        }
+        Insert: {
+          cid?: string | null
+          id?: string
+          keyword: string
+          searched_at?: string
+          user_id: string
+          wiki_qid?: string | null
+        }
+        Update: {
+          cid?: string | null
+          id?: string
+          keyword?: string
+          searched_at?: string
+          user_id?: string
+          wiki_qid?: string | null
+        }
+        Relationships: []
+      }
       trust_connections: {
         Row: {
           ceremony_cid: string | null
