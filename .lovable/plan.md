@@ -1,141 +1,82 @@
 
 
-# Desktop OS Shell — Browser-Based Operating System Experience
+# Make `/search` the Desktop — Perplexity-Crisp Home Experience
 
 ## Vision
 
-Transform the existing immersive search view into a full macOS-inspired desktop operating system delivered entirely in the browser. The solar-aware wallpaper, clock, and search bar become the desktop foundation. Existing pages (Oracle, Search, Library, Messenger, etc.) render inside draggable, resizable windows instead of full-page routes. A dock at the bottom and a top menu bar complete the OS metaphor.
+The `/search` route becomes the primary desktop experience. Instead of a separate `/desktop` route, the search page **is** the OS home screen. The existing `ImmersiveSearchView` transforms into a Perplexity-inspired clean home with the solar wallpaper behind it, the dock at the bottom, and the menu bar at top. Searching opens results in a desktop window. The `/desktop` route redirects to `/search`.
 
-## Architecture
+## What Changes
 
-```text
-┌──────────────────────────────────────────────┐
-│  DesktopMenuBar (top)                        │
-│  ── Logo · App Name · Clock · Wi-Fi · User ──│
-├──────────────────────────────────────────────┤
-│                                              │
-│         Solar Wallpaper (full viewport)       │
-│                                              │
-│    ┌─────────────┐   ┌─────────────┐         │
-│    │  Window:     │   │  Window:    │         │
-│    │  Oracle      │   │  Library    │         │
-│    │  (draggable) │   │  (draggable)│         │
-│    └─────────────┘   └─────────────┘         │
-│                                              │
-│    Desktop Widgets (clock, quote, weather)    │
-│                                              │
-├──────────────────────────────────────────────┤
-│  DesktopDock (bottom, centered)              │
-│  ── Search · Oracle · Library · Messenger ── │
-└──────────────────────────────────────────────┘
-```
+### 1. Merge Desktop Shell into Search (`ResolvePage.tsx`)
 
-## Implementation Steps
+When the user is on the **home state** (no query active), render the desktop shell directly:
+- Solar wallpaper background (already there via `ImmersiveBackground`)
+- Top menu bar (`DesktopMenuBar`)
+- Centered Perplexity-style search area (clock + greeting + clean search bar)
+- Bottom dock (`DesktopDock`)
+- Windows layer for any open apps
 
-### 1. Create the Desktop Shell (`src/modules/desktop/`)
+When a search is submitted, it opens in a **desktop window** (Search app) rather than replacing the whole page. The home view stays underneath.
 
-**`DesktopShell.tsx`** — The root layout component that replaces the current `Layout.tsx` for the `/desktop` route (or becomes the new default for `/search`).
+### 2. Redesign Home Search to Perplexity Style (`DesktopWidgets.tsx`)
 
-- Full-viewport container with the existing solar wallpaper (`ImmersiveBackground`)
-- Renders three layers: MenuBar (top), Windows (middle), Dock (bottom)
-- Manages window state: which apps are open, positions, z-order, minimized/maximized
+Replace the current clock+quote widget with a Perplexity-inspired home:
+- **Clock**: Keep the large elegant clock, slightly smaller
+- **Greeting**: Clean, crisp `"Good afternoon"` text
+- **Search bar**: Ultra-clean, Perplexity-style — thin `border-white/[0.08]`, `bg-white/[0.04]`, rounded-2xl (not pill), generous padding, placeholder "Ask anything..."
+- **Context `+` button** inline in the search bar (reuse existing `ContextMenu`)
+- **Quick actions row** below search: subtle chips for "New Thread", "Library", "Oracle"
+- **Quote**: Smaller, more subdued below everything
+- On submit → calls `wm.openApp("search", query)` to open Search in a window
 
-**`useWindowManager.ts`** — Hook to manage window state:
-- `openWindows: Array<{ id, appId, title, position, size, zIndex, minimized, maximized }>`
-- `openApp(appId)`, `closeApp(id)`, `focusWindow(id)`, `minimizeWindow(id)`, `maximizeWindow(id)`
-- `moveWindow(id, pos)`, `resizeWindow(id, size)`
-- Persists layout to localStorage
+### 3. Refine Dock Styling (`DesktopDock.tsx`)
 
-### 2. Create the Menu Bar (`DesktopMenuBar.tsx`)
+Make it Perplexity-crisp:
+- Monochrome icons on subtle `bg-white/[0.06]` tiles (remove colored gradients)
+- Hover: `bg-white/[0.12]` fill, no color
+- Thinner dock border: `border-white/[0.06]`
+- More subtle background: `bg-black/40 backdrop-blur-3xl`
 
-Inspired by macOS top bar:
-- Left: UOR logo + active app name
-- Center: (empty, clean)
-- Right: SoundCloud status icon, Wi-Fi icon, clock (HH:MM Day Month Date), user avatar/identity button
+### 4. Refine Window Chrome (`DesktopWindow.tsx` + `desktop.css`)
 
-Frosted glass aesthetic: `bg-black/40 backdrop-blur-2xl border-b border-white/10`
+- Darker frosted glass: `bg-[#1a1a1a]/85`
+- Thinner borders: `border-white/[0.06]`
+- Content area: solid `bg-[#191919]` for crisp Perplexity-dark inside
+- Slightly brighter title text for active windows
 
-### 3. Create the Dock (`DesktopDock.tsx`)
+### 5. Refine Menu Bar (`DesktopMenuBar.tsx`)
 
-macOS-style bottom dock with magnification on hover:
-- Icons for: Search, Oracle, Library, Messenger, Vault, Settings
-- Each icon is a 48px rounded square with app icon and label on hover
-- Clicking opens the app in a new window (or focuses existing)
-- Minimized apps show a dot indicator below
-- CSS magnification effect: icons scale up when hovered (neighbors also grow slightly)
-- Frosted glass pill: `rounded-2xl bg-black/30 backdrop-blur-xl border border-white/15`
+- Slimmer, crisper
+- Thinner border: `border-white/[0.06]`
 
-### 4. Create the Window Component (`DesktopWindow.tsx`)
+### 6. Route Changes (`App.tsx`)
 
-Draggable, resizable window inspired by macOS:
-- Title bar with traffic-light buttons (close=red, minimize=yellow, maximize=green)
-- Draggable via title bar (using pointer events, not a library)
-- Resizable via corner/edge handles
-- Content area renders the app component
-- Double-click title bar to maximize/restore
-- Smooth open/close animations (scale + opacity via framer-motion)
-- Frosted glass chrome: `bg-black/60 backdrop-blur-2xl rounded-xl border border-white/12`
-- Active window has brighter border, inactive dims slightly
+- `/search` renders `DesktopShell` (which includes the home search + windows + dock)
+- `/desktop` redirects to `/search`
+- The old `ResolvePage` search logic gets loaded **inside** a desktop window when search is triggered
 
-### 5. Register Desktop Apps
+### 7. Wire Search Submission to Window
 
-Each existing feature becomes a "desktop app" with an icon and component:
-
-| App ID | Label | Icon | Component |
-|--------|-------|------|-----------|
-| search | Search | Search icon | Existing search input + results (extracted from ResolvePage) |
-| oracle | Oracle | Sparkles | OraclePage content (chat interface) |
-| library | Library | BookOpen | LibraryPage content |
-| messenger | Messenger | MessageCircle | MessengerPage content |
-| vault | Vault | Shield | VaultContextPicker (full view) |
-| settings | Settings | Settings | Preferences panel (theme, wallpaper, sound) |
-| music | Music | Music | SoundCloud player (expanded) |
-
-### 6. Desktop Widgets Layer
-
-Floating widgets on the desktop (when no window is focused/maximized):
-- **Clock widget**: Large time display (already exists in ImmersiveSearchView)
-- **Quote widget**: Rotating quotes (already exists as ImmersiveQuote)
-- **Search spotlight**: Centered search bar that opens the Search app on submit
-- Widgets fade when a maximized window is active
-
-### 7. Route Integration
-
-- Add `/desktop` route in `App.tsx` that renders `DesktopShell`
-- The existing immersive search view on `/search` gains a "Desktop mode" button
-- Desktop mode persists via localStorage preference
-- Each app window uses the existing page component but without Layout wrapper (no navbar/footer)
-
-### 8. Spotlight Search (Cmd+K / Click search in dock)
-
-- Overlay search bar (like macOS Spotlight) that appears centered
-- Searches across all app content
-- Results open in the appropriate app window
-- Reuses the existing search infrastructure
-
-## Technical Details
-
-- **Drag**: Pure pointer-event-based dragging (no external library) — `onPointerDown` captures offset, `onPointerMove` updates position, `onPointerUp` releases
-- **Resize**: Corner handles with `cursor: nwse-resize`, min-size constraints (400x300)
-- **Z-order**: Global counter incremented on focus; highest z-index = active window
-- **Dock magnification**: CSS `transform: scale()` with neighbor scaling via sibling selectors or computed in React
-- **Animations**: framer-motion for window open/close, dock hover effects via CSS transitions for performance
-- **Mobile**: On mobile viewports, the dock becomes a bottom tab bar and windows become full-screen sheets (no drag/resize)
-- **Wallpaper**: Reuses existing `ImmersiveBackground` with solar-phase photos
-
-## Files to Create
-
-1. `src/modules/desktop/DesktopShell.tsx`
-2. `src/modules/desktop/DesktopMenuBar.tsx`
-3. `src/modules/desktop/DesktopDock.tsx`
-4. `src/modules/desktop/DesktopWindow.tsx`
-5. `src/modules/desktop/DesktopWidgets.tsx`
-6. `src/modules/desktop/hooks/useWindowManager.ts`
-7. `src/modules/desktop/lib/desktop-apps.ts` (app registry)
-8. `src/modules/desktop/desktop.css` (dock magnification, window chrome)
+Update `DesktopShell.tsx`:
+- Add a `handleHomeSearch(query)` callback
+- Pass it to `DesktopWidgets`
+- On submit, call `wm.openApp("search", query)` — this opens ResolvePage in a window with the query pre-filled
+- Add query passing to `useWindowManager` (optional initial data per window)
 
 ## Files to Modify
 
-1. `src/App.tsx` — add `/desktop` route
-2. `src/modules/oracle/pages/ResolvePage.tsx` — add "Desktop mode" toggle that redirects to `/desktop`
+1. **`src/modules/desktop/DesktopShell.tsx`** — add home search handler, become the `/search` page
+2. **`src/modules/desktop/DesktopWidgets.tsx`** — redesign as Perplexity-style home with search bar, greeting, quick actions
+3. **`src/modules/desktop/DesktopDock.tsx`** — monochrome, crisper styling
+4. **`src/modules/desktop/DesktopWindow.tsx`** — darker, crisper chrome
+5. **`src/modules/desktop/DesktopMenuBar.tsx`** — slimmer, refined
+6. **`src/modules/desktop/desktop.css`** — updated window/dock styles
+7. **`src/App.tsx`** — `/search` → DesktopShell, `/desktop` → redirect
+
+## Technical Notes
+
+- The existing `ImmersiveSearchView` remains available but is superseded by the desktop home for the `/search` route
+- `useWindowManager.openApp` gains an optional `initialData` parameter so search queries can be passed into the Search window
+- Mobile detection (`useIsMobile`) will keep the current mobile search experience unchanged — desktop shell is desktop-only
 
