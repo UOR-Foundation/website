@@ -4,6 +4,7 @@ import uorIcon from "@/assets/uor-icon-new.png";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 import { navItems } from "@/data/nav-items";
 import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
+import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
 
 const Footer = () => {
   return (
@@ -79,9 +80,12 @@ const Footer = () => {
           >
             Open Standard
           </a>
-          <p className="text-foreground/40 text-fluid-caption font-body uppercase tracking-[0.1em]">
-            © {new Date().getFullYear()} The UOR Foundation
-          </p>
+          <div className="flex items-center gap-4">
+            <SoundCloudFab />
+            <p className="text-foreground/40 text-fluid-caption font-body uppercase tracking-[0.1em]">
+              © {new Date().getFullYear()} The UOR Foundation
+            </p>
+          </div>
         </div>
       </div>
     </footer>

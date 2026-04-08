@@ -1,302 +1,318 @@
 /**
- * SoundCloudFab — Draggable floating disc that plays SoundCloud playlists.
- * 
- * - Click: toggles play/pause with spinning animation
- * - Double-click: opens mini player with playlist chooser
- * - Draggable to any screen position
- * - Only visible in immersive mode
+ * SoundCloudFab — ambient SoundCloud player as a spinning vinyl disc.
+ *
+ * Interactions:
+ *   • Single click → play / pause (disc spins clockwise when playing)
+ *   • Double click → toggle mini SoundCloud embed panel
+ *
+ * When playing, the disc pulls album artwork from SoundCloud and uses it
+ * as the disc surface texture — blended under vinyl grooves for a rich,
+ * dimensional look. When paused, it returns to a clean dark vinyl.
+ *
+ * Uses SoundCloud's iframe Widget API for real playback control.
+ * Default playlist: Ben Böhmer — Begin Again
  */
-
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
-import { Play, Pause, X, SkipForward, SkipBack, Volume2, VolumeX } from "lucide-react";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+import { X } from "lucide-react";
 
-/* ── SoundCloud playlists (public, no API key needed) ── */
-const SC_PLAYLISTS = [
-  {
-    id: "chillhop",
-    name: "Lo-Fi Focus",
-    url: "https://soundcloud.com/chaboree/sets/lofi-hip-hop-chill",
-    color: "hsl(200 60% 50%)",
-  },
-  {
-    id: "ambient",
-    name: "Ambient Worlds",
-    url: "https://soundcloud.com/ambientmusicalgenre/sets/the-ambient-realm",
-    color: "hsl(260 60% 50%)",
-  },
-  {
-    id: "deep-focus",
-    name: "Deep Focus",
-    url: "https://soundcloud.com/lakeyinspired/sets/chill-nation",
-    color: "hsl(140 50% 45%)",
-  },
-  {
-    id: "jazz",
-    name: "Jazz Café",
-    url: "https://soundcloud.com/jazzandsoul/sets/smooth-jazz-selection",
-    color: "hsl(30 70% 50%)",
-  },
-];
+const SC_PLAYLIST = "https://soundcloud.com/ben-bohmer/sets/begin-again";
+const SC_PLAYLIST_ENCODED = encodeURIComponent(SC_PLAYLIST);
+const EMBED_AUDIO = `https://w.soundcloud.com/player/?url=${SC_PLAYLIST_ENCODED}&color=%232A2724&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
+const EMBED_VISUAL = `https://w.soundcloud.com/player/?url=${SC_PLAYLIST_ENCODED}&color=%232A2724&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
 
-const SC_WIDGET_API = "https://w.soundcloud.com/player/";
+interface SCWidget {
+  play: () => void;
+  pause: () => void;
+  isPaused: (cb: (paused: boolean) => void) => void;
+  bind: (event: string, cb: () => void) => void;
+  unbind: (event: string) => void;
+  getCurrentSound: (cb: (sound: { title?: string; artwork_url?: string; user?: { username?: string } }) => void) => void;
+}
+
+declare global {
+  interface Window {
+    SC?: { Widget: (el: HTMLIFrameElement) => SCWidget; Events: Record<string, string> };
+  }
+}
+
+let apiLoaded = false;
+const loadSCApi = (): Promise<void> => {
+  if (apiLoaded || window.SC) { apiLoaded = true; return Promise.resolve(); }
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = "https://w.soundcloud.com/player/api.js";
+    s.onload = () => { apiLoaded = true; resolve(); };
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+};
+
+const DISC_SIZE = 24;
+const GROOVE_COUNT = 4;
 
 export default function SoundCloudFab() {
   const [playing, setPlaying] = useState(false);
-  const [showMini, setShowMini] = useState(false);
-  const [activePlaylist, setActivePlaylist] = useState(SC_PLAYLISTS[0]);
-  const [muted, setMuted] = useState(false);
-  const [trackTitle, setTrackTitle] = useState("");
-
+  const [expanded, setExpanded] = useState(false);
+  const [trackTitle, setTrackTitle] = useState<string | null>(null);
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const widgetRef = useRef<any>(null);
+  const widgetRef = useRef<SCWidget | null>(null);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const constraintsRef = useRef<HTMLDivElement>(null);
+  const clickCountRef = useRef(0);
+  const spinControls = useAnimationControls();
 
-  // Position state for drag
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  // Load SoundCloud Widget API script
   useEffect(() => {
-    if ((window as any).SC?.Widget) return;
-
-    const script = document.createElement("script");
-    script.src = "https://w.soundcloud.com/player/api.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      try { document.body.removeChild(script); } catch {}
-    };
-  }, []);
-
-  // Initialize widget when iframe loads
-  const initWidget = useCallback(() => {
-    const SC = (window as any).SC;
-    if (!SC?.Widget || !iframeRef.current) return;
-
-    const widget = SC.Widget(iframeRef.current);
-    widgetRef.current = widget;
-
-    widget.bind(SC.Widget.Events.READY, () => {
-      widget.setVolume(80);
-      // Get initial track title
-      widget.getCurrentSound((sound: any) => {
-        if (sound?.title) setTrackTitle(sound.title);
-      });
-    });
-
-    widget.bind(SC.Widget.Events.PLAY, () => {
-      setPlaying(true);
-      widget.getCurrentSound((sound: any) => {
-        if (sound?.title) setTrackTitle(sound.title);
-      });
-    });
-
-    widget.bind(SC.Widget.Events.PAUSE, () => setPlaying(false));
-    widget.bind(SC.Widget.Events.FINISH, () => {
-      widget.next();
+    loadSCApi().then(() => {
+      if (iframeRef.current && window.SC) {
+        const w = window.SC.Widget(iframeRef.current);
+        widgetRef.current = w;
+        w.bind("play", () => {
+          setPlaying(true);
+          w.getCurrentSound((sound) => {
+            if (sound?.title) setTrackTitle(sound.title);
+            if (sound?.artwork_url) {
+              setArtworkUrl(sound.artwork_url.replace("-large", "-t500x500"));
+            }
+          });
+        });
+        w.bind("pause", () => setPlaying(false));
+        w.bind("finish", () => setPlaying(false));
+      }
     });
   }, []);
+
+  // RAF-based smooth spin
+  const rotationRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (playing) {
+      lastTimeRef.current = null;
+      const spin = (time: number) => {
+        if (lastTimeRef.current !== null) {
+          const delta = time - lastTimeRef.current;
+          rotationRef.current = (rotationRef.current + (delta / 6000) * 360) % 360;
+          spinControls.set({ rotate: rotationRef.current });
+        }
+        lastTimeRef.current = time;
+        rafRef.current = requestAnimationFrame(spin);
+      };
+      rafRef.current = requestAnimationFrame(spin);
+    } else {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lastTimeRef.current = null;
+    }
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, spinControls]);
 
   const togglePlay = useCallback(() => {
-    const widget = widgetRef.current;
-    if (!widget) return;
-    widget.toggle();
+    const w = widgetRef.current;
+    if (!w) return;
+    w.isPaused((paused) => {
+      if (paused) w.play(); else w.pause();
+    });
   }, []);
 
   const handleClick = useCallback(() => {
-    // Single click: play/pause. Double-click: open mini player.
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-      setShowMini(prev => !prev);
-      return;
-    }
-
+    clickCountRef.current += 1;
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     clickTimerRef.current = setTimeout(() => {
-      clickTimerRef.current = null;
-      togglePlay();
+      if (clickCountRef.current === 1) {
+        togglePlay();
+      } else if (clickCountRef.current >= 2) {
+        setExpanded((e) => !e);
+      }
+      clickCountRef.current = 0;
     }, 250);
   }, [togglePlay]);
 
-  const switchPlaylist = useCallback((playlist: typeof SC_PLAYLISTS[0]) => {
-    setActivePlaylist(playlist);
-    setTrackTitle("");
-    // Widget will re-mount with new URL
-    setTimeout(() => {
-      const widget = widgetRef.current;
-      if (widget) {
-        widget.play();
-      }
-    }, 1000);
-  }, []);
-
-  const skipNext = useCallback(() => widgetRef.current?.next(), []);
-  const skipPrev = useCallback(() => widgetRef.current?.prev(), []);
-
-  const toggleMute = useCallback(() => {
-    const widget = widgetRef.current;
-    if (!widget) return;
-    if (muted) {
-      widget.setVolume(80);
-    } else {
-      widget.setVolume(0);
-    }
-    setMuted(!muted);
-  }, [muted]);
-
-  const iframeSrc = `${SC_WIDGET_API}?url=${encodeURIComponent(activePlaylist.url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false&color=%23ff5500`;
+  const half = DISC_SIZE / 2;
 
   return (
-    <>
-      {/* Drag constraint area — full screen */}
-      <div ref={constraintsRef} className="fixed inset-0 z-[90] pointer-events-none" />
-
-      {/* Hidden SoundCloud iframe */}
+    <div className="relative flex items-center" style={{ zIndex: 50 }}>
+      {/* Hidden audio iframe */}
       <iframe
         ref={iframeRef}
-        key={activePlaylist.id}
-        src={iframeSrc}
-        onLoad={initWidget}
-        className="hidden"
+        src={EMBED_AUDIO}
+        width="0"
+        height="0"
         allow="autoplay"
+        style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
         title="SoundCloud Player"
       />
 
-      {/* Draggable Floating Disc */}
-      <motion.div
-        drag
-        dragConstraints={constraintsRef}
-        dragMomentum={false}
-        dragElastic={0.1}
-        initial={{ x: 0, y: 0 }}
-        className="fixed bottom-8 right-8 z-[95] pointer-events-auto"
-        style={{ touchAction: "none" }}
-      >
-        {/* The disc button */}
-        <motion.button
-          onClick={handleClick}
-          className="relative w-14 h-14 rounded-full shadow-2xl focus:outline-none group"
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.95 }}
-          title={playing ? "Click to pause · Double-click for player" : "Click to play · Double-click for player"}
-        >
-          {/* Outer glow ring */}
-          <motion.div
-            className="absolute -inset-1 rounded-full opacity-50"
-            style={{ background: `radial-gradient(circle, ${activePlaylist.color}, transparent 70%)` }}
-            animate={playing ? { scale: [1, 1.3, 1], opacity: [0.4, 0.15, 0.4] } : { scale: 1, opacity: 0.2 }}
-            transition={playing ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
-          />
-
-          {/* Disc body — spins when playing */}
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-white/20 overflow-hidden"
-            style={{
-              background: `conic-gradient(from 0deg, hsl(0 0% 8%), hsl(0 0% 14%), hsl(0 0% 8%), hsl(0 0% 14%), hsl(0 0% 8%))`,
-            }}
-            animate={playing ? { rotate: 360 } : { rotate: 0 }}
-            transition={playing ? { duration: 3, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+      {/* Track title — to the LEFT of the disc */}
+      <AnimatePresence>
+        {playing && trackTitle && !expanded && (
+          <motion.span
+            className="text-foreground/40 font-body truncate select-none"
+            style={{ fontSize: 10, maxWidth: 120, marginRight: 14 }}
+            initial={{ opacity: 0, x: 4 }}
+            animate={{ opacity: 0.6, x: 0 }}
+            exit={{ opacity: 0, x: 4 }}
+            transition={{ duration: 0.4 }}
           >
-            {/* Vinyl grooves */}
-            <div className="absolute inset-2 rounded-full border border-white/5" />
-            <div className="absolute inset-4 rounded-full border border-white/5" />
-            <div className="absolute inset-[22px] rounded-full border border-white/8" />
+            {trackTitle}
+          </motion.span>
+        )}
+      </AnimatePresence>
 
-            {/* Center label */}
+      <button
+        onClick={handleClick}
+        className="group relative flex items-center justify-center rounded-full focus:outline-none"
+        style={{
+          width: DISC_SIZE,
+          height: DISC_SIZE,
+          cursor: "pointer",
+          background: "none",
+          border: "none",
+          padding: 0,
+          transition: "transform 0.3s ease",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.12)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+        title={playing ? "Tap to pause · Double-tap for controls" : "Tap to play · Double-tap for controls"}
+        aria-label="Music player"
+      >
+        {/* Spinning disc container */}
+        <motion.div
+          className="absolute inset-0 rounded-full overflow-hidden"
+          animate={spinControls}
+          style={{
+            boxShadow: playing
+              ? "0 0 4px 1px hsl(0 0% 0% / 0.3), inset 0 0 3px hsl(0 0% 0% / 0.4)"
+              : "0 1px 4px hsl(0 0% 0% / 0.4), inset 0 0 3px hsl(0 0% 0% / 0.3)",
+          }}
+        >
+          {/* Album artwork */}
+          {artworkUrl ? (
+            <img
+              src={artworkUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: "saturate(0.85) contrast(1.05) brightness(0.8)" }}
+              crossOrigin="anonymous"
+            />
+          ) : (
             <div
-              className="absolute inset-[18px] rounded-full flex items-center justify-center"
-              style={{ background: activePlaylist.color }}
-            >
-              <div className="w-2 h-2 rounded-full bg-black/40" />
-            </div>
-          </motion.div>
-
-          {/* Play/Pause overlay on hover */}
-          <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-sm">
-            {playing ? (
-              <Pause className="w-5 h-5 text-white" />
-            ) : (
-              <Play className="w-5 h-5 text-white ml-0.5" />
-            )}
-          </div>
-        </motion.button>
-
-        {/* Mini Player Panel */}
-        <AnimatePresence>
-          {showMini && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-              className="absolute bottom-[72px] right-0 w-72 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: activePlaylist.color }} />
-                  <span className="text-white/80 text-xs font-semibold tracking-wide uppercase">SoundCloud</span>
-                </div>
-                <button
-                  onClick={() => setShowMini(false)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Now playing */}
-              <div className="px-4 pb-3">
-                <p className="text-white/90 text-sm font-medium truncate">
-                  {trackTitle || activePlaylist.name}
-                </p>
-                <p className="text-white/40 text-xs mt-0.5">{activePlaylist.name}</p>
-              </div>
-
-              {/* Transport controls */}
-              <div className="flex items-center justify-center gap-4 px-4 pb-4">
-                <button onClick={skipPrev} className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white/90 hover:bg-white/10 transition-all">
-                  <SkipBack className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={togglePlay}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all"
-                  style={{ background: activePlaylist.color }}
-                >
-                  {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                </button>
-                <button onClick={skipNext} className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white/90 hover:bg-white/10 transition-all">
-                  <SkipForward className="w-4 h-4" />
-                </button>
-                <button onClick={toggleMute} className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white/90 hover:bg-white/10 transition-all">
-                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {/* Playlist chooser */}
-              <div className="border-t border-white/5 px-2 py-2">
-                <p className="text-white/30 text-[10px] font-semibold tracking-widest uppercase px-2 mb-1.5">Playlists</p>
-                {SC_PLAYLISTS.map((pl) => (
-                  <button
-                    key={pl.id}
-                    onClick={() => switchPlaylist(pl)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all ${
-                      activePlaylist.id === pl.id
-                        ? "bg-white/10 text-white"
-                        : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-3 h-3 rounded-full shrink-0" style={{ background: pl.color }} />
-                    <span className="text-xs font-medium truncate">{pl.name}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(circle at 50% 50%, hsl(0 0% 16%) 0%, hsl(0 0% 8%) 100%)`,
+              }}
+            />
           )}
-        </AnimatePresence>
-      </motion.div>
-    </>
+
+          {/* Vinyl overlay — grooves + sheen */}
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width={DISC_SIZE}
+            height={DISC_SIZE}
+            viewBox={`0 0 ${DISC_SIZE} ${DISC_SIZE}`}
+          >
+            <circle cx={half} cy={half} r={half - 0.5} fill="none" stroke="hsl(0 0% 0% / 0.5)" strokeWidth="1" />
+            {Array.from({ length: GROOVE_COUNT }).map((_, i) => {
+              const r = 3.5 + i * 2;
+              return (
+                <circle key={i} cx={half} cy={half} r={r} fill="none" stroke="hsl(0 0% 0% / 0.2)" strokeWidth="0.3" />
+              );
+            })}
+            <circle
+              cx={half} cy={half} r={half - 2} fill="none"
+              stroke="hsl(0 0% 100% / 0.08)" strokeWidth="0.5"
+              strokeDasharray={`${Math.PI * (half - 2) * 0.25} ${Math.PI * (half - 2) * 1.75}`}
+              strokeLinecap="round"
+              style={{ transform: "rotate(-45deg)", transformOrigin: "center" }}
+            />
+          </svg>
+        </motion.div>
+
+        {/* Centre spindle */}
+        <div
+          className="relative rounded-full z-10"
+          style={{
+            width: 5, height: 5,
+            background: "radial-gradient(circle at 40% 35%, hsl(0 0% 85%), hsl(0 0% 40%))",
+            boxShadow: "0 0 2px hsl(0 0% 0% / 0.5), inset 0 0.5px 0 hsl(0 0% 100% / 0.4)",
+          }}
+        />
+
+        {/* Glow ring when playing */}
+        {playing && (
+          <motion.div
+            className="absolute rounded-full pointer-events-none"
+            style={{ inset: -1.5, border: "0.5px solid hsl(0 0% 100% / 0.08)", borderRadius: "50%" }}
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
+      </button>
+
+      {/* Expanded mini-player panel — double-tap */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="absolute rounded-2xl border border-border/30 shadow-2xl overflow-hidden backdrop-blur-sm"
+            style={{
+              bottom: "calc(100% + 12px)",
+              right: 0,
+              width: 320,
+              zIndex: 100,
+              background: "hsl(0 0% 8% / 0.95)",
+            }}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {/* Artwork header */}
+            {artworkUrl && (
+              <div className="relative" style={{ height: 80, overflow: "hidden" }}>
+                <img
+                  src={artworkUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  style={{ filter: "brightness(0.6) saturate(0.8)" }}
+                  crossOrigin="anonymous"
+                />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 0%, hsl(0 0% 8% / 0.95) 100%)" }} />
+                {trackTitle && (
+                  <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 12px 8px" }}>
+                    <span className="text-sm font-medium block truncate" style={{ color: "hsl(0 0% 100% / 0.85)" }}>
+                      {trackTitle}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between" style={{ padding: "8px 12px", borderBottom: "1px solid hsl(0 0% 100% / 0.06)" }}>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(0 0% 100% / 0.4)" }}>
+                SoundCloud
+              </span>
+              <button
+                onClick={() => setExpanded(false)}
+                className="flex items-center justify-center rounded-lg transition-colors"
+                style={{ width: 22, height: 22, color: "hsl(0 0% 100% / 0.4)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(0 0% 100% / 0.8)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(0 0% 100% / 0.4)")}
+              >
+                <X style={{ width: 12, height: 12 }} strokeWidth={1.5} />
+              </button>
+            </div>
+            <iframe
+              src={EMBED_VISUAL}
+              width="320"
+              height="300"
+              allow="autoplay"
+              style={{ border: "none", display: "block" }}
+              title="SoundCloud Controls"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
