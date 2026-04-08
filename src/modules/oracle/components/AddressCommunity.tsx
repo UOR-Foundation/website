@@ -6,8 +6,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Eye, MessageCircle, Send } from "lucide-react";
+import { motion } from "framer-motion";
+import { Eye, MessageCircle, Send, GitFork } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -28,11 +28,20 @@ interface Comment {
   author: CommentAuthor;
 }
 
+interface ChildFork {
+  child_cid: string;
+  fork_note: string | null;
+  created_at: string;
+}
+
 interface SocialData {
   visitCount: number;
   reactions: Record<string, number>;
   totalReactions: number;
   comments: Comment[];
+  forkCount: number;
+  forkedFrom: { parent_cid: string; fork_note: string | null; created_at: string } | null;
+  childForks: ChildFork[];
 }
 
 const REACTIONS = [
@@ -43,7 +52,7 @@ const REACTIONS = [
 ] as const;
 
 /* ── Shared data hook ── */
-function useSocialData(cid: string) {
+export function useSocialData(cid: string) {
   const { user } = useAuth();
   const [data, setData] = useState<SocialData | null>(null);
   const [myReaction, setMyReaction] = useState<string | null>(null);
@@ -72,8 +81,9 @@ function useSocialData(cid: string) {
     }
 
     const channel = supabase
-      .channel(`address-comments-${cid}`)
+      .channel(`address-social-${cid}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "address_comments", filter: `address_cid=eq.${cid}` }, () => load())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "address_forks", filter: `parent_cid=eq.${cid}` }, () => load())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -107,7 +117,7 @@ function useSocialData(cid: string) {
 }
 
 /* ── Stats Bar (for profile header) ── */
-export function AddressSocialStats({ cid }: { cid: string }) {
+export function AddressSocialStats({ cid, onForkClick }: { cid: string; onForkClick?: () => void }) {
   const { data, myReaction, handleReaction } = useSocialData(cid);
   if (!data) return null;
 
@@ -126,6 +136,14 @@ export function AddressSocialStats({ cid }: { cid: string }) {
           <MessageCircle className="w-3.5 h-3.5" />
           {data.comments.length} comment{data.comments.length !== 1 ? "s" : ""}
         </span>
+        <span className="text-muted-foreground/20">·</span>
+        <button
+          onClick={onForkClick}
+          className="flex items-center gap-1.5 hover:text-foreground/70 transition-colors"
+        >
+          <GitFork className="w-3.5 h-3.5" />
+          {data.forkCount} fork{data.forkCount !== 1 ? "s" : ""}
+        </button>
       </div>
 
       {/* Reactions */}
@@ -257,6 +275,63 @@ export function AddressDiscussion({ cid }: { cid: string }) {
           <Send className="w-4 h-4" />
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ── Provenance Section ── */
+export function AddressProvenance({ cid, onNavigate }: { cid: string; onNavigate: (cid: string) => void }) {
+  const { data } = useSocialData(cid);
+  if (!data || (!data.forkedFrom && data.forkCount === 0)) return null;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] flex items-center gap-2">
+        <GitFork className="w-3.5 h-3.5" />
+        Provenance
+      </p>
+
+      {/* Parent link */}
+      {data.forkedFrom && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/15 bg-muted/5">
+          <span className="text-muted-foreground/50 text-sm">Forked from</span>
+          <button
+            onClick={() => onNavigate(data.forkedFrom!.parent_cid)}
+            className="font-mono text-sm text-primary/70 hover:text-primary transition-colors truncate"
+          >
+            {data.forkedFrom.parent_cid.slice(0, 24)}…
+          </button>
+          {data.forkedFrom.fork_note && (
+            <span className="text-xs text-muted-foreground/35 italic truncate">— {data.forkedFrom.fork_note}</span>
+          )}
+        </div>
+      )}
+
+      {/* Child forks */}
+      {data.childForks.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-sm text-muted-foreground/40">{data.forkCount} fork{data.forkCount !== 1 ? "s" : ""}</span>
+          <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+            {data.childForks.map((fork) => (
+              <button
+                key={fork.child_cid}
+                onClick={() => onNavigate(fork.child_cid)}
+                className="flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-lg border border-border/10 hover:border-border/25 bg-muted/3 hover:bg-muted/8 transition-all group"
+              >
+                <GitFork className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
+                <span className="font-mono text-sm text-foreground/55 group-hover:text-foreground/80 truncate transition-colors">
+                  {fork.child_cid.slice(0, 24)}…
+                </span>
+                {fork.fork_note && (
+                  <span className="text-xs text-muted-foreground/30 italic truncate ml-auto">
+                    {fork.fork_note}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
