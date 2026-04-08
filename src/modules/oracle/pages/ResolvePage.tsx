@@ -637,6 +637,55 @@ const SearchPage = () => {
     if (addr) { setInput(addr); handleSearch(addr); }
   }, [searchParams, wasmReady]);
 
+  // Portal redemption: handle ?portal= param
+  useEffect(() => {
+    const portalToken = searchParams.get("portal");
+    if (!portalToken) return;
+
+    (async () => {
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/portal-transfer?token=${encodeURIComponent(portalToken)}`,
+          {
+            headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          }
+        );
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          toast.error(body.error || "Portal link is invalid or expired");
+          navigate("/search", { replace: true });
+          return;
+        }
+
+        const { hashed_token, email, target_url } = await res.json();
+
+        // Use verifyOtp with the hashed token to create a session
+        const { error: otpErr } = await supabase.auth.verifyOtp({
+          type: "magiclink",
+          token_hash: hashed_token,
+          email,
+        } as any);
+
+        if (otpErr) {
+          console.error("Portal OTP error:", otpErr);
+          toast.error("Session transfer failed");
+          navigate("/search", { replace: true });
+          return;
+        }
+
+        toast.success("Portal connected — session transferred!");
+        // Navigate to the target URL
+        navigate(target_url || "/search", { replace: true });
+      } catch (e) {
+        console.error("Portal redemption error:", e);
+        toast.error("Portal link failed");
+        navigate("/search", { replace: true });
+      }
+    })();
+  }, [searchParams]);
+
   // Auto-scroll AI chat
   useEffect(() => {
     if (aiScrollRef.current) {
