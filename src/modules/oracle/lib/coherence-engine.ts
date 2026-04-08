@@ -1,11 +1,8 @@
 /**
  * coherence-engine — The cybernetic core.
  *
- * Combines novelty scoring + attention tracking into actionable
- * adaptive behaviors: lens recommendations, session coherence,
- * and signal-to-noise optimization.
- *
- * All decisions are transparently logged in the user's context journal.
+ * Combines novelty scoring + attention tracking + lens intelligence
+ * into actionable adaptive behaviors.
  */
 
 import { computeNovelty, type NoveltyResult } from "./novelty-scorer";
@@ -16,6 +13,8 @@ import {
   getPreferredLens,
   type AttentionProfile,
 } from "./attention-tracker";
+import { generateLensSuggestion, dismissLensSuggestion } from "./lens-intelligence";
+import type { LensBlueprint } from "./knowledge-lenses";
 import type { SearchHistoryEntry } from "./search-history";
 
 export interface CoherenceState {
@@ -23,10 +22,12 @@ export interface CoherenceState {
   sessionCoherence: number;
   /** Novelty of the current topic */
   novelty: NoveltyResult;
-  /** Suggested lens (null if no strong signal) */
+  /** Suggested lens (null if no strong signal) — legacy string for backward compat */
   suggestedLens: string | null;
   /** Why the lens was suggested */
   suggestedLensReason: string | null;
+  /** Full blueprint suggestion from intelligence engine */
+  suggestedBlueprint: LensBlueprint | null;
   /** Number of consecutive topics in the same domain */
   domainDepth: number;
   /** Current attention profile */
@@ -55,31 +56,35 @@ export function computeCoherence(
 
   const profile = loadProfile();
 
-  // Compute domain depth: how many recent searches are in the same domain
+  // Compute domain depth
   const recentDomains = profile.domainHistory.slice(-10).map((d) => d.domain);
   const domainDepth = recentDomains.filter((d) => d === novelty.domain).length;
 
-  // Session coherence: ratio of same-domain searches in last 10
+  // Session coherence
   const sessionCoherence = recentDomains.length > 0
     ? recentDomains.filter((d) => d === novelty.domain).length / recentDomains.length
     : 0.5;
 
-  // Lens suggestion based on domain preference
-  const preferredLens = getPreferredLens(novelty.domain);
+  // ── Lens Intelligence: generate dynamic suggestion ──
+  const suggestedBlueprint = generateLensSuggestion(novelty.domain);
+
+  // Extract legacy fields from blueprint (or fall back to simple rules)
   let suggestedLens: string | null = null;
   let suggestedLensReason: string | null = null;
 
-  if (preferredLens) {
-    suggestedLens = preferredLens;
-    suggestedLensReason = `You usually prefer this lens for ${novelty.domain} topics`;
-  } else if (domainDepth >= 3) {
-    // Going deep — suggest expert lens
-    suggestedLens = "expert";
-    suggestedLensReason = `You're going deep into ${novelty.domain} — expert view may help`;
-  } else if (novelty.score >= 85) {
-    // Very novel — suggest simple lens for first encounter
-    suggestedLens = "encyclopedia";
-    suggestedLensReason = "New territory — encyclopedia lens gives a solid overview";
+  if (suggestedBlueprint) {
+    suggestedLens = suggestedBlueprint.label;
+    suggestedLensReason = suggestedBlueprint.generatedReason || suggestedBlueprint.description;
+  } else {
+    // Fallback: simple preference-based suggestion
+    const preferredLens = getPreferredLens(novelty.domain);
+    if (preferredLens) {
+      suggestedLens = preferredLens;
+      suggestedLensReason = `You usually prefer this lens for ${novelty.domain} topics`;
+    } else if (novelty.score >= 85) {
+      suggestedLens = "encyclopedia";
+      suggestedLensReason = "New territory — encyclopedia lens gives a solid overview";
+    }
   }
 
   // Log the suggestion transparently
@@ -97,6 +102,7 @@ export function computeCoherence(
     novelty,
     suggestedLens,
     suggestedLensReason,
+    suggestedBlueprint,
     domainDepth,
     profile,
   };
@@ -137,3 +143,6 @@ export function recordScrollDepth(topic: string, depth: number): void {
     description: `Scrolled to ${Math.round(depth * 100)}% of "${topic}"`,
   });
 }
+
+/** Dismiss a dynamic lens suggestion */
+export { dismissLensSuggestion };

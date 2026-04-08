@@ -2,18 +2,23 @@
  * LensSuggestion — Adaptive lens recommendation pill.
  *
  * When the coherence engine detects a lens preference pattern,
- * shows a subtle glowing suggestion the user can accept or dismiss.
+ * shows a subtle glowing suggestion with transparent reasoning.
  */
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Sparkles, X, Settings2 } from "lucide-react";
+import type { LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 
 interface LensSuggestionProps {
   suggestedLens: string;
   reason: string;
   onAccept: () => void;
   onDismiss: () => void;
+  /** Full blueprint for inspector access */
+  blueprint?: LensBlueprint | null;
+  /** Open inspector to review before applying */
+  onInspect?: () => void;
 }
 
 const LensSuggestion: React.FC<LensSuggestionProps> = ({
@@ -21,6 +26,8 @@ const LensSuggestion: React.FC<LensSuggestionProps> = ({
   reason,
   onAccept,
   onDismiss,
+  blueprint,
+  onInspect,
 }) => {
   return (
     <motion.div
@@ -58,6 +65,23 @@ const LensSuggestion: React.FC<LensSuggestionProps> = ({
         </button>{" "}
         <span className="text-muted-foreground/40">— {reason}</span>
       </span>
+      {/* Inspect button — review before applying */}
+      {onInspect && blueprint && (
+        <button
+          onClick={onInspect}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 2,
+            display: "flex",
+          }}
+          className="text-muted-foreground/30 hover:text-primary/60 transition-colors"
+          title="Inspect this lens"
+        >
+          <Settings2 size={11} />
+        </button>
+      )}
       <button
         onClick={onDismiss}
         style={{

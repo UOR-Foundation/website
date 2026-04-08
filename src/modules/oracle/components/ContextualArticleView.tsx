@@ -1,12 +1,12 @@
 /**
- * ContextualArticleView — Wraps WikiArticleView with context-aware personalization
- * and a lens switcher for changing rendering perspectives.
+ * ContextualArticleView — Wraps WikiArticleView with context-aware personalization,
+ * adaptive lens intelligence, and transparent lens inspector.
  */
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText, User, Plus, Settings2 } from "lucide-react";
 import type { MediaData } from "@/modules/oracle/lib/stream-knowledge";
 import WikiArticleView from "./WikiArticleView";
 import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
@@ -14,14 +14,23 @@ import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
 import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import ProvenanceBanner from "./ProvenanceBanner";
-import { KNOWLEDGE_LENSES, type KnowledgeLens } from "@/modules/oracle/lib/knowledge-lenses";
+import LensInspector from "./LensInspector";
+import {
+  PRESET_BLUEPRINTS,
+  loadCustomLenses,
+  getBlueprint,
+  type LensBlueprint,
+  type KnowledgeLens,
+} from "@/modules/oracle/lib/knowledge-lenses";
 
-const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> = {
+const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   BookOpen,
   Newspaper,
   Baby,
   GraduationCap,
   BookText,
+  Sparkles,
+  User,
 };
 
 const LENS_RENDERERS: Record<string, React.FC<{
@@ -49,18 +58,18 @@ interface ContextualArticleViewProps {
   contextKeywords?: string[];
   activeLens?: string;
   onLensChange?: (lensId: string) => void;
-  /** When true, suppress lens switcher and context banner (toolbar provides these) */
   isReaderMode?: boolean;
-  /** Provenance metadata from the edge function */
   provenance?: {
     model?: string;
     personalized?: boolean;
     personalizedTopics?: string[];
   };
-  /** Multimedia data from Wikimedia Commons */
   media?: MediaData;
-  /** Whether we're in immersive full-screen mode */
   immersive?: boolean;
+  /** AI-suggested lens from coherence engine */
+  suggestedBlueprint?: LensBlueprint | null;
+  /** Callback when user applies a full blueprint (triggers re-stream with params) */
+  onBlueprintApply?: (bp: LensBlueprint) => void;
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -76,42 +85,112 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   provenance,
   media,
   immersive = false,
+  suggestedBlueprint,
+  onBlueprintApply,
 }) => {
   const navigate = useNavigate();
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [inspectedBlueprint, setInspectedBlueprint] = useState<LensBlueprint | null>(null);
 
   const relevantContext = contextKeywords.filter(
     (k) => k.toLowerCase() !== title.toLowerCase()
   ).slice(0, 5);
+
+  // Combine preset + custom + suggested lenses
+  const allLenses = useMemo(() => {
+    const custom = loadCustomLenses();
+    const lenses: Array<LensBlueprint & { _type: "preset" | "custom" | "suggested" }> = [
+      ...PRESET_BLUEPRINTS.map(l => ({ ...l, _type: "preset" as const })),
+      ...custom.map(l => ({ ...l, _type: "custom" as const })),
+    ];
+    // Add suggested if not already present
+    if (suggestedBlueprint && !lenses.some(l => l.id === suggestedBlueprint.id)) {
+      lenses.push({ ...suggestedBlueprint, _type: "suggested" as const });
+    }
+    return lenses;
+  }, [suggestedBlueprint]);
+
+  const openInspector = (bp: LensBlueprint) => {
+    setInspectedBlueprint(bp);
+    setInspectorOpen(true);
+  };
+
+  const handleBlueprintApply = (bp: LensBlueprint) => {
+    if (onBlueprintApply) {
+      onBlueprintApply(bp);
+    } else if (onLensChange) {
+      // Fallback: just switch to the base lens ID
+      const baseId = PRESET_BLUEPRINTS.find(p => p.id === bp.id)?.id;
+      onLensChange(baseId || bp.id);
+    }
+  };
 
   return (
     <div>
       {/* ── Lens Switcher (hidden in reader mode — toolbar provides it) ── */}
       {onLensChange && !isReaderMode && (
         <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-          {KNOWLEDGE_LENSES.map((lens) => {
-            const Icon = ICON_MAP[lens.icon];
+          {allLenses.map((lens) => {
+            const Icon = ICON_MAP[lens.icon] || BookOpen;
             const isActive = lens.id === activeLens;
+            const isSuggested = lens._type === "suggested";
+            const isCustom = lens._type === "custom";
             return (
-              <button
+              <motion.button
                 key={lens.id}
-                onClick={() => !isActive && onLensChange(lens.id)}
+                layout
+                initial={isSuggested ? { opacity: 0, scale: 0.9 } : false}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => {
+                  if (!isActive) onLensChange(lens.id);
+                }}
+                onDoubleClick={() => openInspector(lens)}
                 disabled={synthesizing && isActive}
-                title={lens.description}
+                title={`${lens.description}${isSuggested ? " ✦ AI suggested" : ""}${isCustom ? " — custom" : ""}\nDouble-click to inspect`}
                 className={`
                   inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
-                  transition-all duration-200 border
+                  transition-all duration-200 border relative
                   ${isActive
                     ? "bg-primary/15 text-primary border-primary/25 shadow-sm"
-                    : "bg-muted/5 text-muted-foreground/50 border-border/10 hover:bg-muted/15 hover:text-foreground/70 hover:border-border/20"
+                    : isSuggested
+                      ? "bg-primary/[0.06] text-primary/70 border-primary/15 hover:bg-primary/15 hover:text-primary"
+                      : "bg-muted/5 text-muted-foreground/50 border-border/10 hover:bg-muted/15 hover:text-foreground/70 hover:border-border/20"
                   }
                   ${synthesizing && !isActive ? "opacity-40 cursor-wait" : "cursor-pointer"}
                 `}
               >
+                {isSuggested && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
+                )}
                 <Icon className="w-3 h-3" />
                 <span>{lens.label}</span>
-              </button>
+                {isSuggested && <span className="text-[9px] opacity-50">✦</span>}
+              </motion.button>
             );
           })}
+          {/* Inspect active lens button */}
+          <button
+            onClick={() => {
+              const bp = allLenses.find(l => l.id === activeLens) || getBlueprint(activeLens);
+              openInspector(bp);
+            }}
+            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-[10px] text-muted-foreground/30 hover:text-primary/60 border border-dashed border-border/15 hover:border-primary/25 transition-all"
+            title="Inspect & customize active lens"
+          >
+            <Settings2 className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Lens Inspector Panel ── */}
+      {inspectedBlueprint && (
+        <div className="mb-4">
+          <LensInspector
+            blueprint={inspectedBlueprint}
+            open={inspectorOpen}
+            onClose={() => setInspectorOpen(false)}
+            onApply={handleBlueprintApply}
+          />
         </div>
       )}
 
@@ -159,7 +238,11 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
 
       {/* ── Article — routed through active lens renderer ── */}
       {(() => {
-        const LensRenderer = LENS_RENDERERS[activeLens] ?? WikiArticleView;
+        // For custom/dynamic lenses, find closest preset renderer
+        const rendererKey = LENS_RENDERERS[activeLens]
+          ? activeLens
+          : "encyclopedia"; // fallback
+        const LensRenderer = LENS_RENDERERS[rendererKey];
         return (
           <LensRenderer
             title={title}
