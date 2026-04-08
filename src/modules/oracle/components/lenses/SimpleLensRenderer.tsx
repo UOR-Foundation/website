@@ -38,28 +38,28 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       const emoji = SECTION_EMOJIS[sectionCounter.current % SECTION_EMOJIS.length];
       sectionCounter.current++;
       return (
-        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "1.55rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2.2rem", marginBottom: "0.8rem", lineHeight: 1.3, display: "flex", alignItems: "center", gap: 10 }} {...props}>
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "3rem", marginBottom: "0.8rem", lineHeight: 1.2, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: 10 }} {...props}>
           <span style={{ fontSize: "1.3em" }}>{emoji}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/85" style={{ fontSize: "1.2rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.5rem", marginBottom: "0.5rem" }} {...props}>{children}</h3>
+      <h3 className="text-foreground/85" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.5rem", marginBottom: "0.5rem", letterSpacing: "-0.02em", lineHeight: 1.2 }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
       const text = typeof children === "string" ? children : "";
       const isWow = text.startsWith("!") || /did you know/i.test(text) || /fun fact/i.test(text) || /imagine/i.test(text);
       if (isWow) {
         return (
-          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: 740 }}>
             <span style={{ marginRight: 8, fontSize: "1.2em" }}>✨</span>
             <span className="text-foreground/85">{text.replace(/^!\s*/, "")}</span>
           </div>
         );
       }
       return (
-        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em" }} {...props}>{children}</p>
+        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em", maxWidth: 740 }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
@@ -72,7 +72,7 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '" }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '", maxWidth: 740 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 6 }} {...props}>{children}</li>
@@ -105,8 +105,8 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
   }
 
   return (
-    <article style={{ maxWidth: 700, margin: "0 auto" }}>
-      <h1 className="text-foreground" style={{ fontSize: "2.2rem", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, marginBottom: 8 }}>
+    <article style={{ margin: "0 auto" }}>
+      <h1 className="text-foreground" style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 8 }}>
         {title}
       </h1>
 

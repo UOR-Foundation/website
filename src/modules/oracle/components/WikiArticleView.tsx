@@ -90,7 +90,7 @@ const Infobox: React.FC<{
       className="bg-muted/20 border border-border/20"
       style={{
         float: "right",
-        width: window.innerWidth < 768 ? "100%" : 280,
+        width: window.innerWidth < 768 ? "100%" : "min(320px, 38.2%)",
         marginLeft: window.innerWidth < 768 ? 0 : 24,
         marginBottom: 16,
         borderRadius: 8,
@@ -393,13 +393,14 @@ function createMarkdownComponents(immersive = false) {
           id={id}
           className="text-foreground"
           style={{
-            fontSize: immersive ? "1.5rem" : "1.35rem",
+            fontSize: "clamp(1.4rem, 3vw, 2rem)",
             fontWeight: 600,
             fontFamily: "Georgia, 'Times New Roman', serif",
             paddingBottom: 4,
-            marginTop: "1.8rem",
+            marginTop: "3rem",
             marginBottom: "0.6rem",
-            lineHeight: 1.3,
+            lineHeight: 1.2,
+            letterSpacing: "-0.02em",
             borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
           }}
           {...props}
@@ -416,6 +417,7 @@ function createMarkdownComponents(immersive = false) {
           lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
           marginBottom: "0.7em",
+          maxWidth: 720,
         }}
         {...props}
       >
@@ -435,6 +437,7 @@ function createMarkdownComponents(immersive = false) {
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: bodySize,
           lineHeight: bodyLineHeight,
+          maxWidth: 720,
         }}
         className="text-foreground/85"
         {...props}
@@ -481,10 +484,11 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         <h1
           className="text-foreground"
           style={{
-            fontSize: "2.2rem",
+            fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
             fontWeight: 400,
             fontFamily: "Georgia, 'Times New Roman', serif",
             lineHeight: 1.2,
+            letterSpacing: "-0.02em",
             margin: 0,
             paddingBottom: 6,
             borderBottom: "1px solid rgba(255,255,255,0.12)",
@@ -498,7 +502,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         <SourcesPills sources={sourceMetas} />
 
         {/* ── Two-column grid ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 32, marginTop: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "calc(1rem * 1.618)", marginTop: 8 }}>
           {/* Main content column */}
           <div style={{ minWidth: 0 }}>
             <TableOfContents entries={toc} defaultCollapsed={false} />
@@ -547,10 +551,11 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       <h1
         className="text-foreground"
         style={{
-          fontSize: immersive ? "2.2rem" : "1.85rem",
+          fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
           fontWeight: 400,
           fontFamily: "Georgia, 'Times New Roman', serif",
           lineHeight: 1.2,
+          letterSpacing: "-0.02em",
           margin: 0,
           paddingBottom: 4,
           borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",

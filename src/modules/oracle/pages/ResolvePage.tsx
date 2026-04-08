@@ -2110,20 +2110,20 @@ const SearchPage = () => {
                           maxWidth: "100vw",
                           paddingTop: 12,
                           paddingBottom: 80,
-                          paddingLeft: 20,
-                          paddingRight: 20,
+                          paddingLeft: 16,
+                          paddingRight: 16,
                         } : immersiveMode ? {
-                          maxWidth: "min(1200px, 92vw)",
+                          maxWidth: "min(1400px, 95vw)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
                           paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
-                          paddingLeft: "clamp(2rem, 5vw, 5rem)",
-                          paddingRight: "clamp(2rem, 5vw, 5rem)",
+                          paddingLeft: "clamp(1.5rem, 3vw, 3rem)",
+                          paddingRight: "clamp(1.5rem, 3vw, 3rem)",
                         } : {
-                          maxWidth: "clamp(640px, 65vw, 860px)",
+                          maxWidth: "clamp(720px, 85vw, 1100px)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
                           paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
-                          paddingLeft: "clamp(1.5rem, 4vw, 4rem)",
-                          paddingRight: "clamp(1.5rem, 4vw, 4rem)",
+                          paddingLeft: "clamp(1rem, 3vw, 2.5rem)",
+                          paddingRight: "clamp(1rem, 3vw, 2.5rem)",
                         }}
                       >
                         <div className={immersiveMode ? `[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50 ${mobileImmersive ? "[&_p]:!text-[17px] [&_p]:!leading-[1.85] [&_li]:!text-[17px]" : ""}` : ""}>

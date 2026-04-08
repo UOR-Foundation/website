@@ -28,16 +28,16 @@ function splitIntoSections(md: string): string[] {
 function createStoryComponents() {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h2 className="text-foreground/70" style={{ fontSize: "1.4rem", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: "3rem", marginBottom: "1rem", lineHeight: 1.3 }} {...props}>{children}</h2>
+      <h2 className="text-foreground/70" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: "3rem", marginBottom: "1rem", lineHeight: 1.2, letterSpacing: "-0.02em" }} {...props}>{children}</h2>
     ),
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/65" style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const }} {...props}>{children}</h3>
+      <h3 className="text-foreground/65" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", lineHeight: 1.2, textTransform: "uppercase" as const }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em" }} {...props}>{children}</p>
+      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em", maxWidth: 680 }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)" }} {...props}>{children}</blockquote>
+      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)", maxWidth: 900 }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
@@ -46,7 +46,7 @@ function createStoryComponents() {
       <em style={{ fontStyle: "italic" }} {...props}>{children}</em>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9 }} {...props}>{children}</ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9, maxWidth: 680 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 8 }} {...props}>{children}</li>
@@ -88,14 +88,14 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
   }
 
   return (
-    <article style={{ maxWidth: 640, margin: "0 auto" }}>
+    <article style={{ margin: "0 auto" }}>
       {/* Cinematic hero image */}
       {heroImage && !synthesizing && (
-        <InlineFigure image={heroImage} variant="full-width" className="mb-10 -mx-6 sm:mx-0 rounded-none sm:rounded-lg" />
+        <InlineFigure image={heroImage} variant="full-width" className="mb-10 -mx-6 sm:-mx-4 md:mx-0 rounded-none sm:rounded-lg" />
       )}
 
       {/* Large serif display title */}
-      <h1 className="text-foreground" style={{ fontSize: "2.5rem", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.15, marginBottom: 14, letterSpacing: "-0.01em" }}>
+      <h1 className="text-foreground" style={{ fontSize: "clamp(2.4rem, 6vw, 3.6rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}>
         {title}
       </h1>
 
