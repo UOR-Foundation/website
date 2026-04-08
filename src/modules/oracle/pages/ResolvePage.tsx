@@ -259,8 +259,9 @@ const SearchPage = () => {
   // Count assistant messages with proofs
   const proofCount = aiMessages.filter(m => m.role === "assistant" && m.proof).length;
 
-  const encodeChain = async () => {
-    if (selectedProofIndices.size === 0) return;
+  const encodeChain = async (overrideIndices?: Set<number>) => {
+    const indices = overrideIndices ?? selectedProofIndices;
+    if (indices.size === 0) return;
     setChainEncoding(true);
     try {
       // Get all assistant messages with proofs, map by their position among proof-bearing messages
@@ -268,7 +269,7 @@ const SearchPage = () => {
         .map((m, i) => ({ msg: m, originalIdx: i }))
         .filter(({ msg }) => msg.role === "assistant" && msg.proof);
 
-      const selected = [...selectedProofIndices].sort().map(i => proofMessages[i]);
+      const selected = [...indices].sort().map(i => proofMessages[i]);
       if (selected.length === 0) return;
 
       // Find the user query preceding each assistant message
@@ -749,6 +750,21 @@ const SearchPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {proofCount >= 2 && (
+                    <button
+                      onClick={() => {
+                        const all = new Set<number>();
+                        for (let i = 0; i < proofCount; i++) all.add(i);
+                        setSelectedProofIndices(all);
+                        setTimeout(() => encodeChain(all), 50);
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20 transition-all"
+                      title="Encode entire conversation as a single chain address"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      Chain All
+                    </button>
+                  )}
                   <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
                     <X className="w-4 h-4" />
                   </button>
@@ -932,7 +948,7 @@ const SearchPage = () => {
                         </button>
                       )}
                       <button
-                        onClick={encodeChain}
+                        onClick={() => encodeChain()}
                         disabled={chainEncoding}
                         className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
                       >
