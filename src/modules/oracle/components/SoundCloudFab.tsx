@@ -265,7 +265,7 @@ export default function SoundCloudFab() {
               <iframe
                 ref={iframeRef}
                 width="100%"
-                height="166"
+                height="180"
                 scrolling="no"
                 frameBorder="no"
                 allow="autoplay"
