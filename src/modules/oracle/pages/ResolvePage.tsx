@@ -160,13 +160,14 @@ const SearchPage = () => {
     handleSearch(triword);
   };
 
-  useEffect(() => { loadWasm().then(() => { setWasmReady(true); encode(NEAR_INFINITE_CONCEPT).catch(() => {}); }); }, []);
+  useEffect(() => { loadWasm().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); encode(NEAR_INFINITE_CONCEPT).catch(() => {}); }); }, []);
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
   useEffect(() => {
+    if (!wasmReady) return;
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
     if (addr) { setInput(addr); handleSearch(addr); }
-  }, [searchParams]);
+  }, [searchParams, wasmReady]);
 
   // Auto-scroll AI chat
   useEffect(() => {
