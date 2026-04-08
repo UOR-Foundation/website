@@ -135,19 +135,16 @@ export default function UnifiedFloatingInput({ onRefine, streaming = false, onCa
           />
         </div>
 
-        {/* Subtle hint text */}
-        <AnimatePresence>
-          {focused && !value && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              className="text-center text-[11px] text-white/15 mt-2 tracking-wide"
-            >
-              Type or speak to reshape this page in real time
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {/* Hint text — always occupies space to prevent layout shift */}
+        <div className="h-6 flex items-start justify-center">
+          <p
+            className={`text-[11px] tracking-wide mt-2 transition-opacity duration-200 ${
+              focused && !value ? "text-white/15 opacity-100" : "opacity-0"
+            }`}
+          >
+            Type or speak to reshape this page in real time
+          </p>
+        </div>
       </motion.div>
     </div>
   );
