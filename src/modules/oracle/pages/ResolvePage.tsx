@@ -688,9 +688,27 @@ const SearchPage = () => {
       context: recentContext,
       lens: lensOverride || activeLens,
       onWiki: (streamWiki, sources) => {
-        // Update wiki metadata if the stream provides it (and we didn't get it already)
-        if (streamWiki && !wiki) {
+        // Update wiki metadata when it arrives from the SSE stream
+        if (streamWiki) {
           wiki = streamWiki;
+          // Update the card with wiki data immediately
+          setResult(prev => {
+            if (!prev) return prev;
+            const src = prev.source as Record<string, unknown>;
+            return {
+              ...prev,
+              source: {
+                ...src,
+                "uor:description": streamWiki.description || src["uor:description"],
+                "uor:wikidata": {
+                  qid: streamWiki.qid,
+                  thumbnail: streamWiki.thumbnail,
+                  description: streamWiki.description,
+                },
+                "uor:sources": sources,
+              },
+            };
+          });
         }
         if (sources.length > 0) streamSources = sources;
       },
