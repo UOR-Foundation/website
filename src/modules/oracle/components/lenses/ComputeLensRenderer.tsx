@@ -6,7 +6,7 @@
  * comparisons, formulas, plots — mapping directly to UOR hologram projections.
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, ChevronDown, ChevronRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { queryWolfram, isComputableQuery, type WolframPod, type WolframResult } from "@/modules/oracle/lib/wolfram-client";
@@ -123,19 +123,14 @@ export default function ComputeLensRenderer({
 }: LensRendererProps) {
   const [result, setResult] = useState<WolframResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [queried, setQueried] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   // Auto-query Wolfram when the lens mounts
   useEffect(() => {
-    if (!title || queried) return;
+    if (!title) return;
 
-    abortRef.current?.abort();
     const ac = new AbortController();
-    abortRef.current = ac;
 
     setLoading(true);
-    setQueried(true);
 
     queryWolfram(title, ac.signal).then((res) => {
       if (!ac.signal.aborted) {
@@ -145,7 +140,8 @@ export default function ComputeLensRenderer({
     });
 
     return () => ac.abort();
-  }, [title, queried]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
 
   const isComputable = isComputableQuery(title);
 
@@ -236,9 +232,7 @@ export default function ComputeLensRenderer({
               lineHeight: 1.8,
               fontSize: 15,
             }}
-            dangerouslySetInnerHTML={{ __html: "" }}
           >
-            {/* Rendered via CitedMarkdown in a real integration — simplified here */}
             <p style={{ whiteSpace: "pre-wrap" }}>{contentMarkdown.slice(0, 2000)}</p>
           </div>
         </div>
