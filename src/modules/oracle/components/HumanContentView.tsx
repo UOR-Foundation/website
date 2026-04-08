@@ -10,7 +10,8 @@
  * - Progressive disclosure for nested objects
  */
 
-import React from "react";
+import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
@@ -219,6 +220,49 @@ function EntryRenderer({ entryKey, value }: { entryKey: string; value: unknown }
   const label = humanLabel(entryKey);
   if (!label) return null;
 
+  // Source URL — clickable link
+  if (entryKey === "uor:sourceUrl" && typeof value === "string") {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+        <SectionLabel inline>{label}</SectionLabel>
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: 15, textDecoration: "underline", textUnderlineOffset: 3 }}
+          className="text-primary/70 hover:text-primary transition-colors"
+        >
+          {value}
+        </a>
+      </div>
+    );
+  }
+
+  // Markdown content (WebPage body)
+  if (entryKey === "uor:content" && typeof value === "string" && value.length > 200) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <SectionLabel>{label}</SectionLabel>
+        <div
+          style={{
+            borderLeft: "2px solid hsl(var(--primary) / 0.3)",
+            paddingLeft: 20,
+            maxHeight: 400,
+            overflowY: "auto",
+          }}
+          className="prose prose-sm dark:prose-invert max-w-none text-foreground/80"
+        >
+          <ReactMarkdown>{value}</ReactMarkdown>
+        </div>
+      </div>
+    );
+  }
+
+  // Existing semantics — collapsible section
+  if (entryKey === "uor:existingSemantics" && typeof value === "object" && value !== null) {
+    return <CollapsibleSemantics label={label} data={value as Record<string, unknown>} />;
+  }
+
   // Long text (definition, response, or any string > 100 chars)
   if (
     typeof value === "string" &&
@@ -285,7 +329,7 @@ function EntryRenderer({ entryKey, value }: { entryKey: string; value: unknown }
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <SectionLabel>{label}</SectionLabel>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-          {value.map((item, i) => (
+          {value.slice(0, 20).map((item, i) => (
             <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, paddingLeft: 4 }}>
               <span
                 style={{ width: 6, height: 6, borderRadius: "50%", marginTop: 8, flexShrink: 0 }}
@@ -300,6 +344,11 @@ function EntryRenderer({ entryKey, value }: { entryKey: string; value: unknown }
               )}
             </li>
           ))}
+          {value.length > 20 && (
+            <li className="text-muted-foreground/40 text-xs pl-4">
+              … and {value.length - 20} more
+            </li>
+          )}
         </ul>
       </div>
     );
@@ -316,6 +365,51 @@ function EntryRenderer({ entryKey, value }: { entryKey: string; value: unknown }
   }
 
   return null;
+}
+
+/* ── Collapsible Semantics section ───────────────────────────────────── */
+
+function CollapsibleSemantics({ label, data }: { label: string; data: Record<string, unknown> }) {
+  const [open, setOpen] = useState(false);
+  const hasData = (data as { hasStructuredData?: boolean }).hasStructuredData;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        <SectionLabel>{label}</SectionLabel>
+        {hasData && (
+          <span
+            style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4 }}
+            className="bg-emerald-500/10 text-emerald-400"
+          >
+            found
+          </span>
+        )}
+        <span
+          style={{
+            fontSize: 10,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s",
+          }}
+          className="text-muted-foreground/30"
+        >
+          ▼
+        </span>
+      </button>
+      {open && <NestedCard data={data} />}
+    </div>
+  );
 }
 
 /* ── Nested object card ──────────────────────────────────────────────── */
