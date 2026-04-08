@@ -1,46 +1,34 @@
 
 
-# UOR Search — Google-Fidelity Polish
+# "Surprise Me" — Random Address with Confetti
 
-## Current vs Target
+## What happens
 
-The current page has the right structure but lacks Google's signature details:
-- Search bar is missing the **left "+" icon** and **right-side action icons**
-- No equivalent of Google's **"AI Mode" pill** inside the search bar
-- Search bar border is invisible — Google uses a subtle `1px` border with `#5f6368` on hover
-- Buttons feel muted — need higher contrast text
+When the user clicks **"Surprise Me"**, the app picks a random entry from the global receipt registry (all content-addressed objects), triggers a playful confetti burst, and navigates to show that entry's result — complete with a fun transition animation.
 
 ## Changes — Single file: `src/modules/oracle/pages/ResolvePage.tsx`
 
-### Search bar interior elements (matching Google exactly)
+### 1. Add confetti library
+Install `canvas-confetti` (lightweight, ~6KB). Import it in the page.
 
-**Left side**: `+` icon (Plus from lucide) at `text-muted-foreground/50`, same position as Google's
+### 2. "Surprise Me" button logic
+- Import `allEntries` from `@/modules/oracle/lib/receipt-registry`
+- On click: grab all entries, pick one at random
+- Fire a confetti burst (gold/purple/blue particles, spread from center)
+- Brief delay (~400ms) for the confetti to land, then display the result
+- Show a playful toast like "✨ You landed on..." or a fun random phrase from a small pool of delightful messages (e.g. "Look what the universe found!", "This one's special.", "Your cosmic address awaits…")
 
-**Right side** (inside the bar, before the edge):
-1. A vertical separator line
-2. A **"Content Mode"** pill — equivalent to Google's "AI Mode". Rounded pill with a subtle border, a small sparkle/atom icon + "Content Mode" text. This toggles between address-lookup and content-encode mode, replacing the auto-detect behavior with an explicit toggle (more intuitive)
+### 3. Transition animation
+- The result fades in with a gentle scale-up + slight bounce (spring physics via framer-motion)
+- The wordmark ("UOR") shrinks up and away before the result appears — a satisfying "whoosh" feeling
 
-### Search bar styling
-- Add `border border-[#303134]` default, `hover:border-[#5f6368]` on hover (Google's exact behavior)
-- Increase height slightly: `py-[14px]` (Google uses ~46px total height)
-- Make the bar wider: `max-w-[582px]` (Google's exact width)
+### 4. Edge case
+- If registry is empty (no entries yet), show a friendly toast: "Nothing mapped yet — search something first!"
 
-### Button refinements
-- Text color to full `text-foreground` (not `/90`)
-- Font size `text-[14px]` matching Google's button text
-- Rounded corners `rounded-[4px]` (Google uses very slight rounding)
-- Add `h-9` for consistent button height
-
-### Wordmark
-- Reduce letter-spacing from `0.12em` to `0.05em` — Google's logo has tighter tracking
-- Keep the `clamp(4rem, 8vw, 7rem)` size — it's correct
-
-### Remove
-- The `Search` icon on the left of the input (Google doesn't have a magnifying glass in the main input on dark mode — it has `+`)
-
-## Files Changed
+## Files changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Add interior bar icons (+, Content Mode pill), refine bar border/sizing, polish buttons and wordmark tracking |
+| `package.json` | Add `canvas-confetti` dependency |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Import confetti + `allEntries`, wire "Surprise Me" to random pick with confetti + playful toast + spring transition |
 
