@@ -241,24 +241,26 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
       )}
 
       {/* ── Article — routed through active lens renderer ── */}
-      {(() => {
-        // For custom/dynamic lenses, find closest preset renderer
-        const rendererKey = LENS_RENDERERS[activeLens]
-          ? activeLens
-          : "encyclopedia"; // fallback
-        const LensRenderer = LENS_RENDERERS[rendererKey];
-        return (
-          <LensRenderer
-            title={title}
-            contentMarkdown={contentMarkdown}
-            wikidata={wikidata}
-            sources={sources}
-            synthesizing={synthesizing}
-            media={media}
-            immersive={immersive}
-          />
-        );
-      })()}
+      <AdaptiveContentContainer>
+        {(() => {
+          // For custom/dynamic lenses, find closest preset renderer
+          const rendererKey = LENS_RENDERERS[activeLens]
+            ? activeLens
+            : "encyclopedia"; // fallback
+          const LensRenderer = LENS_RENDERERS[rendererKey];
+          return (
+            <LensRenderer
+              title={title}
+              contentMarkdown={contentMarkdown}
+              wikidata={wikidata}
+              sources={sources}
+              synthesizing={synthesizing}
+              media={media}
+              immersive={immersive}
+            />
+          );
+        })()}
+      </AdaptiveContentContainer>
     </div>
   );
 };
