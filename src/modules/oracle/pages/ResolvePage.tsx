@@ -9,7 +9,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2 } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -59,13 +59,13 @@ interface Result {
 }
 
 /* ── Tiny copy button ── */
-function CopyBtn({ onClick, copied, size = 12, label }: {
+function CopyBtn({ onClick, copied, size = 14, label }: {
   onClick: () => void; copied: boolean; size?: number; label?: string;
 }) {
   return (
-    <button onClick={onClick} className="inline-flex items-center gap-1 text-muted-foreground/25 hover:text-muted-foreground/60 transition-colors" title="Copy">
+    <button onClick={onClick} className="inline-flex items-center gap-1.5 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors" title="Copy">
       {copied ? <Check size={size} className="text-emerald-400" /> : <Copy size={size} />}
-      {label && <span className="text-[10px]">{label}</span>}
+      {label && <span className="text-sm">{label}</span>}
     </button>
   );
 }
