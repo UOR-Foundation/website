@@ -18,6 +18,7 @@ import { EncyclopediaMedia } from "./MediaGallery";
 import { normalizeSource } from "../lib/citation-parser";
 import type { SourceMeta } from "../lib/citation-parser";
 import type { MediaData } from "../lib/stream-knowledge";
+import { useContainerWidth } from "./AdaptiveContentContainer";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
