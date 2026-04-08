@@ -74,6 +74,12 @@ export const PRESET_BLUEPRINTS: LensBlueprint[] = [
     recommendedSources: [
       { domain: "wikipedia.org", reason: "Gold-standard encyclopedic source", qualityScore: 98, enabled: true },
       { domain: "britannica.com", reason: "Authoritative reference", qualityScore: 95, enabled: true },
+      { domain: "plato.stanford.edu", reason: "Peer-reviewed philosophy encyclopedia", qualityScore: 96, enabled: true },
+      { domain: "scholar.google.com", reason: "Broad academic search across disciplines", qualityScore: 93, enabled: true },
+      { domain: "pubmed.ncbi.nlm.nih.gov", reason: "US National Library of Medicine — biomedical research", qualityScore: 96, enabled: true },
+      { domain: "loc.gov", reason: "Library of Congress — primary sources and reference", qualityScore: 94, enabled: true },
+      { domain: "jstor.org", reason: "Digital library of academic journals and books", qualityScore: 92, enabled: true },
+      { domain: "worldcat.org", reason: "World's largest library catalog (OCLC)", qualityScore: 90, enabled: true },
     ],
   },
   {
