@@ -66,6 +66,8 @@ export async function streamKnowledge({
     sources: Array<string | { url: string; title?: string; type?: string }>,
     provenance?: ProvenanceMeta
   ) => void;
+  /** Called when multimedia data arrives (images, videos, audio from Wikimedia Commons) */
+  onMedia?: (media: MediaData) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
