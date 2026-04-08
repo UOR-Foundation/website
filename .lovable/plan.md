@@ -1,76 +1,47 @@
 
 
-## Native Messenger — WhatsApp Desktop Clone
+## Model Upgrade & Provenance Clarity
 
-### Summary
-Create a full-screen messenger experience at `/messenger` that precisely emulates WhatsApp Desktop's three-panel layout: sidebar (chat list), conversation view, and optional contact/call panel. Pure UI/UX first — no backend wiring yet.
+### Current State
 
-### Layout (matches WhatsApp Desktop exactly)
+The primary content-rendering pipeline (`uor-knowledge`) already uses `google/gemini-3-flash-preview` — the fastest next-gen model available. However, the provenance banner displays **"Gemini 3 Flash Preview"** via naive string formatting, and secondary functions still use older models. The user's screenshot shows this attribution text prominently, and it should feel polished rather than exposing raw model identifiers.
 
-```text
-┌──────┬──────────────────────┬──────────────────────┐
-│ Nav  │   Chat List (30%)    │  Conversation (70%)  │
-│ Rail │   ─────────────────  │  ─────────────────── │
-│      │  Search bar          │  Contact header bar  │
-│ 💬   │  Chat item           │  Message bubbles     │
-│ 📞   │  Chat item (active)  │  (green = sent,      │
-│ 🔄   │  Chat item           │   white = received)  │
-│ ⚙️   │  ...                 │  ─────────────────── │
-│      │                      │  Input bar + attach  │
-└──────┴──────────────────────┴──────────────────────┘
-```
+### Changes
 
-### Architecture
+#### 1. Upgrade All Edge Functions to Best Available Models
 
-**New module**: `src/modules/messenger/`
+| Edge Function | Current Model | Upgrade To |
+|---|---|---|
+| `uor-knowledge` | `gemini-3-flash-preview` | ✅ Already optimal |
+| `uor-oracle` | `gemini-3-flash-preview` | ✅ Already optimal |
+| `quantum-inference-stream` (70B) | `gemini-3-flash-preview` | Upgrade to `google/gemini-3.1-pro-preview` for the "70B" tier — latest and most powerful reasoning model |
+| `quantum-inference-stream` (8B) | `gemini-2.5-flash` | Upgrade to `google/gemini-3-flash-preview` |
+| `quantum-inference-stream` (default) | `gemini-2.5-flash-lite` | Upgrade to `google/gemini-2.5-flash` |
+| `hologram-code-ai` (completion) | `gemini-2.5-flash-lite` | Upgrade to `google/gemini-2.5-flash` |
+| `confidential-inference` | `gemini-3-flash-preview` | ✅ Already optimal |
 
-| File | Purpose |
-|------|---------|
-| `pages/MessengerPage.tsx` | Full-screen shell, no Navbar/Footer |
-| `components/ChatSidebar.tsx` | Left panel: nav rail + chat list with search |
-| `components/ChatList.tsx` | Scrollable contact list with avatars, timestamps, badges |
-| `components/ConversationView.tsx` | Right panel: header + messages + input |
-| `components/MessageBubble.tsx` | Individual message (sent/received, text/image/voice) |
-| `components/MessageInput.tsx` | Bottom input bar with emoji, attach, voice, send |
-| `components/ContactHeader.tsx` | Top bar showing contact name, status, call/video/search icons |
-| `lib/mock-data.ts` | Seed conversations and messages for demo |
+#### 2. Clean Up Provenance Banner — Remove Model Attribution
 
-### Visual Spec (matching WhatsApp Desktop)
+**File: `src/modules/oracle/components/ProvenanceBanner.tsx`**
 
-- **Nav rail**: ~64px wide, dark (#111b21), vertical icon buttons — chat, calls, status, settings, profile avatar at bottom
-- **Chat list**: ~30% width, dark (#111b21) bg, search bar at top, each chat row: avatar (48px circle), name (bold white), last message (gray), timestamp (green for unread), unread badge (green circle)
-- **Conversation**: ~70% width, darker bg (#0b141a) with subtle wallpaper pattern, green bubbles for sent (WhatsApp green #005c4b), dark bubbles for received (#202c33)
-- **Message input**: bottom bar with emoji button, attachment clip, text input, and mic/send toggle
-- **Contact header**: avatar, name + "online" status, video/call/search icons right-aligned
-- **Typography**: system font stack, 14-15px body, timestamps in 11px
-- **Colors**: WhatsApp dark theme palette exactly
+The provenance banner currently exposes the raw model name. Since the purpose is a seamless personal internet experience (not a model showcase), replace the model identifier with human-friendly, brand-aligned language:
 
-### Routing
+- Badge row: Replace "⚙ Gemini 3 Flash Preview" → "⚙ UOR Synthesis" or simply remove the model badge entirely
+- Expanded detail: Replace "This article was synthesized by **Gemini 3 Flash Preview**" → "This article was synthesized by **UOR**" — keeping the focus on the framework, not the underlying model
+- Remove the `model` prop dependency from display (keep it internally for debugging/logging if needed)
 
-Add `/messenger` route in `App.tsx` — renders `MessengerPage` directly (no Layout wrapper, full-screen).
+#### 3. Update SSE Metadata Label
 
-### Mock Data
+**File: `supabase/functions/uor-knowledge/index.ts`**
 
-- 8-10 contacts with avatars (generated initials), varied last messages, timestamps, unread counts
-- Active conversation: ~15 messages mixing text, emoji, image placeholders, voice note indicator, timestamps, read receipts (double blue check)
-
-### Mobile Responsive
-
-- On mobile: single-panel — show chat list OR conversation (not both)
-- Swipe/tap to navigate between panels
-- Bottom nav bar moves to top on mobile conversation view
+Change the `model` field in the SSE `wiki` event from `"gemini-3-flash-preview"` to `"uor-synthesis"` so the client receives a clean label. Three occurrences (~lines 797, 814, and the response metadata).
 
 ### Files Changed
 
 | File | Change |
-|------|--------|
-| `src/App.tsx` | Add `/messenger` route |
-| `src/modules/messenger/pages/MessengerPage.tsx` | **New** — Full-screen shell |
-| `src/modules/messenger/components/ChatSidebar.tsx` | **New** — Nav rail + chat list |
-| `src/modules/messenger/components/ChatList.tsx` | **New** — Contact rows |
-| `src/modules/messenger/components/ConversationView.tsx` | **New** — Messages + input |
-| `src/modules/messenger/components/MessageBubble.tsx` | **New** — Sent/received bubble |
-| `src/modules/messenger/components/MessageInput.tsx` | **New** — Input bar |
-| `src/modules/messenger/components/ContactHeader.tsx` | **New** — Conversation top bar |
-| `src/modules/messenger/lib/mock-data.ts` | **New** — Seed contacts + messages |
+|---|---|
+| `supabase/functions/quantum-inference-stream/index.ts` | Upgrade model tiers to latest |
+| `supabase/functions/hologram-code-ai/index.ts` | Upgrade completion model |
+| `supabase/functions/uor-knowledge/index.ts` | Change model label in SSE metadata |
+| `src/modules/oracle/components/ProvenanceBanner.tsx` | Display "UOR Synthesis" instead of raw model name |
 
