@@ -3,9 +3,9 @@
  * Now with inline Sovereign Context Vault picker.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getPhasePhoto, getCurrentPhase, preloadNextPhasePhoto, initLocation } from "@/modules/oracle/lib/immersive-photos";
 import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
@@ -17,6 +17,37 @@ import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import VaultImportDialog from "@/modules/sovereign-vault/components/VaultImportDialog";
 import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
 import { toast } from "sonner";
+import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
+
+/** Detect if input is a valid address (triword or IPv6) */
+type AddressKind = "triword" | "ipv6" | null;
+
+function detectAddress(input: string): { kind: AddressKind; label: string | null } {
+  const t = input.trim();
+  if (!t) return { kind: null, label: null };
+
+  // Triword: Word.Word.Word or word · word · word or "word word word"
+  const normalized = t.replace(/\s*[·.]\s*/g, ".").replace(/\s+/g, ".").toLowerCase();
+  const parts = normalized.split(".");
+  if (parts.length === 3 && parts.every((p) => p.length >= 2)) {
+    if (isValidTriword(normalized)) {
+      const bd = triwordBreakdown(normalized);
+      return {
+        kind: "triword",
+        label: bd
+          ? `${bd.observer.charAt(0).toUpperCase() + bd.observer.slice(1)}.${bd.observable.charAt(0).toUpperCase() + bd.observable.slice(1)}.${bd.context.charAt(0).toUpperCase() + bd.context.slice(1)}`
+          : null,
+      };
+    }
+  }
+
+  // IPv6: contains colons and hex segments
+  if (/^[0-9a-fA-F:]+$/.test(t) && t.includes(":") && t.split(":").length >= 3) {
+    return { kind: "ipv6", label: t };
+  }
+
+  return { kind: null, label: null };
+}
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -42,6 +73,8 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const vault = useVault();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
+  const detected = useMemo(() => detectAddress(query), [query]);
+  const isAddress = detected.kind !== null;
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
@@ -204,21 +237,53 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             style={{ maxWidth: "min(580px, 80vw)" }}
           >
             <div className="w-full relative group">
-              {/* Outer glow ring — creates the "lifting off the screen" effect */}
+              {/* Outer glow ring — shifts to emerald when address detected */}
               <div
-                className="absolute -inset-[1px] rounded-full opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none"
+                className="absolute -inset-[1px] rounded-full transition-all duration-500 pointer-events-none"
                 style={{
-                  background: "linear-gradient(135deg, hsl(195 60% 65% / 0.25), hsl(200 40% 50% / 0.08), hsl(210 50% 60% / 0.2))",
+                  opacity: isAddress ? 1 : undefined,
+                  background: isAddress
+                    ? "linear-gradient(135deg, hsl(160 60% 50% / 0.3), hsl(170 50% 40% / 0.1), hsl(155 60% 55% / 0.25))"
+                    : "linear-gradient(135deg, hsl(195 60% 65% / 0.25), hsl(200 40% 50% / 0.08), hsl(210 50% 60% / 0.2))",
                   filter: "blur(6px)",
                 }}
               />
-              {/* Ambient depth shadow — always visible, intensifies on hover */}
+              {isAddress && (
+                <div
+                  className="absolute -inset-[1px] rounded-full pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(160 55% 50% / 0.15), transparent, hsl(155 50% 45% / 0.12))",
+                    filter: "blur(12px)",
+                  }}
+                />
+              )}
+              {/* Ambient depth shadow */}
               <div
                 className="absolute -inset-1 rounded-full pointer-events-none transition-all duration-500"
                 style={{
-                  boxShadow: "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                  boxShadow: isAddress
+                    ? "0 12px 48px -12px hsl(160 40% 12% / 0.7), 0 4px 16px -4px hsl(160 50% 20% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.08)"
+                    : "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
                 }}
               />
+
+              {/* Address badge — lock icon + label that slides in */}
+              <AnimatePresence>
+                {isAddress && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -8, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -8, scale: 0.9 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 400 }}
+                    className="absolute left-14 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 pointer-events-none"
+                  >
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span className="text-[11px] font-medium tracking-wide text-emerald-400/80 uppercase">
+                      {detected.kind === "triword" ? "Address" : "IPv6"}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <input
                 ref={inputRef}
@@ -232,16 +297,25 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                   }
                 }}
                 placeholder="What is your main focus today?"
-                className="relative w-full rounded-full pl-14 pr-24 py-4 text-white text-base focus:outline-none transition-all duration-300"
+                className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
                 style={{
-                  background: "linear-gradient(135deg, hsl(200 25% 22% / 0.55), hsl(195 20% 18% / 0.45), hsl(200 30% 20% / 0.5))",
+                  paddingLeft: isAddress ? "7.5rem" : "3.5rem",
+                  background: isAddress
+                    ? "linear-gradient(135deg, hsl(165 25% 18% / 0.6), hsl(160 20% 15% / 0.5), hsl(170 25% 17% / 0.55))"
+                    : "linear-gradient(135deg, hsl(200 25% 22% / 0.55), hsl(195 20% 18% / 0.45), hsl(200 30% 20% / 0.5))",
                   backdropFilter: "blur(40px) saturate(1.6)",
                   WebkitBackdropFilter: "blur(40px) saturate(1.6)",
-                  border: "1px solid hsl(0 0% 100% / 0.14)",
-                  boxShadow: "inset 0 1px 1px hsl(0 0% 100% / 0.08), inset 0 -1px 2px hsl(0 0% 0% / 0.15), 0 1px 3px hsl(0 0% 0% / 0.2)",
-                  color: "hsl(0 0% 100% / 0.95)",
-                  caretColor: "hsl(195 70% 65%)",
+                  border: isAddress
+                    ? "1px solid hsl(160 50% 50% / 0.25)"
+                    : "1px solid hsl(0 0% 100% / 0.14)",
+                  boxShadow: isAddress
+                    ? "inset 0 1px 1px hsl(160 50% 60% / 0.1), inset 0 -1px 2px hsl(0 0% 0% / 0.15), 0 1px 3px hsl(0 0% 0% / 0.2)"
+                    : "inset 0 1px 1px hsl(0 0% 100% / 0.08), inset 0 -1px 2px hsl(0 0% 0% / 0.15), 0 1px 3px hsl(0 0% 0% / 0.2)",
+                  color: isAddress ? "hsl(160 40% 85%)" : "hsl(0 0% 100% / 0.95)",
+                  caretColor: isAddress ? "hsl(160 60% 60%)" : "hsl(195 70% 65%)",
                   textShadow: "0 1px 2px hsl(0 0% 0% / 0.2)",
+                  fontFamily: isAddress ? "var(--font-mono, ui-monospace, monospace)" : undefined,
+                  letterSpacing: isAddress ? "0.02em" : undefined,
                 }}
               />
 
