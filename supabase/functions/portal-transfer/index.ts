@@ -29,17 +29,15 @@ Deno.serve(async (req) => {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(
-        authHeader.replace("Bearer ", "")
-      );
-      if (claimsErr || !claimsData?.claims?.sub) {
+      const { data: { user }, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !user?.id) {
         return new Response(JSON.stringify({ error: "Invalid token" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const userId = claimsData.claims.sub as string;
+      const userId = user.id;
       const body = await req.json();
       const targetUrl = typeof body.target_url === "string" ? body.target_url : "/search";
       const targetLens = typeof body.target_lens === "string" ? body.target_lens : "overview";

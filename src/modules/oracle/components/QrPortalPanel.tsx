@@ -1,9 +1,11 @@
 /**
  * QrPortalPanel — Clean QR code panel for cross-device session transfer.
  * Functional, scannable QR that links to the current session.
+ * Uses React Portal to escape overflow-auto clipping in window containers.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, RotateCcw, X, Smartphone } from "lucide-react";
 import QRCode from "qrcode";
@@ -15,6 +17,8 @@ interface QrPortalPanelProps {
   targetUrl: string;
   targetLens: string;
   immersive?: boolean;
+  /** Ref to the trigger button for positioning */
+  anchorRef?: React.RefObject<HTMLElement>;
 }
 
 const PORTAL_TTL = 5 * 60;
