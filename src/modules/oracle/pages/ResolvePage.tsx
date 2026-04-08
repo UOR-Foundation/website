@@ -558,9 +558,9 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Search bar in header ── */}
       {result ? (
-        <header className="flex items-center gap-3 px-4 md:px-6 h-14 border-b border-border/15 shrink-0">
-          <button onClick={clearResult} className="text-muted-foreground/40 hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
+        <header className="flex items-center gap-3 px-4 md:px-6 h-16 border-b border-border/15 shrink-0">
+          <button onClick={clearResult} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 relative">
             <input
@@ -568,17 +568,17 @@ const SearchPage = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              className="w-full bg-[hsl(var(--muted)/0.08)] border border-border/15 rounded-full px-4 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
+              className="w-full bg-[hsl(var(--muted)/0.08)] border border-border/15 rounded-full px-4 py-2.5 pr-10 text-base font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
             />
-            <button onClick={() => { clearResult(); setTimeout(submit, 50); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-              <Search className="w-3.5 h-3.5" />
+            <button onClick={() => { clearResult(); setTimeout(submit, 50); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/40 hover:text-foreground/60 transition-colors">
+              <Search className="w-4 h-4" />
             </button>
           </div>
         </header>
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 md:px-6">
+        <div className="max-w-3xl mx-auto px-6 md:px-8">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
