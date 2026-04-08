@@ -24,6 +24,7 @@ const TYPE_STYLES: Record<string, { color: string; bg: string }> = {
   Datum:       { color: "hsl(var(--primary))",          bg: "hsl(var(--primary) / 0.08)" },
   Observable:  { color: "hsl(190 70% 50%)",             bg: "hsl(190 70% 50% / 0.08)" },
   Derivation:  { color: "hsl(340 60% 55%)",             bg: "hsl(340 60% 55% / 0.08)" },
+  WebPage:     { color: "hsl(200 70% 55%)",             bg: "hsl(200 70% 55% / 0.08)" },
 };
 
 const DEFAULT_STYLE = { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.15)" };
@@ -51,6 +52,15 @@ const LABEL_MAP: Record<string, string> = {
   "uor:position": "Position",
   "uor:proofAddress": "Proof Address",
   "uor:proofCid": "Proof CID",
+  "uor:sourceUrl": "Source",
+  "uor:content": "Content",
+  "uor:title": "Title",
+  "uor:description": "Description",
+  "uor:language": "Language",
+  "uor:linkedResources": "Linked Resources",
+  "uor:scrapedAt": "Encoded At",
+  "uor:existingSemantics": "Existing Semantics",
+  "uor:semanticWebLayers": "Semantic Web Layers",
 };
 
 function humanLabel(key: string): string {
@@ -66,12 +76,13 @@ function humanLabel(key: string): string {
 
 const META_KEYS = new Set([
   "uor:timestamp", "uor:position", "uor:chainLength",
-  "uor:proofAddress", "uor:proofCid",
+  "uor:proofAddress", "uor:proofCid", "uor:scrapedAt",
+  "uor:language", "uor:semanticWebLayers",
 ]);
 
 /* ── Title keys (rendered as the main heading) ───────────────────────── */
 
-const TITLE_KEYS = ["uor:label", "uor:query", "@id"];
+const TITLE_KEYS = ["uor:label", "uor:query", "uor:title", "@id"];
 
 /* ── Long text keys (always get serif treatment) ─────────────────────── */
 
