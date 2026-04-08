@@ -740,17 +740,17 @@ const SearchPage = () => {
               style={{ height: "100dvh" }}
             >
               {/* AI Mode header */}
-              <div className="flex items-center justify-between py-5 shrink-0">
+                <div className="flex items-center justify-between py-5 shrink-0">
                 <div className="flex items-center gap-3">
-                  <button onClick={exitAiMode} className="text-muted-foreground/40 hover:text-foreground transition-colors">
-                    <ArrowLeft className="w-4 h-4" />
+                  <button onClick={exitAiMode} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary/70" />
-                    <span className="text-sm font-medium text-foreground/80">UOR Oracle</span>
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-5 h-5 text-primary/80" />
+                    <span className="text-base font-medium text-foreground/85">UOR Oracle</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   {proofCount >= 2 && (
                     <button
                       onClick={() => {
@@ -759,15 +759,15 @@ const SearchPage = () => {
                         setSelectedProofIndices(all);
                         setTimeout(() => encodeChain(all), 50);
                       }}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20 transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground/50 hover:text-foreground/70 border border-transparent hover:border-border/25 transition-all"
                       title="Encode entire conversation as a single chain address"
                     >
-                      <Link2 className="w-3 h-3" />
+                      <Link2 className="w-3.5 h-3.5" />
                       Chain All
                     </button>
                   )}
-                  <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-                    <X className="w-4 h-4" />
+                  <button onClick={exitAiMode} className="text-muted-foreground/40 hover:text-foreground/70 transition-colors">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
