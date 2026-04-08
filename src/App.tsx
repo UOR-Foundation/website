@@ -35,6 +35,7 @@ const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
 const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
+const DesktopShell = lazy(() => import("@/modules/desktop/DesktopShell"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
