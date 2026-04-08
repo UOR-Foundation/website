@@ -14,6 +14,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown, Menu, Maximize2 } from "lucide-react";
 import ImmersiveSearchView from "@/modules/oracle/components/ImmersiveSearchView";
+import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
 import ReaderToolbar from "@/modules/oracle/components/ReaderToolbar";
 import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
 import MobileSearchBar from "@/modules/oracle/components/MobileSearchBar";
@@ -1904,35 +1905,45 @@ const SearchPage = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="flex flex-col"
+                    className={`flex flex-col relative ${immersiveMode ? "text-white" : ""}`}
                     style={{ minHeight: "100dvh" }}
                   >
-                    <ReaderToolbar
-                      triwordDisplay={triwordDisplay}
-                      typeLabel={typeRaw}
-                      activeLens={activeLens}
-                      onLensChange={handleLensChange}
-                      onBack={clearResult}
-                      onToggleDetails={() => setReaderMode(false)}
-                      synthesizing={result.synthesizing}
-                    />
-                    <div
-                      className="flex-1 mx-auto w-full"
-                      style={{
-                        maxWidth: "min(720px, 90vw)",
-                        paddingTop: "calc(1rem * 1.618 * 1.618)",
-                        paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
-                        paddingLeft: "1.5rem",
-                        paddingRight: "1.5rem",
-                      }}
-                    >
-                      <HumanContentView
-                        source={result.source}
-                        synthesizing={result.synthesizing}
-                        contextKeywords={contextKeywords}
+                    {immersiveMode && <ImmersiveBackground />}
+                    <div className="relative z-10 flex flex-col flex-1">
+                      <ReaderToolbar
+                        triwordDisplay={triwordDisplay}
+                        typeLabel={typeRaw}
                         activeLens={activeLens}
                         onLensChange={handleLensChange}
+                        onBack={clearResult}
+                        onToggleDetails={() => setReaderMode(false)}
+                        synthesizing={result.synthesizing}
+                        immersive={immersiveMode}
                       />
+                      <div
+                        className={`flex-1 mx-auto w-full ${
+                          immersiveMode
+                            ? "bg-white/[0.04] backdrop-blur-xl border-x border-b border-white/[0.06] rounded-b-2xl shadow-[0_8px_60px_-12px_rgba(0,0,0,0.5)]"
+                            : ""
+                        }`}
+                        style={{
+                          maxWidth: "min(720px, 90vw)",
+                          paddingTop: "calc(1rem * 1.618 * 1.618)",
+                          paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
+                          paddingLeft: "1.5rem",
+                          paddingRight: "1.5rem",
+                        }}
+                      >
+                        <div className={immersiveMode ? "[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50" : ""}>
+                          <HumanContentView
+                            source={result.source}
+                            synthesizing={result.synthesizing}
+                            contextKeywords={contextKeywords}
+                            activeLens={activeLens}
+                            onLensChange={handleLensChange}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 );
