@@ -394,6 +394,7 @@ const SearchPage = () => {
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
   const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
+  const [readerMode, setReaderMode] = useState(true);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
