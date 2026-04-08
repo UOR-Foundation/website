@@ -728,7 +728,19 @@ const SearchPage = () => {
                 className="absolute left-0 right-0 text-center text-lg text-foreground/50 select-none tracking-wide"
                 style={{ bottom: "6vh" }}
               >
-                Searching a <span className="text-primary font-semibold">near-infinite</span> address space.
+                Searching a{" "}
+                <button
+                  onClick={() => {
+                    setInput("uor:concept:near-infinite-addressing");
+                    clearResult();
+                    setTimeout(() => handleSearch("uor:concept:near-infinite-addressing"), 50);
+                  }}
+                  className="text-primary font-semibold hover:text-primary/90 underline decoration-primary/30 underline-offset-4 hover:decoration-primary/60 transition-all cursor-pointer"
+                  title="Resolve the canonical definition of near-infinite addressing"
+                >
+                  near-infinite
+                </button>{" "}
+                address space.
               </p>
             </div>
           )}
