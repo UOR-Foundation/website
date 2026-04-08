@@ -1,6 +1,7 @@
 /**
  * SourcesPills — Horizontal row of source cards (Perplexity-style).
  * Shows immediately when wiki data arrives, before AI text streams in.
+ * Includes quality indicators for high-signal sources.
  */
 
 import React from "react";
@@ -10,8 +11,20 @@ interface SourcesPillsProps {
   sources: SourceMeta[];
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  academic: "Academic",
+  institutional: "Institutional",
+  wikipedia: "Encyclopedia",
+  wikidata: "Knowledge base",
+  news: "News",
+  web: "Web",
+};
+
 const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
   if (!sources.length) return null;
+
+  const isHighSignal = (s: SourceMeta) =>
+    s.type === "academic" || s.type === "institutional" || s.type === "wikipedia" || (s.score && s.score >= 80);
 
   return (
     <div
@@ -27,7 +40,7 @@ const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
           letterSpacing: "0.1em",
         }}
       >
-        Sources
+        {sources.length} {sources.length === 1 ? "Source" : "Sources"}
       </span>
       {sources.map((s, i) => (
         <a
@@ -35,6 +48,7 @@ const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
           href={s.url}
           target="_blank"
           rel="noopener noreferrer"
+          title={`${s.title || s.domain} — ${TYPE_LABELS[s.type] || "Web"}${s.score ? ` (signal: ${s.score})` : ""}`}
           className="flex items-center gap-1.5 shrink-0 bg-muted/15 hover:bg-muted/25 border border-border/10 hover:border-border/20 transition-all text-foreground/70 hover:text-foreground/90"
           style={{
             padding: "4px 10px 4px 6px",
@@ -44,6 +58,24 @@ const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
             fontWeight: 500,
           }}
         >
+          {/* Quality indicator for high-signal sources */}
+          {isHighSignal(s) && (
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
+              className={
+                s.type === "academic"
+                  ? "bg-emerald-400"
+                  : s.type === "institutional"
+                  ? "bg-blue-400"
+                  : "bg-amber-400"
+              }
+            />
+          )}
           <img
             src={`https://www.google.com/s2/favicons?domain=${s.domain}&sz=16`}
             alt=""
@@ -52,7 +84,7 @@ const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
             style={{ borderRadius: 2, opacity: 0.8 }}
             loading="lazy"
           />
-          <span>{s.domain}</span>
+          <span>{s.title && s.title.length < 30 ? s.title : s.domain}</span>
           <span
             className="text-muted-foreground/30"
             style={{

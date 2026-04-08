@@ -16,11 +16,14 @@ function toSuperscript(n: number): string {
     .join("");
 }
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
   wikipedia: { icon: "📖", label: "Wikipedia", color: "bg-blue-500/15 text-blue-400" },
   wikidata: { icon: "🔗", label: "Wikidata", color: "bg-emerald-500/15 text-emerald-400" },
+  academic: { icon: "🎓", label: "Academic", color: "bg-emerald-500/15 text-emerald-400" },
+  institutional: { icon: "🏛️", label: "Institutional", color: "bg-blue-500/15 text-blue-400" },
+  news: { icon: "📰", label: "News", color: "bg-amber-500/15 text-amber-400" },
   web: { icon: "🌐", label: "Web", color: "bg-muted text-muted-foreground" },
-} as const;
+};
 
 interface InlineCitationProps {
   index: number;
@@ -46,7 +49,7 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
     setOpen((prev) => !prev);
   }, []);
 
-  const cfg = TYPE_CONFIG[source.type];
+  const cfg = TYPE_CONFIG[source.type] || TYPE_CONFIG.web;
   const displayTitle = source.title || source.domain;
 
   return (
