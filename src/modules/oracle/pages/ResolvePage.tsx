@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -19,6 +19,7 @@ import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry
 import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -284,6 +285,10 @@ const SearchPage = () => {
   const [chainEncoding, setChainEncoding] = useState(false);
   const [contentViewMode, setContentViewMode] = useState<"human" | "machine">("human");
 
+  // IPFS Inscribe state
+  const [inscribing, setInscribing] = useState(false);
+  const [inscribeResult, setInscribeResult] = useState<{ ipfsHash: string; gatewayUrl: string } | null>(null);
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -430,7 +435,30 @@ const SearchPage = () => {
     setTimeout(() => setCopied(null), 1500);
   }, []);
 
-  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); };
+  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); };
+
+  /** Inscribe the current result to IPFS via Pinata */
+  const inscribeToIpfs = async () => {
+    if (!result || inscribing) return;
+    setInscribing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("inscribe-ipfs", {
+        body: { source: result.source, receipt: result.receipt },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Inscription failed");
+      setInscribeResult({ ipfsHash: data.ipfsHash, gatewayUrl: data.gatewayUrl });
+      toast("Inscribed on IPFS.", {
+        description: `Hash: ${data.ipfsHash.slice(0, 16)}…`,
+        icon: "🌐",
+      });
+    } catch (err) {
+      console.error("[Inscribe] Failed:", err);
+      toast.error("IPFS inscription failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInscribing(false);
+    }
+  };
 
   /* ── AI Oracle ── */
   const sendAiMessage = async () => {
@@ -1310,6 +1338,19 @@ const SearchPage = () => {
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-2.5">
+                      <button onClick={inscribeToIpfs} disabled={inscribing || !!inscribeResult} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
+                        <Globe className="w-3.5 h-3.5" /> {inscribing ? "Inscribing…" : inscribeResult ? "Inscribed ✓" : "Inscribe"}
+                      </button>
+                      {inscribeResult && (
+                        <a
+                          href={inscribeResult.gatewayUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary/60 hover:text-primary/90 transition-colors underline underline-offset-2"
+                        >
+                          View on IPFS →
+                        </a>
+                      )}
                       <button onClick={rederive} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
                         <RotateCcw className="w-3.5 h-3.5" /> Verify Integrity
                       </button>
