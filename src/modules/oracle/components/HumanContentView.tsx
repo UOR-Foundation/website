@@ -140,7 +140,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml"
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml" && key !== "uor:sources"
   );
 
   const rawHtml = rawHtmlVal;
@@ -152,6 +152,8 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   // Semantic Web Tower data
   const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
   const isWebPage = rawType === "WebPage";
+  const sources = Array.isArray(src["uor:sources"]) ? (src["uor:sources"] as string[]) : [];
+  const contentMarkdown = typeof src["uor:content"] === "string" ? (src["uor:content"] as string) : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
