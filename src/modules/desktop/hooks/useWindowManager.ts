@@ -114,7 +114,7 @@ export function useWindowManager() {
       if (existing) {
         const z = ++nextZ.current;
         const next = prev.map(w =>
-          w.id === existing.id ? { ...w, minimized: false, zIndex: z } : w
+          w.id === existing.id ? { ...w, title, minimized: false, zIndex: z } : w
         );
         saveWindows(next);
         return next;
