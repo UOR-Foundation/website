@@ -99,6 +99,8 @@ interface Result {
   confirmations?: number;
   /** When the content was first discovered (ms since epoch) */
   originalTimestamp?: number;
+  /** Whether AI synthesis is still loading (progressive rendering) */
+  synthesizing?: boolean;
 }
 
 /* ── Human-readable content renderer ── */
