@@ -125,7 +125,7 @@ export default function DesktopWindow({
       />
 
       <div className="relative overflow-auto rounded-b-xl" style={{ height: `calc(100% - ${DRAG_STRIP_H}px)`, background: contentBg }}>
-        <WindowContextProvider>
+        <WindowContextProvider initialQuery={win.title}>
           <Suspense fallback={
             <div className="flex items-center justify-center h-full">
               <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
