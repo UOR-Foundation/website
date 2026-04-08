@@ -457,7 +457,32 @@ const SearchPage = () => {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
+                    onKeyDown={(e) => {
+                      if (showSuggestions && suggestions.length > 0) {
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          setSelectedSuggIdx(prev => Math.min(prev + 1, suggestions.length - 1));
+                          return;
+                        }
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          setSelectedSuggIdx(prev => Math.max(prev - 1, -1));
+                          return;
+                        }
+                        if (e.key === "Enter" && selectedSuggIdx >= 0) {
+                          e.preventDefault();
+                          pickSuggestion(suggestions[selectedSuggIdx].triword);
+                          return;
+                        }
+                        if (e.key === "Escape") {
+                          setShowSuggestions(false);
+                          return;
+                        }
+                      }
+                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); submit(); }
+                    }}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
                     placeholder=""
                     className="flex-1 bg-transparent py-[18px] px-2 text-lg text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
                   />
@@ -474,6 +499,43 @@ const SearchPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Autocomplete suggestions dropdown */}
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-border/20 bg-[hsl(0_0%_12%)] backdrop-blur-xl shadow-2xl overflow-hidden z-50"
+                    >
+                      {suggestions.map((s, i) => {
+                        const trimmed = input.trim().toLowerCase();
+                        const idx = s.triword.toLowerCase().indexOf(trimmed);
+                        const before = s.triword.slice(0, idx);
+                        const match = s.triword.slice(idx, idx + trimmed.length);
+                        const after = s.triword.slice(idx + trimmed.length);
+
+                        return (
+                          <button
+                            key={s.triword}
+                            onMouseDown={() => pickSuggestion(s.triword)}
+                            onMouseEnter={() => setSelectedSuggIdx(i)}
+                            className={`w-full flex items-center gap-3 px-5 py-3 text-left transition-colors ${
+                              i === selectedSuggIdx ? "bg-primary/10" : "hover:bg-[hsl(0_0%_16%)]"
+                            }`}
+                          >
+                            <Search className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
+                            <span className="text-sm font-mono text-foreground/70">
+                              {before}<span className="text-foreground font-semibold">{match}</span>{after}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Dual buttons — golden ratio spacing */}
