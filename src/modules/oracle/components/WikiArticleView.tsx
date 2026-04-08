@@ -11,6 +11,7 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import BalancedHeading from "./BalancedHeading";
 import CitedMarkdown from "./CitedMarkdown";
 import SourcesPills from "./SourcesPills";
 import { EncyclopediaMedia } from "./MediaGallery";
