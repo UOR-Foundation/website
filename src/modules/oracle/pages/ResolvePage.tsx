@@ -771,7 +771,7 @@ const SearchPage = () => {
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
         <header className="flex items-center justify-center px-4 md:px-6 h-16 shrink-0 border-b border-border/10">
-          <div className="w-full max-w-2xl relative">
+          <div className="w-full max-w-4xl relative">
             <button
               onClick={clearResult}
               className="absolute left-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/40 hover:text-foreground transition-colors z-10"
@@ -799,7 +799,7 @@ const SearchPage = () => {
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 md:px-8">
+        <div className="max-w-5xl mx-auto px-8 md:px-12 lg:px-16">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
@@ -1027,7 +1027,7 @@ const SearchPage = () => {
               </div>
 
               {/* Messages area */}
-              <div ref={aiScrollRef} className="flex-1 overflow-y-auto space-y-6 pb-4 min-h-0">
+              <div ref={aiScrollRef} className="flex-1 overflow-y-auto space-y-8 pb-6 min-h-0">
                 {aiMessages.length === 0 && (
                   <div className="flex flex-col items-center justify-center text-center" style={{ paddingTop: "calc(100dvh * 0.236)" }}>
                     <div className="rounded-2xl bg-primary/10 flex items-center justify-center" style={{ width: "calc(1rem * 1.618 * 1.618 * 1.618)", height: "calc(1rem * 1.618 * 1.618 * 1.618)", marginBottom: "calc(1rem * 1.618)" }}>
@@ -1056,15 +1056,15 @@ const SearchPage = () => {
 
                     return (
                       <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                        <div className={`max-w-[85%] ${
+                        <div className={`max-w-[88%] ${
                           msg.role === "user"
-                            ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
-                            : "prose prose-invert prose-sm max-w-none"
+                            ? "bg-primary/15 rounded-2xl rounded-br-md px-5 py-4"
+                            : "prose prose-invert prose-base max-w-none"
                         }`}>
                           {msg.role === "user" ? (
-                            <p className="text-sm text-foreground/90">{msg.content}</p>
+                            <p className="text-base text-foreground/90 leading-relaxed">{msg.content}</p>
                           ) : (
-                            <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
+                            <div className="text-base text-foreground/75 leading-[1.75] [&>p]:mb-4 [&>ul]:mb-4 [&>ol]:mb-4 [&>h2]:text-lg [&>h3]:text-base [&>h2]:font-semibold [&>h3]:font-semibold [&>h2]:mt-6 [&>h3]:mt-5">
                               <ReactMarkdown>
                                 {msg.content}
                               </ReactMarkdown>
@@ -1074,7 +1074,7 @@ const SearchPage = () => {
 
                         {/* UOR Proof Card — appears below each completed assistant message */}
                         {hasProof && msg.proof && (
-                          <div className="relative mt-2 max-w-[85%] w-full">
+                          <div className="relative mt-3 max-w-[88%] w-full">
                             <motion.div
                               initial={{ opacity: 0, y: 6, scale: 0.97 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1285,7 +1285,7 @@ const SearchPage = () => {
                     </motion.div>
                   </div>
                   <div className="flex items-baseline gap-3">
-                    <h2 className="text-3xl md:text-4xl font-display font-medium text-foreground tracking-wide leading-tight">
+                    <h2 className="text-4xl md:text-5xl font-display font-medium text-foreground tracking-wide leading-tight">
                       {result.receipt.triwordFormatted}
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
@@ -1359,7 +1359,7 @@ const SearchPage = () => {
                   {/* IPv6 */}
                   <div className="flex items-center gap-2.5">
                     <span className="text-xs uppercase tracking-wider text-primary/60 font-semibold shrink-0">IPv6</span>
-                    <code className="text-base font-mono text-primary tracking-wide">
+                    <code className="text-lg font-mono text-primary tracking-wide">
                       {result.receipt.ipv6}
                     </code>
                     <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} />
@@ -1368,7 +1368,7 @@ const SearchPage = () => {
                   {/* CID */}
                   <div className="flex items-center gap-2.5">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold shrink-0">CID</span>
-                    <code className="text-base font-mono text-foreground/60 break-all leading-relaxed">
+                    <code className="text-lg font-mono text-foreground/60 break-all leading-relaxed">
                       {result.receipt.cid}
                     </code>
                     <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} />
