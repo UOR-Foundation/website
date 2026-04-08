@@ -765,16 +765,15 @@ const SearchPage = () => {
               >
                 Searching a{" "}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const entry = allEntries().find(e => (e.source as Record<string, unknown>)?.["@id"] === "uor:concept:near-infinite-addressing");
                     if (entry) {
                       setInput(entry.receipt.triword);
-                      setResult({ source: entry.source, receipt: entry.receipt });
+                      handleSearch(entry.receipt.triword);
                     } else {
-                      encode(NEAR_INFINITE_CONCEPT).then(receipt => {
-                        setInput(receipt.triword);
-                        setResult({ source: NEAR_INFINITE_CONCEPT, receipt });
-                      });
+                      const receipt = await encode(NEAR_INFINITE_CONCEPT);
+                      setInput(receipt.triword);
+                      setResult({ source: NEAR_INFINITE_CONCEPT, receipt });
                     }
                   }}
                   className="text-primary font-semibold hover:text-primary/90 transition-colors cursor-pointer"
