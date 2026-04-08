@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from "react";
+import BalancedHeading from "../BalancedHeading";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
 import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";

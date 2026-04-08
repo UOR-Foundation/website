@@ -5,6 +5,7 @@
 
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import BalancedHeading from "../BalancedHeading";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
 import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections } from "../InlineMedia";
