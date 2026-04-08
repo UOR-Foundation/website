@@ -4,6 +4,7 @@ import uorIcon from "@/assets/uor-icon-new.png";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 import { navItems } from "@/data/nav-items";
 import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
+import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
 
 const Footer = () => {
   return (
