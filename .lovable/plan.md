@@ -1,69 +1,65 @@
 
 
-## Duplicate Detection: "Discovered" vs "Confirmed"
+## Social Layer for UOR Addresses
 
-### Terminology
+Every UOR address becomes a living place — somewhere people visit, react to, and discuss. The metaphor: addresses are locations in a universal coordinate space, and this makes them natural gathering points.
 
-In UOR, every piece of content already has an address. It's deterministic. We don't "create" addresses, we discover them. This gives us two natural, authentic states:
+### Database Tables
 
-- **Discovered**: First time this content's address has been found. "Address discovered."
-- **Confirmed**: Content already has a known address. "Address confirmed." This proves the system works: same content, same address, every time.
+**1. `address_visits`** — Track visitors per address
+- `id`, `address_cid` (text), `visitor_fingerprint` (text, anonymous hash), `visited_at` (timestamptz)
+- No auth required — public addresses, public visits
+- A simple view counter with unique visitor deduplication
 
-No jargon. Self-descriptive. True to UOR's philosophy that identity is inherent in content.
+**2. `address_reactions`** — Lightweight sentiment (like a star rating but more expressive)
+- `id`, `address_cid`, `user_id` (uuid, references auth.users), `reaction` (text — e.g. "resonates", "useful", "elegant", "surprising"), `created_at`
+- Authenticated users only
+- Unique constraint on (address_cid, user_id) — one reaction per user per address
 
-### Changes
+**3. `address_comments`** — Threaded discussion at each address
+- `id`, `address_cid`, `user_id` (uuid), `content` (text), `parent_id` (uuid, nullable — for replies), `created_at`
+- Authenticated users only
+- RLS: anyone can read, only author can insert
 
-**1. Remove the timestamp from the source object** (`ResolvePage.tsx`, line 367)
+### UI Design
 
-Drop `"uor:encodedAt"` so that identical content always produces the same address. Content identity should come from content alone.
+Below the existing metadata block on the result page, add a new **"Community"** section:
 
-**2. Add pre-encoding registry check** (`ResolvePage.tsx`, `handleEncode`)
+**Visitor Counter** — A subtle line: "47 visitors · 12 reactions" with a small animated eye icon. Updates on each view (fires a lightweight insert on result load). No auth needed.
 
-Before calling `encode()`, import `singleProofHash` from `@/lib/uor-canonical` and `lookupReceipt` from the registry. Compute the CID, check if it already exists. If found, use the existing entry and flag `isConfirmed: true`. If not, encode normally and flag `isConfirmed: false`.
+**Reaction Bar** — Four curated reaction buttons in a horizontal row, similar to GitHub's reaction picker but simpler:
+- ✦ Resonates — "this makes sense to me"
+- ◆ Useful — "I can use this"  
+- ◇ Elegant — "beautifully structured"
+- ★ Surprising — "unexpected"
 
-**3. Extend the `Result` interface** (line 82)
+Each shows a count. Clicking toggles your reaction (requires auth). Feels like emoji reactions on Slack/GitHub — instantly familiar.
 
-Add `isConfirmed: boolean` and `originalTimestamp?: number` (when confirmed, show when it was first discovered).
+**Comments Thread** — A clean, minimal comment thread below reactions. Each comment shows the user's display name (or anonymous glyph), relative timestamp, and content. Reply support via `parent_id`. A simple text input at the bottom with "Share a thought…" placeholder.
 
-**4. Differentiate the UI response**
+### Implementation
 
-- **Discovered** (new): Green confetti. Toast: "Address discovered." A small badge near the address: `DISCOVERED` in green.
-- **Confirmed** (existing): No confetti. A calm, confident blue badge: `CONFIRMED`. Toast: "Address confirmed. Same content, same address." Show "First discovered {relative time}" below the badge.
+**Edge function: `address-social`**
+- `GET ?cid=...` — Returns visit count, reactions summary, and comments for an address. Also records a visit.
+- `POST /react` — Toggle a reaction (auth required)
+- `POST /comment` — Add a comment (auth required)
 
-Both states display the full address and all identity forms identically. The distinction is purely in the status indicator.
+**Frontend changes: `ResolvePage.tsx`**
+- New `<AddressCommunity cid={result.receipt.cid} />` component rendered after the metadata block
+- Uses `useEffect` to fetch social data on mount (which also records the visit)
+- Reaction buttons with optimistic UI updates
+- Comment thread with auto-refresh
 
-**5. Additional navigation value**
+**Realtime** — Enable `supabase_realtime` on `address_comments` so new comments appear live, reinforcing the "gathering place" feeling.
 
-When content is confirmed, show a small counter: "Confirmed 3 times" (tracked via a simple in-memory counter on each registry entry). This gives a sense of how frequently content is being referenced, useful for understanding which concepts are actively being used across the system.
+### Files to create/modify
 
-### Technical detail
+- **New migration**: Create `address_visits`, `address_reactions`, `address_comments` tables with RLS
+- **New edge function**: `supabase/functions/address-social/index.ts`
+- **New component**: `src/modules/oracle/components/AddressCommunity.tsx`
+- **Modified**: `src/modules/oracle/pages/ResolvePage.tsx` — integrate the community component
 
-```
-// handleEncode — revised flow
-const contentObj = {
-  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
-  "@type": "uor:UserContent",
-  "uor:content": text,
-};
+### Why this works
 
-const proof = await singleProofHash(contentObj);
-const existing = lookupReceipt(proof.cid);
-
-if (existing) {
-  // Increment confirmation count on registry entry
-  existing.confirmations = (existing.confirmations || 1) + 1;
-  setResult({ source: existing.source, receipt: existing.receipt, isConfirmed: true, originalTimestamp: existing.createdAt });
-  toast("Address confirmed.", { description: "Same content, same address." });
-} else {
-  const receipt = await encode(contentObj);
-  setResult({ source: contentObj, receipt, isConfirmed: false });
-  confetti(...);
-  toast("Address discovered.", { description: receipt.triwordFormatted });
-}
-```
-
-### Files modified
-
-- `src/modules/oracle/pages/ResolvePage.tsx` — Remove timestamp, add pre-check, update UI states
-- `src/modules/oracle/lib/receipt-registry.ts` — Add optional `confirmations` counter to `RegistryEntry`
+The reactions are not generic likes — they're curated to reflect how people relate to *ideas and structures* (resonates, useful, elegant, surprising). This makes every address feel like a small plaza in the coordinate space where people naturally congregate around shared meaning.
 
