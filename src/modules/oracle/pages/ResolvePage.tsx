@@ -10,10 +10,21 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
+import { allEntries } from "@/modules/oracle/lib/receipt-registry";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
+
+const SURPRISE_MESSAGES = [
+  "✨ Look what the universe found!",
+  "🌟 This one's special.",
+  "🎲 Your cosmic address awaits…",
+  "🔮 The Oracle chose this for you.",
+  "🪐 A corner of the address space, just for you.",
+  "💫 Every address tells a story.",
+];
 
 interface Result {
   source: unknown;
