@@ -84,6 +84,149 @@ interface Result {
   receipt: EnrichedReceipt;
 }
 
+/* ── Human-readable content renderer ── */
+const HUMAN_LABEL_MAP: Record<string, string> = {
+  "@context": "Schema",
+  "@type": "Type",
+  "@id": "Identifier",
+  "uor:label": "Label",
+  "uor:definition": "Definition",
+  "uor:content": "Content",
+  "uor:encodedAt": "Encoded At",
+  "uor:query": "Query",
+  "uor:response": "Response",
+  "uor:timestamp": "Timestamp",
+  "uor:properties": "Properties",
+  "uor:enables": "Enables",
+  "uor:chainLength": "Chain Length",
+  "uor:links": "Links",
+  "uor:position": "Position",
+  "uor:proofAddress": "Proof Address",
+  "uor:proofCid": "Proof CID",
+};
+
+function humanLabel(key: string): string {
+  return HUMAN_LABEL_MAP[key] ?? key.replace(/^(uor|schema):/, "").replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase()).trim();
+}
+
+function renderHumanContent(source: unknown): string {
+  const src = source as Record<string, unknown> | null;
+  if (!src || typeof src !== "object") return String(source);
+
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(src)) {
+    if (key === "@context") continue; // skip schema URL in human view
+    const label = humanLabel(key);
+    if (typeof value === "string") {
+      lines.push(`${label}: ${value}`);
+    } else if (Array.isArray(value)) {
+      lines.push(`${label}:`);
+      value.forEach(v => lines.push(`  • ${typeof v === "string" ? v : JSON.stringify(v)}`));
+    } else if (typeof value === "object" && value !== null) {
+      lines.push(`${label}:`);
+      for (const [k, v] of Object.entries(value)) {
+        lines.push(`  ${humanLabel(k)}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+      }
+    } else {
+      lines.push(`${label}: ${String(value)}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+function renderHumanView(source: unknown): React.ReactNode {
+  const src = source as Record<string, unknown> | null;
+  if (!src || typeof src !== "object") {
+    return <p className="text-base text-foreground/70">{String(source)}</p>;
+  }
+
+  const entries = Object.entries(src).filter(([key]) => key !== "@context");
+
+  return (
+    <div className="space-y-4">
+      {entries.map(([key, value]) => {
+        const label = humanLabel(key);
+
+        // Type badge
+        if (key === "@type") {
+          const typeStr = String(value).replace(/^uor:/, "");
+          return (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase tracking-widest text-primary/50">{typeStr}</span>
+            </div>
+          );
+        }
+
+        // Long text (definition, response, content)
+        if (typeof value === "string" && value.length > 120) {
+          return (
+            <div key={key} className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
+              <p className="text-base text-foreground/75 leading-relaxed">{value}</p>
+            </div>
+          );
+        }
+
+        // Short string
+        if (typeof value === "string") {
+          return (
+            <div key={key} className="flex items-baseline gap-3">
+              <span className="text-sm font-medium text-muted-foreground/50 shrink-0">{label}</span>
+              <span className="text-base text-foreground/75 font-mono">{value}</span>
+            </div>
+          );
+        }
+
+        // Array — bullet list
+        if (Array.isArray(value)) {
+          return (
+            <div key={key} className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
+              <ul className="space-y-1 pl-1">
+                {value.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="text-primary/40 mt-1.5 shrink-0">•</span>
+                    <span className="text-base text-foreground/70 leading-relaxed">
+                      {typeof item === "string" ? item : JSON.stringify(item)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+
+        // Nested object — key/value pairs
+        if (typeof value === "object" && value !== null) {
+          return (
+            <div key={key} className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
+              <div className="space-y-1.5 pl-3 border-l border-border/15">
+                {Object.entries(value).map(([k, v]) => (
+                  <div key={k} className="flex items-baseline gap-3">
+                    <span className="text-sm text-muted-foreground/45 shrink-0">{humanLabel(k)}</span>
+                    <span className="text-sm text-foreground/65 font-mono break-all">
+                      {typeof v === "string" ? v : JSON.stringify(v)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // Number / boolean
+        return (
+          <div key={key} className="flex items-baseline gap-3">
+            <span className="text-sm font-medium text-muted-foreground/50 shrink-0">{label}</span>
+            <span className="text-base text-foreground/75 font-mono">{String(value)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Tiny copy button ── */
 function CopyBtn({ onClick, copied, size = 14, label }: {
   onClick: () => void; copied: boolean; size?: number; label?: string;
