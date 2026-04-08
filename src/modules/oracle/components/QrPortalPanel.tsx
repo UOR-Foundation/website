@@ -29,6 +29,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   targetUrl,
   targetLens,
   immersive = true,
+  anchorRef,
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
