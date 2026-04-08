@@ -1,0 +1,60 @@
+import { lazy, type ComponentType } from "react";
+import {
+  Search, Sparkles, BookOpen, MessageCircle, Shield, Settings, Music,
+} from "lucide-react";
+
+export interface DesktopApp {
+  id: string;
+  label: string;
+  icon: ComponentType<any>;
+  component: React.LazyExoticComponent<ComponentType<any>>;
+  defaultSize?: { w: number; h: number };
+  color: string; // accent color for dock glow
+}
+
+export const DESKTOP_APPS: DesktopApp[] = [
+  {
+    id: "search",
+    label: "Search",
+    icon: Search,
+    component: lazy(() => import("@/modules/oracle/pages/ResolvePage")),
+    defaultSize: { w: 960, h: 620 },
+    color: "hsl(210 80% 60%)",
+  },
+  {
+    id: "oracle",
+    label: "Oracle",
+    icon: Sparkles,
+    component: lazy(() => import("@/modules/oracle/pages/OraclePage")),
+    defaultSize: { w: 780, h: 580 },
+    color: "hsl(270 70% 65%)",
+  },
+  {
+    id: "library",
+    label: "Library",
+    icon: BookOpen,
+    component: lazy(() => import("@/modules/oracle/pages/LibraryPage")),
+    defaultSize: { w: 900, h: 600 },
+    color: "hsl(35 90% 55%)",
+  },
+  {
+    id: "messenger",
+    label: "Messenger",
+    icon: MessageCircle,
+    component: lazy(() => import("@/modules/messenger/pages/MessengerPage")),
+    defaultSize: { w: 700, h: 560 },
+    color: "hsl(160 60% 50%)",
+  },
+  {
+    id: "vault",
+    label: "Vault",
+    icon: Shield,
+    component: lazy(() => import("@/modules/identity/pages/ProjectUorIdentity")),
+    defaultSize: { w: 720, h: 520 },
+    color: "hsl(200 70% 55%)",
+  },
+];
+
+export function getApp(id: string): DesktopApp | undefined {
+  return DESKTOP_APPS.find(a => a.id === id);
+}
