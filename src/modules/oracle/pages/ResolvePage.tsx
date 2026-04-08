@@ -562,6 +562,30 @@ const SearchPage = () => {
   useEffect(() => { loadWasm().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
+  // Inject JSON-LD into <head> for AI agents and crawlers
+  useEffect(() => {
+    if (!result?.source) return;
+    const src = result.source as Record<string, unknown>;
+    const jsonLd: Record<string, unknown> = {
+      "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+      "@type": src["@type"] || "uor:Object",
+      "@id": `urn:uor:${result.receipt.cid}`,
+      "uor:triword": result.receipt.triword,
+      "uor:cid": result.receipt.cid,
+      "uor:ipv6": result.receipt.ipv6,
+    };
+    if (typeof src["uor:label"] === "string") jsonLd["name"] = src["uor:label"];
+    if (typeof src["uor:title"] === "string") jsonLd["name"] = src["uor:title"];
+    if (typeof src["uor:description"] === "string") jsonLd["description"] = src["uor:description"];
+    if (typeof src["uor:sourceUrl"] === "string") jsonLd["url"] = src["uor:sourceUrl"];
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-uor", "true");
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, [result?.receipt?.cid]);
+
   useEffect(() => {
     if (!wasmReady) return;
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
