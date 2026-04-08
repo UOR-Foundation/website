@@ -46,10 +46,11 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
 import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
-import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
+import { computeCoherence, recordDwell, recordLensSwitch, dismissLensSuggestion, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
 import CoherenceIndicator from "@/modules/oracle/components/CoherenceIndicator";
 import LensSuggestion from "@/modules/oracle/components/LensSuggestion";
+import type { LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -1036,6 +1037,18 @@ const SearchPage = () => {
       handleKeywordResolve(keyword, lensId);
     }
   }, [result, coherenceState]);
+
+  /** Apply a full blueprint — re-stream with custom parameters */
+  const handleBlueprintApply = useCallback((bp: LensBlueprint) => {
+    setActiveLens(bp.id);
+    setLensSuggestionDismissed(true);
+    const src = result?.source as Record<string, unknown> | null;
+    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
+      // Re-stream with blueprint params — the edge function will compose a custom prompt
+      handleKeywordResolve(keyword, bp.id);
+    }
+  }, [result]);
 
   const submit = () => {
     handleSearch(input);
@@ -2222,8 +2235,20 @@ const SearchPage = () => {
                             <LensSuggestion
                               suggestedLens={coherenceState.suggestedLens}
                               reason={coherenceState.suggestedLensReason || ""}
-                              onAccept={() => handleLensChange(coherenceState.suggestedLens!)}
-                              onDismiss={() => setLensSuggestionDismissed(true)}
+                              onAccept={() => {
+                                if (coherenceState.suggestedBlueprint) {
+                                  handleBlueprintApply(coherenceState.suggestedBlueprint);
+                                } else {
+                                  handleLensChange(coherenceState.suggestedLens!);
+                                }
+                              }}
+                              onDismiss={() => {
+                                setLensSuggestionDismissed(true);
+                                if (coherenceState.suggestedBlueprint) {
+                                  dismissLensSuggestion(coherenceState.suggestedBlueprint.id);
+                                }
+                              }}
+                              blueprint={coherenceState.suggestedBlueprint}
                             />
                           )}
                           <HumanContentView
@@ -2235,6 +2260,8 @@ const SearchPage = () => {
                             isReaderMode
                             novelty={coherenceState?.novelty || null}
                             immersive={immersiveMode}
+                            suggestedBlueprint={coherenceState?.suggestedBlueprint}
+                            onBlueprintApply={handleBlueprintApply}
                           />
                         </div>
                       </div>

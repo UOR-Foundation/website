@@ -398,6 +398,84 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
 
 /* ── Lens system prompts ─────────────────────────────────────────────── */
 
+/** Build a dynamic prompt from blueprint params (new adaptive system) */
+function buildBlueprintPrompt(params: {
+  tone?: string;
+  depth?: string;
+  audience?: string;
+  structure?: string;
+  citationDensity?: string;
+  focusAreas?: string[];
+  excludeAreas?: string[];
+}, context?: string[], sourceCount?: number): string {
+  const totalSources = sourceCount || 2;
+  const citationNote = totalSources > 2
+    ? `Use [1] for Wikipedia, [2] for Wikidata, and [3]-[${totalSources}] for additional sources.`
+    : `Use [1] for Wikipedia and [2] for Wikidata.`;
+
+  const toneMap: Record<string, string> = {
+    neutral: "Write in a neutral, encyclopedic tone. No first person, no hedging.",
+    vivid: "Write in a vivid, cinematic style with dramatic flair and sensory language.",
+    technical: "Write in a precise, rigorous, scholarly tone using domain-specific terminology.",
+    conversational: "Write in a warm, accessible, conversational tone using simple everyday language.",
+    poetic: "Write in a lyrical, evocative style that finds beauty and drama in the subject.",
+  };
+
+  const depthMap: Record<string, string> = {
+    overview: "Write 500-800 words. Give a clear high-level overview without excessive detail.",
+    standard: "Write 1000-1500 words. Be comprehensive but concise.",
+    deep: "Write 1500-2200 words. Provide substantial depth and technical detail.",
+    exhaustive: "Write 2000-3000 words. Leave no significant aspect uncovered.",
+  };
+
+  const audienceMap: Record<string, string> = {
+    beginner: "Explain for someone with no background. Use analogies to everyday things. Define all terms.",
+    curious: "Write for an intelligent general reader. Explain specialized terms briefly.",
+    informed: "Assume the reader has basic domain knowledge. Focus on insights rather than definitions.",
+    expert: "Write for domain experts. Use technical terminology without over-explaining.",
+  };
+
+  const structureMap: Record<string, string> = {
+    sections: "Structure with ## headings for 6-12 organized sections.",
+    narrative: "Structure as a narrative arc: setup → discovery → implications → reflection.",
+    qa: "Structure as a series of compelling questions and thorough answers.",
+    timeline: "Structure chronologically, tracing the evolution of the topic over time.",
+    comparison: "Structure around comparisons: different perspectives, approaches, or schools of thought.",
+  };
+
+  const citMap: Record<string, string> = {
+    minimal: "Add only 2-4 citation markers for the most critical claims.",
+    moderate: "Add citation markers after key factual claims. " + citationNote,
+    thorough: "Add citation markers after every significant factual claim. " + citationNote,
+  };
+
+  const parts: string[] = [
+    "You are a world-class knowledge writer. Write a comprehensive article about the given topic.",
+    "",
+    `TONE: ${toneMap[params.tone || "neutral"] || toneMap.neutral}`,
+    `DEPTH: ${depthMap[params.depth || "standard"] || depthMap.standard}`,
+    `AUDIENCE: ${audienceMap[params.audience || "curious"] || audienceMap.curious}`,
+    `STRUCTURE: ${structureMap[params.structure || "sections"] || structureMap.sections}`,
+    `CITATIONS: ${citMap[params.citationDensity || "moderate"] || citMap.moderate}`,
+    "",
+    "Bold the subject on first mention using **Subject**.",
+    "Do NOT use ### sub-headings — only ## level.",
+  ];
+
+  if (params.focusAreas && params.focusAreas.length > 0) {
+    parts.push(`\nFOCUS AREAS: Emphasize these aspects: ${params.focusAreas.join(", ")}.`);
+  }
+  if (params.excludeAreas && params.excludeAreas.length > 0) {
+    parts.push(`\nEXCLUDE: Do not cover or minimize these aspects: ${params.excludeAreas.join(", ")}.`);
+  }
+
+  if (context && context.length > 0) {
+    parts.push(`\nCONTEXTUAL PERSONALIZATION: The user has recently explored: [${context.slice(0, 10).join(", ")}]. Where relevant, emphasize connections. Include a ## Connections section near the end.`);
+  }
+
+  return parts.join("\n");
+}
+
 function buildLensPrompt(lens: string, context?: string[], sourceCount?: number): string {
   const totalSources = sourceCount || 2;
   const citationNote = totalSources > 2
@@ -512,7 +590,7 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword, context, lens } = await req.json();
+    const { keyword, context, lens, lensParams } = await req.json();
     if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Missing keyword" }), {
         status: 400,
@@ -523,6 +601,7 @@ serve(async (req) => {
     const term = keyword.trim();
     const userContext = Array.isArray(context) ? context.filter((c: unknown) => typeof c === "string").slice(0, 20) : [];
     const activeLens = typeof lens === "string" ? lens : "encyclopedia";
+    const blueprintParams = lensParams && typeof lensParams === "object" ? lensParams : null;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -542,8 +621,18 @@ serve(async (req) => {
 
     console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl)`);
 
-    // Build AI prompt with enriched source context
+    // Build AI prompt — use blueprint params if available, otherwise use lens ID
+    const systemPrompt = blueprintParams
+      ? buildBlueprintPrompt(blueprintParams, userContext, sources.length)
+      : buildLensPrompt(activeLens, userContext, sources.length);
+
     const userMessage = buildUserMessage(term, activeLens, wiki, topSources);
+
+    // Determine temperature and max tokens from params or lens
+    const effectiveDepth = blueprintParams?.depth || (activeLens === "expert" ? "exhaustive" : "standard");
+    const effectiveTone = blueprintParams?.tone || activeLens;
+    const maxTokens = effectiveDepth === "exhaustive" ? 3200 : effectiveDepth === "deep" ? 2800 : 2400;
+    const temperature = (effectiveTone === "poetic" || effectiveTone === "vivid" || activeLens === "storyteller" || activeLens === "magazine") ? 0.6 : 0.3;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -554,11 +643,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: buildLensPrompt(activeLens, userContext, sources.length) },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-        max_tokens: activeLens === "expert" ? 3200 : 2400,
-        temperature: activeLens === "storyteller" || activeLens === "magazine" ? 0.6 : 0.3,
+        max_tokens: maxTokens,
+        temperature,
         stream: true,
       }),
     });
