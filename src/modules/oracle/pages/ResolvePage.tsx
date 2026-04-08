@@ -986,6 +986,7 @@ const SearchPage = () => {
 
           {/* Right: Sovereign Identity avatar */}
           <button
+            onClick={() => setIdentityPanelOpen(true)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
             title="Sovereign Identity"
           >
