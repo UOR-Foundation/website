@@ -54,6 +54,31 @@ const IMPROBABILITY_EXPONENTS = [
   "2^1,048,576", "2^∞",
 ];
 
+/* ── Canonical concept: near-infinite addressing ── */
+const NEAR_INFINITE_CONCEPT = {
+  "@context": "https://schema.uor.foundation/v1",
+  "@type": "uor:Concept",
+  "@id": "uor:concept:near-infinite-addressing",
+  "uor:label": "Near-Infinite Addressing",
+  "uor:definition": "The UOR framework leverages IPv6 Unique Local Addressing (fd00:0075:6f72::/48) to provide a near-infinite content-addressed namespace. IPv6's 128-bit address space yields ~3.4 × 10³⁸ unique addresses — enough to assign a distinct, deterministic identifier to every discrete semantic object ever conceived. Each address is derived from the SHA-256 hash of canonicalized content, truncated to 128 bits and projected into the ULA range. This creates a decentralized, DNS-independent substrate where every concept, datum, proof, or relationship occupies a stable, collision-resistant coordinate. The result is a programmable semantic web: both humans and AI agents can reference, compose, and verify meaning through universal addresses that are simultaneously routable (Layer 4) and content-verifiable (Layer 1).",
+  "uor:properties": {
+    "address_space_size": "2¹²⁸ ≈ 3.4 × 10³⁸",
+    "prefix": "fd00:0075:6f72::/48",
+    "prefix_encoding": "0075:6f72 = 'uor' in ASCII",
+    "hash_algorithm": "SHA-256 → 128-bit truncation",
+    "addressing_model": "Content-addressed, deterministic, collision-resistant",
+    "identity_forms": ["derivation_id (256-bit)", "CID (dag-json/sha2-256)", "IPv6 ULA (128-bit)", "Braille glyph"],
+    "key_insight": "Identity and routing converge — what something IS determines where it LIVES in the address space"
+  },
+  "uor:enables": [
+    "Programmable semantics — meaning becomes addressable and composable",
+    "Machine-readable semantic web — AI agents navigate via stable addresses",
+    "Human-readable semantic web — triword addresses provide intuitive naming",
+    "Decentralized identity — no DNS dependency, no central registry",
+    "Semantic substrate — a universal coordinate system for knowledge"
+  ]
+};
+
 interface Result {
   source: unknown;
   receipt: EnrichedReceipt;
@@ -135,7 +160,7 @@ const SearchPage = () => {
     handleSearch(triword);
   };
 
-  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+  useEffect(() => { loadWasm().then(() => { setWasmReady(true); encode(NEAR_INFINITE_CONCEPT).catch(() => {}); }); }, []);
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
   useEffect(() => {
@@ -728,7 +753,26 @@ const SearchPage = () => {
                 className="absolute left-0 right-0 text-center text-lg text-foreground/50 select-none tracking-wide"
                 style={{ bottom: "6vh" }}
               >
-                Searching a <span className="text-primary font-semibold">near-infinite</span> address space.
+                Searching a{" "}
+                <button
+                  onClick={() => {
+                    const entry = allEntries().find(e => (e.source as Record<string, unknown>)?.["@id"] === "uor:concept:near-infinite-addressing");
+                    if (entry) {
+                      setInput(entry.receipt.triword);
+                      setResult({ source: entry.source, receipt: entry.receipt });
+                    } else {
+                      encode(NEAR_INFINITE_CONCEPT).then(receipt => {
+                        setInput(receipt.triword);
+                        setResult({ source: NEAR_INFINITE_CONCEPT, receipt });
+                      });
+                    }
+                  }}
+                  className="text-primary font-semibold hover:text-primary/90 underline decoration-primary/30 underline-offset-4 hover:decoration-primary/60 transition-all cursor-pointer"
+                  title="Resolve the canonical definition of near-infinite addressing"
+                >
+                  near-infinite
+                </button>{" "}
+                address space.
               </p>
             </div>
           )}
