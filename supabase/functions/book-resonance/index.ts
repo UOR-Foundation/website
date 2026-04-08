@@ -189,7 +189,7 @@ async function handleIngest(sourceUrl: string) {
 
 /* ── FUSE action (Manual mode) — streaming ───────────────────────── */
 
-async function handleFuse(bookIds: string[]) {
+async function handleFuse(bookIds: string[], latencyTier?: string) {
   const { data: books, error } = await supabaseAdmin
     .from("book_summaries")
     .select("id, title, author, domain, summary_markdown")
@@ -226,11 +226,12 @@ Return ONLY the JSON array, no markdown fences.`;
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+  const tier = typeof latencyTier === "string" && TIER_MODELS[latencyTier] ? latencyTier : "balanced";
+
+  const { response } = await fetchWithCascade(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    LOVABLE_API_KEY,
+    {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Analyze these ${books.length} books and discover cross-domain invariant patterns:\n\n${bookContext}` },
@@ -238,8 +239,9 @@ Return ONLY the JSON array, no markdown fences.`;
       stream: true,
       max_tokens: 4096,
       temperature: 0.5,
-    }),
-  });
+    },
+    tier,
+  );
 
   if (!response.ok) {
     const status = response.status;
@@ -255,7 +257,7 @@ Return ONLY the JSON array, no markdown fences.`;
 
 /* ── DISCOVER action (Auto mode) — streaming ─────────────────────── */
 
-async function handleDiscover(userContext?: string) {
+async function handleDiscover(userContext?: string, latencyTier?: string) {
   const { data: books, error } = await supabaseAdmin
     .from("book_summaries")
     .select("id, title, author, domain, summary_markdown")
