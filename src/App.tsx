@@ -27,6 +27,7 @@ const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHo
 const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUorIdentity"));
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 const SearchPage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
+const DesktopSearch = lazy(() => import("@/modules/desktop/DesktopShell"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
 const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
@@ -35,7 +36,7 @@ const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
 const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
-const DesktopShell = lazy(() => import("@/modules/desktop/DesktopShell"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,12 +69,12 @@ const App = () => {
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/donate" element={<DonatePage />} />
               <Route path="/oracle" element={<OraclePage />} />
-              <Route path="/search" element={<SearchPage />} />
+              <Route path="/search" element={<DesktopSearch />} />
               <Route path="/resolve" element={<SearchPage />} />
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
               <Route path="/library" element={<LibraryPage />} />
-              <Route path="/desktop" element={<DesktopShell />} />
+              <Route path="/desktop" element={<Navigate to="/search" replace />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />

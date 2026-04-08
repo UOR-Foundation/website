@@ -1,5 +1,5 @@
 /**
- * DesktopWindow — Draggable, resizable window with macOS traffic-light buttons.
+ * DesktopWindow — Crisp, Perplexity-dark draggable/resizable window.
  */
 
 import { useRef, useCallback, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -35,7 +35,6 @@ export default function DesktopWindow({
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
 
-  // Drag handlers
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest(".traffic-light")) return;
     onFocus(win.id);
@@ -62,7 +61,6 @@ export default function DesktopWindow({
     dragRef.current = null;
   }, []);
 
-  // Resize handlers
   const onResizeStart = useCallback((e: ReactPointerEvent) => {
     e.stopPropagation();
     onFocus(win.id);
@@ -115,14 +113,21 @@ export default function DesktopWindow({
       }}
       onPointerDown={() => onFocus(win.id)}
     >
-      {/* Glass background */}
-      <div className="absolute inset-0 frosted-glass rounded-xl" />
+      {/* Glass background — darker, crisper */}
+      <div
+        className="absolute inset-0 rounded-xl"
+        style={{
+          background: "rgba(26,26,26,0.85)",
+          backdropFilter: "blur(48px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+        }}
+      />
 
       {/* Border overlay */}
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          border: `1px solid ${isActive ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)"}`,
+          border: `1px solid ${isActive ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)"}`,
         }}
       />
 
@@ -151,17 +156,20 @@ export default function DesktopWindow({
         </div>
 
         {/* Title */}
-        <span className="text-[12px] font-medium text-white/60 truncate flex-1 text-center pr-12">
+        <span className={`text-[12px] font-medium truncate flex-1 text-center pr-12 ${isActive ? "text-white/65" : "text-white/40"}`}>
           {win.title}
         </span>
       </div>
 
-      {/* Content */}
-      <div className="relative overflow-auto" style={{ height: "calc(100% - 40px)" }}>
+      {/* Content — solid dark background for crispness */}
+      <div
+        className="relative overflow-auto rounded-b-xl"
+        style={{ height: "calc(100% - 40px)", background: "#191919" }}
+      >
         <Suspense
           fallback={
             <div className="flex items-center justify-center h-full">
-              <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/15 border-t-white/50 rounded-full animate-spin" />
             </div>
           }
         >
@@ -169,7 +177,7 @@ export default function DesktopWindow({
         </Suspense>
       </div>
 
-      {/* Resize handle (bottom-right) */}
+      {/* Resize handles */}
       {!win.maximized && (
         <>
           <div

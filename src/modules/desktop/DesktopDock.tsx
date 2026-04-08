@@ -1,5 +1,5 @@
 /**
- * DesktopDock — macOS-style bottom dock with magnification.
+ * DesktopDock — Perplexity-crisp monochrome dock.
  */
 
 import { DESKTOP_APPS, type DesktopApp } from "@/modules/desktop/lib/desktop-apps";
@@ -17,7 +17,15 @@ export default function DesktopDock({ windows, onOpenApp }: Props) {
 
   return (
     <div className="fixed bottom-3 inset-x-0 z-[190] flex justify-center pointer-events-none">
-      <div className="pointer-events-auto flex items-end gap-1.5 px-3 py-1.5 frosted-glass rounded-2xl border border-white/[0.12]">
+      <div
+        className="pointer-events-auto flex items-end gap-1 px-2.5 py-1.5 rounded-2xl"
+        style={{
+          background: "rgba(0,0,0,0.40)",
+          backdropFilter: "blur(48px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+          border: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
         {DESKTOP_APPS.map((app) => (
           <DockIcon
             key={app.id}
@@ -52,19 +60,18 @@ function DockIcon({
       aria-label={`Open ${app.label}`}
     >
       {/* Tooltip */}
-      <span className="dock-tooltip absolute -top-8 px-2 py-0.5 rounded-md text-[11px] font-medium text-white/90 bg-black/70 backdrop-blur-sm border border-white/10 whitespace-nowrap">
+      <span className="dock-tooltip absolute -top-8 px-2 py-0.5 rounded-md text-[11px] font-medium text-white/90 bg-black/80 backdrop-blur-sm border border-white/[0.06] whitespace-nowrap">
         {app.label}
       </span>
 
-      {/* Icon tile */}
+      {/* Icon tile — monochrome */}
       <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors"
+        className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
         style={{
-          background: `linear-gradient(135deg, ${app.color}, ${app.color}88)`,
-          boxShadow: `0 4px 16px -4px ${app.color}66`,
+          background: "rgba(255,255,255,0.06)",
         }}
       >
-        <Icon className="w-5 h-5 text-white" />
+        <Icon className="w-[18px] h-[18px] text-white/60 group-hover:text-white/90 transition-colors" />
       </div>
 
       {/* Open indicator dot */}
@@ -72,7 +79,7 @@ function DockIcon({
         <div
           className="w-1 h-1 rounded-full mt-0.5"
           style={{
-            background: isMinimized ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.7)",
+            background: isMinimized ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
           }}
         />
       )}
