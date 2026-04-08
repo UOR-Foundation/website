@@ -39,6 +39,17 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [anchorPos, setAnchorPos] = useState<{ top: number; right: number } | null>(null);
+
+  // Compute position from anchor ref
+  useEffect(() => {
+    if (!open || !anchorRef?.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    setAnchorPos({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+  }, [open, anchorRef]);
 
   const generateToken = useCallback(async () => {
     setLoading(true);
