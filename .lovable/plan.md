@@ -1,55 +1,67 @@
 
 
-## Triword Vocabulary Refresh — Unified Ecosystem Words
+## Sovereign Context Board — Inline Vault Picker
 
-### Goal
-Replace all three 256-word lists (OBSERVERS, OBSERVABLES, CONTEXTS) with new vocabularies that are:
-- Balanced equally across 5 domains: **humans, nature, animals & plants, space, ocean & fish**
-- Super simple (a 10-year-old knows every word), easy to spell, easy to pronounce
-- Delightful, crisp, and shareable as addresses like "Moon · Bright · Reef"
+### What We're Building
 
-### Vocabulary Design
+A beautiful **"+" button** on the left side of the search input (both desktop immersive view and mobile search bar) that opens a compact **Context Picker** sheet. This lets users select vault documents as context for their search — like attaching files to a message. Selected documents appear as small pills below the search bar, and their content is passed along with the query.
 
-Each list has 256 slots. Slot 0 is reserved for the genesis kernel (theos/logos/sophia). The remaining 255 are distributed across 5 domains (~51 words each), sorted alphabetically within each domain.
+### User Flow
 
-**OBSERVERS (Dimension 1 — "Who/What")** — Beings, entities, forces:
-- **Humans** (~51): baby, baker, boy, bride, chief, child, coach, cook, cousin, dad, dancer, doctor, diver, drummer, elder, farmer, friend, girl, guard, guide, healer, hero, human, hunter, king, knight, lady, maker, mama, mentor, miner, mom, nurse, padre, painter, papa, pilot, poet, prince, queen, rider, sage, sailor, scout, singer, sister, smith, soul, teacher, twin, woman
-- **Animals & Plants** (~51): ant, bass, bear, bee, bird, bud, bull, cat, calf, cobra, colt, crab, crow, deer, dog, dove, duck, eagle, elk, fawn, finch, fish, fox, frog, goat, goose, hawk, hen, horse, lamb, lark, leaf, lion, moth, mouse, oak, orchid, otter, owl, palm, panda, pine, pony, pup, robin, rose, seal, shark, swan, whale, wolf
-- **Nature** (~51): ash, bloom, breeze, brook, clay, cliff, cloud, coral, creek, dew, dune, dust, ember, fern, flame, flood, flower, fog, frost, gale, gem, grove, hail, heat, hill, ice, ivy, lake, leaf, light, marsh, mist, moon, moss, rain, reef, ridge, river, rock, root, sand, seed, shade, shell, snow, spring, stone, storm, stream, sun, vine, wave, wind
-- **Space** (~51): comet, cosmos, crater, dawn, dusk, earth, eclipse, flare, galaxy, glow, mars, meteor, nebula, night, north, nova, orbit, planet, plasma, pluto, pulse, quasar, ray, ring, rocket, saturn, sky, solar, south, star, stellar, sun, twilight, uranus, venus, void, west, east, zenith
-- **Ocean & Fish** (~51): anchovy, clam, cod, conch, coral, crab, current, delta, depth, dolphin, drift, eel, estuary, fin, flounder, foam, gulf, guppy, harbor, inlet, jelly, kelp, krill, lagoon, lobster, marlin, mussel, narwhal, oyster, pearl, perch, pike, plankton, reef, salmon, sardine, scallop, seahorse, shrimp, snail, sponge, squid, starfish, stingray, surf, tide, trout, tuna, turtle, urchin, walrus
+1. User taps the **+** button (left of search input)
+2. A slide-up sheet appears showing:
+   - Their vault documents as a selectable list (checkbox-style)
+   - A quick "Import" button (file or URL) at the bottom
+   - A compact search bar to filter documents
+3. User taps documents to toggle selection → pills appear below search input
+4. User types their query and submits — selected vault docs are included as context
+5. Tapping a pill removes it from context
 
-**OBSERVABLES (Dimension 2 — "How/What quality")** — Simple adjectives balanced across domains:
-- **Human qualities**: bold, brave, calm, clever, fair, fast, free, gentle, glad, good, grand, great, happy, honest, humble, keen, kind, loyal, merry, noble, patient, proud, pure, quick, quiet, ready, safe, simple, smart, steady, strong, sure, sweet, tender, true, warm, wise, young
-- **Nature qualities**: arid, bare, bitter, blazing, bright, brisk, broad, clear, cold, cool, crisp, dark, deep, dense, dewy, dim, dry, dusky, earthy, fallen, faint, fierce, fine, flat, foggy, fresh, frigid, frozen, full, green, hardy, hazy, heavy, high, hot, hushed, icy, lush, mild, misty, mossy, pale, raw, rich, rough, rugged, serene, sharp, sheer, silent, sleek, slim, slow, smooth, snowy, soft, steep, still, stormy, sunny, thick, thin, vast, vivid, wet, wide, wild
-- **Space qualities**: aglow, astral, cosmic, distant, endless, eternal, far, giant, lunar, massive, radiant, solar, stellar
-- **Ocean qualities**: aqua, azure, briny, coral, fluid, marine, pearly, salty, tidal, wavy
+### File Changes
 
-**CONTEXTS (Dimension 3 — "Where")** — Places and habitats:
-- **Human places**: barn, bridge, cabin, camp, castle, chapel, city, court, dock, farm, fence, forge, fort, garden, gate, hall, harbor, hearth, home, house, hut, inn, lane, lodge, manor, market, mill, palace, park, path, pier, plaza, port, ranch, road, room, school, shop, square, station, street, tower, trail, village, wall, ward, well, yard
-- **Nature places**: bank, basin, bay, beach, bend, bluff, bog, cape, canyon, cave, clearing, cliff, coast, copse, cove, creek, crest, dale, dell, delta, desert, dune, edge, falls, fen, field, fjord, flat, forest, glade, glen, gorge, grove, heath, highland, hill, hollow, island, knoll, lake, ledge, lowland, marsh, meadow, mesa, moor, mount, oasis, pass, peak, plain, pond, prairie, quarry, range, ravine, ridge, river, rock, savanna, shore, slope, spring, steppe, summit, swamp, terrace, thicket, tundra, vale, valley, volcano, wood
-- **Space places**: cosmos, crater, eclipse, galaxy, nebula, north, orbit, ring, sky, south, star, sun, void, west, east, zenith, horizon
-- **Ocean places**: abyss, atoll, channel, coral, current, deep, depth, drift, estuary, gulf, inlet, isle, lagoon, narrows, pool, reef, sea, shelf, shoal, shore, sound, strait, surf, tide, trench, wake, wharf
+**1. New component: `src/modules/sovereign-vault/components/VaultContextPicker.tsx`**
+- A slide-up sheet/popover triggered by the + button
+- Shows list of vault documents with checkboxes, file icons, and truncated CIDs
+- Filter input at top to narrow down documents
+- "Import file" and "Import URL" quick-actions at the bottom
+- Uses `useVault()` for data, `AnimatePresence` for smooth transitions
+- Returns selected document IDs via an `onSelectionChange` callback
+- If not authenticated, shows a gentle "Sign in to use your Sovereign Vault" prompt
 
-### Implementation
+**2. New component: `src/modules/sovereign-vault/components/ContextPills.tsx`**
+- Renders selected vault documents as small, dismissible pills below the search bar
+- Each pill shows a Shield icon + truncated filename + X to remove
+- Subtle primary/10 background with primary text — matches existing VaultContextBadge style
 
-**Single file change**: `src/lib/uor-triword.ts`
+**3. Modify: `src/modules/oracle/components/ImmersiveSearchView.tsx`**
+- Replace the existing top-bar "Encode" button with the new + button positioned **inside the search input**, on the left side
+- Add state: `selectedVaultDocs: string[]` (array of document IDs)
+- Render `VaultContextPicker` as a popover anchored to the + button
+- Render `ContextPills` between the search input and the vault badge
+- Pass selected doc IDs through `onSearch` (extend to include context)
 
-1. Replace the `OBSERVERS` array (lines 166–199) with the new 256-entry list
-2. Replace the `OBSERVABLES` array (lines 207–240) with the new 256-entry list
-3. Replace the `CONTEXTS` array (lines 248–281) with the new 256-entry list
-4. Update the `TRIWORD_GENESIS` description (lines 86–157) to reflect the unified ecosystem theme
-5. Ensure all three lists have exactly 256 unique entries, slot 0 = genesis kernel, rest sorted alphabetically
+**4. Modify: `src/modules/oracle/components/MobileSearchBar.tsx`**
+- Replace the existing `onEncode` Plus button with the vault context picker trigger
+- Same popover/sheet pattern, opening upward on mobile
+- Render `ContextPills` in a row above the input bar when docs are selected
 
-The genesis verification will automatically re-derive a new canonical hash on next load. All existing triword references will change (expected — this is a vocabulary update), but the system remains structurally sound.
+**5. Modify: `src/modules/sovereign-vault/components/VaultImportDialog.tsx`**
+- Add an `embedded` prop variant for inline use within the context picker (compact mode, no Dialog wrapper)
 
-### Result
+### Design Details
 
-Addresses become things like:
-- **"Dove · Bright · Reef"**
-- **"Moon · Gentle · Meadow"**
-- **"Dolphin · Warm · Forest"**
-- **"Star · Clear · Harbor"**
+- **+ button**: 36×36px rounded-full, `bg-white/10` on immersive, `bg-white/[0.06]` on mobile, with a smooth scale animation on tap
+- **Sheet**: Rounded-2xl, backdrop-blur-xl, max-height 50vh, scrollable document list
+- **Document rows**: 48px height, file icon + filename + chunk count + checkbox on right
+- **Context pills**: 28px height, rounded-full, Shield icon + filename truncated to 12 chars + X button
+- **Import actions**: Compact row at bottom of sheet with Upload and Link2 icons
+- **Empty state**: Friendly message with Shield icon when vault is empty
+- **Auth gate**: If not signed in, show a soft prompt to sign in
 
-Simple, beautiful, shareable, and spanning a unified picture of all ecosystems.
+### Technical Notes
+
+- The vault is already linked to the user's sovereign identity via `useAuth()` → `user.id` — persistence across devices is handled by the existing database layer
+- No database changes needed — `sovereign_documents` table and RLS policies already exist
+- Selected context will be stored in component state (not persisted) — it's per-search-session
+- The `onSearch` callback signature doesn't change externally; context doc IDs are passed as a second parameter or via a shared context provider
 
