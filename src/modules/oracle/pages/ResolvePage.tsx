@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
+import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
