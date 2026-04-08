@@ -1102,94 +1102,24 @@ const SearchPage = () => {
                           )}
                         </div>
 
-                        {/* UOR Proof Card — appears below each completed assistant message */}
+                        {/* UOR Proof Receipt — compact expandable */}
                         {hasProof && msg.proof && (
-                          <div className="relative mt-3 max-w-[88%] w-full">
-                            <motion.div
-                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                              className="flex items-stretch gap-0"
-                            >
-                              {/* Chain connector + checkbox column */}
-                              {proofCount >= 2 && (
-                                <div className="flex flex-col items-center w-8 shrink-0 pt-1">
-                                  {/* Always-interactive chain dot */}
-                                  <button
-                                    onClick={() => toggleProofIndex(currentProofIdx)}
-                                    className="transition-all hover:scale-125"
-                                    aria-label={isSelected ? "Deselect proof" : "Select proof for chain"}
-                                  >
-                                    {isSelected ? (
-                                      <motion.div
-                                        initial={{ scale: 0.5 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                                      >
-                                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                                      </motion.div>
-                                    ) : (
-                                      <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/15 cursor-pointer hover:bg-primary/40 hover:border-primary/30 transition-colors" />
-                                    )}
-                                  </button>
-                                  {/* Connector line to next proof */}
-                                  {nextProofExists && (
-                                    <div className="flex-1 w-px bg-primary/10 mt-1" style={{ minHeight: 24 }} />
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Proof card */}
-                              <div className={`flex-1 border rounded-xl px-4 py-3 space-y-2 transition-all ${
-                                isSelected
-                                  ? "border-primary/30 bg-primary/[0.06]"
-                                  : "border-primary/10 bg-primary/[0.03]"
-                              }`}>
-                                <div className="flex items-center gap-2">
-                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
-                                  <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
-                                </div>
-
-                                {/* Triword address */}
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-display text-foreground/80 tracking-wide">
-                                    {msg.proof.triwordFormatted}
-                                  </span>
-                                  <CopyBtn
-                                    onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
-                                    copied={copied === `proof-triword-${i}`}
-                                    size={10}
-                                  />
-                                </div>
-
-                                {/* IPv6 address */}
-                                {msg.proof.ipv6 && (
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
-                                      {msg.proof.ipv6}
-                                    </p>
-                                    <CopyBtn
-                                      onClick={() => copy(msg.proof!.ipv6, `proof-ipv6-${i}`)}
-                                      copied={copied === `proof-ipv6-${i}`}
-                                      size={10}
-                                    />
-                                  </div>
-                                )}
-
-                                {/* Clickable to navigate to full proof */}
-                                <button
-                                  onClick={() => {
-                                    setInput(msg.proof!.triword);
-                                    exitAiMode();
-                                    setTimeout(() => handleSearch(msg.proof!.triword), 100);
-                                  }}
-                                  className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
-                                >
-                                  View full proof →
-                                </button>
-                              </div>
-                            </motion.div>
-                          </div>
+                          <ProofReceipt
+                            proof={msg.proof}
+                            index={i}
+                            proofCount={proofCount}
+                            currentProofIdx={currentProofIdx}
+                            isSelected={isSelected}
+                            nextProofExists={nextProofExists}
+                            toggleProofIndex={toggleProofIndex}
+                            copied={copied}
+                            onCopy={copy}
+                            onViewFull={() => {
+                              setInput(msg.proof!.triword);
+                              exitAiMode();
+                              setTimeout(() => handleSearch(msg.proof!.triword), 100);
+                            }}
+                          />
                         )}
                       </div>
                     );
