@@ -241,7 +241,7 @@ const SearchPage = () => {
     setAiInput("");
   };
 
-  /* ── Infinite Improbability Drive sequence (~4s, themed) ── */
+  /* ── Infinite Improbability Drive sequence (~5s, themed) ── */
   const fireImprobabilityDrive = () => {
     const entries = allEntries();
     if (entries.length === 0) {
@@ -249,70 +249,83 @@ const SearchPage = () => {
       return;
     }
 
-    setImprobabilityActive(true);
-    setImprobPhase(1);
+    // Phase 0: particle → wave (blur the page content)
+    setDrivePrePhase(true);
     setImprobExponent(0);
     setImprobSideEffect("");
 
-    // Phase 1 (0–1000ms): tick exponent counter slowly
-    let expIdx = 0;
-    const expInterval = setInterval(() => {
-      expIdx++;
-      if (expIdx < IMPROBABILITY_EXPONENTS.length) {
-        setImprobExponent(expIdx);
-      } else {
-        clearInterval(expInterval);
-      }
-    }, 150);
-
-    // Phase 2 at 1000ms: cycle side effects
+    // At 800ms: overlay activates, pre-phase ends
     setTimeout(() => {
-      setImprobPhase(2);
-      let effectIdx = 0;
-      const effectInterval = setInterval(() => {
-        setImprobSideEffect(
-          IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
-        );
-        effectIdx++;
-      }, 500);
+      setDrivePrePhase(false);
+      setImprobabilityActive(true);
+      setImprobPhase(1);
 
-      // Phase 3 at 2800ms: DON'T PANIC + pick result
+      // Phase 1 (800–1800ms): tick exponent counter
+      let expIdx = 0;
+      const expInterval = setInterval(() => {
+        expIdx++;
+        if (expIdx < IMPROBABILITY_EXPONENTS.length) {
+          setImprobExponent(expIdx);
+        } else {
+          clearInterval(expInterval);
+        }
+      }, 150);
+
+      // Phase 2 at 1800ms: cycle side effects
       setTimeout(() => {
-        clearInterval(effectInterval);
-        setImprobPhase(3);
+        setImprobPhase(2);
+        let effectIdx = 0;
+        const effectInterval = setInterval(() => {
+          setImprobSideEffect(
+            IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
+          );
+          effectIdx++;
+        }, 500);
 
-        const pick = entries[Math.floor(Math.random() * entries.length)];
-        // Site-palette confetti
-        const root = document.documentElement;
-        const cs = getComputedStyle(root);
-        const toHex = (v: string) => {
-          const el = document.createElement("div");
-          el.style.color = `hsl(${v})`;
-          document.body.appendChild(el);
-          const c = getComputedStyle(el).color;
-          el.remove();
-          return c;
-        };
-        const colors = [
-          toHex(cs.getPropertyValue("--primary").trim()),
-          toHex(cs.getPropertyValue("--accent").trim()),
-          toHex(cs.getPropertyValue("--foreground").trim()),
-        ];
-        confetti({ particleCount: 120, spread: 110, origin: { y: 0.5 }, colors, startVelocity: 28, gravity: 0.6, ticks: 160 });
-        setTimeout(() => confetti({ particleCount: 50, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 16, gravity: 0.5, ticks: 130 }), 200);
-
-        // At 4000ms: dissolve overlay, show result
+        // Phase 3 at 3600ms: DON'T PANIC + pick result
         setTimeout(() => {
-          setImprobabilityActive(false);
-          setImprobPhase(0);
-          setInput(pick.receipt.triword);
-          setResult({ source: pick.source, receipt: pick.receipt });
+          clearInterval(effectInterval);
+          setImprobPhase(3);
 
-          const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
-          toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
-        }, 1200);
-      }, 1800);
-    }, 1000);
+          const pick = entries[Math.floor(Math.random() * entries.length)];
+          // Site-palette confetti
+          const root = document.documentElement;
+          const cs = getComputedStyle(root);
+          const toHex = (v: string) => {
+            const el = document.createElement("div");
+            el.style.color = `hsl(${v})`;
+            document.body.appendChild(el);
+            const c = getComputedStyle(el).color;
+            el.remove();
+            return c;
+          };
+          const colors = [
+            toHex(cs.getPropertyValue("--primary").trim()),
+            toHex(cs.getPropertyValue("--accent").trim()),
+            toHex(cs.getPropertyValue("--foreground").trim()),
+          ];
+          confetti({ particleCount: 120, spread: 110, origin: { y: 0.5 }, colors, startVelocity: 28, gravity: 0.6, ticks: 160 });
+          setTimeout(() => confetti({ particleCount: 50, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 16, gravity: 0.5, ticks: 130 }), 200);
+
+          // At 4800ms: dissolve overlay, enter post-phase (wave → particle)
+          setTimeout(() => {
+            setImprobabilityActive(false);
+            setImprobPhase(0);
+            setInput(pick.receipt.triword);
+            setResult({ source: pick.source, receipt: pick.receipt });
+            setDrivePostPhase(true);
+
+            const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
+            toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
+
+            // At 5200ms: snap to crisp
+            setTimeout(() => {
+              setDrivePostPhase(false);
+            }, 400);
+          }, 1200);
+        }, 1800);
+      }, 1000);
+    }, 800);
   };
 
   return (
