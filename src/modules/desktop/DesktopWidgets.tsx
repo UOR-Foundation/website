@@ -8,8 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { ArrowRight, Plus, Lock } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Plus } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useAuth } from "@/hooks/use-auth";
@@ -143,27 +142,25 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     : isLight ? "0 2px 24px rgba(0,0,0,0.06)" : "0 2px 24px rgba(0,0,0,0.3)";
   const greetingColor = isImmersive ? "text-white/90" : isLight ? "text-black/35" : "text-white/40";
 
-  // Search bar styles
+  // Search bar styles — no color change for address, just subtle text formatting
   const searchBg = isImmersive
-    ? (isAddress
-        ? "hsl(165 20% 14% / 0.92)"
-        : "hsl(200 15% 16% / 0.9)")
+    ? "hsl(200 15% 16% / 0.9)"
     : isLight
-      ? (isAddress ? "rgba(0,180,120,0.06)" : "rgba(0,0,0,0.04)")
-      : (isAddress ? "rgba(0,180,120,0.08)" : "rgba(255,255,255,0.04)");
+      ? "rgba(0,0,0,0.04)"
+      : "rgba(255,255,255,0.04)";
   const searchBorder = isImmersive
-    ? (isAddress ? "1px solid hsl(160 50% 50% / 0.25)" : "1px solid hsl(0 0% 100% / 0.14)")
+    ? "1px solid hsl(0 0% 100% / 0.14)"
     : isLight
-      ? (isAddress ? "1px solid hsl(160 50% 50% / 0.3)" : "1px solid rgba(0,0,0,0.08)")
-      : (isAddress ? "1px solid hsl(160 50% 50% / 0.25)" : "1px solid rgba(255,255,255,0.08)");
+      ? "1px solid rgba(0,0,0,0.08)"
+      : "1px solid rgba(255,255,255,0.08)";
   const searchShadow = isImmersive
     ? "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3)"
     : isLight ? "0 4px 24px -8px rgba(0,0,0,0.08)" : "0 4px 24px -8px rgba(0,0,0,0.3)";
   const inputColor = isImmersive
-    ? (isAddress ? "hsl(160 40% 85%)" : "hsl(0 0% 100% / 0.95)")
+    ? "hsl(0 0% 100% / 0.95)"
     : isLight
-      ? (isAddress ? "hsl(160 40% 25%)" : "hsl(0 0% 0% / 0.85)")
-      : (isAddress ? "hsl(160 40% 85%)" : "hsl(0 0% 100% / 0.9)");
+      ? "hsl(0 0% 0% / 0.85)"
+      : "hsl(0 0% 100% / 0.9)";
   const placeholderColor = isImmersive ? "hsl(0 0% 100% / 0.35)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.25)";
   const btnBgStyle = isImmersive
     ? "hsl(0 0% 100% / 0.1)"
@@ -227,40 +224,25 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
         {/* Search bar */}
         <form onSubmit={handleSubmit} className="w-full mt-8">
           <div className="relative w-full group">
-            {/* Address badge */}
-            <AnimatePresence>
-              {isAddress && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8, scale: 0.9 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -8, scale: 0.9 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                  className="absolute left-14 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 pointer-events-none"
-                >
-                  <Lock className="w-3 h-3 text-emerald-400" />
-                  <span className="text-[11px] font-medium tracking-wide text-emerald-400/80 uppercase">
-                    {detected.kind === "triword" ? "Address" : "IPv6"}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What is your main focus today?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-colors duration-300"
+              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
               style={{
-                paddingLeft: isAddress ? "7.5rem" : "3.5rem",
+                paddingLeft: "3.5rem",
                 background: searchBg,
                 border: searchBorder,
                 boxShadow: searchShadow,
                 color: inputColor,
-                caretColor: isAddress ? "hsl(160 60% 60%)" : (isImmersive ? "hsl(195 70% 65%)" : undefined),
-                fontFamily: isAddress ? "var(--font-mono, ui-monospace, monospace)" : "'DM Sans', -apple-system, sans-serif",
-                letterSpacing: isAddress ? "0.02em" : undefined,
+                caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
+                fontFamily: isAddress
+                  ? "var(--font-mono, ui-monospace, monospace)"
+                  : "'DM Sans', -apple-system, sans-serif",
+                letterSpacing: isAddress ? "0.03em" : undefined,
+                fontWeight: isAddress ? 500 : undefined,
               }}
             />
 
