@@ -434,6 +434,9 @@ const SearchPage = () => {
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
 
+  // Voice shortcut (Ctrl+Shift+V)
+  const voiceShortcut = useVoiceShortcut();
+
   // Encode mode state
   const [encodeMode, setEncodeMode] = useState(false);
   const [encodeText, setEncodeText] = useState("");
@@ -1392,6 +1395,13 @@ const SearchPage = () => {
     <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+
+      {/* Voice overlay (Ctrl+Shift+V) */}
+      <VoiceOverlay
+        open={voiceShortcut.active}
+        onClose={voiceShortcut.close}
+        onSubmit={(text) => { setInput(text); setShowPrefetch(false); handleSearch(text); }}
+      />
 
       {/* ── Coherence indicator (ambient session quality) ── */}
       {coherenceState && result && <CoherenceIndicator coherence={coherenceState.sessionCoherence} />}
