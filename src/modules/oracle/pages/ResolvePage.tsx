@@ -923,6 +923,11 @@ const SearchPage = () => {
       getSearchHistory(50),
     ]);
 
+    // ── Search sovereign vault in background for personal context ──
+    const vaultPromise = user?.id
+      ? import("@/modules/sovereign-vault/lib/vault-search").then(m => m.searchVault(user.id, keyword, 3))
+      : Promise.resolve([]);
+
     setLensSuggestionDismissed(false);
 
     // ── Seed from speculative prefetch if available ──
