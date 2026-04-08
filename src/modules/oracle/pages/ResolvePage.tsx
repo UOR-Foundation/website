@@ -1038,6 +1038,18 @@ const SearchPage = () => {
     }
   }, [result, coherenceState]);
 
+  /** Apply a full blueprint — re-stream with custom parameters */
+  const handleBlueprintApply = useCallback((bp: LensBlueprint) => {
+    setActiveLens(bp.id);
+    setLensSuggestionDismissed(true);
+    const src = result?.source as Record<string, unknown> | null;
+    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
+      // Re-stream with blueprint params — the edge function will compose a custom prompt
+      handleKeywordResolve(keyword, bp.id);
+    }
+  }, [result]);
+
   const submit = () => {
     handleSearch(input);
   };
