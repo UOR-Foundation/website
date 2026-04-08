@@ -1,59 +1,68 @@
 /**
- * Identity Hub — Holographic Address Projections
+ * Identity Hub — Share this address in any format.
  *
- * Anchors on IPv6 as primary identity, then lets users explore
- * all canonical projections of the same identity across protocols.
+ * Shows the primary address (IPv6 + triword), with a button
+ * that opens a full-screen overlay to browse all available
+ * identity formats — all deterministically linked to the same object.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, ChevronDown } from "lucide-react";
+import { Copy, Check, ChevronRight, X, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
 import type { ProjectionInput, Hologram, HologramProjection } from "@/modules/uns/core/hologram";
 import type { EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
 
-// ── Category definitions ───────────────────────────────────────────────────
+// ── Category definitions with human-friendly descriptions ──────────────────
 
 interface Category {
   label: string;
+  description: string;
   icon: string;
   keys: string[];
 }
 
 const CATEGORIES: Category[] = [
   {
-    label: "Foundational",
+    label: "Core Identifiers",
+    description: "The foundational addresses used across the web",
     icon: "🏛",
     keys: ["cid", "jsonld", "did", "vc"],
   },
   {
-    label: "Native",
+    label: "Native Formats",
+    description: "Visual and compact ways to represent this address",
     icon: "🔮",
     keys: ["ipv6", "glyph", "emoji"],
   },
   {
-    label: "Federation",
+    label: "Social & Federation",
+    description: "Share across social networks and federated platforms",
     icon: "🌐",
     keys: ["webfinger", "activitypub", "atproto"],
   },
   {
-    label: "Enterprise",
+    label: "Enterprise Systems",
+    description: "Use in business, supply chain, and organizational tools",
     icon: "🏢",
     keys: ["oidc", "gs1", "oci", "solid", "openbadges"],
   },
   {
     label: "Infrastructure",
+    description: "Technical protocols for discovery and synchronization",
     icon: "⚙️",
     keys: ["scitt", "mls", "dnssd", "stac", "croissant", "crdt"],
   },
   {
-    label: "Blockchain",
+    label: "Blockchain & Crypto",
+    description: "Anchored on-chain for permanent, verifiable proof",
     icon: "⛓",
     keys: ["bitcoin", "bitcoin-hashlock", "lightning", "zcash-transparent", "zcash-memo", "nostr", "nostr-note"],
   },
   {
-    label: "Agentic AI",
+    label: "AI & Agents",
+    description: "Machine-readable identity for autonomous systems",
     icon: "🤖",
     keys: ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf", "onnx", "onnx-op"],
   },
@@ -62,44 +71,49 @@ const CATEGORIES: Category[] = [
 // ── Friendly display names ─────────────────────────────────────────────────
 
 const DISPLAY_NAMES: Record<string, string> = {
-  cid: "IPFS CID",
-  jsonld: "JSON-LD URN",
-  did: "DID",
+  cid: "IPFS Content ID",
+  jsonld: "JSON-LD Identifier",
+  did: "Decentralized ID",
   vc: "Verifiable Credential",
-  ipv6: "IPv6 ULA",
+  ipv6: "IPv6 Address",
   glyph: "Braille Glyph",
-  emoji: "Emoji",
+  emoji: "Emoji Shorthand",
   webfinger: "WebFinger",
-  activitypub: "ActivityPub",
-  atproto: "AT Protocol",
+  activitypub: "ActivityPub (Mastodon, etc.)",
+  atproto: "AT Protocol (Bluesky)",
   oidc: "OpenID Connect",
   gs1: "GS1 Digital Link",
-  oci: "OCI Digest",
+  oci: "Container Image Digest",
   solid: "Solid WebID",
   openbadges: "Open Badges",
-  scitt: "SCITT",
-  mls: "MLS Group",
-  dnssd: "DNS-SD",
-  stac: "STAC",
-  croissant: "Croissant",
-  crdt: "CRDT / Automerge",
-  bitcoin: "Bitcoin OP_RETURN",
+  scitt: "Supply Chain Transparency",
+  mls: "Messaging Layer Security",
+  dnssd: "DNS Service Discovery",
+  stac: "Geospatial Catalog",
+  croissant: "ML Dataset",
+  crdt: "Sync-friendly (CRDT)",
+  bitcoin: "Bitcoin (OP_RETURN)",
   "bitcoin-hashlock": "Bitcoin Hash Lock",
-  lightning: "Lightning BOLT-11",
-  "zcash-transparent": "Zcash Transparent",
-  "zcash-memo": "Zcash Memo",
+  lightning: "Lightning Invoice",
+  "zcash-transparent": "Zcash Address",
+  "zcash-memo": "Zcash Memo Field",
   nostr: "Nostr Event ID",
-  "nostr-note": "Nostr note1…",
-  erc8004: "ERC-8004 Agent",
-  x402: "x402 Payment",
-  "mcp-tool": "MCP Tool",
+  "nostr-note": "Nostr Note",
+  erc8004: "ERC-8004 Agent ID",
+  x402: "x402 Payment Header",
+  "mcp-tool": "MCP Tool Binding",
   "mcp-context": "MCP Context",
-  "skill-md": "Skill.md",
-  a2a: "A2A Agent",
-  "a2a-task": "A2A Task",
-  oasf: "OASF Service",
+  "skill-md": "Skill Manifest",
+  a2a: "Agent-to-Agent Card",
+  "a2a-task": "Agent Task",
+  oasf: "Open Agent Service",
   onnx: "ONNX Model",
   "onnx-op": "ONNX Operator",
+};
+
+const FIDELITY_LABELS: Record<string, { label: string; color: string; desc: string }> = {
+  lossless: { label: "Exact", color: "bg-emerald-400/70", desc: "Contains the full original identity — nothing lost" },
+  lossy: { label: "Compact", color: "bg-amber-400/70", desc: "Shortened to fit this format — still uniquely linked" },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -124,17 +138,14 @@ interface IdentityHubProps {
 }
 
 export default function IdentityHub({ receipt }: IdentityHubProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const hologram = useMemo<Hologram | null>(() => {
     try {
       const hashBytes = hexToBytes(receipt.hashHex);
-      const input: ProjectionInput = {
-        hashBytes,
-        cid: receipt.cid,
-        hex: receipt.hashHex,
-      };
+      const input: ProjectionInput = { hashBytes, cid: receipt.cid, hex: receipt.hashHex };
       return project(input);
     } catch {
       return null;
@@ -144,213 +155,302 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
   const copyValue = (value: string, key: string) => {
     navigator.clipboard.writeText(value);
     setCopiedKey(key);
-    toast("Copied", { icon: "📋", duration: 1500 });
+    toast("Copied to clipboard", { icon: "📋", duration: 1500 });
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  // Count available projections
   const totalProjections = hologram ? Object.keys(hologram.projections).length : 0;
 
+  // Lock body scroll when overlay is open
+  useEffect(() => {
+    if (overlayOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [overlayOpen]);
+
+  // ESC to close
+  useEffect(() => {
+    if (!overlayOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOverlayOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [overlayOpen]);
+
   return (
-    <div>
-      {/* ── Section Label ── */}
-      <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] mb-3">
-        Identity
-      </p>
+    <>
+      <div>
+        {/* ── Section Label ── */}
+        <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] mb-3">
+          Identity
+        </p>
 
-      {/* ── Primary Identity: IPv6 Hero ── */}
-      <div className="rounded-xl border border-border/15 bg-muted/5 overflow-hidden">
-        {/* IPv6 — Hero */}
-        <div className="px-5 py-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-semibold">
-              IPv6 Address
-            </span>
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/70"
-              title="Lossy — 80-bit truncation of 256-bit hash (routing projection)"
-            />
+        {/* ── Primary Identity Card ── */}
+        <div className="rounded-2xl border border-border/15 bg-muted/5 overflow-hidden">
+          {/* IPv6 */}
+          <div className="px-5 py-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-semibold">
+                Network Address
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <code className="text-[15px] font-mono text-primary tracking-wide flex-1 truncate">
+                {receipt.ipv6}
+              </code>
+              <CopyBtn onClick={() => copyValue(receipt.ipv6, "ipv6-hero")} copied={copiedKey === "ipv6-hero"} />
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <code className="text-[16px] font-mono text-primary tracking-wide flex-1 truncate">
-              {receipt.ipv6}
-            </code>
-            <CopyBtn
-              onClick={() => copyValue(receipt.ipv6, "ipv6-hero")}
-              copied={copiedKey === "ipv6-hero"}
-            />
+
+          {/* Triword */}
+          <div className="px-5 pb-4 -mt-1">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm italic text-muted-foreground/50 flex-1 truncate">
+                {receipt.triwordFormatted || receipt.triword}
+              </span>
+              <CopyBtn onClick={() => copyValue(receipt.triword, "triword-hero")} copied={copiedKey === "triword-hero"} />
+            </div>
           </div>
+
+          {/* ── Open overlay button ── */}
+          <button
+            onClick={() => setOverlayOpen(true)}
+            className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 border-t border-border/10 text-sm font-medium text-primary/70 hover:text-primary hover:bg-primary/5 transition-all group"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Share this address in {totalProjections} formats</span>
+            <ChevronRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
+          </button>
         </div>
+      </div>
 
-        {/* Triword — Alias */}
-        <div className="px-5 pb-4 -mt-1">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm italic text-muted-foreground/50 flex-1 truncate">
-              {receipt.triwordFormatted || receipt.triword}
-            </span>
-            <CopyBtn
-              onClick={() => copyValue(receipt.triword, "triword-hero")}
-              copied={copiedKey === "triword-hero"}
-            />
-          </div>
-        </div>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* ═══ FULL-SCREEN FORMAT EXPLORER OVERLAY ═══ */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {overlayOpen && hologram && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col"
+          >
+            {/* ── Overlay Header ── */}
+            <div className="shrink-0 border-b border-border/10">
+              <div className="max-w-6xl mx-auto px-6 py-5 flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-display font-semibold text-foreground tracking-wide">
+                    Share This Address
+                  </h2>
+                  <p className="text-sm text-muted-foreground/50 mt-0.5">
+                    One object, {totalProjections} ways to reference it — every format points to the same thing
+                  </p>
+                </div>
 
-        {/* ── Expand toggle ── */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3 border-t border-border/10 text-xs font-medium text-primary/60 hover:text-primary/80 hover:bg-muted/10 transition-all"
-        >
-          <span>
-            {expanded
-              ? "Hide formats"
-              : `Express in ${totalProjections} other formats`}
-          </span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
-          />
-        </button>
+                {/* Search */}
+                <div className="relative hidden sm:block">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Filter formats…"
+                    className="bg-muted/10 border border-border/15 rounded-lg pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 w-56"
+                    autoFocus
+                  />
+                </div>
 
-        {/* ── Projection Gallery ── */}
-        <AnimatePresence>
-          {expanded && hologram && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden"
-            >
-              <div className="border-t border-border/10">
+                <button
+                  onClick={() => setOverlayOpen(false)}
+                  className="p-2 rounded-lg hover:bg-muted/15 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── Source identity ── */}
+            <div className="shrink-0 border-b border-border/5">
+              <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-4">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/35 font-semibold">Source</span>
+                <code className="text-sm font-mono text-primary/70 truncate">{receipt.ipv6}</code>
+                <span className="text-muted-foreground/20">·</span>
+                <span className="text-sm italic text-muted-foreground/40 truncate">{receipt.triwordFormatted || receipt.triword}</span>
+              </div>
+            </div>
+
+            {/* ── Scrollable format gallery ── */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
+
+                {/* Legend */}
+                <div className="flex items-center gap-6 text-xs text-muted-foreground/40">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400/70" />
+                    Exact — full identity preserved
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400/70" />
+                    Compact — shortened to fit, still uniquely linked
+                  </span>
+                </div>
+
                 {CATEGORIES.map((cat) => {
                   const entries = cat.keys
                     .filter((k) => hologram.projections[k])
-                    .map((k) => ({
-                      key: k,
-                      projection: hologram.projections[k],
-                    }));
-                  if (entries.length === 0) return null;
+                    .map((k) => ({ key: k, projection: hologram.projections[k] }));
+
+                  // Apply search filter
+                  const filtered = searchQuery
+                    ? entries.filter(({ key }) => {
+                        const name = (DISPLAY_NAMES[key] || key).toLowerCase();
+                        const q = searchQuery.toLowerCase();
+                        return name.includes(q) || key.includes(q) || cat.label.toLowerCase().includes(q);
+                      })
+                    : entries;
+
+                  if (filtered.length === 0) return null;
 
                   return (
-                    <div key={cat.label}>
+                    <motion.div
+                      key={cat.label}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       {/* Category header */}
-                      <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-                        <span className="text-sm">{cat.icon}</span>
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-primary/40 font-semibold">
-                          {cat.label}
-                        </span>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-xl">{cat.icon}</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground/80">{cat.label}</h3>
+                          <p className="text-xs text-muted-foreground/40">{cat.description}</p>
+                        </div>
+                        <span className="ml-auto text-xs text-muted-foreground/25 font-mono">{filtered.length} format{filtered.length !== 1 ? "s" : ""}</span>
                       </div>
 
-                      {/* Projection rows */}
-                      {entries.map(({ key, projection }, i) => (
-                        <ProjectionRow
-                          key={key}
-                          name={DISPLAY_NAMES[key] || key}
-                          projection={projection}
-                          onCopy={() => copyValue(projection.value, key)}
-                          copied={copiedKey === key}
-                          even={i % 2 === 0}
-                        />
-                      ))}
-                    </div>
+                      {/* Format cards — responsive grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {filtered.map(({ key, projection }) => (
+                          <FormatCard
+                            key={key}
+                            name={DISPLAY_NAMES[key] || key}
+                            projectionKey={key}
+                            projection={projection}
+                            onCopy={() => copyValue(projection.value, key)}
+                            copied={copiedKey === key}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
                   );
                 })}
 
-                {/* Uncategorized projections */}
+                {/* Uncategorized */}
                 {(() => {
                   const categorized = new Set(CATEGORIES.flatMap((c) => c.keys));
-                  const uncategorized = Object.entries(hologram.projections).filter(
-                    ([k]) => !categorized.has(k)
-                  );
+                  let uncategorized = Object.entries(hologram.projections).filter(([k]) => !categorized.has(k));
+                  if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    uncategorized = uncategorized.filter(([k]) => {
+                      const name = (DISPLAY_NAMES[k] || k).toLowerCase();
+                      return name.includes(q) || k.includes(q);
+                    });
+                  }
                   if (uncategorized.length === 0) return null;
                   return (
-                    <div>
-                      <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-                        <span className="text-sm">📡</span>
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-primary/40 font-semibold">
-                          Other
-                        </span>
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-xl">📡</span>
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground/80">Other Formats</h3>
+                          <p className="text-xs text-muted-foreground/40">Additional protocol representations</p>
+                        </div>
                       </div>
-                      {uncategorized.map(([key, projection], i) => (
-                        <ProjectionRow
-                          key={key}
-                          name={DISPLAY_NAMES[key] || key}
-                          projection={projection}
-                          onCopy={() => copyValue(projection.value, key)}
-                          copied={copiedKey === key}
-                          even={i % 2 === 0}
-                        />
-                      ))}
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {uncategorized.map(([key, projection]) => (
+                          <FormatCard
+                            key={key}
+                            name={DISPLAY_NAMES[key] || key}
+                            projectionKey={key}
+                            projection={projection}
+                            onCopy={() => copyValue(projection.value, key)}
+                            copied={copiedKey === key}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
                   );
                 })()}
 
-                {/* Footer note */}
-                <div className="px-5 py-3 border-t border-border/10">
-                  <p className="text-[11px] text-muted-foreground/35 italic">
-                    Every format above is a deterministic projection of the same canonical SHA-256 identity.
-                    <span className="inline-flex items-center gap-1 ml-2 not-italic">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400/70" /> lossless
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400/70 ml-1" /> lossy
-                    </span>
+                {/* Footer */}
+                <div className="pt-6 pb-4 border-t border-border/10">
+                  <p className="text-sm text-muted-foreground/35 text-center leading-relaxed">
+                    Every format above is derived from the same underlying content.
+                    <br />
+                    Same data → same identity → different expression.
                   </p>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
-// ── Projection Row ─────────────────────────────────────────────────────────
+// ── Format Card (used in overlay) ──────────────────────────────────────────
 
-function ProjectionRow({
+function FormatCard({
   name,
+  projectionKey,
   projection,
   onCopy,
   copied,
-  even,
 }: {
   name: string;
+  projectionKey: string;
   projection: HologramProjection;
   onCopy: () => void;
   copied: boolean;
-  even: boolean;
 }) {
-  const isLossless = projection.fidelity === "lossless";
+  const fidelity = FIDELITY_LABELS[projection.fidelity] || FIDELITY_LABELS.lossy;
 
   return (
-    <div
-      className={`flex items-center gap-3 px-5 py-2.5 ${even ? "bg-muted/[0.03]" : ""} hover:bg-muted/[0.08] transition-colors group`}
-    >
-      {/* Fidelity dot */}
-      <span
-        className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLossless ? "bg-emerald-400/70" : "bg-amber-400/70"}`}
-        title={
-          isLossless
-            ? "Lossless — full 256-bit identity preserved"
-            : projection.lossWarning || "Lossy — truncated projection"
-        }
-      />
-
-      {/* Name */}
-      <span className="text-xs text-foreground/50 font-medium w-28 shrink-0 truncate">
-        {name}
-      </span>
+    <div className="group rounded-xl border border-border/10 bg-muted/[0.03] hover:bg-muted/[0.08] hover:border-border/20 transition-all p-4 space-y-2.5">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${fidelity.color}`} title={fidelity.desc} />
+          <span className="text-sm font-medium text-foreground/75 truncate">{name}</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] text-muted-foreground/30 font-mono">{projectionKey}</span>
+          <button
+            onClick={onCopy}
+            className="p-1.5 rounded-md hover:bg-muted/20 transition-colors"
+            title="Copy this format"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/50 transition-colors" />
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Value */}
-      <code className="text-[13px] font-mono text-foreground/55 flex-1 truncate">
-        {truncate(projection.value, 52)}
+      <code className="block text-[13px] font-mono text-foreground/50 break-all leading-relaxed select-all">
+        {truncate(projection.value, 120)}
       </code>
-
-      {/* Copy */}
-      <CopyBtn onClick={onCopy} copied={copied} />
     </div>
   );
 }
 
-// ── Copy Button ────────────────────────────────────────────────────────────
+// ── Copy Button (compact, for the sidebar card) ────────────────────────────
 
 function CopyBtn({ onClick, copied }: { onClick: () => void; copied: boolean }) {
   return (
