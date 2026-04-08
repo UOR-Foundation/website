@@ -19,6 +19,8 @@ import {
   Clock,
   X,
   QrCode,
+  PanelRightOpen,
+  PanelRightClose,
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
