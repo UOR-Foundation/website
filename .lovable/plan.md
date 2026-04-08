@@ -1,78 +1,84 @@
 
 
-## Dynamic Contextual Quotes for Immersive Mode
+## Enriching Images with Multi-Source Open Access Media
 
-### What we're building
+### Current State
 
-The immersive mode bottom bar currently shows a static "Universal Object Reference" label. We'll replace it with a rotating, personally curated quote system that draws from the user's search history, interaction patterns, and contextual signals to surface meaningful, attributed quotes. The system mixes resonant quotes (affirming strengths) with growth quotes (gently encouraging areas to develop), using UOR semantic categories to match quote themes to user context.
+Images come exclusively from **Wikimedia Commons** via Wikipedia's API. This works well for encyclopedic topics but produces sparse or low-quality results for many searches (abstract concepts, modern topics, niche domains). The current `fetchCommonsMedia` function already has good relevance scoring and UOR hashing.
+
+### New Sources (all free, no API keys required)
+
+| Source | Strength | API |
+|---|---|---|
+| **Wikimedia Commons** | Encyclopedic, diagrams, historical | Already implemented |
+| **Metropolitan Museum of Art** | Fine art, historical artifacts, paintings | `collectionapi.metmuseum.org` — no key |
+| **NASA Images** | Space, science, Earth, astronomy | `images-api.nasa.gov` — no key |
+| **Library of Congress** | Historical photos, maps, Americana | `loc.gov/search` — no key |
+| **Europeana** | European cultural heritage, art, archives | `api.europeana.eu` — free key (wskey=apidemo for dev) |
+
+These are all institutional, curated, high-resolution, and properly licensed (public domain or CC). They complement Wikimedia by covering art, space, history, and culture where Wikipedia images are weak.
 
 ### Architecture
 
+Rename and expand `fetchCommonsMedia` into `fetchMultiSourceMedia`. It runs all sources **in parallel** (Promise.allSettled), merges results, then applies a unified relevance + diversity sort before emitting the SSE `media` event.
+
 ```text
-┌──────────────────────────────────────┐
-│  ImmersiveSearchView                 │
-│                                      │
-│  ┌────────────────────────────────┐  │
-│  │  ImmersiveQuote (new component)│  │
-│  │  - Fetches user context        │  │
-│  │  - Calls edge function         │  │
-│  │  - Fades between quotes        │  │
-│  └────────────────────────────────┘  │
-│                                      │
-│  Edge function: uor-oracle           │
-│  (new "quote" mode)                  │
-│  - Receives: recent searches,       │
-│    time of day, interaction count    │
-│  - Returns: {text, author, source,   │
-│    resonanceType: "affirm"|"grow"}   │
-└──────────────────────────────────────┘
+fetchMultiSourceMedia(term, qid)
+  ├── fetchWikimediaImages(term)         (existing logic, extracted)
+  ├── fetchMetMuseumImages(term)         (new)
+  ├── fetchNASAImages(term)              (new)
+  ├── fetchLibraryOfCongressImages(term) (new)
+  └── merge + relevance sort + deduplicate + UOR hash
+      → top 8 images with source attribution
 ```
 
-### Design philosophy
+Each sub-fetcher returns `MediaImage[]` with `source` set to its origin (e.g. `"met-museum"`, `"nasa"`, `"loc"`). The existing `uorHash` and `relevance` scoring pattern is reused.
 
-Quotes are selected along two axes:
-- **Resonance quotes** (~60%): Align with what the user is actively exploring. If they've been searching philosophy, they get Seneca. Yachts? They get a quote about craftsmanship or the sea.
-- **Growth quotes** (~40%): Gently stretch into adjacent domains. A user deep in technical topics might receive a quote about patience, creativity, or perspective.
+### Source Selection Logic
 
-All quotes are real, attributed, and non-cheesy. The AI is instructed to draw from: literary authors, scientists, philosophers, practitioners, and domain experts. Never motivational poster material.
+Not every source is relevant for every query. A lightweight keyword classifier picks which sources to query:
 
-### Files to create/modify
+- **Met Museum**: art, painting, sculpture, ancient, historical figures, culture
+- **NASA**: space, planet, star, galaxy, nebula, earth, satellite, physics
+- **Library of Congress**: American history, presidents, civil war, jazz, photography
+- **Wikimedia**: always queried (broadest coverage)
+
+If the term doesn't match any specialty source, only Wikimedia + one general fallback runs, keeping latency tight.
+
+### Relevance + Diversity Merge
+
+After all sources return, images are merged into a single pool:
+1. Score each image against the search term (existing `relevance` logic)
+2. Apply a **source diversity bonus**: if the top 4 are all from Wikimedia, boost the highest-scoring image from other sources
+3. Sort by final score, take top 8
+4. Each image retains its `source` field for provenance display in the UI
+
+### UOR Integration
+
+Each image already gets a `uorHash` (FNV-1a of its URL). The `source` field maps to a UOR provenance category:
+- `wikimedia-commons` → `uor:media/commons`
+- `met-museum` → `uor:media/art`
+- `nasa` → `uor:media/science`
+- `loc` → `uor:media/archive`
+
+This ensures images are semantically tagged within the UOR framework and can be coherently placed by the existing `distributeMediaAcrossSections` algorithm in `InlineMedia.tsx`.
+
+### Client-Side Enhancement
+
+Add a small source badge to `InlineFigure` — a subtle icon or text showing the image origin (e.g. a small "Met Museum" or "NASA" label in the figcaption). This builds trust and delight by showing users where the image comes from.
+
+### Files Changed
 
 | File | Change |
 |---|---|
-| `src/modules/oracle/components/ImmersiveQuote.tsx` | **New.** Standalone component that fetches a contextual quote on mount, caches it for 15 minutes in sessionStorage, and renders with a gentle fade-in. Shows author and source. Rotates every ~45 seconds if the user stays on the screen. |
-| `src/modules/oracle/lib/quote-context.ts` | **New.** Gathers user context signals: recent search keywords (from `getRecentKeywords`), time of day, day of week, session count. Returns a compact context object for the edge function. |
-| `supabase/functions/uor-oracle/index.ts` | **Modify.** Add a `"quote"` mode branch. When `mode === "quote"`, use a curated system prompt to generate 3 quotes (mix of resonance/growth), each with `{text, author, source, resonanceType}`. Non-streaming, fast response. Uses `latencyTier` to pick model (flash-lite is fine for quotes). |
-| `src/modules/oracle/components/ImmersiveSearchView.tsx` | **Modify.** Replace the static bottom-left text with `<ImmersiveQuote />`. Style: italic serif, white/50 opacity, max-width ~60%, with author attribution in small caps. |
+| `supabase/functions/uor-knowledge/index.ts` | Expand `fetchCommonsMedia` into `fetchMultiSourceMedia` with parallel sub-fetchers for Met Museum, NASA, and Library of Congress. Add keyword classifier for source selection. Unified relevance merge. |
+| `src/modules/oracle/components/InlineMedia.tsx` | Add subtle source attribution badge to `InlineFigure` figcaption (e.g. "via NASA" or "Met Museum"). |
+| `src/modules/oracle/lib/stream-knowledge.ts` | Update `MediaImage` type to include optional `source` display name (already has `source` field, just ensure it flows through). |
 
-### Quote component behavior
+### Latency Considerations
 
-- On mount: check `sessionStorage` for cached quotes (keyed by date + hour block)
-- If no cache: call `uor-oracle` with `mode: "quote"` and the user context object
-- Display first quote with a 1s fade-in
-- Every 45s, crossfade to next quote in the batch
-- If fetch fails, fall back to a small hardcoded set of timeless quotes (Borges, Feynman, Ada Lovelace)
-- Quotes render as: `"Quote text here." — Author Name`
-
-### Edge function prompt design
-
-The system prompt instructs the model to:
-1. Read the user's recent search topics and time context
-2. Select 3 real, verifiable quotes from known authors
-3. Tag each as `affirm` (resonates with current interests) or `grow` (adjacent virtue/perspective)
-4. Never use generic motivational content
-5. Prefer: working practitioners, literary voices, scientists, philosophers
-6. Each quote must include the actual source (book, speech, interview)
-
-### UOR anchoring
-
-Each quote response includes a `uor:category` tag derived from the semantic domain of the quote's theme, ensuring it maps into the same category encoding used across the rendered internet experience. The quote's `resonanceType` is itself a UOR epistemic signal: `affirm` maps to coherence (constructive interference), `grow` maps to expansion (adjacent domain bridging).
-
-### Visual treatment
-
-- Font: Georgia/serif, italic, ~15px on desktop, ~14px on mobile
-- Color: `text-white/50`, author in `text-white/35` small-caps
-- Transition: 800ms opacity crossfade
-- Position: Bottom-left of immersive view, replacing current static text
-- Max width: 60% of viewport to avoid cramping
+- All image fetches run in parallel with `Promise.allSettled` + 4s timeout each
+- Source selection means we only query 2-3 APIs per request, not all 4
+- Image fetch is already non-blocking (runs parallel to AI streaming)
+- No impact on TTFT — images arrive independently via SSE `media` event
 
