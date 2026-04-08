@@ -1271,6 +1271,10 @@ const SearchPage = () => {
     <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+
+      {/* ── SoundCloud Music FAB (immersive only) ── */}
+      {immersiveMode && <SoundCloudFab />}
+
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
         {improbabilityActive && (
