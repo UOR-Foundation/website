@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useRef, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/modules/core/ui/dialog";
 import { Upload, Link2, Loader2, File } from "lucide-react";
 import type { VaultHandle } from "../hooks/useVault";
 import { toast } from "sonner";
