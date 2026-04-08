@@ -550,16 +550,6 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Keyframes */}
-      {(improbabilityActive || drivePrePhase) && (
-        <style>{`
-          @keyframes gentlePulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-          }
-        `}</style>
-      )}
-
       {/* Loading bar */}
       <AnimatePresence>
         {(loading || aiStreaming) && (
@@ -573,16 +563,8 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Main content wrapper — applies particle↔wave transitions */}
-      <div
-        className="flex-1 flex flex-col overflow-hidden"
-        style={{
-          filter: drivePrePhase ? "blur(8px)" : "blur(0px)",
-          opacity: drivePrePhase ? 0.15 : 1,
-          transform: drivePrePhase ? "scale(1.01)" : "scale(1)",
-          transition: "filter 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
-        }}
-      >
+      {/* Main content wrapper */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* ── RESULT STATE: Search bar in header ── */}
       {result ? (
