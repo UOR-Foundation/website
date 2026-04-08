@@ -517,6 +517,7 @@ const SearchPage = () => {
         "uor:language": metadata.language || "en",
         "uor:linkedResources": sortedLinks,
         "uor:scrapedAt": new Date().toISOString(),
+        ...(rawHtml ? { "uor:rawHtml": rawHtml } : {}),
       };
 
       setResult({

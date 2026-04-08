@@ -14,6 +14,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import SemanticWebTower from "./SemanticWebTower";
+import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
@@ -66,6 +67,7 @@ const LABEL_MAP: Record<string, string> = {
   "uor:existingSemantics": "Existing Semantics",
   "uor:semanticWebLayers": "Semantic Web Layers",
   "uor:wikidata": "",
+  "uor:rawHtml": "",
 };
 
 function humanLabel(key: string): string {
@@ -103,7 +105,11 @@ interface HumanContentViewProps {
 
 const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const src = source as Record<string, unknown> | null;
-  if (!src || typeof src !== "object") {
+  const isObj = !!src && typeof src === "object";
+  const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
+  const [viewMode, setViewMode] = useState<"original" | "readable">(rawHtmlVal ? "original" : "readable");
+
+  if (!isObj) {
     return (
       <p style={{ fontSize: 17, lineHeight: 1.75, fontFamily: "Georgia, 'Times New Roman', serif" }}
         className="text-foreground/80">
@@ -130,8 +136,11 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata"
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers" && key !== "uor:wikidata" && key !== "uor:rawHtml"
   );
+
+  const rawHtml = rawHtmlVal;
+  const sourceUrl = typeof src["uor:sourceUrl"] === "string" ? (src["uor:sourceUrl"] as string) : undefined;
 
   // Wikipedia data
   const wikidata = src["uor:wikidata"] as Record<string, unknown> | undefined;
@@ -239,13 +248,46 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
         <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
       )}
 
-      {/* ── Body entries ── */}
-      {bodyEntries.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {bodyEntries.map(([key, value]) => (
-            <EntryRenderer key={key} entryKey={key} value={value} />
+      {/* ── View mode toggle (Original / Readable) for WebPages with rawHtml ── */}
+      {isWebPage && rawHtml && (
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {(["original", "readable"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              style={{
+                fontSize: 11,
+                fontWeight: viewMode === mode ? 600 : 400,
+                padding: "4px 14px",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                textTransform: "capitalize",
+              }}
+              className={viewMode === mode
+                ? "bg-primary/15 text-primary"
+                : "bg-transparent text-muted-foreground/50 hover:text-muted-foreground/70"
+              }
+            >
+              {mode}
+            </button>
           ))}
         </div>
+      )}
+
+      {/* ── Original fidelity view (Shadow DOM) ── */}
+      {isWebPage && rawHtml && viewMode === "original" ? (
+        <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
+      ) : (
+        /* ── Body entries (Readable mode) ── */
+        bodyEntries.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {bodyEntries.map(([key, value]) => (
+              <EntryRenderer key={key} entryKey={key} value={value} />
+            ))}
+          </div>
+        )
       )}
 
       {/* ── Semantic Web Tower (WebPage only) ── */}
