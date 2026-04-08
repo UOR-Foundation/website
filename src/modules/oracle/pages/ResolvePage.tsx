@@ -1788,6 +1788,75 @@ const SearchPage = () => {
       </div>
       </div>{/* end main content wrapper */}
 
+      {/* ══════════════ FORK MODAL ══════════════ */}
+      <AnimatePresence>
+        {forkModalOpen && result && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            onClick={(e) => { if (e.target === e.currentTarget) { setForkModalOpen(false); setForkNote(""); } }}
+          >
+            <div className="absolute inset-0 bg-[hsl(0_0%_4%/0.85)] backdrop-blur-md" />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              className="relative z-10 w-full border border-[hsl(0_0%_18%/0.6)] bg-[hsl(0_0%_7%/0.97)] backdrop-blur-xl rounded-2xl shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+              style={{ maxWidth: "min(560px, 92vw)" }}
+            >
+              <div className="p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <GitFork className="w-5 h-5 text-primary/70" />
+                    <h2 className="text-lg font-display font-semibold text-foreground/90 tracking-wide">Fork Address</h2>
+                  </div>
+                  <button onClick={() => { setForkModalOpen(false); setForkNote(""); }} className="text-muted-foreground/40 hover:text-foreground/70 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Source</p>
+                  <div className="px-4 py-3 rounded-xl border border-border/15 bg-muted/5">
+                    <p className="text-sm font-mono text-foreground/60 truncate">{result.receipt.triword}</p>
+                    <p className="text-xs text-muted-foreground/30 font-mono mt-1 truncate">{result.receipt.cid}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Fork Note <span className="normal-case font-normal text-muted-foreground/30">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={forkNote}
+                    onChange={(e) => setForkNote(e.target.value)}
+                    placeholder="e.g. remixed for research, adapted for…"
+                    maxLength={500}
+                    className="w-full px-4 py-2.5 rounded-xl bg-muted/5 border border-border/15 text-sm text-foreground/70 placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 transition-colors"
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground/35 leading-relaxed">
+                  Forking creates a new content-addressed object that wraps the original with provenance metadata. The parent link is cryptographically baked into the new CID — provenance is inseparable from the fork.
+                </p>
+
+                <button
+                  onClick={handleFork}
+                  disabled={forking}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/25 hover:border-primary/40 text-sm font-semibold text-foreground/85 transition-all shadow-[0_0_16px_-6px_hsl(var(--primary)/0.15)] disabled:opacity-40"
+                >
+                  <GitFork className="w-4 h-4 text-primary" />
+                  {forking ? "Forking…" : "Create Fork"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ══════════════ ENCODE OVERLAY ══════════════ */}
       <AnimatePresence>
         {encodeMode && (
