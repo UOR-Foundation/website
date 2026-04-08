@@ -295,6 +295,13 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             <Info className="w-4 h-4" />
           </IconBtn>
           <HistoryDropdown />
+          <QrPortalPanel
+            open={portalOpen}
+            onClose={() => setPortalOpen(false)}
+            targetUrl={window.location.pathname + window.location.search}
+            targetLens={activeLens}
+            immersive={immersive}
+          />
         </div>
       </div>
 
