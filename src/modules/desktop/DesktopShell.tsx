@@ -8,7 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
-import DesktopDock from "@/modules/desktop/DesktopDock";
+// DesktopDock removed — tabs handle app switching now
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
@@ -125,7 +125,6 @@ function DesktopShellInner() {
         </AnimatePresence>
 
         <DesktopThemeDots />
-        <DesktopDock windows={wm.windows} onOpenApp={wm.openApp} />
 
         <SpotlightSearch
           open={spotlightOpen}
