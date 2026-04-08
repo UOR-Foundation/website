@@ -1406,8 +1406,7 @@ const SearchPage = () => {
       {/* ── Coherence indicator (ambient session quality) ── */}
       {coherenceState && result && <CoherenceIndicator coherence={coherenceState.sessionCoherence} />}
 
-      {/* ── SoundCloud Music FAB (immersive only) ── */}
-      {immersiveMode && <SoundCloudFab />}
+      {/* ── SoundCloud Music — now lives in Footer as inline vinyl disc ── */}
 
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
