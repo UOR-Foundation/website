@@ -1179,8 +1179,9 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
-      {!result && !aiMode && <SearchConstellationBg />}
+    <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
+      {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
+      {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
         {improbabilityActive && (
@@ -1331,11 +1332,11 @@ const SearchPage = () => {
       </AnimatePresence>
 
       {/* Main content wrapper */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${immersiveMode ? "relative z-10" : ""}`}>
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
-        <header className={`flex items-center shrink-0 border-b border-border/10 ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
+        <header className={`flex items-center shrink-0 border-b border-border/10 ${immersiveMode ? "relative z-10" : ""} ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
           {isMobile ? (
             <>
               {/* Mobile result header */}
@@ -1426,7 +1427,7 @@ const SearchPage = () => {
         </header>
       ) : null}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${immersiveMode ? "relative z-10" : ""}`}>
         <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
@@ -1436,8 +1437,8 @@ const SearchPage = () => {
                 <ImmersiveSearchView
                   onSearch={(q) => { setInput(q); handleSearch(q); }}
                   onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }}
-                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setEncodeMode(true), 100); }}
-                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setAiMode(true), 100); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
                 />
               ) : (
               /* ── MOBILE: Perplexity-style portal ── */
@@ -1504,13 +1505,13 @@ const SearchPage = () => {
                 <ImmersiveSearchView
                   onSearch={(q) => { setInput(q); handleSearch(q); }}
                   onExit={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }}
-                  onEncode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setEncodeMode(true), 100); }}
-                  onAiMode={() => { setImmersiveMode(false); localStorage.setItem("uor-immersive", "false"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); setTimeout(() => setAiMode(true), 100); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
                 />
               ) : (
               /* ── DESKTOP: Original layout ── */
             <div
-              className="relative flex flex-col items-center"
+              className={`relative flex flex-col items-center ${immersiveMode ? "z-10 text-white" : ""}`}
               style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
             >
               {/* Immersive toggle — top right */}
@@ -1707,7 +1708,7 @@ const SearchPage = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col"
+              className={`flex flex-col relative ${immersiveMode ? "text-white z-10" : ""}`}
               style={{ height: "100dvh" }}
             >
               {/* AI Mode header */}
