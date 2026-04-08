@@ -399,7 +399,7 @@ const SearchPage = () => {
     setImprobabilityActive(true);
     setImprobPhase(1);
 
-    // Phase 1 (0–800ms): improbability counter ticking
+    // Phase 1 (0–1400ms): improbability counter ticking
     let expIdx = 0;
     const expInterval = setInterval(() => {
       expIdx++;
@@ -408,7 +408,7 @@ const SearchPage = () => {
       } else {
         clearInterval(expInterval);
       }
-    }, 110);
+    }, 180);
 
     // Phase 2 at 800ms: side effects
     setTimeout(() => {
