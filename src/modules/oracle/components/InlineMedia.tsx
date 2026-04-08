@@ -8,6 +8,19 @@ import React, { useState, useMemo } from "react";
 import { Play, Volume2, X } from "lucide-react";
 import type { MediaData, MediaImage, MediaVideo, MediaAudio } from "../lib/stream-knowledge";
 
+/* ── Source display names ───────────────────────────────────────────── */
+
+const SOURCE_NAMES: Record<string, string> = {
+  "wikimedia-commons": "Wikimedia",
+  "met-museum": "Met Museum",
+  "nasa": "NASA",
+  "loc": "Library of Congress",
+};
+
+function sourceDisplayName(source: string): string {
+  return SOURCE_NAMES[source] || source;
+}
+
 /* ── Lightbox ──────────────────────────────────────────────────────── */
 
 const Lightbox: React.FC<{ image: MediaImage; onClose: () => void }> = ({ image, onClose }) => (
@@ -55,12 +68,17 @@ export const InlineFigure: React.FC<{
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
-        {image.caption && (
+        {(image.caption || image.source) && (
           <figcaption
-            className="text-muted-foreground/50 mt-2 leading-snug"
+            className="text-muted-foreground/50 mt-2 leading-snug flex items-baseline gap-1.5 flex-wrap"
             style={{ fontSize: 12, fontStyle: "italic" }}
           >
-            {image.caption}
+            {image.caption && <span>{image.caption}</span>}
+            {image.source && image.source !== "wikimedia-commons" && (
+              <span className="text-primary/40 not-italic font-medium" style={{ fontSize: 10 }}>
+                via {sourceDisplayName(image.source)}
+              </span>
+            )}
           </figcaption>
         )}
       </figure>

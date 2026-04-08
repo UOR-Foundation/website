@@ -358,7 +358,7 @@ async function fetchWikidataFacts(qid: string): Promise<Record<string, string>> 
   return facts;
 }
 
-/* ── Wikimedia Commons media fetch ───────────────────────────────────── */
+/* ── Multi-source media fetch ────────────────────────────────────────── */
 
 interface MediaImage {
   url: string;
@@ -380,91 +380,276 @@ interface MediaAudio {
   uorHash: string;
 }
 
-async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
-  images: MediaImage[];
-  videos: MediaVideo[];
-  audio: MediaAudio[];
-}> {
-  const images: MediaImage[] = [];
-  const videos: MediaVideo[] = [];
-  const audio: MediaAudio[] = [];
+/* ── Keyword classifier: which specialty sources to query ──────────── */
 
-  // ── Wikipedia images ──
+const SOURCE_KEYWORDS: Record<string, RegExp> = {
+  "met-museum": /\b(art|paint(ing)?|sculpt(ure)?|ancient|renaissance|medieval|baroque|impressioni|ceramic|pottery|portrait|museum|gallery|fresco|mosaic|artifact|antiquit|decorative|textile|manuscript)\b/i,
+  "nasa": /\b(space|planet|star|galaxy|nebula|earth|satellite|physics|astrono|cosmos|solar|lunar|moon|mars|jupiter|saturn|orbit|asteroid|comet|rocket|shuttle|telescope|hubble|webb|iss)\b/i,
+  "loc": /\b(americ|president|civil.war|congress|constitution|jazz|blues|folk|baseball|lincoln|washington|jefferson|roosevelt|colonial|pioneer|immigration|suffrage|civil.rights|dust.bowl|great.depression|world.war|vietnam|korean.war|manifest.destiny)\b/i,
+};
+
+function selectSources(term: string): string[] {
+  const sources = ["wikimedia"]; // Always query
+  for (const [src, re] of Object.entries(SOURCE_KEYWORDS)) {
+    if (re.test(term)) sources.push(src);
+  }
+  // If no specialty matched, add Met Museum as a general cultural fallback
+  if (sources.length === 1) sources.push("met-museum");
+  return sources;
+}
+
+/* ── Wikimedia Commons images ──────────────────────────────────────── */
+
+async function fetchWikimediaImages(term: string): Promise<MediaImage[]> {
+  const images: MediaImage[] = [];
   try {
     const wikiTitle = encodeURIComponent(term);
     const r = await fetch(
       `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&imlimit=15&format=json&origin=*`,
       { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
     );
-    if (r.ok) {
-      const data = await r.json();
-      const pages = data.query?.pages || {};
-      for (const page of Object.values(pages) as Array<{ images?: Array<{ title: string }> }>) {
-        if (!page.images) continue;
-        for (const img of page.images) {
-          const filename = img.title;
-          if (/\.(svg|ico)$/i.test(filename)) continue;
-          // Aggressive filtering: reject decorative/UI images
-          if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram|Ambox|Edit-|Question_book|Text_document|Nuvola|Crystal_|Gnome-|P_|Disambig|Folder_|Lock-|Semi-protection|Portal-|Wikiquote|Wikisource|Wiktionary|Wikinews|Wikibooks|Wikiversity|Wikispecies|Wikivoyage|Logo|Button|Banner|Arrow|Cquote|Information_icon/i.test(filename)) continue;
+    if (!r.ok) return images;
+    const data = await r.json();
+    const pages = data.query?.pages || {};
+    for (const page of Object.values(pages) as Array<{ images?: Array<{ title: string }> }>) {
+      if (!page.images) continue;
+      for (const img of page.images) {
+        const filename = img.title;
+        if (/\.(svg|ico)$/i.test(filename)) continue;
+        if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram|Ambox|Edit-|Question_book|Text_document|Nuvola|Crystal_|Gnome-|P_|Disambig|Folder_|Lock-|Semi-protection|Portal-|Wikiquote|Wikisource|Wiktionary|Wikinews|Wikibooks|Wikiversity|Wikispecies|Wikivoyage|Logo|Button|Banner|Arrow|Cquote|Information_icon/i.test(filename)) continue;
 
-          try {
-            const infoR = await fetch(
-              `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`,
-              { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
-            );
-            if (infoR.ok) {
-              const infoData = await infoR.json();
-              const infoPages = infoData.query?.pages || {};
-              for (const infoPage of Object.values(infoPages) as Array<{ imageinfo?: Array<{ thumburl?: string; url?: string; extmetadata?: Record<string, { value?: string }> }> }>) {
-                const info = infoPage.imageinfo?.[0];
-                if (!info) continue;
-                const imgUrl = info.thumburl || info.url;
-                if (!imgUrl) continue;
-                const rawCaption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 200) ||
-                  filename.replace(/^File:/, "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
-                
-                // Compute relevance score: how well does this image relate to the search term?
-                const captionLower = rawCaption.toLowerCase();
-                const filenameLower = filename.toLowerCase().replace(/_/g, " ");
-                const termLower = term.toLowerCase();
-                const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
-                
-                let relevance = 0;
-                // Exact term match in caption or filename
-                if (captionLower.includes(termLower)) relevance += 50;
-                if (filenameLower.includes(termLower)) relevance += 40;
-                // Individual word matches
-                for (const w of termWords) {
-                  if (captionLower.includes(w)) relevance += 15;
-                  if (filenameLower.includes(w)) relevance += 10;
-                }
-                // Penalize generic images
-                if (/map|location|locator/i.test(filename) && !/^map/i.test(term)) relevance -= 10;
-                if (/coat.of.arms|seal.of|emblem/i.test(filename)) relevance -= 20;
-
-                images.push({
-                  url: imgUrl,
-                  caption: rawCaption,
-                  uorHash: fnv1a(imgUrl),
-                  source: "wikimedia-commons",
-                  relevance,
-                });
+        try {
+          const infoR = await fetch(
+            `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`,
+            { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
+          );
+          if (infoR.ok) {
+            const infoData = await infoR.json();
+            const infoPages = infoData.query?.pages || {};
+            for (const infoPage of Object.values(infoPages) as Array<{ imageinfo?: Array<{ thumburl?: string; url?: string; extmetadata?: Record<string, { value?: string }> }> }>) {
+              const info = infoPage.imageinfo?.[0];
+              if (!info) continue;
+              const imgUrl = info.thumburl || info.url;
+              if (!imgUrl) continue;
+              const rawCaption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 200) ||
+                filename.replace(/^File:/, "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
+              
+              const captionLower = rawCaption.toLowerCase();
+              const filenameLower = filename.toLowerCase().replace(/_/g, " ");
+              const termLower = term.toLowerCase();
+              const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
+              
+              let relevance = 0;
+              if (captionLower.includes(termLower)) relevance += 50;
+              if (filenameLower.includes(termLower)) relevance += 40;
+              for (const w of termWords) {
+                if (captionLower.includes(w)) relevance += 15;
+                if (filenameLower.includes(w)) relevance += 10;
               }
-            }
-          } catch { /* skip this image */ }
+              if (/map|location|locator/i.test(filename) && !/^map/i.test(term)) relevance -= 10;
+              if (/coat.of.arms|seal.of|emblem/i.test(filename)) relevance -= 20;
 
-          if (images.length >= 12) break;
-        }
+              images.push({
+                url: imgUrl,
+                caption: rawCaption,
+                uorHash: fnv1a(imgUrl),
+                source: "wikimedia-commons",
+                relevance,
+              });
+            }
+          }
+        } catch { /* skip */ }
+        if (images.length >= 12) break;
       }
     }
-  } catch { /* commons fetch failed */ }
+  } catch { /* wikimedia fetch failed */ }
+  return images;
+}
 
-  // Sort by relevance and keep top images
-  images.sort((a, b) => ((b as any).relevance || 0) - ((a as any).relevance || 0));
-  // Remove the relevance field before sending to client (it's internal)
-  const topImages = images.slice(0, 8).map(({ relevance, ...rest }: any) => rest);
-  images.length = 0;
-  images.push(...topImages);
+/* ── Metropolitan Museum of Art ─────────────────────────────────────── */
+
+async function fetchMetMuseumImages(term: string): Promise<MediaImage[]> {
+  const images: MediaImage[] = [];
+  try {
+    const searchR = await fetch(
+      `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=${encodeURIComponent(term)}`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (!searchR.ok) return images;
+    const searchData = await searchR.json();
+    const objectIDs: number[] = (searchData.objectIDs || []).slice(0, 6);
+    if (objectIDs.length === 0) return images;
+
+    const fetches = objectIDs.map(id =>
+      fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`, {
+        signal: AbortSignal.timeout(3000),
+      }).then(r => r.ok ? r.json() : null).catch(() => null)
+    );
+    const objects = await Promise.all(fetches);
+
+    const termLower = term.toLowerCase();
+    const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
+
+    for (const obj of objects) {
+      if (!obj || !obj.primaryImageSmall) continue;
+      const caption = [obj.title, obj.artistDisplayName, obj.objectDate].filter(Boolean).join(" — ");
+      const captionLower = caption.toLowerCase();
+
+      let relevance = 10; // Base score for being from a curated museum
+      if (captionLower.includes(termLower)) relevance += 50;
+      for (const w of termWords) {
+        if (captionLower.includes(w)) relevance += 15;
+      }
+
+      images.push({
+        url: obj.primaryImageSmall,
+        caption,
+        uorHash: fnv1a(obj.primaryImageSmall),
+        source: "met-museum",
+        relevance,
+      });
+    }
+  } catch { /* Met Museum fetch failed */ }
+  return images;
+}
+
+/* ── NASA Images ───────────────────────────────────────────────────── */
+
+async function fetchNASAImages(term: string): Promise<MediaImage[]> {
+  const images: MediaImage[] = [];
+  try {
+    const r = await fetch(
+      `https://images-api.nasa.gov/search?q=${encodeURIComponent(term)}&media_type=image&page_size=6`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (!r.ok) return images;
+    const data = await r.json();
+    const items = data.collection?.items || [];
+
+    const termLower = term.toLowerCase();
+    const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
+
+    for (const item of items.slice(0, 6)) {
+      const meta = item.data?.[0];
+      const link = item.links?.[0];
+      if (!meta || !link?.href) continue;
+
+      const caption = meta.title || "";
+      const desc = (meta.description || "").slice(0, 200);
+      const captionLower = (caption + " " + desc).toLowerCase();
+
+      let relevance = 10;
+      if (captionLower.includes(termLower)) relevance += 50;
+      for (const w of termWords) {
+        if (captionLower.includes(w)) relevance += 15;
+      }
+
+      images.push({
+        url: link.href,
+        caption: caption + (meta.date_created ? ` (${meta.date_created.split("T")[0]})` : ""),
+        uorHash: fnv1a(link.href),
+        source: "nasa",
+        relevance,
+      });
+    }
+  } catch { /* NASA fetch failed */ }
+  return images;
+}
+
+/* ── Library of Congress ───────────────────────────────────────────── */
+
+async function fetchLibraryOfCongressImages(term: string): Promise<MediaImage[]> {
+  const images: MediaImage[] = [];
+  try {
+    const r = await fetch(
+      `https://www.loc.gov/search/?q=${encodeURIComponent(term)}&fa=online-format:image&fo=json&c=6`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (!r.ok) return images;
+    const data = await r.json();
+    const results = data.results || [];
+
+    const termLower = term.toLowerCase();
+    const termWords = termLower.split(/\s+/).filter(w => w.length > 2);
+
+    for (const item of results.slice(0, 6)) {
+      const imgUrl = item.image_url?.[0] || item.image?.url;
+      if (!imgUrl || typeof imgUrl !== "string") continue;
+
+      const caption = item.title || "";
+      const captionLower = caption.toLowerCase();
+
+      let relevance = 10;
+      if (captionLower.includes(termLower)) relevance += 50;
+      for (const w of termWords) {
+        if (captionLower.includes(w)) relevance += 15;
+      }
+
+      images.push({
+        url: imgUrl,
+        caption,
+        uorHash: fnv1a(imgUrl),
+        source: "loc",
+        relevance,
+      });
+    }
+  } catch { /* LOC fetch failed */ }
+  return images;
+}
+
+/* ── Multi-source orchestrator ─────────────────────────────────────── */
+
+async function fetchMultiSourceMedia(term: string, _qid: string | null): Promise<{
+  images: MediaImage[];
+  videos: MediaVideo[];
+  audio: MediaAudio[];
+}> {
+  const videos: MediaVideo[] = [];
+  const audio: MediaAudio[] = [];
+
+  // Determine which sources to query
+  const sources = selectSources(term);
+  console.log(`[media] Sources for "${term}":`, sources);
+
+  // Fetch images from all selected sources in parallel
+  const imagePromises: Promise<MediaImage[]>[] = [];
+  if (sources.includes("wikimedia")) imagePromises.push(fetchWikimediaImages(term));
+  if (sources.includes("met-museum")) imagePromises.push(fetchMetMuseumImages(term));
+  if (sources.includes("nasa")) imagePromises.push(fetchNASAImages(term));
+  if (sources.includes("loc")) imagePromises.push(fetchLibraryOfCongressImages(term));
+
+  const imageResults = await Promise.allSettled(imagePromises);
+  let allImages: MediaImage[] = [];
+  for (const result of imageResults) {
+    if (result.status === "fulfilled") allImages.push(...result.value);
+  }
+
+  // Deduplicate by URL
+  const seen = new Set<string>();
+  allImages = allImages.filter(img => {
+    if (seen.has(img.url)) return false;
+    seen.add(img.url);
+    return true;
+  });
+
+  // Sort by relevance
+  allImages.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+
+  // Source diversity bonus: if top 4 are all from same source, boost best from other sources
+  if (allImages.length > 4) {
+    const topSource = allImages[0]?.source;
+    const top4AllSame = allImages.slice(0, 4).every(img => img.source === topSource);
+    if (top4AllSame) {
+      const otherBest = allImages.find(img => img.source !== topSource);
+      if (otherBest) {
+        otherBest.relevance = (otherBest.relevance || 0) + 30;
+        allImages.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+      }
+    }
+  }
+
+  // Take top 8 and strip internal relevance field
+  const images: MediaImage[] = allImages.slice(0, 8).map(({ relevance, ...rest }) => rest);
 
   // ── YouTube videos — search with topic-specific terms ──
   try {
@@ -575,6 +760,9 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
 
   return { images, videos, audio };
 }
+
+// Alias for backward compat with call site
+const fetchCommonsMedia = fetchMultiSourceMedia;
 
 /* ── Lens system prompts ─────────────────────────────────────────────── */
 
