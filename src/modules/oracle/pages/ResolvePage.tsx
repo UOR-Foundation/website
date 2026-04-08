@@ -645,6 +645,13 @@ const SearchPage = () => {
     if (addr) { setInput(addr); handleSearch(addr); }
   }, [searchParams, wasmReady]);
 
+  // When opened inside a desktop window with a query, trigger search automatically
+  useEffect(() => {
+    if (!wasmReady || !inWindow || !windowInitialQuery) return;
+    const q = windowInitialQuery.trim();
+    if (q) { setInput(q); handleSearch(q); }
+  }, [wasmReady, inWindow, windowInitialQuery]);
+
   // Portal redemption: handle ?portal= param
   useEffect(() => {
     const portalToken = searchParams.get("portal");
