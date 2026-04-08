@@ -236,7 +236,7 @@ const SearchPage = () => {
                 className="w-full relative group"
                 style={{ maxWidth: "min(720px, 85vw)", marginTop: "calc(4rem * 0.618)" }}
               >
-                <div className="relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_2px_12px_0_hsl(0_0%_0%/0.4)]">
+                <div className="relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all duration-500 focus-within:border-primary/30 focus-within:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.25),0_0_60px_-12px_hsl(var(--primary)/0.1)]">
                   {/* Left + icon */}
                   <button className="pl-5 pr-2 py-[18px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
                     <Plus className="w-6 h-6" />
