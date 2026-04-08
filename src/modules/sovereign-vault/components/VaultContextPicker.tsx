@@ -19,6 +19,8 @@ interface Props {
   /** Position anchor — "above" for mobile, "below" for desktop */
   anchor?: "above" | "below";
   className?: string;
+  /** When true, renders inline without AnimatePresence wrapper and outside-click handler */
+  inline?: boolean;
 }
 
 function truncateCid(cid: string, len = 8): string {
@@ -39,13 +41,14 @@ export default function VaultContextPicker({
   onImportUrl,
   anchor = "below",
   className = "",
+  inline = false,
 }: Props) {
   const [filter, setFilter] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close on outside click (skip when inline)
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onOpenChange(false);
@@ -53,7 +56,7 @@ export default function VaultContextPicker({
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, inline]);
 
   const filtered = vault.documents.filter((d) => {
     if (!filter.trim()) return true;

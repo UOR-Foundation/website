@@ -1,14 +1,14 @@
 /**
- * ContextPills — Dismissible pills showing selected vault documents as search context.
+ * ContextPills — Dismissible pills showing selected context items (guest + vault).
  */
 
-import { Shield, X } from "lucide-react";
+import { Shield, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { VaultDocument } from "../lib/types";
+import type { ContextItem } from "../hooks/useContextManager";
 
 interface Props {
-  documents: VaultDocument[];
-  onRemove: (docId: string) => void;
+  items: ContextItem[];
+  onRemove: (id: string) => void;
   className?: string;
 }
 
@@ -17,25 +17,33 @@ function truncate(s: string, max = 14): string {
   return s.length > max ? s.slice(0, max) + "…" : s;
 }
 
-export default function ContextPills({ documents, onRemove, className = "" }: Props) {
-  if (documents.length === 0) return null;
+export default function ContextPills({ items, onRemove, className = "" }: Props) {
+  if (items.length === 0) return null;
 
   return (
     <div className={`flex flex-wrap gap-1.5 ${className}`}>
       <AnimatePresence mode="popLayout">
-        {documents.map((doc) => (
+        {items.map((item) => (
           <motion.button
-            key={doc.id}
+            key={item.id}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            onClick={() => onRemove(doc.id)}
-            className="inline-flex items-center gap-1 h-7 pl-2 pr-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors group"
-            title={doc.filename || "Untitled"}
+            onClick={() => onRemove(item.id)}
+            className={`inline-flex items-center gap-1 h-7 pl-2 pr-1.5 rounded-full text-[11px] font-medium transition-colors group ${
+              item.isGuest
+                ? "bg-muted-foreground/10 text-muted-foreground/70 border border-dashed border-muted-foreground/20 hover:bg-muted-foreground/15"
+                : "bg-primary/10 text-primary hover:bg-primary/20"
+            }`}
+            title={`${item.filename}${item.isGuest ? " (session only)" : ""}`}
           >
-            <Shield className="w-3 h-3 shrink-0" />
-            <span>{truncate(doc.filename || "Untitled")}</span>
+            {item.isGuest ? (
+              <Clock className="w-3 h-3 shrink-0 opacity-60" />
+            ) : (
+              <Shield className="w-3 h-3 shrink-0" />
+            )}
+            <span>{truncate(item.filename)}</span>
             <X className="w-3 h-3 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
           </motion.button>
         ))}
