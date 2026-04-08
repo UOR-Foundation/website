@@ -6,7 +6,7 @@ import {
 export interface DesktopApp {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string; size?: number }>;
+  icon: ComponentType<any>;
   component: React.LazyExoticComponent<ComponentType<any>>;
   defaultSize?: { w: number; h: number };
   color: string; // accent color for dock glow
