@@ -482,7 +482,10 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
     return (
       <article style={{ display: "flex", flexDirection: "column", gap: 0 }}>
         {/* ── Title ── */}
-        <h1
+        <BalancedHeading
+          font="400 30px Georgia, 'Times New Roman', serif"
+          lineHeight={36}
+          as="h1"
           className="text-foreground"
           style={{
             fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
@@ -496,7 +499,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
           }}
         >
           {title}
-        </h1>
+        </BalancedHeading>
         <p className="text-muted-foreground/50" style={{ fontSize: 12, fontStyle: "italic", margin: "6px 0 12px" }}>
           From UOR Knowledge, the universal encyclopedia
         </p>
