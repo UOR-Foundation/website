@@ -9,7 +9,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2 } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -59,13 +59,13 @@ interface Result {
 }
 
 /* ── Tiny copy button ── */
-function CopyBtn({ onClick, copied, size = 12, label }: {
+function CopyBtn({ onClick, copied, size = 14, label }: {
   onClick: () => void; copied: boolean; size?: number; label?: string;
 }) {
   return (
-    <button onClick={onClick} className="inline-flex items-center gap-1 text-muted-foreground/25 hover:text-muted-foreground/60 transition-colors" title="Copy">
+    <button onClick={onClick} className="inline-flex items-center gap-1.5 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors" title="Copy">
       {copied ? <Check size={size} className="text-emerald-400" /> : <Copy size={size} />}
-      {label && <span className="text-[10px]">{label}</span>}
+      {label && <span className="text-sm">{label}</span>}
     </button>
   );
 }
@@ -101,6 +101,7 @@ const SearchPage = () => {
   // Chain of Proofs state
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
+  const [chainViewMode, setChainViewMode] = useState<"readable" | "raw">("readable");
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
@@ -557,9 +558,9 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Search bar in header ── */}
       {result ? (
-        <header className="flex items-center gap-3 px-4 md:px-6 h-14 border-b border-border/15 shrink-0">
-          <button onClick={clearResult} className="text-muted-foreground/40 hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
+        <header className="flex items-center gap-3 px-4 md:px-6 h-16 border-b border-border/15 shrink-0">
+          <button onClick={clearResult} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 relative">
             <input
@@ -567,17 +568,17 @@ const SearchPage = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              className="w-full bg-[hsl(var(--muted)/0.08)] border border-border/15 rounded-full px-4 py-2 pr-10 text-sm font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
+              className="w-full bg-[hsl(var(--muted)/0.08)] border border-border/15 rounded-full px-4 py-2.5 pr-10 text-base font-mono text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/8 transition-all"
             />
-            <button onClick={() => { clearResult(); setTimeout(submit, 50); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-              <Search className="w-3.5 h-3.5" />
+            <button onClick={() => { clearResult(); setTimeout(submit, 50); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground/40 hover:text-foreground/60 transition-colors">
+              <Search className="w-4 h-4" />
             </button>
           </div>
         </header>
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 md:px-6">
+        <div className="max-w-3xl mx-auto px-6 md:px-8">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
@@ -739,17 +740,17 @@ const SearchPage = () => {
               style={{ height: "100dvh" }}
             >
               {/* AI Mode header */}
-              <div className="flex items-center justify-between py-5 shrink-0">
+                <div className="flex items-center justify-between py-5 shrink-0">
                 <div className="flex items-center gap-3">
-                  <button onClick={exitAiMode} className="text-muted-foreground/40 hover:text-foreground transition-colors">
-                    <ArrowLeft className="w-4 h-4" />
+                  <button onClick={exitAiMode} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary/70" />
-                    <span className="text-sm font-medium text-foreground/80">UOR Oracle</span>
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-5 h-5 text-primary/80" />
+                    <span className="text-base font-medium text-foreground/85">UOR Oracle</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   {proofCount >= 2 && (
                     <button
                       onClick={() => {
@@ -758,15 +759,15 @@ const SearchPage = () => {
                         setSelectedProofIndices(all);
                         setTimeout(() => encodeChain(all), 50);
                       }}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20 transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-muted-foreground/50 hover:text-foreground/70 border border-transparent hover:border-border/25 transition-all"
                       title="Encode entire conversation as a single chain address"
                     >
-                      <Link2 className="w-3 h-3" />
+                      <Link2 className="w-3.5 h-3.5" />
                       Chain All
                     </button>
                   )}
-                  <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-                    <X className="w-4 h-4" />
+                  <button onClick={exitAiMode} className="text-muted-foreground/40 hover:text-foreground/70 transition-colors">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -998,49 +999,26 @@ const SearchPage = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20, mass: 0.8 }}
-                className="py-8 space-y-5"
+                className="space-y-0"
+                style={{ paddingTop: "calc(100vh * 0.06)" }}
               >
                 {/* ADDRESS */}
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-3">
-                  <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Address</p>
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="space-y-4">
+                  <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
                   <div className="flex items-baseline gap-3">
-                    <h2 className="text-2xl md:text-3xl font-display font-medium text-foreground tracking-wide leading-tight">
+                    <h2 className="text-3xl md:text-4xl font-display font-medium text-foreground tracking-wide leading-tight">
                       {result.receipt.triwordFormatted}
                     </h2>
                     <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
                   </div>
-
-                  {/* IPv6 */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wider text-primary/40 font-semibold shrink-0">IPv6</span>
-                    <code className="text-[12px] font-mono text-primary/70 tracking-wide">
-                      {result.receipt.ipv6}
-                    </code>
-                    <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} size={10} />
-                  </div>
-
-                  {/* CID */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/30 font-semibold shrink-0">CID</span>
-                    <code className="text-[11px] font-mono text-muted-foreground/30 break-all leading-relaxed">
-                      {result.receipt.cid}
-                    </code>
-                    <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} size={10} />
-                  </div>
-
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-amber-400"}`} />
-                    <span className="text-[10px] text-muted-foreground/30 font-mono">
-                      {result.receipt.engine === "wasm" ? `wasm ✓ ${result.receipt.crateVersion ?? ""}` : "ts fallback"}
-                    </span>
-                  </div>
                 </motion.div>
 
-                {/* ── Continue / Discuss in Oracle CTA ── */}
+                {/* ── Continue / Discuss in Oracle CTA — prominent at top ── */}
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.08 }}
+                  style={{ marginTop: "calc(2rem * 1.618)" }}
                 >
                   <button
                     onClick={() => {
@@ -1080,9 +1058,9 @@ const SearchPage = () => {
                       setAiMode(true);
                       setTimeout(() => aiInputRef.current?.focus(), 150);
                     }}
-                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/15 hover:border-primary/30 hover:from-primary/25 hover:to-primary/15 text-foreground/85 font-semibold text-sm tracking-wide transition-all group"
+                    className="w-full flex items-center justify-center gap-3 px-7 py-4 rounded-xl bg-gradient-to-r from-primary/25 to-primary/12 border border-primary/20 hover:border-primary/40 hover:from-primary/30 hover:to-primary/18 text-foreground font-bold text-base tracking-wide transition-all group shadow-[0_0_24px_-8px_hsl(var(--primary)/0.15)]"
                   >
-                    <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
+                    <Sparkles className="w-5 h-5 text-primary group-hover:text-primary transition-colors" />
                     {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs"
                       ? "Continue Chain in Oracle →"
                       : (result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
@@ -1091,84 +1069,157 @@ const SearchPage = () => {
                   </button>
                 </motion.div>
 
-                <div className="border-t border-border/10" />
+                {/* Metadata block — IPv6, CID, engine */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-3"
+                  style={{ marginTop: "calc(2rem * 1.618)" }}
+                >
+                  {/* IPv6 */}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs uppercase tracking-wider text-primary/60 font-semibold shrink-0">IPv6</span>
+                    <code className="text-base font-mono text-primary tracking-wide">
+                      {result.receipt.ipv6}
+                    </code>
+                    <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} />
+                  </div>
+
+                  {/* CID */}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold shrink-0">CID</span>
+                    <code className="text-base font-mono text-foreground/60 break-all leading-relaxed">
+                      {result.receipt.cid}
+                    </code>
+                    <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-amber-400"}`} />
+                    <span className="text-base text-foreground/50 font-mono">
+                      {result.receipt.engine === "wasm" ? `wasm ✓ ${result.receipt.crateVersion ?? ""}` : "ts fallback"}
+                    </span>
+                  </div>
+                </motion.div>
+
+                <div className="border-t border-border/10" style={{ marginTop: "calc(1.5rem * 1.618)" }} />
 
                 {/* CONTENT — Chain of Proofs special rendering */}
                 {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs" ? (
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Link2 className="w-3.5 h-3.5 text-primary/60" />
-                      <p className="text-[10px] font-semibold text-primary/50 uppercase tracking-[0.15em]">Chain of Proofs</p>
-                      <span className="text-[10px] text-muted-foreground/30 font-mono">
-                        {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
-                      </span>
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-5" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <Link2 className="w-4 h-4 text-primary/70" />
+                        <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">Chain of Proofs</p>
+                        <span className="text-base text-foreground/50 font-mono">
+                          {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
+                        </span>
+                      </div>
+                      {/* Readable / Raw toggle */}
+                      <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
+                        <button
+                          onClick={() => setChainViewMode("readable")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
+                            chainViewMode === "readable"
+                              ? "bg-primary/15 text-foreground"
+                              : "text-muted-foreground/40 hover:text-foreground/60"
+                          }`}
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          Readable
+                        </button>
+                        <button
+                          onClick={() => setChainViewMode("raw")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
+                            chainViewMode === "raw"
+                              ? "bg-primary/15 text-foreground"
+                              : "text-muted-foreground/40 hover:text-foreground/60"
+                          }`}
+                        >
+                          <Code2 className="w-3.5 h-3.5" />
+                          Raw
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-0">
-                      {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
-                        <div key={idx} className="flex items-stretch gap-0">
-                          {/* Chain connector column */}
-                          <div className="flex flex-col items-center w-6 shrink-0">
-                            <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/25 mt-3 shrink-0" />
-                            {idx < arr.length - 1 && (
-                              <div className="flex-1 w-px bg-primary/10" style={{ minHeight: 12 }} />
-                            )}
-                          </div>
-                          {/* Link card */}
-                          <div className="flex-1 border border-border/10 rounded-lg p-3 mb-2 space-y-1.5 bg-muted/5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-semibold text-muted-foreground/30 uppercase tracking-wider">Link {idx + 1}</span>
-                              {link["uor:proofAddress"] && (
-                                <button
-                                  onClick={() => {
-                                    setInput(link["uor:proofAddress"] as string);
-                                    clearResult();
-                                    setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50);
-                                  }}
-                                  className="text-[9px] text-primary/50 hover:text-primary/80 transition-colors font-mono"
-                                >
-                                  {link["uor:proofAddress"] as string}
-                                </button>
+                    {chainViewMode === "readable" ? (
+                      <div className="space-y-0">
+                        {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
+                          <div key={idx} className="flex items-stretch gap-0">
+                            {/* Chain connector column */}
+                            <div className="flex flex-col items-center w-7 shrink-0">
+                              <div className="w-3 h-3 rounded-full bg-primary/25 border border-primary/30 mt-3.5 shrink-0" />
+                              {idx < arr.length - 1 && (
+                                <div className="flex-1 w-px bg-primary/15" style={{ minHeight: 12 }} />
                               )}
                             </div>
-                            {link["uor:query"] && (
-                              <p className="text-xs text-foreground/60 line-clamp-2">
-                                <span className="text-muted-foreground/30 font-semibold mr-1">Q:</span>
-                                {link["uor:query"] as string}
-                              </p>
-                            )}
-                            {link["uor:response"] && (
-                              <p className="text-xs text-foreground/45 line-clamp-3">
-                                <span className="text-muted-foreground/30 font-semibold mr-1">A:</span>
-                                {(link["uor:response"] as string).slice(0, 200)}…
-                              </p>
-                            )}
+                            {/* Link card */}
+                            <div className="flex-1 border border-border/15 rounded-lg p-4 mb-2.5 space-y-2.5 bg-muted/5">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Link {idx + 1}</span>
+                                {link["uor:proofAddress"] && (
+                                  <button
+                                    onClick={() => {
+                                      setInput(link["uor:proofAddress"] as string);
+                                      clearResult();
+                                      setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50);
+                                    }}
+                                    className="text-sm text-primary/60 hover:text-primary/90 transition-colors font-mono"
+                                  >
+                                    {link["uor:proofAddress"] as string}
+                                  </button>
+                                )}
+                              </div>
+                              {link["uor:query"] && (
+                                <p className="text-base text-foreground/70 line-clamp-2">
+                                  <span className="text-foreground/40 font-semibold mr-1.5">Q:</span>
+                                  {link["uor:query"] as string}
+                                </p>
+                              )}
+                              {link["uor:response"] && (
+                                <p className="text-base text-foreground/55 line-clamp-3">
+                                  <span className="text-foreground/40 font-semibold mr-1.5">A:</span>
+                                  {(link["uor:response"] as string).slice(0, 200)}…
+                                </p>
+                              )}
+                            </div>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* Raw JSON view */
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-end">
+                          <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "chain-json")} copied={copied === "chain-json"} label="Copy" />
                         </div>
-                      ))}
-                    </div>
+                        <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[55vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
+                          {JSON.stringify(result.source, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                   </motion.div>
                 ) : (
                   /* Standard content */
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-2">
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-3" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Content</p>
+                      <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Content</p>
                       <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
                     </div>
-                    <pre className="text-sm font-mono text-foreground/65 bg-muted/5 rounded-xl p-5 overflow-x-auto max-h-[45vh] overflow-y-auto border border-border/10 leading-relaxed whitespace-pre-wrap break-words">
+                    <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[50vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
                       {JSON.stringify(result.source, null, 2)}
                     </pre>
                   </motion.div>
                 )}
 
-                {/* Verify */}
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-3 pt-1">
-                  <button onClick={rederive} disabled={loading} className="flex items-center gap-1.5 text-xs text-muted-foreground/30 hover:text-foreground/60 transition-colors disabled:opacity-20">
-                    <RotateCcw className="w-3 h-3" /> Verify determinism
+                {/* Verify Integrity */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-3" style={{ paddingTop: "calc(1rem * 1.618)" }}>
+                  <button onClick={rederive} disabled={loading} className="flex items-center gap-2 text-base text-foreground/50 hover:text-foreground/80 transition-colors disabled:opacity-20">
+                    <RotateCcw className="w-4 h-4" /> Verify Integrity
                   </button>
                   {rederived && (
-                    <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-xs text-emerald-400/60 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Identical
+                    <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} className="text-base text-emerald-400/70 flex items-center gap-1.5">
+                      <Check className="w-4 h-4" /> Identical
                     </motion.span>
                   )}
                 </motion.div>
