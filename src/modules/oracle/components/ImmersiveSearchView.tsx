@@ -1,6 +1,6 @@
 /**
  * ImmersiveSearchView — Full-screen photo portal with clock, greeting, and search.
- * Now with inline Sovereign Context Vault picker.
+ * Now with unified context menu (guest + vault).
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -12,10 +12,9 @@ import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
-import VaultContextPicker from "@/modules/sovereign-vault/components/VaultContextPicker";
+import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import VaultImportDialog from "@/modules/sovereign-vault/components/VaultImportDialog";
-import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
+import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import { toast } from "sonner";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 
@@ -26,7 +25,6 @@ function detectAddress(input: string): { kind: AddressKind; label: string | null
   const t = input.trim();
   if (!t) return { kind: null, label: null };
 
-  // Triword: Word.Word.Word or word · word · word or "word word word"
   const normalized = t.replace(/\s*[·.]\s*/g, ".").replace(/\s+/g, ".").toLowerCase();
   const parts = normalized.split(".");
   if (parts.length === 3 && parts.every((p) => p.length >= 2)) {
@@ -41,7 +39,6 @@ function detectAddress(input: string): { kind: AddressKind; label: string | null
     }
   }
 
-  // IPv6: contains colons and hex segments
   if (/^[0-9a-fA-F:]+$/.test(t) && t.includes(":") && t.split(":").length >= 3) {
     return { kind: "ipv6", label: t };
   }
@@ -70,7 +67,7 @@ interface Props {
 
 export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
   const { profile } = useAuth();
-  const vault = useVault();
+  const ctx = useContextManager();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
   const detected = useMemo(() => detectAddress(query), [query]);
@@ -80,24 +77,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
   const [dragOver, setDragOver] = useState(false);
-
-  // Vault context state
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importTab, setImportTab] = useState<"file" | "url">("file");
-
-  const selectedDocs = vault.documents.filter((d) => selectedDocIds.includes(d.id));
-
-  const toggleDoc = useCallback((docId: string) => {
-    setSelectedDocIds((prev) =>
-      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
-    );
-  }, []);
-
-  const removeDoc = useCallback((docId: string) => {
-    setSelectedDocIds((prev) => prev.filter((id) => id !== docId));
-  }, []);
 
   // Solar-phase photo update
   useEffect(() => {
@@ -136,19 +116,18 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
 
   const handleSubmit = useCallback(() => {
     const q = query.trim();
-    if (q) onSearch(q, selectedDocIds.length > 0 ? selectedDocIds : undefined);
-  }, [query, onSearch, selectedDocIds]);
+    if (q) onSearch(q, ctx.getContextDocIds());
+  }, [query, onSearch, ctx]);
 
-  const handleVaultDrop = useCallback(async (e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (!vault.ready) return;
     const files = Array.from(e.dataTransfer.files);
     for (const file of files) {
-      const doc = await vault.importFile(file);
-      if (doc) toast.success(`Imported to vault: ${doc.filename}`);
+      await ctx.addFile(file);
+      toast.success(`Added to context: ${file.name}`);
     }
-  }, [vault]);
+  }, [ctx]);
 
   const displayName = profile?.displayName || "Explorer";
   const greeting = getGreeting();
@@ -162,7 +141,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       className="fixed inset-0 z-50 flex flex-col"
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
-      onDrop={handleVaultDrop}
+      onDrop={handleDrop}
     >
       {/* Background image */}
       <div className="absolute inset-0">
@@ -237,7 +216,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             style={{ maxWidth: "min(580px, 80vw)" }}
           >
             <div className="w-full relative group">
-              {/* Outer glow ring — shifts to emerald when address detected */}
+              {/* Outer glow ring */}
               <div
                 className="absolute -inset-[1px] rounded-full transition-all duration-500 pointer-events-none"
                 style={{
@@ -257,7 +236,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                   }}
                 />
               )}
-              {/* Ambient depth shadow */}
               <div
                 className="absolute -inset-1 rounded-full pointer-events-none transition-all duration-500"
                 style={{
@@ -267,7 +245,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 }}
               />
 
-              {/* Address badge — lock icon + label that slides in */}
+              {/* Address badge */}
               <AnimatePresence>
                 {isAddress && (
                   <motion.div
@@ -319,33 +297,29 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 }}
               />
 
-              {/* + button (vault context picker trigger) — left of input */}
+              {/* + button (context menu trigger) */}
               <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setPickerOpen((p) => !p)}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                   style={{
-                    background: pickerOpen || selectedDocIds.length > 0
+                    background: pickerOpen || ctx.contextItems.length > 0
                       ? "hsl(var(--primary) / 0.2)"
                       : "hsl(0 0% 100% / 0.08)",
-                    border: `1px solid ${pickerOpen || selectedDocIds.length > 0 ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.1)"}`,
-                    color: pickerOpen || selectedDocIds.length > 0 ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.5)",
+                    border: `1px solid ${pickerOpen || ctx.contextItems.length > 0 ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.1)"}`,
+                    color: pickerOpen || ctx.contextItems.length > 0 ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.5)",
                     boxShadow: "0 2px 8px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
                   }}
-                  title="Attach vault documents as context"
+                  title="Add context — files, text, or URLs"
                 >
                   <Plus className="w-4 h-4" />
                 </motion.button>
 
-                <VaultContextPicker
+                <ContextMenu
                   open={pickerOpen}
                   onOpenChange={setPickerOpen}
-                  vault={vault}
-                  selectedIds={selectedDocIds}
-                  onToggle={toggleDoc}
-                  onImportFile={() => { setImportTab("file"); setImportDialogOpen(true); }}
-                  onImportUrl={() => { setImportTab("url"); setImportDialogOpen(true); }}
+                  ctx={ctx}
                   anchor="below"
                   className="top-12 left-0"
                 />
@@ -356,7 +330,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 <VoiceInput
                   onTranscript={(text, isFinal) => {
                     setQuery(text);
-                    if (isFinal && text.trim()) onSearch(text.trim(), selectedDocIds.length > 0 ? selectedDocIds : undefined);
+                    if (isFinal && text.trim()) onSearch(text.trim(), ctx.getContextDocIds());
                   }}
                   size="sm"
                   className="text-white/60 hover:text-white/90 border-white/10 hover:border-white/25"
@@ -377,20 +351,20 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             </div>
 
             {/* Context pills */}
-            {selectedDocs.length > 0 && (
+            {ctx.contextItems.length > 0 && (
               <div className="mt-3">
-                <ContextPills documents={selectedDocs} onRemove={removeDoc} />
+                <ContextPills items={ctx.contextItems} onRemove={ctx.remove} />
               </div>
             )}
           </motion.div>
         </div>
 
         {/* Drag overlay */}
-        {dragOver && vault.ready && (
+        {dragOver && (
           <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
             <div className="border-2 border-dashed border-white/40 rounded-3xl px-12 py-8 text-center">
-              <p className="text-white text-lg font-medium">Drop to import to Vault</p>
-              <p className="text-white/50 text-sm mt-1">Files will be encrypted & content-addressed</p>
+              <p className="text-white text-lg font-medium">Drop to add context</p>
+              <p className="text-white/50 text-sm mt-1">Files will be extracted and added to your session</p>
             </div>
           </div>
         )}
@@ -406,9 +380,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
           <span className="text-white/40 text-xs">Photo · Unsplash</span>
         </div>
       </div>
-
-      {/* Import dialog */}
-      <VaultImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} vault={vault} />
     </motion.div>
   );
 }
