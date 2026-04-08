@@ -150,7 +150,153 @@ function renderHumanContent(source: unknown): string {
 
 // renderHumanView replaced by HumanContentView component
 
-/* ── Tiny copy button ── */
+/* ── Proof Receipt — compact expandable receipt ── */
+function ProofReceipt({
+  proof,
+  index,
+  proofCount,
+  currentProofIdx,
+  isSelected,
+  nextProofExists,
+  toggleProofIndex,
+  copied,
+  onCopy,
+  onViewFull,
+}: {
+  proof: EnrichedReceipt;
+  index: number;
+  proofCount: number;
+  currentProofIdx: number;
+  isSelected: boolean;
+  nextProofExists: boolean;
+  toggleProofIndex: (idx: number) => void;
+  copied: string | null;
+  onCopy: (text: string, key: string) => void;
+  onViewFull: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="relative mt-2 max-w-[88%] w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        className="flex items-stretch gap-0"
+      >
+        {/* Chain connector column */}
+        {proofCount >= 2 && (
+          <div className="flex flex-col items-center w-7 shrink-0 pt-2">
+            <button
+              onClick={() => toggleProofIndex(currentProofIdx)}
+              className="transition-all hover:scale-125"
+              aria-label={isSelected ? "Deselect proof" : "Select proof for chain"}
+            >
+              {isSelected ? (
+                <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }}>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                </motion.div>
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-primary/20 border border-primary/15 hover:bg-primary/40 transition-colors" />
+              )}
+            </button>
+            {nextProofExists && (
+              <div className="flex-1 w-px bg-primary/8 mt-1" style={{ minHeight: 16 }} />
+            )}
+          </div>
+        )}
+
+        {/* Receipt */}
+        <div className="flex-1">
+          {/* Collapsed: single-line receipt */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all group ${
+              isSelected
+                ? "bg-primary/[0.06] border border-primary/20"
+                : "bg-transparent hover:bg-primary/[0.03] border border-transparent hover:border-primary/8"
+            }`}
+          >
+            <ShieldCheck className="w-3 h-3 text-emerald-400/50 shrink-0" />
+            <span className="text-[10px] font-mono text-muted-foreground/35 truncate">
+              {proof.triwordFormatted}
+            </span>
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="ml-auto shrink-0"
+            >
+              <ChevronDown className="w-3 h-3 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
+            </motion.div>
+          </button>
+
+          {/* Expanded details */}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-3 pt-2 pb-2.5 space-y-2 border-x border-b border-primary/10 rounded-b-lg bg-primary/[0.02]">
+                  {/* Triword with copy */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-display text-foreground/70 tracking-wide">
+                      {proof.triwordFormatted}
+                    </span>
+                    <CopyBtn
+                      onClick={() => onCopy(proof.triword, `proof-triword-${index}`)}
+                      copied={copied === `proof-triword-${index}`}
+                      size={10}
+                    />
+                  </div>
+
+                  {/* IPv6 */}
+                  {proof.ipv6 && (
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[9px] font-mono text-muted-foreground/30 truncate">
+                        {proof.ipv6}
+                      </p>
+                      <CopyBtn
+                        onClick={() => onCopy(proof.ipv6, `proof-ipv6-${index}`)}
+                        copied={copied === `proof-ipv6-${index}`}
+                        size={9}
+                      />
+                    </div>
+                  )}
+
+                  {/* Ring + Engine info */}
+                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground/25">
+                    <span>{proof.ringPartition}</span>
+                    <span className="text-muted-foreground/15">·</span>
+                    <span>Engine: {proof.engine}</span>
+                    {proof.glyph && (
+                      <>
+                        <span className="text-muted-foreground/15">·</span>
+                        <span className="font-mono">{proof.glyph.slice(0, 6)}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* View full proof link */}
+                  <button
+                    onClick={onViewFull}
+                    className="text-[9px] text-primary/40 hover:text-primary/70 transition-colors"
+                  >
+                    View full proof →
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function CopyBtn({ onClick, copied, size = 14, label }: {
   onClick: () => void; copied: boolean; size?: number; label?: string;
 }) {
