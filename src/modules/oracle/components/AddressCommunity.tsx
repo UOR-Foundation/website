@@ -114,6 +114,7 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
   }, [cid, sort]);
 
   useEffect(() => {
+    if (!cid) return;
     load();
 
     if (user) {
