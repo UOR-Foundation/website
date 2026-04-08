@@ -641,6 +641,10 @@ const SearchPage = () => {
 
   /** Resolve a plain keyword into a multi-source knowledge card (streaming) */
   const handleKeywordResolve = async (keyword: string) => {
+    // ── Fetch user context for personalization ──
+    const recentContext = await getRecentKeywords(15);
+    setContextKeywords(recentContext);
+
     // ── Phase 1: Instant Wikipedia metadata (~200ms) ──
     let wiki: WikiMeta | null = null;
     try {
@@ -697,6 +701,7 @@ const SearchPage = () => {
 
     await streamKnowledge({
       keyword,
+      context: recentContext,
       onWiki: (streamWiki, sources) => {
         // Update wiki metadata if the stream provides it (and we didn't get it already)
         if (streamWiki && !wiki) {
