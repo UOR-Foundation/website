@@ -383,26 +383,34 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               />
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={handleAddressClick}>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={!synthesizing ? handleAddressClick : undefined}>
               <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
-              <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
-                {triwordDisplay}
-              </span>
+              {synthesizing || !triwordDisplay ? (
+                <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/40" : "text-foreground/40"}`}>
+                  Synthesizing{streamProgress > 0 ? `… ${Math.round(streamProgress * 100)}%` : "…"}
+                </span>
+              ) : (
+                <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
+                  {triwordDisplay}
+                </span>
+              )}
             </div>
           )}
 
-          {/* Copy address */}
-          <button
-            onClick={handleCopy}
-            title={copied ? "Copied!" : "Copy address"}
-            className={`p-1 rounded transition-all shrink-0 ${
-              immersive
-                ? "text-white/25 hover:text-white/60 hover:bg-white/[0.06]"
-                : "text-muted-foreground/25 hover:text-foreground/55 hover:bg-muted/8"
-            }`}
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
+          {/* Copy address — only visible when synthesis is complete and address is assigned */}
+          {!synthesizing && triwordDisplay && (
+            <button
+              onClick={handleCopy}
+              title={copied ? "Copied!" : "Copy address"}
+              className={`p-1 rounded transition-all shrink-0 ${
+                immersive
+                  ? "text-white/25 hover:text-white/60 hover:bg-white/[0.06]"
+                  : "text-muted-foreground/25 hover:text-foreground/55 hover:bg-muted/8"
+              }`}
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+          )}
 
           <Shield className={`w-3.5 h-3.5 shrink-0 transition-colors ${
             immersive
