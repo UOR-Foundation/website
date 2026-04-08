@@ -113,9 +113,11 @@ interface HumanContentViewProps {
   activeLens?: string;
   /** Callback when user switches lens */
   onLensChange?: (lensId: string) => void;
+  /** When true, suppress duplicate controls (lens pills, context banner) */
+  isReaderMode?: boolean;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
@@ -305,6 +307,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           contextKeywords={contextKeywords}
           activeLens={activeLens}
           onLensChange={onLensChange}
+          isReaderMode={isReaderMode}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />

@@ -45,6 +45,8 @@ interface ContextualArticleViewProps {
   contextKeywords?: string[];
   activeLens?: string;
   onLensChange?: (lensId: string) => void;
+  /** When true, suppress lens switcher and context banner (toolbar provides these) */
+  isReaderMode?: boolean;
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -56,6 +58,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   contextKeywords = [],
   activeLens = "encyclopedia",
   onLensChange,
+  isReaderMode = false,
 }) => {
   const navigate = useNavigate();
 
