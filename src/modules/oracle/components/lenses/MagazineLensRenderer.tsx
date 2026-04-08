@@ -102,15 +102,13 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
   const components = useMemo(() => createMagazineComponents(isFirstParagraph), [isFirstParagraph]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
-  const inlineImages = useMemo(
-    () => media ? distributeMediaAcrossSections(contentMarkdown, media.images, 4) : new Map(),
+  const inlineImageMap = useMemo(
+    () => media ? distributeMediaAcrossSections(contentMarkdown, media.images.slice(1), 4) : new Map(),
     [contentMarkdown, media]
   );
 
   // Hero image = first available image
   const heroImage = media?.images?.[0];
-  // Remaining images for inline distribution (skip hero)
-  const inlinePool = media?.images?.slice(1) || [];
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
