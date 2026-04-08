@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { label: "Home", icon: Home, path: "/" },
   { label: "Discover", icon: Compass, path: "/discover" },
   { label: "AI Oracle", icon: Sparkles, action: "ai" },
-  { label: "History", icon: Clock, path: "/search" },
+  { label: "History", icon: Clock, path: "/os" },
 ];
 
 export default function MobileSearchMenu({ open, onClose, onAiMode, onIdentity }: Props) {

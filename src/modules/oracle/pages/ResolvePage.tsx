@@ -660,7 +660,7 @@ const SearchPage = () => {
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           toast.error(body.error || "Portal link is invalid or expired");
-          navigate("/search", { replace: true });
+          navigate("/os", { replace: true });
           return;
         }
 
@@ -676,17 +676,17 @@ const SearchPage = () => {
         if (otpErr) {
           console.error("Portal OTP error:", otpErr);
           toast.error("Session transfer failed");
-          navigate("/search", { replace: true });
+          navigate("/os", { replace: true });
           return;
         }
 
         toast.success("Portal connected — session transferred!");
         // Navigate to the target URL
-        navigate(target_url || "/search", { replace: true });
+        navigate(target_url || "/os", { replace: true });
       } catch (e) {
         console.error("Portal redemption error:", e);
         toast.error("Portal link failed");
-        navigate("/search", { replace: true });
+        navigate("/os", { replace: true });
       }
     })();
   }, [searchParams]);
