@@ -590,7 +590,7 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword, context, lens } = await req.json();
+    const { keyword, context, lens, lensParams } = await req.json();
     if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Missing keyword" }), {
         status: 400,
@@ -601,6 +601,7 @@ serve(async (req) => {
     const term = keyword.trim();
     const userContext = Array.isArray(context) ? context.filter((c: unknown) => typeof c === "string").slice(0, 20) : [];
     const activeLens = typeof lens === "string" ? lens : "encyclopedia";
+    const blueprintParams = lensParams && typeof lensParams === "object" ? lensParams : null;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -620,8 +621,18 @@ serve(async (req) => {
 
     console.log(`Sources for "${term}": ${sources.length} total (${topSources.length} from Firecrawl)`);
 
-    // Build AI prompt with enriched source context
+    // Build AI prompt — use blueprint params if available, otherwise use lens ID
+    const systemPrompt = blueprintParams
+      ? buildBlueprintPrompt(blueprintParams, userContext, sources.length)
+      : buildLensPrompt(activeLens, userContext, sources.length);
+
     const userMessage = buildUserMessage(term, activeLens, wiki, topSources);
+
+    // Determine temperature and max tokens from params or lens
+    const effectiveDepth = blueprintParams?.depth || (activeLens === "expert" ? "exhaustive" : "standard");
+    const effectiveTone = blueprintParams?.tone || activeLens;
+    const maxTokens = effectiveDepth === "exhaustive" ? 3200 : effectiveDepth === "deep" ? 2800 : 2400;
+    const temperature = (effectiveTone === "poetic" || effectiveTone === "vivid" || activeLens === "storyteller" || activeLens === "magazine") ? 0.6 : 0.3;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -632,11 +643,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: buildLensPrompt(activeLens, userContext, sources.length) },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-        max_tokens: activeLens === "expert" ? 3200 : 2400,
-        temperature: activeLens === "storyteller" || activeLens === "magazine" ? 0.6 : 0.3,
+        max_tokens: maxTokens,
+        temperature,
         stream: true,
       }),
     });
