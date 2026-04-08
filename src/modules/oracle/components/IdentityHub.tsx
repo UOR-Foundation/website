@@ -157,7 +157,7 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  const totalProjections = hologram ? Object.keys(hologram.projections).length : 0;
+  
 
   // Lock body scroll when overlay is open
   useEffect(() => {
