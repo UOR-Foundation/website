@@ -479,6 +479,8 @@ async function fetchWikimediaImages(term: string): Promise<MediaImage[]> {
               }
               if (/map|location|locator/i.test(filename) && !/^map/i.test(term)) relevance -= 10;
               if (/coat.of.arms|seal.of|emblem/i.test(filename)) relevance -= 20;
+              // Apply off-topic domain penalty
+              relevance -= computeOfftopicPenalty(rawCaption + " " + filename, term);
 
               images.push({
                 url: imgUrl,
@@ -666,6 +668,11 @@ async function fetchMultiSourceMedia(term: string, _qid: string | null): Promise
   // Sort by relevance
   allImages.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
+  // ── HARD RELEVANCE FLOOR: discard images scoring below 10 ──
+  const RELEVANCE_FLOOR = 10;
+  allImages = allImages.filter(img => (img.relevance || 0) >= RELEVANCE_FLOOR);
+  console.log(`[media] After relevance floor (>=${RELEVANCE_FLOOR}): ${allImages.length} images`);
+
   // Source diversity bonus: if top 4 are all from same source, boost best from other sources
   if (allImages.length > 4) {
     const topSource = allImages[0]?.source;
@@ -679,8 +686,12 @@ async function fetchMultiSourceMedia(term: string, _qid: string | null): Promise
     }
   }
 
-  // Take top 8 and strip internal relevance field
-  const images: MediaImage[] = allImages.slice(0, 8).map(({ relevance, ...rest }) => rest);
+  // Compute coherenceScore (normalized 0-1) and take top 8
+  const maxRelevance = Math.max(...allImages.map(i => i.relevance || 0), 1);
+  const images: MediaImage[] = allImages.slice(0, 8).map(({ relevance, ...rest }) => ({
+    ...rest,
+    coherenceScore: Math.min(1, (relevance || 0) / Math.max(maxRelevance, 50)),
+  }));
 
   // ── YouTube videos — search with topic-specific terms ──
   try {
