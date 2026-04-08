@@ -101,6 +101,7 @@ const SearchPage = () => {
   // Chain of Proofs state
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
+  const [chainViewMode, setChainViewMode] = useState<"readable" | "raw">("readable");
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
