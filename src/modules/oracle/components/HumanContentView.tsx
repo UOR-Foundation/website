@@ -365,6 +365,12 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
         hasWikidata={!!(wikidata?.qid)}
       />
 
+      {/* ── Signal Leaders — curated thought leaders for this domain ── */}
+      {novelty && <SignalLeaders domain={novelty.domain} />}
+
+      {/* ── Context Journal — transparent private context window ── */}
+      <ContextJournal />
+
       {/* ── Metadata footer ── */}
       {metaEntries.length > 0 && (
         <footer
