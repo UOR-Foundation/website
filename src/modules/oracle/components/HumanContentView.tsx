@@ -214,8 +214,6 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
               )}
               {novelty && <NoveltyBadge novelty={novelty} />}
             </div>
-            )}
-
             {wikidata ? (
               <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
