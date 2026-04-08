@@ -1196,6 +1196,7 @@ const SearchPage = () => {
       onDone: () => {
         tokenBuffer.stop();
         setRefining(false);
+        setStreamProgress(1);
         setResult(prev => {
           if (!prev) return prev;
           const s = prev.source as Record<string, unknown>;
