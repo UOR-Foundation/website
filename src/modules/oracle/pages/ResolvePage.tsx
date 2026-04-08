@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
@@ -946,11 +946,21 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
-        <header className="flex items-center justify-center px-4 md:px-6 h-16 shrink-0 border-b border-border/10">
-          <div className="w-full max-w-4xl relative">
+        <header className="flex items-center justify-between px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
+          {/* Left: UOR Logo */}
+          <button
+            onClick={clearResult}
+            className="flex items-center gap-2 shrink-0 group"
+            title="Back to search"
+          >
+            <img src={uorHexagon} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </button>
+
+          {/* Center: Pronounced search bar */}
+          <div className="flex-1 max-w-2xl mx-6 relative">
             <button
               onClick={clearResult}
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/40 hover:text-foreground transition-colors z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
               title="Back to search"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -961,16 +971,24 @@ const SearchPage = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
               placeholder="Search an address…"
-              className="w-full bg-muted/10 border border-border/15 rounded-full pl-10 pr-10 py-2.5 text-base font-mono text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/10 transition-all text-center"
+              className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
             />
             <button
               onClick={() => { clearResult(); setTimeout(submit, 50); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/40 hover:text-foreground/60 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
               title="Search"
             >
               <Search className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Right: Sovereign Identity avatar */}
+          <button
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
+            title="Sovereign Identity"
+          >
+            <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
+          </button>
         </header>
       ) : null}
 
