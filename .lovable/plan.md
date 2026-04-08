@@ -1,105 +1,79 @@
 
+# Desktop Theme Switcher — Three Dots
 
-# UOR OS — From Chat Interface to Living Operating System
+## Overview
 
-## Philosophy
+Add three small dots at the bottom of the desktop (between dock and screen edge) that toggle between three themes: Immersive (photo background), Dark (solid dark), and Light (solid white). All shell components adapt their colors accordingly.
 
-The current state has the bones of an OS (windows, dock, menu bar) but still *feels* like a web page. A real OS is defined by how it responds to you — keyboard shortcuts that just work, contextual menus that appear where you need them, a universal search that finds anything instantly, and transitions that feel physical. The goal is to make every interaction feel like the system already knows what you want.
+## Implementation
 
-Less is more. We remove the quote widget and the three quick-action buttons from the home view. The home screen becomes just the clock and the search bar — nothing else. Everything else is discoverable through the dock, Spotlight, or right-click. This is the "trust" part: the system doesn't overwhelm you with options. It waits.
+### 1. Theme Context — `src/modules/desktop/hooks/useDesktopTheme.ts`
 
-## Changes
+Create a React context + hook that stores the current theme in localStorage and provides it to all desktop components.
 
-### 1. Spotlight Search (Cmd+K)
+- Three themes: `"immersive"` | `"dark"` | `"light"`
+- Persisted in `localStorage("uor:desktop-theme")`
+- Provides `{ theme, setTheme }` via context
+- Default: `"immersive"`
 
-**New file: `src/modules/desktop/SpotlightSearch.tsx`**
+### 2. Theme Dots Component — `src/modules/desktop/DesktopThemeDots.tsx`
 
-A floating overlay triggered by Cmd+K (or clicking the search icon in the menu bar). Frosted glass panel centered on screen, ~480px wide. As you type, it shows:
-- App matches (Search, Oracle, Library, Messenger, Vault) with icons
-- Recent searches (from localStorage)
-- Selecting an app opens it; selecting a search query opens the Search app with that query
+Three small dots rendered just above the dock. The active dot is slightly larger/brighter. Clicking a dot switches theme. Each dot has a subtle visual identity:
+- Dot 1 (immersive): gradient fill suggesting a photo
+- Dot 2 (dark): solid dark fill
+- Dot 3 (light): solid white fill with dark border
 
-This is the universal entry point. It replaces the quick-action chips entirely — those apps are now discoverable through Spotlight and the dock only.
+Positioned fixed at the bottom, centered, just above the dock (~`bottom-[72px]`). Minimal and elegant.
 
-### 2. Minimal Home View
+### 3. Shell Integration — Modify `DesktopShell.tsx`
 
-**Modify: `DesktopWidgets.tsx`**
+- Wrap the shell in the theme provider
+- Conditionally render `ImmersiveBackground` only when theme is `"immersive"`
+- For `"dark"`: shell background becomes `bg-black` (already is)
+- For `"light"`: shell background becomes `bg-white`
+- Pass `theme` down to components that need color adaptation
+- Render `DesktopThemeDots` above the dock
 
-Strip to essentials:
-- Clock (as-is, beautiful)
-- Greeting text (as-is)
-- Search bar (as-is, but with a subtle "⌘K" hint badge on the right instead of the `+` button)
-- Remove the three quick-action buttons
-- Remove the quote widget entirely
+### 4. Component Adaptations
 
-The home screen becomes a calm, empty canvas. Just time, a greeting, and a place to ask.
+Each component reads the theme and adjusts colors:
 
-### 3. Desktop Context Menu (Right-Click)
+**DesktopMenuBar** — 
+- Immersive/dark: current dark glass style
+- Light: `rgba(245,245,245,0.85)` background, dark text, dark icons
 
-**New file: `src/modules/desktop/DesktopContextMenu.tsx`**
+**DesktopDock** —
+- Immersive/dark: current dark glass
+- Light: `rgba(255,255,255,0.7)` background, dark icon colors, dark indicator dots
 
-Right-clicking the desktop wallpaper (not on a window or dock) shows a minimal context menu:
-- "New Search" → focuses the home search bar
-- "Spotlight" → opens Spotlight (Cmd+K)
-- A divider
-- "About UOR OS" → opens a small info window
+**DesktopWidgets** (clock + search) —
+- Immersive/dark: white text, dark glass search bar
+- Light: dark text (`text-black/75`), light glass search bar (`rgba(0,0,0,0.04)`)
 
-Frosted glass, 3-4 items max, positioned at cursor. Clicking away dismisses.
+**DesktopWindow** —
+- Immersive/dark: current dark chrome
+- Light: `rgba(245,245,245,0.92)` chrome, dark title text, light content bg (`#f5f5f5`)
 
-### 4. Keyboard Shortcuts
+**SpotlightSearch** —
+- Immersive/dark: current dark glass
+- Light: white glass panel, dark text
 
-**New file: `src/modules/desktop/hooks/useDesktopShortcuts.ts`**
+**DesktopContextMenu** —
+- Same pattern as Spotlight
 
-Global keyboard handler integrated into `DesktopShell`:
-- `Cmd+K` → Spotlight
-- `Cmd+W` → Close active window
-- `Cmd+M` → Minimize active window
-- `Cmd+H` → Hide all windows (show desktop)
-- `Escape` → Close Spotlight if open
-
-These make the OS feel real. Every shortcut a user tries from muscle memory just works.
-
-### 5. Menu Bar Enhancements
-
-**Modify: `DesktopMenuBar.tsx`**
-
-- Add a subtle search icon (magnifying glass) on the right side that opens Spotlight on click
-- Show "⌘K" tooltip on hover
-- The menu bar label changes from "Finder" to "Desktop" when no app is focused — this is UOR OS, not macOS
-
-### 6. Window Improvements
-
-**Modify: `DesktopWindow.tsx`**
-
-- Add a subtle entrance animation that zooms from the dock icon position (approximated as bottom-center) rather than just scaling in from center — this creates spatial continuity
-- Title bar: on double-click, maximize (already works). Add a subtle title fade when dragging.
-
-### 7. Dock Polish
-
-**Modify: `DesktopDock.tsx`**
-
-- Add a subtle separator line before the last item (Vault) to visually group "apps" vs "system" — like macOS separates apps from Finder/Trash
-- The dock bounce animation when an app finishes loading (a single subtle bounce on the icon)
+**SnapOverlay** —
+- Light: `rgba(0,0,0,0.06)` instead of `rgba(255,255,255,0.06)`
 
 ## Files to Create
-1. `src/modules/desktop/SpotlightSearch.tsx`
-2. `src/modules/desktop/DesktopContextMenu.tsx`
-3. `src/modules/desktop/hooks/useDesktopShortcuts.ts`
+1. `src/modules/desktop/hooks/useDesktopTheme.ts` — context + hook
+2. `src/modules/desktop/DesktopThemeDots.tsx` — the three dots UI
 
 ## Files to Modify
-1. `src/modules/desktop/DesktopShell.tsx` — integrate Spotlight, context menu, shortcuts
-2. `src/modules/desktop/DesktopWidgets.tsx` — strip to minimal (clock + search only)
-3. `src/modules/desktop/DesktopMenuBar.tsx` — add search icon, rename "Finder" to "Desktop"
-4. `src/modules/desktop/DesktopWindow.tsx` — bottom-center entrance animation
-5. `src/modules/desktop/DesktopDock.tsx` — separator, bounce animation
-6. `src/modules/desktop/desktop.css` — spotlight styles, context menu styles
-
-## What This Achieves
-
-The OS becomes discoverable through three natural patterns users already know:
-1. **See it** → Dock (always visible, familiar)
-2. **Search for it** → Spotlight (Cmd+K, universal)
-3. **Ask for it** → Right-click (contextual)
-
-The home screen becomes a place of calm — just time and a question. No buttons competing for attention. The system trusts the user to know what they want, and makes it effortless to get there.
-
+1. `src/modules/desktop/DesktopShell.tsx` — provider, conditional background, pass theme
+2. `src/modules/desktop/DesktopMenuBar.tsx` — theme-aware colors
+3. `src/modules/desktop/DesktopDock.tsx` — theme-aware colors
+4. `src/modules/desktop/DesktopWidgets.tsx` — theme-aware colors
+5. `src/modules/desktop/DesktopWindow.tsx` — theme-aware colors
+6. `src/modules/desktop/SpotlightSearch.tsx` — theme-aware colors
+7. `src/modules/desktop/DesktopContextMenu.tsx` — theme-aware colors
+8. `src/modules/desktop/SnapOverlay.tsx` — theme-aware colors
