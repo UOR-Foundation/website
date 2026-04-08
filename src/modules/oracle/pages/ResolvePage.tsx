@@ -291,6 +291,12 @@ const SearchPage = () => {
   const [inscribing, setInscribing] = useState(false);
   const [inscribeResult, setInscribeResult] = useState<{ ipfsHash: string; gatewayUrl: string } | null>(null);
 
+  // Fork state
+  const [forkModalOpen, setForkModalOpen] = useState(false);
+  const [forkNote, setForkNote] = useState("");
+  const [forking, setForking] = useState(false);
+  const { user } = useAuth();
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
