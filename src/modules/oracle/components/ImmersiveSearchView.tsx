@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Minimize2, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getDailyPhoto } from "@/modules/oracle/lib/immersive-photos";
+import { getHourlyPhoto, getCurrentHour, preloadNextHourPhoto } from "@/modules/oracle/lib/immersive-photos";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
@@ -36,7 +36,22 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const [query, setQuery] = useState("");
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const photoUrl = getDailyPhoto();
+  const [photoUrl, setPhotoUrl] = useState(() => getHourlyPhoto());
+  const hourRef = useRef(getCurrentHour());
+
+  // Hourly photo update
+  useEffect(() => {
+    preloadNextHourPhoto();
+    const interval = setInterval(() => {
+      const now = getCurrentHour();
+      if (now !== hourRef.current) {
+        hourRef.current = now;
+        setPhotoUrl(getHourlyPhoto());
+        preloadNextHourPhoto();
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Live clock
   useEffect(() => {
