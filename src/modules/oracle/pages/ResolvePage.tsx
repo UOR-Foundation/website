@@ -15,7 +15,8 @@ import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
-import { allEntries } from "@/modules/oracle/lib/receipt-registry";
+import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 
@@ -82,6 +83,12 @@ const NEAR_INFINITE_CONCEPT = {
 interface Result {
   source: unknown;
   receipt: EnrichedReceipt;
+  /** Whether this content was already known (confirmed) vs newly discovered */
+  isConfirmed?: boolean;
+  /** How many times this content has been confirmed */
+  confirmations?: number;
+  /** When the content was first discovered (ms since epoch) */
+  originalTimestamp?: number;
 }
 
 /* ── Human-readable content renderer ── */
@@ -364,15 +371,44 @@ const SearchPage = () => {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:UserContent",
         "uor:content": text,
-        "uor:encodedAt": new Date().toISOString(),
       };
-      const receipt = await encode(sourceObj);
-      setResult({ source: sourceObj, receipt });
-      setInput(receipt.triword);
-      setEncodeMode(false);
-      setEncodeText("");
-      confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
-      toast("✨ Your data has its address.", { description: receipt.triwordFormatted });
+
+      // Pre-check: does this content already have an address?
+      const proof = await singleProofHash(sourceObj);
+      const existing = lookupReceipt(proof.cid);
+
+      if (existing) {
+        // Content confirmed — same address, same content
+        existing.confirmations = (existing.confirmations || 1) + 1;
+        const upgraded = await ensureWasmReceipt(existing.source, existing.receipt);
+        setResult({
+          source: existing.source,
+          receipt: upgraded,
+          isConfirmed: true,
+          confirmations: existing.confirmations,
+          originalTimestamp: existing.createdAt,
+        });
+        setInput(existing.receipt.triword);
+        setEncodeMode(false);
+        setEncodeText("");
+        toast("Address confirmed.", {
+          description: "Same content, same address.",
+          icon: "✓",
+        });
+      } else {
+        // New content — address discovered
+        const receipt = await encode(sourceObj);
+        setResult({
+          source: sourceObj,
+          receipt,
+          isConfirmed: false,
+        });
+        setInput(receipt.triword);
+        setEncodeMode(false);
+        setEncodeText("");
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
+        toast("Address discovered.", { description: receipt.triwordFormatted, icon: "✨" });
+      }
     } catch (err) { console.error("[Encode] Failed:", err); toast.error("Encoding failed: " + (err instanceof Error ? err.message : String(err))); }
     finally { setLoading(false); }
   };
