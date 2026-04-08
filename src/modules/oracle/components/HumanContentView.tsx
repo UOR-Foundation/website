@@ -14,6 +14,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import SemanticWebTower from "./SemanticWebTower";
+import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
