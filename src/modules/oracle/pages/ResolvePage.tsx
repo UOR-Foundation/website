@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
+import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
@@ -1411,42 +1412,14 @@ const SearchPage = () => {
                   <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
 
-                {/* ═══ 3. IDENTITY CARD ═══ */}
+                {/* ═══ 3. IDENTITY HUB ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.09 }}
                   style={{ marginTop: "calc(1.5rem * 1.618)" }}
                 >
-                  <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em] mb-3">Identity</p>
-                  <div className="rounded-xl border border-border/15 bg-muted/5 divide-y divide-border/10 overflow-hidden">
-                    {/* IPv6 */}
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">IPv6</span>
-                      <code className="text-sm font-mono text-primary/80 flex-1 truncate mx-3">{result.receipt.ipv6}</code>
-                      <CopyBtn onClick={() => copy(result.receipt.ipv6, "ipv6")} copied={copied === "ipv6"} />
-                    </div>
-                    {/* CID */}
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">CID</span>
-                      <code className="text-sm font-mono text-foreground/55 flex-1 truncate mx-3">{result.receipt.cid}</code>
-                      <CopyBtn onClick={() => copy(result.receipt.cid, "cid")} copied={copied === "cid"} />
-                    </div>
-                    {/* Triword */}
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">Triword</span>
-                      <code className="text-sm font-mono text-foreground/55 flex-1 truncate mx-3">{result.receipt.triword}</code>
-                      <CopyBtn onClick={() => copy(result.receipt.triword, "triword2")} copied={copied === "triword2"} />
-                    </div>
-                    {/* Engine */}
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground/50 font-semibold w-16 shrink-0">Engine</span>
-                      <span className="text-sm font-mono text-foreground/45 flex-1 mx-3">
-                        {result.receipt.engine === "wasm" ? `wasm · ${result.receipt.crateVersion ?? ""}` : "typescript"}
-                      </span>
-                      <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/20"}`} />
-                    </div>
-                  </div>
+                  <IdentityHub receipt={result.receipt} />
                 </motion.div>
 
                 {/* ═══ 4. ACTION BAR ═══ */}
