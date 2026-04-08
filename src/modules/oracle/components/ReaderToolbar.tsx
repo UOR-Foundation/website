@@ -1,6 +1,7 @@
 /**
  * ReaderToolbar — Browser-like address bar for the immersive reader.
- * Always visible. Full-width, with golden-ratio proportions.
+ * Sticky full-width, with golden-ratio proportions and a details toggle
+ * anchored at the bottom-right of the bar.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
