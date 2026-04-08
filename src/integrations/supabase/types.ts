@@ -49,6 +49,33 @@ export type Database = {
           },
         ]
       }
+      address_cover_images: {
+        Row: {
+          address_cid: string
+          created_at: string
+          id: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_cid: string
+          created_at?: string
+          id?: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_cid?: string
+          created_at?: string
+          id?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       address_forks: {
         Row: {
           child_cid: string
