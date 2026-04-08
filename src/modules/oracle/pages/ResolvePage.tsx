@@ -43,6 +43,8 @@ import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-his
 import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
+import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
+import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
