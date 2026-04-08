@@ -25,6 +25,7 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { isValidTriword } from "@/lib/uor-triword";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { streamKnowledge, type WikiMeta } from "@/modules/oracle/lib/stream-knowledge";
+import { DEFAULT_LENS } from "@/modules/oracle/lib/knowledge-lenses";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
@@ -393,7 +394,7 @@ const SearchPage = () => {
 
   // Context personalization state
   const [contextKeywords, setContextKeywords] = useState<string[]>([]);
-
+  const [activeLens, setActiveLens] = useState(DEFAULT_LENS);
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   // Compute suggestions when input changes (triword only, not IPv6)
