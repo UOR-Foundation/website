@@ -153,6 +153,11 @@ async function handlePost(req: Request, supabase: ReturnType<typeof createClient
   const body = await req.json();
   const action = body.action;
 
+  // Guest-allowed actions (no auth required)
+  if (action === "comment_guest") {
+    return handleGuestComment(body, supabase);
+  }
+
   const authHeader = req.headers.get("authorization");
   if (!authHeader) return json({ error: "Authentication required" }, 401);
 
