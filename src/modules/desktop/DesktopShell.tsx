@@ -20,7 +20,6 @@ import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWind
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
-import BootSequence from "@/modules/desktop/BootSequence";
 import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
