@@ -774,9 +774,25 @@ const SearchPage = () => {
                     <span className="text-sm font-medium text-foreground/80">UOR Oracle</span>
                   </div>
                 </div>
-                <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {proofCount >= 2 && (
+                    <button
+                      onClick={toggleChainSelect}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                        chainSelectMode
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20"
+                      }`}
+                      title="Chain of Proofs — select proofs to encode as a single address"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      {chainSelectMode ? "Cancel" : "Chain"}
+                    </button>
+                  )}
+                  <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Messages area */}
