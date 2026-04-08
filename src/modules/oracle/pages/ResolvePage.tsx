@@ -586,28 +586,29 @@ const SearchPage = () => {
           {!result && !aiMode && (
             <div
               className="relative flex flex-col items-center"
-              style={{ minHeight: "100dvh", paddingTop: "28vh" }}
+              style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.309)" }}
             >
-              {/* Title row with icon */}
-              <div className="flex items-center gap-4 md:gap-5">
+              {/* Logo + Title — stacked, centered, golden ratio */}
+              <div className="flex flex-col items-center" style={{ gap: "calc(1.5rem * 0.618)" }}>
                 <img
                   src={uorHexagon}
                   alt="UOR"
-                  className="w-12 h-12 md:w-14 md:h-14 select-none opacity-90"
+                  className="w-16 h-16 md:w-20 md:h-20 select-none drop-shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
                   draggable={false}
+                  style={{ filter: "none" }}
                 />
                 <h1
-                  className="font-display font-bold tracking-[0.02em] text-foreground select-none leading-none whitespace-nowrap"
-                  style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
+                  className="font-display font-bold tracking-[0.03em] text-foreground select-none leading-[1.1] text-center"
+                  style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", maxWidth: "min(520px, 80vw)" }}
                 >
-                  The Universal Object Reference
+                  Universal Object Reference
                 </h1>
               </div>
 
               {/* Search bar — golden ratio spacing from title */}
               <div
                 className="w-full relative group"
-                style={{ maxWidth: "min(720px, 85vw)", marginTop: "calc(4rem * 0.618)" }}
+                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(3rem * 0.618)" }}
               >
                 <div className="relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all duration-500 focus-within:border-primary/30 focus-within:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.25),0_0_60px_-12px_hsl(var(--primary)/0.1)]">
                   {/* Left + icon */}
@@ -704,7 +705,7 @@ const SearchPage = () => {
               {/* Dual buttons — golden ratio spacing */}
               <div
                 className="flex items-center gap-4"
-                style={{ marginTop: "1.85rem" }}
+                style={{ marginTop: "calc(1.85rem * 1.618)" }}
               >
                 <button
                   onClick={submit}
