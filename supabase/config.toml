@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.uor-knowledge]
 verify_jwt = false
+
+[functions.book-resonance]
+verify_jwt = false

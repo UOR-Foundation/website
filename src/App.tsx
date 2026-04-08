@@ -34,6 +34,7 @@ const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWeb
 const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
+const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +71,7 @@ const App = () => {
               <Route path="/resolve" element={<SearchPage />} />
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
+              <Route path="/library" element={<LibraryPage />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
