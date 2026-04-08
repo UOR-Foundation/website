@@ -1,45 +1,72 @@
 
 
-# Boot Sequence for UOR OS
+# Chrome-Style Tab Bar for UOR OS
 
 ## Overview
 
-Create a cinematic boot-up animation that plays once per session when the user first navigates to `/os`. The sequence mimics a real OS boot — logo reveal, progress indicator, and a smooth transition into the desktop shell.
+Replace the current macOS-style menu bar with a Chrome-inspired tab bar. Each open window becomes a tab in the top bar, making the OS feel browser-native rather than an Apple clone. The menu bar's dropdowns (UOR, Window) move into a compact area, and the window title bars are removed since the tab bar serves that purpose.
 
-## Sequence (total ~4 seconds)
+## Visual Design
 
-1. **Black screen** (0–400ms) — empty, builds anticipation
-2. **Logo fade-in** (400–1400ms) — UOR logo/glyph scales up from 0.8 to 1.0 with opacity 0→1, subtle glow pulse
-3. **"UOR OS" text** (1000–1800ms) — clean sans-serif text fades in below the logo with a slight upward slide
-4. **Progress bar** (1400–3200ms) — thin horizontal line fills left-to-right with a slight ease-out, subtle shimmer effect
-5. **Fade to desktop** (3200–4000ms) — entire boot screen fades out and scales up slightly (1.0→1.02) while the desktop shell fades in underneath
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ⬡  │ ◇ Search  │ ✧ Oracle  │ 📖 Library  │  +  │         🔍  📶  8:21 PM │
+│     ╰──────────╯╰──────────╯╰────────────╯     │                        │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ← → ⟳  │  search query or app context here...                    ⭐  │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-## Session-Only Trigger
+**Row 1 — Tab strip:** UOR logo/menu on the left, then curved Chrome-style tabs for each open window (with app icon + title + close X), a "+" new tab button, and clock/status icons on the right.
 
-- Use `sessionStorage.getItem("uor:booted")` to check if boot has already played this session
-- If not booted: show boot sequence, then set `sessionStorage.setItem("uor:booted", "true")`
-- On subsequent visits in the same tab session, skip straight to the desktop
+**Row 2 — Address/context bar:** Shows context for the active tab (search query, page title, breadcrumb). Optional — adds to the browser feel.
 
-## Files
+## Key Behaviors
 
-### Create: `src/modules/desktop/BootSequence.tsx`
-- Full-screen black overlay with `z-[9999]` (above everything)
-- Uses `framer-motion` for all animations (opacity, scale, width of progress bar)
-- Calls `onComplete` callback when the sequence finishes
-- Renders: logo SVG/icon → "UOR OS" text → thin progress bar → fade out
-- Self-contained, no external dependencies beyond framer-motion and the existing logo/icon assets
+- **Clicking a tab** focuses that window and brings it to front
+- **Clicking the X on a tab** closes that window
+- **Active tab** is visually connected to the content area below (lighter background, no bottom border — like Chrome)
+- **Dragging tabs** reorders them (future enhancement, not in v1)
+- **"+" button** opens Spotlight/app picker to launch a new app
+- **Minimized windows** show as dimmed/faded tabs
+- **Double-clicking empty tab bar area** could open a new search tab
 
-### Modify: `src/modules/desktop/DesktopShell.tsx`
-- Add `booting` state initialized from `sessionStorage`
-- Render `<BootSequence onComplete={() => setBooting(false)} />` when `booting === true`
-- Render the normal desktop shell underneath (so the transition is seamless)
-- The boot overlay sits on top and fades away, revealing the already-mounted desktop
+## Technical Changes
 
-## Visual Details
+### 1. Create `src/modules/desktop/TabBar.tsx`
+- New component replacing `DesktopMenuBar`
+- Height: ~38px (tab strip) — slightly taller than current 28px menu bar
+- Renders:
+  - Left: UOR logo button (dropdown menu for Appearance, Hide All, About)
+  - Center: Tabs for each `WindowState` in `windows` array — each tab shows the app icon + `win.title` + close button
+  - Right: Search icon (Spotlight), Wi-Fi, clock
+- Tab styling: Chrome-like curved/trapezoid shape using CSS border-radius or SVG clip paths, with the active tab blending into the content below
+- Theme-aware (light/dark/immersive) using `useDesktopTheme`
+- Props: same interface as current `DesktopMenuBar` plus `onFocusWindow(id)`
 
-- Background: pure black (`#000`)
-- Logo: use the existing UOR glyph/icon (or a minimal geometric mark) in white/amber
-- Progress bar: 1px tall, amber/gold accent (`#D4A853`), with a subtle traveling shimmer highlight
-- Typography: system sans-serif, light weight, letter-spaced, white at 60% opacity
-- All animations use spring or cubic-bezier easing for organic feel — no linear motion
+### 2. Modify `src/modules/desktop/DesktopWindow.tsx`
+- Remove the title bar (the 40px header with traffic lights and title) since tabs now serve this purpose
+- Window content starts from the top of the window frame
+- Keep resize handles and drag behavior (drag from window edges or a thin top strip)
+- When maximized, window fills below tab bar instead of below old menu bar
+
+### 3. Modify `src/modules/desktop/DesktopShell.tsx`
+- Replace `<DesktopMenuBar>` with `<TabBar>`
+- Pass `onFocusWindow` handler to `TabBar`
+- Update `MENU_BAR_H` constant references to new tab bar height (~38px)
+
+### 4. Update `src/modules/desktop/hooks/useWindowManager.ts`
+- Update `MENU_BAR_H` constant from 28 to 38
+- Everything else stays the same
+
+### 5. Update `src/modules/desktop/desktop.css`
+- Add Chrome-style tab CSS: curved tab shapes, active tab highlight, hover effects, close button transitions
+- Remove traffic light CSS (no longer needed in window chrome)
+
+## What Stays the Same
+- Dock at the bottom (unchanged)
+- Window snapping, resizing, and dragging
+- Spotlight search (triggered by "+" or ⌘K)
+- Theme system
+- Mobile shell (unchanged)
 
