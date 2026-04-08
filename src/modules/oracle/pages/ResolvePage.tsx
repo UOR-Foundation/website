@@ -694,12 +694,18 @@ const SearchPage = () => {
     let accumulatedSynthesis = "";
     let wiki: WikiMeta | null = null;
     let streamSources: string[] = [];
+    let provenanceMeta: { model?: string; personalized?: boolean; personalizedTopics?: string[] } = {};
 
     await streamKnowledge({
       keyword,
       context: recentContext,
       lens: lensOverride || activeLens,
-      onWiki: (streamWiki, sources) => {
+      onWiki: (streamWiki, sources, provenance) => {
+        // Normalize rich source objects to URL strings
+        const normalizedSources = sources.map((s: string | { url: string }) =>
+          typeof s === "string" ? s : s.url
+        );
+        if (provenance) provenanceMeta = provenance;
         // Update wiki metadata when it arrives from the SSE stream
         if (streamWiki) {
           wiki = streamWiki;
@@ -717,12 +723,13 @@ const SearchPage = () => {
                   thumbnail: streamWiki.thumbnail,
                   description: streamWiki.description,
                 },
-                "uor:sources": sources,
+                "uor:sources": normalizedSources,
+                "uor:provenance": provenanceMeta,
               },
             };
           });
         }
-        if (sources.length > 0) streamSources = sources;
+        if (normalizedSources.length > 0) streamSources = normalizedSources;
       },
       onDelta: (text) => {
         accumulatedSynthesis += text;
@@ -761,6 +768,7 @@ const SearchPage = () => {
               },
             } : {}),
             "uor:sources": sources,
+            "uor:provenance": provenanceMeta,
           };
 
           const finalReceipt = await encode(finalSource);

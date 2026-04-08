@@ -1,9 +1,10 @@
 /**
- * InlineCitation — A superscript citation badge with hover popover.
+ * InlineCitation — A superscript citation badge with hover/tap popover.
  * UOR-anchored: shows a deterministic content hash for each source.
+ * Perplexity-style: title, type badge, one-tap open source.
  */
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import type { SourceMeta } from "../lib/citation-parser";
 
 const SUPERSCRIPT = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
@@ -15,6 +16,12 @@ function toSuperscript(n: number): string {
     .join("");
 }
 
+const TYPE_CONFIG = {
+  wikipedia: { icon: "📖", label: "Wikipedia", color: "bg-blue-500/15 text-blue-400" },
+  wikidata: { icon: "🔗", label: "Wikidata", color: "bg-emerald-500/15 text-emerald-400" },
+  web: { icon: "🌐", label: "Web", color: "bg-muted text-muted-foreground" },
+} as const;
+
 interface InlineCitationProps {
   index: number;
   source: SourceMeta;
@@ -25,16 +32,22 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
   const timeout = useRef<ReturnType<typeof setTimeout>>();
   const ref = useRef<HTMLSpanElement>(null);
 
-  const show = () => {
+  const show = useCallback(() => {
     clearTimeout(timeout.current);
     setOpen(true);
-  };
-  const hide = () => {
+  }, []);
+  const hide = useCallback(() => {
     timeout.current = setTimeout(() => setOpen(false), 200);
-  };
+  }, []);
 
-  const typeIcon =
-    source.type === "wikipedia" ? "📖" : source.type === "wikidata" ? "🔗" : "🌐";
+  // Touch support: toggle on tap
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    setOpen((prev) => !prev);
+  }, []);
+
+  const cfg = TYPE_CONFIG[source.type];
+  const displayTitle = source.title || source.domain;
 
   return (
     <span
@@ -44,14 +57,13 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
+      onTouchStart={handleTouchStart}
     >
-      <a
-        href={source.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary/70 hover:text-primary transition-colors"
-        aria-label={`Source ${index}: ${source.domain}`}
+      <span
+        className="text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+        aria-label={`Source ${index}: ${displayTitle}`}
         tabIndex={0}
+        role="button"
         style={{
           fontSize: "0.7em",
           fontFamily: "ui-monospace, monospace",
@@ -59,13 +71,12 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
           verticalAlign: "super",
           lineHeight: 1,
           textDecoration: "none",
-          padding: "0 1px",
-          borderRadius: 2,
-          cursor: "pointer",
+          padding: "0 2px",
+          borderRadius: 3,
         }}
       >
         {toSuperscript(index)}
-      </a>
+      </span>
 
       {/* Popover */}
       {open && (
@@ -77,34 +88,61 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
             bottom: "calc(100% + 6px)",
             left: "50%",
             transform: "translateX(-50%)",
-            borderRadius: 8,
-            padding: "8px 12px",
-            minWidth: 220,
-            maxWidth: 300,
+            borderRadius: 10,
+            padding: "10px 14px",
+            minWidth: 240,
+            maxWidth: 320,
             whiteSpace: "normal",
             pointerEvents: "auto",
           }}
         >
-          <span className="flex items-center gap-1.5 mb-1">
-            <span style={{ fontSize: 12 }}>{typeIcon}</span>
+          {/* Type badge */}
+          <span className="flex items-center gap-2 mb-1.5">
             <span
-              className="text-foreground/90 font-medium"
-              style={{ fontSize: 12 }}
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${cfg.color}`}
+              style={{ fontSize: 10, fontWeight: 600 }}
             >
-              {source.domain}
+              <span style={{ fontSize: 11 }}>{cfg.icon}</span>
+              {cfg.label}
             </span>
           </span>
+
+          {/* Source title */}
+          <span
+            className="text-foreground/90 font-medium block mb-1"
+            style={{ fontSize: 12, lineHeight: 1.4 }}
+          >
+            {displayTitle}
+          </span>
+
+          {/* URL preview */}
+          <span
+            className="text-muted-foreground/50 block truncate mb-2"
+            style={{ fontSize: 10 }}
+          >
+            {source.url.replace(/^https?:\/\//, "").slice(0, 60)}
+          </span>
+
+          {/* Open Source button */}
           <a
             href={source.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary/70 hover:text-primary transition-colors block truncate"
-            style={{ fontSize: 11, textDecoration: "none" }}
+            className="inline-flex items-center gap-1 text-primary/80 hover:text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              padding: "4px 10px",
+              borderRadius: 6,
+            }}
           >
-            {source.url.replace(/^https?:\/\//, "").slice(0, 60)}
+            Open source ↗
           </a>
+
+          {/* UOR hash */}
           <span
-            className="text-muted-foreground/40 block mt-1"
+            className="text-muted-foreground/30 block mt-2"
             style={{
               fontSize: 9,
               fontFamily: "ui-monospace, monospace",
@@ -113,6 +151,7 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
           >
             uor:{source.uorHash}
           </span>
+
           {/* Arrow */}
           <span
             className="absolute bg-popover border-b border-r border-border/30"

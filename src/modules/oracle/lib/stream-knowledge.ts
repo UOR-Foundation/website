@@ -14,6 +14,13 @@ export interface WikiMeta {
   pageUrl: string | null;
 }
 
+/** Provenance metadata emitted alongside wiki data */
+export interface ProvenanceMeta {
+  model?: string;
+  personalized?: boolean;
+  personalizedTopics?: string[];
+}
+
 export async function streamKnowledge({
   keyword,
   context,
@@ -28,7 +35,11 @@ export async function streamKnowledge({
   context?: string[];
   /** Rendering lens ID (e.g. "encyclopedia", "magazine", "expert") */
   lens?: string;
-  onWiki: (wiki: WikiMeta | null, sources: string[]) => void;
+  onWiki: (
+    wiki: WikiMeta | null,
+    sources: Array<string | { url: string; title?: string; type?: string }>,
+    provenance?: ProvenanceMeta
+  ) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
@@ -107,7 +118,15 @@ export async function streamKnowledge({
       try {
         const parsed = JSON.parse(jsonStr);
         if (parsed.type === "wiki") {
-          onWiki(parsed.wiki as WikiMeta | null, parsed.sources || []);
+          onWiki(
+            parsed.wiki as WikiMeta | null,
+            parsed.sources || [],
+            {
+              model: parsed.model,
+              personalized: parsed.personalized,
+              personalizedTopics: parsed.personalizedTopics,
+            }
+          );
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }
@@ -130,7 +149,15 @@ export async function streamKnowledge({
       try {
         const parsed = JSON.parse(jsonStr);
         if (parsed.type === "wiki") {
-          onWiki(parsed.wiki as WikiMeta | null, parsed.sources || []);
+          onWiki(
+            parsed.wiki as WikiMeta | null,
+            parsed.sources || [],
+            {
+              model: parsed.model,
+              personalized: parsed.personalized,
+              personalizedTopics: parsed.personalizedTopics,
+            }
+          );
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }

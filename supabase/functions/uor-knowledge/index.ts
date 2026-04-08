@@ -23,6 +23,7 @@ async function fetchWikipedia(term: string) {
       description: data.description || null,
       extract: data.extract || null,
       pageUrl: data.content_urls?.desktop?.page || null,
+      pageTitle: data.titles?.display || data.title || null,
     };
   } catch {
     return null;
@@ -97,7 +98,7 @@ function buildLensPrompt(lens: string, context?: string[]): string {
 5. Include specific quotes (attributed to real experts when possible), concrete anecdotes, and surprising statistics.
 6. Weave in human interest — how does this topic affect real people?
 7. End with a thought-provoking final line that lingers.
-8. Do NOT add citations, reference brackets, or "Sources" sections.
+8. Add light inline citation markers [1], [2] after 3-5 key factual claims to reference the source list. Use [1] for Wikipedia-sourced facts and [2] for Wikidata-sourced facts. Keep citations minimal — they should never interrupt the narrative flow.
 9. Do NOT use ### sub-headings — only ## level.
 10. Tone: Intelligent, warm, occasionally witty. Like explaining something fascinating at a dinner party.${contextSuffix}`;
 
@@ -112,7 +113,7 @@ function buildLensPrompt(lens: string, context?: string[]): string {
 6. Use simple words but don't shy away from teaching real vocabulary — just explain it: "This is called 'photosynthesis' — it's basically how plants eat sunlight!"
 7. Ask rhetorical questions to keep engagement: "Can you guess what happens next?"
 8. End with something that encourages curiosity: "Next time you see a ___, think about…"
-9. Do NOT add citations or reference brackets.
+9. Add light inline citation markers [1], [2] after 2-4 key factual claims to reference the source list. Use [1] for Wikipedia-sourced facts and [2] for Wikidata-sourced facts. Keep citations very minimal — they should feel invisible.
 10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
 
     case "expert":
@@ -140,7 +141,7 @@ function buildLensPrompt(lens: string, context?: string[]): string {
 6. Use the present tense for key moments to create immediacy: "She lifts the slide to the microscope. What she sees changes everything."
 7. Weave factual content seamlessly into the story — the reader learns without realizing they're learning.
 8. End with a resonant image or reflection that connects the topic to something universal about human experience.
-9. Do NOT add citations, reference brackets, or "Sources" sections.
+9. Add light inline citation markers [1], [2] after 3-5 key factual claims to reference the source list. Use [1] for Wikipedia-sourced facts and [2] for Wikidata-sourced facts. Keep citations minimal — they must never break the storytelling momentum.
 10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
 
     case "encyclopedia":
@@ -246,10 +247,11 @@ serve(async (req) => {
       });
     }
 
-    // Build initial sources list (wikidata facts still loading)
-    const sources: string[] = [];
-    if (wiki?.pageUrl) sources.push(wiki.pageUrl);
-    if (wiki?.qid) sources.push(`https://www.wikidata.org/wiki/${wiki.qid}`);
+    // Build initial sources list with rich metadata
+    const sources: Array<{ url: string; title: string; type: string }> = [];
+    if (wiki?.pageUrl) sources.push({ url: wiki.pageUrl, title: wiki.pageTitle || term, type: "wikipedia" });
+    if (wiki?.qid) sources.push({ url: `https://www.wikidata.org/wiki/${wiki.qid}`, title: `${term} — Wikidata`, type: "wikidata" });
+    const isPersonalized = userContext.length > 0;
 
     // Create SSE stream — emit wiki immediately, then AI tokens
     const encoder = new TextEncoder();
@@ -273,6 +275,9 @@ serve(async (req) => {
             wiki: wiki ? { ...wiki, facts: wikidataFacts } : null,
             sources,
             keyword: term,
+            model: "gemini-2.5-flash",
+            personalized: isPersonalized,
+            personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
           })}\n\n`)
         );
 
@@ -287,6 +292,9 @@ serve(async (req) => {
                     wiki: { ...wiki, facts },
                     sources,
                     keyword: term,
+                    model: "gemini-2.5-flash",
+                    personalized: isPersonalized,
+                    personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
                   })}\n\n`)
                 );
               } catch { /* stream may be closed */ }

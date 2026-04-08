@@ -72,6 +72,7 @@ const LABEL_MAP: Record<string, string> = {
   "uor:rawHtml": "",
   "uor:sources": "Sources",
   "uor:synthesizedAt": "Synthesized At",
+  "uor:provenance": "",
 };
 
 function humanLabel(key: string): string {
@@ -308,6 +309,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           activeLens={activeLens}
           onLensChange={onLensChange}
           isReaderMode={isReaderMode}
+          provenance={isObj && src["uor:provenance"] ? (src["uor:provenance"] as { model?: string; personalized?: boolean; personalizedTopics?: string[] }) : undefined}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />

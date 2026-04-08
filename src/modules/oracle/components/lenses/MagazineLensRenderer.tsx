@@ -1,10 +1,14 @@
 /**
  * MagazineLensRenderer — The Atlantic / National Geographic style.
  * Drop cap, pull-quotes, sans-serif body, ornamental section dividers, generous whitespace.
+ * Now with Perplexity-style inline citations and source pills.
  */
 
 import React, { useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import CitedMarkdown from "../CitedMarkdown";
+import SourcesPills from "../SourcesPills";
+import { normalizeSource } from "../../lib/citation-parser";
+import type { SourceMeta } from "../../lib/citation-parser";
 
 interface LensRendererProps {
   title: string;
@@ -22,7 +26,6 @@ function slugify(text: string): string {
 function extractPullQuote(md: string): string | null {
   const match = md.match(/^>\s*(.+)$/m);
   if (match) return match[1].replace(/^\*+|\*+$/g, "");
-  // fallback: first bold sentence
   const boldMatch = md.match(/\*\*([^*]{30,120})\*\*/);
   return boldMatch ? boldMatch[1] : null;
 }
@@ -49,7 +52,6 @@ function createMagazineComponents(isFirstParagraph: { current: boolean }) {
           {...props}
         >
           {children}
-          {/* Ornamental divider */}
           <span
             className="block text-center text-primary/30"
             style={{
@@ -150,6 +152,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
   const pullQuote = useMemo(() => extractPullQuote(contentMarkdown), [contentMarkdown]);
   const isFirstParagraph = useMemo(() => ({ current: true }), [contentMarkdown]);
   const components = useMemo(() => createMagazineComponents(isFirstParagraph), [isFirstParagraph]);
+  const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -178,7 +181,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         }
       `}</style>
 
-      {/* Title — large sans-serif */}
+      {/* Title */}
       <h1
         className="text-foreground"
         style={{
@@ -207,6 +210,9 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         UOR Knowledge · Feature
       </p>
 
+      {/* Source pills */}
+      <SourcesPills sources={sourceMetas} />
+
       {/* Hero pull-quote */}
       {pullQuote && (
         <div
@@ -225,8 +231,8 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         </div>
       )}
 
-      {/* Content */}
-      <ReactMarkdown components={components}>{contentMarkdown}</ReactMarkdown>
+      {/* Content with inline citations */}
+      <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
 
       {/* Streaming cursor */}
       {synthesizing && (
@@ -237,18 +243,23 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* Sources */}
-      {sources.length > 0 && (
+      {/* References footer */}
+      {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
-          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">Sources</span>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {sources.map((url, i) => (
-              <a key={i} href={url.startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer"
-                className="text-muted-foreground/50 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors text-[11px] px-2.5 py-1 rounded-md border border-border/10">
-                {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </a>
+          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
+          <ol className="mt-2 space-y-1 list-decimal list-inside">
+            {sourceMetas.map((s, i) => (
+              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+                <a href={s.url} target="_blank" rel="noopener noreferrer"
+                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
+                  {s.title || s.domain}
+                </a>
+                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}>
+                  uor:{s.uorHash}
+                </span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       )}
     </article>

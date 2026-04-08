@@ -10,6 +10,8 @@ export interface SourceMeta {
   url: string;
   domain: string;
   type: "wikipedia" | "wikidata" | "web";
+  /** Human-readable title for the source */
+  title?: string;
   /** Deterministic UOR content hash (fnv1a hex of URL) */
   uorHash: string;
 }
@@ -26,9 +28,10 @@ function fnv1a(str: string): string {
 
 /** Normalize a raw source (string or object) into SourceMeta */
 export function normalizeSource(
-  raw: string | { url: string; domain?: string; type?: string }
+  raw: string | { url: string; domain?: string; type?: string; title?: string }
 ): SourceMeta {
   const url = typeof raw === "string" ? raw : raw.url;
+  const title = typeof raw === "object" ? raw.title : undefined;
   const fullUrl = url.startsWith("http") ? url : `https://${url}`;
   const domain = (() => {
     try {
@@ -48,6 +51,7 @@ export function normalizeSource(
     url: fullUrl,
     domain,
     type,
+    title,
     uorHash: fnv1a(fullUrl),
   };
 }
