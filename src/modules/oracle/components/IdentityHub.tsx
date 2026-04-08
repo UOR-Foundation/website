@@ -23,6 +23,22 @@ interface Category {
   keys: string[];
 }
 
+/** The 12 curated formats — the most valuable and interesting ones */
+const CURATED_KEYS = [
+  "cid",          // IPFS Content ID — the gold standard
+  "did",          // Decentralized ID — W3C standard
+  "glyph",        // Braille — visual, playful
+  "emoji",        // Emoji — fun, shareable
+  "ipv6",         // IPv6 — routing, practical
+  "jsonld",       // JSON-LD — semantic web
+  "nostr",        // Nostr — decentralized social
+  "atproto",      // Bluesky — social federation
+  "bitcoin",      // Bitcoin — on-chain anchor
+  "lightning",    // Lightning — instant payments
+  "webfinger",    // WebFinger — email-style sharing
+  "vc",           // Verifiable Credential — trust
+] as const;
+
 const CATEGORIES: Category[] = [
   {
     label: "Core Identifiers",
@@ -31,40 +47,22 @@ const CATEGORIES: Category[] = [
     keys: ["cid", "jsonld", "did", "vc"],
   },
   {
-    label: "Native Formats",
+    label: "Visual & Playful",
     description: "Visual and compact ways to represent this address",
     icon: "🔮",
     keys: ["ipv6", "glyph", "emoji"],
   },
   {
-    label: "Social & Federation",
+    label: "Social & Sharing",
     description: "Share across social networks and federated platforms",
     icon: "🌐",
-    keys: ["webfinger", "activitypub", "atproto"],
+    keys: ["webfinger", "atproto", "nostr"],
   },
   {
-    label: "Enterprise Systems",
-    description: "Use in business, supply chain, and organizational tools",
-    icon: "🏢",
-    keys: ["oidc", "gs1", "oci", "solid", "openbadges"],
-  },
-  {
-    label: "Infrastructure",
-    description: "Technical protocols for discovery and synchronization",
-    icon: "⚙️",
-    keys: ["scitt", "mls", "dnssd", "stac", "croissant", "crdt"],
-  },
-  {
-    label: "Blockchain & Crypto",
+    label: "Value & Trust",
     description: "Anchored on-chain for permanent, verifiable proof",
     icon: "⛓",
-    keys: ["bitcoin", "bitcoin-hashlock", "lightning", "zcash-transparent", "zcash-memo", "nostr", "nostr-note"],
-  },
-  {
-    label: "AI & Agents",
-    description: "Machine-readable identity for autonomous systems",
-    icon: "🤖",
-    keys: ["erc8004", "x402", "mcp-tool", "mcp-context", "skill-md", "a2a", "a2a-task", "oasf", "onnx", "onnx-op"],
+    keys: ["bitcoin", "lightning"],
   },
 ];
 
@@ -159,7 +157,7 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  const totalProjections = hologram ? Object.keys(hologram.projections).length : 0;
+  
 
   // Lock body scroll when overlay is open
   useEffect(() => {
@@ -177,23 +175,21 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [overlayOpen]);
 
+  // Show only curated formats count
+  const curatedCount = hologram ? CURATED_KEYS.filter(k => hologram.projections[k]).length : 0;
+
   return (
     <>
-      {/* ── Compact single-row identity bar ── */}
-      <div className="flex items-center gap-3 rounded-xl border border-border/12 bg-muted/5 px-4 py-2.5">
-        <code className="text-[13px] font-mono text-primary tracking-wide truncate flex-1">
-          {receipt.ipv6}
-        </code>
-        <CopyBtn onClick={() => copyValue(receipt.ipv6, "ipv6-hero")} copied={copiedKey === "ipv6-hero"} />
-        <button
-          onClick={() => setOverlayOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-medium text-primary/60 hover:text-primary transition-colors shrink-0"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{totalProjections} formats</span>
-          <ChevronRight className="w-3 h-3 opacity-40" />
-        </button>
-      </div>
+      {/* ── Compact format preview row ── */}
+      <button
+        onClick={() => setOverlayOpen(true)}
+        className="w-full flex items-center gap-3 rounded-xl border border-border/12 bg-muted/5 hover:bg-muted/10 hover:border-border/20 transition-all px-4 py-3 group text-left"
+      >
+        <Share2 className="w-4 h-4 text-primary/50 shrink-0" />
+        <span className="text-sm text-foreground/60 font-medium">Share this address</span>
+        <span className="text-xs text-muted-foreground/35 font-mono">{curatedCount} formats</span>
+        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/50 ml-auto transition-colors" />
+      </button>
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* ═══ FULL-SCREEN FORMAT EXPLORER OVERLAY ═══ */}
@@ -211,12 +207,12 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
             <div className="shrink-0 border-b border-border/10">
               <div className="max-w-6xl mx-auto px-6 py-5 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-display font-semibold text-foreground tracking-wide">
-                    Share This Address
-                  </h2>
-                  <p className="text-sm text-muted-foreground/50 mt-0.5">
-                    One object, {totalProjections} ways to reference it — every format points to the same thing
-                  </p>
+                   <h2 className="text-lg font-display font-semibold text-foreground tracking-wide">
+                     Share This Address
+                   </h2>
+                   <p className="text-sm text-muted-foreground/50 mt-0.5">
+                     One object, {curatedCount} ways to share it — every format points to the same thing
+                   </p>
                 </div>
 
                 {/* Search */}
@@ -269,8 +265,9 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                 </div>
 
                 {CATEGORIES.map((cat) => {
+                  const curatedSet = new Set(CURATED_KEYS as readonly string[]);
                   const entries = cat.keys
-                    .filter((k) => hologram.projections[k])
+                    .filter((k) => curatedSet.has(k) && hologram.projections[k])
                     .map((k) => ({ key: k, projection: hologram.projections[k] }));
 
                   // Apply search filter
@@ -298,7 +295,6 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                           <h3 className="text-sm font-semibold text-foreground/80">{cat.label}</h3>
                           <p className="text-xs text-muted-foreground/40">{cat.description}</p>
                         </div>
-                        <span className="ml-auto text-xs text-muted-foreground/25 font-mono">{filtered.length} format{filtered.length !== 1 ? "s" : ""}</span>
                       </div>
 
                       {/* Format cards — responsive grid */}
@@ -317,43 +313,6 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                     </motion.div>
                   );
                 })}
-
-                {/* Uncategorized */}
-                {(() => {
-                  const categorized = new Set(CATEGORIES.flatMap((c) => c.keys));
-                  let uncategorized = Object.entries(hologram.projections).filter(([k]) => !categorized.has(k));
-                  if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    uncategorized = uncategorized.filter(([k]) => {
-                      const name = (DISPLAY_NAMES[k] || k).toLowerCase();
-                      return name.includes(q) || k.includes(q);
-                    });
-                  }
-                  if (uncategorized.length === 0) return null;
-                  return (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className="text-xl">📡</span>
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground/80">Other Formats</h3>
-                          <p className="text-xs text-muted-foreground/40">Additional protocol representations</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {uncategorized.map(([key, projection]) => (
-                          <FormatCard
-                            key={key}
-                            name={DISPLAY_NAMES[key] || key}
-                            projectionKey={key}
-                            projection={projection}
-                            onCopy={() => copyValue(projection.value, key)}
-                            copied={copiedKey === key}
-                          />
-                        ))}
-                      </div>
-                    </motion.div>
-                  );
-                })()}
 
                 {/* Footer */}
                 <div className="pt-6 pb-4 border-t border-border/10">

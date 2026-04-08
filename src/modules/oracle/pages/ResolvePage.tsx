@@ -1901,7 +1901,7 @@ const SearchPage = () => {
                   </div>
                 </motion.div>
 
-                {/* ═══ SOCIAL STATS BAR ═══ */}
+                {/* ═══ SOCIAL STATS + IPv6 BAR ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1909,10 +1909,10 @@ const SearchPage = () => {
                   className="border-t border-b border-border/10 py-4 px-4 sm:px-8"
                   style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
-                  <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
+                  <AddressSocialStats cid={result.receipt.cid} ipv6={result.receipt.ipv6} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
 
-                {/* ═══ IDENTITY ROW (collapsed, expandable) ═══ */}
+                {/* ═══ IDENTITY FORMATS (compact, expandable) ═══ */}
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}

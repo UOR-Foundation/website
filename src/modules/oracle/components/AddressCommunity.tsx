@@ -159,12 +159,13 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
 }
 
 /* ── Stats Bar ── */
-export function AddressSocialStats({ cid, onForkClick }: { cid: string; onForkClick?: () => void }) {
+export function AddressSocialStats({ cid, ipv6, onForkClick }: { cid: string; ipv6?: string; onForkClick?: () => void }) {
   const { data } = useSocialData(cid);
   if (!data) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="flex items-center justify-between gap-4 flex-wrap">
+      {/* Left: social stats */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground/50">
         <span className="flex items-center gap-1.5">
           <Eye className="w-3.5 h-3.5" />
@@ -181,6 +182,13 @@ export function AddressSocialStats({ cid, onForkClick }: { cid: string; onForkCl
           {data.forkCount} fork{data.forkCount !== 1 ? "s" : ""}
         </button>
       </div>
+
+      {/* Right: IPv6 address */}
+      {ipv6 && (
+        <code className="text-[12px] font-mono text-primary/50 tracking-wide truncate max-w-[320px] hidden sm:block">
+          {ipv6}
+        </code>
+      )}
     </div>
   );
 }
