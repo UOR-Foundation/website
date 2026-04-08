@@ -1,7 +1,7 @@
 /**
  * SpotlightSearch — Universal command palette (⌘K) powered by cmdk.
  * Theme-aware with fuzzy search, ARIA support, and grouped sections.
- * v0.2.0: Groups apps by OS taxonomy category.
+ * v0.3.0: Adds predictive search suggestions from history + context + Wikipedia.
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -10,8 +10,11 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
-import { Search, Clock } from "lucide-react";
+import { Search, Clock, Compass } from "lucide-react";
 import { CONTENT, SPACE, RADIUS, TIMING } from "@/modules/desktop/lib/golden-ratio";
+import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/lib/search-suggestions";
+import { getSearchHistory } from "@/modules/oracle/lib/search-history";
+import { loadProfile as loadAttentionProfile } from "@/modules/oracle/lib/attention-tracker";
 
 interface Props {
   open: boolean;
@@ -31,10 +34,45 @@ function addRecent(q: string) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 5)));
 }
 
+const SUGGESTION_ICONS = {
+  history: Clock,
+  context: Compass,
+  popular: Search,
+} as const;
+
 export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: Props) {
   const [query, setQuery] = useState("");
   const { isLight } = useDesktopTheme();
   const recents = getRecents();
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const engineRef = useMemo(() => ({ current: null as ReturnType<typeof createSuggestionEngine> | null }), []);
+
+  // Initialize suggestion engine when palette opens
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      const history = await getSearchHistory(30);
+      const attention = loadAttentionProfile();
+      if (cancelled) return;
+      engineRef.current = createSuggestionEngine({
+        history,
+        contextKeywords: [],
+        domainHistory: attention.domainHistory,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
+  // Drive suggestions on query change
+  useEffect(() => {
+    if (!query.trim() || !engineRef.current) {
+      setSuggestions([]);
+      return;
+    }
+    engineRef.current.suggest(query, setSuggestions);
+    return () => engineRef.current?.cancel();
+  }, [query]);
 
   // Group apps by OS taxonomy category
   const groupedApps = useMemo(() => {
@@ -50,7 +88,7 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
   }, []);
 
   useEffect(() => {
-    if (open) setQuery("");
+    if (open) { setQuery(""); setSuggestions([]); }
   }, [open]);
 
   const handleSelect = useCallback((value: string) => {
@@ -59,6 +97,11 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
       onClose();
     } else if (value.startsWith("recent:")) {
       const q = value.replace("recent:", "");
+      addRecent(q);
+      onSearch(q);
+      onClose();
+    } else if (value.startsWith("suggest:")) {
+      const q = value.replace("suggest:", "");
       addRecent(q);
       onSearch(q);
       onClose();
@@ -83,6 +126,7 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
   const itemIconColor = isLight ? "text-black/40" : "text-white/50";
   const selectedBg = isLight ? "bg-black/[0.06]" : "bg-white/[0.08]";
   const emptyText = isLight ? "text-black/40" : "text-white/40";
+  const suggestionIconColor = isLight ? "text-black/25" : "text-white/30";
 
   return (
     <AnimatePresence>
@@ -115,7 +159,7 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
             <Command
               className="bg-transparent"
               filter={(value, search) => {
-                const label = value.replace(/^(app|recent):/, "").toLowerCase();
+                const label = value.replace(/^(app|recent|suggest):/, "").toLowerCase();
                 return label.includes(search.toLowerCase()) ? 1 : 0;
               }}
               onKeyDown={(e) => {
@@ -154,6 +198,40 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
                     "Type to search…"
                   )}
                 </CommandEmpty>
+
+                {/* Predictive suggestions */}
+                {suggestions.length > 0 && query.trim() && (
+                  <CommandGroup
+                    heading="Suggestions"
+                    className={`[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:${headingColor} [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5`}
+                  >
+                    {suggestions.map((s) => {
+                      const SIcon = SUGGESTION_ICONS[s.type];
+                      return (
+                        <CommandItem
+                          key={`${s.type}-${s.text}`}
+                          value={`suggest:${s.text}`}
+                          onSelect={() => handleSelect(`suggest:${s.text}`)}
+                          className={`flex items-center gap-3 px-4 py-2 mx-0 rounded-none cursor-default ${itemText} data-[selected=true]:${selectedBg}`}
+                        >
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: itemIconBg }}>
+                            <SIcon className={`w-3.5 h-3.5 ${suggestionIconColor}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[13px] font-medium truncate block">{s.text}</span>
+                            {s.subtitle && (
+                              <span className={`text-[11px] truncate block ${isLight ? "text-black/30" : "text-white/25"}`}>{s.subtitle}</span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                )}
+
+                {suggestions.length > 0 && query.trim() && (
+                  <CommandSeparator className={isLight ? "bg-black/[0.06]" : "bg-white/[0.06]"} />
+                )}
 
                 {Object.entries(groupedApps).map(([groupLabel, apps]) => (
                   <CommandGroup
