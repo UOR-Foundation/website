@@ -1726,6 +1726,7 @@ const SearchPage = () => {
             {result && (() => {
               const src = result.source as Record<string, unknown> | null;
               const typeRaw = String(src?.["@type"] ?? "Unknown").replace(/^uor:/, "");
+              const wikiThumb = (src?.["uor:wikidata"] as Record<string, unknown> | undefined)?.thumbnail as string | undefined;
               const glyphChars = result.receipt.glyph?.slice(0, 2) || "⠿⠿";
               const triwordParts = result.receipt.triword.split(".");
               const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
