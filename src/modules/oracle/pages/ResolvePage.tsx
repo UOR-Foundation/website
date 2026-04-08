@@ -866,25 +866,16 @@ const SearchPage = () => {
 
     // Placeholder receipt — encode deferred to after stream completes
     const placeholderReceipt = {
-      derivationId: "",
-      cid: "",
-      ipv6: "",
+      derivationId: "", cid: "", ipv6: "",
       triword: "loading.knowledge.card",
       triwordFormatted: "Loading · Knowledge · Card",
-      glyph: "",
-      ringPartition: "pending",
-      engine: "deferred",
-      hashHex: "",
-      nquads: "",
-      ringByte: 0,
-      ringFactors: [],
-      ringLabel: "",
-      wasmAvailable: false,
-      wasmEnriched: false,
-      ringFamily: "",
-      ringOrder: 0,
-      idempotent: false,
-    } as EnrichedReceipt;
+      glyph: "", ringPartition: "pending", engine: "deferred",
+      hashHex: "", nquads: "", ringByte: 0, ringFactors: [],
+      ringLabel: "", wasmAvailable: false, wasmEnriched: false,
+      ringFamily: "", ringOrder: 0, idempotent: false,
+      ringCriticalIdentity: false, ringPopcount: 0,
+      ringBasis: [], crateVersion: "", triwordDimensions: [],
+    } as unknown as EnrichedReceipt;
 
     setResult({
       source: { ...partialSource, "uor:synthesizedAt": new Date().toISOString() },
