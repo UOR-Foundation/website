@@ -942,6 +942,39 @@ const SearchPage = () => {
                 )}
               </div>
 
+              {/* Floating chain selection bar */}
+              <AnimatePresence>
+                {chainSelectMode && selectedProofIndices.size > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    className="shrink-0 mx-auto mb-2"
+                  >
+                    <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
+                      <Link2 className="w-3.5 h-3.5 text-primary/70" />
+                      <span className="text-sm font-medium text-foreground/80">
+                        {selectedProofIndices.size} proof{selectedProofIndices.size > 1 ? "s" : ""} selected
+                      </span>
+                      <button
+                        onClick={encodeChain}
+                        disabled={chainEncoding}
+                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
+                      >
+                        {chainEncoding ? "Encoding…" : "Copy Chain Address"}
+                      </button>
+                      <button
+                        onClick={() => setSelectedProofIndices(new Set())}
+                        className="text-muted-foreground/40 hover:text-foreground/60 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* AI input bar — fixed at bottom */}
               <div className="shrink-0 pb-6 pt-3">
                 <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
