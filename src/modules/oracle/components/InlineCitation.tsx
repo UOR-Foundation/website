@@ -49,7 +49,7 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
     setOpen((prev) => !prev);
   }, []);
 
-  const cfg = TYPE_CONFIG[source.type];
+  const cfg = TYPE_CONFIG[source.type] || TYPE_CONFIG.web;
   const displayTitle = source.title || source.domain;
 
   return (
