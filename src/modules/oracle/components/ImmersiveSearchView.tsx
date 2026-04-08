@@ -17,6 +17,37 @@ import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import VaultImportDialog from "@/modules/sovereign-vault/components/VaultImportDialog";
 import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
 import { toast } from "sonner";
+import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
+
+/** Detect if input is a valid address (triword or IPv6) */
+type AddressKind = "triword" | "ipv6" | null;
+
+function detectAddress(input: string): { kind: AddressKind; label: string | null } {
+  const t = input.trim();
+  if (!t) return { kind: null, label: null };
+
+  // Triword: Word.Word.Word or word · word · word or "word word word"
+  const normalized = t.replace(/\s*[·.]\s*/g, ".").replace(/\s+/g, ".").toLowerCase();
+  const parts = normalized.split(".");
+  if (parts.length === 3 && parts.every((p) => p.length >= 2)) {
+    if (isValidTriword(normalized)) {
+      const bd = triwordBreakdown(normalized);
+      return {
+        kind: "triword",
+        label: bd
+          ? `${bd.observer.charAt(0).toUpperCase() + bd.observer.slice(1)}.${bd.observable.charAt(0).toUpperCase() + bd.observable.slice(1)}.${bd.context.charAt(0).toUpperCase() + bd.context.slice(1)}`
+          : null,
+      };
+    }
+  }
+
+  // IPv6: contains colons and hex segments
+  if (/^[0-9a-fA-F:]+$/.test(t) && t.includes(":") && t.split(":").length >= 3) {
+    return { kind: "ipv6", label: t };
+  }
+
+  return { kind: null, label: null };
+}
 
 function getGreeting(): string {
   const h = new Date().getHours();
