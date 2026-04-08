@@ -127,13 +127,19 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
         </motion.div>
       )}
 
-      {/* ── Article ── */}
-      <WikiArticleView
-        title={title}
-        contentMarkdown={contentMarkdown}
-        wikidata={wikidata}
-        sources={sources}
-        synthesizing={synthesizing}
+      {/* ── Article — routed through active lens renderer ── */}
+      {(() => {
+        const LensRenderer = LENS_RENDERERS[activeLens] ?? WikiArticleView;
+        return (
+          <LensRenderer
+            title={title}
+            contentMarkdown={contentMarkdown}
+            wikidata={wikidata}
+            sources={sources}
+            synthesizing={synthesizing}
+          />
+        );
+      })()}
       />
     </div>
   );
