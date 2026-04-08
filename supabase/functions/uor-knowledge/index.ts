@@ -794,7 +794,7 @@ serve(async (req) => {
             wiki: wiki ? { ...wiki, facts: wikidataFacts } : null,
             sources,
             keyword: term,
-            model: "gemini-3-flash-preview",
+            model: "uor-synthesis",
             personalized: isPersonalized,
             personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
           })}\n\n`)
@@ -811,7 +811,7 @@ serve(async (req) => {
                     wiki: { ...wiki, facts },
                     sources,
                     keyword: term,
-                    model: "gemini-3-flash-preview",
+                    model: "uor-synthesis",
                     personalized: isPersonalized,
                     personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
                   })}\n\n`)

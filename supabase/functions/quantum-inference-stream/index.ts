@@ -30,10 +30,10 @@ serve(async (req) => {
 
     // Map model selection to appropriate gateway model
     const gatewayModel = model === "70B"
-      ? "google/gemini-3-flash-preview"
+      ? "google/gemini-3.1-pro-preview"
       : model === "8B"
-      ? "google/gemini-2.5-flash"
-      : "google/gemini-2.5-flash-lite";
+      ? "google/gemini-3-flash-preview"
+      : "google/gemini-2.5-flash";
 
     const systemPrompt = model === "70B"
       ? `You are an advanced AI assistant demonstrating deep expertise. Respond thoughtfully, precisely, and comprehensively in clear human language. Use natural paragraphs. Be articulate, insightful, and accessible.`

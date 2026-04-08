@@ -104,7 +104,7 @@ Return completions for what the developer is likely trying to type next.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: COMPLETE_SYSTEM },
             { role: "user", content: userPrompt },
