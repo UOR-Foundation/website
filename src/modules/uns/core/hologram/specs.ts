@@ -6307,4 +6307,44 @@ export const SPECS: ReadonlyMap<string, HologramSpec> = new Map<string, Hologram
     fidelity: "lossless",
     spec: "https://trustedcomputinggroup.org/resource/tpm-library-specification/",
   }],
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FUN. EMOJI PROJECTION (Deterministic Visual Identity)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Emoji Address. Human-Delightful Lossless Identity ─────────────────
+  // Maps each of the 32 hash bytes (0x00–0xFF) to one of 256 curated emoji
+  // from stable Unicode blocks. 32 emoji = 256 bits = lossless. The same
+  // hash always produces the same emoji string. Visually distinctive,
+  // instantly recognizable, surprisingly memorable.
+  //
+  //   Format: 32 emoji characters (one per byte)
+  //   Fidelity: LOSSLESS (bijection: 256 emoji ↔ 256 byte values)
+
+  ["emoji", {
+    project: ({ hashBytes }) => {
+      // 256 curated emoji — stable Unicode, visually distinct, no skin-tone variants
+      const ALPHABET = [
+        "🌀","🌁","🌂","🌃","🌄","🌅","🌆","🌇","🌈","🌉","🌊","🌋","🌌","🌍","🌎","🌏",
+        "🌐","🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘","🌙","🌚","🌛","🌜","🌝","🌞","🌟",
+        "🌠","🌡","🌤","🌥","🌦","🌧","🌨","🌩","🌪","🌫","🌬","🌭","🌮","🌯","🌰","🌱",
+        "🌲","🌳","🌴","🌵","🌶","🌷","🌸","🌹","🌺","🌻","🌼","🌽","🌾","🌿","🍀","🍁",
+        "🍂","🍃","🍄","🍅","🍆","🍇","🍈","🍉","🍊","🍋","🍌","🍍","🍎","🍏","🍐","🍑",
+        "🍒","🍓","🍔","🍕","🍖","🍗","🍘","🍙","🍚","🍛","🍜","🍝","🍞","🍟","🍠","🍡",
+        "🍢","🍣","🍤","🍥","🍦","🍧","🍨","🍩","🍪","🍫","🍬","🍭","🍮","🍯","🍰","🍱",
+        "🍲","🍳","🍴","🍵","🍶","🍷","🍸","🍹","🍺","🍻","🍼","🍽","🍾","🍿","🎀","🎁",
+        "🎂","🎃","🎄","🎅","🎆","🎇","🎈","🎉","🎊","🎋","🎌","🎍","🎎","🎏","🎐","🎑",
+        "🎒","🎓","🎠","🎡","🎢","🎣","🎤","🎥","🎦","🎧","🎨","🎩","🎪","🎫","🎬","🎭",
+        "🎮","🎯","🎰","🎱","🎲","🎳","🎴","🎵","🎶","🎷","🎸","🎹","🎺","🎻","🎼","🎽",
+        "🎾","🎿","🏀","🏁","🏂","🏃","🏄","🏅","🏆","🏇","🏈","🏉","🏊","🏋","🏌","🏍",
+        "🏎","🏏","🏐","🏑","🏒","🏓","🏔","🏕","🏖","🏗","🏘","🏙","🏚","🏛","🏜","🏝",
+        "🏞","🏟","🏠","🏡","🏢","🏣","🏤","🏥","🏦","🏧","🏨","🏩","🏪","🏫","🏬","🏭",
+        "🏮","🏯","🏰","🏳","🏴","🏵","🏶","🏷","🐀","🐁","🐂","🐃","🐄","🐅","🐆","🐇",
+        "🐈","🐉","🐊","🐋","🐌","🐍","🐎","🐏","🐐","🐑","🐒","🐓","🐔","🐕","🐖","🐗",
+      ];
+      return Array.from(hashBytes).map(b => ALPHABET[b]).join("");
+    },
+    fidelity: "lossless",
+    spec: "https://uor.foundation/spec/emoji-bijection",
+  }],
 ]);
