@@ -265,8 +265,9 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                 </div>
 
                 {CATEGORIES.map((cat) => {
+                  const curatedSet = new Set(CURATED_KEYS as readonly string[]);
                   const entries = cat.keys
-                    .filter((k) => hologram.projections[k])
+                    .filter((k) => curatedSet.has(k) && hologram.projections[k])
                     .map((k) => ({ key: k, projection: hologram.projections[k] }));
 
                   // Apply search filter
@@ -294,7 +295,6 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                           <h3 className="text-sm font-semibold text-foreground/80">{cat.label}</h3>
                           <p className="text-xs text-muted-foreground/40">{cat.description}</p>
                         </div>
-                        <span className="ml-auto text-xs text-muted-foreground/25 font-mono">{filtered.length} format{filtered.length !== 1 ? "s" : ""}</span>
                       </div>
 
                       {/* Format cards — responsive grid */}
@@ -313,43 +313,6 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
                     </motion.div>
                   );
                 })}
-
-                {/* Uncategorized */}
-                {(() => {
-                  const categorized = new Set(CATEGORIES.flatMap((c) => c.keys));
-                  let uncategorized = Object.entries(hologram.projections).filter(([k]) => !categorized.has(k));
-                  if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    uncategorized = uncategorized.filter(([k]) => {
-                      const name = (DISPLAY_NAMES[k] || k).toLowerCase();
-                      return name.includes(q) || k.includes(q);
-                    });
-                  }
-                  if (uncategorized.length === 0) return null;
-                  return (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className="text-xl">📡</span>
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground/80">Other Formats</h3>
-                          <p className="text-xs text-muted-foreground/40">Additional protocol representations</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {uncategorized.map(([key, projection]) => (
-                          <FormatCard
-                            key={key}
-                            name={DISPLAY_NAMES[key] || key}
-                            projectionKey={key}
-                            projection={projection}
-                            onCopy={() => copyValue(projection.value, key)}
-                            copied={copiedKey === key}
-                          />
-                        ))}
-                      </div>
-                    </motion.div>
-                  );
-                })()}
 
                 {/* Footer */}
                 <div className="pt-6 pb-4 border-t border-border/10">
