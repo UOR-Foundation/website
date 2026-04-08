@@ -190,11 +190,11 @@ export function AddressCommunity({ cid }: { cid: string }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="space-y-5"
-      style={{ marginTop: "calc(1.5rem * 1.618)" }}
+      transition={{ delay: 0.15 }}
+      className="space-y-4"
+      style={{ marginTop: "calc(1rem * 1.618)" }}
     >
-      <div className="border-t border-border/10 pt-6">
+      <div className="pt-2">
         {/* Stats line */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground/45">
           <span className="flex items-center gap-1.5">
