@@ -68,8 +68,8 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
 
   return (
     <div>
-      {/* ── Lens Switcher ── */}
-      {onLensChange && (
+      {/* ── Lens Switcher (hidden in reader mode — toolbar provides it) ── */}
+      {onLensChange && !isReaderMode && (
         <div className="mb-4 flex items-center gap-1.5 flex-wrap">
           {KNOWLEDGE_LENSES.map((lens) => {
             const Icon = ICON_MAP[lens.icon];
@@ -98,8 +98,8 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
         </div>
       )}
 
-      {/* ── Context Banner ── */}
-      {relevantContext.length > 0 && !synthesizing && contentMarkdown.trim().length > 100 && (
+      {/* ── Context Banner (hidden in reader mode) ── */}
+      {!isReaderMode && relevantContext.length > 0 && !synthesizing && contentMarkdown.trim().length > 100 && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
