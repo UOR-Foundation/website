@@ -84,16 +84,98 @@ const SYSTEM_PROMPT = `You are a world-class explainer and reasoning partner. Yo
 - Do not use filler phrases like "Great question!" or "That's an interesting topic."
 - Do not hedge excessively — be direct and confident when the evidence supports it.`;
 
+/* ── Quote mode system prompt ────────────────────────────────────────── */
+
+const QUOTE_SYSTEM_PROMPT = `You are a literary curator with encyclopedic knowledge of world literature, science, philosophy, and the arts. Your task is to select real, verifiable quotes that resonate with a specific person's current intellectual context.
+
+## Rules
+1. Return EXACTLY 3 quotes as a JSON object: {"quotes": [...]}
+2. Each quote has: {"text": "...", "author": "...", "source": "...", "resonanceType": "affirm"|"grow"}
+3. ~2 quotes should be "affirm" (resonating with the user's active interests) and ~1 should be "grow" (gently stretching toward adjacent virtues or perspectives).
+4. Every quote MUST be real and attributable. Include the actual source: book title, essay, speech, letter, or interview.
+5. NEVER use generic motivational content. No "believe in yourself" or "chase your dreams."
+6. Prefer voices of working practitioners: writers, scientists, craftspeople, philosophers, engineers, artists.
+7. Match the time of day subtly: mornings can lean contemplative/energizing, evenings reflective/philosophical.
+8. Quotes should be concise (1-3 sentences max). Favor precision over length.
+9. Do NOT repeat quotes across calls. Vary widely across eras, cultures, and domains.
+10. Return ONLY the JSON object, no markdown, no explanation.`;
+
+function buildQuoteUserPrompt(context: {
+  recentTopics?: string[];
+  timeOfDay?: string;
+  dayOfWeek?: string;
+  sessionCount?: number;
+}): string {
+  const parts: string[] = [];
+  if (context.recentTopics?.length) {
+    parts.push(`Recent interests: ${context.recentTopics.slice(0, 8).join(", ")}`);
+  } else {
+    parts.push("No recent search history — select broadly resonant quotes from literature and science.");
+  }
+  if (context.timeOfDay) parts.push(`Time of day: ${context.timeOfDay}`);
+  if (context.dayOfWeek) parts.push(`Day: ${context.dayOfWeek}`);
+  if (context.sessionCount) parts.push(`Session number: ${context.sessionCount}`);
+  return parts.join("\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, scaffoldFragment, temperature: reqTemp, latencyTier } = await req.json();
-    const temperature = typeof reqTemp === "number" && reqTemp >= 0 && reqTemp <= 1 ? reqTemp : 0.4;
+    const body = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    /* ── Quote mode (non-streaming, fast) ── */
+    if (body.mode === "quote") {
+      const userPrompt = buildQuoteUserPrompt(body.context || {});
+      const model = TIER_MODELS.fast; // flash-lite is perfect for quotes
+      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: QUOTE_SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
+          ],
+          max_tokens: 1024,
+          temperature: 0.9,
+        }),
+      });
+
+      if (!resp.ok) {
+        const t = await resp.text();
+        console.error("Quote generation error:", resp.status, t);
+        return new Response(JSON.stringify({ error: "Quote generation failed" }), {
+          status: resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const result = await resp.json();
+      const raw = result.choices?.[0]?.message?.content || "";
+      try {
+        // Parse JSON from the response (may be wrapped in markdown code fences)
+        const cleaned = raw.replace(/```json?\s*/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        console.log(`uor-oracle: quote mode, model=${model}, quotes=${parsed.quotes?.length}`);
+        return new Response(JSON.stringify(parsed), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch {
+        console.error("Failed to parse quote JSON:", raw);
+        return new Response(JSON.stringify({ error: "Invalid quote response" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    /* ── Standard chat mode ── */
+    const { messages, scaffoldFragment, temperature: reqTemp, latencyTier } = body;
+    const temperature = typeof reqTemp === "number" && reqTemp >= 0 && reqTemp <= 1 ? reqTemp : 0.4;
 
     let systemContent = SYSTEM_PROMPT;
     if (scaffoldFragment && typeof scaffoldFragment === "string") {

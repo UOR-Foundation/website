@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getDailyPhoto } from "@/modules/oracle/lib/immersive-photos";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
+import ImmersiveQuote from "./ImmersiveQuote";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -194,9 +195,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
 
         {/* ── Bottom bar ── */}
         <div className="flex items-center justify-between px-8 py-5">
-          <span className="text-white/40 text-xs font-medium tracking-wide">
-            Universal Object Reference
-          </span>
+          <ImmersiveQuote />
           <div className="flex items-center gap-4">
             <SoundCloudFab />
             <span className="text-white/40 text-xs">
