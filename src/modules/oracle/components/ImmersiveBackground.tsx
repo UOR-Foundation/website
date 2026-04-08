@@ -49,7 +49,7 @@ export default function ImmersiveBackground({ scrollProgress = 0 }: ImmersiveBac
     return () => clearInterval(interval);
   }, []);
 
-  const blurAmount = 24 + scrollProgress * 12;
+  const blurAmount = 2 + scrollProgress * 8;
   const parallaxY = scrollProgress * -30;
 
   return (
@@ -72,9 +72,9 @@ export default function ImmersiveBackground({ scrollProgress = 0 }: ImmersiveBac
           draggable={false}
         />
       </AnimatePresence>
-      {/* Dark overlay for legibility */}
-      <div className="absolute inset-0 bg-black/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/30" />
+      {/* Subtle overlay for text legibility */}
+      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
     </div>
   );
 }
