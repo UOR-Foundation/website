@@ -10,6 +10,7 @@ type ScrapeOptions = {
   formats?: string[];
   onlyMainContent?: boolean;
   waitFor?: number;
+  location?: { country?: string; languages?: string[] };
 };
 
 export interface SearchResult {
