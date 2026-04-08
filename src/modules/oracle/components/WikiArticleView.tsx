@@ -275,6 +275,8 @@ const TableOfContents: React.FC<{
   defaultCollapsed?: boolean;
 }> = ({ entries, defaultCollapsed = false }) => {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const [expanded, setExpanded] = useState(false);
+  const INITIAL_COUNT = 3;
 
   const handleClick = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -282,6 +284,9 @@ const TableOfContents: React.FC<{
   }, []);
 
   if (entries.length < 2) return null;
+
+  const visibleEntries = expanded ? entries : entries.slice(0, INITIAL_COUNT);
+  const hasMore = entries.length > INITIAL_COUNT;
 
   return (
     <div
@@ -308,33 +313,51 @@ const TableOfContents: React.FC<{
         </span>
       </div>
       {!collapsed && (
-        <ol
-          style={{
-            margin: "8px 0 0",
-            paddingLeft: 20,
-            listStyleType: "decimal",
-          }}
-        >
-          {entries.map((e) => (
-            <li key={e.id} style={{ marginBottom: 3 }}>
-              <button
-                onClick={() => handleClick(e.id)}
-                className="text-primary/70 hover:text-primary transition-colors"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 13,
-                  padding: 0,
-                  textAlign: "left",
-                  lineHeight: 1.5,
-                }}
-              >
-                {e.text}
-              </button>
-            </li>
-          ))}
-        </ol>
+        <>
+          <ol
+            style={{
+              margin: "8px 0 0",
+              paddingLeft: 20,
+              listStyleType: "decimal",
+            }}
+          >
+            {visibleEntries.map((e) => (
+              <li key={e.id} style={{ marginBottom: 3 }}>
+                <button
+                  onClick={() => handleClick(e.id)}
+                  className="text-primary/70 hover:text-primary transition-colors"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    padding: 0,
+                    textAlign: "left",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {e.text}
+                </button>
+              </li>
+            ))}
+          </ol>
+          {hasMore && !expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="text-muted-foreground/50 hover:text-primary transition-colors"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 11,
+                padding: "4px 0 0 20px",
+                display: "block",
+              }}
+            >
+              ▸ Expand ({entries.length - INITIAL_COUNT} more)
+            </button>
+          )}
+        </>
       )}
     </div>
   );
