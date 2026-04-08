@@ -1,13 +1,12 @@
 /**
  * SimpleLensRenderer — Children's textbook / Kurzgesagt style.
- * Large friendly type, emoji section markers, pastel callout cards, warm and playful.
- * Now with Perplexity-style inline citations and source pills.
+ * Large friendly type, emoji markers, playful inline images and videos.
  */
 
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
-import { ImageGallery, VideoEmbed } from "../MediaGallery";
+import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
@@ -27,6 +26,11 @@ function slugify(text: string): string {
 
 const SECTION_EMOJIS = ["🌟", "🔍", "💡", "🧩", "🌍", "🎯", "🚀", "🧪", "📖", "🎨", "⚡", "🌈"];
 
+function splitIntoSections(md: string): string[] {
+  const parts = md.split(/(?=\n## )/);
+  return parts.map((p) => p.trim()).filter(Boolean);
+}
+
 function createSimpleComponents(sectionCounter: { current: number }) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
@@ -34,90 +38,32 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       const emoji = SECTION_EMOJIS[sectionCounter.current % SECTION_EMOJIS.length];
       sectionCounter.current++;
       return (
-        <h2
-          id={slugify(text)}
-          className="text-foreground"
-          style={{
-            fontSize: "1.55rem",
-            fontWeight: 700,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            marginTop: "2.2rem",
-            marginBottom: "0.8rem",
-            lineHeight: 1.3,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-          {...props}
-        >
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "1.55rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2.2rem", marginBottom: "0.8rem", lineHeight: 1.3, display: "flex", alignItems: "center", gap: 10 }} {...props}>
           <span style={{ fontSize: "1.3em" }}>{emoji}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3
-        className="text-foreground/85"
-        style={{
-          fontSize: "1.2rem",
-          fontWeight: 600,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          marginTop: "1.5rem",
-          marginBottom: "0.5rem",
-        }}
-        {...props}
-      >
-        {children}
-      </h3>
+      <h3 className="text-foreground/85" style={{ fontSize: "1.2rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.5rem", marginBottom: "0.5rem" }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
       const text = typeof children === "string" ? children : "";
       const isWow = text.startsWith("!") || /did you know/i.test(text) || /fun fact/i.test(text) || /imagine/i.test(text);
       if (isWow) {
         return (
-          <div
-            className="bg-primary/[0.06] border border-primary/15"
-            style={{
-              borderRadius: 14,
-              padding: "14px 18px",
-              marginBottom: "1.2em",
-              fontSize: 18,
-              lineHeight: 1.9,
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-            }}
-          >
+          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
             <span style={{ marginRight: 8, fontSize: "1.2em" }}>✨</span>
             <span className="text-foreground/85">{text.replace(/^!\s*/, "")}</span>
           </div>
         );
       }
       return (
-        <p
-          className="text-foreground/80"
-          style={{
-            fontSize: 19,
-            lineHeight: 2.0,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            marginBottom: "1em",
-          }}
-          {...props}
-        >
-          {children}
-        </p>
+        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em" }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <div
-        className="bg-accent/[0.08] border border-accent/15"
-        style={{
-          borderRadius: 14,
-          padding: "14px 18px",
-          margin: "1.2em 0",
-          fontSize: 18,
-          lineHeight: 1.8,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-        }}
-      >
+      <div className="bg-accent/[0.08] border border-accent/15" style={{ borderRadius: 14, padding: "14px 18px", margin: "1.2em 0", fontSize: 18, lineHeight: 1.8, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <span style={{ marginRight: 8, fontSize: "1.2em" }}>💬</span>
         {children}
       </div>
@@ -126,20 +72,7 @@ function createSimpleComponents(sectionCounter: { current: number }) {
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul
-        className="text-foreground/80"
-        style={{
-          paddingLeft: 28,
-          marginBottom: "1em",
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: 19,
-          lineHeight: 2.0,
-          listStyleType: "'🔹 '",
-        }}
-        {...props}
-      >
-        {children}
-      </ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '" }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 6 }} {...props}>{children}</li>
@@ -157,6 +90,8 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
   const components = useMemo(() => createSimpleComponents(sectionCounter), [sectionCounter]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
+  const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
+  const images = media?.images || [];
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -171,45 +106,64 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ maxWidth: 700, margin: "0 auto" }}>
-      {/* Warm, friendly title */}
-      <h1
-        className="text-foreground"
-        style={{
-          fontSize: "2.2rem",
-          fontWeight: 800,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          lineHeight: 1.15,
-          marginBottom: 8,
-        }}
-      >
+      <h1 className="text-foreground" style={{ fontSize: "2.2rem", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, marginBottom: 8 }}>
         {title}
       </h1>
 
-      <p
-        className="text-primary/50"
-        style={{
-          fontSize: 14,
-          fontWeight: 600,
-          marginBottom: 20,
-        }}
-      >
+      <p className="text-primary/50" style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>
         🌟 Explained simply
       </p>
 
-      {/* Source pills */}
       <SourcesPills sources={sourceMetas} />
 
-      {/* Content with inline citations */}
-      <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
+      {/* Fun hero image */}
+      {images.length > 0 && !synthesizing && (
+        <div className="my-6 bg-primary/[0.04] border border-primary/10 rounded-2xl overflow-hidden">
+          <img src={images[0].url} alt={images[0].caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 240 }} />
+          {images[0].caption && (
+            <div className="p-3">
+              <p className="text-foreground/70 text-sm">👀 {images[0].caption}</p>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Playful media */}
-      {media && media.images.length > 0 && !synthesizing && (
-        <ImageGallery images={media.images} layout="playful" maxImages={3} className="my-6" />
+      {/* Content with playful inline images */}
+      {sections.length > 1 ? (
+        sections.map((section, idx) => {
+          const img = images[idx + 1]; // +1 because hero used [0]
+          const showImg = img && idx > 0 && idx <= 3 && !synthesizing;
+          return (
+            <React.Fragment key={idx}>
+              <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
+              {showImg && (
+                <div className="my-4 bg-accent/[0.04] border border-accent/10 rounded-2xl overflow-hidden">
+                  <img src={img.url} alt={img.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 200 }} />
+                  {img.caption && (
+                    <div className="p-2.5">
+                      <p className="text-foreground/60 text-xs">🖼️ {img.caption}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })
+      ) : (
+        <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
       )}
 
       {/* Video */}
       {media && media.videos.length > 0 && !synthesizing && (
-        <VideoEmbed video={media.videos[0]} variant="playful" className="my-4" />
+        <div className="my-6 bg-accent/[0.06] border border-accent/15 rounded-2xl overflow-hidden p-3">
+          <p className="text-foreground/70 text-sm font-semibold flex items-center gap-2 mb-2">🎬 Watch and Learn!</p>
+          <InlineVideo video={media.videos[0]} variant="compact" />
+        </div>
+      )}
+
+      {/* Audio */}
+      {media?.audio && media.audio.length > 0 && !synthesizing && (
+        <InlineAudio audio={media.audio[0]} className="my-4" />
       )}
 
       {synthesizing && (
@@ -217,20 +171,16 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* References footer */}
+      {/* References */}
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
           <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
               <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.title || s.domain}
                 </a>
-                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}>
-                  uor:{s.uorHash}
-                </span>
               </li>
             ))}
           </ol>

@@ -1,13 +1,12 @@
 /**
  * StoryLensRenderer — Longreads / Medium longform style.
- * Large serif title, author byline, generous paragraph spacing, immersive pull-quotes.
- * Now with Perplexity-style inline citations and source pills.
+ * Cinematic hero image, inline scene-setting images, immersive narrative flow.
  */
 
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
-import { ImageGallery, VideoEmbed } from "../MediaGallery";
+import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
@@ -21,72 +20,24 @@ interface LensRendererProps {
   media?: MediaData;
 }
 
+function splitIntoSections(md: string): string[] {
+  const parts = md.split(/(?=\n## )/);
+  return parts.map((p) => p.trim()).filter(Boolean);
+}
+
 function createStoryComponents() {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h2
-        className="text-foreground/70"
-        style={{
-          fontSize: "1.4rem",
-          fontWeight: 400,
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontStyle: "italic",
-          marginTop: "3rem",
-          marginBottom: "1rem",
-          lineHeight: 1.3,
-        }}
-        {...props}
-      >
-        {children}
-      </h2>
+      <h2 className="text-foreground/70" style={{ fontSize: "1.4rem", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: "3rem", marginBottom: "1rem", lineHeight: 1.3 }} {...props}>{children}</h2>
     ),
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3
-        className="text-foreground/65"
-        style={{
-          fontSize: "1.1rem",
-          fontWeight: 600,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          marginTop: "2rem",
-          marginBottom: "0.6rem",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase" as const,
-        }}
-        {...props}
-      >
-        {children}
-      </h3>
+      <h3 className="text-foreground/65" style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", textTransform: "uppercase" as const }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p
-        className="text-foreground/80"
-        style={{
-          fontSize: 18,
-          lineHeight: 1.9,
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          marginBottom: "1.8em",
-        }}
-        {...props}
-      >
-        {children}
-      </p>
+      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em" }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote
-        className="border-l-[3px] border-primary/25"
-        style={{
-          margin: "2.5rem 0",
-          padding: "0 2rem",
-          fontSize: 22,
-          fontStyle: "italic",
-          lineHeight: 1.55,
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          color: "hsl(var(--foreground) / 0.55)",
-        }}
-        {...props}
-      >
-        {children}
-      </blockquote>
+      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)" }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
@@ -95,27 +46,13 @@ function createStoryComponents() {
       <em style={{ fontStyle: "italic" }} {...props}>{children}</em>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul
-        className="text-foreground/80"
-        style={{
-          paddingLeft: 24,
-          marginBottom: "1.5em",
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 18,
-          lineHeight: 1.9,
-        }}
-        {...props}
-      >
-        {children}
-      </ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 8 }} {...props}>{children}</li>
     ),
     hr: () => (
-      <div className="text-center text-muted-foreground/20 my-10" style={{ fontSize: 18, letterSpacing: "0.6em" }}>
-        ● ● ●
-      </div>
+      <div className="text-center text-muted-foreground/20 my-10" style={{ fontSize: 18, letterSpacing: "0.6em" }}>● ● ●</div>
     ),
   };
 }
@@ -129,6 +66,9 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
 }) => {
   const components = useMemo(() => createStoryComponents(), []);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
+  const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
+  const heroImage = media?.images?.[0];
+  const inlineImages = media?.images?.slice(1) || [];
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -146,61 +86,63 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ maxWidth: 640, margin: "0 auto" }}>
+      {/* Cinematic hero image */}
+      {heroImage && !synthesizing && (
+        <InlineFigure image={heroImage} variant="full-width" className="mb-10 -mx-6 sm:mx-0 rounded-none sm:rounded-lg" />
+      )}
+
       {/* Large serif display title */}
-      <h1
-        className="text-foreground"
-        style={{
-          fontSize: "2.5rem",
-          fontWeight: 400,
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          lineHeight: 1.15,
-          marginBottom: 14,
-          letterSpacing: "-0.01em",
-        }}
-      >
+      <h1 className="text-foreground" style={{ fontSize: "2.5rem", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.15, marginBottom: 14, letterSpacing: "-0.01em" }}>
         {title}
       </h1>
 
       {/* Byline */}
       <div style={{ marginBottom: 24 }}>
-        <p
-          className="text-muted-foreground/50"
-          style={{
-            fontSize: 14,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            fontStyle: "italic",
-          }}
-        >
+        <p className="text-muted-foreground/50" style={{ fontSize: 14, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }}>
           A UOR Knowledge Story
         </p>
-        <div
-          className="bg-primary/20 mt-4"
-          style={{ height: 1, width: 60 }}
-        />
+        <div className="bg-primary/20 mt-4" style={{ height: 1, width: 60 }} />
       </div>
 
-      {/* Source pills */}
       <SourcesPills sources={sourceMetas} />
 
-      {/* Scene-setting image */}
-      {media && media.images.length > 0 && (
-        <ImageGallery images={media.images} layout="hero" maxImages={1} className="my-6" />
+      {/* Audio */}
+      {media?.audio && media.audio.length > 0 && !synthesizing && (
+        <InlineAudio audio={media.audio[0]} className="my-6" />
       )}
 
-      {/* Content with inline citations */}
-      <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
+      {/* Content with inline scene-setting images */}
+      {sections.length > 1 ? (
+        sections.map((section, idx) => {
+          const img = inlineImages[idx];
+          const showImg = img && idx > 0 && idx <= 4 && !synthesizing;
+          return (
+            <React.Fragment key={idx}>
+              <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
+              {showImg && (
+                <InlineFigure image={img} variant="full-width" className="my-8" />
+              )}
+            </React.Fragment>
+          );
+        })
+      ) : (
+        <CitedMarkdown markdown={contentMarkdown} sources={sourceMetas} components={components} />
+      )}
 
       {synthesizing && (
         <span className="inline-block bg-primary/70" style={{ width: 2, height: 20, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
       )}
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-      {/* End mark */}
+      {/* End mark + video */}
       {!synthesizing && contentMarkdown.trim().length > 100 && (
         <>
           {media && media.videos.length > 0 && (
-            <div className="mt-8 mb-6">
-              <VideoEmbed video={media.videos[0]} />
+            <div className="mt-10 mb-6 space-y-4">
+              <InlineVideo video={media.videos[0]} variant="cinematic" />
+              {media.videos.length > 1 && (
+                <InlineVideo video={media.videos[1]} variant="compact" />
+              )}
             </div>
           )}
           <div className="text-center mt-12 mb-4">
@@ -216,13 +158,9 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
               <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.title || s.domain}
                 </a>
-                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9, fontFamily: "ui-monospace, monospace" }}>
-                  uor:{s.uorHash}
-                </span>
               </li>
             ))}
           </ol>

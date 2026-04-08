@@ -1,13 +1,13 @@
 /**
  * DeepDiveLensRenderer — Nature / arXiv / Scientific Journal style.
- * Abstract block, §-numbered sections, compact sans-serif, dense layout, footnote metadata.
+ * Abstract block, §-numbered sections, compact layout, inline figures with captions.
  */
 
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
-import { ExpertMedia } from "../MediaGallery";
+import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
@@ -25,7 +25,6 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-/** Extract lead paragraph as the "abstract" */
 function extractAbstract(md: string): { abstract: string; rest: string } {
   const lines = md.split("\n");
   const firstHeading = lines.findIndex((l) => /^##\s+/.test(l));
@@ -36,113 +35,40 @@ function extractAbstract(md: string): { abstract: string; rest: string } {
   };
 }
 
+function splitIntoSections(md: string): string[] {
+  const parts = md.split(/(?=\n## )/);
+  return parts.map((p) => p.trim()).filter(Boolean);
+}
+
 function createDeepDiveComponents(sectionCounter: { current: number }) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
       const text = typeof children === "string" ? children : String(children);
       sectionCounter.current++;
       return (
-        <h2
-          id={slugify(text)}
-          className="text-foreground"
-          style={{
-            fontSize: "1.05rem",
-            fontWeight: 700,
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-            marginTop: "2rem",
-            marginBottom: "0.5rem",
-            lineHeight: 1.3,
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-          }}
-          {...props}
-        >
-          <span className="text-primary/50" style={{ fontFamily: "ui-monospace, monospace", marginRight: 8, fontWeight: 400 }}>
-            §{sectionCounter.current}
-          </span>
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "1.05rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.5rem", lineHeight: 1.3, textTransform: "uppercase", letterSpacing: "0.04em" }} {...props}>
+          <span className="text-primary/50" style={{ fontFamily: "ui-monospace, monospace", marginRight: 8, fontWeight: 400 }}>§{sectionCounter.current}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3
-        className="text-foreground/85"
-        style={{
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          marginTop: "1.3rem",
-          marginBottom: "0.4rem",
-          fontStyle: "italic",
-        }}
-        {...props}
-      >
-        {children}
-      </h3>
+      <h3 className="text-foreground/85" style={{ fontSize: "0.95rem", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic" }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p
-        className="text-foreground/80"
-        style={{
-          fontSize: 15,
-          lineHeight: 1.65,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          marginBottom: "0.55em",
-          textAlign: "justify",
-          hyphens: "auto" as const,
-        }}
-        {...props}
-      >
-        {children}
-      </p>
+      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote
-        className="bg-muted/20 border-l-2 border-primary/30"
-        style={{
-          margin: "1rem 0",
-          padding: "8px 14px",
-          fontSize: 14,
-          lineHeight: 1.6,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontStyle: "italic",
-        }}
-        {...props}
-      >
-        {children}
-      </blockquote>
+      <blockquote className="bg-muted/20 border-l-2 border-primary/30" style={{ margin: "1rem 0", padding: "8px 14px", fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }} {...props}>{children}</blockquote>
     ),
     code: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
-      <code
-        className="text-primary/80 bg-primary/[0.06]"
-        style={{
-          fontFamily: "ui-monospace, 'Cascadia Code', monospace",
-          fontSize: "0.88em",
-          padding: "1px 5px",
-          borderRadius: 3,
-        }}
-        {...props}
-      >
-        {children}
-      </code>
+      <code className="text-primary/80 bg-primary/[0.06]" style={{ fontFamily: "ui-monospace, 'Cascadia Code', monospace", fontSize: "0.88em", padding: "1px 5px", borderRadius: 3 }} {...props}>{children}</code>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul
-        className="text-foreground/80"
-        style={{
-          paddingLeft: 20,
-          marginBottom: "0.55em",
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: 15,
-          lineHeight: 1.65,
-        }}
-        {...props}
-      >
-        {children}
-      </ul>
+      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65 }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 3 }} {...props}>{children}</li>
@@ -161,6 +87,8 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
   const components = useMemo(() => createDeepDiveComponents(sectionCounter), [sectionCounter]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
+  const bodySections = useMemo(() => splitIntoSections(rest || contentMarkdown), [rest, contentMarkdown]);
+  const images = media?.images || [];
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -175,89 +103,55 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ maxWidth: 740, margin: "0 auto" }}>
-      {/* Journal-style title */}
-      <h1
-        className="text-foreground"
-        style={{
-          fontSize: "1.6rem",
-          fontWeight: 700,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          lineHeight: 1.2,
-          marginBottom: 6,
-          textAlign: "center",
-        }}
-      >
+      <h1 className="text-foreground" style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, marginBottom: 6, textAlign: "center" }}>
         {title}
       </h1>
 
-      {/* Byline */}
-      <p
-        className="text-muted-foreground/40 text-center"
-        style={{
-          fontSize: 12,
-          fontFamily: "ui-monospace, monospace",
-          letterSpacing: "0.06em",
-          marginBottom: 12,
-        }}
-      >
+      <p className="text-muted-foreground/40 text-center" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace", letterSpacing: "0.06em", marginBottom: 12 }}>
         UOR Knowledge · Technical Review
       </p>
 
-      {/* Source pills */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <SourcesPills sources={sourceMetas} />
       </div>
 
       {/* Abstract */}
       {abstract && (
-        <div
-          className="bg-muted/15 border border-border/15"
-          style={{
-            borderRadius: 6,
-            padding: "14px 18px",
-            marginBottom: 28,
-          }}
-        >
-          <span
-            className="text-foreground/60"
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              display: "block",
-              marginBottom: 6,
-            }}
-          >
-            Abstract
-          </span>
-          <div
-            className="text-foreground/75"
-            style={{
-              fontSize: 14,
-              lineHeight: 1.6,
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontStyle: "italic",
-            }}
-          >
-            <ReactMarkdown components={{
-              p: ({ children }) => <p style={{ margin: 0 }}>{children}</p>,
-            }}>
+        <div className="bg-muted/15 border border-border/15" style={{ borderRadius: 6, padding: "14px 18px", marginBottom: 28 }}>
+          <span className="text-foreground/60" style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>Abstract</span>
+          <div className="text-foreground/75" style={{ fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }}>
+            <ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: 0 }}>{children}</p> }}>
               {abstract}
             </ReactMarkdown>
           </div>
         </div>
       )}
 
-      {/* Body — dense layout with CSS columns on wide screens */}
-      <div
-        style={{
-          columnCount: 1,
-          columnGap: 32,
-        }}
-        className="lg:[column-count:2]"
-      >
-        <CitedMarkdown markdown={rest || contentMarkdown} sources={sourceMetas} components={components} />
+      {/* Body with inline figures */}
+      <div style={{ columnCount: 1, columnGap: 32 }} className="lg:[column-count:2]">
+        {bodySections.length > 1 ? (
+          bodySections.map((section, idx) => {
+            const fig = images[idx];
+            const showFig = fig && idx > 0 && idx <= 3 && !synthesizing;
+            return (
+              <React.Fragment key={idx}>
+                <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
+                {showFig && (
+                  <figure className="my-4 break-inside-avoid" style={{ margin: 0 }}>
+                    <div className="overflow-hidden rounded-md border border-border/15">
+                      <img src={fig.url} alt={fig.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 180 }} />
+                    </div>
+                    <figcaption className="text-muted-foreground/50 text-[11px] mt-1.5 leading-snug">
+                      <span className="text-foreground/60 font-medium">Fig. {idx}.</span> {fig.caption || ""}
+                    </figcaption>
+                  </figure>
+                )}
+              </React.Fragment>
+            );
+          })
+        ) : (
+          <CitedMarkdown markdown={rest || contentMarkdown} sources={sourceMetas} components={components} />
+        )}
 
         {synthesizing && (
           <span className="inline-block bg-primary/70" style={{ width: 2, height: 16, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
@@ -266,7 +160,21 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
       {/* Supplementary Materials */}
-      {media && !synthesizing && <ExpertMedia media={media} />}
+      {media && (media.videos.length > 0 || (media.audio && media.audio.length > 0)) && !synthesizing && (
+        <details className="border border-border/15 rounded-md mt-6 group">
+          <summary className="px-4 py-3 cursor-pointer text-foreground/60 text-xs font-bold uppercase tracking-wider select-none">
+            Supplementary Materials ({media.videos.length + (media.audio?.length || 0)})
+          </summary>
+          <div className="px-4 pb-4 pt-2 space-y-4">
+            {media.videos.map((v, i) => (
+              <InlineVideo key={i} video={v} variant="compact" />
+            ))}
+            {media.audio?.map((a, i) => (
+              <InlineAudio key={i} audio={a} />
+            ))}
+          </div>
+        </details>
+      )}
 
       {/* References (journal style) */}
       {sourceMetas.length > 0 && (
@@ -275,13 +183,9 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
               <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer"
-                  className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.domain}
                 </a>
-                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9 }}>
-                  uor:{s.uorHash}
-                </span>
               </li>
             ))}
           </ol>
