@@ -8,6 +8,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
+import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
+import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { ArrowRight, Plus } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
@@ -67,8 +70,11 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const plusBtnRef = useRef<HTMLButtonElement>(null);
   const { theme, isLight } = useDesktopTheme();
   const { profile } = useAuth();
+  const ctx = useContextManager();
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
   const [containerWidth, setContainerWidth] = useState(580);
@@ -246,9 +252,11 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
             />
 
             {/* + button */}
-            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 relative">
               <button
+                ref={plusBtnRef}
                 type="button"
+                onClick={() => setContextMenuOpen((o) => !o)}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                 style={{
                   background: btnBgStyle,
@@ -259,6 +267,14 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               >
                 <Plus className="w-4 h-4" />
               </button>
+              {/* Context Menu anchored above the + button */}
+              <ContextMenu
+                open={contextMenuOpen}
+                onOpenChange={setContextMenuOpen}
+                ctx={ctx}
+                anchor="above"
+                className="bottom-full left-0 mb-2"
+              />
             </div>
 
             {/* Right-side actions */}
