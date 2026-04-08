@@ -120,39 +120,35 @@ export default function ImmersiveQuote() {
   const current = quotes[index];
 
   return (
-    <div className="max-w-[60vw] md:max-w-[50vw] min-h-[2.5rem]">
+    <div className="max-w-[520px] w-full text-center min-h-[3rem]">
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col gap-0.5"
+          className="flex flex-col items-center gap-1.5"
         >
           <p
-            className="text-white/50 leading-relaxed"
+            className="text-white/60 leading-relaxed"
             style={{
-              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: "italic",
-              fontSize: "clamp(13px, 1.1vw, 15px)",
+              fontSize: "clamp(15px, 1.4vw, 19px)",
+              letterSpacing: "0.01em",
             }}
           >
             "{current.text}"
           </p>
           <span
-            className="text-white/30 tracking-widest"
+            className="text-white/35 tracking-[0.15em] uppercase"
             style={{
-              fontVariant: "small-caps",
-              fontSize: "clamp(10px, 0.8vw, 12px)",
+              fontSize: "clamp(9px, 0.7vw, 11px)",
+              fontWeight: 500,
             }}
           >
-            — {current.author}
-            {current.source && current.source !== "Traditional" && (
-              <span className="text-white/20 ml-1.5 tracking-normal" style={{ fontVariant: "normal", fontStyle: "italic" }}>
-                {current.source}
-              </span>
-            )}
+            {current.author}
           </span>
         </motion.div>
       </AnimatePresence>
