@@ -194,23 +194,26 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
       {!isKnowledgeCard && (
         <>
           <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {rawType && typeStyle && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: "ui-monospace, 'SF Mono', monospace",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  color: typeStyle.color,
-                  background: typeStyle.bg,
-                  padding: "3px 10px",
-                  borderRadius: 6,
-                  alignSelf: "flex-start",
-                }}
-              >
-                {rawType}
-              </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {rawType && typeStyle && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "ui-monospace, 'SF Mono', monospace",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.15em",
+                    fontWeight: 600,
+                    color: typeStyle.color,
+                    background: typeStyle.bg,
+                    padding: "3px 10px",
+                    borderRadius: 6,
+                  }}
+                >
+                  {rawType}
+                </span>
+              )}
+              {novelty && <NoveltyBadge novelty={novelty} />}
+            </div>
             )}
 
             {wikidata ? (
