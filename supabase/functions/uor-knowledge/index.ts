@@ -321,23 +321,26 @@ interface MediaVideo {
   uorHash: string;
 }
 
-function commonsUrlFromFilename(filename: string): string {
-  const name = filename.replace(/^File:/, "").replace(/ /g, "_");
-  const md5 = fnv1a(name);
-  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${md5[0]}/${md5.slice(0, 2)}/${encodeURIComponent(name)}/640px-${encodeURIComponent(name)}`;
+interface MediaAudio {
+  url: string;
+  title: string;
+  uorHash: string;
 }
 
 async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
   images: MediaImage[];
   videos: MediaVideo[];
+  audio: MediaAudio[];
 }> {
   const images: MediaImage[] = [];
   const videos: MediaVideo[] = [];
+  const audio: MediaAudio[] = [];
 
+  // ── Wikipedia images ──
   try {
     const wikiTitle = encodeURIComponent(term);
     const r = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&imlimit=8&format=json&origin=*`,
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&imlimit=10&format=json&origin=*`,
       { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
     );
     if (r.ok) {
@@ -348,11 +351,11 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
         for (const img of page.images) {
           const filename = img.title;
           if (/\.(svg|ico)$/i.test(filename)) continue;
-          if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram/i.test(filename)) continue;
+          if (/Flag_of_|Commons-logo|Wiki|Symbol|Icon|Pictogram|Ambox|Edit-|Question_book|Text_document/i.test(filename)) continue;
 
           try {
             const infoR = await fetch(
-              `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640&format=json&origin=*`,
+              `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*`,
               { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
             );
             if (infoR.ok) {
@@ -363,7 +366,7 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
                 if (!info) continue;
                 const imgUrl = info.thumburl || info.url;
                 if (!imgUrl) continue;
-                const caption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 120) ||
+                const caption = info.extmetadata?.ImageDescription?.value?.replace(/<[^>]*>/g, "").slice(0, 200) ||
                   filename.replace(/^File:/, "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
                 images.push({
                   url: imgUrl,
@@ -375,25 +378,102 @@ async function fetchCommonsMedia(term: string, _qid: string | null): Promise<{
             }
           } catch { /* skip this image */ }
 
-          if (images.length >= 5) break;
+          if (images.length >= 8) break;
         }
       }
     }
   } catch { /* commons fetch failed */ }
 
+  // ── YouTube videos via Invidious ──
   try {
-    const searchTerm = `${term} explained`;
-    const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/results?search_query=${encodeURIComponent(searchTerm)}&format=json`;
-    const noembedR = await fetch(
-      `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${encodeURIComponent(term)}`,
-      { headers: { "User-Agent": "UOR-Framework/1.0" } }
+    const searchTerm = encodeURIComponent(`${term} explained documentary`);
+    const invidiousR = await fetch(
+      `https://vid.puffyan.us/api/v1/search?q=${searchTerm}&type=video&sort_by=relevance&page=1`,
+      { headers: { "User-Agent": "UOR-Framework/1.0" }, signal: AbortSignal.timeout(4000) }
     );
-    if (noembedR.ok) {
-      // placeholder — YouTube search requires API key for reliable results
+    if (invidiousR.ok) {
+      const results = await invidiousR.json();
+      const validVideos = (results as Array<{ videoId?: string; title?: string; lengthSeconds?: number }>)
+        .filter((v) => v.videoId && v.title && (v.lengthSeconds || 0) > 60 && (v.lengthSeconds || 0) < 3600)
+        .slice(0, 3);
+      for (const v of validVideos) {
+        videos.push({
+          youtubeId: v.videoId!,
+          title: v.title!,
+          uorHash: fnv1a(v.videoId!),
+        });
+      }
     }
-  } catch { /* youtube fetch failed */ }
+  } catch { /* invidious fetch failed — try fallback */ }
 
-  return { images, videos };
+  // ── Fallback YouTube via piped.video ──
+  if (videos.length === 0) {
+    try {
+      const searchTerm = encodeURIComponent(`${term} explained`);
+      const pipedR = await fetch(
+        `https://pipedapi.kavin.rocks/search?q=${searchTerm}&filter=videos`,
+        { headers: { "User-Agent": "UOR-Framework/1.0" }, signal: AbortSignal.timeout(4000) }
+      );
+      if (pipedR.ok) {
+        const data = await pipedR.json();
+        const items = (data.items || []) as Array<{ url?: string; title?: string; duration?: number }>;
+        for (const item of items.slice(0, 3)) {
+          if (!item.url || !item.title) continue;
+          const match = item.url.match(/\/watch\?v=([^&]+)/);
+          if (match) {
+            videos.push({
+              youtubeId: match[1],
+              title: item.title,
+              uorHash: fnv1a(match[1]),
+            });
+          }
+        }
+      }
+    } catch { /* piped fetch failed */ }
+  }
+
+  // ── Wikipedia pronunciation audio ──
+  try {
+    const wikiTitle = encodeURIComponent(term);
+    const audioR = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}&prop=images&format=json&origin=*`,
+      { headers: { "Api-User-Agent": "UOR-Framework/1.0" }, signal: AbortSignal.timeout(3000) }
+    );
+    if (audioR.ok) {
+      const data = await audioR.json();
+      const pages = data.query?.pages || {};
+      for (const page of Object.values(pages) as Array<{ images?: Array<{ title: string }> }>) {
+        if (!page.images) continue;
+        for (const f of page.images) {
+          if (/\.(ogg|oga|wav|mp3|flac)$/i.test(f.title)) {
+            try {
+              const infoR = await fetch(
+                `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(f.title)}&prop=imageinfo&iiprop=url&format=json&origin=*`,
+                { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
+              );
+              if (infoR.ok) {
+                const infoData = await infoR.json();
+                const infoPages = infoData.query?.pages || {};
+                for (const p of Object.values(infoPages) as Array<{ imageinfo?: Array<{ url?: string }> }>) {
+                  const url = p.imageinfo?.[0]?.url;
+                  if (url) {
+                    audio.push({
+                      url,
+                      title: f.title.replace(/^File:/, "").replace(/\.[^.]+$/, "").replace(/_/g, " "),
+                      uorHash: fnv1a(url),
+                    });
+                  }
+                }
+              }
+            } catch { /* skip */ }
+            if (audio.length >= 2) break;
+          }
+        }
+      }
+    }
+  } catch { /* audio fetch failed */ }
+
+  return { images, videos, audio };
 }
 
 /* ── Lens system prompts ─────────────────────────────────────────────── */
