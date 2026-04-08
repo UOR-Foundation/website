@@ -1,6 +1,6 @@
 /**
- * QrPortalPanel — Animated QR code panel for cross-device session transfer.
- * Shows a QR code with a glowing border, countdown timer, and status states.
+ * QrPortalPanel — Clean QR code panel for cross-device session transfer.
+ * Functional, scannable QR that links to the current session.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -17,7 +17,7 @@ interface QrPortalPanelProps {
   immersive?: boolean;
 }
 
-const PORTAL_TTL = 5 * 60; // 5 minutes in seconds
+const PORTAL_TTL = 5 * 60;
 
 const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   open,
@@ -33,7 +33,6 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   const [expired, setExpired] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
   const [isGuest, setIsGuest] = useState(false);
 
   const generateToken = useCallback(async () => {
@@ -53,12 +52,10 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
       let portalUrl: string;
 
       if (!accessToken) {
-        // Guest mode: generate a direct link QR (no session transfer)
         setIsGuest(true);
         const params = new URLSearchParams({ lens: targetLens });
         portalUrl = `${appOrigin}${targetUrl}?${params.toString()}`;
       } else {
-        // Authenticated mode: create encrypted session transfer
         const res = await fetch(
           `https://${projectId}.supabase.co/functions/v1/portal-transfer`,
           {
@@ -84,19 +81,19 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
         portalUrl = `${appOrigin}/search?portal=${token}`;
       }
 
+      // Generate a high-quality, scannable QR code
       const dataUrl = await QRCode.toDataURL(portalUrl, {
-        width: 240,
-        margin: 2,
+        width: 280,
+        margin: 3,
         color: {
           dark: "#ffffff",
-          light: "#00000000", // transparent background
+          light: "#00000000",
         },
-        errorCorrectionLevel: "M",
+        errorCorrectionLevel: "H", // Highest error correction for reliable scanning
       });
 
       setQrDataUrl(dataUrl);
 
-      // Start countdown (even guest links expire visually for consistency)
       if (timerRef.current) clearInterval(timerRef.current);
       const start = Date.now();
       timerRef.current = setInterval(() => {
@@ -117,7 +114,6 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     }
   }, [targetUrl, targetLens]);
 
-  // Generate on open
   useEffect(() => {
     if (open) {
       generateToken();
@@ -129,7 +125,6 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     };
   }, [open, generateToken]);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -147,48 +142,46 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const progress = secondsLeft / PORTAL_TTL; // 1 → 0
-
   return (
     <AnimatePresence>
       {open && (
         <motion.div
           ref={panelRef}
-          initial={{ opacity: 0, y: -8, scale: 0.95 }}
+          initial={{ opacity: 0, y: -8, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.95 }}
+          exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
           className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
           style={{
-            width: "min(320px, 90vw)",
+            width: "min(340px, 90vw)",
             background: immersive
-              ? "rgba(8, 12, 16, 0.94)"
-              : "hsl(var(--background) / 0.96)",
+              ? "rgba(10, 14, 20, 0.96)"
+              : "hsl(var(--background) / 0.97)",
             border: immersive
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid hsl(var(--border) / 0.15)",
+              ? "1px solid rgba(255,255,255,0.08)"
+              : "1px solid hsl(var(--border) / 0.12)",
             backdropFilter: "blur(32px)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
           }}
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-4 py-3 border-b"
+            className="flex items-center justify-between px-5 py-3.5 border-b"
             style={{
               borderColor: immersive
                 ? "rgba(255,255,255,0.06)"
                 : "hsl(var(--border) / 0.1)",
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Smartphone
                 className={`w-4 h-4 ${
-                  immersive ? "text-white/60" : "text-foreground/60"
+                  immersive ? "text-white/50" : "text-foreground/50"
                 }`}
               />
               <span
-                className={`text-[13px] font-semibold ${
-                  immersive ? "text-white/80" : "text-foreground/80"
+                className={`text-sm font-semibold tracking-tight ${
+                  immersive ? "text-white/85" : "text-foreground/85"
                 }`}
               >
                 Portal
@@ -196,10 +189,10 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
             </div>
             <button
               onClick={onClose}
-              className={`p-1 rounded-lg transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors ${
                 immersive
-                  ? "text-white/30 hover:text-white/60 hover:bg-white/[0.06]"
-                  : "text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-muted/10"
+                  ? "text-white/25 hover:text-white/50 hover:bg-white/[0.06]"
+                  : "text-muted-foreground/25 hover:text-muted-foreground/50 hover:bg-muted/10"
               }`}
             >
               <X className="w-4 h-4" />
@@ -207,35 +200,35 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
           </div>
 
           {/* Body */}
-          <div className="flex flex-col items-center px-4 py-5 gap-4">
+          <div className="flex flex-col items-center px-5 py-6 gap-4">
             {loading && (
-              <div className="flex flex-col items-center gap-3 py-6">
+              <div className="flex flex-col items-center gap-3 py-8">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                  className="w-8 h-8 rounded-full border-2 border-t-transparent"
+                  className="w-7 h-7 rounded-full border-2 border-t-transparent"
                   style={{
                     borderColor: immersive
-                      ? "rgba(255,255,255,0.15)"
-                      : "hsl(var(--border) / 0.2)",
+                      ? "rgba(255,255,255,0.12)"
+                      : "hsl(var(--border) / 0.15)",
                     borderTopColor: "transparent",
                   }}
                 />
                 <span
                   className={`text-xs ${
-                    immersive ? "text-white/40" : "text-muted-foreground/40"
+                    immersive ? "text-white/35" : "text-muted-foreground/35"
                   }`}
                 >
-                  Opening portal…
+                  Generating link…
                 </span>
               </div>
             )}
 
             {error && (
-              <div className="flex flex-col items-center gap-3 py-4">
+              <div className="flex flex-col items-center gap-3 py-6">
                 <span
                   className={`text-sm text-center ${
-                    immersive ? "text-white/60" : "text-foreground/60"
+                    immersive ? "text-white/55" : "text-foreground/55"
                   }`}
                 >
                   {error}
@@ -256,108 +249,56 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
 
             {qrDataUrl && !loading && !error && (
               <>
-                {/* QR with animated glow border */}
-                <div className="relative">
-                  {/* Animated glow ring */}
-                  {!expired && (
-                    <motion.div
-                      className="absolute -inset-2 rounded-2xl"
-                      style={{
-                        background: `conic-gradient(from 0deg, transparent, rgba(99,210,255,0.3), rgba(139,92,246,0.3), transparent)`,
-                        filter: "blur(8px)",
-                      }}
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 4,
-                        ease: "linear",
-                      }}
-                    />
-                  )}
-
-                  {/* Progress arc (SVG ring) */}
-                  <svg
-                    className="absolute -inset-1.5"
-                    viewBox="0 0 108 108"
-                    style={{ transform: "rotate(-90deg)" }}
-                  >
-                    <circle
-                      cx="54"
-                      cy="54"
-                      r="52"
-                      fill="none"
-                      stroke={
-                        immersive
-                          ? "rgba(255,255,255,0.06)"
-                          : "hsl(var(--border) / 0.08)"
-                      }
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="54"
-                      cy="54"
-                      r="52"
-                      fill="none"
-                      stroke={
-                        expired
-                          ? "rgba(239,68,68,0.5)"
-                          : "rgba(99,210,255,0.6)"
-                      }
-                      strokeWidth="2"
-                      strokeDasharray={`${2 * Math.PI * 52}`}
-                      strokeDashoffset={`${2 * Math.PI * 52 * (1 - progress)}`}
-                      strokeLinecap="round"
-                      style={{ transition: "stroke-dashoffset 1s linear" }}
-                    />
-                  </svg>
-
-                  {/* QR image */}
-                  <div
-                    className="relative rounded-xl overflow-hidden p-3"
+                {/* QR code — clean, no animation */}
+                <div
+                  className="relative rounded-2xl overflow-hidden p-4"
+                  style={{
+                    background: immersive
+                      ? "rgba(255,255,255,0.03)"
+                      : "hsl(var(--muted) / 0.06)",
+                    border: immersive
+                      ? "1px solid rgba(255,255,255,0.06)"
+                      : "1px solid hsl(var(--border) / 0.08)",
+                  }}
+                >
+                  <img
+                    src={qrDataUrl}
+                    alt="Scan to continue on mobile"
+                    className="w-[220px] h-[220px]"
                     style={{
-                      background: immersive
-                        ? "rgba(255,255,255,0.04)"
-                        : "hsl(var(--muted) / 0.08)",
+                      opacity: expired ? 0.2 : 1,
+                      transition: "opacity 0.3s",
+                      imageRendering: "pixelated",
                     }}
-                  >
-                    <img
-                      src={qrDataUrl}
-                      alt="QR Code"
-                      className="w-[200px] h-[200px]"
-                      style={{
-                        opacity: expired ? 0.25 : 1,
-                        transition: "opacity 0.3s",
-                      }}
-                    />
-                    {expired && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                        <span
-                          className={`text-sm font-medium ${
-                            immersive ? "text-white/70" : "text-foreground/70"
-                          }`}
-                        >
-                          Expired
-                        </span>
-                        <button
-                          onClick={generateToken}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            immersive
-                              ? "bg-white/[0.1] text-white/80 hover:bg-white/[0.15]"
-                              : "bg-primary/10 text-primary hover:bg-primary/15"
-                          }`}
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          Regenerate
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  />
+                  {expired && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
+                      <span
+                        className={`text-sm font-medium ${
+                          immersive ? "text-white/70" : "text-foreground/70"
+                        }`}
+                      >
+                        Expired
+                      </span>
+                      <button
+                        onClick={generateToken}
+                        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-colors ${
+                          immersive
+                            ? "bg-white/[0.1] text-white/80 hover:bg-white/[0.15]"
+                            : "bg-primary/10 text-primary hover:bg-primary/15"
+                        }`}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Regenerate
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Label */}
                 <span
                   className={`text-[13px] font-medium text-center ${
-                    immersive ? "text-white/60" : "text-foreground/60"
+                    immersive ? "text-white/55" : "text-foreground/55"
                   }`}
                 >
                   Scan to continue on mobile
@@ -367,32 +308,34 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                 <span
                   className={`text-[11px] tabular-nums ${
                     expired
-                      ? "text-red-400/70"
+                      ? "text-red-400/60"
                       : secondsLeft < 60
-                        ? "text-amber-400/70"
+                        ? "text-amber-400/60"
                         : immersive
-                          ? "text-white/30"
-                          : "text-muted-foreground/30"
+                          ? "text-white/25"
+                          : "text-muted-foreground/25"
                   }`}
                 >
                   {expired ? "Token expired" : `Expires in ${formatTime(secondsLeft)}`}
                 </span>
 
                 {/* Security badge */}
-                <div className="flex items-center gap-1.5 mt-1">
+                <div className="flex items-center gap-1.5">
                   <Lock
                     className={`w-3 h-3 ${
                       isGuest
-                        ? immersive ? "text-amber-400/50" : "text-amber-500/50"
-                        : immersive ? "text-emerald-400/50" : "text-emerald-500/50"
+                        ? "text-amber-400/40"
+                        : "text-emerald-400/40"
                     }`}
                   />
                   <span
                     className={`text-[10px] ${
-                      immersive ? "text-white/25" : "text-muted-foreground/25"
+                      immersive ? "text-white/20" : "text-muted-foreground/20"
                     }`}
                   >
-                    {isGuest ? "Direct link — sign in for encrypted transfer" : "Encrypted one-time session transfer"}
+                    {isGuest
+                      ? "Direct link — sign in for encrypted transfer"
+                      : "Encrypted one-time session transfer"}
                   </span>
                 </div>
               </>
