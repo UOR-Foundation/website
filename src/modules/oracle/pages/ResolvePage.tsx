@@ -26,6 +26,32 @@ const SURPRISE_MESSAGES = [
   "💫 Every address tells a story.",
 ];
 
+/* ── Infinite Improbability Drive ── */
+const IMPROBABILITY_SIDE_EFFECTS = [
+  "A sperm whale just appeared above Magrathea",
+  "All molecules in your device leapt one foot to the left",
+  "239,000 lightly fried eggs materialized somewhere nearby",
+  "You have been briefly turned into a penguin",
+  "A small potted petunia thought \"Oh no, not again\"",
+  "Your probability of existing just became finite",
+  "Somewhere, a Vogon is reading poetry in your honor",
+  "The answer was 42 all along, but the question changed",
+];
+
+const DONT_PANIC_MESSAGES = [
+  "The Improbability Drive found this improbably relevant.",
+  "Reality has been restored. Mostly.",
+  "That was improbable. But then again, so is everything.",
+  "The universe is rarely what it seems. Neither is this address.",
+  "Don't panic — this result was always going to happen. Probably.",
+  "Normality has been restored. Whatever that means.",
+];
+
+const IMPROBABILITY_EXPONENTS = [
+  "2^17", "2^256", "2^4,096", "2^65,536", "2^276,709",
+  "2^1,048,576", "2^∞",
+];
+
 interface Result {
   source: unknown;
   receipt: EnrichedReceipt;
@@ -62,6 +88,12 @@ const SearchPage = () => {
   const [aiMessages, setAiMessages] = useState<Msg[]>([]);
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
+
+  // Infinite Improbability Drive state
+  const [improbabilityActive, setImprobabilityActive] = useState(false);
+  const [improbPhase, setImprobPhase] = useState(0); // 0=off, 1=engaging, 2=passing, 3=don't panic
+  const [improbExponent, setImprobExponent] = useState(0);
+  const [improbSideEffect, setImprobSideEffect] = useState("");
 
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
@@ -178,8 +210,157 @@ const SearchPage = () => {
     setAiInput("");
   };
 
+  /* ── Infinite Improbability Drive sequence ── */
+  const fireImprobabilityDrive = () => {
+    const entries = allEntries();
+    if (entries.length === 0) {
+      toast("Nothing mapped yet. Search something first!", { icon: "🫧" });
+      return;
+    }
+
+    setImprobabilityActive(true);
+    setImprobPhase(1);
+    setImprobExponent(0);
+    setImprobSideEffect("");
+
+    // Phase 1: tick exponent counter
+    let expIdx = 0;
+    const expInterval = setInterval(() => {
+      expIdx++;
+      if (expIdx < IMPROBABILITY_EXPONENTS.length) {
+        setImprobExponent(expIdx);
+      } else {
+        clearInterval(expInterval);
+      }
+    }, 85);
+
+    // Phase 2 at 600ms: cycle side effects
+    setTimeout(() => {
+      setImprobPhase(2);
+      let effectIdx = 0;
+      const effectInterval = setInterval(() => {
+        setImprobSideEffect(
+          IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
+        );
+        effectIdx++;
+      }, 300);
+
+      // Phase 3 at 1800ms: DON'T PANIC + pick result
+      setTimeout(() => {
+        clearInterval(effectInterval);
+        setImprobPhase(3);
+
+        const pick = entries[Math.floor(Math.random() * entries.length)];
+        const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
+        confetti({ particleCount: 160, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 35, gravity: 0.7, ticks: 150 });
+        setTimeout(() => confetti({ particleCount: 60, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 20, gravity: 0.5, ticks: 120 }), 150);
+
+        // At 2500ms: dissolve overlay, show result
+        setTimeout(() => {
+          setImprobabilityActive(false);
+          setImprobPhase(0);
+          setInput(pick.receipt.triword);
+          setResult({ source: pick.source, receipt: pick.receipt });
+
+          const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
+          toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
+        }, 700);
+      }, 1200);
+    }, 600);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
+      {/* ── Infinite Improbability Drive Overlay ── */}
+      <AnimatePresence>
+        {improbabilityActive && (
+          <motion.div
+            key="improbability-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+            style={{
+              background: improbPhase === 1
+                ? "radial-gradient(ellipse at center, hsl(280 60% 12%), hsl(0 0% 3%))"
+                : improbPhase === 2
+                ? "radial-gradient(ellipse at 30% 40%, hsl(45 90% 18%), hsl(280 60% 10%) 50%, hsl(180 50% 8%))"
+                : "radial-gradient(ellipse at center, hsl(45 80% 8%), hsl(0 0% 2%))",
+              animation: improbPhase === 1 ? "improbShake 0.08s infinite" : undefined,
+            }}
+          >
+            {/* Phase 1 & 2: Improbability counter */}
+            {(improbPhase === 1 || improbPhase === 2) && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center gap-6"
+              >
+                <p className="text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground/50">
+                  {improbPhase === 1 ? "Engaging Infinite Improbability Drive" : "Passing through every point in the universe"}
+                </p>
+                <motion.p
+                  key={improbExponent}
+                  initial={{ opacity: 0.3, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="font-mono text-4xl md:text-5xl font-bold"
+                  style={{ color: "hsl(45 90% 60%)" }}
+                >
+                  {IMPROBABILITY_EXPONENTS[improbExponent] ?? "2^∞"}
+                </motion.p>
+                <p className="text-[10px] font-mono text-muted-foreground/30 tracking-widest">IMPROBABILITY FACTOR</p>
+              </motion.div>
+            )}
+
+            {/* Phase 2: Side effects */}
+            {improbPhase === 2 && improbSideEffect && (
+              <motion.p
+                key={improbSideEffect}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 0.7, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mt-10 text-center text-sm md:text-base italic text-foreground/50 max-w-md px-6"
+              >
+                {improbSideEffect}
+              </motion.p>
+            )}
+
+            {/* Phase 3: DON'T PANIC */}
+            {improbPhase === 3 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="flex flex-col items-center gap-4"
+              >
+                <h2
+                  className="font-display font-bold tracking-wide text-center"
+                  style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", color: "hsl(45 90% 60%)" }}
+                >
+                  DON'T PANIC
+                </h2>
+                <p className="text-sm text-muted-foreground/40 font-mono">Normality restoring…</p>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Screen shake keyframe */}
+      {improbabilityActive && (
+        <style>{`
+          @keyframes improbShake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(2px, -1px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(1px, -2px); }
+            100% { transform: translate(-1px, 1px); }
+          }
+        `}</style>
+      )}
+
       {/* Loading bar */}
       <AnimatePresence>
         {(loading || aiStreaming) && (
@@ -279,27 +460,9 @@ const SearchPage = () => {
                   UOR Search
                 </button>
                 <button
-                  onClick={() => {
-                    const entries = allEntries();
-                    if (entries.length === 0) {
-                      toast("Nothing mapped yet. Search something first!", { icon: "🫧" });
-                      return;
-                    }
-                    const pick = entries[Math.floor(Math.random() * entries.length)];
-
-                    const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
-                    confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors, startVelocity: 30, gravity: 0.8, ticks: 120 });
-                    setTimeout(() => confetti({ particleCount: 40, spread: 120, origin: { y: 0.5 }, colors, startVelocity: 15, gravity: 0.6, ticks: 100 }), 200);
-
-                    const msg = SURPRISE_MESSAGES[Math.floor(Math.random() * SURPRISE_MESSAGES.length)];
-                    toast(msg, { description: pick.receipt.triwordFormatted });
-
-                    setTimeout(() => {
-                      setInput(pick.receipt.triword);
-                      setResult({ source: pick.source, receipt: pick.receipt });
-                    }, 400);
-                  }}
-                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all"
+                  onClick={fireImprobabilityDrive}
+                  disabled={improbabilityActive}
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
                 >
                   Surprise Me
                 </button>
