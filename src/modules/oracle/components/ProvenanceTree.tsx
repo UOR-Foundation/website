@@ -124,9 +124,7 @@ function TreeNodeItem({
           className="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-offset-1"
           style={{
             backgroundColor: color,
-            ringColor: isCurrent ? color : "transparent",
-            boxShadow: isCurrent ? `0 0 8px ${color}40` : "none",
-            ringOffsetColor: "hsl(var(--background))",
+            boxShadow: isCurrent ? `0 0 8px ${color}40, 0 0 0 2px hsl(var(--background)), 0 0 0 4px ${color}` : "none",
           }}
         />
 
