@@ -43,7 +43,8 @@ import { streamKnowledge, type WikiMeta, type MediaData } from "@/modules/oracle
 import { DEFAULT_LENS } from "@/modules/oracle/lib/knowledge-lenses";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
+import { useSocialData, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
+import { Eye } from "lucide-react";
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
@@ -391,11 +392,11 @@ function InlineSocialStats({ cid }: { cid: string }) {
 
 /* ── Content Preview (Human view with truncation) ── */
 function ContentPreview({ source, synthesizing, contextKeywords, activeLens, novelty, isReadableType, onReadMore }: {
-  source: Record<string, unknown>;
+  source: unknown;
   synthesizing?: boolean;
   contextKeywords?: string[];
-  activeLens?: LensBlueprint | null;
-  novelty?: number | null;
+  activeLens?: string;
+  novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
   isReadableType: boolean;
   onReadMore: () => void;
 }) {
