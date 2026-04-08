@@ -1,58 +1,62 @@
 
 
-# Golden Ratio Search Page — Crisp, Confident Layout
+# "Continue in Oracle" — Seamless Address → Conversation Bridge
 
-## What changes
+## What it does
 
-Restructure the homepage empty state to use the full viewport with true golden ratio positioning, placing elements with mathematical precision and pushing the tagline to the bottom of the screen.
+When viewing any content-addressed result (especially `uor:OracleExchange` entries), a prominent **"Continue in Oracle"** button appears that instantly opens AI Mode pre-populated with the original conversation context. For non-Oracle content, a **"Discuss in Oracle"** button seeds the conversation with that content as context.
 
-## Layout — Golden Ratio Vertical Distribution
-
-The viewport is split using φ (0.618). The title sits at the golden section point (~38% from top), the search bar follows with φ-proportioned gaps, buttons below that, and the tagline anchors to the bottom of the viewport.
+## Layout
 
 ```text
-┌─────────────────────────────────┐
-│                                 │
-│          38.2% of vh            │
-│                                 │
-│   UOR SEMANTIC WEB SEARCH       │  ← at golden section point
-│                                 │
-│        [ search bar ]           │  ← gap = title size × φ
-│                                 │
-│    [UOR Search] [Surprise Me]   │  ← gap = bar height × φ
-│                                 │
-│                                 │
-│                                 │
-│  Searching a near-infinite      │  ← pinned near bottom
-│       address space.            │
-└─────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  ← panda.royal.cosmos              🔍  │
+├─────────────────────────────────────────┤
+│  ADDRESS                                │
+│  PANDA · ROYAL · COSMOS                 │
+│  IPv6 / CID / engine                    │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ ✨ Continue in Oracle →         │    │  ← NEW: prominent CTA
+│  └─────────────────────────────────┘    │
+│                                         │
+│  CONTENT                                │
+│  { "@type": "uor:OracleExchange", … }  │
+│                                         │
+│  ⟳ Verify determinism                  │
+└─────────────────────────────────────────┘
 ```
 
 ## Changes — Single file: `src/modules/oracle/pages/ResolvePage.tsx`
 
-### 1. Restructure empty state layout
-- Switch from `flex justify-center` (vertically centered) to a `relative` container filling `100dvh`
-- Position the content group (title + search + buttons) using `paddingTop: 38.2vh` (golden section from top)
-- Position the tagline absolutely at `bottom: 6vh`, centered, so it floats near the page bottom
+### 1. Detect OracleExchange content
+After a result loads, check if `result.source["@type"] === "uor:OracleExchange"`. This determines the button label and how the conversation is seeded.
 
-### 2. Increase title confidence
-- Bump font size to `clamp(2.6rem, 5.5vw, 4rem)` — larger, bolder
-- Change to `font-bold` (from `font-semibold`)
-- Tighten letter-spacing to `0.025em` for a crisper feel
+### 2. "Continue in Oracle" button (for OracleExchange)
+- Placed between the address block and the content block — visually prominent
+- Styled as a subtle gradient pill with a Sparkles icon
+- On click:
+  - Extract `uor:query` and `uor:response` from the source
+  - Pre-populate `aiMessages` with `[{role: "user", content: query}, {role: "assistant", content: response, proof: result.receipt}]`
+  - Switch to `aiMode = true` and clear the result view
+  - The user lands in Oracle with full prior context, ready to continue
 
-### 3. Refine search bar
-- Increase max-width to `min(720px, 85vw)` for better screen fill
-- Keep input height and padding as-is (already generous at `py-[18px]`)
+### 3. "Discuss in Oracle" button (for non-OracleExchange content)
+- Same position, slightly different label: "Discuss in Oracle →"
+- On click:
+  - Create a system-like user message: "I'm looking at this content-addressed object: [JSON summary]. Help me understand or build on it."
+  - Switch to AI mode with that seed message
+  - Oracle responds in context of the discovered content
 
-### 4. Button spacing
-- Gap between search bar and buttons: `calc(button-height × 0.618)` ≈ `1.85rem`
+### 4. Animation
+- Button enters with a spring animation (slight delay after the address block)
+- Transition from result view → AI mode uses a smooth crossfade (opacity + y-translate)
 
-### 5. Tagline at bottom
-- Remove inline `marginTop` from the tagline `<p>`
-- Position it absolutely at `bottom: 6vh` with `left: 0; right: 0; text-align: center`
-- Slightly reduce opacity for a whisper-quiet footer feel
+### 5. Chain-of-proof continuity
+- When the conversation continues, new proofs reference the same content lineage
+- The pre-populated assistant message carries the original `proof` (receipt), maintaining the chain
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Restructure empty state: golden-section vertical positioning, tagline pinned near bottom, bolder title, wider search bar |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Add "Continue/Discuss in Oracle" CTA in result view, wire click to pre-populate AI mode with content from the address, smooth transition |
 
