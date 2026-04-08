@@ -397,6 +397,18 @@ const SearchPage = () => {
   const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
   const [readerMode, setReaderMode] = useState(true);
 
+  // Sync immersive mode with fullscreen API (user may press Esc to exit)
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && immersiveMode) {
+        setImmersiveMode(false);
+        localStorage.setItem("uor-immersive", "false");
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [immersiveMode]);
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
