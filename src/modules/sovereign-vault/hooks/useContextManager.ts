@@ -11,7 +11,7 @@ export interface ContextItem {
   filename: string;
   text?: string;
   isGuest: boolean;
-  source: "file" | "paste" | "url" | "vault";
+  source: "file" | "paste" | "url" | "vault" | "workspace" | "folder";
 }
 
 export interface ContextManagerHandle {
@@ -29,6 +29,10 @@ export interface ContextManagerHandle {
   addPaste: (text: string, label?: string) => void;
   /** Add URL (goes to guest store if not authed, vault if authed) */
   addUrl: (url: string) => Promise<void>;
+  /** Add a workspace container */
+  addWorkspace: (name: string) => void;
+  /** Add a folder container */
+  addFolder: (name: string) => void;
   /** Remove a context item by id */
   remove: (id: string) => void;
   /** Toggle a vault doc selection */
@@ -60,6 +64,14 @@ export function useContextManager(): ContextManagerHandle {
 
   const addUrl = useCallback(async (url: string) => {
     await guestContext.addUrl(url);
+  }, []);
+
+  const addWorkspace = useCallback((name: string) => {
+    guestContext.addWorkspace(name);
+  }, []);
+
+  const addFolder = useCallback((name: string) => {
+    guestContext.addFolder(name);
   }, []);
 
   const remove = useCallback((id: string) => {
@@ -111,6 +123,8 @@ export function useContextManager(): ContextManagerHandle {
     addFile,
     addPaste,
     addUrl,
+    addWorkspace,
+    addFolder,
     remove,
     toggleVaultDoc,
     getContextTexts,

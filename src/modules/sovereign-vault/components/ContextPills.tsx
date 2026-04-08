@@ -2,7 +2,7 @@
  * ContextPills — Dismissible pills showing selected context items (guest + vault).
  */
 
-import { Shield, X, Clock } from "lucide-react";
+import { Shield, X, Clock, FolderOpen, LayoutGrid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ContextItem } from "../hooks/useContextManager";
 
@@ -38,7 +38,11 @@ export default function ContextPills({ items, onRemove, className = "" }: Props)
             }`}
             title={`${item.filename}${item.isGuest ? " (session only)" : ""}`}
           >
-            {item.isGuest ? (
+            {item.source === "workspace" ? (
+              <LayoutGrid className="w-3 h-3 shrink-0 opacity-70" />
+            ) : item.source === "folder" ? (
+              <FolderOpen className="w-3 h-3 shrink-0 opacity-70" />
+            ) : item.isGuest ? (
               <Clock className="w-3 h-3 shrink-0 opacity-60" />
             ) : (
               <Shield className="w-3 h-3 shrink-0" />
