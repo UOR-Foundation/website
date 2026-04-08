@@ -6,6 +6,58 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/* ── Latency-driven model cascade ────────────────────────────────────── */
+
+const TIER_MODELS: Record<string, string> = {
+  quality: "google/gemini-3-flash-preview",
+  balanced: "google/gemini-2.5-flash",
+  fast: "google/gemini-2.5-flash-lite",
+};
+const FALLBACK_ORDER = ["quality", "balanced", "fast"];
+
+function tierModel(tier?: string): string {
+  return TIER_MODELS[tier || "balanced"] || TIER_MODELS.balanced;
+}
+function nextTier(tier: string): string | null {
+  const idx = FALLBACK_ORDER.indexOf(tier);
+  return idx >= 0 && idx < FALLBACK_ORDER.length - 1 ? FALLBACK_ORDER[idx + 1] : null;
+}
+
+async function fetchWithCascade(
+  url: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  tier: string,
+  timeoutMs = 3000,
+): Promise<{ response: Response; model: string }> {
+  const model = tierModel(tier);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, model }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (resp.ok) return { response: resp, model };
+    if (resp.status === 429 || resp.status === 402) return { response: resp, model };
+  } catch (e) {
+    clearTimeout(timer);
+    if (!(e instanceof DOMException && e.name === "AbortError")) throw e;
+  }
+  const next = nextTier(tier);
+  if (next) return fetchWithCascade(url, apiKey, body, next, timeoutMs);
+  const finalModel = TIER_MODELS.fast;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, model: finalModel }),
+  });
+  return { response: resp, model: finalModel };
+}
+
 /* ── FNV-1a hash (UOR content-address) ───────────────────────────────── */
 
 function fnv1a(str: string): string {
@@ -718,7 +770,7 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword, context, lens, lensParams } = await req.json();
+    const { keyword, context, lens, lensParams, latencyTier } = await req.json();
     if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Missing keyword" }), {
         status: 400,
