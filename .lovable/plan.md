@@ -1,89 +1,112 @@
 
 
-## Full-Screen Immersive Reader — Edge-to-Edge Redesign
+## Automatic Source Optimization — Dynamic Signal-to-Noise Source Selection
 
-### Problem (from screenshot)
+### Current State
 
-The desktop immersive reader constrains content to a narrow column (`max-width: clamp(640px, 65vw, 860px)`) centered on screen, leaving roughly 40% of the viewport as dead space. The toolbar is a sticky horizontal bar with a type badge, lens buttons, and details toggle — standard UI chrome that breaks immersion. The infobox floats right within the already-narrow column, squeezing body text further.
+The `uor-knowledge` edge function hardcodes exactly two sources: Wikipedia and Wikidata. These are excellent high-signal sources, but the system has no ability to dynamically discover, evaluate, or include additional authoritative sources based on the topic being explored.
 
-### Design Vision
+### Design
 
-Transform the reader into a **full-viewport editorial canvas** where content breathes across the entire screen, controls are ambient and contextual, and every pixel serves the reading experience.
+Add an **automatic source discovery and ranking** stage to the edge function that runs in parallel with the existing Wikipedia fetch. The system uses Firecrawl Search (already connected) to find the best sources for each topic, then scores and filters them before feeding them to the AI synthesis prompt. The user never sees low-quality sources — the system handles it silently.
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ ← (hover-reveal)              LENS PILLS (hover-reveal) │ ← Transparent overlay bar, fades to invisible
-├──────────┬───────────────────────────────────────┬───────┤
-│          │                                       │       │
-│  INFOBOX │         ARTICLE BODY                  │       │
-│  (fixed  │    (wide: max-width ~1100px)          │       │
-│  sidebar │    Centered, generous margins          │       │
-│  on lg)  │    Serif text, 18-20px                │       │
-│          │                                       │       │
-│          │                                       │       │
-├──────────┴───────────────────────────────────────┴───────┤
-│                 [Floating search pill]                    │
-└──────────────────────────────────────────────────────────┘
+User searches "CRISPR gene editing"
+         │
+         ├─── Wikipedia fetch (existing, fast)
+         ├─── Firecrawl Search: "CRISPR gene editing" (limit 8)
+         │         │
+         │         ▼
+         │    Source Ranker
+         │    ├─ Domain reputation score (tier list)
+         │    ├─ Content relevance (title/description match)
+         │    ├─ Deduplication (remove wiki duplicates)
+         │    └─ UOR hash for content-addressing
+         │         │
+         │         ▼
+         │    Top 3-5 ranked sources
+         │
+         ▼
+    AI Synthesis Prompt
+    "Using these sources: [Wikipedia extract] + [top ranked sources with snippets]"
+    → Richer, multi-source article with [1] [2] [3] citations
 ```
 
 ### Changes
 
-#### 1. Wide Content Container (Desktop Immersive)
-**File: `ResolvePage.tsx` (~line 2196)**
+#### 1. Source Ranker in Edge Function
+**File: `supabase/functions/uor-knowledge/index.ts`**
 
-Change the desktop immersive content wrapper from the narrow column to a wide layout:
-- `maxWidth`: `clamp(640px, 65vw, 860px)` → `min(1200px, 90vw)`
-- Side padding: `clamp(1.5rem, 4vw, 4rem)` → `clamp(2rem, 5vw, 5rem)`
-- Remove the `bg-white/[0.04]`, `border-x`, `border-b`, `rounded-b-2xl` container chrome for immersive mode (same treatment mobile already gets)
-- Content floats directly on the blurred background — more editorial, more immersive
+Add a `rankSources()` function with a domain reputation tier system:
+- **Tier 1 (score 95-100)**: wikipedia.org, nature.com, science.org, arxiv.org, pubmed.ncbi.nlm.nih.gov, plato.stanford.edu, britannica.com
+- **Tier 2 (score 80-94)**: .edu domains, .gov domains, who.int, ieee.org, acm.org, springer.com, wiley.com
+- **Tier 3 (score 60-79)**: well-known outlets (bbc.com, nytimes.com, reuters.com, theguardian.com)
+- **Tier 4 (score 40-59)**: other known domains
+- **Unranked (score 30)**: unknown domains
 
-#### 2. Auto-Hiding Transparent Toolbar (Desktop Immersive)
-**File: `ReaderToolbar.tsx`**
+Score formula: `domainReputation * 0.6 + titleRelevance * 0.4`
 
-Apply the same auto-hide pattern that already works for mobile to desktop immersive:
-- Toolbar starts visible, fades out after 3s of mouse inactivity
-- Move mouse to top 80px of viewport → toolbar reveals with backdrop blur
-- When hidden, show nothing (clean top edge — the coherence indicator line is enough)
-- The toolbar itself becomes fully transparent (`bg: transparent`) when idle, transitioning to `bg: rgba(0,0,0,0.3) backdrop-blur` on hover
-- Lens pills move into the toolbar (already there on desktop) — they inherit the fade behavior
-- Back arrow and Details button stay in toolbar
+Title relevance is computed by keyword overlap between the search term and the result title/description.
 
-#### 3. Two-Column Layout for Infobox on Wide Screens
-**File: `WikiArticleView.tsx`**
+#### 2. Firecrawl Search Integration
+**File: `supabase/functions/uor-knowledge/index.ts`**
 
-On screens ≥ 1024px in immersive mode:
-- Instead of `float: right` with a fixed 280px width crammed into the text column, use a CSS Grid or flex layout:
-  - Left column (sidebar): infobox at ~300px, sticky at `top: 80px`
-  - Right column (main): article body fills remaining space
-- On screens < 1024px: infobox stays full-width above the article (current mobile behavior)
-- This uses the full viewport width naturally — infobox and text sit side by side
+Add a `fetchTopSources()` function:
+- Calls Firecrawl Search API with the keyword (limit 8 results)
+- Filters out Wikipedia URLs (already have that source)
+- Runs results through `rankSources()`
+- Returns top 3-5 sources with URL, title, description, and score
+- Runs in parallel with Wikipedia fetch — no added latency
 
-#### 4. Pass Immersive Context to WikiArticleView
-**File: `HumanContentView.tsx`**
+Falls back gracefully: if Firecrawl is unavailable or returns no results, the system proceeds with Wikipedia-only (current behavior). Zero degradation.
 
-Add an `immersive` prop that flows down to `ContextualArticleView` → `WikiArticleView` so the article renderer can adapt its layout (sidebar vs. inline infobox, wider typography).
+#### 3. Enriched AI Synthesis Prompt
+**File: `supabase/functions/uor-knowledge/index.ts`**
 
-#### 5. Wider Article Typography in Immersive
-**File: `WikiArticleView.tsx`**
+Update the AI prompt to include source context:
+- Append ranked source summaries to the user message: "Additional authoritative sources: [title] — [description snippet]"
+- Update citation instructions: "[1] for Wikipedia, [2] for Wikidata, [3]-[N] for additional sources"
+- The AI naturally weaves in multi-source information with proper citation markers
 
-When in immersive wide mode:
-- Body text: 18px with `line-height: 1.9` for comfortable reading against the photo background
-- Section headers: slightly larger, with a subtle white underline instead of the muted border
-- The article fills the available column width naturally
+#### 4. Emit Richer Sources in SSE Stream
+**File: `supabase/functions/uor-knowledge/index.ts`**
 
-#### 6. Floating Controls Refinement
-**File: `ResolvePage.tsx`**
+The `sources` array in the SSE `wiki` event currently contains Wikipedia + Wikidata. Extend it to include the ranked sources with metadata:
+- Each source object: `{ url, title, type, score, domain }`
+- `type` values: "wikipedia", "wikidata", "academic", "institutional", "news", "web"
+- The client already handles rich source objects (see `normalizeSource` in citation-parser)
 
-The floating search pill (bottom) already exists for mobile — extend it to desktop immersive:
-- Small pill at bottom-center: search icon + "Search…" text, expands on click
-- This replaces the need for a persistent header search bar in immersive reader
+#### 5. Source Quality Badge on SourcesPills
+**File: `src/modules/oracle/components/SourcesPills.tsx`**
+
+Add a tiny visual quality indicator per source pill:
+- Tier 1-2 sources get a small green dot or checkmark
+- Tier 3 sources show normally (no indicator)
+- The "Sources" label updates to show count: "5 Sources"
+- Tooltip on hover shows: "High-signal source — academic/institutional" or similar
+
+#### 6. Update Citation Parser for Rich Source Types
+**File: `src/modules/oracle/lib/citation-parser.ts`**
+
+Extend `normalizeSource` to recognize more source types beyond just "wikipedia" / "wikidata" / "web":
+- "academic" for .edu, arxiv, pubmed, nature, science
+- "institutional" for .gov, who.int, official organizations
+- "news" for recognized news outlets
+- "web" remains the fallback
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `ResolvePage.tsx` | Wide content container for desktop immersive, remove container chrome, extend floating search pill to desktop |
-| `ReaderToolbar.tsx` | Auto-hide on desktop immersive (mouse-aware), transparent hover-reveal |
-| `WikiArticleView.tsx` | Two-column grid layout on wide screens (infobox sidebar + article), wider typography |
-| `HumanContentView.tsx` | Pass `immersive` prop down to article renderers |
+| `supabase/functions/uor-knowledge/index.ts` | Add `fetchTopSources()`, `rankSources()`, enrich AI prompt with multi-source context, emit ranked sources in SSE |
+| `src/modules/oracle/components/SourcesPills.tsx` | Quality indicator dots, source count label |
+| `src/modules/oracle/lib/citation-parser.ts` | Extended source type classification |
+
+### What the User Experiences
+
+1. **Search "CRISPR"** — Sources strip shows: `wikipedia.org` `nature.com` `nih.gov` `wikidata.org` — all auto-selected, highest signal sources for biology
+2. **Search "machine learning"** — Sources: `wikipedia.org` `arxiv.org` `stanford.edu` `wikidata.org` — academic sources prioritized automatically
+3. **Search "climate change"** — Sources: `wikipedia.org` `nasa.gov` `ipcc.ch` `nature.com` `wikidata.org` — institutional + scientific
+4. **The article itself** cites `[1]` `[2]` `[3]` `[4]` drawing from multiple high-quality sources, richer than Wikipedia alone
+5. **If Firecrawl is down** — seamlessly falls back to Wikipedia-only, zero user-visible degradation
 
