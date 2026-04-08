@@ -402,7 +402,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
 
-  if (synthesizing) {
+  // Show skeleton only when synthesizing AND no content yet
+  if (synthesizing && !contentMarkdown.trim()) {
     return <SynthesizingSkeleton />;
   }
 
