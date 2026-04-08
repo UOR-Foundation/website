@@ -1,40 +1,69 @@
 
 
-## Assessment: WASM vs TypeScript Fallback
+## Duplicate Detection: "Discovered" vs "Confirmed"
 
-### What's happening
+### Terminology
 
-The encoding pipeline is **working correctly**. The "ts fallback" badge you see means the WASM binary (`uor_wasm_shim_bg.wasm`) failed to load at runtime, so the system fell back to the TypeScript ring engine — which produces **mathematically identical results**.
+In UOR, every piece of content already has an address. It's deterministic. We don't "create" addresses, we discover them. This gives us two natural, authentic states:
 
-The pipeline is:
+- **Discovered**: First time this content's address has been found. "Address discovered."
+- **Confirmed**: Content already has a known address. "Address confirmed." This proves the system works: same content, same address, every time.
 
-```text
-User Input → JSON-LD → URDNA2015 → SHA-256 → Ring Enrichment (WASM or TS) → Address
+No jargon. Self-descriptive. True to UOR's philosophy that identity is inherent in content.
+
+### Changes
+
+**1. Remove the timestamp from the source object** (`ResolvePage.tsx`, line 367)
+
+Drop `"uor:encodedAt"` so that identical content always produces the same address. Content identity should come from content alone.
+
+**2. Add pre-encoding registry check** (`ResolvePage.tsx`, `handleEncode`)
+
+Before calling `encode()`, import `singleProofHash` from `@/lib/uor-canonical` and `lookupReceipt` from the registry. Compute the CID, check if it already exists. If found, use the existing entry and flag `isConfirmed: true`. If not, encode normally and flag `isConfirmed: false`.
+
+**3. Extend the `Result` interface** (line 82)
+
+Add `isConfirmed: boolean` and `originalTimestamp?: number` (when confirmed, show when it was first discovered).
+
+**4. Differentiate the UI response**
+
+- **Discovered** (new): Green confetti. Toast: "Address discovered." A small badge near the address: `DISCOVERED` in green.
+- **Confirmed** (existing): No confetti. A calm, confident blue badge: `CONFIRMED`. Toast: "Address confirmed. Same content, same address." Show "First discovered {relative time}" below the badge.
+
+Both states display the full address and all identity forms identically. The distinction is purely in the status indicator.
+
+**5. Additional navigation value**
+
+When content is confirmed, show a small counter: "Confirmed 3 times" (tracked via a simple in-memory counter on each registry entry). This gives a sense of how frequently content is being referenced, useful for understanding which concepts are actively being used across the system.
+
+### Technical detail
+
+```
+// handleEncode — revised flow
+const contentObj = {
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:UserContent",
+  "uor:content": text,
+};
+
+const proof = await singleProofHash(contentObj);
+const existing = lookupReceipt(proof.cid);
+
+if (existing) {
+  // Increment confirmation count on registry entry
+  existing.confirmations = (existing.confirmations || 1) + 1;
+  setResult({ source: existing.source, receipt: existing.receipt, isConfirmed: true, originalTimestamp: existing.createdAt });
+  toast("Address confirmed.", { description: "Same content, same address." });
+} else {
+  const receipt = await encode(contentObj);
+  setResult({ source: contentObj, receipt, isConfirmed: false });
+  confetti(...);
+  toast("Address discovered.", { description: receipt.triwordFormatted });
+}
 ```
 
-The WASM module only handles Step 5 (ring operations like `classifyByte`, `factorize`, `verifyCriticalIdentity`). Steps 1–4 (canonicalization, hashing, CID generation, IPv6 projection) are always done in TypeScript regardless. The address you got is **deterministically correct** either way.
+### Files modified
 
-### Why WASM fails to load
-
-The WASM binary exists at `public/wasm/uor_wasm_shim_bg.wasm` and is a valid 27KB WebAssembly module. However, in the Lovable preview environment, the fetch for `/wasm/uor_wasm_shim_bg.wasm` likely fails due to the preview server's MIME type or CORS configuration. When this happens, `loadWasm()` catches the error, sets `wasmFailed = true`, and all subsequent `bridge.*` calls route to the identical TypeScript implementations.
-
-### Proposed plan
-
-**No code changes are needed for correctness.** The TypeScript fallback is not a degraded mode — it is the same math. However, to improve transparency and reduce confusion, I propose:
-
-1. **Improve the engine badge UX** — Instead of showing a yellow "ts fallback" dot (which implies something is wrong), show a neutral "TypeScript Engine" or "WASM Engine" label without alarm coloring. Both are first-class engines.
-
-2. **Add a retry mechanism** — When WASM fails on first load, try once more after a short delay. Some preview environments take a moment to serve static assets.
-
-3. **Log clearer diagnostics** — Surface the specific WASM load error in the encode overlay's status bar (e.g., "WASM unavailable: fetch 404") so developers can diagnose environment issues.
-
-### Technical details
-
-- File: `src/modules/oracle/pages/ResolvePage.tsx` — Update the engine badge styling from warning-yellow to neutral
-- File: `src/lib/wasm/uor-bridge.ts` — Add a one-time retry with 500ms delay before setting `wasmFailed = true`
-- File: `src/modules/oracle/lib/receipt-registry.ts` — No changes needed; `enrichWithWasm` already correctly delegates via `bridge.engineType()`
-
-### Key takeaway
-
-Your "hello world" encoding produced a **correct, deterministic UOR address**. The triword, CID, IPv6, and derivation ID are all valid and identical regardless of which engine computed the ring enrichment. The "ts fallback" label is informational, not an error.
+- `src/modules/oracle/pages/ResolvePage.tsx` — Remove timestamp, add pre-check, update UI states
+- `src/modules/oracle/lib/receipt-registry.ts` — Add optional `confirmations` counter to `RegistryEntry`
 
