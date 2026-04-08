@@ -261,8 +261,8 @@ const SearchPage = () => {
               </div>
 
               {/* Address space count */}
-              <p className="text-[13px] text-muted-foreground/40 mt-6">
-                Searching across <span className="text-foreground/60 font-medium">340,282,366,920,938,463,463,374,607,431,768,211,456</span> possible addresses
+              <p className="text-[13px] text-muted-foreground/40 mt-5">
+                Searching across <span className="text-foreground/60 font-medium">340 undecillion</span> possible addresses
               </p>
             </div>
           )}
