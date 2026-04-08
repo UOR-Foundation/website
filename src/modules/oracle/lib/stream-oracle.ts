@@ -1,4 +1,5 @@
 import type { EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
+import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
 
 export type Msg = { role: "user" | "assistant"; content: string; proof?: EnrichedReceipt };
 
@@ -19,13 +20,16 @@ export async function streamOracle({
   onDone: () => void;
   onError: (error: string) => void;
 }) {
+  const ttft = createTTFTMeasure();
+  const latencyTier = getPreferredTier();
+
   const resp = await fetch(ORACLE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, scaffoldFragment, temperature }),
+    body: JSON.stringify({ messages, scaffoldFragment, temperature, latencyTier }),
   });
 
   if (!resp.ok || !resp.body) {
@@ -58,7 +62,7 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
+        if (content) { ttft.markFirstToken(); onDelta(content); }
       } catch {
         buffer = line + "\n" + buffer;
         break;
@@ -77,7 +81,7 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
+        if (content) { ttft.markFirstToken(); onDelta(content); }
       } catch { /* ignore */ }
     }
   }
