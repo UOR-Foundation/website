@@ -1,76 +1,45 @@
 
 
-# Open-Source UX Components for UOR OS
+# Boot Sequence for UOR OS
 
-## Current State
+## Overview
 
-Your project already uses: React 18, Tailwind CSS, Framer Motion, Radix UI (dialog, tooltip, toast), Lucide icons, Tabler icons, Monaco Editor, Sonner toasts, and dnd-kit. The desktop shell (windows, dock, menu bar, snap zones, Spotlight, theme switcher) is entirely custom-built.
+Create a cinematic boot-up animation that plays once per session when the user first navigates to `/os`. The sequence mimics a real OS boot — logo reveal, progress indicator, and a smooth transition into the desktop shell.
 
-You do **not** have shadcn/ui installed despite the project being scaffolded from a shadcn template — the `src/components/ui` directory is empty.
+## Sequence (total ~4 seconds)
 
-## Recommendation
+1. **Black screen** (0–400ms) — empty, builds anticipation
+2. **Logo fade-in** (400–1400ms) — UOR logo/glyph scales up from 0.8 to 1.0 with opacity 0→1, subtle glow pulse
+3. **"UOR OS" text** (1000–1800ms) — clean sans-serif text fades in below the logo with a slight upward slide
+4. **Progress bar** (1400–3200ms) — thin horizontal line fills left-to-right with a slight ease-out, subtle shimmer effect
+5. **Fade to desktop** (3200–4000ms) — entire boot screen fades out and scales up slightly (1.0→1.02) while the desktop shell fades in underneath
 
-Rather than pulling in a heavy "desktop OS" framework (most are outdated, poorly maintained, or clash with your custom shell), the best strategy is to layer **targeted, high-quality primitive libraries** that fill specific gaps. Your custom shell is already strong — these fill the interior of windows and system-level interactions.
+## Session-Only Trigger
 
-### Tier 1 — Install Now (High Impact, Zero Risk)
+- Use `sessionStorage.getItem("uor:booted")` to check if boot has already played this session
+- If not booted: show boot sequence, then set `sessionStorage.setItem("uor:booted", "true")`
+- On subsequent visits in the same tab session, skip straight to the desktop
 
-| Library | What It Gives You | Why |
-|---------|------------------|-----|
-| **shadcn/ui** (already scaffolded) | Buttons, inputs, selects, dropdowns, sheets, tabs, scroll-area, resizable panels, command palette, context menu, menubar, avatar, badge, progress, skeleton, switch, slider | You already have the Radix dependencies. Running `npx shadcn-ui init` + cherry-picking components gives you a complete, accessible, theme-aware primitive set that matches your frosted-glass aesthetic with minimal CSS overrides. |
-| **cmdk** (Command Menu) | Replace your hand-rolled Spotlight with a battle-tested, keyboard-navigable command palette | Your current SpotlightSearch works but lacks accessibility (ARIA), fuzzy matching, and grouped sections. cmdk gives all of this in ~4KB. shadcn/ui wraps it as `<Command>`. |
-| **@radix-ui/react-context-menu** | Native-feeling right-click menus with submenus, keyboard nav, checkmarks | Replace your custom DesktopContextMenu with a fully accessible version that supports nested menus (e.g., "View > Grid / List") — something your current impl can't do. |
-| **@radix-ui/react-menubar** | A proper menu bar with dropdowns (File, Edit, View, Window, Help) | Your menu bar currently only shows the app name and clock. A real OS has dropdown menus — Radix Menubar gives you this with full keyboard support. |
-| **vaul** (Drawer) | Mobile-friendly bottom sheets | On mobile viewports, windows don't work. Vaul gives you swipeable drawers that can serve as the mobile equivalent of desktop windows. |
+## Files
 
-### Tier 2 — Add When Building Specific Apps
+### Create: `src/modules/desktop/BootSequence.tsx`
+- Full-screen black overlay with `z-[9999]` (above everything)
+- Uses `framer-motion` for all animations (opacity, scale, width of progress bar)
+- Calls `onComplete` callback when the sequence finishes
+- Renders: logo SVG/icon → "UOR OS" text → thin progress bar → fade out
+- Self-contained, no external dependencies beyond framer-motion and the existing logo/icon assets
 
-| Library | For Which App Window | Why |
-|---------|---------------------|-----|
-| **@tanstack/react-table** (already have @tanstack/react-query) | Library, Vault, any data-heavy view | Virtualized, sortable, filterable tables. Essential for showing large datasets without DOM bloat. |
-| **react-resizable-panels** | Split-pane layouts inside windows | Like VS Code's panel splits. Useful for the Search app (results left, detail right) or Messenger (contacts + chat). |
-| **react-virtuoso** | Long scrolling lists | Virtualizes lists of 1000+ items with ~60fps. Critical for chat history in Messenger, search results, library items. |
-| **@floating-ui/react** | Tooltips, popovers, floating menus inside apps | More precise positioning than Radix tooltips, useful for inline annotations in the Oracle or Library apps. |
+### Modify: `src/modules/desktop/DesktopShell.tsx`
+- Add `booting` state initialized from `sessionStorage`
+- Render `<BootSequence onComplete={() => setBooting(false)} />` when `booting === true`
+- Render the normal desktop shell underneath (so the transition is seamless)
+- The boot overlay sits on top and fades away, revealing the already-mounted desktop
 
-### Tier 3 — Visual Polish
+## Visual Details
 
-| Library | Purpose |
-|---------|---------|
-| **react-spring** or keep **framer-motion** | You already use Framer Motion extensively — no need to switch. But for physics-based window dragging (rubber-band, momentum), react-spring's imperative API can be more performant. |
-| **@react-aria/focus** | Focus management across windows — ensures Tab key moves logically between the active window, dock, and menu bar. Critical for accessibility. |
-
-## What NOT to Use
-
-- **Full "web desktop" frameworks** (os.js, web-desktop-environment, ReactOS-web): Outdated, opinionated, would fight your existing architecture.
-- **Heavy component suites** (Ant Design, MUI, Chakra): Too opinionated, bundle-heavy, visual style clashes with your frosted-glass aesthetic.
-- **Electron-style libraries**: Not relevant — you're building in-browser, not wrapping a browser.
-
-## Implementation Plan
-
-### Step 1 — Initialize shadcn/ui primitives
-Generate the shadcn/ui components you need most: `command`, `context-menu`, `menubar`, `dialog`, `scroll-area`, `tabs`, `button`, `input`, `badge`, `skeleton`, `avatar`, `dropdown-menu`, `sheet`, `resizable`. Override their CSS variables to match your three themes (immersive/dark/light).
-
-### Step 2 — Replace Spotlight with shadcn Command
-Swap `SpotlightSearch.tsx` internals to use the `<Command>` component (wraps cmdk). Keep your existing open/close logic, animation wrapper, and theme-aware glass styling — just replace the list/input/keyboard handling with Command's built-in behavior. Gains: fuzzy search, ARIA, grouped results, extensible.
-
-### Step 3 — Upgrade Context Menu and Menu Bar
-Replace `DesktopContextMenu.tsx` with Radix ContextMenu. Add a proper `DesktopMenuBar` using Radix Menubar with dropdown menus per app (File, Edit, View, Window, Help). Each app can register its own menu items.
-
-### Step 4 — Add mobile drawer fallback
-Detect mobile via your existing `useIsMobile` hook. On mobile, instead of floating windows, open apps in a Vaul drawer (swipeable bottom sheet). The dock remains at the bottom.
-
-### Step 5 — Wire up react-resizable-panels for split views
-Inside the Search and Messenger windows, use resizable panels for split-pane layouts.
-
-## Performance Notes
-
-All recommended libraries are tree-shakeable and under 10KB gzipped individually. shadcn/ui components are copy-pasted source (not a runtime dependency), so you only ship what you use. Radix primitives are the most performant accessible component library available — they use no global providers and render minimal DOM.
-
-## Files to Create/Modify
-
-- **New**: shadcn/ui component files in `src/components/ui/` (~15 files)
-- **Modify**: `SpotlightSearch.tsx` — swap to Command component
-- **Modify**: `DesktopContextMenu.tsx` — swap to Radix ContextMenu
-- **Modify**: `DesktopMenuBar.tsx` — add Radix Menubar dropdowns
-- **Modify**: `DesktopShell.tsx` — mobile drawer routing
-- **New**: `src/modules/desktop/MobileShell.tsx` — mobile layout with Vaul drawers
+- Background: pure black (`#000`)
+- Logo: use the existing UOR glyph/icon (or a minimal geometric mark) in white/amber
+- Progress bar: 1px tall, amber/gold accent (`#D4A853`), with a subtle traveling shimmer highlight
+- Typography: system sans-serif, light weight, letter-spaced, white at 60% opacity
+- All animations use spring or cubic-bezier easing for organic feel — no linear motion
 
