@@ -112,7 +112,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [uorAddress]);
+  }, [threeWords]);
 
   const handleHistoryToggle = useCallback(async () => {
     if (historyOpen) {
