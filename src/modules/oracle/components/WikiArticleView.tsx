@@ -383,7 +383,7 @@ const SynthesizingSkeleton: React.FC = () => (
 
 /* ── Custom markdown components with Wikipedia styling ───────────────── */
 
-function createMarkdownComponents(immersive = false) {
+function createMarkdownComponents(immersive = false, bodyMaxWidth = 720) {
   const bodySize = immersive ? 18 : 16;
   const bodyLineHeight = immersive ? 1.9 : 1.8;
   return {
@@ -419,7 +419,7 @@ function createMarkdownComponents(immersive = false) {
           lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
           marginBottom: "0.7em",
-          maxWidth: 720,
+          maxWidth: bodyMaxWidth,
         }}
         {...props}
       >
@@ -439,7 +439,7 @@ function createMarkdownComponents(immersive = false) {
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: bodySize,
           lineHeight: bodyLineHeight,
-          maxWidth: 720,
+          maxWidth: bodyMaxWidth,
         }}
         className="text-foreground/85"
         {...props}
