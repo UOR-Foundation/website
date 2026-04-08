@@ -14,14 +14,9 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ContextualArticleView from "./ContextualArticleView";
-import SemanticWebTower from "./SemanticWebTower";
-import ExistingSemanticsBadge from "./ExistingSemanticsBadge";
-import InteropBadges from "./InteropBadges";
 import NoveltyBadge from "./NoveltyBadge";
-import SignalLeaders from "./SignalLeaders";
 import ContextJournal from "./ContextJournal";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
-import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
@@ -175,24 +170,9 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
   // Wikipedia data
   const wikidata = src["uor:wikidata"] as Record<string, unknown> | undefined;
 
-  // Semantic Web Tower data
-  const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
-  const existingSemantics = src["uor:existingSemantics"] as { jsonLd?: unknown[]; openGraph?: Record<string, string>; meta?: Record<string, string>; hasStructuredData?: boolean } | undefined;
   const isWebPage = rawType === "WebPage";
   const sources = Array.isArray(src["uor:sources"]) ? (src["uor:sources"] as string[]) : [];
   const contentMarkdown = typeof src["uor:content"] === "string" ? (src["uor:content"] as string) : null;
-
-  // Compute tower layers: use explicit layers for WebPage, derive for all other types
-  const towerLayers: Record<string, string> = semanticWebLayers || {
-    L0: "content-addressed",
-    L1: "json-ld-1.1",
-    L2: "urdna2015",
-    L3: wikidata?.qid ? `wikidata:${wikidata.qid}` : "none",
-    L4: "canonical-reduction",
-    L5: "singleProofHash",
-    L6: "deterministic-trust",
-    Signature: "CIDv1",
-  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -355,27 +335,6 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           </div>
         )
       )}
-
-      {/* ── Existing Semantics (WebPage only) ── */}
-      {isWebPage && existingSemantics && (
-        <ExistingSemanticsBadge existingSemantics={existingSemantics} />
-      )}
-
-      {/* ── Semantic Web Tower (all object types) ── */}
-      <SemanticWebTower
-        layers={towerLayers}
-        engine={engineType()}
-        crateVersion={crateVersion()}
-      />
-
-      {/* ── Interoperability Badges ── */}
-      <InteropBadges
-        objectType={rawType || undefined}
-        hasWikidata={!!(wikidata?.qid)}
-      />
-
-      {/* ── Signal Leaders — curated thought leaders for this domain ── */}
-      {novelty && <SignalLeaders domain={novelty.domain} />}
 
       {/* ── Context Journal — transparent private context window ── */}
       <ContextJournal />
