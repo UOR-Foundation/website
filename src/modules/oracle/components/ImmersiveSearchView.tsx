@@ -204,6 +204,22 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             style={{ maxWidth: "min(580px, 80vw)" }}
           >
             <div className="w-full relative group">
+              {/* Outer glow ring — creates the "lifting off the screen" effect */}
+              <div
+                className="absolute -inset-[1px] rounded-full opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  background: "linear-gradient(135deg, hsl(195 60% 65% / 0.25), hsl(200 40% 50% / 0.08), hsl(210 50% 60% / 0.2))",
+                  filter: "blur(6px)",
+                }}
+              />
+              {/* Ambient depth shadow — always visible, intensifies on hover */}
+              <div
+                className="absolute -inset-1 rounded-full pointer-events-none transition-all duration-500"
+                style={{
+                  boxShadow: "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                }}
+              />
+
               <input
                 ref={inputRef}
                 type="text"
@@ -216,25 +232,38 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                   }
                 }}
                 placeholder="What is your main focus today?"
-                className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/35 focus:border-white/50 rounded-full pl-14 pr-24 py-4 text-white text-base placeholder:text-white/30 focus:outline-none transition-all shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]"
+                className="relative w-full rounded-full pl-14 pr-24 py-4 text-white text-base focus:outline-none transition-all duration-300"
+                style={{
+                  background: "linear-gradient(135deg, hsl(200 25% 22% / 0.55), hsl(195 20% 18% / 0.45), hsl(200 30% 20% / 0.5))",
+                  backdropFilter: "blur(40px) saturate(1.6)",
+                  WebkitBackdropFilter: "blur(40px) saturate(1.6)",
+                  border: "1px solid hsl(0 0% 100% / 0.14)",
+                  boxShadow: "inset 0 1px 1px hsl(0 0% 100% / 0.08), inset 0 -1px 2px hsl(0 0% 0% / 0.15), 0 1px 3px hsl(0 0% 0% / 0.2)",
+                  color: "hsl(0 0% 100% / 0.95)",
+                  caretColor: "hsl(195 70% 65%)",
+                  textShadow: "0 1px 2px hsl(0 0% 0% / 0.2)",
+                }}
               />
 
               {/* + button (vault context picker trigger) — left of input */}
-              <div className="absolute left-2 top-1/2 -translate-y-1/2">
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setPickerOpen((p) => !p)}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                    pickerOpen || selectedDocIds.length > 0
-                      ? "bg-primary/20 text-primary border border-primary/30"
-                      : "bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/15 border border-white/10"
-                  }`}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                  style={{
+                    background: pickerOpen || selectedDocIds.length > 0
+                      ? "hsl(var(--primary) / 0.2)"
+                      : "hsl(0 0% 100% / 0.08)",
+                    border: `1px solid ${pickerOpen || selectedDocIds.length > 0 ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.1)"}`,
+                    color: pickerOpen || selectedDocIds.length > 0 ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.5)",
+                    boxShadow: "0 2px 8px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                  }}
                   title="Attach vault documents as context"
                 >
                   <Plus className="w-4 h-4" />
                 </motion.button>
 
-                {/* Picker popover — anchored below the + button */}
                 <VaultContextPicker
                   open={pickerOpen}
                   onOpenChange={setPickerOpen}
@@ -249,7 +278,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
               </div>
 
               {/* Right-side actions */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-2 z-10">
                 <VoiceInput
                   onTranscript={(text, isFinal) => {
                     setQuery(text);
@@ -261,7 +290,12 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 <button
                   onClick={handleSubmit}
                   disabled={!query.trim()}
-                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 disabled:opacity-30 flex items-center justify-center transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-25"
+                  style={{
+                    background: "hsl(0 0% 100% / 0.1)",
+                    border: "1px solid hsl(0 0% 100% / 0.12)",
+                    boxShadow: "0 2px 8px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
+                  }}
                 >
                   <ArrowRight className="w-5 h-5 text-white" />
                 </button>
