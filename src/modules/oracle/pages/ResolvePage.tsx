@@ -998,7 +998,7 @@ const SearchPage = () => {
     const coherence = computeCoherence(keyword, history);
     setCoherenceState(coherence);
 
-    toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
+    // toast removed — streaming feedback is handled inline
 
     // ── Prepare AbortController for live mode cancel-on-resume ──
     if (liveAbortRef.current) liveAbortRef.current.abort();
