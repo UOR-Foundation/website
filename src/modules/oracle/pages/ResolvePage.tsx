@@ -1511,7 +1511,7 @@ const SearchPage = () => {
               ) : (
               /* ── DESKTOP: Original layout ── */
             <div
-              className="relative flex flex-col items-center"
+              className={`relative flex flex-col items-center ${immersiveMode ? "z-10 text-white" : ""}`}
               style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
             >
               {/* Immersive toggle — top right */}
