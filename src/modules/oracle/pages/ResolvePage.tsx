@@ -686,7 +686,24 @@ const SearchPage = () => {
                 className="w-full relative group"
                 style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(3rem * 0.618)" }}
               >
-                <div className={`relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] transition-all duration-500 focus-within:border-primary/30 focus-within:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.25),0_0_60px_-12px_hsl(var(--primary)/0.1)] ${encodeMode ? "rounded-2xl" : "rounded-full"}`}>
+                {/* Animated border glow — rotating conic gradient, always subtly alive */}
+                <div
+                  className={`absolute -inset-[1px] transition-opacity duration-700 blur-[0.5px] group-hover:blur-[1px] group-focus-within:blur-[1px] ${encodeMode ? "rounded-[17px]" : "rounded-full"}`}
+                  style={{
+                    background: "conic-gradient(from var(--search-glow-angle, 0deg), transparent 0%, hsl(var(--primary) / 0.4) 10%, transparent 20%, hsl(var(--primary) / 0.15) 40%, transparent 50%, hsl(45 80% 60% / 0.3) 60%, transparent 70%, hsl(var(--primary) / 0.25) 85%, transparent 100%)",
+                    animation: "searchGlowRotate 6s linear infinite, searchIdleBreathe 4s ease-in-out infinite",
+                    opacity: undefined, // controlled by animation
+                  }}
+                />
+                {/* Outer ambient glow */}
+                <div
+                  className={`absolute -inset-[3px] opacity-0 group-hover:opacity-60 group-focus-within:opacity-80 transition-opacity duration-1000 blur-lg ${encodeMode ? "rounded-[20px]" : "rounded-full"}`}
+                  style={{
+                    background: "conic-gradient(from var(--search-glow-angle, 0deg), transparent 0%, hsl(var(--primary) / 0.12) 15%, transparent 30%, hsl(45 70% 55% / 0.1) 55%, transparent 70%, hsl(var(--primary) / 0.08) 90%, transparent 100%)",
+                    animation: "searchGlowRotate 6s linear infinite",
+                  }}
+                />
+                <div className={`relative z-10 flex items-center bg-[hsl(0_0%_11%/0.92)] backdrop-blur-xl border border-[hsl(0_0%_22%/0.5)] hover:border-[hsl(0_0%_35%/0.7)] transition-all duration-500 focus-within:border-primary/25 shadow-[0_4px_40px_-10px_hsl(0_0%_0%/0.6),inset_0_1px_0_0_hsl(0_0%_100%/0.05),inset_0_-1px_0_0_hsl(0_0%_0%/0.2)] ${encodeMode ? "rounded-2xl" : "rounded-full"}`}>
                   {/* Left + / × icon */}
                   <button
                     onClick={() => { setEncodeMode(!encodeMode); setEncodeText(""); setTimeout(() => { if (!encodeMode) encodeRef.current?.focus(); else inputRef.current?.focus(); }, 100); }}
