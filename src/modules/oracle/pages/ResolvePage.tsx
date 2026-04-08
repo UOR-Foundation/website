@@ -492,6 +492,28 @@ const SearchPage = () => {
   const [activeLens, setActiveLens] = useState(DEFAULT_LENS);
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
+  // Coherence engine state
+  const [coherenceState, setCoherenceState] = useState<CoherenceState | null>(null);
+  const [lensSuggestionDismissed, setLensSuggestionDismissed] = useState(false);
+  const dwellStartRef = useRef<number>(0);
+  const dwellTopicRef = useRef<string>("");
+
+  // Track dwell time when result changes
+  useEffect(() => {
+    if (result && !result.synthesizing) {
+      const src = result.source as Record<string, unknown>;
+      const topic = (typeof src["uor:label"] === "string" ? src["uor:label"] : typeof src["uor:title"] === "string" ? src["uor:title"] : input) as string;
+      dwellStartRef.current = Date.now();
+      dwellTopicRef.current = topic;
+      return () => {
+        if (dwellStartRef.current && dwellTopicRef.current) {
+          const seconds = (Date.now() - dwellStartRef.current) / 1000;
+          if (seconds >= 3) recordDwell(dwellTopicRef.current, seconds);
+        }
+      };
+    }
+  }, [result?.receipt?.cid, result?.synthesizing]);
+
   // Compute suggestions when input changes (triword only, not IPv6)
   useEffect(() => {
     const trimmed = input.trim().toLowerCase();
