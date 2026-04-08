@@ -20,7 +20,8 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AddressSocialStats, AddressDiscussion, AddressProvenance } from "@/modules/oracle/components/AddressCommunity";
+import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
+import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import { useAuth } from "@/hooks/use-auth";
 
 const SURPRISE_MESSAGES = [
@@ -1626,7 +1627,7 @@ const SearchPage = () => {
                   transition={{ delay: 0.13 }}
                   style={{ marginTop: "calc(1.5rem * 1.618)" }}
                 >
-                  <AddressProvenance cid={result.receipt.cid} onNavigate={(cid) => { setInput(cid); clearResult(); setTimeout(() => handleSearch(cid), 50); }} />
+                  <ProvenanceTree cid={result.receipt.cid} onNavigate={(cid) => { setInput(cid); clearResult(); setTimeout(() => handleSearch(cid), 50); }} />
                 </motion.div>
 
                 {/* ═══ 5. CONTENT ═══ */}
