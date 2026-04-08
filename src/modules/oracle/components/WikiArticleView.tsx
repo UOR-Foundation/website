@@ -552,7 +552,10 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   return (
     <article style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       {/* ── Title ── */}
-      <h1
+      <BalancedHeading
+        font="400 30px Georgia, 'Times New Roman', serif"
+        lineHeight={36}
+        as="h1"
         className="text-foreground"
         style={{
           fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
@@ -566,7 +569,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         }}
       >
         {title}
-      </h1>
+      </BalancedHeading>
 
       {/* ── Tagline ── */}
       <p
