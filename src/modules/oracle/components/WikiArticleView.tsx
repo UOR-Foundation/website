@@ -75,6 +75,7 @@ const Infobox: React.FC<{
   const description = wikidata.description as string | undefined;
   const qid = wikidata.qid as string | undefined;
   const taxonomy = wikidata.taxonomy as Record<string, string> | undefined;
+  const facts = wikidata.facts as Record<string, string> | undefined;
 
   return (
     <div
