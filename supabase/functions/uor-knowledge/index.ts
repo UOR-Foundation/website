@@ -366,6 +366,8 @@ interface MediaImage {
   uorHash: string;
   source: string;
   relevance?: number;
+  coherenceScore?: number;
+  topicDomain?: string;
 }
 
 interface MediaVideo {
