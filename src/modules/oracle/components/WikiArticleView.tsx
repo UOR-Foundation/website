@@ -89,8 +89,8 @@ const Infobox: React.FC<{
       className="bg-muted/20 border border-border/20"
       style={{
         float: "right",
-        width: 280,
-        marginLeft: 24,
+        width: window.innerWidth < 768 ? "100%" : 280,
+        marginLeft: window.innerWidth < 768 ? 0 : 24,
         marginBottom: 16,
         borderRadius: 8,
         overflow: "hidden",
@@ -504,7 +504,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       {wikidata && <Infobox title={title} wikidata={wikidata} />}
 
       {/* ── Table of Contents ── */}
-      <TableOfContents entries={toc} />
+      <TableOfContents entries={toc} defaultCollapsed={isMobileView} />
 
       {/* ── Lead paragraph ── */}
       {lead && (
