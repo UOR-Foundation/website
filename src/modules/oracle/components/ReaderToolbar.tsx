@@ -11,14 +11,15 @@ import {
   Home,
   Shield,
   Star,
-  Share2,
   Info,
   Lock,
   Copy,
   Check,
   Clock,
   X,
+  QrCode,
 } from "lucide-react";
+import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
 import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,6 +52,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<SearchHistoryEntry[]>([]);
+  const [portalOpen, setPortalOpen] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
 
   const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
@@ -283,7 +285,9 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         {/* ── Right-side actions ── */}
         <div className="flex items-center gap-0.5 ml-1 relative">
           <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
-          <IconBtn title="Share" onClick={() => {}}><Share2 className="w-3.5 h-3.5" /></IconBtn>
+          <IconBtn onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
+            <QrCode className={`w-4 h-4 ${portalOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
+          </IconBtn>
           <IconBtn onClick={handleHistoryToggle} title="Search history">
             <Clock className={`w-4 h-4 ${historyOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
           </IconBtn>
@@ -291,6 +295,13 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             <Info className="w-4 h-4" />
           </IconBtn>
           <HistoryDropdown />
+          <QrPortalPanel
+            open={portalOpen}
+            onClose={() => setPortalOpen(false)}
+            targetUrl={window.location.pathname + window.location.search}
+            targetLens={activeLens}
+            immersive={immersive}
+          />
         </div>
       </div>
 

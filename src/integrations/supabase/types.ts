@@ -1719,6 +1719,36 @@ export type Database = {
         }
         Relationships: []
       }
+      session_transfers: {
+        Row: {
+          created_at: string
+          id: string
+          target_lens: string
+          target_url: string
+          token: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_lens?: string
+          target_url: string
+          token: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_lens?: string
+          target_url?: string
+          token?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       trust_connections: {
         Row: {
           ceremony_cid: string | null
