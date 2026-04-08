@@ -24,9 +24,11 @@ function pickCover(cid: string): string {
 
 interface ProfileCoverProps {
   cid: string;
+  /** Optional contextual image (e.g. Wikipedia thumbnail) used as blurred hero background */
+  contextImageUrl?: string | null;
 }
 
-const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
+const ProfileCover: React.FC<ProfileCoverProps> = ({ cid, contextImageUrl }) => {
   const defaultSrc = pickCover(cid);
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -125,18 +127,22 @@ const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
     }
   };
 
+  const heroSrc = customUrl || contextImageUrl || defaultSrc;
+  const isContextual = !customUrl && !!contextImageUrl;
+
   return (
     <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden group" style={{ height: "calc(100vw / 1.618 / 2.618)", maxHeight: "280px", minHeight: "140px" }}>
       <img
-        src={customUrl || defaultSrc}
+        src={heroSrc}
         alt=""
         className="w-full h-full object-cover will-change-transform"
         loading="lazy"
         width={1536}
         height={512}
         style={{
-          transform: `translateY(${offsetY * 0.6}px) scale(1.1)`,
+          transform: `translateY(${offsetY * 0.6}px) scale(${isContextual ? 1.3 : 1.1})`,
           transition: "transform 0.1s linear",
+          filter: isContextual ? "blur(20px) brightness(0.6) saturate(1.3)" : undefined,
         }}
       />
       {/* Bottom gradient fade */}
