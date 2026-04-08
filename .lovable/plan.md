@@ -1,107 +1,92 @@
 
 
-# Unified Context Hub for the Desktop Home Screen
+# Polished Content Rendering Across All Lenses
 
-## Overview
+## Problem
 
-The "+" button on the home screen search bar is currently inert — it renders but does nothing. The uploaded reference image (Notion-style "+ New" menu) confirms the desired pattern: a clean dropdown with structured options for adding context, differentiated by user type (guest vs. sovereign ID holder).
+The Encyclopedia lens (and other lenses) waste screen space with excessive margins, disconnected elements, and undersized media. The Table of Contents and Infobox float independently with large gaps between them, the lead paragraph sits far from the title, and images are small and underemphasized. The overall impression is loose and unfinished rather than crisp, deliberate, and delightful.
 
-The goal is to wire the existing `ContextMenu` component (from sovereign-vault) into the desktop home screen, then extend it with two new capabilities: **Workspace/Project creation** and **Folder organization** — all canonically mapped through the UOR framework via `singleProofHash`.
+## Design Principles
 
-## Architecture
-
-```text
-DesktopWidgets (home screen)
-  └─ [+] button ── opens ContextMenu (already built)
-       ├── Upload File      → guest: in-memory / sovereign: vault
-       ├── Paste Text        → guest: in-memory / sovereign: vault
-       ├── Import from URL   → guest: in-memory / sovereign: vault
-       ├── ─────────────────
-       ├── New Workspace     → creates a UOR-addressed workspace container
-       ├── New Folder         → organizes context items into groups
-       ├── ─────────────────
-       └── Sovereign Vault   → (sovereign users only) persistent encrypted docs
-       └── [guest notice]    → (guests only) "session-only" reminder
-```
-
-Every item ingested — file, paste, URL, workspace — gets a canonical UOR address via `singleProofHash`, making it part of the unified knowledge graph alongside internet-sourced content.
+- **Fill the viewport deliberately**: Tighten vertical gaps between title, tagline, sources, ToC, and body. No wasted vertical whitespace.
+- **Side-by-side ToC + Infobox**: On wide screens, place the ToC and Infobox in a shared right column (Wikipedia-style), eliminating the large gap between them.
+- **Promote media**: Images should be larger, crisper, with refined captions. Hero images fill the column width. Gallery images use golden-ratio aspect ratios.
+- **Consistent lens rhythm**: Apply the same spacing and media treatment rules across all five lenses via shared constants.
 
 ## Changes
 
-### 1. Wire ContextMenu into DesktopWidgets.tsx
+### 1. WikiArticleView.tsx — Encyclopedia Lens (primary fix)
 
-- Import `useContextManager` and `ContextMenu` from sovereign-vault
-- Add state for `contextMenuOpen` toggled by the "+" button
-- Add `ContextPills` below the search bar to show active context items
-- Position the ContextMenu anchored above the "+" button
+**Layout tightening:**
+- Reduce title `paddingBottom` from 4→2, tagline margin from `6px 0 12px` → `4px 0 8px`
+- Reduce SourcesPills bottom spacing
+- ToC: increase `maxWidth` from 340→420, reduce `marginBottom` from 20→12
+- Body text margin-bottom from `0.7em` → `0.6em`
 
-### 2. Extend ContextMenu with Workspace and Folder options
+**Two-column on wide non-immersive screens:**
+- When `!isNarrow && wikidata`, use a CSS grid with `1fr 300px` (content + sidebar) instead of float-based infobox
+- ToC goes inside main column, Infobox goes in sticky sidebar
+- This eliminates the float-related dead space visible in the screenshot
 
-In `sovereign-vault/components/ContextMenu.tsx`:
+**Infobox refinements:**
+- Increase thumbnail `maxHeight` from 220→280 for crisper hero display
+- Tighten internal padding
 
-- Add two new menu items between the URL import and the divider:
-  - **New Workspace** — creates a named container (UOR type `vault:Workspace`) that groups context items. For guests, stored in memory; for sovereign users, persisted to the vault.
-  - **New Folder** — creates a named folder (UOR type `vault:Folder`) for organizing items hierarchically.
-- Add sub-views for each with a simple name input field
-- Both create UOR-addressed objects via `singleProofHash` so they join the unified knowledge graph
+**EncyclopediaMedia section:**
+- Gallery images: increase grid item height from 160→200px
+- Use `aspect-ratio: 1.618/1` on hero image for cinematic proportions
 
-### 3. Extend useContextManager with workspace/folder support
+### 2. InlineMedia.tsx — Shared media components
 
-In `sovereign-vault/hooks/useContextManager.ts`:
+**InlineFigure improvements:**
+- Float variant `maxHeight` from 220→260px for more visual impact
+- Full-width variant `maxHeight` from 420→480px
+- Add subtle `box-shadow` on hover for depth
+- Caption font-size from 12→13px, spacing tightened
 
-- Add `addWorkspace(name: string)` and `addFolder(name: string)` methods
-- For guests: create in-memory items via `guestContext`
-- For sovereign users: persist via `vaultStore`
-- Each gets a canonical CID derived from its name + creation timestamp
+**InlineVideo:**
+- Compact variant: slightly larger play button
 
-### 4. Extend guest-context.ts with workspace/folder types
+### 3. MagazineLensRenderer.tsx
 
-In `sovereign-vault/lib/guest-context.ts`:
+- Tighten pull-quote margins
+- Hero image: remove negative margins on larger screens, use full container width
+- Section spacing: reduce `sectionSpacingTop` gap slightly
+- Inline images: increase `max-height` for float variants
 
-- Add `addWorkspace(name: string)` and `addFolder(name: string)` methods
-- These create `GuestContextItem` entries with source types `"workspace"` and `"folder"`
-- Same ephemeral in-memory pattern as existing items
+### 4. DeepDiveLensRenderer.tsx
 
-### 5. Update ContextPills to show workspace/folder icons
+- Abstract block: reduce bottom margin by ~20%
+- Column gap from 32→26px (tighter two-column)
+- Figure images: increase `maxHeight` from 180→220px
 
-In `sovereign-vault/components/ContextPills.tsx`:
+### 5. StoryLensRenderer.tsx
 
-- Add icon variants for `workspace` and `folder` source types (FolderOpen, Layout icons)
-- Differentiate visually from file/paste/url pills
+- Hero image bottom margin from `mb-10` → `mb-8`
+- Tighten title-to-subtitle gap
+- Inline full-width images: larger maxHeight
 
-### 6. Update ContextItem type
+### 6. SimpleLensRenderer.tsx
 
-In `useContextManager.ts`, extend the `ContextItem.source` union:
+- Hero image: increase `maxHeight` from 240→300px
+- Inline images: increase from 200→240px
+- Reduce excessive vertical spacing between emoji sections
 
-```typescript
-source: "file" | "paste" | "url" | "vault" | "workspace" | "folder";
-```
+### 7. MediaGallery.tsx — EncyclopediaMedia
 
-## Guest vs. Sovereign Differentiation
-
-- **Guests**: All context is session-only (in-memory). The ContextMenu already shows a "session-only" notice with a prompt to create a Sovereign ID. No changes needed here — the existing UX handles this gracefully.
-- **Sovereign users**: Context persists in the encrypted vault. The "Sovereign Vault" menu item appears, giving access to persistent documents.
-- Both user types get the same top-level options (Upload, Paste, URL, Workspace, Folder) — the difference is persistence, not capability.
-
-## UOR Canonical Mapping
-
-Every context item — regardless of type — flows through the same pipeline:
-
-```text
-Content → singleProofHash({@type, content, metadata})
-        → CID + IPv6 + Glyph + CanonicalId
-        → Unified Knowledge Graph node
-```
-
-This means user-uploaded files, pasted text, scraped URLs, workspaces, and folders all live in the same address space as internet-sourced knowledge articles — enabling cross-referencing, search, and coherence scoring across the entire graph.
+- Grid images height from 160→200px
+- Hero image maxHeight from 400→480px
+- Figure images: increase from 150×150 to responsive width
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/desktop/DesktopWidgets.tsx` | Wire useContextManager, open ContextMenu from "+" button, show ContextPills |
-| `src/modules/sovereign-vault/components/ContextMenu.tsx` | Add Workspace + Folder menu items and sub-views |
-| `src/modules/sovereign-vault/hooks/useContextManager.ts` | Add addWorkspace/addFolder methods, extend ContextItem type |
-| `src/modules/sovereign-vault/lib/guest-context.ts` | Add addWorkspace/addFolder to guest store |
-| `src/modules/sovereign-vault/components/ContextPills.tsx` | Add workspace/folder icon variants |
+| `WikiArticleView.tsx` | Grid-based two-column layout, tighter spacing, larger infobox thumbnail |
+| `InlineMedia.tsx` | Larger image dimensions, refined shadows and captions |
+| `MagazineLensRenderer.tsx` | Tighter spacing, larger inline media |
+| `DeepDiveLensRenderer.tsx` | Tighter columns, larger figures |
+| `StoryLensRenderer.tsx` | Tighter hero-to-content gap, larger inline images |
+| `SimpleLensRenderer.tsx` | Larger hero/inline images, tighter section gaps |
+| `MediaGallery.tsx` | Larger gallery images across all layout modes |
 
