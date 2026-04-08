@@ -443,7 +443,52 @@ const SearchPage = () => {
     setTimeout(() => setCopied(null), 1500);
   }, []);
 
-  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); };
+  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); setForkModalOpen(false); setForkNote(""); };
+
+  /** Fork the current result */
+  const handleFork = async () => {
+    if (!result || !user || forking) return;
+    setForking(true);
+    try {
+      const src = result.source as Record<string, unknown>;
+      const forkObj = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:Fork",
+        "uor:forkedFrom": {
+          "uor:cid": result.receipt.cid,
+          "uor:triword": result.receipt.triword,
+          "uor:forkedAt": new Date().toISOString(),
+        },
+        "uor:content": src,
+        ...(forkNote.trim() ? { "uor:forkNote": forkNote.trim() } : {}),
+      };
+
+      const forkReceipt = await encode(forkObj);
+
+      // Record fork relationship
+      const { error } = await supabase.functions.invoke("address-social", {
+        method: "POST",
+        body: { action: "fork", parentCid: result.receipt.cid, childCid: forkReceipt.cid, note: forkNote.trim() || null },
+      });
+      if (error) throw error;
+
+      setForkModalOpen(false);
+      setForkNote("");
+
+      // Navigate to the new fork
+      setResult({ source: forkObj, receipt: forkReceipt, isConfirmed: false });
+      setInput(forkReceipt.triword);
+      navigate(`/search?w=${encodeURIComponent(forkReceipt.triword)}`, { replace: true });
+
+      confetti({ particleCount: 40, spread: 45, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)"] });
+      toast("Fork created.", { description: forkReceipt.triwordFormatted, icon: "⑂" });
+    } catch (err) {
+      console.error("[Fork] Failed:", err);
+      toast.error("Fork failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setForking(false);
+    }
+  };
 
   /** Inscribe the current result to IPFS via Pinata */
   const inscribeToIpfs = async () => {
