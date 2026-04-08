@@ -1,84 +1,84 @@
 
 
-## Enriching Images with Multi-Source Open Access Media
+## Cross-Device Portal — QR Code Session Bridge
 
-### Current State
+### What It Does
 
-Images come exclusively from **Wikimedia Commons** via Wikipedia's API. This works well for encyclopedic topics but produces sparse or low-quality results for many searches (abstract concepts, modern topics, niche domains). The current `fetchCommonsMedia` function already has good relevance scoring and UOR hashing.
-
-### New Sources (all free, no API keys required)
-
-| Source | Strength | API |
-|---|---|---|
-| **Wikimedia Commons** | Encyclopedic, diagrams, historical | Already implemented |
-| **Metropolitan Museum of Art** | Fine art, historical artifacts, paintings | `collectionapi.metmuseum.org` — no key |
-| **NASA Images** | Space, science, Earth, astronomy | `images-api.nasa.gov` — no key |
-| **Library of Congress** | Historical photos, maps, Americana | `loc.gov/search` — no key |
-| **Europeana** | European cultural heritage, art, archives | `api.europeana.eu` — free key (wskey=apidemo for dev) |
-
-These are all institutional, curated, high-resolution, and properly licensed (public domain or CC). They complement Wikimedia by covering art, space, history, and culture where Wikipedia images are weak.
+A "Portal" button integrated into the address bar generates a QR code that, when scanned on mobile, opens the exact same page with an authenticated session transfer token. The mobile device picks up where the desktop left off — same content, same lens, same view.
 
 ### Architecture
 
-Rename and expand `fetchCommonsMedia` into `fetchMultiSourceMedia`. It runs all sources **in parallel** (Promise.allSettled), merges results, then applies a unified relevance + diversity sort before emitting the SSE `media` event.
+The flow uses a short-lived, one-time session transfer token stored in the database:
 
 ```text
-fetchMultiSourceMedia(term, qid)
-  ├── fetchWikimediaImages(term)         (existing logic, extracted)
-  ├── fetchMetMuseumImages(term)         (new)
-  ├── fetchNASAImages(term)              (new)
-  ├── fetchLibraryOfCongressImages(term) (new)
-  └── merge + relevance sort + deduplicate + UOR hash
-      → top 8 images with source attribution
+Desktop clicks Portal icon (in address bar)
+  → Creates a session_transfer row in DB:
+      { token (random UUID), user_id, target_url, created_at, used: false }
+      (auto-expires after 5 minutes)
+  → Generates QR code pointing to:
+      https://{app}/resolve?portal={token}
+  → Shows QR in an animated dropdown panel from the address bar
+
+Mobile scans QR
+  → App loads, reads ?portal= param
+  → Edge function validates token (not expired, not used, marks used)
+  → Returns a new session for that user_id
+  → Mobile navigates to the target_url with active session
 ```
 
-Each sub-fetcher returns `MediaImage[]` with `source` set to its origin (e.g. `"met-museum"`, `"nasa"`, `"loc"`). The existing `uorHash` and `relevance` scoring pattern is reused.
+### Database Migration
 
-### Source Selection Logic
+New table `session_transfers`:
+- `id` (uuid, PK)
+- `token` (text, unique, indexed)
+- `user_id` (uuid, references auth.users)
+- `target_url` (text) — the current page path + search params
+- `target_lens` (text) — current active lens
+- `created_at` (timestamptz, default now())
+- `used` (boolean, default false)
+- RLS: users can only insert/read their own rows
 
-Not every source is relevant for every query. A lightweight keyword classifier picks which sources to query:
+### Edge Function: `portal-transfer`
 
-- **Met Museum**: art, painting, sculpture, ancient, historical figures, culture
-- **NASA**: space, planet, star, galaxy, nebula, earth, satellite, physics
-- **Library of Congress**: American history, presidents, civil war, jazz, photography
-- **Wikimedia**: always queried (broadest coverage)
+- **POST** (create): Authenticated user creates a transfer token. Stores user_id, target URL, lens. Returns the token.
+- **GET** (redeem): Receives token, validates (< 5 min old, not used), marks used, generates a new auth session for that user via `supabase.auth.admin.generateLink()` or creates a magic link. Returns redirect URL with session.
 
-If the term doesn't match any specialty source, only Wikimedia + one general fallback runs, keeping latency tight.
+Since generating arbitrary sessions requires the service role key, the edge function handles this securely server-side.
 
-### Relevance + Diversity Merge
+### UI: QR Portal Panel in ReaderToolbar
 
-After all sources return, images are merged into a single pool:
-1. Score each image against the search term (existing `relevance` logic)
-2. Apply a **source diversity bonus**: if the top 4 are all from Wikimedia, boost the highest-scoring image from other sources
-3. Sort by final score, take top 8
-4. Each image retains its `source` field for provenance display in the UI
+Replace the existing no-op `Share2` button with a Portal button (using `QrCode` icon from lucide). On click, it:
 
-### UOR Integration
+1. Calls the edge function to create a transfer token
+2. Uses the existing `qrcode` library to generate a QR data URL
+3. Opens an animated dropdown panel (same style as the history dropdown) showing:
+   - The QR code with a subtle animated glow border
+   - "Scan to continue on mobile" label
+   - A 5-minute countdown timer
+   - A "Regenerate" button after expiry
+   - Small lock icon + "Encrypted session transfer" text for trust
 
-Each image already gets a `uorHash` (FNV-1a of its URL). The `source` field maps to a UOR provenance category:
-- `wikimedia-commons` → `uor:media/commons`
-- `met-museum` → `uor:media/art`
-- `nasa` → `uor:media/science`
-- `loc` → `uor:media/archive`
-
-This ensures images are semantically tagged within the UOR framework and can be coherently placed by the existing `distributeMediaAcrossSections` algorithm in `InlineMedia.tsx`.
-
-### Client-Side Enhancement
-
-Add a small source badge to `InlineFigure` — a subtle icon or text showing the image origin (e.g. a small "Met Museum" or "NASA" label in the figcaption). This builds trust and delight by showing users where the image comes from.
+The panel animates in with the same `motion.div` pattern as `HistoryDropdown`.
 
 ### Files Changed
 
 | File | Change |
 |---|---|
-| `supabase/functions/uor-knowledge/index.ts` | Expand `fetchCommonsMedia` into `fetchMultiSourceMedia` with parallel sub-fetchers for Met Museum, NASA, and Library of Congress. Add keyword classifier for source selection. Unified relevance merge. |
-| `src/modules/oracle/components/InlineMedia.tsx` | Add subtle source attribution badge to `InlineFigure` figcaption (e.g. "via NASA" or "Met Museum"). |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Update `MediaImage` type to include optional `source` display name (already has `source` field, just ensure it flows through). |
+| `supabase/functions/portal-transfer/index.ts` | New edge function — create and redeem session transfer tokens |
+| **DB migration** | New `session_transfers` table with RLS |
+| `src/modules/oracle/components/ReaderToolbar.tsx` | Add QR Portal button (replacing Share2), QR dropdown panel with countdown |
+| `src/modules/oracle/components/QrPortalPanel.tsx` | New component — QR display with glow animation, countdown timer, status states |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Handle `?portal=` query param on load — call redeem endpoint, set session, navigate to target |
 
-### Latency Considerations
+### Security
 
-- All image fetches run in parallel with `Promise.allSettled` + 4s timeout each
-- Source selection means we only query 2-3 APIs per request, not all 4
-- Image fetch is already non-blocking (runs parallel to AI streaming)
-- No impact on TTFT — images arrive independently via SSE `media` event
+- Tokens are UUID v4 (unguessable)
+- 5-minute TTL enforced server-side
+- One-time use (marked `used` on redeem)
+- Service role key stays in the edge function — never exposed to client
+- RLS ensures users can only create tokens for themselves
+
+### Visual Design
+
+The QR panel uses the same frosted glass / dark immersive styling as the history dropdown. The QR code itself renders with a subtle `conic-gradient` animated border (like a scanning beam) to feel magical and alive. The countdown shows as a thin progress arc around the QR.
 
