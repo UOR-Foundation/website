@@ -552,7 +552,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: buildLensPrompt(activeLens, userContext, sources.length) },
           { role: "user", content: userMessage },
@@ -625,7 +625,7 @@ serve(async (req) => {
             wiki: wiki ? { ...wiki, facts: wikidataFacts } : null,
             sources,
             keyword: term,
-            model: "gemini-2.5-flash",
+            model: "gemini-3-flash-preview",
             personalized: isPersonalized,
             personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
           })}\n\n`)
@@ -642,7 +642,7 @@ serve(async (req) => {
                     wiki: { ...wiki, facts },
                     sources,
                     keyword: term,
-                    model: "gemini-2.5-flash",
+                    model: "gemini-3-flash-preview",
                     personalized: isPersonalized,
                     personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
                   })}\n\n`)
