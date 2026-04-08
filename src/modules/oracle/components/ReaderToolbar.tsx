@@ -21,7 +21,13 @@ import {
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
-import { KNOWLEDGE_LENSES } from "@/modules/oracle/lib/knowledge-lenses";
+import { KNOWLEDGE_LENSES, getBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getSearchHistory, type SearchHistoryEntry } from "@/modules/oracle/lib/search-history";
 
