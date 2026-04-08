@@ -15,15 +15,18 @@ export class TokenBuffer {
   private onFlush: (text: string) => void;
 
   /** Base interval between flushes (ms). Randomised ±15 ms each tick. */
-  private baseInterval = 35;
+  private baseInterval: number;
   /** Extra pause after sentence-ending punctuation (ms). */
-  private sentencePause = 280;
+  private sentencePause: number;
   /** Instant-flush mode: first N chars flush with zero delay */
-  private rushChars = 80;
+  private rushChars: number;
   private totalFlushed = 0;
 
-  constructor(onFlush: (text: string) => void) {
+  constructor(onFlush: (text: string) => void, opts?: { baseInterval?: number; sentencePause?: number; rushChars?: number }) {
     this.onFlush = onFlush;
+    this.baseInterval = opts?.baseInterval ?? 22;
+    this.sentencePause = opts?.sentencePause ?? 120;
+    this.rushChars = opts?.rushChars ?? 250;
   }
 
   /** Push a raw token from the SSE stream. */
