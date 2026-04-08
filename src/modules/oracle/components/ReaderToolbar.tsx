@@ -291,6 +291,10 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               className={`text-[13px] font-display flex-1 min-w-0 bg-transparent outline-none ${immersive ? "text-white/90 placeholder:text-white/30" : "text-foreground/90 placeholder:text-muted-foreground/30"}`}
               placeholder="Search or enter address…"
             />
+          ) : synthesizing || !triwordDisplay ? (
+            <span className={`text-[13px] font-display truncate flex-1 min-w-0 ${immersive ? "text-white/40" : "text-foreground/40"}`}>
+              Synthesizing{streamProgress > 0 ? `… ${Math.round(streamProgress * 100)}%` : "…"}
+            </span>
           ) : (
             <span className={`text-[13px] font-display truncate flex-1 min-w-0 cursor-text ${immersive ? "text-white/70" : "text-foreground/70"}`}>
               {triwordDisplay}
@@ -298,9 +302,11 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           )}
         </div>
 
-        <IconBtn onClick={handleCopy} title="Copy address">
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-        </IconBtn>
+        {!synthesizing && triwordDisplay && (
+          <IconBtn onClick={handleCopy} title="Copy address">
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </IconBtn>
+        )}
         <IconBtn onClick={onToggleDetails} title="Details"><Info className="w-3.5 h-3.5" /></IconBtn>
       </motion.div>
     );
