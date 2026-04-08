@@ -399,7 +399,7 @@ const SearchPage = () => {
     setImprobabilityActive(true);
     setImprobPhase(1);
 
-    // Phase 1 (0–800ms): improbability counter ticking
+    // Phase 1 (0–1400ms): improbability counter ticking
     let expIdx = 0;
     const expInterval = setInterval(() => {
       expIdx++;
@@ -408,9 +408,9 @@ const SearchPage = () => {
       } else {
         clearInterval(expInterval);
       }
-    }, 110);
+    }, 180);
 
-    // Phase 2 at 800ms: side effects
+    // Phase 2 at 1400ms: side effects
     setTimeout(() => {
       setImprobPhase(2);
       let effectIdx = 0;
@@ -419,9 +419,9 @@ const SearchPage = () => {
           IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
         );
         effectIdx++;
-      }, 700);
+      }, 1200);
 
-      // Phase 3 at 2400ms: DON'T PANIC
+      // Phase 3 at 3800ms: DON'T PANIC
       setTimeout(() => {
         clearInterval(effectInterval);
         setImprobPhase(3);
@@ -444,7 +444,7 @@ const SearchPage = () => {
         ];
         confetti({ particleCount: 50, spread: 90, origin: { y: 0.45 }, colors, startVelocity: 18, gravity: 0.5, ticks: 120 });
 
-        // At 1200ms: set result BEHIND the still-opaque overlay, then fade out
+        // At 1800ms: set result BEHIND the still-opaque overlay, then fade out
         setTimeout(async () => {
           const upgraded = await ensureWasmReceipt(pick.source, pick.receipt);
           setInput(pick.receipt.triword);
@@ -465,9 +465,9 @@ const SearchPage = () => {
               }, 700);
             });
           });
-        }, 1200);
-      }, 1600);
-    }, 800);
+        }, 1800);
+      }, 2400);
+    }, 1400);
   };
 
   return (
@@ -552,19 +552,19 @@ const SearchPage = () => {
                 transition={{ duration: 0.4 }}
                 className="flex flex-col items-center gap-5 z-10"
               >
-                <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground/30">
+                <p className="text-base md:text-lg font-mono uppercase tracking-[0.25em] text-muted-foreground/40">
                   {improbPhase === 1 ? "Folding dimensions…" : "Traversing the address space…"}
                 </p>
                 <motion.p
                   key={improbExponent}
                   initial={{ opacity: 0.5 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.1 }}
-                  className="font-mono text-2xl md:text-3xl font-bold text-primary/70"
+                  transition={{ duration: 0.15 }}
+                  className="font-mono text-4xl md:text-5xl font-bold text-primary/70"
                 >
                   {IMPROBABILITY_EXPONENTS[improbExponent] ?? "2^∞"}
                 </motion.p>
-                <p className="text-[9px] font-mono text-muted-foreground/18 tracking-widest">IMPROBABILITY FACTOR</p>
+                <p className="text-sm md:text-base font-mono text-muted-foreground/30 tracking-widest">IMPROBABILITY FACTOR</p>
               </motion.div>
             )}
 
@@ -575,7 +575,7 @@ const SearchPage = () => {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 0.35, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="mt-8 text-center text-sm italic text-muted-foreground/35 max-w-sm px-6 z-10"
+                className="mt-10 text-center text-lg md:text-xl italic text-muted-foreground/45 max-w-md px-6 z-10"
               >
                 {improbSideEffect}
               </motion.p>
@@ -599,7 +599,7 @@ const SearchPage = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.35 }}
                   transition={{ delay: 0.2 }}
-                  className="text-xs text-muted-foreground/25 font-mono"
+                  className="text-base text-muted-foreground/35 font-mono"
                 >
                   Normality restoring…
                 </motion.p>
