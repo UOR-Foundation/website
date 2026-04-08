@@ -41,6 +41,7 @@ export default function VaultContextPicker({
   onImportUrl,
   anchor = "below",
   className = "",
+  inline = false,
 }: Props) {
   const [filter, setFilter] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
