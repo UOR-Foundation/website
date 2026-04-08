@@ -2209,14 +2209,12 @@ const SearchPage = () => {
                         </div>
                       </div>
 
-                      {/* Unified floating input for real-time refinement */}
-                      {(mobileImmersive || immersiveMode) && (
-                        <UnifiedFloatingInput
-                          onRefine={handleRefine}
-                          streaming={refining}
-                          onCancel={handleCancelRefine}
-                        />
-                      )}
+                      {/* Unified floating input for real-time refinement — always available */}
+                      <UnifiedFloatingInput
+                        onRefine={handleRefine}
+                        streaming={refining}
+                        onCancel={handleCancelRefine}
+                      />
 
                       {/* Non-immersive: show a subtle Oracle FAB */}
                       {!immersiveMode && !mobileImmersive && (
