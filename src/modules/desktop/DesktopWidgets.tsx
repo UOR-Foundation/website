@@ -73,7 +73,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const { profile } = useAuth();
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
-  const [containerWidth, setContainerWidth] = useState(CONTENT.searchWidth);
+  const [containerWidth, setContainerWidth] = useState<number>(CONTENT.searchWidth);
 
   const detected = useMemo(() => detectAddress(query), [query]);
   const isAddress = detected.kind !== null;
