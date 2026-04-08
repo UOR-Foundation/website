@@ -2,6 +2,7 @@
  * SimpleLensRenderer — Children's textbook / Kurzgesagt style.
  * Large friendly type, emoji markers, playful inline images and videos.
  *
+ * Golden ratio (φ) proportioned spacing and typography scale.
  * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
@@ -14,6 +15,7 @@ import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
 import { useContainerWidth } from "../AdaptiveContentContainer";
+import { TYPE, LINE_HEIGHT, RHYTHM, OPACITY, SPACE, RADIUS } from "@/modules/desktop/lib/golden-ratio";
 
 interface LensRendererProps {
   title: string;
@@ -42,32 +44,32 @@ function createSimpleComponents(sectionCounter: { current: number }, bodyMaxWidt
       const emoji = SECTION_EMOJIS[sectionCounter.current % SECTION_EMOJIS.length];
       sectionCounter.current++;
       return (
-        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "3rem", marginBottom: "0.8rem", lineHeight: 1.2, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: 10 }} {...props}>
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: `${TYPE.h2}px`, fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: RHYTHM.sectionSpacingTop, marginBottom: RHYTHM.sectionSpacingBottom, lineHeight: LINE_HEIGHT.heading, letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: SPACE.md }} {...props}>
           <span style={{ fontSize: "1.3em" }}>{emoji}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/85" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.5rem", marginBottom: "0.5rem", letterSpacing: "-0.02em", lineHeight: 1.2 }} {...props}>{children}</h3>
+      <h3 className="text-foreground" style={{ fontSize: `${TYPE.large}px`, fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.5rem", marginBottom: "0.5rem", letterSpacing: "-0.02em", lineHeight: LINE_HEIGHT.heading, opacity: OPACITY.primary }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
       const text = typeof children === "string" ? children : "";
       const isWow = text.startsWith("!") || /did you know/i.test(text) || /fun fact/i.test(text) || /imagine/i.test(text);
       if (isWow) {
         return (
-          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: 14, padding: "14px 18px", marginBottom: "1.2em", fontSize: 18, lineHeight: 1.9, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: bodyMaxWidth }}>
+          <div className="bg-primary/[0.06] border border-primary/15" style={{ borderRadius: RADIUS.lg, padding: `${SPACE.lg - 2}px ${SPACE.lg + 2}px`, marginBottom: RHYTHM.paragraphSpacing, fontSize: 18, lineHeight: LINE_HEIGHT.relaxed, fontFamily: "'DM Sans', system-ui, sans-serif", maxWidth: bodyMaxWidth }}>
             <span style={{ marginRight: 8, fontSize: "1.2em" }}>✨</span>
-            <span className="text-foreground/85">{text.replace(/^!\s*/, "")}</span>
+            <span className="text-foreground" style={{ opacity: OPACITY.primary }}>{text.replace(/^!\s*/, "")}</span>
           </div>
         );
       }
       return (
-        <p className="text-foreground/80" style={{ fontSize: 19, lineHeight: 2.0, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1em", maxWidth: bodyMaxWidth }} {...props}>{children}</p>
+        <p className="text-foreground" style={{ fontSize: 19, lineHeight: LINE_HEIGHT.loose, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: RHYTHM.paragraphSpacing, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <div className="bg-accent/[0.08] border border-accent/15" style={{ borderRadius: 14, padding: "14px 18px", margin: "1.2em 0", fontSize: 18, lineHeight: 1.8, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <div className="bg-accent/[0.08] border border-accent/15" style={{ borderRadius: RADIUS.lg, padding: `${SPACE.lg - 2}px ${SPACE.lg + 2}px`, margin: `${RHYTHM.paragraphSpacing} 0`, fontSize: 18, lineHeight: LINE_HEIGHT.body, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <span style={{ marginRight: 8, fontSize: "1.2em" }}>💬</span>
         {children}
       </div>
@@ -76,10 +78,10 @@ function createSimpleComponents(sectionCounter: { current: number }, bodyMaxWidt
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 28, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: 2.0, listStyleType: "'🔹 '", maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
+      <ul className="text-foreground" style={{ paddingLeft: TYPE.h2, marginBottom: RHYTHM.paragraphSpacing, fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 19, lineHeight: LINE_HEIGHT.loose, listStyleType: "'🔹 '", maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
-      <li style={{ marginBottom: 6 }} {...props}>{children}</li>
+      <li style={{ marginBottom: SPACE.sm }} {...props}>{children}</li>
     ),
   };
 }
@@ -108,7 +110,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
     return (
       <div className="space-y-4 py-8">
         {[85, 100, 90, 75].map((w, i) => (
-          <div key={i} className="animate-pulse rounded-xl" style={{ height: 18, width: `${w}%`, background: "hsl(var(--primary) / 0.08)", borderRadius: 12 }} />
+          <div key={i} className="animate-pulse" style={{ height: 18, width: `${w}%`, background: "hsl(var(--primary) / 0.08)", borderRadius: RADIUS.md }} />
         ))}
         <p className="text-muted-foreground/40 italic text-sm mt-4">✨ Making it simple…</p>
       </div>
@@ -129,14 +131,14 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
         {title}
       </BalancedHeading>
 
-      <p className="text-primary/50" style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>
+      <p className="text-primary" style={{ fontSize: 14, fontWeight: 600, marginBottom: 20, opacity: OPACITY.secondary }}>
         🌟 Explained simply
       </p>
 
       <SourcesPills sources={sourceMetas} />
 
       {images.length > 0 && !synthesizing && (
-        <div className="my-6 bg-primary/[0.04] border border-primary/10 rounded-2xl overflow-hidden">
+        <div className="my-6 bg-primary/[0.04] border border-primary/10 overflow-hidden" style={{ borderRadius: RADIUS.xl }}>
           <img src={images[0].url} alt={images[0].caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 240 }} />
           {images[0].caption && (
             <div className="p-3">
@@ -154,7 +156,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
             <React.Fragment key={idx}>
               <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
               {showImg && (
-                <div className="my-4 bg-accent/[0.04] border border-accent/10 rounded-2xl overflow-hidden">
+                <div className="my-4 bg-accent/[0.04] border border-accent/10 overflow-hidden" style={{ borderRadius: RADIUS.xl }}>
                   <img src={img.url} alt={img.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 200 }} />
                   {img.caption && (
                     <div className="p-2.5">
@@ -171,7 +173,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
       )}
 
       {media && media.videos.length > 0 && !synthesizing && (
-        <div className="my-6 bg-accent/[0.06] border border-accent/15 rounded-2xl overflow-hidden p-3">
+        <div className="my-6 bg-accent/[0.06] border border-accent/15 overflow-hidden p-3" style={{ borderRadius: RADIUS.xl }}>
           <p className="text-foreground/70 text-sm font-semibold flex items-center gap-2 mb-2">🎬 Watch and Learn!</p>
           <InlineVideo video={media.videos[0]} variant="compact" />
         </div>
@@ -188,10 +190,10 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
-          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
+          <span className="text-muted-foreground text-[11px] uppercase tracking-[0.12em] font-semibold" style={{ opacity: OPACITY.tertiary }}>References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
-              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+              <li key={i} className="text-muted-foreground" style={{ fontSize: 12, opacity: OPACITY.secondary }}>
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.title || s.domain}
                 </a>
