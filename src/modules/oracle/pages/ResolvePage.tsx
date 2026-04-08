@@ -1391,6 +1391,9 @@ const SearchPage = () => {
       {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
 
+      {/* ── Coherence indicator (ambient session quality) ── */}
+      {coherenceState && result && <CoherenceIndicator coherence={coherenceState.sessionCoherence} />}
+
       {/* ── SoundCloud Music FAB (immersive only) ── */}
       {immersiveMode && <SoundCloudFab />}
 
