@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      address_comments: {
+        Row: {
+          address_cid: string
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          user_id: string
+        }
+        Insert: {
+          address_cid: string
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          user_id: string
+        }
+        Update: {
+          address_cid?: string
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "address_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      address_reactions: {
+        Row: {
+          address_cid: string
+          created_at: string
+          id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          address_cid: string
+          created_at?: string
+          id?: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          address_cid?: string
+          created_at?: string
+          id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      address_visits: {
+        Row: {
+          address_cid: string
+          id: string
+          visited_at: string
+          visitor_fingerprint: string
+        }
+        Insert: {
+          address_cid: string
+          id?: string
+          visited_at?: string
+          visitor_fingerprint: string
+        }
+        Update: {
+          address_cid?: string
+          id?: string
+          visited_at?: string
+          visitor_fingerprint?: string
+        }
+        Relationships: []
+      }
       agent_compression_witnesses: {
         Row: {
           agent_id: string
