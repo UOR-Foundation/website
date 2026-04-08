@@ -123,8 +123,6 @@ export default function ComputeLensRenderer({
 }: LensRendererProps) {
   const [result, setResult] = useState<WolframResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [queried, setQueried] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   // Auto-query Wolfram when the lens mounts
   useEffect(() => {
