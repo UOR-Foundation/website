@@ -444,9 +444,10 @@ const SearchPage = () => {
         confetti({ particleCount: 50, spread: 90, origin: { y: 0.45 }, colors, startVelocity: 18, gravity: 0.5, ticks: 120 });
 
         // At 1200ms: set result BEHIND the still-opaque overlay, then fade out
-        setTimeout(() => {
+        setTimeout(async () => {
+          const upgraded = await ensureWasmReceipt(pick.source, pick.receipt);
           setInput(pick.receipt.triword);
-          setResult({ source: pick.source, receipt: pick.receipt });
+          setResult({ source: pick.source, receipt: upgraded });
 
           // Brief pause so React renders the result underneath
           requestAnimationFrame(() => {
