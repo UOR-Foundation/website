@@ -89,6 +89,12 @@ const SearchPage = () => {
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
 
+  // Infinite Improbability Drive state
+  const [improbabilityActive, setImprobabilityActive] = useState(false);
+  const [improbPhase, setImprobPhase] = useState(0); // 0=off, 1=engaging, 2=passing, 3=don't panic
+  const [improbExponent, setImprobExponent] = useState(0);
+  const [improbSideEffect, setImprobSideEffect] = useState("");
+
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
