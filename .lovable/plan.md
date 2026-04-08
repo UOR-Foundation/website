@@ -1,153 +1,55 @@
 
 
-## Sovereign Context Vault — Private File Aggregation + UOR-Mapped Context Engine
+## Triword Vocabulary Refresh — Unified Ecosystem Words
 
-### What This Is
+### Goal
+Replace all three 256-word lists (OBSERVERS, OBSERVABLES, CONTEXTS) with new vocabularies that are:
+- Balanced equally across 5 domains: **humans, nature, animals & plants, space, ocean & fish**
+- Super simple (a 10-year-old knows every word), easy to spell, easy to pronounce
+- Delightful, crisp, and shareable as addresses like "Moon · Bright · Reef"
 
-A new module (`src/modules/sovereign-vault/`) that lets users import personal files (documents, notes, images, code, bookmarks) from their device, cloud drives, or URLs. Every file is content-addressed via the UOR pipeline (URDNA2015 → SHA-256 → CID), encrypted client-side (AES-256-GCM via the existing Data Bank encryption layer), and stored in the user's private vault. The extracted semantic content is projected into the existing Fusion Graph as a new "documents" modality, making all personal context available to the Oracle search bar and LLM inference — without any data ever leaving the user's control in plaintext.
+### Vocabulary Design
 
-### How Eden.so Does It (and How We Differ)
+Each list has 256 slots. Slot 0 is reserved for the genesis kernel (theos/logos/sophia). The remaining 255 are distributed across 5 domains (~51 words each), sorted alphabetically within each domain.
 
-Eden aggregates user files (notes, images, social links, references) into a workspace that an AI agent can access. Files are stored on Eden's servers, organized by folders/projects, and the agent queries them during conversations. The agent "learns how you work" by accumulating context over time.
+**OBSERVERS (Dimension 1 — "Who/What")** — Beings, entities, forces:
+- **Humans** (~51): baby, baker, boy, bride, chief, child, coach, cook, cousin, dad, dancer, doctor, diver, drummer, elder, farmer, friend, girl, guard, guide, healer, hero, human, hunter, king, knight, lady, maker, mama, mentor, miner, mom, nurse, padre, painter, papa, pilot, poet, prince, queen, rider, sage, sailor, scout, singer, sister, smith, soul, teacher, twin, woman
+- **Animals & Plants** (~51): ant, bass, bear, bee, bird, bud, bull, cat, calf, cobra, colt, crab, crow, deer, dog, dove, duck, eagle, elk, fawn, finch, fish, fox, frog, goat, goose, hawk, hen, horse, lamb, lark, leaf, lion, moth, mouse, oak, orchid, otter, owl, palm, panda, pine, pony, pup, robin, rose, seal, shark, swan, whale, wolf
+- **Nature** (~51): ash, bloom, breeze, brook, clay, cliff, cloud, coral, creek, dew, dune, dust, ember, fern, flame, flood, flower, fog, frost, gale, gem, grove, hail, heat, hill, ice, ivy, lake, leaf, light, marsh, mist, moon, moss, rain, reef, ridge, river, rock, root, sand, seed, shade, shell, snow, spring, stone, storm, stream, sun, vine, wave, wind
+- **Space** (~51): comet, cosmos, crater, dawn, dusk, earth, eclipse, flare, galaxy, glow, mars, meteor, nebula, night, north, nova, orbit, planet, plasma, pluto, pulse, quasar, ray, ring, rocket, saturn, sky, solar, south, star, stellar, sun, twilight, uranus, venus, void, west, east, zenith
+- **Ocean & Fish** (~51): anchovy, clam, cod, conch, coral, crab, current, delta, depth, dolphin, drift, eel, estuary, fin, flounder, foam, gulf, guppy, harbor, inlet, jelly, kelp, krill, lagoon, lobster, marlin, mussel, narwhal, oyster, pearl, perch, pike, plankton, reef, salmon, sardine, scallop, seahorse, shrimp, snail, sponge, squid, starfish, stingray, surf, tide, trout, tuna, turtle, urchin, walrus
 
-**Our approach is fundamentally different**:
-- **Zero-knowledge**: Files are encrypted client-side before cloud sync. The server never sees plaintext.
-- **Content-addressed**: Every file gets a canonical UOR identity (CID, Braille glyph, IPv6). Deduplication is automatic.
-- **Semantic projection**: File content is extracted, chunked, embedded into triples, and merged into the Fusion Graph. This means the Oracle search bar doesn't just search *the web* — it searches the user's entire sovereign knowledge base simultaneously.
-- **No lock-in**: Files can be imported from local disk, URLs, or cloud storage. The canonical identity is portable.
+**OBSERVABLES (Dimension 2 — "How/What quality")** — Simple adjectives balanced across domains:
+- **Human qualities**: bold, brave, calm, clever, fair, fast, free, gentle, glad, good, grand, great, happy, honest, humble, keen, kind, loyal, merry, noble, patient, proud, pure, quick, quiet, ready, safe, simple, smart, steady, strong, sure, sweet, tender, true, warm, wise, young
+- **Nature qualities**: arid, bare, bitter, blazing, bright, brisk, broad, clear, cold, cool, crisp, dark, deep, dense, dewy, dim, dry, dusky, earthy, fallen, faint, fierce, fine, flat, foggy, fresh, frigid, frozen, full, green, hardy, hazy, heavy, high, hot, hushed, icy, lush, mild, misty, mossy, pale, raw, rich, rough, rugged, serene, sharp, sheer, silent, sleek, slim, slow, smooth, snowy, soft, steep, still, stormy, sunny, thick, thin, vast, vivid, wet, wide, wild
+- **Space qualities**: aglow, astral, cosmic, distant, endless, eternal, far, giant, lunar, massive, radiant, solar, stellar
+- **Ocean qualities**: aqua, azure, briny, coral, fluid, marine, pearly, salty, tidal, wavy
 
-### Architecture
+**CONTEXTS (Dimension 3 — "Where")** — Places and habitats:
+- **Human places**: barn, bridge, cabin, camp, castle, chapel, city, court, dock, farm, fence, forge, fort, garden, gate, hall, harbor, hearth, home, house, hut, inn, lane, lodge, manor, market, mill, palace, park, path, pier, plaza, port, ranch, road, room, school, shop, square, station, street, tower, trail, village, wall, ward, well, yard
+- **Nature places**: bank, basin, bay, beach, bend, bluff, bog, cape, canyon, cave, clearing, cliff, coast, copse, cove, creek, crest, dale, dell, delta, desert, dune, edge, falls, fen, field, fjord, flat, forest, glade, glen, gorge, grove, heath, highland, hill, hollow, island, knoll, lake, ledge, lowland, marsh, meadow, mesa, moor, mount, oasis, pass, peak, plain, pond, prairie, quarry, range, ravine, ridge, river, rock, savanna, shore, slope, spring, steppe, summit, swamp, terrace, thicket, tundra, vale, valley, volcano, wood
+- **Space places**: cosmos, crater, eclipse, galaxy, nebula, north, orbit, ring, sky, south, star, sun, void, west, east, zenith, horizon
+- **Ocean places**: abyss, atoll, channel, coral, current, deep, depth, drift, estuary, gulf, inlet, isle, lagoon, narrows, pool, reef, sea, shelf, shoal, shore, sound, strait, surf, tide, trench, wake, wharf
 
-```text
-User Files (local/URL/cloud)
-       │
-       ▼
-  ┌─────────────────┐
-  │  Ingest Pipeline │ ← File API / drag-drop / URL fetch
-  │  (extract text,  │
-  │   parse metadata,│
-  │   chunk content) │
-  └────────┬────────┘
-           │
-           ▼
-  ┌─────────────────┐
-  │ UOR Identity    │ ← singleProofHash(semantic object)
-  │ (CID, glyph,   │   → content-addressed, deduped
-  │  IPv6, triword) │
-  └────────┬────────┘
-           │
-           ▼
-  ┌─────────────────┐
-  │ Encrypt + Store │ ← AES-256-GCM via Data Bank
-  │ (user_data_bank │   → zero-knowledge cloud sync
-  │  + storage)     │
-  └────────┬────────┘
-           │
-           ▼
-  ┌─────────────────┐
-  │ Fusion Graph    │ ← New "documents" modality projection
-  │ projectDocs()   │   → triples injected into context window
-  └────────┬────────┘
-           │
-           ▼
-  Oracle search bar / LLM context
-  (personal + web + reasoning)
-```
+### Implementation
 
-### Implementation Plan
+**Single file change**: `src/lib/uor-triword.ts`
 
-#### 1. Database: `sovereign_documents` table
+1. Replace the `OBSERVERS` array (lines 166–199) with the new 256-entry list
+2. Replace the `OBSERVABLES` array (lines 207–240) with the new 256-entry list
+3. Replace the `CONTEXTS` array (lines 248–281) with the new 256-entry list
+4. Update the `TRIWORD_GENESIS` description (lines 86–157) to reflect the unified ecosystem theme
+5. Ensure all three lists have exactly 256 unique entries, slot 0 = genesis kernel, rest sorted alphabetically
 
-New table to store document metadata (the encrypted content goes to Data Bank slots):
+The genesis verification will automatically re-derive a new canonical hash on next load. All existing triword references will change (expected — this is a vocabulary update), but the system remains structurally sound.
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | uuid PK | Row ID |
-| `user_id` | uuid NOT NULL | Owner (RLS) |
-| `cid` | text NOT NULL | UOR content address |
-| `filename` | text | Original filename |
-| `mime_type` | text | File MIME type |
-| `size_bytes` | integer | Original file size |
-| `source_type` | text | "local", "url", "cloud" |
-| `source_uri` | text | Original source path/URL |
-| `chunk_count` | integer DEFAULT 0 | Number of semantic chunks |
-| `tags` | text[] DEFAULT '{}' | User-defined tags |
-| `created_at` | timestamptz DEFAULT now() | Import time |
+### Result
 
-RLS: Users can only CRUD their own rows.
+Addresses become things like:
+- **"Dove · Bright · Reef"**
+- **"Moon · Gentle · Meadow"**
+- **"Dolphin · Warm · Forest"**
+- **"Star · Clear · Harbor"**
 
-#### 2. New Module: `src/modules/sovereign-vault/`
-
-**Files:**
-
-| File | Purpose |
-|---|---|
-| `lib/extract.ts` | Text extraction pipeline: PDF (via edge function), plain text, markdown, HTML, JSON, images (metadata). Returns `{ text, metadata, chunks }` |
-| `lib/chunker.ts` | Semantic chunking: splits extracted text into overlapping 512-token windows with sentence-boundary alignment. Each chunk gets its own CID |
-| `lib/vault-store.ts` | Encrypt chunks → Data Bank slots (`doc:{cid}:chunk:{n}`), upsert metadata to `sovereign_documents`, content-address via `singleProofHash` |
-| `lib/vault-search.ts` | Client-side semantic search across vault chunks using TF-IDF scoring against the query. Returns ranked chunks with source attribution |
-| `lib/project-documents.ts` | Fusion Graph projection operator: `projectDocuments(userId)` → `CompressibleTriple[]`. Queries `sovereign_documents` + decrypts top chunks for context injection |
-| `hooks/useVault.ts` | React hook: `importFile()`, `importUrl()`, `listDocuments()`, `searchVault(query)`, `removeDocument()`, `getTags()` |
-| `components/VaultPanel.tsx` | UI: drag-drop zone, file list with CID badges, tag management, search bar, storage usage indicator |
-| `components/VaultImportDialog.tsx` | Modal: file picker + URL input + progress indicator during ingestion |
-| `components/VaultContextBadge.tsx` | Small badge on Oracle search bar showing "N docs in context" when vault has content |
-| `index.ts` | Barrel exports |
-
-#### 3. Fusion Graph Integration
-
-Add `projectDocuments()` to `fusion-graph.ts` as a 5th modality alongside audio, proofs, memories, and context. The `assembleFusionGraph()` function will call it in parallel with the others:
-
-```text
-Audio Features  ─┐
-Proof Chains     ─┤
-Agent Memories   ─┤→ CompressibleTriple[] → UGC2 → context window
-User Context     ─┤
-Sovereign Docs   ─┘  ← NEW
-```
-
-Each document chunk becomes triples:
-- `doc:{cid} rdf:type doc:sovereign`
-- `doc:{cid} schema:name {filename}`
-- `doc:{cid} doc:chunk {chunk_text_truncated}`
-- `doc:{cid} doc:tag {tag}`
-- `doc:{cid} doc:source {source_uri}`
-
-#### 4. Oracle Search Integration
-
-Modify the Oracle search pipeline to include vault results:
-- In `ResolvePage.tsx`, before calling the web search, run `searchVault(query)` from `useVault`
-- If vault hits exist, inject them as a "Personal Context" section above web results in `HumanContentView`
-- Pass vault-relevant chunks into the LLM context block alongside the fusion graph
-
-#### 5. Edge Function: `parse-document`
-
-For binary files (PDF, DOCX) that can't be parsed client-side:
-- Accepts file upload via multipart form
-- Extracts text using server-side parsing
-- Returns extracted text + metadata
-- JWT-authenticated, user-scoped
-
-#### 6. UI Entry Points
-
-- **Vault Panel**: Accessible from the Oracle reader toolbar (new icon) or from a dedicated `/vault` route
-- **Drag-Drop**: The Oracle search view accepts file drops — files go directly into the vault
-- **URL Import**: Paste a URL in the vault import dialog — uses Firecrawl to scrape and ingest
-- **Context Badge**: When vault has documents, the search bar shows a subtle "N docs" indicator
-
-### What the User Experiences
-
-1. Drop a file onto the Oracle → it gets content-addressed, encrypted, and indexed
-2. Search for anything → results blend web knowledge + personal vault seamlessly
-3. The AI responses reference personal documents when relevant, with source attribution
-4. All data is encrypted — the server never sees plaintext
-5. Every document has a permanent UOR identity that works across devices
-
-### Files Summary
-
-| Action | Files |
-|---|---|
-| **Migration** | `sovereign_documents` table + RLS |
-| **New module** | `src/modules/sovereign-vault/` (9 files) |
-| **New edge fn** | `supabase/functions/parse-document/index.ts` |
-| **Modify** | `fusion-graph.ts` (add documents modality), `ResolvePage.tsx` (vault search integration), `HumanContentView.tsx` (personal results section), `ImmersiveSearchView.tsx` (drag-drop zone) |
+Simple, beautiful, shareable, and spanning a unified picture of all ecosystems.
 
