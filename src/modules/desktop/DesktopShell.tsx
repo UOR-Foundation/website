@@ -79,7 +79,7 @@ function DesktopShellInner() {
         {theme === "immersive" && (
           <>
             <ImmersiveBackground />
-            <div className="fixed bottom-[76px] left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
+            <div className="fixed bottom-8 left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
               <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
               <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
             </div>
