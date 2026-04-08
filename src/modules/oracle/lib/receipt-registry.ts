@@ -9,6 +9,7 @@
 import * as bridge from "@/lib/wasm/uor-bridge";
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
 import { canonicalToTriword, formatTriword, triwordBreakdown, isValidTriword, triwordToPrefix } from "@/lib/uor-triword";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Enriched Receipt (WASM-anchored) ───────────────────────────────────────
 
