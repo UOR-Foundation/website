@@ -6,6 +6,31 @@
 
 const KNOWLEDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-knowledge`;
 
+export interface MediaImage {
+  url: string;
+  caption?: string;
+  uorHash: string;
+  source: string;
+}
+
+export interface MediaVideo {
+  youtubeId: string;
+  title: string;
+  uorHash: string;
+}
+
+export interface MediaAudio {
+  url: string;
+  title: string;
+  uorHash: string;
+}
+
+export interface MediaData {
+  images: MediaImage[];
+  videos: MediaVideo[];
+  audio?: MediaAudio[];
+}
+
 export interface WikiMeta {
   qid: string | null;
   thumbnail: string | null;
@@ -127,6 +152,8 @@ export async function streamKnowledge({
               personalizedTopics: parsed.personalizedTopics,
             }
           );
+        } else if (parsed.type === "media" && parsed.media) {
+          onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }
