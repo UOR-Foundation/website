@@ -271,8 +271,9 @@ const Infobox: React.FC<{
 
 const TableOfContents: React.FC<{
   entries: TocEntry[];
-}> = ({ entries }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  defaultCollapsed?: boolean;
+}> = ({ entries, defaultCollapsed = false }) => {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
   const handleClick = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -455,6 +456,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   synthesizing = false,
   media,
 }) => {
+  const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
   const markdownComponents = useMemo(() => createMarkdownComponents(), []);
