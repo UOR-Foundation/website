@@ -12,6 +12,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
@@ -146,98 +147,7 @@ function renderHumanContent(source: unknown): string {
   return lines.join("\n");
 }
 
-function renderHumanView(source: unknown): React.ReactNode {
-  const src = source as Record<string, unknown> | null;
-  if (!src || typeof src !== "object") {
-    return <p className="text-base text-foreground/70">{String(source)}</p>;
-  }
-
-  const entries = Object.entries(src).filter(([key]) => key !== "@context");
-
-  return (
-    <div className="space-y-4">
-      {entries.map(([key, value]) => {
-        const label = humanLabel(key);
-
-        // Type badge
-        if (key === "@type") {
-          const typeStr = String(value).replace(/^uor:/, "");
-          return (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-primary/50">{typeStr}</span>
-            </div>
-          );
-        }
-
-        // Long text (definition, response, content)
-        if (typeof value === "string" && value.length > 120) {
-          return (
-            <div key={key} className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
-              <p className="text-base text-foreground/75 leading-relaxed">{value}</p>
-            </div>
-          );
-        }
-
-        // Short string
-        if (typeof value === "string") {
-          return (
-            <div key={key} className="flex items-baseline gap-3">
-              <span className="text-sm font-medium text-muted-foreground/50 shrink-0">{label}</span>
-              <span className="text-base text-foreground/75 font-mono">{value}</span>
-            </div>
-          );
-        }
-
-        // Array — bullet list
-        if (Array.isArray(value)) {
-          return (
-            <div key={key} className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
-              <ul className="space-y-1 pl-1">
-                {value.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-primary/40 mt-1.5 shrink-0">•</span>
-                    <span className="text-base text-foreground/70 leading-relaxed">
-                      {typeof item === "string" ? item : JSON.stringify(item)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        }
-
-        // Nested object — key/value pairs
-        if (typeof value === "object" && value !== null) {
-          return (
-            <div key={key} className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">{label}</p>
-              <div className="space-y-1.5 pl-3 border-l border-border/15">
-                {Object.entries(value).map(([k, v]) => (
-                  <div key={k} className="flex items-baseline gap-3">
-                    <span className="text-sm text-muted-foreground/45 shrink-0">{humanLabel(k)}</span>
-                    <span className="text-sm text-foreground/65 font-mono break-all">
-                      {typeof v === "string" ? v : JSON.stringify(v)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        // Number / boolean
-        return (
-          <div key={key} className="flex items-baseline gap-3">
-            <span className="text-sm font-medium text-muted-foreground/50 shrink-0">{label}</span>
-            <span className="text-base text-foreground/75 font-mono">{String(value)}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// renderHumanView replaced by HumanContentView component
 
 /* ── Tiny copy button ── */
 function CopyBtn({ onClick, copied, size = 14, label }: {
@@ -1741,7 +1651,7 @@ const SearchPage = () => {
                     <AnimatePresence mode="wait">
                       {contentViewMode === "human" ? (
                         <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-xl p-6 border border-border/15 space-y-4 max-h-[60vh] overflow-y-auto">
-                          {renderHumanView(result.source)}
+                          <HumanContentView source={result.source} />
                         </motion.div>
                       ) : (
                         <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
