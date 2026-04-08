@@ -10,10 +10,21 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
+import { allEntries } from "@/modules/oracle/lib/receipt-registry";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
+
+const SURPRISE_MESSAGES = [
+  "✨ Look what the universe found!",
+  "🌟 This one's special.",
+  "🎲 Your cosmic address awaits…",
+  "🔮 The Oracle chose this for you.",
+  "🪐 A corner of the address space, just for you.",
+  "💫 Every address tells a story.",
+];
 
 interface Result {
   source: unknown;
@@ -251,11 +262,27 @@ const SearchPage = () => {
                 </button>
                 <button
                   onClick={() => {
-                    if (!input.trim()) {
-                      setAiMode(true);
-                    } else {
-                      submit();
+                    const entries = allEntries();
+                    if (entries.length === 0) {
+                      toast("Nothing mapped yet — search something first!", { icon: "🫧" });
+                      return;
                     }
+                    const pick = entries[Math.floor(Math.random() * entries.length)];
+
+                    // 🎉 Confetti burst
+                    const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
+                    confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors, startVelocity: 30, gravity: 0.8, ticks: 120 });
+                    setTimeout(() => confetti({ particleCount: 40, spread: 120, origin: { y: 0.5 }, colors, startVelocity: 15, gravity: 0.6, ticks: 100 }), 200);
+
+                    // Playful toast
+                    const msg = SURPRISE_MESSAGES[Math.floor(Math.random() * SURPRISE_MESSAGES.length)];
+                    toast(msg, { description: pick.receipt.triwordFormatted });
+
+                    // Show result with a brief delay for the confetti moment
+                    setTimeout(() => {
+                      setInput(pick.receipt.triword);
+                      setResult({ source: pick.source, receipt: pick.receipt });
+                    }, 400);
                   }}
                   className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all"
                 >
@@ -369,10 +396,10 @@ const SearchPage = () => {
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35 }}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20, mass: 0.8 }}
                 className="py-8 space-y-5"
               >
                 {/* ADDRESS */}
