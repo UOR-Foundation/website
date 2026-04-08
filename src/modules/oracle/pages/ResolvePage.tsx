@@ -726,13 +726,17 @@ const SearchPage = () => {
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
 
-    // ── Show partial card immediately (no client-side wiki fetch) ──
+    // ── Seed from speculative prefetch if available ──
+    const cached = getCachedPrefetch(keyword);
+    const seedContent = cached?.extract || "";
+
+    // ── Show partial card immediately — seeded with Wikipedia extract if available ──
     const partialSource: Record<string, unknown> = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:KnowledgeCard",
-      "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
-      "uor:description": "",
-      "uor:content": "",
+      "uor:label": cached?.title || keyword.charAt(0).toUpperCase() + keyword.slice(1),
+      "uor:description": cached?.description || "",
+      "uor:content": seedContent,
       "uor:sources": [],
     };
 
