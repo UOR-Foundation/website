@@ -1,6 +1,6 @@
 /**
  * DesktopShell — UOR OS shell.
- * Wallpaper + menu bar + windows + dock + spotlight + context menu.
+ * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones.
  */
 
 import { Suspense, useCallback, useState, useMemo } from "react";
@@ -12,7 +12,8 @@ import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
 import DesktopContextMenu from "@/modules/desktop/DesktopContextMenu";
-import { useWindowManager } from "@/modules/desktop/hooks/useWindowManager";
+import SnapOverlay from "@/modules/desktop/SnapOverlay";
+import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
@@ -21,6 +22,7 @@ export default function DesktopShell() {
   const wm = useWindowManager();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ open: boolean; x: number; y: number }>({ open: false, x: 0, y: 0 });
+  const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -48,7 +50,6 @@ export default function DesktopShell() {
   useDesktopShortcuts(shortcutHandlers);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    // Only on the desktop background itself
     const target = e.target as HTMLElement;
     if (target.closest(".desktop-window-chrome") || target.closest("[data-dock]") || target.closest("[data-menubar]")) return;
     e.preventDefault();
@@ -74,6 +75,9 @@ export default function DesktopShell() {
         onSpotlight={() => setSpotlightOpen(true)}
       />
 
+      {/* Snap preview overlay */}
+      <SnapOverlay zone={snapPreview} />
+
       <AnimatePresence>
         {wm.windows
           .filter(w => !w.minimized)
@@ -88,6 +92,8 @@ export default function DesktopShell() {
               onFocus={wm.focusWindow}
               onMove={wm.moveWindow}
               onResize={wm.resizeWindow}
+              onSnap={wm.snapWindow}
+              onSnapPreview={setSnapPreview}
             />
           ))}
       </AnimatePresence>
@@ -105,7 +111,7 @@ export default function DesktopShell() {
         open={ctxMenu.open}
         position={{ x: ctxMenu.x, y: ctxMenu.y }}
         onClose={() => setCtxMenu(c => ({ ...c, open: false }))}
-        onNewSearch={() => {/* focus home search - widgets handle this */}}
+        onNewSearch={() => {}}
         onSpotlight={() => setSpotlightOpen(true)}
       />
     </div>
