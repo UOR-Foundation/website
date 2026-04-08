@@ -91,11 +91,40 @@ const SearchPage = () => {
 
   // Infinite Improbability Drive state
   const [improbabilityActive, setImprobabilityActive] = useState(false);
-  const [improbPhase, setImprobPhase] = useState(0); // 0=off, 1=engaging, 2=passing, 3=don't panic
+  const [improbPhase, setImprobPhase] = useState(0);
   const [improbExponent, setImprobExponent] = useState(0);
   const [improbSideEffect, setImprobSideEffect] = useState("");
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggIdx, setSelectedSuggIdx] = useState(-1);
+
   const looksLikeIpv6 = input.trim().toLowerCase().startsWith("fd00:0075:6f72");
+
+  // Compute suggestions when input changes (triword only, not IPv6)
+  useEffect(() => {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed || looksLikeIpv6 || trimmed.length < 1) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const entries = allEntries();
+    const matches = entries
+      .filter(e => e.receipt.triword.toLowerCase().includes(trimmed))
+      .slice(0, 6)
+      .map(e => ({ triword: e.receipt.triword, formatted: e.receipt.triwordFormatted }));
+    setSuggestions(matches);
+    setShowSuggestions(matches.length > 0);
+    setSelectedSuggIdx(-1);
+  }, [input]);
+
+  const pickSuggestion = (triword: string) => {
+    setInput(triword);
+    setShowSuggestions(false);
+    handleSearch(triword);
+  };
 
   useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
