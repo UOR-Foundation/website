@@ -40,7 +40,7 @@ import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/componen
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
-import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-history";
+import { getRecentKeywords, recordSearch, findByKeyword } from "@/modules/oracle/lib/search-history";
 import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
@@ -835,7 +835,23 @@ const SearchPage = () => {
         return;
       }
 
-      // 3. Free keyword → resolve via knowledge bases
+      // 3. Check search history — if user searched this keyword before and we have a CID, rehydrate instantly
+      if (!isUorAddress(trimmed)) {
+        const historyHit = await findByKeyword(trimmed);
+        if (historyHit?.cid) {
+          const historyEntry = await rehydrateFromDb(historyHit.cid);
+          if (historyEntry) {
+            const upgraded = await ensureWasmReceipt(historyEntry.source, historyEntry.receipt);
+            setResult({ source: historyEntry.source, receipt: upgraded, isConfirmed: true });
+            toast.success("Instantly loaded from your history.", {
+              description: historyEntry.receipt.triwordFormatted,
+            });
+            return;
+          }
+        }
+      }
+
+      // 4. Free keyword → resolve via knowledge bases
       await handleKeywordResolve(trimmed);
     } catch (err) {
       console.error("[Search] failed:", err);
