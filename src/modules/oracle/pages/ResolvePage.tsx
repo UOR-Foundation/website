@@ -1950,12 +1950,14 @@ const SearchPage = () => {
               }
 
               return (
+              <>
+              {immersiveMode && <ImmersiveBackground />}
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20, mass: 0.8 }}
-                className="pb-24"
+                className={`pb-24 relative z-10 ${immersiveMode ? "text-white" : ""}`}
                 style={{ paddingTop: "calc(100vh * 0.02)" }}
               >
                 {/* ═══ COVER IMAGE ═══ */}
