@@ -1146,21 +1146,9 @@ const SearchPage = () => {
     });
   };
 
-  /** Switch rendering lens — re-stream the current keyword with a new perspective */
-  const handleLensChange = useCallback((lensId: string) => {
-    setActiveLens(lensId);
-    setLensSuggestionDismissed(true);
-    const src = result?.source as Record<string, unknown> | null;
-    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
-    if (keyword) {
-      // Record lens switch for coherence engine
-      const domain = coherenceState?.novelty?.domain || "general";
-      recordLensSwitch(keyword, lensId, domain);
-    }
-    if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
-      handleKeywordResolve(keyword, lensId);
-    }
-  }, [result, coherenceState]);
+  /* handleLensChange removed — lens selection is locked at generation time;
+     each lens produces a unique UOR address. */
+
 
   /** Handle real-time refinement from UnifiedFloatingInput */
   const handleRefine = useCallback((instruction: string) => {
@@ -1216,17 +1204,7 @@ const SearchPage = () => {
     setRefining(false);
   }, []);
 
-  /** Apply a full blueprint — re-stream with custom parameters */
-  const handleBlueprintApply = useCallback((bp: LensBlueprint) => {
-    setActiveLens(bp.id);
-    setLensSuggestionDismissed(true);
-    const src = result?.source as Record<string, unknown> | null;
-    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
-    if (keyword && src?.["@type"] === "uor:KnowledgeCard") {
-      // Re-stream with blueprint params — the edge function will compose a custom prompt
-      handleKeywordResolve(keyword, bp.id);
-    }
-  }, [result]);
+  /* handleBlueprintApply removed — blueprints are applied at generation time. */
 
   const submit = () => {
     handleSearch(input);
@@ -2156,7 +2134,7 @@ const SearchPage = () => {
                         triwordDisplay={triwordDisplay}
                         typeLabel={typeRaw}
                         activeLens={activeLens}
-                        onLensChange={handleLensChange}
+                        onLensChange={(id) => setActiveLens(id)}
                         onBack={clearResult}
                         onToggleDetails={() => setReaderMode(false)}
                         synthesizing={result.synthesizing}
@@ -2199,12 +2177,9 @@ const SearchPage = () => {
                             synthesizing={result.synthesizing}
                             contextKeywords={contextKeywords}
                             activeLens={activeLens}
-                            onLensChange={handleLensChange}
                             isReaderMode
                             novelty={coherenceState?.novelty || null}
                             immersive={immersiveMode}
-                            suggestedBlueprint={coherenceState?.suggestedBlueprint}
-                            onBlueprintApply={handleBlueprintApply}
                           />
                         </div>
                       </div>
@@ -2578,7 +2553,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} novelty={coherenceState?.novelty || null} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} novelty={coherenceState?.novelty || null} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>

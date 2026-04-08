@@ -451,58 +451,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </div>
       </div>
 
-      {/* ── Lens bar (tab row beneath address bar) ── */}
-      <div
-        className="flex items-center gap-1.5 w-full"
-        style={{
-          paddingLeft: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
-          paddingRight: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
-          paddingBottom: `${Math.round(TOOLBAR_PY * 0.618)}px`,
-        }}
-      >
-        <span className={`text-[10px] font-semibold uppercase tracking-[0.08em] mr-1 select-none shrink-0 ${
-          immersive ? "text-white/20" : "text-muted-foreground/25"
-        }`}>
-          Lenses
-        </span>
-
-        {KNOWLEDGE_LENSES.map((lens) => {
-          const isActive = lens.id === activeLens;
-          const bp = getBlueprint(lens.id);
-          return (
-            <div key={lens.id} className="relative group/lens">
-              <button
-                onClick={() => !isActive && onLensChange(lens.id)}
-                disabled={synthesizing && isActive}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all border ${
-                  isActive
-                    ? immersive
-                      ? "bg-white/[0.12] text-white/90 border-white/[0.12]"
-                      : "bg-primary/12 text-primary border-primary/20"
-                    : immersive
-                      ? "text-white/35 hover:text-white/65 hover:bg-white/[0.05] border-transparent"
-                      : "text-muted-foreground/35 hover:text-foreground/55 hover:bg-muted/10 border-transparent"
-                } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
-              >
-                {lens.label}
-              </button>
-
-              {/* Hover description tooltip */}
-              <div className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-2 rounded-lg text-[11px] leading-relaxed w-52 opacity-0 pointer-events-none group-hover/lens:opacity-100 transition-opacity duration-200 z-50 shadow-lg ${
-                immersive
-                  ? "bg-[hsl(0_0%_12%)] border border-white/10 text-white/70"
-                  : "bg-popover border border-border text-muted-foreground"
-              }`}>
-                <p className={`font-semibold mb-0.5 ${immersive ? "text-white/90" : "text-foreground/80"}`}>{lens.label}</p>
-                <p>{bp.description}</p>
-                <p className={`mt-1 text-[10px] ${immersive ? "text-white/30" : "text-muted-foreground/40"}`}>
-                  {bp.params.tone} · {bp.params.depth} · {bp.params.audience}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Lens bar removed — each lens produces a unique address */}
 
       {/* ── Details toggle — anchored at bottom-right, top flush with toolbar bottom ── */}
       <button
