@@ -322,12 +322,27 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           }}
         >
           <Lock className={`w-3.5 h-3.5 shrink-0 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={onBack}>
-            <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
-            <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
-              {triwordDisplay}
-            </span>
-          </div>
+          {editing ? (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+              <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
+              <input
+                ref={addressInputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleAddressKeyDown}
+                onBlur={() => setEditing(false)}
+                className={`text-[13px] font-display tracking-wide flex-1 min-w-0 bg-transparent outline-none ${immersive ? "text-white/90 placeholder:text-white/30" : "text-foreground/90 placeholder:text-muted-foreground/30"}`}
+                placeholder="Search or type address…"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={handleAddressClick}>
+              <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
+              <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
+                {triwordDisplay}
+              </span>
+            </div>
+          )}
 
           {/* Copy address */}
           <button
