@@ -440,8 +440,6 @@ const OraclePage = () => {
 
   /* ── Render ── */
 
-  const inWindow = useIsInsideWindow();
-
   return (
     <div className={inWindow ? "relative flex flex-col bg-background w-full h-full" : "fixed inset-0 z-50 flex flex-col bg-background"} style={inWindow ? undefined : { height: "100dvh" }}>
       {/* ── Compact header ── */}
