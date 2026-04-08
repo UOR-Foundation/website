@@ -482,12 +482,8 @@ const SearchPage = () => {
   const [forkNote, setForkNote] = useState("");
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
-  const [immersiveMode, setImmersiveMode] = useState(() => {
-    const stored = localStorage.getItem("uor-immersive");
-    if (stored !== null) return stored === "true";
-    // Default to immersive on mobile
-    return window.innerWidth < 768;
-  });
+  const immersiveMode = true; // Immersive is now the permanent default
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const [readerMode, setReaderMode] = useState(true);
   const [oracleOverlayOpen, setOracleOverlayOpen] = useState(false);
 
@@ -498,17 +494,12 @@ const SearchPage = () => {
   const liveAbortRef = useRef<AbortController | null>(null);
   const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync immersive mode with fullscreen API (user may press Esc to exit)
+  // Track fullscreen state
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && immersiveMode) {
-        setImmersiveMode(false);
-        localStorage.setItem("uor-immersive", "false");
-      }
-    };
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [immersiveMode]);
+  }, []);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
