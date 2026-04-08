@@ -614,14 +614,22 @@ const SearchPage = () => {
           {!result && !aiMode && (
             <div
               className="relative flex flex-col items-center"
-              style={{ minHeight: "100dvh", paddingTop: "38.2vh" }}
+              style={{ minHeight: "100dvh", paddingTop: "28vh" }}
             >
-              {/* Brand wordmark — single confident line */}
+              {/* Logo */}
+              <img
+                src={uorLogo}
+                alt="UOR"
+                className="w-20 h-20 md:w-24 md:h-24 mb-5 select-none"
+                draggable={false}
+              />
+
+              {/* Title */}
               <h1
-                className="font-display font-bold tracking-[0.025em] text-foreground select-none leading-none whitespace-nowrap"
-                style={{ fontSize: "clamp(2.6rem, 5.5vw, 4rem)" }}
+                className="font-display font-bold tracking-[0.02em] text-foreground select-none leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(2.4rem, 5.5vw, 3.8rem)" }}
               >
-                UOR Semantic Web Search
+                The Universal Object Reference
               </h1>
 
               {/* Search bar — golden ratio spacing from title */}
