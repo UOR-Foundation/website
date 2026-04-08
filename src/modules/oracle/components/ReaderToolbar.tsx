@@ -33,6 +33,8 @@ interface ReaderToolbarProps {
   onBack: () => void;
   onToggleDetails: () => void;
   synthesizing?: boolean;
+  /** 0–1 streaming progress (actual character-based) */
+  streamProgress?: number;
   immersive?: boolean;
   onSearchHistoryJump?: (keyword: string) => void;
 }
@@ -52,6 +54,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   onBack,
   onToggleDetails,
   synthesizing = false,
+  streamProgress = 0,
   immersive = false,
   onSearchHistoryJump,
 }) => {
