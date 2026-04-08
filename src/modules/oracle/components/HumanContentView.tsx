@@ -160,101 +160,104 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-      {/* ── Type pill + Title ── */}
-      <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {rawType && typeStyle && (
-          <span
-            style={{
-              fontSize: 11,
-              fontFamily: "ui-monospace, 'SF Mono', monospace",
-              textTransform: "uppercase",
-              letterSpacing: "0.15em",
-              fontWeight: 600,
-              color: typeStyle.color,
-              background: typeStyle.bg,
-              padding: "3px 10px",
-              borderRadius: 6,
-              alignSelf: "flex-start",
-            }}
-          >
-            {rawType}
-          </span>
-        )}
+      {/* ── Type pill + Title (skip for KnowledgeCard — WikiArticleView handles it) ── */}
+      {!isKnowledgeCard && (
+        <>
+          <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {rawType && typeStyle && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: "ui-monospace, 'SF Mono', monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  fontWeight: 600,
+                  color: typeStyle.color,
+                  background: typeStyle.bg,
+                  padding: "3px 10px",
+                  borderRadius: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
+                {rawType}
+              </span>
+            )}
 
-        {/* Wikipedia-enhanced header with thumbnail */}
-        {wikidata ? (
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              {title && (
+            {wikidata ? (
+              <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {title && (
+                    <h3
+                      style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
+                      className="text-foreground font-display"
+                    >
+                      {title}
+                    </h3>
+                  )}
+                  {wikidata.description && (
+                    <p
+                      style={{ fontSize: 15, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}
+                      className="text-muted-foreground/70"
+                    >
+                      {wikidata.description as string}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                    {wikidata.qid && (
+                      <a
+                        href={`https://www.wikidata.org/wiki/${wikidata.qid}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "ui-monospace, monospace",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          textDecoration: "none",
+                          fontWeight: 600,
+                        }}
+                        className="bg-primary/10 text-primary/70 hover:text-primary transition-colors"
+                      >
+                        {wikidata.qid as string}
+                      </a>
+                    )}
+                    <span style={{ fontSize: 10 }} className="text-muted-foreground/30">
+                      Wikidata
+                    </span>
+                  </div>
+                </div>
+                {wikidata.thumbnail && (
+                  <img
+                    src={wikidata.thumbnail as string}
+                    alt={title || ""}
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 10,
+                      flexShrink: 0,
+                      border: "1px solid hsl(var(--border) / 0.15)",
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              title && (
                 <h3
                   style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
                   className="text-foreground font-display"
                 >
                   {title}
                 </h3>
-              )}
-              {wikidata.description && (
-                <p
-                  style={{ fontSize: 15, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}
-                  className="text-muted-foreground/70"
-                >
-                  {wikidata.description as string}
-                </p>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                {wikidata.qid && (
-                  <a
-                    href={`https://www.wikidata.org/wiki/${wikidata.qid}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "ui-monospace, monospace",
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      textDecoration: "none",
-                      fontWeight: 600,
-                    }}
-                    className="bg-primary/10 text-primary/70 hover:text-primary transition-colors"
-                  >
-                    {wikidata.qid as string}
-                  </a>
-                )}
-                <span style={{ fontSize: 10 }} className="text-muted-foreground/30">
-                  Wikidata
-                </span>
-              </div>
-            </div>
-            {wikidata.thumbnail && (
-              <img
-                src={wikidata.thumbnail as string}
-                alt={title || ""}
-                style={{
-                  width: 120,
-                  height: 120,
-                  objectFit: "cover",
-                  borderRadius: 10,
-                  flexShrink: 0,
-                  border: "1px solid hsl(var(--border) / 0.15)",
-                }}
-              />
+              )
             )}
-          </div>
-        ) : (
-          title && (
-            <h3
-              style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
-              className="text-foreground font-display"
-            >
-              {title}
-            </h3>
-          )
-        )}
-      </header>
+          </header>
 
-      {/* ── Wikipedia taxonomy card ── */}
-      {wikidata?.taxonomy && typeof wikidata.taxonomy === "object" && Object.keys(wikidata.taxonomy as Record<string, string>).length > 0 && (
-        <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
+          {/* ── Wikipedia taxonomy card ── */}
+          {wikidata?.taxonomy && typeof wikidata.taxonomy === "object" && Object.keys(wikidata.taxonomy as Record<string, string>).length > 0 && (
+            <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
+          )}
+        </>
       )}
 
       {/* ── View mode toggle (Original / Readable) for WebPages with rawHtml ── */}
