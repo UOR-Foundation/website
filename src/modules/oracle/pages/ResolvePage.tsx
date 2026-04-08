@@ -1741,7 +1741,7 @@ const SearchPage = () => {
                 style={{ paddingTop: "calc(100vh * 0.02)" }}
               >
                 {/* ═══ COVER IMAGE ═══ */}
-                <ProfileCover cid={result.receipt.cid} />
+                <ProfileCover cid={result.receipt.cid} contextImageUrl={wikiThumb} />
 
                 {/* ═══ PROFILE HEADER (overlaps cover) ═══ */}
                 <motion.div
@@ -1753,8 +1753,12 @@ const SearchPage = () => {
                 >
                   {/* Glyph Avatar */}
                   <div className="relative shrink-0">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-primary/8 border-[3px] border-primary/20 flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.3)] ring-[5px] ring-background">
-                      <span className="text-3xl sm:text-4xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-[3px] border-primary/20 flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.3)] ring-[5px] ring-background overflow-hidden" style={{ background: wikiThumb ? "transparent" : "hsl(var(--primary) / 0.08)" }}>
+                      {wikiThumb ? (
+                        <img src={wikiThumb} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl sm:text-4xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
+                      )}
                     </div>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
                   </div>
