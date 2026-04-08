@@ -2,6 +2,7 @@
  * StoryLensRenderer — Longreads / Medium longform style.
  * Cinematic hero image, inline scene-setting images, immersive narrative flow.
  *
+ * Golden ratio (φ) proportioned typography and vertical rhythm.
  * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
@@ -14,6 +15,7 @@ import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
 import { useContainerWidth } from "../AdaptiveContentContainer";
+import { TYPE, LINE_HEIGHT, RHYTHM, OPACITY, SPACE } from "@/modules/desktop/lib/golden-ratio";
 
 interface LensRendererProps {
   title: string;
@@ -32,16 +34,16 @@ function splitIntoSections(md: string): string[] {
 function createStoryComponents(bodyMaxWidth: number) {
   return {
     h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h2 className="text-foreground/70" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: "3rem", marginBottom: "1rem", lineHeight: 1.2, letterSpacing: "-0.02em" }} {...props}>{children}</h2>
+      <h2 className="text-foreground" style={{ fontSize: `${TYPE.h2}px`, fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", marginTop: RHYTHM.sectionSpacingTop, marginBottom: RHYTHM.sectionSpacingBottom, lineHeight: LINE_HEIGHT.heading, letterSpacing: "-0.02em", opacity: 0.70 }} {...props}>{children}</h2>
     ),
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/65" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", lineHeight: 1.2, textTransform: "uppercase" as const }} {...props}>{children}</h3>
+      <h3 className="text-foreground" style={{ fontSize: `${TYPE.large}px`, fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "0.06em", lineHeight: LINE_HEIGHT.heading, textTransform: "uppercase" as const, opacity: 0.65 }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 18, lineHeight: 1.9, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: "1.8em", maxWidth: bodyMaxWidth }} {...props}>{children}</p>
+      <p className="text-foreground" style={{ fontSize: 18, lineHeight: LINE_HEIGHT.relaxed, fontFamily: "Georgia, 'Times New Roman', serif", marginBottom: RHYTHM.paragraphSpacing, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: "2.5rem 0", padding: "0 2rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.55)", maxWidth: Math.min(900, bodyMaxWidth * 1.25) }} {...props}>{children}</blockquote>
+      <blockquote className="border-l-[3px] border-primary/25" style={{ margin: `${RHYTHM.pullQuoteMargin} 0`, padding: `0 2rem`, fontSize: 22, fontStyle: "italic", lineHeight: 1.55, fontFamily: "Georgia, 'Times New Roman', serif", color: `hsl(var(--foreground) / ${OPACITY.secondary})`, maxWidth: Math.min(900, bodyMaxWidth * 1.25) }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
@@ -50,13 +52,13 @@ function createStoryComponents(bodyMaxWidth: number) {
       <em style={{ fontStyle: "italic" }} {...props}>{children}</em>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: 1.9, maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
+      <ul className="text-foreground" style={{ paddingLeft: SPACE.xl, marginBottom: "1.5em", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 18, lineHeight: LINE_HEIGHT.relaxed, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 8 }} {...props}>{children}</li>
     ),
     hr: () => (
-      <div className="text-center text-muted-foreground/20 my-10" style={{ fontSize: 18, letterSpacing: "0.6em" }}>● ● ●</div>
+      <div className="text-center my-10" style={{ fontSize: 18, letterSpacing: "0.6em", color: `hsl(var(--muted-foreground) / ${OPACITY.ghost})` }}>● ● ●</div>
     ),
   };
 }
@@ -110,18 +112,18 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
         lineHeight={40}
         as="h1"
         className="text-foreground"
-        style={{ fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}
+        style={{ fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: SPACE.lg - 2, letterSpacing: "-0.02em" }}
         fontSizes={TITLE_FONT_SIZES}
         maxLines={3}
       >
         {title}
       </BalancedHeading>
 
-      <div style={{ marginBottom: 24 }}>
-        <p className="text-muted-foreground/50" style={{ fontSize: 14, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }}>
+      <div style={{ marginBottom: SPACE.xl }}>
+        <p className="text-muted-foreground" style={{ fontSize: 14, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic", opacity: OPACITY.secondary }}>
           A UOR Knowledge Story
         </p>
-        <div className="bg-primary/20 mt-4" style={{ height: 1, width: 60 }} />
+        <div className="bg-primary/20 mt-4" style={{ height: 1, width: SPACE.xxxl - 8 }} />
       </div>
 
       <SourcesPills sources={sourceMetas} />
@@ -163,17 +165,17 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
             </div>
           )}
           <div className="text-center mt-12 mb-4">
-            <span className="text-primary/30" style={{ fontSize: 20 }}>◼</span>
+            <span style={{ fontSize: 20, color: `hsl(var(--primary) / ${OPACITY.tertiary})` }}>◼</span>
           </div>
         </>
       )}
 
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/10 mt-8 pt-5">
-          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
+          <span className="text-muted-foreground text-[11px] uppercase tracking-[0.12em] font-semibold" style={{ opacity: OPACITY.tertiary }}>References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
-              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+              <li key={i} className="text-muted-foreground" style={{ fontSize: 12, opacity: OPACITY.secondary }}>
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.title || s.domain}
                 </a>

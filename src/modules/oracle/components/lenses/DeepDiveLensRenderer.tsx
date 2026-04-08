@@ -2,6 +2,7 @@
  * DeepDiveLensRenderer — Nature / arXiv / Scientific Journal style.
  * Abstract block, §-numbered sections, compact layout, inline figures with captions.
  *
+ * Golden ratio (φ) proportioned typography and spacing.
  * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
@@ -15,6 +16,7 @@ import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
 import { useContainerWidth } from "../AdaptiveContentContainer";
+import { TYPE, LINE_HEIGHT, RHYTHM, OPACITY, SPACE, RADIUS } from "@/modules/desktop/lib/golden-ratio";
 
 interface LensRendererProps {
   title: string;
@@ -50,29 +52,29 @@ function createDeepDiveComponents(sectionCounter: { current: number }, bodyMaxWi
       const text = typeof children === "string" ? children : String(children);
       sectionCounter.current++;
       return (
-        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "3rem", marginBottom: "0.5rem", lineHeight: 1.2, textTransform: "uppercase", letterSpacing: "0.04em" }} {...props}>
-          <span className="text-primary/50" style={{ fontFamily: "ui-monospace, monospace", marginRight: 8, fontWeight: 400 }}>§{sectionCounter.current}</span>
+        <h2 id={slugify(text)} className="text-foreground" style={{ fontSize: `${TYPE.large + 1}px`, fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: RHYTHM.sectionSpacingTop, marginBottom: "0.5rem", lineHeight: LINE_HEIGHT.heading, textTransform: "uppercase", letterSpacing: "0.04em" }} {...props}>
+          <span className="text-primary" style={{ fontFamily: "ui-monospace, monospace", marginRight: 8, fontWeight: 400, opacity: OPACITY.secondary }}>§{sectionCounter.current}</span>
           {children}
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/85" style={{ fontSize: "clamp(0.95rem, 2vw, 1.15rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic", lineHeight: 1.2 }} {...props}>{children}</h3>
+      <h3 className="text-foreground" style={{ fontSize: 18, fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "1.3rem", marginBottom: "0.4rem", fontStyle: "italic", lineHeight: LINE_HEIGHT.heading, opacity: OPACITY.primary }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className="text-foreground/80" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const, maxWidth: bodyMaxWidth }} {...props}>{children}</p>
+      <p className="text-foreground" style={{ fontSize: 15, lineHeight: 1.65, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "0.55em", textAlign: "justify", hyphens: "auto" as const, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</p>
     ),
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="bg-muted/20 border-l-2 border-primary/30" style={{ margin: "1rem 0", padding: "8px 14px", fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }} {...props}>{children}</blockquote>
+      <blockquote className="bg-muted/20 border-l-2 border-primary/30" style={{ margin: "1rem 0", padding: `8px ${SPACE.lg - 2}px`, fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }} {...props}>{children}</blockquote>
     ),
     code: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
-      <code className="text-primary/80 bg-primary/[0.06]" style={{ fontFamily: "ui-monospace, 'Cascadia Code', monospace", fontSize: "0.88em", padding: "1px 5px", borderRadius: 3 }} {...props}>{children}</code>
+      <code className="text-primary/80 bg-primary/[0.06]" style={{ fontFamily: "ui-monospace, 'Cascadia Code', monospace", fontSize: "0.88em", padding: "1px 5px", borderRadius: RADIUS.xs }} {...props}>{children}</code>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-semibold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65, maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
+      <ul className="text-foreground" style={{ paddingLeft: 20, marginBottom: "0.55em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 15, lineHeight: 1.65, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
       <li style={{ marginBottom: 3 }} {...props}>{children}</li>
@@ -123,14 +125,14 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         as="h1"
         center
         className="text-foreground"
-        style={{ fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}
+        style={{ fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: LINE_HEIGHT.heading, letterSpacing: "-0.02em", marginBottom: SPACE.sm, textAlign: "center" }}
         fontSizes={TITLE_FONT_SIZES}
         maxLines={3}
       >
         {title}
       </BalancedHeading>
 
-      <p className="text-muted-foreground/40 text-center" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace", letterSpacing: "0.06em", marginBottom: 12 }}>
+      <p className="text-muted-foreground text-center" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace", letterSpacing: "0.06em", marginBottom: SPACE.md, opacity: OPACITY.tertiary }}>
         UOR Knowledge · Technical Review
       </p>
 
@@ -139,9 +141,9 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       </div>
 
       {abstract && (
-        <div className="bg-muted/15 border border-border/15" style={{ borderRadius: 6, padding: "14px 18px", marginBottom: 28 }}>
-          <span className="text-foreground/60" style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>Abstract</span>
-          <div className="text-foreground/75" style={{ fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic" }}>
+        <div className="bg-muted/15 border border-border/15" style={{ borderRadius: RADIUS.sm, padding: `${SPACE.lg - 2}px ${SPACE.lg + 2}px`, marginBottom: SPACE.xl + 2 }}>
+          <span className="text-foreground" style={{ fontSize: TYPE.caption, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: SPACE.sm, opacity: OPACITY.secondary }}>Abstract</span>
+          <div className="text-foreground" style={{ fontSize: 14, lineHeight: 1.6, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: "italic", opacity: 0.75 }}>
             <ReactMarkdown components={{ p: ({ children }) => <p style={{ margin: 0 }}>{children}</p> }}>
               {abstract}
             </ReactMarkdown>
@@ -159,11 +161,11 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
                 <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
                 {showFig && (
                   <figure className="my-4 break-inside-avoid" style={{ margin: 0 }}>
-                    <div className="overflow-hidden rounded-md border border-border/15">
+                    <div className="overflow-hidden border border-border/15" style={{ borderRadius: RADIUS.sm }}>
                       <img src={fig.url} alt={fig.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 180 }} />
                     </div>
-                    <figcaption className="text-muted-foreground/50 text-[11px] mt-1.5 leading-snug">
-                      <span className="text-foreground/60 font-medium">Fig. {idx}.</span> {fig.caption || ""}
+                    <figcaption className="text-muted-foreground text-[11px] leading-snug" style={{ marginTop: SPACE.sm, opacity: OPACITY.secondary }}>
+                      <span className="text-foreground font-medium" style={{ opacity: OPACITY.secondary }}>Fig. {idx}.</span> {fig.caption || ""}
                     </figcaption>
                   </figure>
                 )}
@@ -181,8 +183,8 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
       {media && (media.videos.length > 0 || (media.audio && media.audio.length > 0)) && !synthesizing && (
-        <details className="border border-border/15 rounded-md mt-6 group">
-          <summary className="px-4 py-3 cursor-pointer text-foreground/60 text-xs font-bold uppercase tracking-wider select-none">
+        <details className="border border-border/15 mt-6 group" style={{ borderRadius: RADIUS.sm }}>
+          <summary className="px-4 py-3 cursor-pointer text-foreground text-xs font-bold uppercase tracking-wider select-none" style={{ opacity: OPACITY.secondary }}>
             Supplementary Materials ({media.videos.length + (media.audio?.length || 0)})
           </summary>
           <div className="px-4 pb-4 pt-2 space-y-4">
@@ -198,10 +200,10 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
 
       {sourceMetas.length > 0 && (
         <div className="border-t border-border/15 mt-8 pt-4">
-          <span className="text-foreground/50 text-[11px] uppercase tracking-[0.1em] font-bold">References</span>
+          <span className="text-foreground text-[11px] uppercase tracking-[0.1em] font-bold" style={{ opacity: OPACITY.secondary }}>References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
-              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>
+              <li key={i} className="text-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace", opacity: OPACITY.secondary }}>
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.domain}
                 </a>

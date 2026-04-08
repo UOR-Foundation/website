@@ -11,6 +11,7 @@ import { DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { Search, Clock } from "lucide-react";
+import { CONTENT, SPACE, RADIUS, TIMING } from "@/modules/desktop/lib/golden-ratio";
 
 interface Props {
   open: boolean;
@@ -100,8 +101,10 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -10 }}
             transition={{ type: "spring", damping: 30, stiffness: 500, duration: 0.2 }}
-            className="fixed z-[301] left-1/2 top-[22%] -translate-x-1/2 w-[480px] max-w-[90vw] rounded-2xl overflow-hidden"
+            className="fixed z-[301] left-1/2 -translate-x-1/2 w-[480px] max-w-[90vw] overflow-hidden"
             style={{
+              top: `${CONTENT.opticalCenter}%`,
+              borderRadius: `${RADIUS.xl}px`,
               background: panelBg,
               backdropFilter: "blur(48px) saturate(1.4)",
               WebkitBackdropFilter: "blur(48px) saturate(1.4)",

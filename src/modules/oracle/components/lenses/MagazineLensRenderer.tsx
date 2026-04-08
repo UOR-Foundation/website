@@ -2,6 +2,7 @@
  * MagazineLensRenderer — The Atlantic / National Geographic style.
  * Drop cap, pull-quotes, full-bleed hero image, inline media between sections.
  *
+ * Golden ratio (φ) proportioned typography, spacing, and rhythm.
  * Uses AdaptiveContentContainer context for fluid, container-aware typography.
  */
 
@@ -16,6 +17,7 @@ import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
 import { useContainerWidth } from "../AdaptiveContentContainer";
 import { FONTS } from "../../lib/pretext-layout";
+import { TYPE, LINE_HEIGHT, RHYTHM, OPACITY, SPACE } from "@/modules/desktop/lib/golden-ratio";
 
 interface LensRendererProps {
   title: string;
@@ -51,47 +53,47 @@ function createMagazineComponents(isFirstParagraph: { current: boolean }, bodyMa
           id={slugify(text)}
           className="text-foreground"
           style={{
-            fontSize: "clamp(1.4rem, 3vw, 2rem)",
+            fontSize: `${TYPE.h2}px`,
             fontWeight: 700,
             fontFamily: "'DM Sans', system-ui, sans-serif",
             letterSpacing: "-0.02em",
-            lineHeight: 1.2,
-            marginTop: "3rem",
-            marginBottom: "1rem",
-            paddingBottom: 12,
+            lineHeight: LINE_HEIGHT.heading,
+            marginTop: RHYTHM.sectionSpacingTop,
+            marginBottom: RHYTHM.sectionSpacingBottom,
+            paddingBottom: SPACE.md,
             borderBottom: "none",
             position: "relative",
           }}
           {...props}
         >
           {children}
-          <span className="block text-center text-primary/30" style={{ position: "absolute", bottom: 0, left: 0, right: 0, fontSize: 14, letterSpacing: "0.5em" }}>
+          <span className="block text-center" style={{ position: "absolute", bottom: 0, left: 0, right: 0, fontSize: 14, letterSpacing: "0.5em", opacity: OPACITY.tertiary, color: "hsl(var(--primary))" }}>
             ◆ ◆ ◆
           </span>
         </h2>
       );
     },
     h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-      <h3 className="text-foreground/90" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "-0.02em", lineHeight: 1.2 }} {...props}>{children}</h3>
+      <h3 className="text-foreground" style={{ fontSize: `${TYPE.large}px`, fontWeight: 600, fontFamily: "'DM Sans', system-ui, sans-serif", marginTop: "2rem", marginBottom: "0.6rem", letterSpacing: "-0.02em", lineHeight: LINE_HEIGHT.heading, opacity: OPACITY.primary }} {...props}>{children}</h3>
     ),
     p: ({ children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
       const isFirst = isFirstParagraph.current;
       if (isFirst) isFirstParagraph.current = false;
       return (
-        <p className={`text-foreground/80 ${isFirst ? "magazine-drop-cap" : ""}`} style={{ fontSize: 17, lineHeight: 1.85, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: "1.2em", maxWidth: bodyMaxWidth }} {...props}>{children}</p>
+        <p className={`text-foreground ${isFirst ? "magazine-drop-cap" : ""}`} style={{ fontSize: `${TYPE.body}px`, lineHeight: LINE_HEIGHT.body, fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: RHYTHM.paragraphSpacing, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</p>
       );
     },
     blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
-      <blockquote className="border-l-4 border-primary/30" style={{ margin: "2.5rem 0", padding: "1rem 1.5rem", fontSize: 22, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.65)", maxWidth: Math.min(900, bodyMaxWidth * 1.25) }} {...props}>{children}</blockquote>
+      <blockquote className="border-l-4 border-primary/25" style={{ margin: `${RHYTHM.pullQuoteMargin} 0`, padding: `${SPACE.md}px ${SPACE.xl}px`, fontSize: 22, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: `hsl(var(--foreground) / ${OPACITY.secondary})`, maxWidth: Math.min(900, bodyMaxWidth * 1.25) }} {...props}>{children}</blockquote>
     ),
     strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className="text-foreground font-bold" {...props}>{children}</strong>
     ),
     ul: ({ children, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
-      <ul className="text-foreground/80" style={{ paddingLeft: 24, marginBottom: "1em", fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.85, maxWidth: bodyMaxWidth }} {...props}>{children}</ul>
+      <ul className="text-foreground" style={{ paddingLeft: SPACE.xl, marginBottom: RHYTHM.paragraphSpacing, fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: `${TYPE.body}px`, lineHeight: LINE_HEIGHT.body, maxWidth: bodyMaxWidth, opacity: OPACITY.primary }} {...props}>{children}</ul>
     ),
     li: ({ children, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
-      <li style={{ marginBottom: 6 }} {...props}>{children}</li>
+      <li style={{ marginBottom: SPACE.sm }} {...props}>{children}</li>
     ),
   };
 }
@@ -158,14 +160,14 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         lineHeight={35}
         as="h1"
         className="text-foreground"
-        style={{ fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 12 }}
+        style={{ fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: SPACE.md }}
         fontSizes={TITLE_FONT_SIZES}
         maxLines={3}
       >
         {title}
       </BalancedHeading>
 
-      <p className="text-muted-foreground/40" style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 500, marginBottom: pullQuote ? 20 : 32 }}>
+      <p className="text-muted-foreground" style={{ fontSize: TYPE.small, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 500, marginBottom: pullQuote ? 20 : 32, opacity: OPACITY.tertiary }}>
         UOR Knowledge · Feature
       </p>
 
@@ -177,7 +179,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
           lineHeight={33}
           as="div"
           className="border-l-4 border-primary/25"
-          style={{ padding: "12px 20px", marginBottom: 32, fontSize: 20, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: "hsl(var(--foreground) / 0.6)" }}
+          style={{ padding: `${SPACE.md}px ${SPACE.lg + SPACE.xs}px`, marginBottom: 32, fontSize: 20, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: `hsl(var(--foreground) / ${OPACITY.secondary})` }}
           maxWidth={Math.min(900, bodyMaxWidth * 1.25)}
         >
           {`"${pullQuote}"`}
@@ -218,7 +220,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
 
       {media && media.videos.length > 0 && !synthesizing && (
         <div className="mt-8 mb-4">
-          <p className="text-muted-foreground/40 text-xs uppercase tracking-widest font-semibold mb-3">Watch More</p>
+          <p className="text-muted-foreground text-xs uppercase tracking-widest font-semibold mb-3" style={{ opacity: OPACITY.tertiary }}>Watch More</p>
           <InlineVideo video={media.videos[0]} variant="cinematic" />
           {media.videos.length > 1 && (
             <div className="grid grid-cols-2 gap-3 mt-3">
@@ -232,10 +234,10 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
 
       {sourceMetas.length > 0 && !synthesizing && (
         <div className="border-t border-border/15 mt-10 pt-5">
-          <span className="text-muted-foreground/35 text-[11px] uppercase tracking-[0.12em] font-semibold">References</span>
+          <span className="text-muted-foreground text-[11px] uppercase tracking-[0.12em] font-semibold" style={{ opacity: OPACITY.tertiary }}>References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
             {sourceMetas.map((s, i) => (
-              <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12 }}>
+              <li key={i} className="text-muted-foreground" style={{ fontSize: 12, opacity: OPACITY.secondary }}>
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
                   {s.title || s.domain}
                 </a>

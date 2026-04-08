@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    Desktop OS Shell — Chrome-style tab bar + window styles
-   Revolut-inspired: tight transitions, minimal effects
+   Golden ratio (φ = 1.618) proportioned shadows and spacing
    ═══════════════════════════════════════════════════════ */
 
 /* ── Chrome Tab Strip ── */
@@ -25,22 +25,24 @@
   background: inherit;
 }
 
-/* ── Window chrome ── */
+/* ── Window chrome — φ-proportioned shadows ── */
 .desktop-window-chrome {
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   contain: layout paint;
   isolation: isolate;
+  /* φ-scale: 16→26 blur, 6→10 spread */
   box-shadow:
-    0 16px 40px -10px rgba(0, 0, 0, 0.45),
-    0 6px 16px -6px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 150ms ease-out, opacity 150ms ease-out;
+    0 16px 26px -10px rgba(0, 0, 0, 0.35),
+    0 6px 16px -6px rgba(0, 0, 0, 0.20);
+  transition: box-shadow 150ms ease-out, opacity 120ms ease-out;
 }
 
 .desktop-window-chrome.active {
+  /* φ-scale: 26→42 blur, 10→26 spread */
   box-shadow:
-    0 20px 50px -10px rgba(0, 0, 0, 0.55),
-    0 8px 22px -6px rgba(0, 0, 0, 0.35);
+    0 26px 42px -10px rgba(0, 0, 0, 0.50),
+    0 10px 26px -6px rgba(0, 0, 0, 0.30);
 }
 
 .desktop-window-chrome.dragging {
