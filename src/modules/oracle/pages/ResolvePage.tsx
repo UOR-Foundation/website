@@ -20,7 +20,8 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AddressSocialStats, AddressDiscussion } from "@/modules/oracle/components/AddressCommunity";
+import { AddressSocialStats, AddressDiscussion, AddressProvenance } from "@/modules/oracle/components/AddressCommunity";
+import { useAuth } from "@/hooks/use-auth";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
