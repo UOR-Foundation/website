@@ -232,8 +232,24 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 </button>
               </div>
             </div>
+            {/* Vault context badge */}
+            {vault.count > 0 && (
+              <div className="mt-3">
+                <VaultContextBadge count={vault.count} />
+              </div>
+            )}
           </motion.div>
         </div>
+
+        {/* Drag overlay */}
+        {dragOver && vault.ready && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <div className="border-2 border-dashed border-white/40 rounded-3xl px-12 py-8 text-center">
+              <p className="text-white text-lg font-medium">Drop to import to Vault</p>
+              <p className="text-white/50 text-sm mt-1">Files will be encrypted & content-addressed</p>
+            </div>
+          </div>
+        )}
 
         {/* ── Bottom bar ── */}
         <div className="flex flex-col items-center px-8 py-6">
