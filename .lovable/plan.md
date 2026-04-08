@@ -1,100 +1,87 @@
 
 
-## Reddit-Style Threaded Discussion for Address Profiles
+## Address Profile Page Redesign
 
-### What Changes
+### Goal
+Transform the address profile from a narrow, stacked layout into a full-width, golden-ratio-proportioned, social-network-style profile that uses the entire screen and feels like a unified, next-level identity page.
 
-Transform the flat comment list in `AddressDiscussion` into a fully threaded, collapsible, Reddit-style discussion system with voting, inline replies, sorting, and visual thread lines.
+### Layout Architecture
 
-### Database Changes
+The current constraint is `max-w-5xl mx-auto px-8` on line 978 of ResolvePage.tsx. The profile result view (lines 1376-1747) will be restructured into distinct zones:
 
-**New table: `address_comment_votes`** — tracks upvotes/downvotes per comment per user.
-
-```sql
-CREATE TABLE public.address_comment_votes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  comment_id uuid NOT NULL REFERENCES public.address_comments(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  vote smallint NOT NULL CHECK (vote IN (-1, 1)),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (comment_id, user_id)
-);
-ALTER TABLE public.address_comment_votes ENABLE ROW LEVEL SECURITY;
--- Anyone can read votes
-CREATE POLICY "Anyone can read votes" ON public.address_comment_votes FOR SELECT USING (true);
--- Authenticated users can manage their own votes
-CREATE POLICY "Users manage own votes" ON public.address_comment_votes FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+```text
+┌──────────────────────────────────────────────────────────┐
+│  COVER IMAGE (full-width, edge-to-edge, taller: 240px)  │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  PROFILE HEADER (overlapping cover bottom)          │ │
+│  │  Avatar + Triword Name + Badges + Actions           │ │
+│  └─────────────────────────────────────────────────────┘ │
+├──────────────────────────────────────────────────────────┤
+│  SOCIAL STATS BAR (full-width, subtle border divider)   │
+│  visitors · comments · forks · reactions                │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌─── MAIN (φ ratio) ───┐  ┌──── SIDEBAR ────┐         │
+│  │                       │  │                  │         │
+│  │  Content Section      │  │  Identity Hub    │         │
+│  │  (Human/Machine view) │  │  (IPv6, triword, │         │
+│  │                       │  │   projections)   │         │
+│  │  Action Bar           │  │                  │         │
+│  │  (Oracle, IPFS,       │  │  Provenance Tree │         │
+│  │   Verify, Fork)       │  │                  │         │
+│  │                       │  │                  │         │
+│  └───────────────────────┘  └──────────────────┘         │
+│                                                          │
+├──────────────────────────────────────────────────────────┤
+│  DISCUSSION (full-width, Reddit-style threads)           │
+│  Sort · Comment box · Threaded replies                   │
+└──────────────────────────────────────────────────────────┘
 ```
 
-**Add `score` column to `address_comments`** (denormalized for sort performance):
-```sql
-ALTER TABLE public.address_comments ADD COLUMN score integer NOT NULL DEFAULT 0;
-```
+### Key Changes
 
-### Edge Function Changes (`address-social/index.ts`)
+**1. Full-width profile container**
+- Remove the `max-w-5xl` constraint for the result/profile view
+- Use `max-w-7xl` for the overall profile, with inner content using golden ratio splits
+- Cover image becomes edge-to-edge within the container, taller (200-260px)
 
-1. **GET handler**: Return comments with `score` field, and include vote counts. Also return user's own votes when authenticated.
-2. **New POST actions**:
-   - `action: "vote"` — upsert into `address_comment_votes`, update denormalized `score` on the comment. Toggle logic: same vote removes it, different vote switches it.
-   - `action: "get_my_votes"` — return user's votes for all comments on this address (batch fetch for efficiency).
-3. **Comments sorting**: Accept `sort` query param (`best`, `new`, `controversial`, `old`). Default `best` (score desc, then newest).
+**2. Profile header overlaps cover**
+- Avatar shifts to overlap the cover bottom edge (negative margin, `ring-4 ring-background`)
+- Name, badges, and status sit beside it on a single row
+- Action buttons (Oracle, IPFS, Verify, Fork) move into the header row as compact icon-buttons, right-aligned
 
-### Frontend: New `AddressDiscussion` Component
+**3. Two-column golden ratio layout (main content area)**
+- Split: 61.8% main column, 38.2% sidebar
+- Main: Content section (Human/Machine view) with the view toggle
+- Sidebar: Identity Hub (sticky) + Provenance Tree
+- On mobile: stack vertically (sidebar below main)
 
-Complete rewrite of the discussion section in `AddressCommunity.tsx`:
+**4. Social stats as a horizontal bar**
+- Full-width thin bar below header, before the two-column area
+- Visitors, comments, forks, reactions displayed as horizontal metrics with icons
+- Reactions are interactive inline (click to react)
 
-**Visual Design (Reddit-inspired, adapted to dark cosmic theme):**
-- Thread lines: thin vertical `border-left` lines in `primary/10` connecting parent to children, with subtle indentation (24px per level, max 6 levels deep)
-- Each comment: avatar | author name + glyph + timestamp | content | action bar
-- Action bar: upvote/downvote arrows (▲ ▼), score count, Reply button, Collapse button
-- Collapsed threads show "[+] username — X children" as a single clickable line
-- Top-level comment box: textarea (not single-line input), with avatar beside it, "Comment" submit button
-- Reply boxes: inline textarea that appears below a comment when "Reply" is clicked
-- Sort dropdown at the top: Best / New / Old / Controversial
+**5. Discussion section**
+- Full-width below the two-column area
+- Stays as-is (Reddit-style threads already implemented)
 
-**Thread Rendering:**
-- Build a tree from flat `comments[]` using `parent_id`
-- Recursive `CommentThread` component renders each node + its children
-- Collapse state stored in a `Set<string>` of collapsed comment IDs
-- Max visible depth of 8, with "Continue this thread →" link beyond that
+**6. Golden ratio proportions throughout**
+- Section spacing: `gap` values follow φ multiples (e.g., 1rem, 1.618rem, 2.618rem)
+- Cover height to header height ratio follows φ
+- Two-column split: 61.8% / 38.2%
 
-**Voting UX:**
-- Upvote arrow turns primary color when active, downvote turns amber/red
-- Optimistic updates with rollback on error
-- Score displayed between arrows (or beside them horizontally)
-- Batch-fetch user's existing votes on mount via `get_my_votes`
-
-**Sort Options:**
-- Best (default): score desc, then created_at desc
-- New: created_at desc
-- Old: created_at asc
-- Controversial: most total votes with score near zero
-
-**Comment Input:**
-- Top-level: always visible at top of discussion, textarea with user avatar
-- Reply: inline textarea that expands below the comment, with Cancel + Reply buttons
-- Markdown not supported initially (plain text only, keeping it simple)
+**7. Visual refinements**
+- Subtle section dividers using `border-border/10`
+- Consistent rounded corners (`rounded-2xl` for major cards)
+- Smooth staggered entrance animations (already partially there)
+- Provenance banner (fork origin) integrates into the header area rather than being a separate block
 
 ### Files Modified
 
-1. **`supabase/migrations/...`** — Create `address_comment_votes` table + add `score` column
-2. **`supabase/functions/address-social/index.ts`** — Add `vote`, `get_my_votes` actions; update GET to include scores and sorting
-3. **`src/modules/oracle/components/AddressCommunity.tsx`** — Full rewrite of `AddressDiscussion`: tree builder, recursive `CommentThread`, vote buttons, collapse, sort dropdown, inline reply, styled thread lines
+1. **`src/modules/oracle/pages/ResolvePage.tsx`** (lines ~1376-1747) — Restructure the result view into the new layout: full-width cover, overlapping header, two-column golden-ratio body, repositioned action bar, full-width discussion
+2. **`src/modules/oracle/components/ProfileCover.tsx`** — Increase height, adjust rounded corners for full-width feel
+3. **`src/modules/oracle/components/IdentityHub.tsx`** — Minor: ensure it works well in a narrower sidebar context
+4. **`src/modules/oracle/components/AddressCommunity.tsx`** — Minor: ensure full-width rendering for discussion section
 
-### Component Structure
-
-```text
-AddressDiscussion
-├── SortSelector (Best / New / Old / Controversial)
-├── TopLevelCommentBox (avatar + textarea + submit)
-└── CommentThread[] (recursive)
-    ├── CommentNode
-    │   ├── ThreadLine (vertical border)
-    │   ├── Avatar
-    │   ├── Header (author, glyph, timestamp)
-    │   ├── Content
-    │   ├── ActionBar (▲ score ▼ · Reply · Collapse)
-    │   └── InlineReplyBox (when replying)
-    └── CommentThread[] (children, indented)
-```
+### No database or backend changes required.
 
