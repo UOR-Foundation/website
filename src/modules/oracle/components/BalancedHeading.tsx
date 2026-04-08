@@ -10,7 +10,7 @@
  */
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { balanceWidth, measureLineCount } from "../lib/pretext-layout";
+import { balanceWidth, measureLineCount, smartTruncate } from "../lib/pretext-layout";
 
 interface BalancedHeadingProps {
   /** The heading text (plain string) */
