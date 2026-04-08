@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Music2, Pause, Play, ListMusic } from "lucide-react";
 
 const SC_PLAYLIST_URL = "https://soundcloud.com/ben-bohmer/sets/begin-again";
-const SC_EMBED_URL = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SC_PLAYLIST_URL)}&color=%23e8985a&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`;
+const SC_EMBED_URL = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SC_PLAYLIST_URL)}&color=%23e8985a&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
 
 const DISC_SIZE = 48;
 const GROOVE_COUNT = 5;
