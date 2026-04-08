@@ -1893,6 +1893,51 @@ const SearchPage = () => {
               const triwordParts = result.receipt.triword.split(".");
               const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
 
+              const isReadableType = typeRaw === "KnowledgeCard" || typeRaw === "WebPage";
+              const showReader = readerMode && isReadableType;
+
+              if (showReader) {
+                return (
+                  <motion.div
+                    key="reader-mode"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col"
+                    style={{ minHeight: "100dvh" }}
+                  >
+                    <ReaderToolbar
+                      triwordDisplay={triwordDisplay}
+                      typeLabel={typeRaw}
+                      activeLens={activeLens}
+                      onLensChange={handleLensChange}
+                      onBack={clearResult}
+                      onToggleDetails={() => setReaderMode(false)}
+                      synthesizing={result.synthesizing}
+                    />
+                    <div
+                      className="flex-1 mx-auto w-full"
+                      style={{
+                        maxWidth: "min(720px, 90vw)",
+                        paddingTop: "calc(1rem * 1.618 * 1.618)",
+                        paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
+                        paddingLeft: "1.5rem",
+                        paddingRight: "1.5rem",
+                      }}
+                    >
+                      <HumanContentView
+                        source={result.source}
+                        synthesizing={result.synthesizing}
+                        contextKeywords={contextKeywords}
+                        activeLens={activeLens}
+                        onLensChange={handleLensChange}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              }
+
               return (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
