@@ -2301,6 +2301,7 @@ const SearchPage = () => {
                         onToggleDetails={() => setReaderMode(false)}
                         synthesizing={result.synthesizing}
                         immersive={immersiveMode}
+                        onSearchHistoryJump={(keyword) => { setInput(keyword); clearResult(); setTimeout(() => handleSearch(keyword), 100); }}
                       />
                       <div
                         className={`flex-1 w-full mx-auto`}
