@@ -181,6 +181,17 @@ const SearchPage = () => {
     }
   }, [aiMessages]);
 
+  /** If a receipt was created with TS fallback but WASM is now ready, re-encode to upgrade */
+  const ensureWasmReceipt = async (source: unknown, receipt: EnrichedReceipt): Promise<EnrichedReceipt> => {
+    if (receipt.engine === "typescript" && wasmReady) {
+      try {
+        const upgraded = await encode(source);
+        if (upgraded.engine === "wasm") return upgraded;
+      } catch { /* keep original */ }
+    }
+    return receipt;
+  };
+
   const handleSearch = async (address: string) => {
     const trimmed = address.trim();
     if (!trimmed) return;
@@ -188,7 +199,8 @@ const SearchPage = () => {
     try {
       const entry = lookup(trimmed);
       if (entry) {
-        setResult({ source: entry.source, receipt: entry.receipt });
+        const upgraded = await ensureWasmReceipt(entry.source, entry.receipt);
+        setResult({ source: entry.source, receipt: upgraded });
       } else {
         toast("Address not found. Paste content to create an entry.", { icon: "📝" });
       }
@@ -277,7 +289,8 @@ const SearchPage = () => {
             "uor:response": assistantSoFar,
             "uor:timestamp": new Date().toISOString(),
           };
-          const receipt = await encode(proofSource);
+          let receipt = await encode(proofSource);
+          receipt = await ensureWasmReceipt(proofSource, receipt);
           // Attach proof to the last assistant message
           setAiMessages(prev => prev.map((m, i) =>
             i === prev.length - 1 && m.role === "assistant"
@@ -432,9 +445,10 @@ const SearchPage = () => {
         confetti({ particleCount: 50, spread: 90, origin: { y: 0.45 }, colors, startVelocity: 18, gravity: 0.5, ticks: 120 });
 
         // At 1200ms: set result BEHIND the still-opaque overlay, then fade out
-        setTimeout(() => {
+        setTimeout(async () => {
+          const upgraded = await ensureWasmReceipt(pick.source, pick.receipt);
           setInput(pick.receipt.triword);
-          setResult({ source: pick.source, receipt: pick.receipt });
+          setResult({ source: pick.source, receipt: upgraded });
 
           // Brief pause so React renders the result underneath
           requestAnimationFrame(() => {
