@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
-import uorHexagon from "@/assets/uor-hexagon.svg";
+import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
