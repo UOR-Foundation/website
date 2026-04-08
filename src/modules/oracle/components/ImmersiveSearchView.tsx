@@ -217,14 +217,14 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="flex flex-col items-center gap-4 px-8 py-6">
+        <div className="flex flex-col items-center px-8 py-6">
           <ImmersiveQuote />
-          <div className="flex items-center gap-4">
-            <SoundCloudFab />
-            <span className="text-white/40 text-xs">
-              Photo · Unsplash
-            </span>
-          </div>
+        </div>
+
+        {/* ── Bottom-right: SoundCloud + attribution ── */}
+        <div className="absolute bottom-4 right-4 flex items-center gap-3 z-10">
+          <SoundCloudFab />
+          <span className="text-white/40 text-xs">Photo · Unsplash</span>
         </div>
       </div>
     </motion.div>
