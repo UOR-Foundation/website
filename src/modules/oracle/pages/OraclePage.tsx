@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 import { useIsInsideWindow } from "@/modules/desktop/WindowContext";
-import SelectionToolbar, { type SelectionAction } from "@/modules/oracle/components/SelectionToolbar";
 
 /* ── Constants ── */
 
