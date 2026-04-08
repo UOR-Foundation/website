@@ -1,5 +1,8 @@
-import React from "react";
-import { Camera } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Camera, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 import cover0 from "@/assets/covers/cover-0.jpg";
 import cover1 from "@/assets/covers/cover-1.jpg";
@@ -24,12 +27,83 @@ interface ProfileCoverProps {
 }
 
 const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
-  const src = pickCover(cid);
+  const defaultSrc = pickCover(cid);
+  const { user } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [customUrl, setCustomUrl] = useState<string | null>(null);
+
+  // Fetch any existing custom cover
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("address_cover_images")
+        .select("storage_path")
+        .eq("address_cid", cid)
+        .maybeSingle();
+      if (!cancelled && data?.storage_path) {
+        const { data: urlData } = supabase.storage
+          .from("address-covers")
+          .getPublicUrl(data.storage_path);
+        if (urlData?.publicUrl) setCustomUrl(urlData.publicUrl);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [cid]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5 MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${cid}.${ext}`;
+
+      // Upload to storage (upsert)
+      const { error: uploadErr } = await supabase.storage
+        .from("address-covers")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadErr) throw uploadErr;
+
+      // Upsert DB record
+      const { error: dbErr } = await supabase
+        .from("address_cover_images")
+        .upsert(
+          { address_cid: cid, user_id: user.id, storage_path: path },
+          { onConflict: "address_cid" }
+        );
+      if (dbErr) throw dbErr;
+
+      // Update displayed URL
+      const { data: urlData } = supabase.storage
+        .from("address-covers")
+        .getPublicUrl(path);
+      setCustomUrl(urlData.publicUrl + "?t=" + Date.now());
+      toast.success("Cover updated!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      toast.error(msg);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   return (
     <div className="relative w-full h-[120px] md:h-[180px] rounded-xl overflow-hidden group">
       <img
-        src={src}
+        src={customUrl || defaultSrc}
         alt=""
         className="w-full h-full object-cover"
         loading="lazy"
@@ -38,14 +112,31 @@ const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
       />
       {/* Bottom gradient fade */}
       <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent" />
-      {/* Future edit overlay */}
-      <button
-        disabled
-        className="absolute top-3 right-3 p-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/20 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-not-allowed"
-        title="Cover editing coming soon"
-      >
-        <Camera className="w-4 h-4" />
-      </button>
+
+      {/* Edit button — only for logged-in users */}
+      {user && (
+        <>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="absolute top-3 right-3 p-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/20 text-muted-foreground/70 hover:text-foreground hover:bg-background/60 opacity-0 group-hover:opacity-100 transition-all"
+            title="Change cover image"
+          >
+            {uploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
+          </button>
+        </>
+      )}
     </div>
   );
 };
