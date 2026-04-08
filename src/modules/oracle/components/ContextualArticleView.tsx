@@ -8,6 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText } from "lucide-react";
 import WikiArticleView from "./WikiArticleView";
+import MagazineLensRenderer from "./lenses/MagazineLensRenderer";
+import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
+import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
+import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import { KNOWLEDGE_LENSES, type KnowledgeLens } from "@/modules/oracle/lib/knowledge-lenses";
 
 const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> = {
@@ -16,6 +20,20 @@ const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> 
   Baby,
   GraduationCap,
   BookText,
+};
+
+const LENS_RENDERERS: Record<string, React.FC<{
+  title: string;
+  contentMarkdown: string;
+  wikidata?: Record<string, unknown> | null;
+  sources: string[];
+  synthesizing?: boolean;
+}>> = {
+  encyclopedia: WikiArticleView,
+  magazine: MagazineLensRenderer,
+  "explain-like-5": SimpleLensRenderer,
+  expert: DeepDiveLensRenderer,
+  storyteller: StoryLensRenderer,
 };
 
 interface ContextualArticleViewProps {
@@ -109,14 +127,19 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
         </motion.div>
       )}
 
-      {/* ── Article ── */}
-      <WikiArticleView
-        title={title}
-        contentMarkdown={contentMarkdown}
-        wikidata={wikidata}
-        sources={sources}
-        synthesizing={synthesizing}
-      />
+      {/* ── Article — routed through active lens renderer ── */}
+      {(() => {
+        const LensRenderer = LENS_RENDERERS[activeLens] ?? WikiArticleView;
+        return (
+          <LensRenderer
+            title={title}
+            contentMarkdown={contentMarkdown}
+            wikidata={wikidata}
+            sources={sources}
+            synthesizing={synthesizing}
+          />
+        );
+      })()}
     </div>
   );
 };
