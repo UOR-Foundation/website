@@ -1495,3 +1495,15 @@
   from { --search-glow-angle: 0deg; }
   to   { --search-glow-angle: 360deg; }
 }
+
+@keyframes searchIdleBreathe {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.35; }
+}
+
+/* When hovered or focused, override idle breathing to full brightness */
+.group:hover > [style*="searchIdleBreathe"],
+.group:focus-within > [style*="searchIdleBreathe"] {
+  animation: searchGlowRotate 4s linear infinite !important;
+  opacity: 1 !important;
+}
