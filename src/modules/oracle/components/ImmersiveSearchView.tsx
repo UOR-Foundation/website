@@ -1,6 +1,6 @@
 /**
  * ImmersiveSearchView — Full-screen photo portal with clock, greeting, and search.
- * Inspired by Momentum / new-tab experiences. Now with voice input.
+ * Inspired by Momentum / new-tab experiences. Now with voice input and vault drop zone.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -12,6 +12,9 @@ import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
+import VaultContextBadge from "@/modules/sovereign-vault/components/VaultContextBadge";
+import { useVault } from "@/modules/sovereign-vault/hooks/useVault";
+import { toast } from "sonner";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -35,12 +38,14 @@ interface Props {
 
 export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
   const { profile } = useAuth();
+  const vault = useVault();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
   const [imgLoaded, setImgLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
+  const [dragOver, setDragOver] = useState(false);
 
   // Solar-phase photo update (checked every 60s)
   useEffect(() => {
@@ -84,6 +89,17 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
     if (q) onSearch(q);
   }, [query, onSearch]);
 
+  const handleVaultDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (!vault.ready) return;
+    const files = Array.from(e.dataTransfer.files);
+    for (const file of files) {
+      const doc = await vault.importFile(file);
+      if (doc) toast.success(`Imported to vault: ${doc.filename}`);
+    }
+  }, [vault]);
+
   const displayName = profile?.displayName || "Explorer";
   const greeting = getGreeting();
 
@@ -94,6 +110,9 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
       className="fixed inset-0 z-50 flex flex-col"
+      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleVaultDrop}
     >
       {/* Background image */}
       <div className="absolute inset-0">
@@ -213,8 +232,24 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 </button>
               </div>
             </div>
+            {/* Vault context badge */}
+            {vault.count > 0 && (
+              <div className="mt-3">
+                <VaultContextBadge count={vault.count} />
+              </div>
+            )}
           </motion.div>
         </div>
+
+        {/* Drag overlay */}
+        {dragOver && vault.ready && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            <div className="border-2 border-dashed border-white/40 rounded-3xl px-12 py-8 text-center">
+              <p className="text-white text-lg font-medium">Drop to import to Vault</p>
+              <p className="text-white/50 text-sm mt-1">Files will be encrypted & content-addressed</p>
+            </div>
+          </div>
+        )}
 
         {/* ── Bottom bar ── */}
         <div className="flex flex-col items-center px-8 py-6">

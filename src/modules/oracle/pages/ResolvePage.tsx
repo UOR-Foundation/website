@@ -923,6 +923,11 @@ const SearchPage = () => {
       getSearchHistory(50),
     ]);
 
+    // ── Search sovereign vault in background for personal context ──
+    const vaultPromise = user?.id
+      ? import("@/modules/sovereign-vault/lib/vault-search").then(m => m.searchVault(user.id, keyword, 3))
+      : Promise.resolve([]);
+
     setLensSuggestionDismissed(false);
 
     // ── Seed from speculative prefetch if available ──
@@ -962,6 +967,16 @@ const SearchPage = () => {
 
     // ── Resolve context in background ──
     const [recentContext, history] = await contextPromise;
+    const vaultHits = await vaultPromise;
+    
+    // Inject vault context into recent context for LLM personalization
+    const vaultContext = vaultHits.length > 0
+      ? vaultHits.map(h => `[Personal: ${h.document.filename}] ${h.chunk.text.slice(0, 200)}`).join("\n")
+      : "";
+    const enrichedContext = vaultContext
+      ? [...recentContext, `__vault_context__:${vaultContext}`]
+      : recentContext;
+    
     setContextKeywords(recentContext);
     const coherence = computeCoherence(keyword, history);
     setCoherenceState(coherence);
@@ -996,7 +1011,7 @@ const SearchPage = () => {
 
     await streamKnowledge({
       keyword,
-      context: recentContext,
+      context: enrichedContext,
       lens: lensOverride || activeLens,
       signal: abortController.signal,
       onWiki: (streamWiki, sources, provenance) => {

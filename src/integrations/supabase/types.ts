@@ -1865,6 +1865,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sovereign_documents: {
+        Row: {
+          chunk_count: number
+          cid: string
+          created_at: string
+          filename: string | null
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          source_type: string
+          source_uri: string | null
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chunk_count?: number
+          cid: string
+          created_at?: string
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          source_type?: string
+          source_uri?: string | null
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chunk_count?: number
+          cid?: string
+          created_at?: string
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          source_type?: string
+          source_uri?: string | null
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trust_connections: {
         Row: {
           ceremony_cid: string | null

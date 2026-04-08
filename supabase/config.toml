@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.portal-transfer]
 verify_jwt = false
+
+[functions.parse-document]
+verify_jwt = false
