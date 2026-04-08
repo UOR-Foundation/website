@@ -225,40 +225,25 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
         {/* Search bar */}
         <form onSubmit={handleSubmit} className="w-full mt-8">
           <div className="relative w-full group">
-            {/* Address badge */}
-            <AnimatePresence>
-              {isAddress && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8, scale: 0.9 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -8, scale: 0.9 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                  className="absolute left-14 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 pointer-events-none"
-                >
-                  <Lock className="w-3 h-3 text-emerald-400" />
-                  <span className="text-[11px] font-medium tracking-wide text-emerald-400/80 uppercase">
-                    {detected.kind === "triword" ? "Address" : "IPv6"}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What is your main focus today?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-colors duration-300"
+              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
               style={{
-                paddingLeft: isAddress ? "7.5rem" : "3.5rem",
+                paddingLeft: "3.5rem",
                 background: searchBg,
                 border: searchBorder,
                 boxShadow: searchShadow,
                 color: inputColor,
-                caretColor: isAddress ? "hsl(160 60% 60%)" : (isImmersive ? "hsl(195 70% 65%)" : undefined),
-                fontFamily: isAddress ? "var(--font-mono, ui-monospace, monospace)" : "'DM Sans', -apple-system, sans-serif",
-                letterSpacing: isAddress ? "0.02em" : undefined,
+                caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
+                fontFamily: isAddress
+                  ? "var(--font-mono, ui-monospace, monospace)"
+                  : "'DM Sans', -apple-system, sans-serif",
+                letterSpacing: isAddress ? "0.03em" : undefined,
+                fontWeight: isAddress ? 500 : undefined,
               }}
             />
 
