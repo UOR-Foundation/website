@@ -158,10 +158,15 @@ export function initLocation(): Promise<{ lat: number; lng: number }> {
   return locationPromise;
 }
 
-/** Get photo for a specific solar phase, rotating daily */
-function photoForPhase(phase: SolarPhase): string {
+/** Get photo entry for a specific solar phase, rotating daily */
+function photoEntryForPhase(phase: SolarPhase): PhotoEntry {
   const bucket = PHASE_PHOTOS[phase];
   return bucket[dayOfYear() % bucket.length];
+}
+
+/** Get photo for a specific solar phase, rotating daily */
+function photoForPhase(phase: SolarPhase): string {
+  return photoEntryForPhase(phase).url;
 }
 
 /** Get the current solar phase using cached location (sync, uses fallback if no geo yet) */
@@ -175,6 +180,11 @@ export function getCurrentPhase(): SolarPhase {
 /** Get the photo URL for the current solar phase */
 export function getPhasePhoto(): string {
   return photoForPhase(getCurrentPhase());
+}
+
+/** Get the description of the current phase photo */
+export function getPhasePhotoDescription(): string {
+  return photoEntryForPhase(getCurrentPhase()).description;
 }
 
 /** Get hourly fallback photo for current hour */
@@ -203,5 +213,5 @@ export const getDailyPhoto = getPhasePhoto;
 export const getCurrentHour = () => new Date().getHours();
 export const preloadNextHourPhoto = preloadNextPhasePhoto;
 
-/** Flat array of all photos for any code that references it */
-export const UNSPLASH_PHOTOS = Object.values(PHASE_PHOTOS).flat();
+/** Flat array of all photo URLs for any code that references it */
+export const UNSPLASH_PHOTOS = Object.values(PHASE_PHOTOS).flat().map(e => e.url);
