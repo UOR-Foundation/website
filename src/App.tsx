@@ -73,6 +73,7 @@ const App = () => {
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
               <Route path="/library" element={<LibraryPage />} />
+              <Route path="/desktop" element={<DesktopShell />} />
 
               {/* Blog & Research */}
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
