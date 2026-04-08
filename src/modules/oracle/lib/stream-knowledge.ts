@@ -188,6 +188,8 @@ export async function streamKnowledge({
               personalizedTopics: parsed.personalizedTopics,
             }
           );
+        } else if (parsed.type === "media" && parsed.media) {
+          onMedia?.(parsed.media as MediaData);
         } else if (parsed.type === "delta" && parsed.content) {
           onDelta(parsed.content);
         }
