@@ -1,6 +1,6 @@
 /**
  * ReaderToolbar — Browser-like address bar for the immersive reader.
- * Always visible. Includes copy-address and search history actions.
+ * Always visible. Full-width, with golden-ratio proportions.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -37,6 +37,13 @@ interface ReaderToolbarProps {
   onSearchHistoryJump?: (keyword: string) => void;
 }
 
+/**
+ * φ (golden ratio) constants for proportional spacing
+ */
+const PHI = 1.618;
+const TOOLBAR_PY = 10; // ~10px vertical padding in chrome row
+const CHROME_GAP = 6;  // gap between nav/address/actions
+
 const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   triwordDisplay,
   typeLabel,
@@ -63,7 +70,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const ta = document.createElement("textarea");
       ta.value = uorAddress;
       document.body.appendChild(ta);
@@ -85,7 +91,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     setHistoryOpen(true);
   }, [historyOpen]);
 
-  // Close history on outside click
   useEffect(() => {
     if (!historyOpen) return;
     const handler = (e: MouseEvent) => {
@@ -115,9 +120,9 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       onClick={onClick}
       title={title}
       disabled={disabled}
-      className={`p-1.5 rounded-md transition-all shrink-0 ${
+      className={`p-2 rounded-lg transition-all shrink-0 ${
         immersive
-          ? `text-white/40 hover:text-white/80 hover:bg-white/[0.08] ${disabled ? "opacity-20 cursor-default" : ""}`
+          ? `text-white/40 hover:text-white/80 hover:bg-white/[0.07] ${disabled ? "opacity-20 cursor-default" : ""}`
           : `text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/15 ${disabled ? "opacity-20 cursor-default" : ""}`
       } ${className}`}
     >
@@ -189,24 +194,25 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     </AnimatePresence>
   );
 
-  // ── Compact mobile toolbar (always visible now) ──
+  // ── Compact mobile toolbar ──
   if (isMobile) {
     return (
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="sticky top-0 z-40 flex items-center gap-1 px-2 py-1.5 backdrop-blur-2xl border-b"
+        className="sticky top-0 z-40 flex items-center gap-1 px-2 backdrop-blur-2xl border-b"
         style={{
           background: immersive ? "rgba(255,255,255,0.06)" : "hsl(var(--background) / 0.82)",
           borderColor: immersive ? "rgba(255,255,255,0.04)" : "hsl(var(--border) / 0.05)",
-          paddingTop: immersive ? "max(6px, env(safe-area-inset-top, 6px))" : undefined,
+          paddingTop: immersive ? "max(10px, env(safe-area-inset-top, 10px))" : "10px",
+          paddingBottom: "6px",
         }}
       >
         <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
 
         {/* Address bar */}
-        <div className="flex-1 flex items-center gap-1.5 min-w-0 h-8 rounded-full px-3"
+        <div className="flex-1 flex items-center gap-1.5 min-w-0 h-9 rounded-full px-3"
           style={{
             background: immersive ? "rgba(255,255,255,0.08)" : "hsl(var(--muted) / 0.15)",
             border: immersive ? "1px solid rgba(255,255,255,0.06)" : "1px solid hsl(var(--border) / 0.12)",
@@ -226,50 +232,65 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     );
   }
 
-  // ── Desktop toolbar (always visible, browser-style chrome) ──
+  // ── Desktop toolbar — full-width browser chrome with golden-ratio spacing ──
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-      className={`sticky top-0 z-40 backdrop-blur-2xl border-b ${immersive ? "border-white/[0.06]" : "border-border/5"}`}
-      style={{ background: immersive ? "rgba(10,14,18,0.75)" : "hsl(var(--background) / 0.82)" }}
+      className="sticky top-0 z-40 w-full backdrop-blur-2xl"
+      style={{
+        background: immersive ? "rgba(10,14,18,0.82)" : "hsl(var(--background) / 0.85)",
+        borderBottom: immersive
+          ? "1px solid rgba(255,255,255,0.05)"
+          : "1px solid hsl(var(--border) / 0.06)",
+      }}
     >
-      {/* ── Browser chrome row ── */}
-      <div className="flex items-center gap-1.5 px-4 py-1.5">
+      {/* ── Browser chrome row — golden-ratio vertical rhythm ── */}
+      <div
+        className="flex items-center w-full"
+        style={{
+          gap: `${CHROME_GAP}px`,
+          paddingLeft: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,  // ~26px
+          paddingRight: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
+          paddingTop: `${Math.round(TOOLBAR_PY * PHI)}px`,         // ~16px top breathing room
+          paddingBottom: `${TOOLBAR_PY}px`,
+        }}
+      >
         {/* Navigation buttons */}
-        <div className="flex items-center gap-0.5 mr-1">
+        <div className="flex items-center gap-0.5 shrink-0">
           <IconBtn onClick={onBack} title="Back (Alt+←)"><ArrowLeft className="w-4 h-4" /></IconBtn>
           <IconBtn disabled title="Forward (Alt+→)"><ArrowRight className="w-4 h-4" /></IconBtn>
           <IconBtn onClick={onBack} title="Reload"><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
           <IconBtn onClick={onBack} title="Home"><Home className="w-4 h-4" /></IconBtn>
         </div>
 
-        {/* ── Address bar ── */}
+        {/* ── Address bar — golden-ratio height ── */}
         <div
-          className="flex-1 flex items-center gap-2 min-w-0 h-[34px] rounded-full px-3.5 group transition-all"
+          className="flex-1 flex items-center gap-2.5 min-w-0 rounded-full px-4 group transition-all"
           style={{
-            background: immersive ? "rgba(255,255,255,0.07)" : "hsl(var(--muted) / 0.15)",
-            border: immersive ? "1px solid rgba(255,255,255,0.08)" : "1px solid hsl(var(--border) / 0.12)",
-            boxShadow: immersive ? "inset 0 1px 2px rgba(0,0,0,0.15)" : "inset 0 1px 2px hsl(var(--background) / 0.3)",
+            height: `${Math.round(20 * PHI)}px`, // ~32px → 36px with phi
+            background: immersive ? "rgba(255,255,255,0.06)" : "hsl(var(--muted) / 0.12)",
+            border: immersive ? "1px solid rgba(255,255,255,0.08)" : "1px solid hsl(var(--border) / 0.1)",
+            boxShadow: immersive ? "inset 0 1px 3px rgba(0,0,0,0.12)" : "inset 0 1px 2px hsl(var(--background) / 0.25)",
           }}
         >
           <Lock className={`w-3.5 h-3.5 shrink-0 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
           <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden cursor-text" onClick={onBack}>
-            <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/40" : "text-muted-foreground/40"}`}>uor://</span>
+            <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
             <span className={`text-[13px] font-display tracking-wide truncate ${immersive ? "text-white/80" : "text-foreground/75"}`}>
               {triwordDisplay}
             </span>
           </div>
 
-          {/* Copy address button (inside bar) */}
+          {/* Copy address */}
           <button
             onClick={handleCopy}
             title={copied ? "Copied!" : "Copy address"}
             className={`p-1 rounded transition-all shrink-0 ${
               immersive
-                ? "text-white/30 hover:text-white/70 hover:bg-white/[0.08]"
-                : "text-muted-foreground/30 hover:text-foreground/60 hover:bg-muted/10"
+                ? "text-white/25 hover:text-white/60 hover:bg-white/[0.06]"
+                : "text-muted-foreground/25 hover:text-foreground/55 hover:bg-muted/8"
             }`}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -277,13 +298,13 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
 
           <Shield className={`w-3.5 h-3.5 shrink-0 transition-colors ${
             immersive
-              ? "text-white/25 group-hover:text-white/40"
-              : "text-muted-foreground/25 group-hover:text-muted-foreground/40"
+              ? "text-white/20 group-hover:text-white/35"
+              : "text-muted-foreground/20 group-hover:text-muted-foreground/35"
           }`} />
         </div>
 
         {/* ── Right-side actions ── */}
-        <div className="flex items-center gap-0.5 ml-1 relative">
+        <div className="flex items-center gap-0.5 shrink-0 relative">
           <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
           <IconBtn onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
             <QrCode className={`w-4 h-4 ${portalOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
@@ -305,8 +326,15 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </div>
       </div>
 
-      {/* ── Lens bar (tab-like row beneath address bar) ── */}
-      <div className="flex items-center gap-0.5 px-5 pb-1.5 -mt-0.5">
+      {/* ── Lens bar (tab row beneath address bar) ── */}
+      <div
+        className="flex items-center gap-1 w-full"
+        style={{
+          paddingLeft: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
+          paddingRight: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
+          paddingBottom: `${Math.round(TOOLBAR_PY * 0.8)}px`,
+        }}
+      >
         {KNOWLEDGE_LENSES.map((lens) => {
           const isActive = lens.id === activeLens;
           return (
@@ -315,13 +343,13 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               onClick={() => !isActive && onLensChange(lens.id)}
               disabled={synthesizing && isActive}
               title={lens.description}
-              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all border ${
+              className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all border ${
                 isActive
                   ? immersive
-                    ? "bg-white/[0.12] text-white/90 border-white/[0.15]"
+                    ? "bg-white/[0.12] text-white/90 border-white/[0.12]"
                     : "bg-primary/12 text-primary border-primary/20"
                   : immersive
-                    ? "text-white/35 hover:text-white/65 hover:bg-white/[0.06] border-transparent"
+                    ? "text-white/35 hover:text-white/65 hover:bg-white/[0.05] border-transparent"
                     : "text-muted-foreground/35 hover:text-foreground/55 hover:bg-muted/10 border-transparent"
               } ${synthesizing && !isActive ? "opacity-30 cursor-wait" : "cursor-pointer"}`}
             >
@@ -334,7 +362,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   );
 };
 
-/** Format a timestamp to relative time (e.g. "2h ago", "3d ago") */
+/** Format a timestamp to relative time */
 function formatTimeAgo(isoStr: string): string {
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
