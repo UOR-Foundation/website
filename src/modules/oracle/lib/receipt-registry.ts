@@ -119,7 +119,71 @@ export async function computeAndRegister(source: unknown): Promise<EnrichedRecei
   registry.set(enriched.triword, entry);
   registry.set(enriched.ipv6, entry);
 
+  // Persist to database (fire-and-forget, don't block)
+  persistToDb(source, enriched).catch((err) =>
+    console.warn("[ReceiptRegistry] DB persist failed:", err)
+  );
+
   return enriched;
+}
+
+/**
+ * Persist an encoded object to the database for cross-session rehydration.
+ */
+async function persistToDb(source: unknown, receipt: EnrichedReceipt): Promise<void> {
+  const { error } = await supabase.from("uor_objects" as any).upsert(
+    {
+      cid: receipt.cid,
+      triword: receipt.triword,
+      ipv6: receipt.ipv6,
+      derivation_id: receipt.derivationId,
+      source: source as any,
+      receipt: receipt as any,
+    },
+    { onConflict: "cid" }
+  );
+  if (error) throw error;
+}
+
+/**
+ * Attempt to rehydrate an object from the database by any identity form.
+ * Returns the registry entry if found, or undefined.
+ */
+export async function rehydrateFromDb(key: string): Promise<RegistryEntry | undefined> {
+  // Direct registry check first
+  const local = lookupReceipt(key);
+  if (local) return local;
+
+  const normalized = key.trim().toLowerCase();
+
+  // Query DB by any identity column
+  const { data, error } = await supabase
+    .from("uor_objects" as any)
+    .select("source, receipt, created_at")
+    .or(`cid.eq.${key},triword.eq.${normalized},ipv6.eq.${normalized},derivation_id.eq.${key}`)
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return undefined;
+
+  const source = (data as any).source;
+  const receiptData = (data as any).receipt as EnrichedReceipt;
+  const createdAt = new Date((data as any).created_at).getTime();
+
+  // Re-register in local memory
+  const entry: RegistryEntry = {
+    source,
+    receipt: receiptData,
+    createdAt,
+    confirmations: 1,
+  };
+
+  registry.set(receiptData.cid, entry);
+  registry.set(receiptData.derivationId, entry);
+  registry.set(receiptData.triword, entry);
+  registry.set(receiptData.ipv6, entry);
+
+  return entry;
 }
 
 /**
