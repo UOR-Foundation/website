@@ -2064,7 +2064,12 @@ const SearchPage = () => {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                     className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
-                    style={{ minHeight: "100dvh" }}
+                    style={{
+                      minHeight: "100dvh",
+                      /* Break out of the max-w-[1100px] container to span full viewport */
+                      width: "100vw",
+                      marginLeft: "calc(-50vw + 50%)",
+                    }}
                     onScroll={mobileImmersive ? (e) => {
                       const el = e.currentTarget;
                       const progress = Math.min(el.scrollTop / Math.max(el.scrollHeight - el.clientHeight, 1), 1);
