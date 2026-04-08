@@ -261,11 +261,13 @@ export function layoutWithExclusion(
   exclusionRect: { x: number; y: number; w: number; h: number }
 ): ExclusionLine[] {
   if (!text.trim()) return [];
-  const prepared = getPreparedWithSegments(text, font);
-  const lines: ExclusionLine[] = [];
-  let y = 0;
 
-  walkLineRanges(prepared, containerWidth, (range: { start: number; end: number }) => {
+  // First, get the normal line layout to know text per line
+  const linesResult = getLines(text, font, containerWidth, lineHeight);
+  const result: ExclusionLine[] = [];
+
+  linesResult.lines.forEach((line, i) => {
+    const y = i * lineHeight;
     const lineTop = y;
     const lineBottom = y + lineHeight;
     const exTop = exclusionRect.y;
@@ -279,17 +281,12 @@ export function layoutWithExclusion(
       const exLeft = exclusionRect.x;
       const exRight = exclusionRect.x + exclusionRect.w;
 
-      // Exclusion is on the left side — indent text
       if (exLeft <= 0) {
         indent = Math.min(exRight, containerWidth * 0.5);
         availableWidth = containerWidth - indent;
-      }
-      // Exclusion is on the right side — reduce width
-      else if (exRight >= containerWidth) {
+      } else if (exRight >= containerWidth) {
         availableWidth = Math.max(exLeft, containerWidth * 0.5);
-      }
-      // Exclusion is in the middle — push to widest side
-      else {
+      } else {
         const leftSpace = exLeft;
         const rightSpace = containerWidth - exRight;
         if (leftSpace >= rightSpace) {
@@ -301,16 +298,15 @@ export function layoutWithExclusion(
       }
     }
 
-    lines.push({
-      text: text.slice(range.start, range.end),
+    result.push({
+      text: line.text,
       indent,
       width: availableWidth,
-      y: lineTop,
+      y,
     });
-    y += lineHeight;
   });
 
-  return lines;
+  return result;
 }
 
 /**
