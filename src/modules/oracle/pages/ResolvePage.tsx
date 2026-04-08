@@ -1327,7 +1327,44 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
-        <header className="flex items-center px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
+        <header className={`flex items-center shrink-0 border-b border-border/10 ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
+          {isMobile ? (
+            <>
+              {/* Mobile result header */}
+              <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex-1 relative min-w-0">
+                <button
+                  onClick={clearResult}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
+                  placeholder="Search…"
+                  className="w-full bg-white/[0.06] border border-white/[0.1] rounded-full pl-9 pr-9 py-2 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/25 transition-all text-center"
+                />
+                <button
+                  onClick={() => { clearResult(); setTimeout(submit, 50); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <button
+                onClick={() => setIdentityPanelOpen(true)}
+                className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.1] flex items-center justify-center shrink-0"
+              >
+                <Shield className="w-3 h-3 text-foreground/60" />
+              </button>
+            </>
+          ) : (
+            <>
           {/* Left: UOR Logo — fixed width for symmetry */}
           <button
             onClick={clearResult}
@@ -1376,6 +1413,8 @@ const SearchPage = () => {
               <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
             </button>
           </div>
+            </>
+          )}
         </header>
       ) : null}
 
