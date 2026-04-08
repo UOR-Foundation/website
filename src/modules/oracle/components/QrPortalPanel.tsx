@@ -382,9 +382,9 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                 <div className="flex items-center gap-1.5 mt-1">
                   <Lock
                     className={`w-3 h-3 ${
-                      immersive
-                        ? "text-emerald-400/50"
-                        : "text-emerald-500/50"
+                      isGuest
+                        ? immersive ? "text-amber-400/50" : "text-amber-500/50"
+                        : immersive ? "text-emerald-400/50" : "text-emerald-500/50"
                     }`}
                   />
                   <span
@@ -392,7 +392,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                       immersive ? "text-white/25" : "text-muted-foreground/25"
                     }`}
                   >
-                    Encrypted one-time session transfer
+                    {isGuest ? "Direct link — sign in for encrypted transfer" : "Encrypted one-time session transfer"}
                   </span>
                 </div>
               </>
