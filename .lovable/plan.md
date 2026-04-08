@@ -1,94 +1,100 @@
 
 
-## Streamlined Knowledge Cards + Full Rehydration from Address
+## Wikipedia-Style Article Layout for Knowledge Cards
 
-### Problem
+### What We're Building
 
-Two issues:
-1. **Slow synthesis**: The edge function call (Wikipedia + AI) blocks for 5-10 seconds with no visual feedback beyond a toast. The user stares at a blank screen.
-2. **No rehydration**: The registry is an in-memory `Map`. Once the page refreshes, all encoded objects vanish. Pasting a triword address back yields nothing — the source object is gone.
+Transforming the KnowledgeCard content view from the current "accent-bordered markdown blob" into a Wikipedia-style article layout — with a two-column design featuring an infobox sidebar, a table of contents, properly styled section headers, and familiar typographic conventions.
 
-### Solution
+### Current State
 
-#### Part 1: Progressive Rendering (Speed)
+Right now, when you search "dog" in Oracle:
+- The AI synthesis returns ~500-700 words of markdown with `##` headers
+- `HumanContentView` renders it inside a single left-bordered `<ReactMarkdown>` block
+- Wikipedia data (thumbnail, description, taxonomy) is shown as small cards above the content
+- No table of contents, no sidebar infobox, no Wikipedia-style visual structure
 
-Instead of waiting for the full AI synthesis before showing anything, split the flow into two visible phases:
+### Design
 
-1. **Instant skeleton + Wikipedia metadata** (~200ms): Call the Wikipedia REST API directly from the client (it's fast, public, no edge function needed). Immediately show a KnowledgeCard skeleton with the title, description, and thumbnail while the AI synthesis loads in the background.
+The layout mirrors Wikipedia's two-column approach:
 
-2. **AI synthesis streams in**: The edge function call happens in parallel. When it resolves, the synthesis markdown fades into the already-visible card. The UOR encoding happens after synthesis arrives.
-
-This means:
-- In `handleKeywordResolve`: fire Wikipedia fetch client-side immediately, render a partial `Result` with just wiki metadata. Then call the edge function for AI synthesis. When it returns, update the result with full content and run `encode()`.
-- Add a `synthesizing` state to `Result` so the UI can show a shimmer/skeleton for the AI content section while it loads.
-- The card appears in <1 second with real data (title, image, description from Wikipedia). The AI article fades in 3-5 seconds later.
-
-**Files changed:**
-- `ResolvePage.tsx` — split `handleKeywordResolve` into two phases: instant wiki + deferred synthesis
-- `HumanContentView.tsx` — add skeleton/shimmer state for the `uor:content` section when `synthesizing` flag is present
-
-#### Part 2: Persistent Rehydration (Database)
-
-Create a `uor_objects` table that stores every encoded object's source JSON alongside its identity forms. When a user pastes a triword/CID/IPv6 address, the system checks:
-1. In-memory registry (instant, same session)
-2. Database lookup by any identity form (cross-session, cross-device)
-
-**New table:**
-```sql
-create table public.uor_objects (
-  id uuid primary key default gen_random_uuid(),
-  cid text unique not null,
-  triword text not null,
-  ipv6 text not null,
-  derivation_id text not null,
-  source jsonb not null,
-  receipt jsonb not null,
-  created_at timestamptz default now()
-);
-
-create index idx_uor_objects_triword on public.uor_objects(triword);
-create index idx_uor_objects_ipv6 on public.uor_objects(ipv6);
-create index idx_uor_objects_derivation on public.uor_objects(derivation_id);
-
-alter table public.uor_objects enable row level security;
-create policy "Anyone can read UOR objects" on public.uor_objects for select using (true);
-create policy "Anyone can insert UOR objects" on public.uor_objects for insert with check (true);
+```text
+┌─────────────────────────────────────────────────┐
+│  Dog                                            │
+│  Domesticated species of canid (italic desc)    │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  From UOR Knowledge, the universal encyclopedia │
+│                                                 │
+│  ┌─────────────────┐  ┌──────────────────────┐  │
+│  │ Contents        │  │   Dog                │  │
+│  │ 1 Taxonomy      │  │   ┌──────────────┐   │  │
+│  │ 2 Anatomy       │  │   │  [thumbnail] │   │  │
+│  │ 3 Behavior      │  │   └──────────────┘   │  │
+│  │ 4 History        │  │  Scientific class.  │  │
+│  │ 5 Significance  │  │  Kingdom: Animalia   │  │
+│  └─────────────────┘  │  Phylum: Chordata    │  │
+│                        │  ...                 │  │
+│  The dog (Canis        │  Wikidata: Q144      │  │
+│  familiaris) is a      └──────────────────────┘  │
+│  domesticated...                                 │
+│                                                 │
+│  ## Taxonomy                                    │
+│  ─────────────                                  │
+│  Dogs are domesticated members...               │
+│                                                 │
+│  ## Anatomy and Physiology                      │
+│  ─────────────────────────                      │
+│  ...                                            │
+│                                                 │
+│  ── Sources ──                                  │
+│  [wikipedia] [wikidata]                         │
+└─────────────────────────────────────────────────┘
 ```
 
-**Integration:**
-- After `encode()` succeeds in `receipt-registry.ts`, upsert the source + receipt into `uor_objects`.
-- In `handleSearch`, before falling through to keyword resolution, query `uor_objects` by triword/CID/IPv6/derivation_id. If found, rehydrate the in-memory registry and display immediately.
-- This makes every UOR address a **permanent, self-describing link** — paste it back anytime, on any device, and get the full object with all visual components.
+### Technical Approach
 
-**Files changed:**
-- `receipt-registry.ts` — add `persistToDb()` call after registration, add `rehydrateFromDb(key)` lookup
-- `ResolvePage.tsx` — in `handleSearch`, add database lookup before keyword resolution
-- New migration for `uor_objects` table
+#### 1. Update AI prompt to generate Wikipedia-style sections (edge function)
 
-#### Part 3: Edge Function Optimization
+Change the system prompt in `uor-knowledge/index.ts` to produce richer, more Wikipedia-like content:
+- Request 8-12 sections with `##` headers (matching Wikipedia's section depth)
+- Increase `max_tokens` to 2400 (Wikipedia articles are substantial)
+- Instruct the model to write an encyclopedic opening paragraph (no header), followed by structured sections like Taxonomy, Description, History, Behavior, Significance, etc.
+- Bold the subject name on first mention (Wikipedia convention)
 
-Reduce AI synthesis latency:
-- Lower `max_tokens` from 2048 to 1200 (500-700 words needs ~1000 tokens)
-- Use `google/gemini-2.5-flash-lite` instead of `gemini-3-flash-preview` (faster, cheaper, sufficient for article synthesis)
-- These changes alone should cut synthesis time by ~40%
+#### 2. Create a new `WikiArticleView` component
 
-**Files changed:**
-- `supabase/functions/uor-knowledge/index.ts` — model + token limit change
+New file: `src/modules/oracle/components/WikiArticleView.tsx`
 
-### What This Enables
+This replaces the current KnowledgeCard rendering branch in `HumanContentView`. Key elements:
 
-Once every encoded object persists and is retrievable by address:
-- **Proof-based transacting**: share a triword like `grove.lost.inlet` — the recipient gets the full knowledge card, AI synthesis, thumbnail, and all UOR metadata instantly
-- **Dehydrate/rehydrate**: any object (web page, knowledge card, user content) → address → full reconstruction
-- **Universal links**: the address IS the content, persistently, across sessions and devices
+- **Infobox sidebar** (right-floated, ~280px): thumbnail image, scientific classification/taxonomy table, quick facts (Wikidata QID link, description). Styled with a light border, slightly tinted background — exactly like Wikipedia's infobox.
+- **Table of Contents**: Parses `##` headers from the markdown, generates a clickable TOC box with numbered entries. Clicking scrolls to the section. Collapsible.
+- **Section rendering**: Each `##` becomes a full-width heading with a bottom border (Wikipedia's characteristic thin line under section headers). Body text uses serif font (Georgia), 16-17px, generous line height.
+- **"From UOR Knowledge"** tagline under the title (mirrors "From Wikipedia, the free encyclopedia").
+- **Opening paragraph** rendered without a header, in slightly larger text.
 
-### Files Changed Summary
+#### 3. Update `HumanContentView` to delegate to `WikiArticleView`
+
+In the `isKnowledgeCard && contentMarkdown` branch (lines 329-380), replace the current bordered markdown rendering with `<WikiArticleView>`. Pass it:
+- `contentMarkdown` (the AI synthesis)
+- `wikidata` (thumbnail, taxonomy, description, QID)
+- `title` (the label)
+- `sources` array
+
+#### 4. Style details (matching Wikipedia)
+
+- Section headers: `font-size: 1.35rem`, `font-weight: 600`, `border-bottom: 1px solid hsl(var(--border) / 0.3)`, `padding-bottom: 4px`, `margin-top: 1.5rem`
+- Body paragraphs: Georgia serif, 16px, `line-height: 1.8`, `color: foreground/85`
+- Infobox: `float: right` on desktop, `width: 280px`, `margin-left: 1.5rem`, `border: 1px solid border/20`, `border-radius: 8px`, stacks full-width on mobile
+- TOC box: bordered container, numbered list, `font-size: 14px`, monospace numbering
+- Remove the gold accent `borderLeft` — Wikipedia doesn't use it
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| New migration | `uor_objects` table with indexes on all identity forms |
-| `src/modules/oracle/lib/receipt-registry.ts` | Add `persistToDb` + `rehydrateFromDb` |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Two-phase progressive rendering + DB lookup in search |
-| `src/modules/oracle/components/HumanContentView.tsx` | Skeleton/shimmer for synthesizing state |
-| `supabase/functions/uor-knowledge/index.ts` | Faster model + lower token limit |
+| `supabase/functions/uor-knowledge/index.ts` | Richer prompt, more sections, higher token limit |
+| `src/modules/oracle/components/WikiArticleView.tsx` | **New** — Wikipedia-style renderer with infobox, TOC, sections |
+| `src/modules/oracle/components/HumanContentView.tsx` | Delegate KnowledgeCard rendering to `WikiArticleView` |
 
