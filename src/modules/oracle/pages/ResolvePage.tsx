@@ -756,9 +756,16 @@ const SearchPage = () => {
                 Searching a{" "}
                 <button
                   onClick={() => {
-                    setInput("uor:concept:near-infinite-addressing");
-                    clearResult();
-                    setTimeout(() => handleSearch("uor:concept:near-infinite-addressing"), 50);
+                    const entry = allEntries().find(e => (e.source as Record<string, unknown>)?.["@id"] === "uor:concept:near-infinite-addressing");
+                    if (entry) {
+                      setInput(entry.receipt.triword);
+                      setResult({ source: entry.source, receipt: entry.receipt });
+                    } else {
+                      encode(NEAR_INFINITE_CONCEPT).then(receipt => {
+                        setInput(receipt.triword);
+                        setResult({ source: NEAR_INFINITE_CONCEPT, receipt });
+                      });
+                    }
                   }}
                   className="text-primary font-semibold hover:text-primary/90 underline decoration-primary/30 underline-offset-4 hover:decoration-primary/60 transition-all cursor-pointer"
                   title="Resolve the canonical definition of near-infinite addressing"
