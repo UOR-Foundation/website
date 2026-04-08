@@ -169,7 +169,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                     handleSubmit();
                   }
                 }}
-                placeholder="Search the address space…"
+                placeholder="What is your main focus today?"
                 className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/35 focus:border-white/50 rounded-full px-6 py-4 text-white text-base placeholder:text-white/30 focus:outline-none transition-all shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
