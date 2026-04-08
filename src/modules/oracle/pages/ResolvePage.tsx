@@ -656,42 +656,14 @@ const SearchPage = () => {
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
 
-    // ── Phase 1: Instant Wikipedia metadata (~200ms) ──
-    let wiki: WikiMeta | null = null;
-    try {
-      const r = await fetch(
-        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword.trim())}`,
-        { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
-      );
-      if (r.ok) {
-        const d = await r.json();
-        if (d.type === "standard") {
-          wiki = {
-            qid: d.wikibase_item || null,
-            thumbnail: d.thumbnail?.source || d.originalimage?.source || null,
-            description: d.description || null,
-            extract: d.extract || null,
-            pageUrl: d.content_urls?.desktop?.page || null,
-          };
-        }
-      }
-    } catch { /* wiki fetch failed */ }
-
-    // Show partial card immediately
+    // ── Show partial card immediately (no client-side wiki fetch) ──
     const partialSource: Record<string, unknown> = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:KnowledgeCard",
       "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
-      "uor:description": wiki?.description || "",
+      "uor:description": "",
       "uor:content": "",
-      ...(wiki ? {
-        "uor:wikidata": {
-          qid: wiki.qid,
-          thumbnail: wiki.thumbnail,
-          description: wiki.description,
-        },
-      } : {}),
-      "uor:sources": wiki?.pageUrl ? [wiki.pageUrl] : [],
+      "uor:sources": [],
     };
 
     const partialReceipt = await encode(partialSource);
@@ -706,18 +678,37 @@ const SearchPage = () => {
 
     toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
 
-    // ── Phase 2: Stream AI synthesis ──
+    // ── Stream AI synthesis (wiki metadata arrives via SSE) ──
     let accumulatedSynthesis = "";
-    let streamSources: string[] = wiki?.pageUrl ? [wiki.pageUrl] : [];
+    let wiki: WikiMeta | null = null;
+    let streamSources: string[] = [];
 
     await streamKnowledge({
       keyword,
       context: recentContext,
       lens: lensOverride || activeLens,
       onWiki: (streamWiki, sources) => {
-        // Update wiki metadata if the stream provides it (and we didn't get it already)
-        if (streamWiki && !wiki) {
+        // Update wiki metadata when it arrives from the SSE stream
+        if (streamWiki) {
           wiki = streamWiki;
+          // Update the card with wiki data immediately
+          setResult(prev => {
+            if (!prev) return prev;
+            const src = prev.source as Record<string, unknown>;
+            return {
+              ...prev,
+              source: {
+                ...src,
+                "uor:description": streamWiki.description || src["uor:description"],
+                "uor:wikidata": {
+                  qid: streamWiki.qid,
+                  thumbnail: streamWiki.thumbnail,
+                  description: streamWiki.description,
+                },
+                "uor:sources": sources,
+              },
+            };
+          });
         }
         if (sources.length > 0) streamSources = sources;
       },
