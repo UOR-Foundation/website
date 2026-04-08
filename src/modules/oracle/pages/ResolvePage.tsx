@@ -56,7 +56,7 @@ const IMPROBABILITY_EXPONENTS = [
 
 /* ── Canonical concept: near-infinite addressing ── */
 const NEAR_INFINITE_CONCEPT = {
-  "@context": "https://schema.uor.foundation/v1",
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
   "@type": "uor:Concept",
   "@id": "uor:concept:near-infinite-addressing",
   "uor:label": "Near-Infinite Addressing",
@@ -361,7 +361,7 @@ const SearchPage = () => {
     setLoading(true);
     try {
       const sourceObj = {
-        "@context": "https://schema.uor.foundation/v1",
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:UserContent",
         "uor:content": text,
         "uor:encodedAt": new Date().toISOString(),
@@ -373,7 +373,7 @@ const SearchPage = () => {
       setEncodeText("");
       confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["hsl(142,70%,45%)", "hsl(217,91%,60%)", "hsl(280,65%,60%)"] });
       toast("✨ Your data has its address.", { description: receipt.triwordFormatted });
-    } catch { toast.error("Encoding failed."); }
+    } catch (err) { console.error("[Encode] Failed:", err); toast.error("Encoding failed: " + (err instanceof Error ? err.message : String(err))); }
     finally { setLoading(false); }
   };
 
@@ -1646,19 +1646,19 @@ const SearchPage = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               transition={{ type: "spring", stiffness: 350, damping: 28 }}
-              className="relative z-10 w-full border border-[hsl(0_0%_18%/0.6)] bg-[hsl(0_0%_8%/0.95)] backdrop-blur-xl rounded-2xl shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8),inset_0_1px_0_0_hsl(0_0%_100%/0.04)]"
-              style={{ maxWidth: "min(720px, 90vw)", maxHeight: "85vh" }}
+              className="relative z-10 w-full border border-[hsl(0_0%_18%/0.6)] bg-[hsl(0_0%_7%/0.97)] backdrop-blur-xl rounded-2xl shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8),inset_0_1px_0_0_hsl(0_0%_100%/0.04)]"
+              style={{ maxWidth: "min(860px, 92vw)", maxHeight: "88vh" }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-8 pt-7 pb-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary/50" />
-                  <h2 className="text-base font-display font-semibold text-foreground/85 tracking-wide uppercase" style={{ letterSpacing: "0.08em" }}>
+              <div className="flex items-center justify-between" style={{ padding: "calc(1.5rem * 1.618) 2.5rem calc(0.5rem * 1.618)" }}>
+                <div className="flex items-center" style={{ gap: "calc(0.5rem * 1.618)" }}>
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary/60" />
+                  <h2 className="text-lg font-display font-semibold text-foreground/90 tracking-[0.1em] uppercase">
                     Encode
                   </h2>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-mono text-muted-foreground/30">
+                <div className="flex items-center" style={{ gap: "calc(1rem * 1.618)" }}>
+                  <span className="text-sm font-mono text-muted-foreground/35 tracking-wide">
                     WASM · URDNA2015 · SHA-256
                   </span>
                   <button
@@ -1670,20 +1670,14 @@ const SearchPage = () => {
                 </div>
               </div>
 
-              {/* Description */}
-              <p className="px-8 pt-3 text-sm text-muted-foreground/40 leading-relaxed">
-                Paste any content — text, markdown, JSON-LD, or raw data. The WASM engine will canonicalize it via URDNA2015, compute its SHA-256 hash, and derive a unique, deterministic address.
-              </p>
-
               {/* Editor area */}
-              <div className="px-8 pt-5 pb-2">
-                {/* Line numbers + textarea */}
-                <div className="relative rounded-xl border border-[hsl(0_0%_16%/0.8)] bg-[hsl(0_0%_6%)] overflow-hidden">
+              <div style={{ padding: "0 2.5rem", paddingTop: "calc(0.75rem * 1.618)" }}>
+                <div className="relative rounded-xl border border-[hsl(0_0%_15%/0.8)] bg-[hsl(0_0%_5%)] overflow-hidden">
                   <div className="flex">
                     {/* Line numbers */}
-                    <div className="shrink-0 select-none pt-5 pb-5 pl-4 pr-3 border-r border-[hsl(0_0%_14%)]" aria-hidden>
-                      {Array.from({ length: Math.max((encodeText.split("\n").length), 12) }, (_, i) => (
-                        <div key={i} className="text-[11px] font-mono text-muted-foreground/20 leading-[1.7] text-right" style={{ minWidth: "1.5rem" }}>
+                    <div className="shrink-0 select-none border-r border-[hsl(0_0%_13%)]" style={{ padding: "1.5rem 0.875rem 1.5rem 1.25rem" }} aria-hidden>
+                      {Array.from({ length: Math.max((encodeText.split("\n").length), 16) }, (_, i) => (
+                        <div key={i} className="text-sm font-mono text-muted-foreground/20 leading-[1.75] text-right tabular-nums" style={{ minWidth: "1.75rem" }}>
                           {i + 1}
                         </div>
                       ))}
@@ -1696,7 +1690,6 @@ const SearchPage = () => {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleEncode(); }
                         if (e.key === "Escape") { setEncodeMode(false); setEncodeText(""); }
-                        // Tab inserts 2 spaces
                         if (e.key === "Tab") {
                           e.preventDefault();
                           const start = e.currentTarget.selectionStart;
@@ -1708,8 +1701,8 @@ const SearchPage = () => {
                       }}
                       placeholder="Paste or type content here…"
                       spellCheck={false}
-                      className="flex-1 bg-transparent p-5 text-sm font-mono text-foreground/80 placeholder:text-muted-foreground/20 focus:outline-none resize-none leading-[1.7] caret-primary"
-                      style={{ minHeight: "calc(12 * 1.7 * 0.875rem + 2.5rem)" }}
+                      className="flex-1 bg-transparent text-base font-mono text-foreground/80 placeholder:text-muted-foreground/20 focus:outline-none resize-none leading-[1.75] caret-primary"
+                      style={{ padding: "1.5rem", minHeight: "calc(16 * 1.75 * 1rem + 3rem)" }}
                       autoFocus
                     />
                   </div>
@@ -1717,27 +1710,25 @@ const SearchPage = () => {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-8 py-5">
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-mono text-muted-foreground/30">
-                    {encodeText.length > 0 ? `${encodeText.length} chars · ${encodeText.split("\n").length} lines` : "⌘+Enter to encode"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between" style={{ padding: "calc(1rem * 1.618) 2.5rem" }}>
+                <span className="text-sm font-mono text-muted-foreground/35">
+                  {encodeText.length > 0 ? `${encodeText.length} chars · ${encodeText.split("\n").length} lines` : "⌘+Enter to encode"}
+                </span>
+                <div className="flex items-center" style={{ gap: "calc(0.5rem * 1.618)" }}>
                   <button
                     onClick={() => { setEncodeMode(false); setEncodeText(""); }}
-                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/50 hover:text-foreground/70 transition-colors"
+                    className="px-5 py-2.5 rounded-lg text-base font-medium text-muted-foreground/45 hover:text-foreground/70 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleEncode}
                     disabled={!encodeText.trim() || loading}
-                    className="flex items-center gap-2.5 rounded-lg bg-primary/90 hover:bg-primary text-primary-foreground font-semibold text-sm tracking-wide transition-all disabled:opacity-30 shadow-[0_0_24px_-4px_hsl(var(--primary)/0.35)]"
-                    style={{ paddingInline: "calc(1rem * 1.618)", paddingBlock: "calc(0.5rem * 1.618)" }}
+                    className="flex items-center gap-2.5 rounded-lg bg-primary/90 hover:bg-primary text-primary-foreground font-semibold text-base tracking-wide transition-all disabled:opacity-30 shadow-[0_0_24px_-4px_hsl(var(--primary)/0.35)]"
+                    style={{ paddingInline: "calc(1.25rem * 1.618)", paddingBlock: "calc(0.625rem * 1.618)" }}
                   >
                     <Sparkles className="w-4 h-4" />
-                    Encode Address
+                    Encode
                   </button>
                 </div>
               </div>
