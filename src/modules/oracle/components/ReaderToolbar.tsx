@@ -33,6 +33,8 @@ interface ReaderToolbarProps {
   onBack: () => void;
   onToggleDetails: () => void;
   synthesizing?: boolean;
+  /** 0–1 streaming progress (actual character-based) */
+  streamProgress?: number;
   immersive?: boolean;
   onSearchHistoryJump?: (keyword: string) => void;
 }
@@ -52,6 +54,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   onBack,
   onToggleDetails,
   synthesizing = false,
+  streamProgress = 0,
   immersive = false,
   onSearchHistoryJump,
 }) => {
@@ -234,7 +237,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="sticky top-0 z-40 flex items-center gap-1 px-2 backdrop-blur-2xl border-b"
+        className={`sticky top-0 z-40 flex items-center gap-1 px-2 backdrop-blur-2xl relative ${synthesizing ? "" : "border-b"}`}
         style={{
           background: immersive ? "rgba(255,255,255,0.06)" : "hsl(var(--background) / 0.82)",
           borderColor: immersive ? "rgba(255,255,255,0.04)" : "hsl(var(--border) / 0.05)",
@@ -242,6 +245,24 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           paddingBottom: "6px",
         }}
       >
+        {/* Mobile streaming progress bar */}
+        {synthesizing && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[1.5px] overflow-hidden"
+            style={{ background: immersive ? "rgba(255,255,255,0.04)" : "hsl(var(--border) / 0.06)" }}
+          >
+            <div
+              className="h-full"
+              style={{
+                width: `${Math.max(streamProgress * 100, 2)}%`,
+                background: "linear-gradient(90deg, hsl(38 60% 55%), hsl(38 70% 65%))",
+                boxShadow: "0 0 8px hsla(38, 60%, 55%, 0.4)",
+                transition: "width 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
+                borderRadius: "0 1px 1px 0",
+              }}
+            />
+          </div>
+        )}
         <IconBtn onClick={onBack} title="Back"><ArrowLeft className="w-4 h-4" /></IconBtn>
 
         {/* Address bar */}
@@ -284,16 +305,33 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-      className="sticky top-0 z-40 w-full backdrop-blur-2xl"
+      className="sticky top-0 z-40 w-full backdrop-blur-2xl relative"
       style={{
         background: immersive ? "rgba(10,14,18,0.88)" : "hsl(var(--background) / 0.88)",
-        borderBottom: immersive
+        borderBottom: synthesizing ? "none" : (immersive
           ? "1px solid rgba(255,255,255,0.06)"
-          : "1px solid hsl(var(--border) / 0.08)",
-        /* Ensure absolutely no top border or stripe */
+          : "1px solid hsl(var(--border) / 0.08)"),
         borderTop: "none",
       }}
     >
+      {/* Streaming progress bar — replaces border during synthesis */}
+      {synthesizing && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[1.5px] overflow-hidden"
+          style={{ background: immersive ? "rgba(255,255,255,0.04)" : "hsl(var(--border) / 0.06)" }}
+        >
+          <div
+            className="h-full origin-left"
+            style={{
+              width: `${Math.max(streamProgress * 100, 2)}%`,
+              background: "linear-gradient(90deg, hsl(38 60% 55%), hsl(38 70% 65%))",
+              boxShadow: "0 0 8px hsla(38, 60%, 55%, 0.4)",
+              transition: "width 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
+              borderRadius: "0 1px 1px 0",
+            }}
+          />
+        </div>
+      )}
       {/* ── Browser chrome row — golden-ratio vertical rhythm ── */}
       <div
         className="flex items-center w-full"

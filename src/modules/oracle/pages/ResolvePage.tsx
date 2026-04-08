@@ -454,6 +454,7 @@ const SearchPage = () => {
   const [aiMessages, setAiMessages] = useState<Msg[]>([]);
   const [aiStreaming, setAiStreaming] = useState(false);
   const [aiInput, setAiInput] = useState("");
+  const [streamProgress, setStreamProgress] = useState(0);
 
   // Voice shortcut (Ctrl+Shift+V)
   const voiceShortcut = useVoiceShortcut();
@@ -979,6 +980,7 @@ const SearchPage = () => {
       synthesizing: true,
     });
     setLoading(false);
+    setStreamProgress(0);
 
     // ── Resolve context in background ──
     const [recentContext, history] = await contextPromise;
@@ -1071,6 +1073,9 @@ const SearchPage = () => {
       onDelta: (text) => {
         accumulatedSynthesis += text;
         tokenBuffer.push(text);
+        // Estimate progress: typical articles are ~3000 chars, cap at 0.95 until done
+        const estimated = Math.min(accumulatedSynthesis.length / 3200, 0.95);
+        setStreamProgress(estimated);
       },
       onDone: async () => {
         // Flush remaining buffered tokens
@@ -1112,6 +1117,7 @@ const SearchPage = () => {
             isConfirmed: false,
             synthesizing: false,
           });
+          setStreamProgress(1);
           setInput(finalReceipt.triword);
 
           // Record search to history for future context personalization
@@ -1167,6 +1173,7 @@ const SearchPage = () => {
     const abortController = new AbortController();
     refineAbortRef.current = abortController;
     setRefining(true);
+    setStreamProgress(0);
 
     // Re-stream with instruction appended as context
     const tokenBuffer = new TokenBuffer((text: string) => {
@@ -1185,10 +1192,11 @@ const SearchPage = () => {
       lens: activeLens,
       signal: abortController.signal,
       onWiki: () => {},
-      onDelta: (text) => { accum += text; tokenBuffer.push(text); },
+      onDelta: (text) => { accum += text; tokenBuffer.push(text); setStreamProgress(Math.min(accum.length / 3200, 0.95)); },
       onDone: () => {
         tokenBuffer.stop();
         setRefining(false);
+        setStreamProgress(1);
         setResult(prev => {
           if (!prev) return prev;
           const s = prev.source as Record<string, unknown>;
@@ -1759,18 +1767,7 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Loading / streaming progress bar */}
-      <AnimatePresence>
-        {(loading || aiStreaming || result?.synthesizing) && (
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: result?.synthesizing ? 12 : 1.5, ease: "easeOut" }}
-            className="absolute top-0 left-0 right-0 h-0.5 bg-primary/60 origin-left z-[60]"
-          />
-        )}
-      </AnimatePresence>
+      {/* Progress bar removed — now integrated into ReaderToolbar border */}
 
       {/* Main content wrapper */}
       <div className={`flex-1 flex flex-col overflow-hidden ${immersiveMode ? "relative z-10" : ""}`}>
@@ -2163,6 +2160,7 @@ const SearchPage = () => {
                         onBack={clearResult}
                         onToggleDetails={() => setReaderMode(false)}
                         synthesizing={result.synthesizing}
+                        streamProgress={streamProgress}
                         immersive={immersiveMode}
                         onSearchHistoryJump={(keyword) => { setInput(keyword); clearResult(); setTimeout(() => handleSearch(keyword), 100); }}
                       />
