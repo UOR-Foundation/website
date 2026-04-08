@@ -1708,7 +1708,7 @@ const SearchPage = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col"
+              className={`flex flex-col relative ${immersiveMode ? "text-white z-10" : ""}`}
               style={{ height: "100dvh" }}
             >
               {/* AI Mode header */}
