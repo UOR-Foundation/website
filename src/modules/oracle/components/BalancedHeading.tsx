@@ -20,8 +20,10 @@ interface BalancedHeadingProps {
   as?: "h1" | "h2" | "h3";
   /** Additional className */
   className?: string;
-  /** Inline styles (applied to outer wrapper) */
+  /** Inline styles (applied to the heading element) */
   style?: React.CSSProperties;
+  /** Center the balanced container */
+  center?: boolean;
 }
 
 const BalancedHeading: React.FC<BalancedHeadingProps> = ({
@@ -31,6 +33,7 @@ const BalancedHeading: React.FC<BalancedHeadingProps> = ({
   as: Tag = "h1",
   className = "",
   style,
+  center = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [balancedPx, setBalancedPx] = useState<number | null>(null);
@@ -60,7 +63,7 @@ const BalancedHeading: React.FC<BalancedHeadingProps> = ({
   }, [recompute]);
 
   return (
-    <div ref={containerRef} style={{ maxWidth: balancedPx ?? undefined }}>
+    <div ref={containerRef} style={{ maxWidth: balancedPx ?? undefined, ...(center ? { marginLeft: "auto", marginRight: "auto" } : {}) }}>
       <Tag className={className} style={style}>
         {children}
       </Tag>
