@@ -221,7 +221,21 @@ async function handleComment(body: any, userId: string, supabase: ReturnType<typ
   return json({ success: true, comment: data });
 }
 
-async function handleFork(body: any, userId: string, supabase: ReturnType<typeof createClient>) {
+async function handleGuestComment(body: any, supabase: ReturnType<typeof createClient>) {
+  const { cid, content, parent_id, guest_name } = body;
+  if (!cid || !content?.trim()) return json({ error: "Missing cid or content" }, 400);
+  if (content.length > 2000) return json({ error: "Comment too long (max 2000 chars)" }, 400);
+  const name = (guest_name?.trim() || "").slice(0, 50) || null;
+
+  const { data, error } = await supabase.from("address_comments").insert({
+    address_cid: cid, user_id: null, content: content.trim(), parent_id: parent_id || null, guest_name: name,
+  }).select("id, created_at, score").single();
+
+  if (error) return json({ error: error.message }, 500);
+  return json({ success: true, comment: data });
+}
+
+
   const { parentCid, childCid, note } = body;
   if (!parentCid || !childCid) return json({ error: "Missing parentCid or childCid" }, 400);
   if (parentCid === childCid) return json({ error: "Cannot fork to same CID" }, 400);
