@@ -286,21 +286,23 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       className="sticky top-0 z-40 w-full backdrop-blur-2xl"
       style={{
-        background: immersive ? "rgba(10,14,18,0.82)" : "hsl(var(--background) / 0.85)",
+        background: immersive ? "rgba(10,14,18,0.88)" : "hsl(var(--background) / 0.88)",
         borderBottom: immersive
-          ? "1px solid rgba(255,255,255,0.05)"
-          : "1px solid hsl(var(--border) / 0.06)",
+          ? "1px solid rgba(255,255,255,0.06)"
+          : "1px solid hsl(var(--border) / 0.08)",
+        /* Ensure absolutely no top border or stripe */
+        borderTop: "none",
       }}
     >
       {/* ── Browser chrome row — golden-ratio vertical rhythm ── */}
       <div
         className="flex items-center w-full"
         style={{
-          gap: `${CHROME_GAP}px`,
-          paddingLeft: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,  // ~26px
-          paddingRight: `${Math.round(TOOLBAR_PY * PHI * PHI)}px`,
-          paddingTop: `${Math.round(TOOLBAR_PY * PHI)}px`,         // ~16px top breathing room
-          paddingBottom: `${TOOLBAR_PY}px`,
+          gap: `${Math.round(CHROME_GAP * PHI)}px`,   // ~10px — φ-scaled gap
+          paddingLeft: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
+          paddingRight: `clamp(12px, ${Math.round(TOOLBAR_PY * PHI * PHI)}px, 32px)`,
+          paddingTop: `${Math.round(TOOLBAR_PY)}px`,
+          paddingBottom: `${Math.round(TOOLBAR_PY * 0.618)}px`, // φ-inverse bottom
         }}
       >
         {/* Navigation buttons */}
