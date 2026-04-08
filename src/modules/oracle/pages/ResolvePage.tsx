@@ -834,8 +834,8 @@ const SearchPage = () => {
                   className={`absolute -inset-[1px] transition-opacity duration-700 blur-[0.5px] group-hover:blur-[1px] group-focus-within:blur-[1px] ${encodeMode ? "rounded-[17px]" : "rounded-full"}`}
                   style={{
                     background: "conic-gradient(from var(--search-glow-angle, 0deg), transparent 0%, hsl(var(--primary) / 0.4) 10%, transparent 20%, hsl(var(--primary) / 0.15) 40%, transparent 50%, hsl(45 80% 60% / 0.3) 60%, transparent 70%, hsl(var(--primary) / 0.25) 85%, transparent 100%)",
-                    animation: "searchGlowRotate 6s linear infinite, searchIdleBreathe 4s ease-in-out infinite",
-                    opacity: undefined, // controlled by animation
+                    animation: "searchGlowRotate 6s linear infinite",
+                    opacity: 0.25,
                   }}
                 />
                 {/* Outer ambient glow */}
