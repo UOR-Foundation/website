@@ -171,9 +171,6 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             className="mt-10 w-full flex flex-col items-center"
             style={{ maxWidth: "min(580px, 80vw)" }}
           >
-            <p className="text-white/60 text-lg font-medium mb-4 select-none">
-              What is your main focus today?
-            </p>
             <div className="w-full relative group">
               <input
                 ref={inputRef}
