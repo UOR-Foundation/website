@@ -264,22 +264,26 @@ function CommentInput({
   onCancel,
   autoFocus = false,
   compact = false,
+  showGuestName = false,
 }: {
   placeholder: string;
-  onSubmit: (text: string) => Promise<void>;
+  onSubmit: (text: string, guestName?: string) => Promise<void>;
   onCancel?: () => void;
   autoFocus?: boolean;
   compact?: boolean;
+  showGuestName?: boolean;
 }) {
   const [text, setText] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
     if (!text.trim() || submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit(text.trim());
+      await onSubmit(text.trim(), showGuestName ? guestName.trim() || undefined : undefined);
       setText("");
+      setGuestName("");
     } finally {
       setSubmitting(false);
     }
@@ -287,6 +291,16 @@ function CommentInput({
 
   return (
     <div className="space-y-2">
+      {showGuestName && (
+        <input
+          type="text"
+          value={guestName}
+          onChange={e => setGuestName(e.target.value)}
+          placeholder="Name (optional)"
+          maxLength={50}
+          className="w-full px-4 py-2 rounded-lg bg-muted/5 border border-border/15 text-sm text-foreground/70 placeholder:text-muted-foreground/25 focus:outline-none focus:border-primary/25 transition-colors"
+        />
+      )}
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}
