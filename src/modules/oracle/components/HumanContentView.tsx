@@ -17,6 +17,9 @@ import ContextualArticleView from "./ContextualArticleView";
 import SemanticWebTower from "./SemanticWebTower";
 import ExistingSemanticsBadge from "./ExistingSemanticsBadge";
 import InteropBadges from "./InteropBadges";
+import NoveltyBadge from "./NoveltyBadge";
+import SignalLeaders from "./SignalLeaders";
+import ContextJournal from "./ContextJournal";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
