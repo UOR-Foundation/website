@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Music2, Pause, Play, ListMusic } from "lucide-react";
 
 const SC_PLAYLIST_URL = "https://soundcloud.com/ben-bohmer/sets/begin-again";
-const SC_EMBED_URL = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SC_PLAYLIST_URL)}&color=%23e8985a&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
+const SC_EMBED_URL = `https://w.soundcloud.com/player/?url=${encodeURIComponent(SC_PLAYLIST_URL)}&color=%23e8985a&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`;
 
 const DISC_SIZE = 48;
 const GROOVE_COUNT = 5;
@@ -23,15 +23,94 @@ const PRELOADED_TRACKS = [
   { title: "After Earth", artist: "Ben Böhmer" },
 ];
 
+/** Load the SoundCloud Widget API script once */
+let scApiLoaded = false;
+let scApiPromise: Promise<void> | null = null;
+function loadSCApi(): Promise<void> {
+  if (scApiLoaded) return Promise.resolve();
+  if (scApiPromise) return scApiPromise;
+  scApiPromise = new Promise((resolve) => {
+    if ((window as any).SC?.Widget) {
+      scApiLoaded = true;
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://w.soundcloud.com/player/api.js";
+    script.onload = () => {
+      scApiLoaded = true;
+      resolve();
+    };
+    script.onerror = () => resolve(); // fail silently
+    document.head.appendChild(script);
+  });
+  return scApiPromise;
+}
+
 export default function SoundCloudFab() {
   const [playing, setPlaying] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [activeTrack, setActiveTrack] = useState(0);
+  const [widgetReady, setWidgetReady] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCountRef = useRef(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const widgetRef = useRef<any>(null);
 
   const half = DISC_SIZE / 2;
+
+  // Load SC API on mount
+  useEffect(() => {
+    loadSCApi();
+  }, []);
+
+  // Initialize widget when iframe is rendered and API is ready
+  useEffect(() => {
+    if (!expanded || !iframeRef.current) return;
+
+    const initWidget = async () => {
+      await loadSCApi();
+      const SC = (window as any).SC;
+      if (!SC?.Widget || !iframeRef.current) return;
+
+      const widget = SC.Widget(iframeRef.current);
+      widgetRef.current = widget;
+
+      widget.bind(SC.Widget.Events.READY, () => {
+        setWidgetReady(true);
+        if (playing) widget.play();
+
+        widget.bind(SC.Widget.Events.PLAY, () => setPlaying(true));
+        widget.bind(SC.Widget.Events.PAUSE, () => setPlaying(false));
+        widget.bind(SC.Widget.Events.FINISH, () => {
+          setActiveTrack((prev) => (prev + 1) % PRELOADED_TRACKS.length);
+        });
+      });
+    };
+
+    initWidget();
+
+    return () => {
+      widgetRef.current = null;
+      setWidgetReady(false);
+    };
+  }, [expanded]);
+
+  // Sync play/pause state to widget
+  useEffect(() => {
+    if (!widgetRef.current || !widgetReady) return;
+    if (playing) widgetRef.current.play();
+    else widgetRef.current.pause();
+  }, [playing, widgetReady]);
+
+  // Skip to track in widget
+  const skipToTrack = useCallback((index: number) => {
+    setActiveTrack(index);
+    if (widgetRef.current && widgetReady) {
+      widgetRef.current.skip(index);
+      setPlaying(true);
+    }
+  }, [widgetReady]);
 
   /* ── Click handler: single = play/pause, double = expand ── */
   const handleClick = useCallback(() => {
@@ -39,25 +118,20 @@ export default function SoundCloudFab() {
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     clickTimerRef.current = setTimeout(() => {
       if (clickCountRef.current === 1) {
-        // Single tap: toggle play/pause
-        setPlaying((p) => !p);
+        if (!expanded) {
+          // If not expanded yet, expand first and auto-play
+          setExpanded(true);
+          setPlaying(true);
+        } else {
+          setPlaying((p) => !p);
+        }
       } else if (clickCountRef.current >= 2) {
-        // Double tap: toggle expanded panel
         setExpanded((e) => !e);
         if (!expanded) setPlaying(true);
       }
       clickCountRef.current = 0;
     }, 220);
   }, [expanded]);
-
-  /* Auto-play embed when playing starts */
-  useEffect(() => {
-    if (!iframeRef.current) return;
-    const widget = (window as any).SC?.Widget?.(iframeRef.current);
-    if (!widget) return;
-    if (playing) widget.play?.();
-    else widget.pause?.();
-  }, [playing]);
 
   return (
     <div className="relative flex items-center" style={{ zIndex: 50 }}>
@@ -117,36 +191,12 @@ export default function SoundCloudFab() {
             height={DISC_SIZE}
             viewBox={`0 0 ${DISC_SIZE} ${DISC_SIZE}`}
           >
+            <circle cx={half} cy={half} r={half - 1} fill="none" stroke="hsl(0 0% 0% / 0.3)" strokeWidth="0.8" />
+            {Array.from({ length: GROOVE_COUNT }).map((_, i) => (
+              <circle key={i} cx={half} cy={half} r={6 + i * 3.5} fill="none" stroke="hsl(0 0% 100% / 0.05)" strokeWidth="0.4" />
+            ))}
             <circle
-              cx={half}
-              cy={half}
-              r={half - 1}
-              fill="none"
-              stroke="hsl(0 0% 0% / 0.3)"
-              strokeWidth="0.8"
-            />
-            {Array.from({ length: GROOVE_COUNT }).map((_, i) => {
-              const r = 6 + i * 3.5;
-              return (
-                <circle
-                  key={i}
-                  cx={half}
-                  cy={half}
-                  r={r}
-                  fill="none"
-                  stroke="hsl(0 0% 100% / 0.05)"
-                  strokeWidth="0.4"
-                />
-              );
-            })}
-            {/* Sheen highlight */}
-            <circle
-              cx={half}
-              cy={half}
-              r={half - 4}
-              fill="none"
-              stroke="hsl(0 0% 100% / 0.08)"
-              strokeWidth="0.6"
+              cx={half} cy={half} r={half - 4} fill="none" stroke="hsl(0 0% 100% / 0.08)" strokeWidth="0.6"
               strokeDasharray={`${Math.PI * (half - 4) * 0.25} ${Math.PI * (half - 4) * 1.75}`}
               strokeLinecap="round"
               style={{ transform: "rotate(-45deg)", transformOrigin: "center" }}
@@ -154,14 +204,12 @@ export default function SoundCloudFab() {
           </svg>
         </motion.div>
 
-        {/* Centre spindle / play-pause indicator */}
+        {/* Centre spindle */}
         <div
           className="relative rounded-full z-10 flex items-center justify-center"
           style={{
-            width: 14,
-            height: 14,
-            background:
-              "radial-gradient(circle at 40% 35%, hsl(0 0% 85%), hsl(0 0% 50%))",
+            width: 14, height: 14,
+            background: "radial-gradient(circle at 40% 35%, hsl(0 0% 85%), hsl(0 0% 50%))",
             boxShadow: "0 0 3px hsl(0 0% 0% / 0.4)",
           }}
         >
@@ -197,14 +245,7 @@ export default function SoundCloudFab() {
             <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
               <div className="flex items-center gap-2">
                 <Music2 className="w-4 h-4" style={{ color: "hsl(24 70% 55%)" }} />
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "hsl(0 0% 100% / 0.85)",
-                    letterSpacing: "0.01em",
-                  }}
-                >
+                <span style={{ fontSize: 13, fontWeight: 600, color: "hsl(0 0% 100% / 0.85)", letterSpacing: "0.01em" }}>
                   Now Playing
                 </span>
               </div>
@@ -219,12 +260,12 @@ export default function SoundCloudFab() {
               </button>
             </div>
 
-            {/* SoundCloud embed */}
+            {/* SoundCloud embed — hidden visually but functional for audio */}
             <div className="px-3 pb-2">
               <iframe
                 ref={iframeRef}
                 width="100%"
-                height="120"
+                height="166"
                 scrolling="no"
                 frameBorder="no"
                 allow="autoplay"
@@ -246,64 +287,38 @@ export default function SoundCloudFab() {
                   Playlist
                 </span>
               </div>
-              <div
-                className="flex flex-col gap-0.5 overflow-y-auto"
-                style={{ maxHeight: 160 }}
-              >
+              <div className="flex flex-col gap-0.5 overflow-y-auto" style={{ maxHeight: 160 }}>
                 {PRELOADED_TRACKS.map((track, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveTrack(i)}
+                    onClick={() => skipToTrack(i)}
                     className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-left w-full"
                     style={{
                       background: i === activeTrack ? "hsl(24 70% 55% / 0.1)" : "transparent",
                       border: i === activeTrack ? "1px solid hsl(24 70% 55% / 0.15)" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => {
-                      if (i !== activeTrack) e.currentTarget.style.background = "hsl(0 0% 100% / 0.04)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (i !== activeTrack) e.currentTarget.style.background = "transparent";
-                    }}
+                    onMouseEnter={(e) => { if (i !== activeTrack) e.currentTarget.style.background = "hsl(0 0% 100% / 0.04)"; }}
+                    onMouseLeave={(e) => { if (i !== activeTrack) e.currentTarget.style.background = i === activeTrack ? "hsl(24 70% 55% / 0.1)" : "transparent"; }}
                   >
                     <div
                       className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
                       style={{
                         background: i === activeTrack ? "hsl(24 70% 55% / 0.2)" : "hsl(0 0% 100% / 0.06)",
-                        fontSize: 9,
-                        fontWeight: 600,
+                        fontSize: 9, fontWeight: 600,
                         color: i === activeTrack ? "hsl(24 70% 55%)" : "hsl(0 0% 100% / 0.3)",
                       }}
                     >
                       {i === activeTrack && playing ? (
-                        <motion.span
-                          animate={{ opacity: [1, 0.4, 1] }}
-                          transition={{ duration: 1.2, repeat: Infinity }}
-                        >
-                          ♪
-                        </motion.span>
+                        <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.2, repeat: Infinity }}>♪</motion.span>
                       ) : (
                         i + 1
                       )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span
-                        className="truncate"
-                        style={{
-                          fontSize: 12,
-                          fontWeight: i === activeTrack ? 600 : 400,
-                          color: i === activeTrack ? "hsl(0 0% 100% / 0.9)" : "hsl(0 0% 100% / 0.55)",
-                        }}
-                      >
+                      <span className="truncate" style={{ fontSize: 12, fontWeight: i === activeTrack ? 600 : 400, color: i === activeTrack ? "hsl(0 0% 100% / 0.9)" : "hsl(0 0% 100% / 0.55)" }}>
                         {track.title}
                       </span>
-                      <span
-                        className="truncate"
-                        style={{
-                          fontSize: 10,
-                          color: i === activeTrack ? "hsl(24 70% 55% / 0.7)" : "hsl(0 0% 100% / 0.25)",
-                        }}
-                      >
+                      <span className="truncate" style={{ fontSize: 10, color: i === activeTrack ? "hsl(24 70% 55% / 0.7)" : "hsl(0 0% 100% / 0.25)" }}>
                         {track.artist}
                       </span>
                     </div>
