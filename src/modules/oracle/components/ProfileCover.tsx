@@ -30,8 +30,33 @@ const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
   const defaultSrc = pickCover(cid);
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
   const [customUrl, setCustomUrl] = useState<string | null>(null);
+  const [offsetY, setOffsetY] = useState(0);
+
+  // Parallax scroll effect
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        // Only compute when visible
+        if (rect.bottom > 0 && rect.top < viewH) {
+          // Shift range: -30px to +30px based on scroll position
+          const progress = (rect.top + rect.height / 2) / viewH;
+          setOffsetY((0.5 - progress) * 60);
+        }
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, []);
 
   // Fetch any existing custom cover
   useEffect(() => {
