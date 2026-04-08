@@ -408,7 +408,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         {/* ── Right-side actions ── */}
         <div className="flex items-center gap-0.5 shrink-0 relative">
           <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
-          <IconBtn onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
+          <IconBtn ref={portalBtnRef} onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
             <QrCode className={`w-4 h-4 ${portalOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
           </IconBtn>
           <IconBtn onClick={handleHistoryToggle} title="Search history">
@@ -424,6 +424,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             targetUrl={window.location.pathname + window.location.search}
             targetLens={activeLens}
             immersive={immersive}
+            anchorRef={portalBtnRef}
           />
         </div>
       </div>
