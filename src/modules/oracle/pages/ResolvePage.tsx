@@ -1117,6 +1117,8 @@ const SearchPage = () => {
             isConfirmed: false,
             synthesizing: false,
           });
+          setStreamProgress(1);
+          });
           setInput(finalReceipt.triword);
 
           // Record search to history for future context personalization
