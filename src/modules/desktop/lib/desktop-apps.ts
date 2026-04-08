@@ -2,6 +2,7 @@ import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Settings, Music,
 } from "lucide-react";
+import type { OsCategory } from "./os-taxonomy";
 
 export interface DesktopApp {
   id: string;
@@ -10,6 +11,8 @@ export interface DesktopApp {
   component: React.LazyExoticComponent<ComponentType<any>>;
   defaultSize?: { w: number; h: number };
   color: string; // accent color for dock glow
+  /** OS taxonomy category grounded in UOR v0.2.0 modules. */
+  category: OsCategory;
 }
 
 export const DESKTOP_APPS: DesktopApp[] = [
@@ -20,6 +23,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/oracle/pages/ResolvePage")),
     defaultSize: { w: 960, h: 620 },
     color: "hsl(210 80% 60%)",
+    category: "RESOLVE",
   },
   {
     id: "oracle",
@@ -28,6 +32,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/oracle/pages/OraclePage")),
     defaultSize: { w: 780, h: 580 },
     color: "hsl(270 70% 65%)",
+    category: "RESOLVE",
   },
   {
     id: "library",
@@ -36,6 +41,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/oracle/pages/LibraryPage")),
     defaultSize: { w: 900, h: 600 },
     color: "hsl(35 90% 55%)",
+    category: "RESOLVE",
   },
   {
     id: "messenger",
@@ -44,6 +50,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/messenger/pages/MessengerPage")),
     defaultSize: { w: 700, h: 560 },
     color: "hsl(160 60% 50%)",
+    category: "EXCHANGE",
   },
   {
     id: "vault",
@@ -52,6 +59,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/identity/pages/ProjectUorIdentity")),
     defaultSize: { w: 720, h: 520 },
     color: "hsl(200 70% 55%)",
+    category: "IDENTITY",
   },
 ];
 

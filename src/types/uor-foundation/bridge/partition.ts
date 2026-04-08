@@ -1,7 +1,9 @@
 /**
- * UOR Foundation v2.0.0. bridge::partition
+ * UOR Foundation v2.0.0 — bridge::partition
  *
  * Irreducibility decomposition and fiber tracking.
+ * v0.2.0 additions: SiteBinding, PartitionProduct,
+ * PartitionRefinement, FiberProjection.
  *
  * @see spec/src/namespaces/partition.rs
  * @namespace partition/
@@ -9,117 +11,136 @@
 
 import type { FiberState } from "../enums";
 
-/**
- * Component. abstract base for partition set components.
- */
+// ── Core Partition Types ───────────────────────────────────────────────────
+
 export interface Component {
-  /** Set of values belonging to this component. */
   elements(): number[];
-  /** Cardinality of this component. */
   size(): number;
 }
 
-/**
- * IrreducibleSet. elements with exactly one non-trivial factorization.
- * In Z/256Z these are the primes ≤ 255 (126 elements).
- *
- * @disjoint ReducibleSet, UnitSet, ExteriorSet
- */
+/** IrreducibleSet — elements with exactly one non-trivial factorization. */
 export interface IrreducibleSet extends Component {
-  /** Always "IrreducibleSet". */
   readonly kind: "IrreducibleSet";
 }
 
-/**
- * ReducibleSet. elements with multiple non-trivial factorizations.
- *
- * @disjoint IrreducibleSet, UnitSet, ExteriorSet
- */
+/** ReducibleSet — elements with multiple non-trivial factorizations. */
 export interface ReducibleSet extends Component {
-  /** Always "ReducibleSet". */
   readonly kind: "ReducibleSet";
-  /** Factorization depth (number of prime factors). */
   maxDepth(): number;
 }
 
-/**
- * UnitSet. the multiplicative identity {1}.
- *
- * @disjoint IrreducibleSet, ReducibleSet, ExteriorSet
- */
+/** UnitSet — the multiplicative identity {1}. */
 export interface UnitSet extends Component {
-  /** Always "UnitSet". */
   readonly kind: "UnitSet";
 }
 
-/**
- * ExteriorSet. the additive identity {0}.
- *
- * @disjoint IrreducibleSet, ReducibleSet, UnitSet
- */
+/** ExteriorSet — the additive identity {0}. */
 export interface ExteriorSet extends Component {
-  /** Always "ExteriorSet". */
   readonly kind: "ExteriorSet";
 }
 
-/**
- * Partition. the complete partition of a ring into 4 disjoint sets.
- */
+/** Partition — the complete partition of a ring into 4 disjoint sets. */
 export interface Partition {
-  /** The irreducible elements. */
   irreducible(): IrreducibleSet;
-  /** The reducible elements. */
   reducible(): ReducibleSet;
-  /** The unit element(s). */
   unit(): UnitSet;
-  /** The exterior element(s). */
   exterior(): ExteriorSet;
-  /** Total number of elements across all sets. */
   totalElements(): number;
-  /** Density: irreducible count / total elements. */
   density(): number;
 }
 
 // ── Fiber Budget System ────────────────────────────────────────────────────
 
-/**
- * FiberCoordinate. a single bit position in the fiber budget.
- */
 export interface FiberCoordinate {
-  /** Bit index (0-based from LSB). */
   bitIndex: number;
-  /** Current resolution state of this fiber. */
   state: FiberState;
-  /** Which constraint pinned this fiber (null if Free). */
   pinnedBy: string | null;
 }
 
-/**
- * FiberPinning. records the pinning of a fiber by a constraint.
- */
 export interface FiberPinning {
-  /** The fiber being pinned. */
   coordinate: FiberCoordinate;
-  /** The constraint that caused the pinning. */
   constraintId: string;
-  /** Timestamp of pinning. */
   pinnedAt: string;
 }
 
-/**
- * FiberBudget. tracks bit-level type resolution progress.
- * totalFibers = bit width of the quantum level.
- * isClosed = true when all fibers are pinned (fully resolved).
- */
 export interface FiberBudget {
-  /** Total number of fibers (= bit width). */
   totalFibers: number;
-  /** Number of fibers currently pinned. */
   pinnedCount: number;
-  /** True when all fibers are pinned. */
   isClosed: boolean;
-  /** Individual fiber states. */
   fibers: FiberCoordinate[];
-  /** History of pinning events. */
   pinnings: FiberPinning[];
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// v0.2.0 ADDITIONS
+// ══════════════════════════════════════════════════════════════════════════
+
+/**
+ * SiteBinding — binds a partition component to a topological site
+ * (a point in the sheaf-theoretic view of the ring).
+ *
+ * @see spec/src/namespaces/partition.rs — SiteBinding
+ */
+export interface SiteBinding {
+  /** Site identifier (topological point). */
+  siteId(): string;
+  /** Component bound to this site. */
+  component(): Component;
+  /** Site state (from kernel::reduction). */
+  siteState(): string;
+  /** Whether the binding is stable under refinement. */
+  isStable(): boolean;
+}
+
+/**
+ * PartitionProduct — the product of two partitions (intersection of sets).
+ * Used to refine a partition by intersecting with constraints.
+ *
+ * @see spec/src/namespaces/partition.rs — PartitionProduct
+ */
+export interface PartitionProduct {
+  /** Left partition. */
+  left(): Partition;
+  /** Right partition. */
+  right(): Partition;
+  /** Resulting refined partition. */
+  product(): Partition;
+  /** Number of components in the product. */
+  componentCount(): number;
+}
+
+/**
+ * PartitionRefinement — records a single refinement step that
+ * splits one partition into a finer one.
+ *
+ * @see spec/src/namespaces/partition.rs — PartitionRefinement
+ */
+export interface PartitionRefinement {
+  /** Refinement identifier. */
+  refinementId(): string;
+  /** Partition before refinement. */
+  before(): Partition;
+  /** Partition after refinement. */
+  after(): Partition;
+  /** Constraint that caused the refinement. */
+  constraintId(): string;
+  /** Number of new components created. */
+  newComponents(): number;
+}
+
+/**
+ * FiberProjection — projects a fiber budget onto a lower-dimensional
+ * subspace, collapsing some fiber coordinates.
+ *
+ * @see spec/src/namespaces/partition.rs — FiberProjection
+ */
+export interface FiberProjection {
+  /** Source fiber budget. */
+  source(): FiberBudget;
+  /** Projected fiber budget. */
+  projected(): FiberBudget;
+  /** Fiber coordinates collapsed by the projection. */
+  collapsedIndices(): number[];
+  /** Whether the projection is information-preserving. */
+  lossless(): boolean;
 }

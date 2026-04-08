@@ -29,6 +29,8 @@
 .desktop-window-chrome {
   border-radius: 12px;
   overflow: hidden;
+  contain: layout paint;
+  isolation: isolate;
   box-shadow:
     0 16px 40px -10px rgba(0, 0, 0, 0.45),
     0 6px 16px -6px rgba(0, 0, 0, 0.3);
