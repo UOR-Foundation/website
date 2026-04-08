@@ -1,53 +1,107 @@
 
 
-# Enforce Topic-Relevant Media Selection via UOR-Typed Coherence Filtering
+# Unified Context Hub for the Desktop Home Screen
 
-## Problem
-When searching "Formula 1", the system fetched images from the Wikipedia article's image list, which includes unrelated artifacts (e.g., Egyptian writing boards). The relevance scoring is weak — basic word overlap — and there's no hard minimum threshold, so irrelevant images with score 0 still get included via the fallback path.
+## Overview
 
-## Root Cause
-Two issues in `supabase/functions/uor-knowledge/index.ts`:
+The "+" button on the home screen search bar is currently inert — it renders but does nothing. The uploaded reference image (Notion-style "+ New" menu) confirms the desired pattern: a clean dropdown with structured options for adding context, differentiated by user type (guest vs. sovereign ID holder).
 
-1. **Weak relevance scoring**: Only checks if search term words appear in the filename/caption. An image of an ancient Egyptian tablet linked from the Formula 1 Wikipedia page scores 0 but still gets included.
-2. **No minimum relevance gate**: The `distributeMediaAcrossSections` function in `InlineMedia.tsx` has a fallback that places images even when semantic score is 0.
+The goal is to wire the existing `ContextMenu` component (from sovereign-vault) into the desktop home screen, then extend it with two new capabilities: **Workspace/Project creation** and **Folder organization** — all canonically mapped through the UOR framework via `singleProofHash`.
 
-## Solution: Three-Layer Media Coherence Filter
+## Architecture
 
-### Layer 1 — Backend: Strict relevance gate in `uor-knowledge/index.ts`
+```text
+DesktopWidgets (home screen)
+  └─ [+] button ── opens ContextMenu (already built)
+       ├── Upload File      → guest: in-memory / sovereign: vault
+       ├── Paste Text        → guest: in-memory / sovereign: vault
+       ├── Import from URL   → guest: in-memory / sovereign: vault
+       ├── ─────────────────
+       ├── New Workspace     → creates a UOR-addressed workspace container
+       ├── New Folder         → organizes context items into groups
+       ├── ─────────────────
+       └── Sovereign Vault   → (sovereign users only) persistent encrypted docs
+       └── [guest notice]    → (guests only) "session-only" reminder
+```
 
-**In `fetchWikimediaImages`**:
-- Add a **minimum relevance threshold of 10** — images that score below this are discarded entirely
-- Add **negative relevance penalties** for obviously off-topic patterns: if the caption/filename contains none of the search term words, score stays at 0 and the image is dropped
-- Add a **topic-type classifier** using the search term: extract the domain (sport, science, person, place, etc.) and penalize images whose captions indicate a different domain (e.g., "ancient", "archaeological" for a motorsport query)
+Every item ingested — file, paste, URL, workspace — gets a canonical UOR address via `singleProofHash`, making it part of the unified knowledge graph alongside internet-sourced content.
 
-**In `fetchMultiSourceMedia`**:
-- After sorting by relevance, enforce a **hard floor**: only keep images with `relevance >= 10`
-- If this leaves fewer than 2 images, use the LLM to generate a relevance-check prompt: ask the AI model (via a cheap, fast call) to score each candidate image caption against the topic, keeping only those rated relevant
-- Add a `MediaImage.coherenceScore` field (0.0-1.0) that travels with the image through the pipeline, derived from the relevance score normalized to [0,1]
+## Changes
 
-### Layer 2 — Frontend: Coherence-gated rendering in `InlineMedia.tsx`
+### 1. Wire ContextMenu into DesktopWidgets.tsx
 
-**In `distributeMediaAcrossSections`**:
-- Remove the fallback that places images with score 0 — if no images have meaningful relevance, show **no images** rather than wrong ones
-- Add a `coherenceScore` check: only render images where `coherenceScore >= 0.3`
-- Update `semanticRelevance` to also check against the article title/topic (passed as a new parameter), not just the section text
+- Import `useContextManager` and `ContextMenu` from sovereign-vault
+- Add state for `contextMenuOpen` toggled by the "+" button
+- Add `ContextPills` below the search bar to show active context items
+- Position the ContextMenu anchored above the "+" button
 
-### Layer 3 — Type enforcement via `MediaImage` interface
+### 2. Extend ContextMenu with Workspace and Folder options
 
-**In `stream-knowledge.ts`**:
-- Add `coherenceScore?: number` and `topicDomain?: string` to the `MediaImage` type
-- This ensures the coherence metadata flows through the entire pipeline from edge function to renderer
+In `sovereign-vault/components/ContextMenu.tsx`:
+
+- Add two new menu items between the URL import and the divider:
+  - **New Workspace** — creates a named container (UOR type `vault:Workspace`) that groups context items. For guests, stored in memory; for sovereign users, persisted to the vault.
+  - **New Folder** — creates a named folder (UOR type `vault:Folder`) for organizing items hierarchically.
+- Add sub-views for each with a simple name input field
+- Both create UOR-addressed objects via `singleProofHash` so they join the unified knowledge graph
+
+### 3. Extend useContextManager with workspace/folder support
+
+In `sovereign-vault/hooks/useContextManager.ts`:
+
+- Add `addWorkspace(name: string)` and `addFolder(name: string)` methods
+- For guests: create in-memory items via `guestContext`
+- For sovereign users: persist via `vaultStore`
+- Each gets a canonical CID derived from its name + creation timestamp
+
+### 4. Extend guest-context.ts with workspace/folder types
+
+In `sovereign-vault/lib/guest-context.ts`:
+
+- Add `addWorkspace(name: string)` and `addFolder(name: string)` methods
+- These create `GuestContextItem` entries with source types `"workspace"` and `"folder"`
+- Same ephemeral in-memory pattern as existing items
+
+### 5. Update ContextPills to show workspace/folder icons
+
+In `sovereign-vault/components/ContextPills.tsx`:
+
+- Add icon variants for `workspace` and `folder` source types (FolderOpen, Layout icons)
+- Differentiate visually from file/paste/url pills
+
+### 6. Update ContextItem type
+
+In `useContextManager.ts`, extend the `ContextItem.source` union:
+
+```typescript
+source: "file" | "paste" | "url" | "vault" | "workspace" | "folder";
+```
+
+## Guest vs. Sovereign Differentiation
+
+- **Guests**: All context is session-only (in-memory). The ContextMenu already shows a "session-only" notice with a prompt to create a Sovereign ID. No changes needed here — the existing UX handles this gracefully.
+- **Sovereign users**: Context persists in the encrypted vault. The "Sovereign Vault" menu item appears, giving access to persistent documents.
+- Both user types get the same top-level options (Upload, Paste, URL, Workspace, Folder) — the difference is persistence, not capability.
+
+## UOR Canonical Mapping
+
+Every context item — regardless of type — flows through the same pipeline:
+
+```text
+Content → singleProofHash({@type, content, metadata})
+        → CID + IPv6 + Glyph + CanonicalId
+        → Unified Knowledge Graph node
+```
+
+This means user-uploaded files, pasted text, scraped URLs, workspaces, and folders all live in the same address space as internet-sourced knowledge articles — enabling cross-referencing, search, and coherence scoring across the entire graph.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/uor-knowledge/index.ts` | Hard relevance floor (>=10), topic-domain penalties, LLM fallback relevance check, coherenceScore field |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Add `coherenceScore` and `topicDomain` to `MediaImage` type |
-| `src/modules/oracle/components/InlineMedia.tsx` | Remove zero-score fallback, add coherenceScore gate, pass topic to `semanticRelevance` |
-
-## Priority
-1. Backend relevance gate (highest impact — stops bad images at source)
-2. Type updates (structural)
-3. Frontend coherence gate (defense-in-depth)
+| `src/modules/desktop/DesktopWidgets.tsx` | Wire useContextManager, open ContextMenu from "+" button, show ContextPills |
+| `src/modules/sovereign-vault/components/ContextMenu.tsx` | Add Workspace + Folder menu items and sub-views |
+| `src/modules/sovereign-vault/hooks/useContextManager.ts` | Add addWorkspace/addFolder methods, extend ContextItem type |
+| `src/modules/sovereign-vault/lib/guest-context.ts` | Add addWorkspace/addFolder to guest store |
+| `src/modules/sovereign-vault/components/ContextPills.tsx` | Add workspace/folder icon variants |
 
