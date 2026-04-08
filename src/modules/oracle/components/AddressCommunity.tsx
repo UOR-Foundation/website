@@ -415,10 +415,7 @@ function CommentNodeView({
           {/* Action bar */}
           <div className="flex items-center gap-3 mb-1">
             <button
-              onClick={() => {
-                if (!user) { toast("Sign in to reply", { icon: "🔒" }); return; }
-                onReply(node.id);
-              }}
+              onClick={() => onReply(node.id)}
               className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
             >
               <MessageSquare className="w-3 h-3" />
