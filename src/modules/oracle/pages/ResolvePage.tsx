@@ -244,6 +244,85 @@ const SearchPage = () => {
     setAiMode(false);
     setAiMessages([]);
     setAiInput("");
+    setChainSelectMode(false);
+    setSelectedProofIndices(new Set());
+  };
+
+  const toggleChainSelect = () => {
+    if (chainSelectMode) {
+      setChainSelectMode(false);
+      setSelectedProofIndices(new Set());
+    } else {
+      setChainSelectMode(true);
+    }
+  };
+
+  const toggleProofIndex = (idx: number) => {
+    setSelectedProofIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  // Count assistant messages with proofs
+  const proofCount = aiMessages.filter(m => m.role === "assistant" && m.proof).length;
+
+  const encodeChain = async () => {
+    if (selectedProofIndices.size === 0) return;
+    setChainEncoding(true);
+    try {
+      // Get all assistant messages with proofs, map by their position among proof-bearing messages
+      const proofMessages = aiMessages
+        .map((m, i) => ({ msg: m, originalIdx: i }))
+        .filter(({ msg }) => msg.role === "assistant" && msg.proof);
+
+      const selected = [...selectedProofIndices].sort().map(i => proofMessages[i]);
+      if (selected.length === 0) return;
+
+      // Find the user query preceding each assistant message
+      const links = selected.map(({ msg, originalIdx }, linkIdx) => {
+        // Walk backwards to find the user message
+        let query = "";
+        for (let j = originalIdx - 1; j >= 0; j--) {
+          if (aiMessages[j].role === "user") {
+            query = aiMessages[j].content;
+            break;
+          }
+        }
+        return {
+          "@type": "uor:ProofOfThought",
+          "uor:position": linkIdx,
+          "uor:query": query,
+          "uor:response": msg.content,
+          "uor:proofAddress": msg.proof?.triword ?? "",
+          "uor:proofCid": msg.proof?.cid ?? "",
+        };
+      });
+
+      const chainSource = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:ChainOfProofs",
+        "uor:links": links,
+        "uor:chainLength": links.length,
+        "uor:timestamp": new Date().toISOString(),
+      };
+
+      const receipt = await encode(chainSource);
+      navigator.clipboard.writeText(receipt.triword);
+      toast.success("Chain address copied!", {
+        description: receipt.triwordFormatted,
+        icon: "🔗",
+      });
+      setChainSelectMode(false);
+      setSelectedProofIndices(new Set());
+    } catch (e) {
+      console.warn("[Chain] Encoding failed:", e);
+      toast.error("Chain encoding failed.");
+    } finally {
+      setChainEncoding(false);
+    }
   };
 
   /* ── Infinite Improbability Drive sequence (~5s, themed) ── */
