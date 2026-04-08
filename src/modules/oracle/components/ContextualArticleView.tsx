@@ -6,10 +6,10 @@
  * container-aware width measurements instead of using viewport units.
  */
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BookOpen, Newspaper, Baby, GraduationCap, BookText, User, Plus, Settings2, Calculator } from "lucide-react";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import type { MediaData } from "@/modules/oracle/lib/stream-knowledge";
 import AdaptiveContentContainer from "./AdaptiveContentContainer";
 import WikiArticleView from "./WikiArticleView";
@@ -19,25 +19,6 @@ import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import ComputeLensRenderer from "./lenses/ComputeLensRenderer";
 import ProvenanceBanner from "./ProvenanceBanner";
-import LensInspector from "./LensInspector";
-import {
-  PRESET_BLUEPRINTS,
-  loadCustomLenses,
-  getBlueprint,
-  type LensBlueprint,
-  type KnowledgeLens,
-} from "@/modules/oracle/lib/knowledge-lenses";
-
-const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
-  BookOpen,
-  Newspaper,
-  Baby,
-  GraduationCap,
-  BookText,
-  Sparkles,
-  User,
-  Calculator,
-};
 
 const LENS_RENDERERS: Record<string, React.FC<{
   title: string;
