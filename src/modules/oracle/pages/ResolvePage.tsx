@@ -1375,9 +1375,9 @@ const SearchPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 pt-0.5">
-                    <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-amber-400"}`} />
-                    <span className="text-base text-foreground/50 font-mono">
-                      {result.receipt.engine === "wasm" ? `wasm ✓ ${result.receipt.crateVersion ?? ""}` : "ts fallback"}
+                    <div className={`w-2 h-2 rounded-full ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-foreground/20"}`} />
+                    <span className="text-base text-foreground/40 font-mono">
+                      {result.receipt.engine === "wasm" ? `wasm · ${result.receipt.crateVersion ?? ""}` : "ts engine"}
                     </span>
                   </div>
                 </motion.div>

@@ -21,17 +21,23 @@ export async function loadWasm(): Promise<WasmModule | null> {
   if (wasmLoadPromise) return wasmLoadPromise;
 
   wasmLoadPromise = (async () => {
-    try {
-      const mod = await import("@/lib/wasm/uor-foundation/uor_wasm_shim");
-      await mod.default();
-      wasmModule = mod;
-      console.log("[UOR] WASM engine loaded — uor-foundation v" + mod.crate_version());
-      return mod;
-    } catch (e) {
-      console.warn("[UOR] WASM load failed, falling back to TypeScript engine:", e);
-      wasmFailed = true;
-      return null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const mod = await import("@/lib/wasm/uor-foundation/uor_wasm_shim");
+        await mod.default();
+        wasmModule = mod;
+        console.log("[UOR] WASM engine loaded — uor-foundation v" + mod.crate_version());
+        return mod;
+      } catch (e) {
+        console.warn(`[UOR] WASM load attempt ${attempt + 1} failed:`, e);
+        if (attempt === 0) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
     }
+    console.info("[UOR] WASM unavailable — using TypeScript engine (identical math)");
+    wasmFailed = true;
+    return null;
   })();
 
   return wasmLoadPromise;
