@@ -4,10 +4,6 @@
  * Canonical source of truth: https://crates.io/crates/uor-foundation (Rust)
  * API documentation: https://docs.rs/uor-foundation
  *
- * These TypeScript types are a projection of the authoritative Rust crate's
- * trait definitions. The crate is the single source of truth for all
- * namespaces, classes, properties, and named individuals in the UOR ontology.
- *
  * 33 canonical namespaces across Tri-Space + Enforcement:
  *   Kernel  (15+): u/, schema/, op/, carry/, cascade/, convergence/, division/,
  *                  effect/, failure/, linear/, monoidal/, operad/, parallel/,
@@ -20,7 +16,6 @@
  *
  * @version 2.0.0
  * @see https://crates.io/crates/uor-foundation
- * @see https://github.com/UOR-Foundation/UOR-Framework
  */
 
 // ── Primitives ─────────────────────────────────────────────────────────────
@@ -28,51 +23,26 @@ export type { Primitives, P } from "./primitives";
 
 // ── Enums ──────────────────────────────────────────────────────────────────
 export type {
-  Space,
-  PrimitiveOp,
-  MetricAxis,
-  FiberState,
-  GeometricCharacter,
-  // v0.2.0 enums
-  AchievabilityStatus,
-  ComplexityClass,
-  ExecutionPolicyKind,
-  GroundingPhase,
-  MeasurementUnit,
-  PhaseBoundaryType,
-  ProofModality,
-  ProofStrategy,
-  QuantifierKind,
-  RewriteRule,
-  SessionBoundaryType,
-  SiteState,
-  TriadProjection,
-  ValidityScopeKind,
-  VarianceAnnotation,
-  VerificationDomain,
-  ViolationKind,
+  Space, PrimitiveOp, MetricAxis, FiberState, GeometricCharacter,
+  AchievabilityStatus, ComplexityClass, ExecutionPolicyKind,
+  GroundingPhase, MeasurementUnit, PhaseBoundaryType,
+  ProofModality, ProofStrategy, QuantifierKind, RewriteRule,
+  SessionBoundaryType, SiteState, TriadProjection,
+  ValidityScopeKind, VarianceAnnotation, VerificationDomain, ViolationKind,
 } from "./enums";
-
 export type { WittLevel } from "./enums";
 
 // ── Kernel Space ───────────────────────────────────────────────────────────
 export type {
-  Address,
-  Glyph,
-  Datum,
-  Term,
-  Triad,
-  Literal,
-  Application,
-  Ring,
-  Operation,
-  UnaryOp,
-  BinaryOp,
-  Involution,
-  IdentityOp,
-  Group,
-  DihedralGroup,
-  // v0.2.0 kernel types
+  Address, Glyph,
+  // schema
+  Datum, Term, Triad, Literal, Application, Ring,
+  TermExpression, VariableBinding, W16Ring, W32Ring, RingHomomorphism, RingExtension,
+  // op
+  Operation, UnaryOp, BinaryOp, Involution, IdentityOp, Group, DihedralGroup,
+  DispatchOperation, SessionCompositionOperation, LiftOperation,
+  ReductionOperation, ParallelOperation, OperationChain,
+  // v0.2.0 kernel modules
   CarryBit, CarryChain, CarryProfile, EncodingQuality,
   CascadeMap, CascadeComposition, CascadeEpoch,
   NormedDivisionAlgebra, HopfFibration, ConvergenceTower,
@@ -97,67 +67,46 @@ export type { OpMeta } from "./kernel/op";
 // ── Bridge Space ───────────────────────────────────────────────────────────
 export type {
   // Query
-  Query,
-  CoordinateQuery,
-  MetricQuery,
-  RepresentationQuery,
+  Query, CoordinateQuery, MetricQuery, RepresentationQuery,
   // Resolver
-  Resolver,
-  DihedralFactorizationResolver,
-  IterativeRefinementResolver,
+  Resolver, DihedralFactorizationResolver, IterativeRefinementResolver,
   RefinementSuggestion,
+  HomotopyResolver, SessionResolver, GeodesicResolver, SpectralResolver,
+  LiftResolver, CascadeResolver, EnforcementResolver, ReductionResolver,
+  CompositeResolver, ResolutionPlan,
   // Partition
-  Component,
-  Partition,
-  IrreducibleSet,
-  ReducibleSet,
-  UnitSet,
-  ExteriorSet,
-  FiberCoordinate,
-  FiberPinning,
-  FiberBudget,
+  Component, Partition, IrreducibleSet, ReducibleSet, UnitSet, ExteriorSet,
+  FiberCoordinate, FiberPinning, FiberBudget,
+  SiteBinding, PartitionProduct, PartitionRefinement, FiberProjection,
   // Observable
-  Observable,
-  StratumObservable,
-  RingMetric,
-  HammingMetric,
-  CascadeObservable,
-  CascadeLength,
-  CurvatureObservable,
-  HolonomyObservable,
-  CatastropheObservable,
-  CatastropheThreshold,
-  DihedralElement,
-  MetricObservable,
-  PathObservable,
+  Observable, StratumObservable, RingMetric, HammingMetric,
+  CascadeObservable, CascadeLength, CurvatureObservable,
+  HolonomyObservable, CatastropheObservable, CatastropheThreshold,
+  DihedralElement, MetricObservable, PathObservable,
+  TopologicalObservable, SpectralGap, SpectralObservable,
+  EntropyObservable, ComplexityObservable, SessionObservable,
+  BoundaryObservable, FiberObservable, ConvergenceObservable,
+  ReductionObservable, InteractionObservable, HomologyObservable,
+  CohomologyObservable, GroundingObservable, AggregateObservable,
   // Proof
-  Proof,
-  CoherenceProof,
-  CriticalIdentityProof,
-  WitnessData,
+  Proof, CoherenceProof, CriticalIdentityProof, WitnessData,
+  InductiveProof, TacticApplication, ProofTerm, ProofContext,
+  ProofObligation, ProofScript,
   // Derivation
-  Derivation as DerivationV2,
-  DerivationStep,
-  RewriteStep,
-  RefinementStep,
-  TermMetrics,
+  Derivation as DerivationV2, DerivationStep, RewriteStep, RefinementStep, TermMetrics,
   // Trace
-  ComputationTrace,
-  ComputationStep,
+  ComputationTrace, ComputationStep,
+  GeodesicTrace, MeasurementEvent, TraceAnnotation, TraceSegment,
   // Certificate
-  Certificate,
-  TransformCertificate,
-  IsometryCertificate,
-  InvolutionCertificate,
+  Certificate, TransformCertificate, IsometryCertificate, InvolutionCertificate,
+  GeodesicCertificate, LiftChainCertificate, DeformationCertificate,
+  CompositionCertificate, EmbeddingCertificate, ActionCertificate,
+  SessionCertificate, CertificateChain,
   // Audio
-  AudioSampleFormat,
-  AudioDatum as AudioDatumType,
-  AudioFrame as AudioFrameType,
-  AudioFeature as AudioFeatureType,
-  AudioSegment as AudioSegmentType,
-  AudioTrack as AudioTrackType,
-  AudioLensProjection,
-  // v0.2.0 bridge types
+  AudioSampleFormat, AudioDatum as AudioDatumType, AudioFrame as AudioFrameType,
+  AudioFeature as AudioFeatureType, AudioSegment as AudioSegmentType,
+  AudioTrack as AudioTrackType, AudioLensProjection,
+  // v0.2.0 bridge modules
   Source, Sink, IngestEffect, EmitEffect, BoundarySession,
   Cochain, CoboundaryMap, CochainComplex, CohomologyGroup, ObstructionClass,
   Shape, PropertyShape, NodeShape, ConformanceReport, Violation,
@@ -170,60 +119,43 @@ export { OBSERVABLE_AXIS } from "./bridge/observable";
 
 // ── User Space ─────────────────────────────────────────────────────────────
 export type {
-  // Type
-  TypeDefinition,
-  PrimitiveType,
-  ProductType,
-  SumType,
-  ConstrainedType,
-  Constraint,
-  ResidueConstraint,
-  CarryConstraint,
-  DepthConstraint,
-  CompositeConstraint,
-  // Morphism
-  Transform,
-  Isometry,
-  Embedding,
-  Action,
-  Composition,
-  CompositionLaw,
-  IdentityMorphism,
-  // State
-  Context,
-  Binding,
-  Frame,
-  Transition,
+  // Type (core)
+  TypeDefinition, PrimitiveType, ProductType, SumType,
+  ConstrainedType, Constraint, ResidueConstraint, CarryConstraint,
+  DepthConstraint, CompositeConstraint,
+  // Type (v0.2.0)
+  ModuliSpace, LiftChain, DeformationFamily, GaloisConnection,
+  TypeScheme, TypeVariable, RecursiveType, RefinementType,
+  DependentType, HigherKindedType, UniverseLevel, TypeEquality,
+  Subtyping, TypeInference, UnificationResult, TypeContext,
+  TypeJudgment, TypeDerivation,
+  // Morphism (core)
+  Transform, Isometry, Embedding, Action, Composition,
+  CompositionLaw, IdentityMorphism,
+  // Morphism (v0.2.0)
+  GroundingMap, ProjectionMap, Witness, SymbolSequence,
+  TopologicalDelta, FunctorMorphism, NaturalTransformation,
+  AdjunctionPair, MonadMorphism, ComonadMorphism,
+  DiagramMorphism, LimitCone,
+  // State (core)
+  Context, Binding, Frame, Transition,
+  // State (v0.2.0)
+  Session, SessionBoundary, SharedContext, ContextLease,
+  ContextMigration, StateCheckpoint, StateSnapshot,
 } from "./user";
 
 export { CRITICAL_COMPOSITION } from "./user/morphism";
 
 // ── Enforcement Module (v0.2.0) ────────────────────────────────────────────
 export type {
-  EnforcementDatum,
-  Validated,
-  EnforcementDerivation,
-  EnforcementFiberBudget,
-  FreeRank,
-  DatumBuilder,
-  DerivationBuilder,
-  FiberBudgetBuilder,
-  TermBuilder,
-  AssertionBuilder,
-  BindingBuilder,
-  SourceDeclBuilder,
-  SinkDeclBuilder,
-  BoundarySessionBuilder,
-  TermKind,
-  EnforcementTerm,
-  TermArena,
-  TermList,
-  EnforcementBinding,
-  Assertion,
-  SourceDeclaration,
-  SinkDeclaration,
-  GroundedCoord,
-  GroundedTuple,
-  Grounding,
-  GroundedValue,
+  EnforcementDatum, Validated, EnforcementDerivation,
+  EnforcementFiberBudget, FreeRank,
+  DatumBuilder, DerivationBuilder, FiberBudgetBuilder,
+  TermBuilder, AssertionBuilder, BindingBuilder,
+  SourceDeclBuilder, SinkDeclBuilder, BoundarySessionBuilder,
+  TermKind, EnforcementTerm, TermArena, TermList,
+  EnforcementBinding, Assertion,
+  SourceDeclaration, SinkDeclaration,
+  GroundedCoord, GroundedTuple,
+  Grounding, GroundedValue,
 } from "./enforcement";

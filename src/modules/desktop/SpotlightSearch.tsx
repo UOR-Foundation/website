@@ -1,12 +1,14 @@
 /**
  * SpotlightSearch — Universal command palette (⌘K) powered by cmdk.
  * Theme-aware with fuzzy search, ARIA support, and grouped sections.
+ * v0.2.0: Groups apps by OS taxonomy category.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/modules/core/ui/command";
 import { DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
+import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { Search, Clock } from "lucide-react";
 
@@ -32,6 +34,18 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
   const [query, setQuery] = useState("");
   const { isLight } = useDesktopTheme();
   const recents = getRecents();
+
+  // Group apps by OS taxonomy category
+  const groupedApps = useMemo(() => {
+    const groups: Record<string, typeof DESKTOP_APPS> = {};
+    for (const app of DESKTOP_APPS) {
+      const cat = app.category;
+      const label = OS_TAXONOMY[cat]?.label ?? cat;
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(app);
+    }
+    return groups;
+  }, []);
 
   useEffect(() => {
     if (open) setQuery("");
@@ -103,7 +117,6 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
               onKeyDown={(e) => {
                 if (e.key === "Escape") { onClose(); }
                 if (e.key === "Enter" && query.trim()) {
-                  // If no item is highlighted, treat as a free-text search
                   const selected = document.querySelector("[cmdk-item][data-selected=true]");
                   if (!selected) {
                     e.preventDefault();
@@ -138,24 +151,30 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
                   )}
                 </CommandEmpty>
 
-                <CommandGroup heading="Apps" className={`[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:${headingColor} [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5`}>
-                  {DESKTOP_APPS.map((app) => {
-                    const Icon = app.icon;
-                    return (
-                      <CommandItem
-                        key={app.id}
-                        value={`app:${app.label}`}
-                        onSelect={() => handleSelect(`app:${app.id}`)}
-                        className={`flex items-center gap-3 px-4 py-2 mx-0 rounded-none cursor-default ${itemText} data-[selected=true]:${selectedBg}`}
-                      >
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: itemIconBg }}>
-                          <Icon className={`w-3.5 h-3.5 ${itemIconColor}`} />
-                        </div>
-                        <span className="text-[13px] font-medium">{app.label}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
+                {Object.entries(groupedApps).map(([groupLabel, apps]) => (
+                  <CommandGroup
+                    key={groupLabel}
+                    heading={groupLabel}
+                    className={`[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:${headingColor} [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5`}
+                  >
+                    {apps.map((app) => {
+                      const Icon = app.icon;
+                      return (
+                        <CommandItem
+                          key={app.id}
+                          value={`app:${app.label}`}
+                          onSelect={() => handleSelect(`app:${app.id}`)}
+                          className={`flex items-center gap-3 px-4 py-2 mx-0 rounded-none cursor-default ${itemText} data-[selected=true]:${selectedBg}`}
+                        >
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: itemIconBg }}>
+                            <Icon className={`w-3.5 h-3.5 ${itemIconColor}`} />
+                          </div>
+                          <span className="text-[13px] font-medium">{app.label}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                ))}
 
                 {recents.length > 0 && (
                   <>
