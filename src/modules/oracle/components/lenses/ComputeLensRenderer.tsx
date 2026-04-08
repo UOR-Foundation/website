@@ -6,7 +6,7 @@
  * comparisons, formulas, plots — mapping directly to UOR hologram projections.
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, ChevronDown, ChevronRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { queryWolfram, isComputableQuery, type WolframPod, type WolframResult } from "@/modules/oracle/lib/wolfram-client";
