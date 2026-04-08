@@ -6,6 +6,7 @@
 import { useCallback, useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
+import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import DesktopMenuBar from "@/modules/desktop/DesktopMenuBar";
 import DesktopDock from "@/modules/desktop/DesktopDock";
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
@@ -75,8 +76,15 @@ function DesktopShellInner() {
       onHideAll={handleHideAll}
     >
       <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}>
-        {theme === "immersive" && <ImmersiveBackground />}
-
+        {theme === "immersive" && (
+          <>
+            <ImmersiveBackground />
+            <div className="fixed bottom-[76px] left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
+              <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
+              <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
+            </div>
+          </>
+        )}
         <DesktopWidgets
           windows={wm.windows}
           onSearch={handleHomeSearch}
