@@ -1,64 +1,90 @@
 
 
-## Solar-Aware Immersive Background Photos
+## Redesign UOR Messenger — Unique Style + Real Backend Wiring
 
-### Problem
-Current system uses fixed hour buckets (e.g., hour 17 = golden hour) regardless of actual sunrise/sunset times. In summer at high latitudes, sunset could be at 21:00; in winter at 16:00. The photos don't match what the user actually sees outside their window.
+### What Changes
 
-### Solution
-Replace the fixed 24-hour grid with a **solar phase engine** that computes the sun's actual position based on the user's coordinates and date, then selects photos matching the real light conditions.
+The messenger currently looks like a WhatsApp clone (green tint, identical layout, tail nubs on bubbles) and uses hardcoded mock data. We'll give it a distinctive visual identity that matches the rest of the UOR/Oracle experience, and wire all messaging to the existing `conduit_sessions` + `encrypted_messages` tables via the UMP protocol layer.
 
-### How It Works
+### Part 1: Visual Redesign
 
-```text
-Browser geolocation (or IP fallback)
-  → latitude + longitude + date
-  → Solar position calculator (sunrise, sunset, solar noon, civil twilight)
-  → Current "light phase" with fractional progress:
-      deep_night → pre_dawn → dawn → sunrise → golden_morning →
-      bright_morning → midday → afternoon → golden_hour →
-      sunset → dusk → twilight → night
-  → Select Unsplash photo matching that phase
-  → Crossfade on phase change (checked every 60s)
-```
+**Goal**: Replace the WhatsApp aesthetic with a design coherent with the Oracle/Immersive UI — dark glass panels, subtle gradients, no message tail nubs, rounded-pill bubbles, and the UOR teal/indigo accent palette.
 
-### Solar Calculator
-Pure math — no API needed. Uses the standard solar declination + hour angle equations to compute sunrise/sunset/twilight times for any lat/lng/date. ~60 lines of trigonometry. Accounts for:
-- Seasonal variation (summer vs winter day length)
-- Latitude (polar regions, tropics, mid-latitudes)
-- Civil twilight angles (-6 degrees)
-
-### Expanded Photo Library
-13 distinct light phases instead of 24 hourly buckets. Each phase has 3-4 curated Unsplash photos for daily rotation. All images are landscape/nature scenes matching that specific light condition. ~45 total curated photos (up from 24).
-
-| Phase | Description | Example scenes |
+| Component | Current (WhatsApp) | New (UOR) |
 |---|---|---|
-| deep_night | Solar elevation < -18 deg | Milky Way, starscapes, aurora |
-| pre_dawn | -18 to -12 deg | Deep blue horizon glow |
-| dawn | -12 to -6 deg | Pink/purple sky, misty valleys |
-| sunrise | -6 to +2 deg (rising) | Sun breaking horizon, warm rays |
-| golden_morning | +2 to +10 deg | Long shadows, golden fields |
-| bright_morning | +10 to +30 deg | Crisp daylight, dewy landscapes |
-| midday | +30 deg to peak | Bright sun, vivid colors |
-| afternoon | Peak to +20 deg (falling) | Warm light, clear skies |
-| golden_hour | +10 to +2 deg (falling) | Amber glow, long shadows |
-| sunset | +2 to -6 deg (falling) | Fiery horizon, silhouettes |
-| dusk | -6 to -12 deg | Purple/pink afterglow |
-| twilight | -12 to -18 deg | Deep blue, first stars |
-| night | < -18 deg (falling) | Same as deep_night |
+| **Color palette** | `#005c4b` sent, `#202c33` received | Sent: indigo-500/20 glass, Received: white/5 glass |
+| **Bubble shape** | Rounded-lg with triangle tail nub | Rounded-2xl, no tail, subtle border |
+| **Sidebar** | Green nav rail, `#111b21` panel | `backdrop-blur-xl bg-white/5` glass panel, no nav rail icons |
+| **Header** | Green-tinged bar with WhatsApp icons | Minimal glass bar, UOR shield badge |
+| **Input bar** | WhatsApp mic/emoji layout | Clean pill input with subtle glow on focus |
+| **Background** | SVG dot pattern on dark green | Subtle radial gradient (dark indigo/slate) |
+| **Chat list** | Green unread badges, WhatsApp spacing | Teal accent, glass hover states |
+| **Empty state** | 💬 emoji | UOR shield/lock iconography |
 
-### Geolocation Strategy
-1. Try `navigator.geolocation` (cached in localStorage for 24h)
-2. Fallback: use timezone offset to estimate longitude, assume 40 deg N latitude
-3. No external API calls needed
+**Files**: `MessageBubble.tsx`, `ChatSidebar.tsx`, `ChatList.tsx`, `ContactHeader.tsx`, `MessageInput.tsx`, `ConversationView.tsx`, `MessengerPage.tsx`, `SessionBadge.tsx`
 
-### Files Changed
+### Part 2: Remove Mock Data, Wire to Backend
+
+**Goal**: Replace `mock-data.ts` with real data from `conduit_sessions` and `encrypted_messages` tables, using the existing UMP protocol functions for encryption/decryption.
+
+#### New files
+
+| File | Purpose |
+|---|---|
+| `src/modules/messenger/lib/use-conversations.ts` | React hook: fetches user's `conduit_sessions`, joins with `profiles` for display names/avatars, subscribes to realtime changes |
+| `src/modules/messenger/lib/use-messages.ts` | React hook: fetches `encrypted_messages` for a session, decrypts via UMP `openMessage()`, subscribes to realtime inserts |
+| `src/modules/messenger/lib/use-send-message.ts` | Hook: encrypts plaintext via `sealMessage()`, inserts into `encrypted_messages`, updates DAG heads |
+| `src/modules/messenger/components/NewConversationDialog.tsx` | Modal to search users by handle (`search_profiles_by_handle`), create a new `conduit_session` via `createDirectSession()` |
+
+#### Modified files
 
 | File | Change |
 |---|---|
-| `src/modules/oracle/lib/solar-position.ts` | New — sunrise/sunset/twilight calculator from lat/lng/date |
-| `src/modules/oracle/lib/immersive-photos.ts` | Replace fixed hourly grid with phase-based photo selection using solar calculator; expand to ~45 curated Unsplash photos across 13 phases |
-| `src/modules/oracle/components/ImmersiveBackground.tsx` | Request geolocation on mount; pass coords to photo selector; check phase every 60s instead of hour change |
+| `mock-data.ts` | Keep type definitions (`Contact`, `Message`, `Chat`), remove all hardcoded data arrays |
+| `ConversationView.tsx` | Use `useMessages(sessionId)` + `useSendMessage(session)` instead of local state from mock arrays |
+| `ChatSidebar.tsx` | Use `useConversations()` instead of imported `chats` array; add "New chat" button |
+| `ChatList.tsx` | Accept real conversation data; show last decrypted message preview |
+| `MessengerPage.tsx` | Gate on `useAuth()` — show sign-in prompt if not authenticated; pass session objects instead of contact IDs |
+| `ContactHeader.tsx` | Show real profile data from the session's participant |
+| `messaging-protocol.ts` | Add `initSession()` and `persistSession()` functions that read/write `conduit_sessions` table and manage the local key cache |
 
-No database changes. No new dependencies. Pure client-side math + expanded Unsplash curation.
+#### Data Flow
+
+```text
+User opens /messenger
+  → useAuth() checks authentication
+  → useConversations() queries conduit_sessions WHERE auth.uid() = ANY(participants)
+  → For each session, fetch peer profile from profiles table
+  → Display in ChatList
+
+User selects a conversation
+  → useMessages(sessionId) queries encrypted_messages ORDER BY created_at
+  → Each message decrypted client-side via openMessage(session, msg)
+  → Realtime subscription on encrypted_messages for live updates
+
+User sends a message
+  → sealMessage(session, plaintext) → ciphertext + message_hash + envelope_cid
+  → INSERT INTO encrypted_messages
+  → Realtime broadcasts to other participant
+
+User starts new conversation
+  → Search profiles by handle
+  → createDirectSession(myIdentity, peerIdentity)
+  → INSERT INTO conduit_sessions
+  → Navigate to new conversation
+```
+
+### Part 3: Authentication Gate
+
+The messenger requires authentication (RLS on both tables enforces this). If the user is not signed in, show a centered prompt with the UOR shield and a "Sign in to message" button that opens the existing `SovereignIdentityPanel`.
+
+### Summary of All Files
+
+| Action | File |
+|---|---|
+| **Restyle** | `MessageBubble.tsx`, `ChatSidebar.tsx`, `ChatList.tsx`, `ContactHeader.tsx`, `MessageInput.tsx`, `ConversationView.tsx`, `MessengerPage.tsx` |
+| **New** | `use-conversations.ts`, `use-messages.ts`, `use-send-message.ts`, `NewConversationDialog.tsx` |
+| **Modify** | `mock-data.ts` (keep types, remove data), `messaging-protocol.ts` (add persistence) |
+
+No database changes needed — `conduit_sessions`, `encrypted_messages`, and `profiles` tables already exist with correct RLS policies and realtime enabled.
 
