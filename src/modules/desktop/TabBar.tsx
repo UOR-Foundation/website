@@ -3,7 +3,7 @@
  * Each open window is a tab. Active tab blends into content below.
  * 
  * Uses Pretext for smart word-boundary truncation instead of CSS truncate.
- * Revolut-inspired: reduced blur, no decorative icons, tight transitions.
+ * Golden ratio (φ) proportioned tab heights and spacing.
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -12,6 +12,7 @@ import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { smartTruncate, FONTS } from "@/modules/oracle/lib/pretext-layout";
+import { SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub,
@@ -30,8 +31,9 @@ interface Props {
 }
 
 const TAB_BAR_H = 38;
+const TAB_H = 34;       // 21 × φ ≈ 34 — golden-ratio tab height
 const TAB_MAX_W = 220;
-const TAB_PADDING = 44; // icon + close button + padding
+const TAB_PADDING = 44;  // icon + close button + padding
 
 export default function TabBar({
   activeWindowId, windows, onFocusWindow, onCloseWindow, onMinimizeWindow,
@@ -141,8 +143,11 @@ export default function TabBar({
           return (
             <button
               key={win.id}
-              className={`chrome-tab group relative flex items-center gap-1.5 min-w-[120px] max-w-[220px] h-[32px] px-3 
-                text-[12px] font-medium whitespace-nowrap transition-all duration-150 ease-out shrink-0
+              className={`chrome-tab group relative flex items-center gap-1.5 min-w-[120px] max-w-[220px] px-3 
+                text-[12px] font-medium whitespace-nowrap shrink-0`}
+              style={{
+                height: TAB_H,
+                transition: `all ${TIMING.fast}ms ease-out`,
                 ${isActive ? tabTextActive : isMini ? tabTextMuted : tabText}
                 ${isActive ? "chrome-tab-active" : ""}
               `}
@@ -195,8 +200,8 @@ export default function TabBar({
         </button>
       </div>
 
-      {/* Right: status — search + clock only */}
-      <div className="flex items-center gap-3 shrink-0 px-3 h-full">
+      {/* Right: status — search + clock only, φ-scale gap */}
+      <div className="flex items-center shrink-0 px-3 h-full" style={{ gap: `${SPACE.md}px` }}>
         <button
           onClick={onSpotlight}
           className={`p-0.5 rounded transition-colors duration-150 ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.05]"}`}

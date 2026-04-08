@@ -2,7 +2,7 @@
  * DesktopWindow — Draggable/resizable window without title bar (tabs handle that).
  * Thin drag strip at top for repositioning. Theme-aware.
  * 
- * Revolut-inspired: tight 150ms transitions, reduced blur, no springs.
+ * Golden ratio (φ) proportioned: border-radius 10px, shadows via desktop.css.
  */
 
 import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -11,6 +11,7 @@ import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { WindowContextProvider } from "@/modules/desktop/WindowContext";
+import { RADIUS, TIMING } from "@/modules/desktop/lib/golden-ratio";
 import "@/modules/desktop/desktop.css";
 
 interface Props {
@@ -92,7 +93,7 @@ export default function DesktopWindow({
     ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px)` }
     : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
-  // Revolut-style: solid semi-opaque bg, reduced blur (20px vs 48px)
+  // Solid semi-opaque bg, reduced blur (20px)
   const glassBg = isLight ? "rgba(245,245,245,0.95)" : "rgba(24,24,24,0.92)";
   const borderColor = isActive
     ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)")
@@ -106,13 +107,17 @@ export default function DesktopWindow({
       style={{ ...style, zIndex: win.zIndex }}
       onPointerDown={() => onFocus(win.id)}
     >
-      <div className="absolute inset-0 rounded-xl" style={{
+      <div className="absolute inset-0" style={{
+        borderRadius: `${RADIUS.md}px`,
         background: glassBg,
         backdropFilter: "blur(20px) saturate(1.2)",
         WebkitBackdropFilter: "blur(20px) saturate(1.2)",
       }} />
 
-      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ border: `1px solid ${borderColor}` }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        borderRadius: `${RADIUS.md}px`,
+        border: `1px solid ${borderColor}`,
+      }} />
 
       {/* Thin drag strip at top — invisible but draggable */}
       <div
@@ -124,7 +129,11 @@ export default function DesktopWindow({
         onDoubleClick={() => onMaximize(win.id)}
       />
 
-      <div className="relative overflow-auto rounded-b-xl" style={{ height: `calc(100% - ${DRAG_STRIP_H}px)`, background: contentBg }}>
+      <div className="relative overflow-auto" style={{
+        height: `calc(100% - ${DRAG_STRIP_H}px)`,
+        background: contentBg,
+        borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
+      }}>
         <WindowContextProvider initialQuery={win.title}>
           <Suspense fallback={
             <div className="flex items-center justify-center h-full">

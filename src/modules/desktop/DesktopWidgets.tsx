@@ -5,6 +5,7 @@
  *
  * Uses Pretext canvas measurement for adaptive clock sizing and
  * orphan-free greeting text — no CSS clamp() hacks.
+ * All proportions governed by the golden ratio (φ = 1.618).
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -16,6 +17,7 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
 import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
+import { CONTENT, SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
 
 interface Props {
   windows: WindowState[];
@@ -71,7 +73,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const { profile } = useAuth();
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
-  const [containerWidth, setContainerWidth] = useState(580);
+  const [containerWidth, setContainerWidth] = useState(CONTENT.searchWidth);
 
   const detected = useMemo(() => detectAddress(query), [query]);
   const isAddress = detected.kind !== null;
@@ -114,7 +116,6 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
         return { fontSize: candidate.fontSize, lineHeight: `${candidate.lineHeight}px` };
       }
     }
-    // Fallback to smallest
     const sm = CLOCK_SIZES[CLOCK_SIZES.length - 1];
     return { fontSize: sm.fontSize, lineHeight: `${sm.lineHeight}px` };
   }, [clockStr, containerWidth]);
@@ -177,18 +178,27 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     <div
       className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
       style={{
-        paddingBottom: 60,
+        paddingBottom: SPACE.xxxl,
         opacity: widgetOpacity,
-        transition: "opacity 300ms ease-out",
+        transition: `opacity ${TIMING.normal}ms ease-out`,
       }}
     >
-      <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "22vh" }}>
+      {/* φ⁻¹ optical center: 38.2% from top */}
+      <div
+        ref={containerRef}
+        className="pointer-events-auto w-full px-6 flex flex-col items-center"
+        style={{
+          maxWidth: `min(${CONTENT.searchWidth}px, ${CONTENT.searchWidthVw}vw)`,
+          marginTop: `${CONTENT.opticalCenter}vh`,
+        }}
+      >
         {/* Clock — Pretext-measured adaptive sizing */}
         <div
-          className="text-center mb-4"
+          className="text-center"
           style={{
+            marginBottom: `${SPACE.lg}px`,
             opacity: clockOpacity,
-            transition: "opacity 300ms ease-out",
+            transition: `opacity ${TIMING.normal}ms ease-out`,
           }}
         >
           <h1
@@ -197,13 +207,13 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               ...clockStyle,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
               textShadow: clockShadow,
-              transition: "font-size 0.3s ease-out",
+              transition: `font-size ${TIMING.normal}ms ease-out`,
             }}
           >
             {clockStr}
           </h1>
           {/* Greeting — BalancedBlock eliminates orphan words */}
-          <div className="mt-3">
+          <div style={{ marginTop: `${SPACE.md}px` }}>
             <BalancedBlock
               font={greetingFontInfo.font}
               lineHeight={greetingFontInfo.lineHeight}
@@ -221,8 +231,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           </div>
         </div>
 
-        {/* Search bar */}
-        <form onSubmit={handleSubmit} className="w-full mt-8">
+        {/* Search bar — φ spacing from greeting */}
+        <form onSubmit={handleSubmit} className="w-full" style={{ marginTop: `${SPACE.xl}px` }}>
           <div className="relative w-full group">
             <input
               ref={inputRef}
@@ -230,7 +240,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What is your main focus today?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
+              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all"
               style={{
                 paddingLeft: "3.5rem",
                 background: searchBg,
@@ -243,6 +253,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                   : "'DM Sans', -apple-system, sans-serif",
                 letterSpacing: isAddress ? "0.03em" : undefined,
                 fontWeight: isAddress ? 500 : undefined,
+                transitionDuration: `${TIMING.fast}ms`,
               }}
             />
 
@@ -255,6 +266,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                   background: btnBgStyle,
                   border: btnBorderStyle,
                   color: isImmersive ? "hsl(0 0% 100% / 0.5)" : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.4)",
+                  transitionDuration: `${TIMING.fast}ms`,
                 }}
                 title="Add context"
               >
@@ -280,10 +292,11 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               <button
                 type="submit"
                 disabled={!query.trim()}
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-25"
+                className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-25"
                 style={{
                   background: btnBgStyle,
                   border: btnBorderStyle,
+                  transition: `all ${TIMING.fast}ms ease-out`,
                 }}
               >
                 <ArrowRight className={`w-5 h-5 ${btnIconColor}`} />
