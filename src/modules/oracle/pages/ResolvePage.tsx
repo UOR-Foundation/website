@@ -30,7 +30,7 @@ import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib
 import { singleProofHash } from "@/lib/uor-canonical";
 import { isValidTriword } from "@/lib/uor-triword";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
-import { streamKnowledge, type WikiMeta } from "@/modules/oracle/lib/stream-knowledge";
+import { streamKnowledge, type WikiMeta, type MediaData } from "@/modules/oracle/lib/stream-knowledge";
 import { DEFAULT_LENS } from "@/modules/oracle/lib/knowledge-lenses";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -695,7 +695,7 @@ const SearchPage = () => {
     let wiki: WikiMeta | null = null;
     let streamSources: string[] = [];
     let provenanceMeta: { model?: string; personalized?: boolean; personalizedTopics?: string[] } = {};
-
+    let mediaData: MediaData | null = null;
     await streamKnowledge({
       keyword,
       context: recentContext,
@@ -730,6 +730,17 @@ const SearchPage = () => {
           });
         }
         if (normalizedSources.length > 0) streamSources = normalizedSources;
+      },
+      onMedia: (media) => {
+        mediaData = media;
+        setResult(prev => {
+          if (!prev) return prev;
+          const src = prev.source as Record<string, unknown>;
+          return {
+            ...prev,
+            source: { ...src, "uor:media": media },
+          };
+        });
       },
       onDelta: (text) => {
         accumulatedSynthesis += text;
