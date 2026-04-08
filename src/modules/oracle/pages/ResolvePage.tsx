@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Circle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -96,6 +96,11 @@ const SearchPage = () => {
   const [improbSideEffect, setImprobSideEffect] = useState("");
   const [drivePrePhase, setDrivePrePhase] = useState(false);
   const [drivePostPhase, setDrivePostPhase] = useState(false);
+
+  // Chain of Proofs state
+  const [chainSelectMode, setChainSelectMode] = useState(false);
+  const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
+  const [chainEncoding, setChainEncoding] = useState(false);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
@@ -239,6 +244,85 @@ const SearchPage = () => {
     setAiMode(false);
     setAiMessages([]);
     setAiInput("");
+    setChainSelectMode(false);
+    setSelectedProofIndices(new Set());
+  };
+
+  const toggleChainSelect = () => {
+    if (chainSelectMode) {
+      setChainSelectMode(false);
+      setSelectedProofIndices(new Set());
+    } else {
+      setChainSelectMode(true);
+    }
+  };
+
+  const toggleProofIndex = (idx: number) => {
+    setSelectedProofIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  // Count assistant messages with proofs
+  const proofCount = aiMessages.filter(m => m.role === "assistant" && m.proof).length;
+
+  const encodeChain = async () => {
+    if (selectedProofIndices.size === 0) return;
+    setChainEncoding(true);
+    try {
+      // Get all assistant messages with proofs, map by their position among proof-bearing messages
+      const proofMessages = aiMessages
+        .map((m, i) => ({ msg: m, originalIdx: i }))
+        .filter(({ msg }) => msg.role === "assistant" && msg.proof);
+
+      const selected = [...selectedProofIndices].sort().map(i => proofMessages[i]);
+      if (selected.length === 0) return;
+
+      // Find the user query preceding each assistant message
+      const links = selected.map(({ msg, originalIdx }, linkIdx) => {
+        // Walk backwards to find the user message
+        let query = "";
+        for (let j = originalIdx - 1; j >= 0; j--) {
+          if (aiMessages[j].role === "user") {
+            query = aiMessages[j].content;
+            break;
+          }
+        }
+        return {
+          "@type": "uor:ProofOfThought",
+          "uor:position": linkIdx,
+          "uor:query": query,
+          "uor:response": msg.content,
+          "uor:proofAddress": msg.proof?.triword ?? "",
+          "uor:proofCid": msg.proof?.cid ?? "",
+        };
+      });
+
+      const chainSource = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:ChainOfProofs",
+        "uor:links": links,
+        "uor:chainLength": links.length,
+        "uor:timestamp": new Date().toISOString(),
+      };
+
+      const receipt = await encode(chainSource);
+      navigator.clipboard.writeText(receipt.triword);
+      toast.success("Chain address copied!", {
+        description: receipt.triwordFormatted,
+        icon: "🔗",
+      });
+      setChainSelectMode(false);
+      setSelectedProofIndices(new Set());
+    } catch (e) {
+      console.warn("[Chain] Encoding failed:", e);
+      toast.error("Chain encoding failed.");
+    } finally {
+      setChainEncoding(false);
+    }
   };
 
   /* ── Infinite Improbability Drive sequence (~5s, themed) ── */
@@ -690,9 +774,25 @@ const SearchPage = () => {
                     <span className="text-sm font-medium text-foreground/80">UOR Oracle</span>
                   </div>
                 </div>
-                <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {proofCount >= 2 && (
+                    <button
+                      onClick={toggleChainSelect}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                        chainSelectMode
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20"
+                      }`}
+                      title="Chain of Proofs — select proofs to encode as a single address"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      {chainSelectMode ? "Cancel" : "Chain"}
+                    </button>
+                  )}
+                  <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Messages area */}
@@ -709,73 +809,127 @@ const SearchPage = () => {
                   </div>
                 )}
 
-                {aiMessages.map((msg, i) => (
-                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div className={`max-w-[85%] ${
-                      msg.role === "user"
-                        ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
-                        : "prose prose-invert prose-sm max-w-none"
-                    }`}>
-                      {msg.role === "user" ? (
-                        <p className="text-sm text-foreground/90">{msg.content}</p>
-                      ) : (
-                        <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
-                          <ReactMarkdown>
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
+                {(() => {
+                  // Track proof index for chain selection
+                  let proofIdx = -1;
+                  return aiMessages.map((msg, i) => {
+                    const hasProof = msg.role === "assistant" && !!msg.proof;
+                    if (hasProof) proofIdx++;
+                    const currentProofIdx = proofIdx;
+                    const isSelected = hasProof && selectedProofIndices.has(currentProofIdx);
 
-                    {/* UOR Proof Card — appears below each completed assistant message */}
-                    {msg.role === "assistant" && msg.proof && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                        className="mt-2 max-w-[85%] w-full"
-                      >
-                        <div className="border border-primary/10 rounded-xl bg-primary/[0.03] px-4 py-3 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
-                            <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
-                          </div>
+                    // Check if the next assistant message also has a proof (for chain connector)
+                    const nextProofExists = hasProof && aiMessages.slice(i + 1).some(m => m.role === "assistant" && m.proof);
 
-                          {/* Triword address */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-display text-foreground/80 tracking-wide">
-                              {msg.proof.triwordFormatted}
-                            </span>
-                            <CopyBtn
-                              onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
-                              copied={copied === `proof-triword-${i}`}
-                              size={10}
-                            />
-                          </div>
-
-                          {/* IPv6 address */}
-                          {msg.proof.ipv6 && (
-                            <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
-                              {msg.proof.ipv6}
-                            </p>
+                    return (
+                      <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                        <div className={`max-w-[85%] ${
+                          msg.role === "user"
+                            ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
+                            : "prose prose-invert prose-sm max-w-none"
+                        }`}>
+                          {msg.role === "user" ? (
+                            <p className="text-sm text-foreground/90">{msg.content}</p>
+                          ) : (
+                            <div className="text-sm text-foreground/75 leading-relaxed [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3">
+                              <ReactMarkdown>
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
                           )}
-
-                          {/* Clickable to navigate to full proof */}
-                          <button
-                            onClick={() => {
-                              setInput(msg.proof!.triword);
-                              exitAiMode();
-                              setTimeout(() => handleSearch(msg.proof!.triword), 100);
-                            }}
-                            className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
-                          >
-                            View full proof →
-                          </button>
                         </div>
-                      </motion.div>
-                    )}
-                  </div>
-                ))}
+
+                        {/* UOR Proof Card — appears below each completed assistant message */}
+                        {hasProof && msg.proof && (
+                          <div className="relative mt-2 max-w-[85%] w-full">
+                            <motion.div
+                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                              className="flex items-stretch gap-0"
+                            >
+                              {/* Chain connector + checkbox column */}
+                              {proofCount >= 2 && (
+                                <div className="flex flex-col items-center w-8 shrink-0 pt-1">
+                                  {/* Chain node / checkbox */}
+                                  {chainSelectMode ? (
+                                    <button
+                                      onClick={() => toggleProofIndex(currentProofIdx)}
+                                      className="transition-all"
+                                      aria-label={isSelected ? "Deselect proof" : "Select proof"}
+                                    >
+                                      {isSelected ? (
+                                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                                      ) : (
+                                        <Circle className="w-4 h-4 text-muted-foreground/25 hover:text-muted-foreground/50" />
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <div className="w-2 h-2 rounded-full bg-primary/20 border border-primary/15 mt-1" />
+                                  )}
+                                  {/* Connector line to next proof */}
+                                  {nextProofExists && (
+                                    <div className="flex-1 w-px bg-primary/10 mt-1" style={{ minHeight: 24 }} />
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Proof card */}
+                              <div className={`flex-1 border rounded-xl px-4 py-3 space-y-2 transition-all ${
+                                isSelected
+                                  ? "border-primary/30 bg-primary/[0.06]"
+                                  : "border-primary/10 bg-primary/[0.03]"
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
+                                  <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
+                                </div>
+
+                                {/* Triword address */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-display text-foreground/80 tracking-wide">
+                                    {msg.proof.triwordFormatted}
+                                  </span>
+                                  <CopyBtn
+                                    onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
+                                    copied={copied === `proof-triword-${i}`}
+                                    size={10}
+                                  />
+                                </div>
+
+                                {/* IPv6 address */}
+                                {msg.proof.ipv6 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
+                                      {msg.proof.ipv6}
+                                    </p>
+                                    <CopyBtn
+                                      onClick={() => copy(msg.proof!.ipv6, `proof-ipv6-${i}`)}
+                                      copied={copied === `proof-ipv6-${i}`}
+                                      size={10}
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Clickable to navigate to full proof */}
+                                <button
+                                  onClick={() => {
+                                    setInput(msg.proof!.triword);
+                                    exitAiMode();
+                                    setTimeout(() => handleSearch(msg.proof!.triword), 100);
+                                  }}
+                                  className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
+                                >
+                                  View full proof →
+                                </button>
+                              </div>
+                            </motion.div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
 
                 {aiStreaming && aiMessages[aiMessages.length - 1]?.role !== "assistant" && (
                   <div className="flex justify-start">
@@ -787,6 +941,39 @@ const SearchPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Floating chain selection bar */}
+              <AnimatePresence>
+                {chainSelectMode && selectedProofIndices.size > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    className="shrink-0 mx-auto mb-2"
+                  >
+                    <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
+                      <Link2 className="w-3.5 h-3.5 text-primary/70" />
+                      <span className="text-sm font-medium text-foreground/80">
+                        {selectedProofIndices.size} proof{selectedProofIndices.size > 1 ? "s" : ""} selected
+                      </span>
+                      <button
+                        onClick={encodeChain}
+                        disabled={chainEncoding}
+                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
+                      >
+                        {chainEncoding ? "Encoding…" : "Copy Chain Address"}
+                      </button>
+                      <button
+                        onClick={() => setSelectedProofIndices(new Set())}
+                        className="text-muted-foreground/40 hover:text-foreground/60 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* AI input bar — fixed at bottom */}
               <div className="shrink-0 pb-6 pt-3">
@@ -869,8 +1056,19 @@ const SearchPage = () => {
                     onClick={() => {
                       const src = result.source as Record<string, unknown> | null;
                       const isOracle = src?.["@type"] === "uor:OracleExchange";
+                      const isChain = src?.["@type"] === "uor:ChainOfProofs";
 
-                      if (isOracle) {
+                      if (isChain) {
+                        const links = (src?.["uor:links"] as Array<Record<string, unknown>>) ?? [];
+                        const restored: Msg[] = [];
+                        for (const link of links) {
+                          const q = (link["uor:query"] as string) ?? "";
+                          const r = (link["uor:response"] as string) ?? "";
+                          if (q) restored.push({ role: "user", content: q });
+                          if (r) restored.push({ role: "assistant", content: r });
+                        }
+                        setAiMessages(restored);
+                      } else if (isOracle) {
                         const query = (src?.["uor:query"] as string) ?? "";
                         const response = (src?.["uor:response"] as string) ?? "";
                         setAiMessages([
@@ -895,24 +1093,83 @@ const SearchPage = () => {
                     className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/15 hover:border-primary/30 hover:from-primary/25 hover:to-primary/15 text-foreground/85 font-semibold text-sm tracking-wide transition-all group"
                   >
                     <Sparkles className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
-                      ? "Continue in Oracle →"
-                      : "Discuss in Oracle →"}
+                    {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs"
+                      ? "Continue Chain in Oracle →"
+                      : (result.source as Record<string, unknown>)?.["@type"] === "uor:OracleExchange"
+                        ? "Continue in Oracle →"
+                        : "Discuss in Oracle →"}
                   </button>
                 </motion.div>
 
                 <div className="border-t border-border/10" />
 
-                {/* CONTENT */}
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Content</p>
-                    <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
-                  </div>
-                  <pre className="text-sm font-mono text-foreground/65 bg-muted/5 rounded-xl p-5 overflow-x-auto max-h-[45vh] overflow-y-auto border border-border/10 leading-relaxed whitespace-pre-wrap break-words">
-                    {JSON.stringify(result.source, null, 2)}
-                  </pre>
-                </motion.div>
+                {/* CONTENT — Chain of Proofs special rendering */}
+                {(result.source as Record<string, unknown>)?.["@type"] === "uor:ChainOfProofs" ? (
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Link2 className="w-3.5 h-3.5 text-primary/60" />
+                      <p className="text-[10px] font-semibold text-primary/50 uppercase tracking-[0.15em]">Chain of Proofs</p>
+                      <span className="text-[10px] text-muted-foreground/30 font-mono">
+                        {((result.source as Record<string, unknown>)?.["uor:chainLength"] as number) ?? 0} links
+                      </span>
+                    </div>
+
+                    <div className="space-y-0">
+                      {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
+                        <div key={idx} className="flex items-stretch gap-0">
+                          {/* Chain connector column */}
+                          <div className="flex flex-col items-center w-6 shrink-0">
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/25 mt-3 shrink-0" />
+                            {idx < arr.length - 1 && (
+                              <div className="flex-1 w-px bg-primary/10" style={{ minHeight: 12 }} />
+                            )}
+                          </div>
+                          {/* Link card */}
+                          <div className="flex-1 border border-border/10 rounded-lg p-3 mb-2 space-y-1.5 bg-muted/5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-semibold text-muted-foreground/30 uppercase tracking-wider">Link {idx + 1}</span>
+                              {link["uor:proofAddress"] && (
+                                <button
+                                  onClick={() => {
+                                    setInput(link["uor:proofAddress"] as string);
+                                    clearResult();
+                                    setTimeout(() => handleSearch(link["uor:proofAddress"] as string), 50);
+                                  }}
+                                  className="text-[9px] text-primary/50 hover:text-primary/80 transition-colors font-mono"
+                                >
+                                  {link["uor:proofAddress"] as string}
+                                </button>
+                              )}
+                            </div>
+                            {link["uor:query"] && (
+                              <p className="text-xs text-foreground/60 line-clamp-2">
+                                <span className="text-muted-foreground/30 font-semibold mr-1">Q:</span>
+                                {link["uor:query"] as string}
+                              </p>
+                            )}
+                            {link["uor:response"] && (
+                              <p className="text-xs text-foreground/45 line-clamp-3">
+                                <span className="text-muted-foreground/30 font-semibold mr-1">A:</span>
+                                {(link["uor:response"] as string).slice(0, 200)}…
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Standard content */
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-semibold text-muted-foreground/35 uppercase tracking-[0.15em]">Content</p>
+                      <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
+                    </div>
+                    <pre className="text-sm font-mono text-foreground/65 bg-muted/5 rounded-xl p-5 overflow-x-auto max-h-[45vh] overflow-y-auto border border-border/10 leading-relaxed whitespace-pre-wrap break-words">
+                      {JSON.stringify(result.source, null, 2)}
+                    </pre>
+                  </motion.div>
+                )}
 
                 {/* Verify */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-3 pt-1">
