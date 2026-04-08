@@ -8,10 +8,13 @@
  * - Type-aware headers (Concept, Fork, Query, Chain, etc.)
  * - Pull-quote treatment for definitions
  * - Progressive disclosure for nested objects
+ * - Semantic Web Tower visualization for WebPage types
  */
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import SemanticWebTower from "./SemanticWebTower";
+import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
 /* ── Type color mapping ──────────────────────────────────────────────── */
 
@@ -78,7 +81,7 @@ function humanLabel(key: string): string {
 const META_KEYS = new Set([
   "uor:timestamp", "uor:position", "uor:chainLength",
   "uor:proofAddress", "uor:proofCid", "uor:scrapedAt",
-  "uor:language", "uor:semanticWebLayers",
+  "uor:language",
 ]);
 
 /* ── Title keys (rendered as the main heading) ───────────────────────── */
@@ -126,8 +129,12 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
   const metaEntries = entries.filter(([key]) => META_KEYS.has(key));
   const titleKey = TITLE_KEYS.find((k) => typeof src[k] === "string" && src[k]);
   const bodyEntries = entries.filter(
-    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key)
+    ([key]) => key !== "@type" && key !== "@context" && key !== titleKey && !META_KEYS.has(key) && key !== "uor:semanticWebLayers"
   );
+
+  // Semantic Web Tower data
+  const semanticWebLayers = src["uor:semanticWebLayers"] as Record<string, string> | undefined;
+  const isWebPage = rawType === "WebPage";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -174,6 +181,15 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
             <EntryRenderer key={key} entryKey={key} value={value} />
           ))}
         </div>
+      )}
+
+      {/* ── Semantic Web Tower (WebPage only) ── */}
+      {isWebPage && semanticWebLayers && (
+        <SemanticWebTower
+          layers={semanticWebLayers}
+          engine={engineType()}
+          crateVersion={crateVersion()}
+        />
       )}
 
       {/* ── Metadata footer ── */}
