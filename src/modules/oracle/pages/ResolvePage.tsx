@@ -99,7 +99,6 @@ const SearchPage = () => {
   const [drivePostPhase, setDrivePostPhase] = useState(false);
 
   // Chain of Proofs state
-  const [chainSelectMode, setChainSelectMode] = useState(false);
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
 
@@ -245,17 +244,7 @@ const SearchPage = () => {
     setAiMode(false);
     setAiMessages([]);
     setAiInput("");
-    setChainSelectMode(false);
     setSelectedProofIndices(new Set());
-  };
-
-  const toggleChainSelect = () => {
-    if (chainSelectMode) {
-      setChainSelectMode(false);
-      setSelectedProofIndices(new Set());
-    } else {
-      setChainSelectMode(true);
-    }
   };
 
   const toggleProofIndex = (idx: number) => {
@@ -316,7 +305,6 @@ const SearchPage = () => {
         description: receipt.triwordFormatted,
         icon: "🔗",
       });
-      setChainSelectMode(false);
       setSelectedProofIndices(new Set());
     } catch (e) {
       console.warn("[Chain] Encoding failed:", e);
@@ -761,20 +749,6 @@ const SearchPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {proofCount >= 2 && (
-                    <button
-                      onClick={toggleChainSelect}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-                        chainSelectMode
-                          ? "bg-primary/20 text-primary border border-primary/30"
-                          : "text-muted-foreground/40 hover:text-foreground/60 border border-transparent hover:border-border/20"
-                      }`}
-                      title="Chain of Proofs — select proofs to encode as a single address"
-                    >
-                      <Link2 className="w-3 h-3" />
-                      {chainSelectMode ? "Cancel" : "Chain"}
-                    </button>
-                  )}
                   <button onClick={exitAiMode} className="text-muted-foreground/30 hover:text-foreground/60 transition-colors">
                     <X className="w-4 h-4" />
                   </button>
@@ -837,22 +811,24 @@ const SearchPage = () => {
                               {/* Chain connector + checkbox column */}
                               {proofCount >= 2 && (
                                 <div className="flex flex-col items-center w-8 shrink-0 pt-1">
-                                  {/* Chain node / checkbox */}
-                                  {chainSelectMode ? (
-                                    <button
-                                      onClick={() => toggleProofIndex(currentProofIdx)}
-                                      className="transition-all"
-                                      aria-label={isSelected ? "Deselect proof" : "Select proof"}
-                                    >
-                                      {isSelected ? (
+                                  {/* Always-interactive chain dot */}
+                                  <button
+                                    onClick={() => toggleProofIndex(currentProofIdx)}
+                                    className="transition-all hover:scale-125"
+                                    aria-label={isSelected ? "Deselect proof" : "Select proof for chain"}
+                                  >
+                                    {isSelected ? (
+                                      <motion.div
+                                        initial={{ scale: 0.5 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                                      >
                                         <CheckCircle2 className="w-4 h-4 text-primary" />
-                                      ) : (
-                                        <Circle className="w-4 h-4 text-muted-foreground/25 hover:text-muted-foreground/50" />
-                                      )}
-                                    </button>
-                                  ) : (
-                                    <div className="w-2 h-2 rounded-full bg-primary/20 border border-primary/15 mt-1" />
-                                  )}
+                                      </motion.div>
+                                    ) : (
+                                      <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/15 cursor-pointer hover:bg-primary/40 hover:border-primary/30 transition-colors" />
+                                    )}
+                                  </button>
                                   {/* Connector line to next proof */}
                                   {nextProofExists && (
                                     <div className="flex-1 w-px bg-primary/10 mt-1" style={{ minHeight: 24 }} />
@@ -930,7 +906,7 @@ const SearchPage = () => {
 
               {/* Floating chain selection bar */}
               <AnimatePresence>
-                {chainSelectMode && selectedProofIndices.size > 0 && (
+                {selectedProofIndices.size > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -943,6 +919,18 @@ const SearchPage = () => {
                       <span className="text-sm font-medium text-foreground/80">
                         {selectedProofIndices.size} proof{selectedProofIndices.size > 1 ? "s" : ""} selected
                       </span>
+                      {selectedProofIndices.size < proofCount && (
+                        <button
+                          onClick={() => {
+                            const all = new Set<number>();
+                            for (let i = 0; i < proofCount; i++) all.add(i);
+                            setSelectedProofIndices(all);
+                          }}
+                          className="px-3 py-1 rounded-full text-[11px] font-medium text-primary/70 border border-primary/20 hover:bg-primary/10 transition-all"
+                        >
+                          Select All
+                        </button>
+                      )}
                       <button
                         onClick={encodeChain}
                         disabled={chainEncoding}
