@@ -170,6 +170,7 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
   // Wikipedia data
   const wikidata = src["uor:wikidata"] as Record<string, unknown> | undefined;
 
+  const isWebPage = rawType === "WebPage";
   const sources = Array.isArray(src["uor:sources"]) ? (src["uor:sources"] as string[]) : [];
   const contentMarkdown = typeof src["uor:content"] === "string" ? (src["uor:content"] as string) : null;
 
