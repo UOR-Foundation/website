@@ -359,8 +359,8 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
   );
 }
 
-/* ── Mobile Immersive Search Pill ── */
-function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void }) {
+/* ── Reader Floating Bar — search + Oracle access from reader ── */
+function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) => void; onOracleOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -375,9 +375,9 @@ function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void
         {expanded ? (
           <motion.div
             key="expanded"
-            initial={{ width: 160, opacity: 0.8 }}
+            initial={{ width: 200, opacity: 0.8 }}
             animate={{ width: "100%", opacity: 1 }}
-            exit={{ width: 160, opacity: 0.8 }}
+            exit={{ width: 200, opacity: 0.8 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             className="pointer-events-auto rounded-full border border-white/[0.12] bg-black/70 backdrop-blur-xl shadow-[0_-4px_30px_-8px_rgba(0,0,0,0.6)] flex items-center gap-2 px-4 py-2"
           >
@@ -399,17 +399,30 @@ function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void
             </button>
           </motion.div>
         ) : (
-          <motion.button
+          <motion.div
             key="collapsed"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            onClick={() => setExpanded(true)}
-            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl text-white/40 hover:text-white/60 transition-colors shadow-lg"
+            className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl shadow-lg"
           >
-            <Search className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-medium">Search…</span>
-          </motion.button>
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-2 px-5 py-2.5 text-white/40 hover:text-white/60 transition-colors"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span className="text-[13px] font-medium">Search…</span>
+            </button>
+            <div className="w-px h-5 bg-white/10" />
+            <button
+              onClick={onOracleOpen}
+              className="flex items-center gap-1.5 px-4 py-2.5 text-white/40 hover:text-white/60 transition-colors"
+              title="Ask Oracle"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[13px] font-medium">Oracle</span>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
