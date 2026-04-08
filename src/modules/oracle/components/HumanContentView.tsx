@@ -119,9 +119,11 @@ interface HumanContentViewProps {
   onLensChange?: (lensId: string) => void;
   /** When true, suppress duplicate controls (lens pills, context banner) */
   isReaderMode?: boolean;
+  /** Novelty result from the coherence engine */
+  novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false, contextKeywords = [], activeLens, onLensChange, isReaderMode = false, novelty = null }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
