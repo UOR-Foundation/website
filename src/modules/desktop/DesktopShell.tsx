@@ -104,25 +104,23 @@ function DesktopShellInner() {
 
         <SnapOverlay zone={snapPreview} />
 
-        <AnimatePresence>
-          {wm.windows
-            .filter(w => !w.minimized)
-            .map(win => (
-              <DesktopWindow
-                key={win.id}
-                win={win}
-                isActive={win.id === wm.activeWindowId}
-                onClose={wm.closeWindow}
-                onMinimize={wm.minimizeWindow}
-                onMaximize={wm.maximizeWindow}
-                onFocus={wm.focusWindow}
-                onMove={wm.moveWindow}
-                onResize={wm.resizeWindow}
-                onSnap={wm.snapWindow}
-                onSnapPreview={setSnapPreview}
-              />
-            ))}
-        </AnimatePresence>
+        {wm.windows
+          .filter(w => !w.minimized)
+          .map(win => (
+            <DesktopWindow
+              key={win.id}
+              win={win}
+              isActive={win.id === wm.activeWindowId}
+              onClose={wm.closeWindow}
+              onMinimize={wm.minimizeWindow}
+              onMaximize={wm.maximizeWindow}
+              onFocus={wm.focusWindow}
+              onMove={wm.moveWindow}
+              onResize={wm.resizeWindow}
+              onSnap={wm.snapWindow}
+              onSnapPreview={setSnapPreview}
+            />
+          ))}
 
         <DesktopThemeDots />
 
