@@ -2064,7 +2064,7 @@ const SearchPage = () => {
               const wikiThumb = (src?.["uor:wikidata"] as Record<string, unknown> | undefined)?.thumbnail as string | undefined;
               const glyphChars = result.receipt.glyph?.slice(0, 2) || "⠿⠿";
               const triwordParts = result.receipt.triword.split(".");
-              const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
+              const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(".");
 
               const isReadableType = typeRaw === "KnowledgeCard" || typeRaw === "WebPage";
               const showReader = readerMode && isReadableType;
