@@ -129,13 +129,13 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
             )}
           </div>
 
-          {/* Right: exit button */}
+          {/* Right: fullscreen toggle */}
           <button
             onClick={onExit}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white transition-all text-sm font-medium"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white transition-all"
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            <Minimize2 className="w-3.5 h-3.5" />
-            <span>Exit</span>
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
 
