@@ -1330,7 +1330,7 @@ const SearchPage = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
-      {result ? (
+      {result && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
         <header className={`flex items-center shrink-0 border-b border-border/10 ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
           {isMobile ? (
             <>
