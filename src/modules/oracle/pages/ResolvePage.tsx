@@ -275,7 +275,7 @@ const SearchPage = () => {
   // Chain of Proofs state
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
-  const [chainViewMode, setChainViewMode] = useState<"human" | "machine">("human");
+  const [contentViewMode, setContentViewMode] = useState<"human" | "machine">("human");
   const [contentViewMode, setContentViewMode] = useState<"human" | "machine">("human");
 
   // Autocomplete state
@@ -1444,9 +1444,9 @@ const SearchPage = () => {
                       {/* Human / Machine toggle */}
                       <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
                         <button
-                          onClick={() => setChainViewMode("human")}
+                          onClick={() => setContentViewMode("human")}
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            chainViewMode === "human"
+                            contentViewMode === "human"
                               ? "bg-primary/15 text-foreground"
                               : "text-muted-foreground/40 hover:text-foreground/60"
                           }`}
@@ -1455,9 +1455,9 @@ const SearchPage = () => {
                           Human
                         </button>
                         <button
-                          onClick={() => setChainViewMode("machine")}
+                          onClick={() => setContentViewMode("machine")}
                           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
-                            chainViewMode === "machine"
+                            contentViewMode === "machine"
                               ? "bg-primary/15 text-foreground"
                               : "text-muted-foreground/40 hover:text-foreground/60"
                           }`}
@@ -1468,7 +1468,7 @@ const SearchPage = () => {
                       </div>
                     </div>
 
-                    {chainViewMode === "human" ? (
+                    {contentViewMode === "human" ? (
                       <div className="space-y-0">
                         {(((result.source as Record<string, unknown>)?.["uor:links"] as Array<Record<string, unknown>>) ?? []).map((link, idx, arr) => (
                           <div key={idx} className="flex items-stretch gap-0">
