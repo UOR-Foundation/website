@@ -846,108 +846,48 @@ const SearchPage = () => {
                     animation: "searchGlowRotate 6s linear infinite",
                   }}
                 />
-                <div className={`relative z-10 flex items-center bg-[hsl(0_0%_11%/0.92)] backdrop-blur-xl border border-[hsl(0_0%_22%/0.5)] hover:border-[hsl(0_0%_35%/0.7)] transition-all duration-500 focus-within:border-primary/25 shadow-[0_4px_40px_-10px_hsl(0_0%_0%/0.6),inset_0_1px_0_0_hsl(0_0%_100%/0.05),inset_0_-1px_0_0_hsl(0_0%_0%/0.2)] ${encodeMode ? "rounded-2xl" : "rounded-full"}`}>
-                  {/* Left + / × icon */}
+                <div className="relative z-10 flex items-center bg-[hsl(0_0%_11%/0.92)] backdrop-blur-xl border border-[hsl(0_0%_22%/0.5)] hover:border-[hsl(0_0%_35%/0.7)] transition-all duration-500 focus-within:border-primary/25 shadow-[0_4px_40px_-10px_hsl(0_0%_0%/0.6),inset_0_1px_0_0_hsl(0_0%_100%/0.05),inset_0_-1px_0_0_hsl(0_0%_0%/0.2)] rounded-full">
+                  {/* Left + icon — opens encode overlay */}
                   <button
-                    onClick={() => { setEncodeMode(!encodeMode); setEncodeText(""); setTimeout(() => { if (!encodeMode) encodeRef.current?.focus(); else inputRef.current?.focus(); }, 100); }}
+                    onClick={() => setEncodeMode(true)}
                     className="pl-[28px] pr-[10px] py-[17px] text-muted-foreground/50 hover:text-foreground/70 transition-all shrink-0"
-                    title={encodeMode ? "Back to search" : "Encode content"}
+                    title="Encode content"
                   >
-                    <motion.div animate={{ rotate: encodeMode ? 135 : 0 }} transition={{ duration: 0.25, ease: "easeInOut" }}>
-                      <Plus className="w-5 h-5" />
-                    </motion.div>
+                    <Plus className="w-5 h-5" />
                   </button>
 
-                  <AnimatePresence mode="wait">
-                    {!encodeMode ? (
-                      <motion.div key="search-input" className="flex-1 flex items-center" initial={false}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (showSuggestions && suggestions.length > 0) {
-                              if (e.key === "ArrowDown") { e.preventDefault(); setSelectedSuggIdx(prev => Math.min(prev + 1, suggestions.length - 1)); return; }
-                              if (e.key === "ArrowUp") { e.preventDefault(); setSelectedSuggIdx(prev => Math.max(prev - 1, -1)); return; }
-                              if (e.key === "Enter" && selectedSuggIdx >= 0) { e.preventDefault(); pickSuggestion(suggestions[selectedSuggIdx].triword); return; }
-                              if (e.key === "Escape") { setShowSuggestions(false); return; }
-                            }
-                            if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); submit(); }
-                          }}
-                          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-                          onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
-                          placeholder=""
-                          className="flex-1 bg-transparent py-[17px] px-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="encode-label"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex-1 flex items-center py-[17px] px-[6px]"
-                      >
-                        <span className="text-base text-primary/70 font-medium tracking-wide select-none">Encode</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (showSuggestions && suggestions.length > 0) {
+                        if (e.key === "ArrowDown") { e.preventDefault(); setSelectedSuggIdx(prev => Math.min(prev + 1, suggestions.length - 1)); return; }
+                        if (e.key === "ArrowUp") { e.preventDefault(); setSelectedSuggIdx(prev => Math.max(prev - 1, -1)); return; }
+                        if (e.key === "Enter" && selectedSuggIdx >= 0) { e.preventDefault(); pickSuggestion(suggestions[selectedSuggIdx].triword); return; }
+                        if (e.key === "Escape") { setShowSuggestions(false); return; }
+                      }
+                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); submit(); }
+                    }}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
+                    placeholder=""
+                    className="flex-1 bg-transparent py-[17px] px-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
+                  />
 
                   {/* Right side — separator + AI Mode pill */}
-                  {!encodeMode && (
-                    <div className="flex items-center gap-[10px] pr-[17px] shrink-0">
-                      <div className="w-px h-[28px] bg-[hsl(0_0%_30%)]" />
-                      <button
-                        onClick={() => setAiMode(true)}
-                        className="flex items-center gap-[6px] px-[17px] py-[10px] rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
-                      >
-                        <Sparkles className="w-[14px] h-[14px] text-primary/70" />
-                        <span className="text-sm font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Encode mode textarea — slides in below */}
-                <AnimatePresence>
-                  {encodeMode && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="overflow-hidden"
+                  <div className="flex items-center gap-[10px] pr-[17px] shrink-0">
+                    <div className="w-px h-[28px] bg-[hsl(0_0%_30%)]" />
+                    <button
+                      onClick={() => setAiMode(true)}
+                      className="flex items-center gap-[6px] px-[17px] py-[10px] rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
                     >
-                      <div className="pt-3">
-                        <textarea
-                          ref={encodeRef}
-                          value={encodeText}
-                          onChange={(e) => setEncodeText(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleEncode(); } }}
-                          placeholder="Paste or type any text to give it a unique, permanent address…"
-                          rows={4}
-                          className="w-full bg-[hsl(0_0%_12%)] border border-[hsl(0_0%_20%)] rounded-xl px-5 py-4 text-base font-mono text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all resize-y"
-                          style={{ minHeight: "120px" }}
-                        />
-                        <div className="flex items-center justify-between mt-3">
-                          <p className="text-sm text-muted-foreground/30">
-                            {encodeText.length > 0 ? `${encodeText.length} characters` : "⌘+Enter to encode"}
-                          </p>
-                          <button
-                            onClick={handleEncode}
-                            disabled={!encodeText.trim() || loading}
-                            className="flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground font-semibold text-sm tracking-wide transition-all disabled:opacity-30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            Encode
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      <Sparkles className="w-[14px] h-[14px] text-primary/70" />
+                      <span className="text-sm font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Autocomplete suggestions dropdown */}
                 <AnimatePresence>
