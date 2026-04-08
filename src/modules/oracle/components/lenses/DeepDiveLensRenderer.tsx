@@ -111,6 +111,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         font="700 28px 'DM Sans', system-ui, sans-serif"
         lineHeight={34}
         as="h1"
+        center
         className="text-foreground"
         style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 6, textAlign: "center" }}
       >
