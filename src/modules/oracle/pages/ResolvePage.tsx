@@ -185,7 +185,7 @@ function ProofReceipt({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="relative mt-2 max-w-[88%] w-full">
+    <div className="relative mt-3 w-full">
       <motion.div
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -194,7 +194,7 @@ function ProofReceipt({
       >
         {/* Chain connector column */}
         {proofCount >= 2 && (
-          <div className="flex flex-col items-center w-7 shrink-0 pt-2">
+          <div className="flex flex-col items-center w-7 shrink-0 pt-3">
             <button
               onClick={() => toggleProofIndex(currentProofIdx)}
               className="transition-all hover:scale-125"
@@ -216,70 +216,86 @@ function ProofReceipt({
 
         {/* Receipt */}
         <div className="flex-1">
-          {/* Collapsed: single-line receipt */}
+          {/* Collapsed: labeled "Proof Receipt" button */}
           <button
             onClick={() => setExpanded(!expanded)}
-            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all group ${
-              isSelected
-                ? "bg-primary/[0.06] border border-primary/20"
-                : "bg-transparent hover:bg-primary/[0.03] border border-transparent hover:border-primary/8"
+            className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all group border ${
+              expanded
+                ? "bg-muted/15 border-border/25"
+                : isSelected
+                  ? "bg-primary/[0.06] border-primary/20"
+                  : "bg-muted/8 hover:bg-muted/15 border-border/15 hover:border-border/25"
             }`}
           >
-            <ShieldCheck className="w-3 h-3 text-emerald-400/50 shrink-0" />
-            <span className="text-[10px] font-mono text-muted-foreground/35 truncate">
-              {proof.triwordFormatted}
+            <ShieldCheck className="w-4 h-4 text-emerald-400/70 shrink-0" />
+            <span className="text-xs font-semibold tracking-[0.08em] text-foreground/60 group-hover:text-foreground/80 transition-colors uppercase">
+              Proof Receipt
             </span>
             <motion.div
               animate={{ rotate: expanded ? 180 : 0 }}
               transition={{ duration: 0.2 }}
               className="ml-auto shrink-0"
             >
-              <ChevronDown className="w-3 h-3 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
             </motion.div>
           </button>
 
-          {/* Expanded details */}
+          {/* Expanded: full-width details panel */}
           <AnimatePresence>
             {expanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <div className="px-3 pt-2 pb-2.5 space-y-2 border-x border-b border-primary/10 rounded-b-lg bg-primary/[0.02]">
-                  {/* Triword with copy */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-display text-foreground/70 tracking-wide">
-                      {proof.triwordFormatted}
-                    </span>
+                <div className="px-4 pt-4 pb-4 space-y-3 border-x border-b border-border/15 rounded-b-xl bg-muted/5">
+                  {/* Triword address */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground/40">Address</span>
+                      <span className="text-sm font-display text-foreground/80 tracking-wide">
+                        {proof.triwordFormatted}
+                      </span>
+                    </div>
                     <CopyBtn
                       onClick={() => onCopy(proof.triword, `proof-triword-${index}`)}
                       copied={copied === `proof-triword-${index}`}
-                      size={10}
+                      size={12}
                     />
                   </div>
 
+                  <div className="border-t border-border/10" />
+
                   {/* IPv6 */}
                   {proof.ipv6 && (
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-[9px] font-mono text-muted-foreground/30 truncate">
-                        {proof.ipv6}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground/40">IPv6</span>
+                        <span className="text-[11px] font-mono text-muted-foreground/50">
+                          {proof.ipv6}
+                        </span>
+                      </div>
                       <CopyBtn
                         onClick={() => onCopy(proof.ipv6, `proof-ipv6-${index}`)}
                         copied={copied === `proof-ipv6-${index}`}
-                        size={9}
+                        size={11}
                       />
                     </div>
                   )}
 
-                  {/* Ring + Engine info */}
-                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground/25">
-                    <span>{proof.ringPartition}</span>
+                  {/* Ring details */}
+                  <div className="flex items-center gap-4 text-[11px] text-muted-foreground/45">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/30">Ring</span>
+                      <span>{proof.ringPartition}</span>
+                    </div>
                     <span className="text-muted-foreground/15">·</span>
-                    <span>Engine: {proof.engine}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/30">Engine</span>
+                      <span>{proof.engine}</span>
+                    </div>
                     {proof.glyph && (
                       <>
                         <span className="text-muted-foreground/15">·</span>
@@ -288,13 +304,15 @@ function ProofReceipt({
                     )}
                   </div>
 
-                  {/* View full proof link */}
-                  <button
-                    onClick={onViewFull}
-                    className="text-[9px] text-primary/40 hover:text-primary/70 transition-colors"
-                  >
-                    View full proof →
-                  </button>
+                  {/* View full proof */}
+                  <div className="pt-1">
+                    <button
+                      onClick={onViewFull}
+                      className="text-[11px] font-medium text-primary/50 hover:text-primary/80 transition-colors"
+                    >
+                      View full proof →
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
