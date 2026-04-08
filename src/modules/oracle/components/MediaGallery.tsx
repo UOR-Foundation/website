@@ -88,7 +88,7 @@ export const ImageGallery: React.FC<{
             alt={hero.caption || ""}
             loading="lazy"
             className="w-full rounded-lg object-cover"
-            style={{ maxHeight: 400 }}
+            style={{ maxHeight: 480, aspectRatio: "1.618 / 1" }}
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg p-4">
             {hero.caption && (
@@ -123,7 +123,7 @@ export const ImageGallery: React.FC<{
                   alt={img.caption || ""}
                   loading="lazy"
                   className="w-full object-cover"
-                  style={{ maxHeight: 150, width: 150 }}
+                  style={{ maxHeight: 200, width: "100%" }}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
@@ -195,7 +195,7 @@ export const ImageGallery: React.FC<{
               alt={img.caption || ""}
               loading="lazy"
               className="w-full object-cover transition-transform group-hover:scale-105"
-              style={{ height: 160 }}
+              style={{ height: 200 }}
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <p className="text-white/80 text-[11px] leading-snug truncate">

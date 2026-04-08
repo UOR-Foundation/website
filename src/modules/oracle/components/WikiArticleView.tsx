@@ -92,10 +92,7 @@ const Infobox: React.FC<{
     <div
       className="bg-muted/20 border border-border/20"
       style={{
-        float: "right",
-        width: isNarrow ? "100%" : "min(320px, 38.2%)",
-        marginLeft: isNarrow ? 0 : 24,
-        marginBottom: 16,
+        width: "100%",
         borderRadius: 8,
         overflow: "hidden",
         fontSize: 13,
@@ -125,7 +122,7 @@ const Infobox: React.FC<{
               width: "100%",
               borderRadius: 6,
               objectFit: "cover",
-              maxHeight: 220,
+              maxHeight: 280,
             }}
           />
           {description && (
@@ -292,8 +289,8 @@ const TableOfContents: React.FC<{
       style={{
         borderRadius: 6,
         padding: collapsed ? "8px 14px" : "10px 14px 14px",
-        marginBottom: 20,
-        maxWidth: 340,
+        marginBottom: 12,
+        maxWidth: 420,
       }}
     >
       <div
@@ -399,9 +396,9 @@ function createMarkdownComponents(immersive = false, bodyMaxWidth = 720) {
             fontSize: "clamp(1.4rem, 3vw, 2rem)",
             fontWeight: 600,
             fontFamily: "Georgia, 'Times New Roman', serif",
-            paddingBottom: 4,
-            marginTop: "3rem",
-            marginBottom: "0.6rem",
+            paddingBottom: 2,
+            marginTop: "2.4rem",
+            marginBottom: "0.5rem",
             lineHeight: 1.2,
             letterSpacing: "-0.02em",
             borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
@@ -419,7 +416,7 @@ function createMarkdownComponents(immersive = false, bodyMaxWidth = 720) {
           fontSize: bodySize,
           lineHeight: bodyLineHeight,
           fontFamily: "Georgia, 'Times New Roman', serif",
-          marginBottom: "0.7em",
+          marginBottom: "0.6em",
           maxWidth: bodyMaxWidth,
         }}
         {...props}
@@ -436,7 +433,7 @@ function createMarkdownComponents(immersive = false, bodyMaxWidth = 720) {
       <ul
         style={{
           paddingLeft: 24,
-          marginBottom: "0.7em",
+          marginBottom: "0.6em",
           fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: bodySize,
           lineHeight: bodyLineHeight,
@@ -497,13 +494,13 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
             lineHeight: 1.2,
             letterSpacing: "-0.02em",
             margin: 0,
-            paddingBottom: 6,
+            paddingBottom: 2,
             borderBottom: "1px solid rgba(255,255,255,0.12)",
           }}
         >
           {title}
         </BalancedHeading>
-        <p className="text-muted-foreground/50" style={{ fontSize: 12, fontStyle: "italic", margin: "6px 0 12px" }}>
+        <p className="text-muted-foreground/50" style={{ fontSize: 12, fontStyle: "italic", margin: "4px 0 8px" }}>
           From UOR Knowledge, the universal encyclopedia
         </p>
         <SourcesPills sources={sourceMetas} />
@@ -567,7 +564,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
           lineHeight: 1.2,
           letterSpacing: "-0.02em",
           margin: 0,
-          paddingBottom: 4,
+          paddingBottom: 2,
           borderBottom: immersive ? "1px solid rgba(255,255,255,0.12)" : "1px solid hsl(var(--border) / 0.25)",
         }}
       >
@@ -580,7 +577,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         style={{
           fontSize: 12,
           fontStyle: "italic",
-          margin: "6px 0 12px",
+          margin: "4px 0 8px",
         }}
       >
         From UOR Knowledge, the universal encyclopedia
@@ -589,8 +586,31 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
       {/* ── Source pills ── */}
       <SourcesPills sources={sourceMetas} />
 
-      {/* ── Infobox (floated right) ── */}
-      {wikidata && <Infobox title={title} wikidata={wikidata} />}
+      {/* ── Two-column grid on wide screens with wikidata ── */}
+      {!isNarrow && wikidata ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 26, marginTop: 4 }}>
+          <div style={{ minWidth: 0 }}>
+            <TableOfContents entries={toc} defaultCollapsed={false} />
+            {lead && (
+              <div style={{ marginBottom: 12 }}>
+                <CitedMarkdown markdown={lead} sources={sourceMetas} components={markdownComponents} />
+              </div>
+            )}
+            <div>
+              <CitedMarkdown markdown={body} sources={sourceMetas} components={markdownComponents} />
+              {synthesizing && (
+                <span className="inline-block bg-primary/70" style={{ width: 2, height: 18, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
+              )}
+            </div>
+          </div>
+          <div style={{ position: "sticky", top: 80, alignSelf: "start" }}>
+            <Infobox title={title} wikidata={wikidata} />
+          </div>
+        </div>
+      ) : (
+        <>
+      {/* ── Infobox (inline on narrow) ── */}
+      {wikidata && <div style={{ marginBottom: 12 }}><Infobox title={title} wikidata={wikidata} /></div>}
 
       {/* ── Table of Contents ── */}
       <TableOfContents entries={toc} defaultCollapsed={isMobileView} />
@@ -620,9 +640,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         )}
       </div>
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
-
-      {/* ── Clear float ── */}
-      <div style={{ clear: "both" }} />
+        </>
+      )}
 
       {/* ── Media section ── */}
       {media && !synthesizing && <EncyclopediaMedia media={media} />}

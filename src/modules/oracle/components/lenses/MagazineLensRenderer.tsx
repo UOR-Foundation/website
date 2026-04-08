@@ -152,7 +152,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
       `}</style>
 
       {heroImage && !synthesizing && (
-        <InlineFigure image={heroImage} variant="full-width" className="mb-8 -mx-6 sm:-mx-4 md:mx-0" />
+        <InlineFigure image={heroImage} variant="full-width" className="mb-6 -mx-4 sm:mx-0" />
       )}
 
       <BalancedHeading
@@ -167,7 +167,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
         {title}
       </BalancedHeading>
 
-      <p className="text-muted-foreground" style={{ fontSize: TYPE.small, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 500, marginBottom: pullQuote ? 20 : 32, opacity: OPACITY.tertiary }}>
+      <p className="text-muted-foreground" style={{ fontSize: TYPE.small, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 500, marginBottom: pullQuote ? 16 : 24, opacity: OPACITY.tertiary }}>
         UOR Knowledge · Feature
       </p>
 
@@ -179,7 +179,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
           lineHeight={33}
           as="div"
           className="border-l-4 border-primary/25"
-          style={{ padding: `${SPACE.md}px ${SPACE.lg + SPACE.xs}px`, marginBottom: 32, fontSize: 20, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: `hsl(var(--foreground) / ${OPACITY.secondary})` }}
+          style={{ padding: `${SPACE.md}px ${SPACE.lg + SPACE.xs}px`, marginBottom: 24, fontSize: 20, fontStyle: "italic", lineHeight: 1.5, fontFamily: "Georgia, 'Times New Roman', serif", color: `hsl(var(--foreground) / ${OPACITY.secondary})` }}
           maxWidth={Math.min(900, bodyMaxWidth * 1.25)}
         >
           {`"${pullQuote}"`}

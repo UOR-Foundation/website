@@ -138,8 +138,8 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
       <SourcesPills sources={sourceMetas} />
 
       {images.length > 0 && !synthesizing && (
-        <div className="my-6 bg-primary/[0.04] border border-primary/10 overflow-hidden" style={{ borderRadius: RADIUS.xl }}>
-          <img src={images[0].url} alt={images[0].caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 240 }} />
+        <div className="my-5 bg-primary/[0.04] border border-primary/10 overflow-hidden" style={{ borderRadius: RADIUS.xl }}>
+          <img src={images[0].url} alt={images[0].caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 300 }} />
           {images[0].caption && (
             <div className="p-3">
               <p className="text-foreground/70 text-sm">👀 {images[0].caption}</p>
@@ -157,7 +157,7 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
               <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
               {showImg && (
                 <div className="my-4 bg-accent/[0.04] border border-accent/10 overflow-hidden" style={{ borderRadius: RADIUS.xl }}>
-                  <img src={img.url} alt={img.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 200 }} />
+                  <img src={img.url} alt={img.caption || ""} loading="lazy" className="w-full object-cover" style={{ maxHeight: 240 }} />
                   {img.caption && (
                     <div className="p-2.5">
                       <p className="text-foreground/60 text-xs">🖼️ {img.caption}</p>
