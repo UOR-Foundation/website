@@ -1,75 +1,79 @@
 
 
-## Pretext-Powered Text Rendering — Integration Plan
+# Context Menu for + Button: Guest & Member Access
 
-### What Pretext Is
+## Overview
 
-Pretext (`@chenglou/pretext`, already installed in the project) is a library that pre-computes text layout — line breaks, heights, widths — using canvas measurement instead of DOM reflow. This unlocks:
+Replace the current `VaultContextPicker` popover with a two-tier context menu inspired by the uploaded reference image. The menu provides clean actions for adding context — files, URLs, and paste — with guest access working entirely in-memory (no auth required) and member access persisting to the Sovereign Vault.
 
-- **Zero-DOM text height prediction** — know exactly how tall text will be before rendering
-- **Manual line-by-line layout** — route text around images, pull-quotes, and obstacles
-- **Shrink-wrap / balanced text** — compute the tightest container width for multiline text
-- **Smooth streaming** — during token streaming, predict layout without triggering reflows
+## Current State
 
-### Where It Adds Magic in This App
+- The `+` button opens `VaultContextPicker`, which shows existing vault documents and import actions
+- The vault requires authentication (`vault.ready` checks for `userId`)
+- `VaultImportDialog` handles file/URL imports but requires auth
+- All storage goes through Supabase via `vault-store.ts`
 
-The app streams AI-generated articles through `TokenBuffer` → ReactMarkdown → lens renderers. Currently, every token flush triggers a full React re-render + DOM reflow. Pretext can enhance three specific areas:
+## Plan
 
-1. **Streaming height prediction** — eliminate layout shift during article synthesis
-2. **Balanced, tight-fit headings** — shrink-wrap article titles to eliminate awkward orphan words
-3. **Pull-quote & drop-cap precision** — position editorial elements with pixel-perfect awareness of surrounding text geometry
+### 1. Create a guest context store (in-memory)
 
-### Implementation
+**New file: `src/modules/sovereign-vault/lib/guest-context.ts`**
 
-**1. New utility: `src/modules/oracle/lib/pretext-layout.ts`**
-- Wrapper around Pretext's `prepare`, `layout`, `prepareWithSegments`, `layoutWithLines`, `measureLineStats`
-- Font constants matching each lens's CSS fonts (`'17px DM Sans'`, `'18px Georgia'`, etc.)
-- `predictSectionHeight(text, font, containerWidth, lineHeight)` — returns height in pixels
-- `balanceText(text, font, maxWidth)` — binary-searches for the narrowest width that keeps the same line count, eliminating orphans
-- `getLineBreaks(text, font, width, lineHeight)` — returns individual lines for manual rendering
+- Simple in-memory store for guest users (no persistence)
+- Holds an array of `GuestContextItem` objects: `{ id, filename, text, mimeType, addedAt }`
+- Uses `extractText` from the existing extract module to process files
+- Cleared on page refresh (intentionally ephemeral)
+- Exposes: `addFile`, `addUrl`, `addPaste`, `remove`, `list`, `getAll`
 
-**2. New component: `src/modules/oracle/components/BalancedHeading.tsx`**
-- Uses Pretext to compute the tightest width that keeps the same line count as the full-width layout
-- Renders the heading in a container set to that width → text looks "balanced" with no orphan words
-- Uses `ResizeObserver` to recompute on container resize (only calls `layout()`, not `prepare()`)
-- Applied to `h1` titles in all lens renderers — the most visible win
+### 2. Create the new context menu component
 
-**3. Enhanced `WaterfallSection` with height prediction**
-- Before a section streams in, use Pretext to predict its final height from the accumulated text
-- Set `min-height` on the section container to the predicted value → prevents content below from jumping
-- As streaming completes, the predicted height matches the actual height — zero layout shift
-- This replaces the current `opacity: 0.85` partial indicator with a smoother spatial reservation
+**New file: `src/modules/sovereign-vault/components/ContextMenu.tsx`**
 
-**4. Streaming layout stabilizer in `TokenBuffer`**
-- Add an optional `onHeightHint` callback to TokenBuffer
-- On each flush, run `layout()` (pure arithmetic, <0.05ms) on the accumulated text to predict total content height
-- The parent component sets a CSS `min-height` on the article container, preventing scroll anchoring jank
-- This is the "0.05ms vs 30ms" win Pretext advertises — height prediction without DOM reflow
+A dropdown menu (similar to uploaded reference) that appears on `+` click with two sections:
 
-**5. Drop-cap & pull-quote awareness (Magazine lens)**
-- Use `layoutNextLineRange()` to compute how many lines the drop-cap displaces
-- Set the drop-cap's `float` height precisely so body text wraps cleanly around it
-- For pull-quotes: use `measureLineStats()` to verify the quote text fits within the allocated column width, adjusting font-size if needed
+**Guest actions (always visible):**
+- **Add File** — opens file picker, extracts text, stores in guest context
+- **Paste Text** — opens a small textarea modal for pasting content
+- **Paste Link** — opens URL input, fetches and extracts content
 
-### Files Modified
+**Member section (shown when authenticated):**
+- Divider line
+- **Sovereign Vault** — opens the existing `VaultContextPicker` for persistent documents
+- Subtle label: "Saved to your sovereign space"
 
-| File | Change |
-|---|---|
-| `src/modules/oracle/lib/pretext-layout.ts` | New — Pretext wrapper utilities |
-| `src/modules/oracle/components/BalancedHeading.tsx` | New — orphan-free balanced headings |
-| `src/modules/oracle/components/WaterfallSection.tsx` | Add height prediction for layout-shift-free streaming |
-| `src/modules/oracle/lib/token-buffer.ts` | Add optional `onHeightHint` callback |
-| `src/modules/oracle/components/lenses/MagazineLensRenderer.tsx` | Use BalancedHeading for title, drop-cap precision |
-| `src/modules/oracle/components/lenses/StoryLensRenderer.tsx` | Use BalancedHeading for title |
-| `src/modules/oracle/components/lenses/DeepDiveLensRenderer.tsx` | Use BalancedHeading for title |
-| `src/modules/oracle/components/lenses/SimpleLensRenderer.tsx` | Use BalancedHeading for title |
-| `src/modules/oracle/components/WikiArticleView.tsx` | Use BalancedHeading for title |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Pass height-hint from TokenBuffer to container min-height |
+**Guest info banner** (shown when not authenticated):
+- Small note at bottom: "Context is session-only. Create a Sovereign ID to save permanently."
 
-### What Users Will Feel
+### 3. Update `useVault` hook or create `useContextManager`
 
-- **No more layout jumps** while articles stream in — text appears and the page stays still
-- **Beautiful, balanced titles** — no more awkward single-word orphan lines on headings
-- **Snappier rendering** — fewer DOM reflows during streaming means smoother scrolling
-- **Pixel-perfect editorial feel** — drop-caps and pull-quotes that interact naturally with body text
+**New file: `src/modules/sovereign-vault/hooks/useContextManager.ts`**
+
+- Wraps both guest context store and vault hook
+- Returns unified `contextItems` array (guest items + selected vault docs)
+- Tracks `isGuest` boolean
+- Provides `addFile`, `addUrl`, `addPaste`, `remove` that route to the correct store
+- Guest items get passed as inline text context to the search/query pipeline
+
+### 4. Update ImmersiveSearchView
+
+- Replace `VaultContextPicker` with the new `ContextMenu`
+- Use `useContextManager` instead of directly using `useVault`
+- Context pills show both guest and vault items (guest items with a "session" badge)
+- The `+` button behavior stays the same (click to toggle menu)
+
+### 5. Update MobileSearchBar
+
+- Same changes as ImmersiveSearchView for consistency
+
+### 6. Update ContextPills component
+
+- Add visual distinction for guest items (e.g., dashed border or "temporary" label)
+- Vault items keep their current appearance
+
+## Technical Notes
+
+- Guest context is purely client-side — no database, no auth required
+- File extraction reuses existing `extractText` from `sovereign-vault/lib/extract.ts`
+- The menu uses `framer-motion` for animation consistency with the rest of the UI
+- Guest context items are passed as `contextDocIds` or as inline text to the search handler
 
