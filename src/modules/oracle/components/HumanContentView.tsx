@@ -568,7 +568,72 @@ function NestedCard({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-/* ── Section label ───────────────────────────────────────────────────── */
+/* ── Wikipedia Taxonomy Card ─────────────────────────────────────────── */
+
+function WikiTaxonomyCard({ taxonomy }: { taxonomy: Record<string, string> }) {
+  const entries = Object.entries(taxonomy);
+  if (entries.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        border: "1px solid hsl(var(--border) / 0.15)",
+        borderRadius: 10,
+        padding: "12px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
+      className="bg-muted/5"
+    >
+      <span
+        style={{
+          fontSize: 11,
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+          fontWeight: 600,
+          marginBottom: 4,
+        }}
+        className="text-muted-foreground/50"
+      >
+        Scientific Classification
+      </span>
+      {entries.map(([key, val]) => (
+        <div
+          key={key}
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 12,
+            padding: "2px 0",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              minWidth: 80,
+              fontWeight: 500,
+              flexShrink: 0,
+            }}
+            className="text-muted-foreground/60"
+          >
+            {key}
+          </span>
+          <span
+            style={{
+              fontSize: 14,
+              fontStyle: key.toLowerCase() === "species" || key.toLowerCase() === "genus" ? "italic" : undefined,
+            }}
+            className="text-foreground/70"
+          >
+            {val}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 function SectionLabel({ children, inline }: { children: React.ReactNode; inline?: boolean }) {
   return (
