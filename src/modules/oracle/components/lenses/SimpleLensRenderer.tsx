@@ -107,9 +107,15 @@ const SimpleLensRenderer: React.FC<LensRendererProps> = ({
 
   return (
     <article style={{ margin: "0 auto" }}>
-      <h1 className="text-foreground" style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 8 }}>
+      <BalancedHeading
+        font="800 32px 'DM Sans', system-ui, sans-serif"
+        lineHeight={37}
+        as="h1"
+        className="text-foreground"
+        style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 8 }}
+      >
         {title}
-      </h1>
+      </BalancedHeading>
 
       <p className="text-primary/50" style={{ fontSize: 14, fontWeight: 600, marginBottom: 20 }}>
         🌟 Explained simply

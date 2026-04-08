@@ -96,9 +96,15 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
       )}
 
       {/* Large serif display title */}
-      <h1 className="text-foreground" style={{ fontSize: "clamp(2.4rem, 6vw, 3.6rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}>
+      <BalancedHeading
+        font="400 36px Georgia, 'Times New Roman', serif"
+        lineHeight={40}
+        as="h1"
+        className="text-foreground"
+        style={{ fontSize: "clamp(2.4rem, 6vw, 3.6rem)", fontWeight: 400, fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.02em" }}
+      >
         {title}
-      </h1>
+      </BalancedHeading>
 
       {/* Byline */}
       <div style={{ marginBottom: 24 }}>
