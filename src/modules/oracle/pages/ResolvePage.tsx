@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useIsInsideWindow } from "@/modules/desktop/WindowContext";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 import { extractSemantics, parseWikipediaUrl, fetchWikiSummary, extractWikiInfobox } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
@@ -431,6 +432,7 @@ function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) =
 }
 
 const SearchPage = () => {
+  const inWindow = useIsInsideWindow();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
@@ -1594,8 +1596,8 @@ const SearchPage = () => {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={{ height: "100dvh" }}>
-      {!result && !aiMode && !immersiveMode && <SearchConstellationBg />}
+    <div className={inWindow ? `relative flex flex-col w-full h-full ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}` : `fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={inWindow ? undefined : { height: "100dvh" }}>
+      {!result && !aiMode && !immersiveMode && !inWindow && <SearchConstellationBg />}
       {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
       {/* Floating vinyl disc in immersive reader mode */}
       {immersiveMode && result && (

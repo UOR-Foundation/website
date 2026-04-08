@@ -8,6 +8,7 @@ import type { WindowState, SnapZone } from "@/modules/desktop/hooks/useWindowMan
 import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { WindowContextProvider } from "@/modules/desktop/WindowContext";
 import "@/modules/desktop/desktop.css";
 
 interface Props {
@@ -135,13 +136,15 @@ export default function DesktopWindow({
       </div>
 
       <div className="relative overflow-auto rounded-b-xl" style={{ height: "calc(100% - 40px)", background: contentBg }}>
-        <Suspense fallback={
-          <div className="flex items-center justify-center h-full">
-            <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
-          </div>
-        }>
-          {AppComponent && <AppComponent />}
-        </Suspense>
+        <WindowContextProvider>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full">
+              <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
+            </div>
+          }>
+            {AppComponent && <AppComponent />}
+          </Suspense>
+        </WindowContextProvider>
       </div>
 
       {!win.maximized && (
