@@ -717,7 +717,7 @@ const SearchPage = () => {
                 <button
                   onClick={fireImprobabilityDrive}
                   disabled={improbabilityActive || drivePrePhase}
-                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
+                  className="px-7 h-12 rounded-md bg-muted/15 hover:bg-muted/25 hover:border-primary/20 border border-border/20 text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
                 >
                   Surprise Me
                 </button>
