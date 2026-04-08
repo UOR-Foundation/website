@@ -422,100 +422,101 @@ const SearchPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: improbPhase === 4 ? 0 : 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: improbPhase === 4 ? 0.8 : 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
-            style={{
-              background: improbPhase === 3 || improbPhase === 4
-                ? "radial-gradient(ellipse at center, hsl(var(--primary) / 0.08), hsl(var(--background)))"
-                : "radial-gradient(ellipse at center, hsl(var(--primary) / 0.04), hsl(var(--background)))",
-            }}
+            transition={{ duration: improbPhase === 4 ? 0.6 : 0.3, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background"
           >
+            {/* Subtle radial glow — purely decorative on top of solid bg */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: improbPhase === 3
+                  ? "radial-gradient(ellipse at center, hsl(var(--primary) / 0.06), transparent)"
+                  : "radial-gradient(ellipse at center, hsl(var(--primary) / 0.03), transparent)",
+              }}
+            />
+
             {/* Dimensional shape visualization */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              {/* Phase 1: 1D line → 2D square — gentle draw */}
               {improbPhase === 1 && (
-                <motion.svg width="200" height="200" viewBox="0 0 200 200" className="opacity-15">
+                <motion.svg width="200" height="200" viewBox="0 0 200 200" className="opacity-10">
                   <motion.line
                     x1="30" y1="100" x2="170" y2="100"
                     stroke="hsl(var(--primary))"
                     strokeWidth="0.5"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.rect
-                    x="40" y="40" width="120" height="120"
+                    x="50" y="50" width="100" height="100"
                     fill="none"
                     stroke="hsl(var(--primary))"
                     strokeWidth="0.3"
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                    transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                   />
                 </motion.svg>
               )}
 
-              {/* Phase 2: 3D cube → gentle collapse */}
               {improbPhase === 2 && (
                 <motion.div
-                  className="opacity-10"
+                  className="opacity-8"
                   initial={{ scale: 1, rotateY: 0 }}
-                  animate={{ scale: [1, 1.1, 0.3], rotateY: [0, 120, 360] }}
-                  transition={{ duration: 1.8, ease: [0.23, 1, 0.32, 1], times: [0, 0.5, 1] }}
+                  animate={{ scale: [1, 1.05, 0.4], rotateY: [0, 90, 270] }}
+                  transition={{ duration: 1.6, ease: [0.23, 1, 0.32, 1], times: [0, 0.5, 1] }}
                   style={{ perspective: "600px", transformStyle: "preserve-3d" }}
                 >
                   <div
-                    className="w-24 h-24 border border-primary/30 rounded-sm"
-                    style={{ transform: "rotateX(25deg) rotateY(45deg)", boxShadow: "inset 0 0 20px hsl(var(--primary) / 0.03)" }}
+                    className="w-20 h-20 border border-primary/20 rounded-sm"
+                    style={{ transform: "rotateX(20deg) rotateY(40deg)" }}
                   />
                 </motion.div>
               )}
 
-              {/* Phase 3: gentle radial pulse */}
               {improbPhase === 3 && (
                 <motion.div
                   className="rounded-full"
-                  initial={{ width: 8, height: 8, opacity: 0.3 }}
-                  animate={{ width: 500, height: 500, opacity: 0 }}
-                  transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
-                  style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent)" }}
+                  initial={{ width: 6, height: 6, opacity: 0.2 }}
+                  animate={{ width: 400, height: 400, opacity: 0 }}
+                  transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
+                  style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.1), transparent)" }}
                 />
               )}
             </div>
 
-            {/* Phase 1 & 2: Improbability counter */}
+            {/* Phase 1 & 2: counter */}
             {(improbPhase === 1 || improbPhase === 2) && (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                className="flex flex-col items-center gap-6 z-10"
+                transition={{ duration: 0.4 }}
+                className="flex flex-col items-center gap-5 z-10"
               >
-                <p className="text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground/35">
+                <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground/30">
                   {improbPhase === 1 ? "Folding dimensions…" : "Traversing the address space…"}
                 </p>
                 <motion.p
                   key={improbExponent}
-                  initial={{ opacity: 0.4, y: 3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="font-mono text-3xl md:text-4xl font-bold text-primary/80"
+                  initial={{ opacity: 0.5 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.1 }}
+                  className="font-mono text-2xl md:text-3xl font-bold text-primary/70"
                 >
                   {IMPROBABILITY_EXPONENTS[improbExponent] ?? "2^∞"}
                 </motion.p>
-                <p className="text-[10px] font-mono text-muted-foreground/20 tracking-widest">IMPROBABILITY FACTOR</p>
+                <p className="text-[9px] font-mono text-muted-foreground/18 tracking-widest">IMPROBABILITY FACTOR</p>
               </motion.div>
             )}
 
-            {/* Phase 2: Side effects */}
+            {/* Phase 2: side effects */}
             {improbPhase === 2 && improbSideEffect && (
               <motion.p
                 key={improbSideEffect}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 0.4, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="mt-10 text-center text-sm italic text-muted-foreground/40 max-w-md px-6 z-10"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 0.35, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-8 text-center text-sm italic text-muted-foreground/35 max-w-sm px-6 z-10"
               >
                 {improbSideEffect}
               </motion.p>
@@ -524,22 +525,22 @@ const SearchPage = () => {
             {/* Phase 3: DON'T PANIC */}
             {improbPhase === 3 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.85 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 120, damping: 20, delay: 0.1 }}
-                className="flex flex-col items-center gap-4 z-10"
+                transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                className="flex flex-col items-center gap-3 z-10"
               >
                 <h2
-                  className="font-display font-bold tracking-wide text-center text-primary/90"
-                  style={{ fontSize: "clamp(2rem, 7vw, 4rem)" }}
+                  className="font-display font-bold tracking-wide text-center text-primary/85"
+                  style={{ fontSize: "clamp(1.8rem, 6vw, 3.2rem)" }}
                 >
                   DON'T PANIC
                 </h2>
                 <motion.p
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.4 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-sm text-muted-foreground/30 font-mono"
+                  animate={{ opacity: 0.35 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-xs text-muted-foreground/25 font-mono"
                 >
                   Normality restoring…
                 </motion.p>
