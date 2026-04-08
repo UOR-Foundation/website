@@ -724,10 +724,10 @@ const SearchPage = () => {
 
               {/* Tagline — pinned near bottom */}
               <p
-                className="absolute left-0 right-0 text-center text-base text-muted-foreground/30 select-none"
+                className="absolute left-0 right-0 text-center text-lg text-foreground/50 select-none tracking-wide"
                 style={{ bottom: "6vh" }}
               >
-                Searching a near-infinite address space.
+                Searching a <span className="text-primary font-semibold">near-infinite</span> address space.
               </p>
             </div>
           )}
