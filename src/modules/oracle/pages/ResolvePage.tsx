@@ -14,6 +14,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown, Menu, Maximize2 } from "lucide-react";
 import ImmersiveSearchView from "@/modules/oracle/components/ImmersiveSearchView";
+import ReaderToolbar from "@/modules/oracle/components/ReaderToolbar";
 import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
 import MobileSearchBar from "@/modules/oracle/components/MobileSearchBar";
 import MobileSearchMenu from "@/modules/oracle/components/MobileSearchMenu";
@@ -393,6 +394,7 @@ const SearchPage = () => {
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
   const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
+  const [readerMode, setReaderMode] = useState(true);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
@@ -1328,7 +1330,7 @@ const SearchPage = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
-      {result ? (
+      {result && !((readerMode) && !isMobile && ["KnowledgeCard", "WebPage"].includes(String((result.source as Record<string, unknown>)?.["@type"] ?? "").replace(/^uor:/, ""))) ? (
         <header className={`flex items-center shrink-0 border-b border-border/10 ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
           {isMobile ? (
             <>
@@ -1891,6 +1893,51 @@ const SearchPage = () => {
               const triwordParts = result.receipt.triword.split(".");
               const triwordDisplay = triwordParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" · ");
 
+              const isReadableType = typeRaw === "KnowledgeCard" || typeRaw === "WebPage";
+              const showReader = readerMode && isReadableType;
+
+              if (showReader) {
+                return (
+                  <motion.div
+                    key="reader-mode"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col"
+                    style={{ minHeight: "100dvh" }}
+                  >
+                    <ReaderToolbar
+                      triwordDisplay={triwordDisplay}
+                      typeLabel={typeRaw}
+                      activeLens={activeLens}
+                      onLensChange={handleLensChange}
+                      onBack={clearResult}
+                      onToggleDetails={() => setReaderMode(false)}
+                      synthesizing={result.synthesizing}
+                    />
+                    <div
+                      className="flex-1 mx-auto w-full"
+                      style={{
+                        maxWidth: "min(720px, 90vw)",
+                        paddingTop: "calc(1rem * 1.618 * 1.618)",
+                        paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
+                        paddingLeft: "1.5rem",
+                        paddingRight: "1.5rem",
+                      }}
+                    >
+                      <HumanContentView
+                        source={result.source}
+                        synthesizing={result.synthesizing}
+                        contextKeywords={contextKeywords}
+                        activeLens={activeLens}
+                        onLensChange={handleLensChange}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              }
+
               return (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -1935,6 +1982,16 @@ const SearchPage = () => {
 
                       {/* Actions — right-aligned on desktop */}
                       <div className="flex items-center gap-2 sm:ml-auto shrink-0">
+                        {isReadableType && (
+                          <button
+                            onClick={() => setReaderMode(true)}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-border/20 text-xs font-semibold text-foreground/70 hover:text-foreground/90 hover:border-border/35 transition-all"
+                            title="Switch to reader mode"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Reader</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             const isOracle = src?.["@type"] === "uor:OracleExchange";
