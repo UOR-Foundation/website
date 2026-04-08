@@ -307,11 +307,12 @@ ${userContext ? `\n## User Context\nThe user's recent areas of interest: ${userC
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+  const tier = typeof latencyTier === "string" && TIER_MODELS[latencyTier] ? latencyTier : "balanced";
+
+  const { response } = await fetchWithCascade(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    LOVABLE_API_KEY,
+    {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Discover hidden cross-domain invariants across this library of ${books.length} books:\n\n${libraryContext}` },
@@ -319,8 +320,9 @@ ${userContext ? `\n## User Context\nThe user's recent areas of interest: ${userC
       stream: true,
       max_tokens: 6144,
       temperature: 0.6,
-    }),
-  });
+    },
+    tier,
+  );
 
   if (!response.ok) {
     const status = response.status;
@@ -355,7 +357,7 @@ serve(async (req) => {
     if (action === "fuse") {
       const { bookIds } = body;
       if (!bookIds?.length || bookIds.length < 2) return new Response(JSON.stringify({ error: "Select at least 2 books" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      const result = await handleFuse(bookIds);
+      const result = await handleFuse(bookIds, body.latencyTier);
       if (result instanceof Response) return result;
       // Shouldn't reach here but just in case
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -363,7 +365,7 @@ serve(async (req) => {
 
     if (action === "discover") {
       const { userContext } = body;
-      const result = await handleDiscover(userContext);
+      const result = await handleDiscover(userContext, body.latencyTier);
       if (result instanceof Response) return result;
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
