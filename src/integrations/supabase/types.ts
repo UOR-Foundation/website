@@ -51,28 +51,31 @@ export type Database = {
           address_cid: string
           content: string
           created_at: string
+          guest_name: string | null
           id: string
           parent_id: string | null
           score: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           address_cid: string
           content: string
           created_at?: string
+          guest_name?: string | null
           id?: string
           parent_id?: string | null
           score?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           address_cid?: string
           content?: string
           created_at?: string
+          guest_name?: string | null
           id?: string
           parent_id?: string | null
           score?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
