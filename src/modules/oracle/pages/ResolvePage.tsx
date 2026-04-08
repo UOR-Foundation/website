@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -404,6 +405,7 @@ const SearchPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" style={{ height: "100dvh" }}>
+      <SearchConstellationBg />
       {/* ── Infinite Improbability Drive Overlay ── */}
       <AnimatePresence>
         {improbabilityActive && (
