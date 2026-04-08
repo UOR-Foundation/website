@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
-import uorHexagon from "@/assets/uor-hexagon.png";
+import uorHexagon from "@/assets/uor-hexagon.svg";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
@@ -593,7 +593,7 @@ const SearchPage = () => {
                 <img
                   src={uorHexagon}
                   alt="UOR"
-                  className="w-16 h-16 md:w-20 md:h-20 select-none drop-shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  className="w-20 h-20 md:w-24 md:h-24 select-none drop-shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
                   draggable={false}
                   style={{ filter: "none" }}
                 />
