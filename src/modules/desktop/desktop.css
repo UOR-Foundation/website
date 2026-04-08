@@ -25,12 +25,18 @@
   box-shadow:
     0 20px 50px -12px rgba(0, 0, 0, 0.55),
     0 8px 20px -8px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.2s ease;
 }
 
 .desktop-window-chrome.active {
   box-shadow:
     0 25px 60px -12px rgba(0, 0, 0, 0.65),
     0 10px 28px -8px rgba(0, 0, 0, 0.45);
+}
+
+.desktop-window-chrome.dragging {
+  opacity: 0.92;
+  cursor: grabbing;
 }
 
 /* Traffic light buttons */

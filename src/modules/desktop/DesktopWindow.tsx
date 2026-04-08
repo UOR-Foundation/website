@@ -1,10 +1,11 @@
 /**
- * DesktopWindow — Crisp, draggable/resizable window with spatial entrance.
+ * DesktopWindow — Draggable/resizable window with snap zones.
  */
 
-import { useRef, useCallback, Suspense, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
 import { motion } from "framer-motion";
-import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
+import type { WindowState, SnapZone } from "@/modules/desktop/hooks/useWindowManager";
+import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
 
@@ -17,33 +18,52 @@ interface Props {
   onFocus: (id: string) => void;
   onMove: (id: string, pos: { x: number; y: number }) => void;
   onResize: (id: string, size: { w: number; h: number }) => void;
+  onSnap: (id: string, zone: SnapZone) => void;
+  onSnapPreview: (zone: SnapZone | null) => void;
 }
 
 const MENU_BAR_H = 28;
 
 export default function DesktopWindow({
-  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize,
+  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
 }: Props) {
   const app = getApp(win.appId);
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest(".traffic-light")) return;
     onFocus(win.id);
     dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.position.x, winY: win.position.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setIsDragging(true);
   }, [win.id, win.position, onFocus]);
 
   const onDragMove = useCallback((e: ReactPointerEvent) => {
     if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
     onMove(win.id, {
-      x: dragRef.current.winX + (e.clientX - dragRef.current.startX),
-      y: Math.max(MENU_BAR_H, dragRef.current.winY + (e.clientY - dragRef.current.startY)),
+      x: dragRef.current.winX + dx,
+      y: Math.max(MENU_BAR_H, dragRef.current.winY + dy),
     });
-  }, [win.id, onMove]);
+    // Detect snap zone
+    const zone = detectSnapZone(e.clientX, e.clientY);
+    onSnapPreview(zone);
+  }, [win.id, onMove, onSnapPreview]);
 
-  const onDragEnd = useCallback(() => { dragRef.current = null; }, []);
+  const onDragEnd = useCallback((e: ReactPointerEvent) => {
+    if (dragRef.current) {
+      const zone = detectSnapZone(e.clientX, e.clientY);
+      if (zone) {
+        onSnap(win.id, zone);
+      }
+    }
+    dragRef.current = null;
+    setIsDragging(false);
+    onSnapPreview(null);
+  }, [win.id, onSnap, onSnapPreview]);
 
   const onResizeStart = useCallback((e: ReactPointerEvent) => {
     e.stopPropagation();
@@ -72,11 +92,11 @@ export default function DesktopWindow({
 
   return (
     <motion.div
-      initial={{ scale: 0.85, opacity: 0, y: 60 }}
+      initial={{ scale: 0.88, opacity: 0, y: 50 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.85, opacity: 0, y: 40 }}
+      exit={{ scale: 0.88, opacity: 0, y: 30 }}
       transition={{ type: "spring", damping: 26, stiffness: 350, duration: 0.3 }}
-      className={`desktop-window-chrome fixed ${isActive ? "active" : ""}`}
+      className={`desktop-window-chrome fixed ${isActive ? "active" : ""} ${isDragging ? "dragging" : ""}`}
       style={{ ...style, zIndex: win.zIndex }}
       onPointerDown={() => onFocus(win.id)}
     >

@@ -9,11 +9,25 @@ export interface WindowState {
   zIndex: number;
   minimized: boolean;
   maximized: boolean;
+  /** Pre-snap geometry so we can restore */
+  preSnap?: { position: { x: number; y: number }; size: { w: number; h: number } } | null;
+}
+
+export interface SnapZone {
+  col: number;
+  row: number;
+  colSpan: number;
+  rowSpan: number;
 }
 
 const STORAGE_KEY = "uor:desktop-windows";
-const MIN_W = 420;
-const MIN_H = 320;
+const MIN_W = 360;
+const MIN_H = 280;
+const MENU_BAR_H = 28;
+const DOCK_H = 68;
+const SNAP_EDGE = 12;
+const GRID_COLS = 4;
+const GRID_ROWS = 4;
 
 let zCounter = 10;
 
@@ -34,6 +48,57 @@ function saveWindows(windows: WindowState[]) {
   } catch {}
 }
 
+/** Detect which snap zone the cursor is in based on screen position */
+export function detectSnapZone(clientX: number, clientY: number): SnapZone | null {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const usableTop = MENU_BAR_H;
+  const usableH = vh - MENU_BAR_H - DOCK_H;
+
+  // Corners — 2x2 quadrants
+  if (clientX <= SNAP_EDGE && clientY <= usableTop + SNAP_EDGE) {
+    return { col: 0, row: 0, colSpan: 2, rowSpan: 2 };
+  }
+  if (clientX >= vw - SNAP_EDGE && clientY <= usableTop + SNAP_EDGE) {
+    return { col: 2, row: 0, colSpan: 2, rowSpan: 2 };
+  }
+  if (clientX <= SNAP_EDGE && clientY >= usableTop + usableH - SNAP_EDGE) {
+    return { col: 0, row: 2, colSpan: 2, rowSpan: 2 };
+  }
+  if (clientX >= vw - SNAP_EDGE && clientY >= usableTop + usableH - SNAP_EDGE) {
+    return { col: 2, row: 2, colSpan: 2, rowSpan: 2 };
+  }
+
+  // Edges — half screen
+  if (clientX <= SNAP_EDGE) {
+    return { col: 0, row: 0, colSpan: 2, rowSpan: 4 };
+  }
+  if (clientX >= vw - SNAP_EDGE) {
+    return { col: 2, row: 0, colSpan: 2, rowSpan: 4 };
+  }
+  if (clientY <= usableTop + SNAP_EDGE) {
+    return { col: 0, row: 0, colSpan: 4, rowSpan: 4 }; // maximize
+  }
+
+  return null;
+}
+
+/** Convert a snap zone to pixel geometry */
+export function snapZoneToRect(zone: SnapZone): { x: number; y: number; w: number; h: number } {
+  const vw = window.innerWidth;
+  const usableH = window.innerHeight - MENU_BAR_H - DOCK_H;
+  const cellW = vw / GRID_COLS;
+  const cellH = usableH / GRID_ROWS;
+  const pad = 6;
+
+  return {
+    x: zone.col * cellW + pad,
+    y: MENU_BAR_H + zone.row * cellH + pad,
+    w: zone.colSpan * cellW - pad * 2,
+    h: zone.rowSpan * cellH - pad * 2,
+  };
+}
+
 export function useWindowManager() {
   const [windows, setWindows] = useState<WindowState[]>(loadWindows);
   const nextZ = useRef(zCounter);
@@ -43,16 +108,10 @@ export function useWindowManager() {
     saveWindows(ws);
   };
 
-  const getNextZ = () => {
-    nextZ.current += 1;
-    return nextZ.current;
-  };
-
   const openApp = useCallback((appId: string, title: string, defaultSize?: { w: number; h: number }) => {
     setWindows(prev => {
       const existing = prev.find(w => w.appId === appId);
       if (existing) {
-        // Focus / un-minimize existing
         const z = ++nextZ.current;
         const next = prev.map(w =>
           w.id === existing.id ? { ...w, minimized: false, zIndex: z } : w
@@ -70,6 +129,7 @@ export function useWindowManager() {
         zIndex: ++nextZ.current,
         minimized: false,
         maximized: false,
+        preSnap: null,
       };
       const next = [...prev, newWin];
       saveWindows(next);
@@ -105,7 +165,7 @@ export function useWindowManager() {
   const maximizeWindow = useCallback((id: string) => {
     setWindows(prev => {
       const next = prev.map(w =>
-        w.id === id ? { ...w, maximized: !w.maximized, zIndex: ++nextZ.current } : w
+        w.id === id ? { ...w, maximized: !w.maximized, zIndex: ++nextZ.current, preSnap: null } : w
       );
       saveWindows(next);
       return next;
@@ -114,7 +174,7 @@ export function useWindowManager() {
 
   const moveWindow = useCallback((id: string, pos: { x: number; y: number }) => {
     setWindows(prev => {
-      const next = prev.map(w => w.id === id ? { ...w, position: pos } : w);
+      const next = prev.map(w => w.id === id ? { ...w, position: pos, maximized: false } : w);
       saveWindows(next);
       return next;
     });
@@ -127,6 +187,36 @@ export function useWindowManager() {
           ? { ...w, size: { w: Math.max(MIN_W, size.w), h: Math.max(MIN_H, size.h) } }
           : w
       );
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
+  const snapWindow = useCallback((id: string, zone: SnapZone) => {
+    const rect = snapZoneToRect(zone);
+    setWindows(prev => {
+      const next = prev.map(w => {
+        if (w.id !== id) return w;
+        return {
+          ...w,
+          preSnap: w.preSnap || { position: { ...w.position }, size: { ...w.size } },
+          position: { x: rect.x, y: rect.y },
+          size: { w: rect.w, h: rect.h },
+          maximized: false,
+          zIndex: ++nextZ.current,
+        };
+      });
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
+  const unsnap = useCallback((id: string) => {
+    setWindows(prev => {
+      const next = prev.map(w => {
+        if (w.id !== id || !w.preSnap) return w;
+        return { ...w, position: w.preSnap.position, size: w.preSnap.size, preSnap: null };
+      });
       saveWindows(next);
       return next;
     });
@@ -146,5 +236,7 @@ export function useWindowManager() {
     maximizeWindow,
     moveWindow,
     resizeWindow,
+    snapWindow,
+    unsnap,
   };
 }
