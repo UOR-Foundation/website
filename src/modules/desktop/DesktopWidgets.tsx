@@ -143,27 +143,25 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     : isLight ? "0 2px 24px rgba(0,0,0,0.06)" : "0 2px 24px rgba(0,0,0,0.3)";
   const greetingColor = isImmersive ? "text-white/90" : isLight ? "text-black/35" : "text-white/40";
 
-  // Search bar styles
+  // Search bar styles — no color change for address, just subtle text formatting
   const searchBg = isImmersive
-    ? (isAddress
-        ? "hsl(165 20% 14% / 0.92)"
-        : "hsl(200 15% 16% / 0.9)")
+    ? "hsl(200 15% 16% / 0.9)"
     : isLight
-      ? (isAddress ? "rgba(0,180,120,0.06)" : "rgba(0,0,0,0.04)")
-      : (isAddress ? "rgba(0,180,120,0.08)" : "rgba(255,255,255,0.04)");
+      ? "rgba(0,0,0,0.04)"
+      : "rgba(255,255,255,0.04)";
   const searchBorder = isImmersive
-    ? (isAddress ? "1px solid hsl(160 50% 50% / 0.25)" : "1px solid hsl(0 0% 100% / 0.14)")
+    ? "1px solid hsl(0 0% 100% / 0.14)"
     : isLight
-      ? (isAddress ? "1px solid hsl(160 50% 50% / 0.3)" : "1px solid rgba(0,0,0,0.08)")
-      : (isAddress ? "1px solid hsl(160 50% 50% / 0.25)" : "1px solid rgba(255,255,255,0.08)");
+      ? "1px solid rgba(0,0,0,0.08)"
+      : "1px solid rgba(255,255,255,0.08)";
   const searchShadow = isImmersive
     ? "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3)"
     : isLight ? "0 4px 24px -8px rgba(0,0,0,0.08)" : "0 4px 24px -8px rgba(0,0,0,0.3)";
   const inputColor = isImmersive
-    ? (isAddress ? "hsl(160 40% 85%)" : "hsl(0 0% 100% / 0.95)")
+    ? "hsl(0 0% 100% / 0.95)"
     : isLight
-      ? (isAddress ? "hsl(160 40% 25%)" : "hsl(0 0% 0% / 0.85)")
-      : (isAddress ? "hsl(160 40% 85%)" : "hsl(0 0% 100% / 0.9)");
+      ? "hsl(0 0% 0% / 0.85)"
+      : "hsl(0 0% 100% / 0.9)";
   const placeholderColor = isImmersive ? "hsl(0 0% 100% / 0.35)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.25)";
   const btnBgStyle = isImmersive
     ? "hsl(0 0% 100% / 0.1)"
