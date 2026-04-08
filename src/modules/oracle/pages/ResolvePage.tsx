@@ -735,7 +735,7 @@ const SearchPage = () => {
                           onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                           onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
                           placeholder=""
-                          className="flex-1 bg-transparent py-[18px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
+                          className="flex-1 bg-transparent py-[18px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
                         />
                       </motion.div>
                     ) : (
