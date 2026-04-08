@@ -703,7 +703,7 @@ const SearchPage = () => {
     await streamKnowledge({
       keyword,
       context: recentContext,
-      lens: activeLens,
+      lens: lensOverride || activeLens,
       onWiki: (streamWiki, sources) => {
         // Update wiki metadata if the stream provides it (and we didn't get it already)
         if (streamWiki && !wiki) {
