@@ -448,9 +448,56 @@ const SearchPage = () => {
     setSelectedSuggIdx(-1);
   }, [input]);
 
+  // Speculative prefetch as user types (Wikipedia summary)
+  useEffect(() => {
+    const trimmed = input.trim();
+    if (!trimmed || trimmed.length < 3 || isUorAddress(trimmed) || isUrl(trimmed) || result) {
+      setPrefetchResult(null);
+      setShowPrefetch(false);
+      cancelPrefetch();
+      return;
+    }
+    speculativePrefetch(trimmed, (res) => {
+      setPrefetchResult(res);
+      setShowPrefetch(!!res);
+    });
+    return () => cancelPrefetch();
+  }, [input, result]);
+
+  // Live mode: debounced type-to-stream
+  useEffect(() => {
+    if (!liveMode || !input.trim() || input.trim().length < 3 || result || isUorAddress(input.trim()) || isUrl(input.trim())) return;
+    if (liveTimerRef.current) clearTimeout(liveTimerRef.current);
+    liveTimerRef.current = setTimeout(() => {
+      // Abort previous live stream
+      if (liveAbortRef.current) liveAbortRef.current.abort();
+      setShowPrefetch(false);
+      handleSearch(input);
+    }, 800);
+    return () => { if (liveTimerRef.current) clearTimeout(liveTimerRef.current); };
+  }, [input, liveMode]);
+
+  const toggleLiveMode = useCallback(() => {
+    setLiveMode(prev => {
+      const next = !prev;
+      localStorage.setItem("uor-live-search", String(next));
+      return next;
+    });
+  }, []);
+
+  // Voice input handler
+  const handleVoiceTranscript = useCallback((text: string, isFinal: boolean) => {
+    setInput(text);
+    if (isFinal && text.trim().length >= 2) {
+      setShowPrefetch(false);
+      handleSearch(text.trim());
+    }
+  }, []);
+
   const pickSuggestion = (triword: string) => {
     setInput(triword);
     setShowSuggestions(false);
+    setShowPrefetch(false);
     handleSearch(triword);
   };
 
