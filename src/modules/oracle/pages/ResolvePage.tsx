@@ -215,34 +215,31 @@ const SearchPage = () => {
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 md:px-6">
+        <div className="max-w-3xl mx-auto px-4 md:px-6">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
             <div
-              className="flex flex-col items-center"
-              style={{ paddingTop: "38.2vh" }}
+              className="flex flex-col items-center justify-center"
+              style={{ minHeight: "100dvh", paddingBottom: "10vh" }}
             >
-              {/* Brand wordmark */}
+              {/* Brand wordmark — single confident line */}
               <h1
-                className="font-display font-medium tracking-[0.05em] text-foreground select-none leading-none"
-                style={{ fontSize: "clamp(4rem, 8vw, 7rem)" }}
+                className="font-display font-semibold tracking-[0.04em] text-foreground select-none leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)" }}
               >
-                UOR
+                UOR Semantic Web Search
               </h1>
-              <p className="text-[13px] text-muted-foreground/35 tracking-[0.08em] mt-2 select-none">
-                Semantic Web Search
-              </p>
 
-              {/* Search bar */}
+              {/* Search bar — golden ratio spacing from title */}
               <div
-                className="w-full max-w-[582px] relative group"
-                style={{ marginTop: "calc(3.5rem * 0.618)" }}
+                className="w-full max-w-[680px] relative group"
+                style={{ marginTop: "calc(3.6rem * 0.618)" }}
               >
-                <div className="relative flex items-center bg-[hsl(0_0%_19%)] border border-[hsl(0_0%_19%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_1px_6px_0_hsl(0_0%_0%/0.3)]">
+                <div className="relative flex items-center bg-[hsl(0_0%_15%)] border border-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] rounded-full transition-all focus-within:border-[hsl(0_0%_37%)] focus-within:shadow-[0_2px_12px_0_hsl(0_0%_0%/0.4)]">
                   {/* Left + icon */}
-                  <button className="pl-4 pr-1 py-[14px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
-                    <Plus className="w-5 h-5" />
+                  <button className="pl-5 pr-2 py-[18px] text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
+                    <Plus className="w-6 h-6" />
                   </button>
 
                   <input
@@ -252,32 +249,32 @@ const SearchPage = () => {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } }}
                     placeholder=""
-                    className="flex-1 bg-transparent py-[14px] px-2 text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
+                    className="flex-1 bg-transparent py-[18px] px-2 text-lg text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
                   />
 
                   {/* Right side — separator + AI Mode pill */}
-                  <div className="flex items-center gap-2 pr-2 shrink-0">
-                    <div className="w-px h-6 bg-[hsl(0_0%_37%)]" />
+                  <div className="flex items-center gap-3 pr-3 shrink-0">
+                    <div className="w-px h-7 bg-[hsl(0_0%_30%)]" />
                     <button
                       onClick={() => setAiMode(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[hsl(0_0%_30%)] hover:bg-[hsl(0_0%_24%)] transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full border border-[hsl(0_0%_28%)] hover:bg-[hsl(0_0%_22%)] transition-all"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-                      <span className="text-xs font-medium text-foreground/80 whitespace-nowrap">AI Mode</span>
+                      <Sparkles className="w-4 h-4 text-primary/70" />
+                      <span className="text-sm font-semibold text-foreground/80 whitespace-nowrap">AI Mode</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Dual buttons */}
+              {/* Dual buttons — golden ratio spacing */}
               <div
-                className="flex items-center gap-3"
-                style={{ marginTop: "calc(2rem * 0.618)" }}
+                className="flex items-center gap-4"
+                style={{ marginTop: "calc(2.8rem * 0.618)" }}
               >
                 <button
                   onClick={submit}
                   disabled={!input.trim() || loading}
-                  className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all disabled:opacity-30"
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all disabled:opacity-30"
                 >
                   UOR Search
                 </button>
@@ -285,29 +282,38 @@ const SearchPage = () => {
                   onClick={() => {
                     const entries = allEntries();
                     if (entries.length === 0) {
-                      toast("Nothing mapped yet — search something first!", { icon: "🫧" });
+                      toast("Nothing mapped yet. Search something first!", { icon: "🫧" });
                       return;
                     }
                     const pick = entries[Math.floor(Math.random() * entries.length)];
 
-                    // 🎉 Confetti burst
                     const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
                     confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors, startVelocity: 30, gravity: 0.8, ticks: 120 });
                     setTimeout(() => confetti({ particleCount: 40, spread: 120, origin: { y: 0.5 }, colors, startVelocity: 15, gravity: 0.6, ticks: 100 }), 200);
 
-                    // Playful toast
                     const msg = SURPRISE_MESSAGES[Math.floor(Math.random() * SURPRISE_MESSAGES.length)];
                     toast(msg, { description: pick.receipt.triwordFormatted });
 
-                    // Show result with a brief delay for the confetti moment
                     setTimeout(() => {
                       setInput(pick.receipt.triword);
                       setResult({ source: pick.source, receipt: pick.receipt });
                     }, 400);
                   }}
-                  className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all"
+                  className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-[15px] font-semibold text-foreground tracking-wide transition-all"
                 >
                   Surprise Me
+                </button>
+              </div>
+
+              {/* Address space count — golden ratio spacing */}
+              <p
+                className="text-[15px] text-muted-foreground/40 select-none"
+                style={{ marginTop: "calc(2rem * 0.618)" }}
+              >
+                Searching across <span className="text-foreground/60 font-semibold">340 undecillion</span> possible addresses
+              </p>
+            </div>
+          )}
                 </button>
               </div>
 
