@@ -56,7 +56,7 @@ const IMPROBABILITY_EXPONENTS = [
 
 /* ── Canonical concept: near-infinite addressing ── */
 const NEAR_INFINITE_CONCEPT = {
-  "@context": "https://schema.uor.foundation/v1",
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
   "@type": "uor:Concept",
   "@id": "uor:concept:near-infinite-addressing",
   "uor:label": "Near-Infinite Addressing",
