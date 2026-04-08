@@ -720,21 +720,12 @@ const SearchPage = () => {
                             />
                           </div>
 
-                          {/* Compact proof details */}
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-muted-foreground/40">
-                            <span title="Content Identifier">
-                              CID: {msg.proof.cid.slice(0, 16)}…
-                            </span>
-                            <span title="Glyph">
-                              {msg.proof.glyph}
-                            </span>
-                            <span title="Ring partition">
-                              Ring: {msg.proof.ringPartition}
-                            </span>
-                            <span title="Engine">
-                              {msg.proof.engine === "wasm" ? "⚙ WASM" : "⚙ TS"}
-                            </span>
-                          </div>
+                          {/* IPv6 address */}
+                          {msg.proof.ipv6 && (
+                            <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
+                              {msg.proof.ipv6}
+                            </p>
+                          )}
 
                           {/* Clickable to navigate to full proof */}
                           <button
