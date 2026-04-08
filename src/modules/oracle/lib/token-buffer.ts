@@ -131,6 +131,7 @@ export class TokenBuffer {
       this.totalFlushed += batch.length;
       this.lastFlush = now;
       this.onFlush(this.accumulated);
+      this.emitHeightHint();
 
       if (this.queue.length > 0 || this.running) {
         this.scheduleFlush();
