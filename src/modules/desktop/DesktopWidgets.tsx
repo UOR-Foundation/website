@@ -306,6 +306,13 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
             </div>
           </div>
         </form>
+
+        {/* Context pills — show active context items */}
+        {ctx.contextItems.length > 0 && (
+          <div className="w-full mt-3">
+            <ContextPills items={ctx.contextItems} onRemove={ctx.remove} />
+          </div>
+        )}
       </div>
 
       {/* Placeholder style for placeholders */}
