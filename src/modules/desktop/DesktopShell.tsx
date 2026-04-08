@@ -33,7 +33,7 @@ function DesktopShellInner() {
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
-    wm.openApp("search", query, app?.defaultSize);
+    wm.openApp("search", query, app?.defaultSize, { maximized: true });
   }, [wm]);
 
   const handleOpenApp = useCallback((appId: string) => {

@@ -1872,31 +1872,27 @@ const SearchPage = () => {
         <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
-          {!result && !aiMode && (
-            isMobile ? (
-                <ImmersiveSearchView
-                  onSearch={(q) => { setInput(q); handleSearch(q); }}
-                  onExit={() => {
-                    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-                    else document.documentElement.requestFullscreen?.().catch(() => {});
-                  }}
-                  onEncode={() => setEncodeMode(true)}
-                  onAiMode={() => setAiMode(true)}
-                  isFullscreen={isFullscreen}
-                />
-            ) : (
-              /* ── DESKTOP ── */
-                <ImmersiveSearchView
-                  onSearch={(q) => { setInput(q); handleSearch(q); }}
-                  onExit={() => {
-                    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-                    else document.documentElement.requestFullscreen?.().catch(() => {});
-                  }}
-                  onEncode={() => setEncodeMode(true)}
-                  onAiMode={() => setAiMode(true)}
-                  isFullscreen={isFullscreen}
-                />
-            )
+          {!result && !aiMode && !(inWindow && windowInitialQuery) && (
+            <ImmersiveSearchView
+              onSearch={(q) => { setInput(q); handleSearch(q); }}
+              onExit={() => {
+                if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+                else document.documentElement.requestFullscreen?.().catch(() => {});
+              }}
+              onEncode={() => setEncodeMode(true)}
+              onAiMode={() => setAiMode(true)}
+              isFullscreen={isFullscreen}
+            />
+          )}
+
+          {/* ══════════════ LOADING STATE — Window opened with query ══════════════ */}
+          {!result && !aiMode && inWindow && windowInitialQuery && (
+            <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <p className="text-sm text-muted-foreground/50 font-mono tracking-wide">Resolving…</p>
+              </div>
+            </div>
           )}
 
           {/* ══════════════ AI MODE — Oracle ══════════════ */}
