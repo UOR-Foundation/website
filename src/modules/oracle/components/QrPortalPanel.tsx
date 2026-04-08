@@ -48,7 +48,9 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
-      const appOrigin = window.location.origin;
+      // Always use the published domain for QR codes so they work when scanned
+      const PUBLISHED_ORIGIN = "https://univeral-coordinate-hub.lovable.app";
+      const appOrigin = PUBLISHED_ORIGIN;
       let portalUrl: string;
 
       if (!accessToken) {
