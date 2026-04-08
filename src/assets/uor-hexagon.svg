@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.8">
+  <!-- Outer hexagon -->
+  <polygon points="100,10 177.3,55 177.3,145 100,190 22.7,145 22.7,55" />
+  <!-- Inner hexagon (rotated 30°) -->
+  <polygon points="100,32 158,66 158,134 100,168 42,134 42,66" />
+  <!-- Star lines: vertex to opposite vertex -->
+  <line x1="100" y1="10" x2="100" y2="190" />
+  <line x1="22.7" y1="55" x2="177.3" y2="145" />
+  <line x1="177.3" y1="55" x2="22.7" y2="145" />
+  <!-- Connecting outer to inner -->
+  <line x1="100" y1="10" x2="42" y2="66" />
+  <line x1="100" y1="10" x2="158" y2="66" />
+  <line x1="177.3" y1="55" x2="158" y2="134" />
+  <line x1="177.3" y1="55" x2="100" y2="32" />
+  <line x1="177.3" y1="145" x2="100" y2="168" />
+  <line x1="177.3" y1="145" x2="158" y2="66" />
+  <line x1="100" y1="190" x2="158" y2="134" />
+  <line x1="100" y1="190" x2="42" y2="134" />
+  <line x1="22.7" y1="145" x2="42" y2="66" />
+  <line x1="22.7" y1="145" x2="100" y2="168" />
+  <line x1="22.7" y1="55" x2="100" y2="32" />
+  <line x1="22.7" y1="55" x2="42" y2="134" />
+  <!-- Inner star connections -->
+  <line x1="42" y1="66" x2="158" y2="134" />
+  <line x1="158" y1="66" x2="42" y2="134" />
+  <line x1="100" y1="32" x2="100" y2="168" />
+  <!-- Center dot -->
+  <circle cx="100" cy="100" r="2" fill="rgba(255,255,255,0.7)" stroke="none" />
+</svg>
