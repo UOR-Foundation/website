@@ -189,6 +189,7 @@ export default function SoundCloudFab() {
 
       <button
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
         className="group relative flex items-center justify-center rounded-full focus:outline-none"
         style={{
           width: DISC_SIZE,
