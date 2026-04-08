@@ -99,7 +99,7 @@ function createSimpleComponents(sectionCounter: { current: number }) {
         </p>
       );
     },
-    blockquote: ({ children, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
+    blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
       <div
         className="bg-accent/[0.08] border border-accent/15"
         style={{
@@ -110,7 +110,6 @@ function createSimpleComponents(sectionCounter: { current: number }) {
           lineHeight: 1.8,
           fontFamily: "'DM Sans', system-ui, sans-serif",
         }}
-        {...props}
       >
         <span style={{ marginRight: 8, fontSize: "1.2em" }}>💬</span>
         {children}

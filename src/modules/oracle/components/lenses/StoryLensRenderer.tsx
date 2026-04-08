@@ -43,8 +43,7 @@ function createStoryComponents() {
           marginTop: "2rem",
           marginBottom: "0.6rem",
           letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          fontSize: "0.85rem",
+          textTransform: "uppercase" as const,
         }}
         {...props}
       >
