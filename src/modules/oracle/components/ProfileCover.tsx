@@ -126,7 +126,7 @@ const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-[124px] md:h-[161px] rounded-2xl overflow-hidden group">
+    <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden group" style={{ height: "calc(100vw / 1.618 / 2.618)", maxHeight: "280px", minHeight: "140px" }}>
       <img
         src={customUrl || defaultSrc}
         alt=""

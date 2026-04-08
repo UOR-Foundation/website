@@ -1332,7 +1332,7 @@ const SearchPage = () => {
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="profile-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
@@ -1747,22 +1747,22 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.03 }}
-                  className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-5 px-4 sm:px-6"
-                  style={{ marginTop: "-2.75rem" }}
+                  className="relative flex flex-col sm:flex-row items-start gap-5 sm:gap-6 px-4 sm:px-8"
+                  style={{ marginTop: "-3.25rem" }}
                 >
                   {/* Glyph Avatar */}
                   <div className="relative shrink-0">
-                    <div className="w-20 h-20 sm:w-[88px] sm:h-[88px] rounded-full bg-primary/8 border-2 border-primary/20 flex items-center justify-center shadow-[0_0_32px_-8px_hsl(var(--primary)/0.25)] ring-4 ring-background">
-                      <span className="text-2xl sm:text-3xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-primary/8 border-[3px] border-primary/20 flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.3)] ring-[5px] ring-background">
+                      <span className="text-3xl sm:text-4xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
                   </div>
 
                   {/* Name + badges + actions */}
                   <div className="flex-1 min-w-0 pt-2 sm:pt-4">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <div className="flex items-baseline gap-2 min-w-0">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-foreground tracking-wide leading-tight truncate">
+                        <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-display font-semibold text-foreground tracking-wide leading-tight truncate">
                           {triwordDisplay}
                         </h1>
                         <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
@@ -1906,8 +1906,8 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.06 }}
-                  className="border-t border-b border-border/10 py-4 px-4 sm:px-6"
-                  style={{ marginTop: "calc(1.25rem * 1.618)" }}
+                  className="border-t border-b border-border/10 py-4 px-4 sm:px-8"
+                  style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
@@ -1917,8 +1917,8 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="px-4 sm:px-6"
-                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                  className="px-4 sm:px-8"
+                  style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   <IdentityHub receipt={result.receipt} />
                 </motion.div>
