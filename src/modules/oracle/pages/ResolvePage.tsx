@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import uorLogo from "@/assets/uor-logo-white.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Circle } from "lucide-react";
@@ -613,14 +614,22 @@ const SearchPage = () => {
           {!result && !aiMode && (
             <div
               className="relative flex flex-col items-center"
-              style={{ minHeight: "100dvh", paddingTop: "38.2vh" }}
+              style={{ minHeight: "100dvh", paddingTop: "28vh" }}
             >
-              {/* Brand wordmark — single confident line */}
+              {/* Logo */}
+              <img
+                src={uorLogo}
+                alt="UOR"
+                className="w-20 h-20 md:w-24 md:h-24 mb-5 select-none"
+                draggable={false}
+              />
+
+              {/* Title */}
               <h1
-                className="font-display font-bold tracking-[0.025em] text-foreground select-none leading-none whitespace-nowrap"
-                style={{ fontSize: "clamp(2.6rem, 5.5vw, 4rem)" }}
+                className="font-display font-bold tracking-[0.02em] text-foreground select-none leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(2.4rem, 5.5vw, 3.8rem)" }}
               >
-                UOR Semantic Web Search
+                The Universal Object Reference
               </h1>
 
               {/* Search bar — golden ratio spacing from title */}
@@ -746,7 +755,7 @@ const SearchPage = () => {
                 className="absolute left-0 right-0 text-center text-[14px] text-muted-foreground/30 select-none"
                 style={{ bottom: "6vh" }}
               >
-                Searching a <span className="text-foreground/50 font-medium">near-infinite</span> address space.
+                Search the semantic web using <span className="text-foreground/50 font-medium">UOR</span>!
               </p>
             </div>
           )}
