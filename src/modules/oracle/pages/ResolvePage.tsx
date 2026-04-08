@@ -1457,15 +1457,66 @@ const SearchPage = () => {
                     )}
                   </motion.div>
                 ) : (
-                  /* Standard content */
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-3" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
+                  /* Standard content — Human / Machine toggle */
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4" style={{ marginTop: "calc(1.5rem * 1.618)" }}>
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Content</p>
-                      <CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />
+                      <div className="flex items-center gap-3">
+                        {/* Human / Machine toggle */}
+                        <div className="flex items-center rounded-full border border-border/20 overflow-hidden">
+                          <button
+                            onClick={() => setContentViewMode("human")}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
+                              contentViewMode === "human"
+                                ? "bg-primary/15 text-foreground"
+                                : "text-muted-foreground/40 hover:text-foreground/60"
+                            }`}
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            Human
+                          </button>
+                          <button
+                            onClick={() => setContentViewMode("machine")}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-all ${
+                              contentViewMode === "machine"
+                                ? "bg-primary/15 text-foreground"
+                                : "text-muted-foreground/40 hover:text-foreground/60"
+                            }`}
+                          >
+                            <Code2 className="w-3.5 h-3.5" />
+                            Machine
+                          </button>
+                        </div>
+                        <CopyBtn onClick={() => copy(contentViewMode === "machine" ? JSON.stringify(result.source, null, 2) : renderHumanContent(result.source), "json")} copied={copied === "json"} label="Copy" />
+                      </div>
                     </div>
-                    <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[50vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
-                      {JSON.stringify(result.source, null, 2)}
-                    </pre>
+
+                    <AnimatePresence mode="wait">
+                      {contentViewMode === "human" ? (
+                        <motion.div
+                          key="human-view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="bg-muted/5 rounded-xl p-6 border border-border/15 space-y-4 max-h-[60vh] overflow-y-auto"
+                        >
+                          {renderHumanView(result.source)}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="machine-view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[60vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
+                            {JSON.stringify(result.source, null, 2)}
+                          </pre>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 )}
 
