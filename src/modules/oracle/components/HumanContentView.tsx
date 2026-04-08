@@ -13,6 +13,7 @@
 
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import WikiArticleView from "./WikiArticleView";
 import SemanticWebTower from "./SemanticWebTower";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
@@ -159,101 +160,104 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-      {/* ── Type pill + Title ── */}
-      <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {rawType && typeStyle && (
-          <span
-            style={{
-              fontSize: 11,
-              fontFamily: "ui-monospace, 'SF Mono', monospace",
-              textTransform: "uppercase",
-              letterSpacing: "0.15em",
-              fontWeight: 600,
-              color: typeStyle.color,
-              background: typeStyle.bg,
-              padding: "3px 10px",
-              borderRadius: 6,
-              alignSelf: "flex-start",
-            }}
-          >
-            {rawType}
-          </span>
-        )}
+      {/* ── Type pill + Title (skip for KnowledgeCard — WikiArticleView handles it) ── */}
+      {!isKnowledgeCard && (
+        <>
+          <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {rawType && typeStyle && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: "ui-monospace, 'SF Mono', monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  fontWeight: 600,
+                  color: typeStyle.color,
+                  background: typeStyle.bg,
+                  padding: "3px 10px",
+                  borderRadius: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
+                {rawType}
+              </span>
+            )}
 
-        {/* Wikipedia-enhanced header with thumbnail */}
-        {wikidata ? (
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-              {title && (
+            {wikidata ? (
+              <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {title && (
+                    <h3
+                      style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
+                      className="text-foreground font-display"
+                    >
+                      {title}
+                    </h3>
+                  )}
+                  {wikidata.description && (
+                    <p
+                      style={{ fontSize: 15, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}
+                      className="text-muted-foreground/70"
+                    >
+                      {wikidata.description as string}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                    {wikidata.qid && (
+                      <a
+                        href={`https://www.wikidata.org/wiki/${wikidata.qid}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "ui-monospace, monospace",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          textDecoration: "none",
+                          fontWeight: 600,
+                        }}
+                        className="bg-primary/10 text-primary/70 hover:text-primary transition-colors"
+                      >
+                        {wikidata.qid as string}
+                      </a>
+                    )}
+                    <span style={{ fontSize: 10 }} className="text-muted-foreground/30">
+                      Wikidata
+                    </span>
+                  </div>
+                </div>
+                {wikidata.thumbnail && (
+                  <img
+                    src={wikidata.thumbnail as string}
+                    alt={title || ""}
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 10,
+                      flexShrink: 0,
+                      border: "1px solid hsl(var(--border) / 0.15)",
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              title && (
                 <h3
                   style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
                   className="text-foreground font-display"
                 >
                   {title}
                 </h3>
-              )}
-              {wikidata.description && (
-                <p
-                  style={{ fontSize: 15, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}
-                  className="text-muted-foreground/70"
-                >
-                  {wikidata.description as string}
-                </p>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                {wikidata.qid && (
-                  <a
-                    href={`https://www.wikidata.org/wiki/${wikidata.qid}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "ui-monospace, monospace",
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      textDecoration: "none",
-                      fontWeight: 600,
-                    }}
-                    className="bg-primary/10 text-primary/70 hover:text-primary transition-colors"
-                  >
-                    {wikidata.qid as string}
-                  </a>
-                )}
-                <span style={{ fontSize: 10 }} className="text-muted-foreground/30">
-                  Wikidata
-                </span>
-              </div>
-            </div>
-            {wikidata.thumbnail && (
-              <img
-                src={wikidata.thumbnail as string}
-                alt={title || ""}
-                style={{
-                  width: 120,
-                  height: 120,
-                  objectFit: "cover",
-                  borderRadius: 10,
-                  flexShrink: 0,
-                  border: "1px solid hsl(var(--border) / 0.15)",
-                }}
-              />
+              )
             )}
-          </div>
-        ) : (
-          title && (
-            <h3
-              style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.3, margin: 0, wordBreak: "break-word" }}
-              className="text-foreground font-display"
-            >
-              {title}
-            </h3>
-          )
-        )}
-      </header>
+          </header>
 
-      {/* ── Wikipedia taxonomy card ── */}
-      {wikidata?.taxonomy && typeof wikidata.taxonomy === "object" && Object.keys(wikidata.taxonomy as Record<string, string>).length > 0 && (
-        <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
+          {/* ── Wikipedia taxonomy card ── */}
+          {wikidata?.taxonomy && typeof wikidata.taxonomy === "object" && Object.keys(wikidata.taxonomy as Record<string, string>).length > 0 && (
+            <WikiTaxonomyCard taxonomy={wikidata.taxonomy as Record<string, string>} />
+          )}
+        </>
       )}
 
       {/* ── View mode toggle (Original / Readable) for WebPages with rawHtml ── */}
@@ -284,100 +288,15 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
         </div>
       )}
 
-      {/* ── KnowledgeCard synthesis view ── */}
-      {isKnowledgeCard && synthesizing ? (
-        /* Shimmer skeleton while AI synthesis loads */
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          <div
-            style={{
-              borderLeft: "3px solid hsl(38 90% 55% / 0.3)",
-              paddingLeft: 24,
-            }}
-            className="space-y-3"
-          >
-            {[100, 92, 96, 60, 88, 95, 72, 50].map((w, i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded"
-                style={{
-                  height: 14,
-                  width: `${w}%`,
-                  background: "hsl(var(--muted-foreground) / 0.08)",
-                }}
-              />
-            ))}
-            <div style={{ height: 8 }} />
-            {[85, 90, 78, 65].map((w, i) => (
-              <div
-                key={`b${i}`}
-                className="animate-pulse rounded"
-                style={{
-                  height: 14,
-                  width: `${w}%`,
-                  background: "hsl(var(--muted-foreground) / 0.06)",
-                }}
-              />
-            ))}
-          </div>
-          <p
-            style={{ fontSize: 11, fontStyle: "italic" }}
-            className="text-muted-foreground/40"
-          >
-            Synthesizing AI article…
-          </p>
-        </div>
-      ) : isKnowledgeCard && contentMarkdown ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {/* AI-synthesized article with accent border */}
-          <div
-            style={{
-              borderLeft: "3px solid hsl(38 90% 55% / 0.5)",
-              paddingLeft: 24,
-              maxHeight: 600,
-              overflowY: "auto",
-            }}
-            className="prose prose-sm dark:prose-invert max-w-none text-foreground/80"
-          >
-            <ReactMarkdown>{contentMarkdown}</ReactMarkdown>
-          </div>
-
-          {/* Sources footer */}
-          {sources.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span
-                style={{
-                  fontSize: 10,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                }}
-                className="text-muted-foreground/40"
-              >
-                Sources
-              </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {sources.map((url, i) => (
-                  <a
-                    key={i}
-                    href={url.startsWith("http") ? url : `https://${url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: 11,
-                      padding: "3px 10px",
-                      borderRadius: 6,
-                      textDecoration: "none",
-                      border: "1px solid hsl(var(--border) / 0.15)",
-                    }}
-                    className="text-muted-foreground/60 hover:text-primary/70 bg-muted/10 hover:bg-primary/5 transition-colors"
-                  >
-                    {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      {/* ── KnowledgeCard — Wikipedia-style article ── */}
+      {isKnowledgeCard ? (
+        <WikiArticleView
+          title={title || ""}
+          contentMarkdown={contentMarkdown || ""}
+          wikidata={wikidata}
+          sources={sources}
+          synthesizing={synthesizing}
+        />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
       ) : (

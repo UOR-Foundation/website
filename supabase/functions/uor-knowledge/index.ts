@@ -51,26 +51,30 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "google/gemini-2.5-flash",
           messages: [
             {
               role: "system",
-              content: `You are an expert knowledge synthesizer. Write a concise, authoritative, beautifully structured article about a given topic. Follow these rules:
-1. Use markdown with clear ## section headers.
-2. Start with a one-paragraph overview — no heading for this opening.
-3. Include 3-5 focused sections covering key facts, history/origin, significance, and interesting details.
-4. Write 500-700 words. Be precise, engaging, and informative.
-5. Use concrete numbers, dates, and comparisons to make concepts tangible.
-6. Do not add source citations, brackets, or annotation tags.
-7. Write naturally — no filler phrases or hedging.`,
+              content: `You are an encyclopedic knowledge writer. Write a comprehensive, Wikipedia-style article about a given topic. Follow these rules strictly:
+
+1. Start with a lead section (NO heading) of 2-3 sentences. Bold the subject name on first mention using **Subject**.
+2. After the lead, include 8-12 sections using ## headings. Choose from these as appropriate:
+   - Etymology, Taxonomy and classification, Description / Anatomy, History, Behavior, Ecology, Distribution, Uses, Cultural significance, Conservation, See also
+   - For non-biological topics adapt: Overview, History, Characteristics, Types/Variants, Applications, Impact, Notable examples, Contemporary relevance
+3. Write 1000-1500 words total. Be encyclopedic: precise, neutral, factual.
+4. Use concrete numbers, dates, proper nouns, and specific details throughout.
+5. Do NOT add citations, reference brackets [1], annotation tags, or "Sources" sections.
+6. Do NOT use ### sub-headings — only ## level.
+7. Write in a neutral, encyclopedic tone. No first person, no hedging, no filler phrases.
+8. Each section should be 2-4 paragraphs of substantive content.`,
             },
             {
               role: "user",
-              content: `Write a knowledge article about: ${term}`,
+              content: `Write a comprehensive encyclopedic article about: ${term}`,
             },
           ],
-          max_tokens: 1200,
-          temperature: 0.35,
+          max_tokens: 2400,
+          temperature: 0.3,
         }),
       }).then(async (r) => {
         if (!r.ok) {
