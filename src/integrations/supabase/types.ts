@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      address_comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote: number
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote: number
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "address_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       address_comments: {
         Row: {
           address_cid: string
@@ -21,6 +53,7 @@ export type Database = {
           created_at: string
           id: string
           parent_id: string | null
+          score: number
           user_id: string
         }
         Insert: {
@@ -29,6 +62,7 @@ export type Database = {
           created_at?: string
           id?: string
           parent_id?: string | null
+          score?: number
           user_id: string
         }
         Update: {
@@ -37,6 +71,7 @@ export type Database = {
           created_at?: string
           id?: string
           parent_id?: string | null
+          score?: number
           user_id?: string
         }
         Relationships: [
