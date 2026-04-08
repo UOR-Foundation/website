@@ -366,6 +366,8 @@ interface MediaImage {
   uorHash: string;
   source: string;
   relevance?: number;
+  coherenceScore?: number;
+  topicDomain?: string;
 }
 
 interface MediaVideo {
@@ -388,13 +390,42 @@ const SOURCE_KEYWORDS: Record<string, RegExp> = {
   "loc": /\b(americ|president|civil.war|congress|constitution|jazz|blues|folk|baseball|lincoln|washington|jefferson|roosevelt|colonial|pioneer|immigration|suffrage|civil.rights|dust.bowl|great.depression|world.war|vietnam|korean.war|manifest.destiny)\b/i,
 };
 
+/* ── Off-topic penalty patterns ──────────────────────────────────────── */
+
+/** Domain-mismatch penalties: if a caption contains these patterns but the
+ *  search term doesn't, the image is likely off-topic */
+const OFFTOPIC_PENALTIES: Array<{ pattern: RegExp; domains: RegExp }> = [
+  // Ancient/archaeological artifacts showing up for modern topics
+  { pattern: /\b(ancient|archaeological|artifact|antiquit|hieroglyph|pharaoh|mummy|cuneiform|papyrus|tablet|stele|amphora|sarcophag)\b/i,
+    domains: /\b(sport|racing|formula|motor|car|tech|software|computer|digital|modern|contemporar)\b/i },
+  // Religious/mythological imagery for science/tech topics
+  { pattern: /\b(deity|worship|temple|altar|ritual|liturgical|reliquary|icon|devotional|biblical|scripture)\b/i,
+    domains: /\b(science|physics|chemistry|biology|engineering|tech|digital|computer|math)\b/i },
+  // Military/weapons for civilian topics
+  { pattern: /\b(weapon|sword|cannon|musket|bayonet|rifle|artillery|ammunition|warfare)\b/i,
+    domains: /\b(art|music|literature|philosophy|food|fashion|sport|entertainment)\b/i },
+];
+
+function computeOfftopicPenalty(caption: string, searchTerm: string): number {
+  let penalty = 0;
+  for (const { pattern, domains } of OFFTOPIC_PENALTIES) {
+    if (pattern.test(caption) && !pattern.test(searchTerm) && domains.test(searchTerm)) {
+      penalty += 30;
+    }
+  }
+  return penalty;
+}
+
 function selectSources(term: string): string[] {
   const sources = ["wikimedia"]; // Always query
   for (const [src, re] of Object.entries(SOURCE_KEYWORDS)) {
     if (re.test(term)) sources.push(src);
   }
-  // If no specialty matched, add Met Museum as a general cultural fallback
-  if (sources.length === 1) sources.push("met-museum");
+  // Only add Met Museum as fallback if the topic relates to art/culture
+  // NOT for generic topics (prevents random artifacts for e.g. "Formula 1")
+  if (sources.length === 1 && /\b(art|culture|histor|heritage|museum)\b/i.test(term)) {
+    sources.push("met-museum");
+  }
   return sources;
 }
 
@@ -448,6 +479,8 @@ async function fetchWikimediaImages(term: string): Promise<MediaImage[]> {
               }
               if (/map|location|locator/i.test(filename) && !/^map/i.test(term)) relevance -= 10;
               if (/coat.of.arms|seal.of|emblem/i.test(filename)) relevance -= 20;
+              // Apply off-topic domain penalty
+              relevance -= computeOfftopicPenalty(rawCaption + " " + filename, term);
 
               images.push({
                 url: imgUrl,
@@ -635,6 +668,11 @@ async function fetchMultiSourceMedia(term: string, _qid: string | null): Promise
   // Sort by relevance
   allImages.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
+  // ── HARD RELEVANCE FLOOR: discard images scoring below 10 ──
+  const RELEVANCE_FLOOR = 10;
+  allImages = allImages.filter(img => (img.relevance || 0) >= RELEVANCE_FLOOR);
+  console.log(`[media] After relevance floor (>=${RELEVANCE_FLOOR}): ${allImages.length} images`);
+
   // Source diversity bonus: if top 4 are all from same source, boost best from other sources
   if (allImages.length > 4) {
     const topSource = allImages[0]?.source;
@@ -648,8 +686,12 @@ async function fetchMultiSourceMedia(term: string, _qid: string | null): Promise
     }
   }
 
-  // Take top 8 and strip internal relevance field
-  const images: MediaImage[] = allImages.slice(0, 8).map(({ relevance, ...rest }) => rest);
+  // Compute coherenceScore (normalized 0-1) and take top 8
+  const maxRelevance = Math.max(...allImages.map(i => i.relevance || 0), 1);
+  const images: MediaImage[] = allImages.slice(0, 8).map(({ relevance, ...rest }) => ({
+    ...rest,
+    coherenceScore: Math.min(1, (relevance || 0) / Math.max(maxRelevance, 50)),
+  }));
 
   // ── YouTube videos — search with topic-specific terms ──
   try {

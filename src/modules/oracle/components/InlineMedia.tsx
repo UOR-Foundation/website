@@ -219,21 +219,43 @@ export function distributeMediaAcrossSections(
   markdown: string,
   images: MediaImage[],
   maxInline: number = 4,
+  /** The article topic for coherence gating */
+  topic?: string,
 ): Map<number, MediaImage> {
   const sectionTexts = markdown.split(/\n##\s/);
   const sections = sectionTexts.length - 1;
   if (sections <= 0 || images.length === 0) return new Map();
 
-  const usable = images.slice(0, maxInline);
+  // COHERENCE GATE: Only use images that pass the coherenceScore threshold
+  // Images without a score (legacy) are allowed through but scored against topic
+  const MIN_COHERENCE = 0.3;
+  const coherent = images.filter(img => {
+    if (typeof img.coherenceScore === "number") return img.coherenceScore >= MIN_COHERENCE;
+    // Legacy images without coherenceScore: check caption against topic
+    if (topic && img.caption) {
+      return semanticRelevance(img.caption, topic) > 0;
+    }
+    return true; // allow if no metadata to judge
+  });
+
+  if (coherent.length === 0) return new Map();
+
+  const usable = coherent.slice(0, maxInline);
   const map = new Map<number, MediaImage>();
   const usedSections = new Set<number>();
   const usedImages = new Set<number>();
 
   // Build a relevance matrix: [imageIdx][sectionIdx] = score
+  // Also factor in the article topic for cross-checking
   const scores: number[][] = usable.map((img) =>
-    sectionTexts.slice(1).map((sectionText) =>
-      semanticRelevance(img.caption || "", sectionText)
-    )
+    sectionTexts.slice(1).map((sectionText) => {
+      let score = semanticRelevance(img.caption || "", sectionText);
+      // Bonus if image also relates to the overall topic
+      if (topic) {
+        score += semanticRelevance(img.caption || "", topic) * 0.5;
+      }
+      return score;
+    })
   );
 
   // Greedy assignment: pick the highest-scoring (image, section) pair repeatedly
@@ -255,23 +277,17 @@ export function distributeMediaAcrossSections(
     }
 
     if (bestImg === -1 || bestSection === -1) break;
-    
-    // Only place if there's meaningful relevance (score > 0)
-    // or if this is the only option and the image is generally relevant
-    if (bestScore > 0 || round === 0) {
+
+    // STRICT: Only place if there's meaningful relevance — no zero-score fallback
+    if (bestScore > 0) {
       map.set(bestSection, usable[bestImg]);
       usedSections.add(bestSection);
       usedImages.add(bestImg);
     }
   }
 
-  // If no semantic matches found at all, fall back to even distribution
-  // but only for the first 1-2 images (better to show fewer than irrelevant ones)
-  if (map.size === 0 && usable.length > 0 && sections > 0) {
-    // Place only the first image at the first non-intro section
-    const targetSection = Math.min(1, sections - 1);
-    map.set(targetSection, usable[0]);
-  }
+  // NO FALLBACK: if no images have meaningful relevance, show none
+  // Better to have no images than irrelevant ones
 
   return map;
 }

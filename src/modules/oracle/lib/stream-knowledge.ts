@@ -13,6 +13,8 @@ export interface MediaImage {
   caption?: string;
   uorHash: string;
   source: string;
+  coherenceScore?: number;
+  topicDomain?: string;
 }
 
 export interface MediaVideo {
