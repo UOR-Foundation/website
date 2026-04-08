@@ -1224,7 +1224,7 @@ serve(async (req) => {
       ? buildBlueprintPrompt(blueprintParams, userContext, sources.length)
       : buildLensPrompt(activeLens, userContext, sources.length);
 
-    const userMessage = buildUserMessage(term, activeLens, wiki, topSources);
+    const userMessage = buildUserMessage(term, activeLens, wiki, allRankedSources);
 
     // Determine temperature and max tokens from params or lens
     const effectiveDepth = blueprintParams?.depth || (activeLens === "expert" ? "exhaustive" : "standard");
