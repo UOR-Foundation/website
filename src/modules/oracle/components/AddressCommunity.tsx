@@ -635,9 +635,13 @@ export function AddressDiscussion({ cid }: { cid: string }) {
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border/10 bg-muted/3">
-          <MessageCircle className="w-4 h-4 text-muted-foreground/25" />
-          <span className="text-sm text-muted-foreground/30">Sign in to join the discussion</span>
+        <div className="flex gap-3">
+          <div className="w-8 h-8 rounded-full bg-muted/10 border border-border/15 flex items-center justify-center text-xs text-muted-foreground/40 shrink-0 mt-1">
+            ?
+          </div>
+          <div className="flex-1">
+            <CommentInput placeholder="Leave a comment as guest…" onSubmit={handleComment} showGuestName />
+          </div>
         </div>
       )}
 
