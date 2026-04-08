@@ -2158,6 +2158,7 @@ const SearchPage = () => {
                         onBack={clearResult}
                         onToggleDetails={() => setReaderMode(false)}
                         synthesizing={result.synthesizing}
+                        streamProgress={streamProgress}
                         immersive={immersiveMode}
                         onSearchHistoryJump={(keyword) => { setInput(keyword); clearResult(); setTimeout(() => handleSearch(keyword), 100); }}
                       />
