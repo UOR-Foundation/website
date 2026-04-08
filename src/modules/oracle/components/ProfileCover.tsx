@@ -126,14 +126,18 @@ const ProfileCover: React.FC<ProfileCoverProps> = ({ cid }) => {
   };
 
   return (
-    <div className="relative w-full h-[120px] md:h-[180px] rounded-xl overflow-hidden group">
+    <div ref={containerRef} className="relative w-full h-[120px] md:h-[180px] rounded-xl overflow-hidden group">
       <img
         src={customUrl || defaultSrc}
         alt=""
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover will-change-transform"
         loading="lazy"
         width={1536}
         height={512}
+        style={{
+          transform: `translateY(${offsetY}px) scale(1.15)`,
+          transition: "transform 0.1s linear",
+        }}
       />
       {/* Bottom gradient fade */}
       <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent" />
