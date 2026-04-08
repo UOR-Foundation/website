@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
@@ -150,7 +150,153 @@ function renderHumanContent(source: unknown): string {
 
 // renderHumanView replaced by HumanContentView component
 
-/* ── Tiny copy button ── */
+/* ── Proof Receipt — compact expandable receipt ── */
+function ProofReceipt({
+  proof,
+  index,
+  proofCount,
+  currentProofIdx,
+  isSelected,
+  nextProofExists,
+  toggleProofIndex,
+  copied,
+  onCopy,
+  onViewFull,
+}: {
+  proof: EnrichedReceipt;
+  index: number;
+  proofCount: number;
+  currentProofIdx: number;
+  isSelected: boolean;
+  nextProofExists: boolean;
+  toggleProofIndex: (idx: number) => void;
+  copied: string | null;
+  onCopy: (text: string, key: string) => void;
+  onViewFull: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="relative mt-2 max-w-[88%] w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        className="flex items-stretch gap-0"
+      >
+        {/* Chain connector column */}
+        {proofCount >= 2 && (
+          <div className="flex flex-col items-center w-7 shrink-0 pt-2">
+            <button
+              onClick={() => toggleProofIndex(currentProofIdx)}
+              className="transition-all hover:scale-125"
+              aria-label={isSelected ? "Deselect proof" : "Select proof for chain"}
+            >
+              {isSelected ? (
+                <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }}>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                </motion.div>
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-primary/20 border border-primary/15 hover:bg-primary/40 transition-colors" />
+              )}
+            </button>
+            {nextProofExists && (
+              <div className="flex-1 w-px bg-primary/8 mt-1" style={{ minHeight: 16 }} />
+            )}
+          </div>
+        )}
+
+        {/* Receipt */}
+        <div className="flex-1">
+          {/* Collapsed: single-line receipt */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all group ${
+              isSelected
+                ? "bg-primary/[0.06] border border-primary/20"
+                : "bg-transparent hover:bg-primary/[0.03] border border-transparent hover:border-primary/8"
+            }`}
+          >
+            <ShieldCheck className="w-3 h-3 text-emerald-400/50 shrink-0" />
+            <span className="text-[10px] font-mono text-muted-foreground/35 truncate">
+              {proof.triwordFormatted}
+            </span>
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="ml-auto shrink-0"
+            >
+              <ChevronDown className="w-3 h-3 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
+            </motion.div>
+          </button>
+
+          {/* Expanded details */}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-3 pt-2 pb-2.5 space-y-2 border-x border-b border-primary/10 rounded-b-lg bg-primary/[0.02]">
+                  {/* Triword with copy */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-display text-foreground/70 tracking-wide">
+                      {proof.triwordFormatted}
+                    </span>
+                    <CopyBtn
+                      onClick={() => onCopy(proof.triword, `proof-triword-${index}`)}
+                      copied={copied === `proof-triword-${index}`}
+                      size={10}
+                    />
+                  </div>
+
+                  {/* IPv6 */}
+                  {proof.ipv6 && (
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[9px] font-mono text-muted-foreground/30 truncate">
+                        {proof.ipv6}
+                      </p>
+                      <CopyBtn
+                        onClick={() => onCopy(proof.ipv6, `proof-ipv6-${index}`)}
+                        copied={copied === `proof-ipv6-${index}`}
+                        size={9}
+                      />
+                    </div>
+                  )}
+
+                  {/* Ring + Engine info */}
+                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground/25">
+                    <span>{proof.ringPartition}</span>
+                    <span className="text-muted-foreground/15">·</span>
+                    <span>Engine: {proof.engine}</span>
+                    {proof.glyph && (
+                      <>
+                        <span className="text-muted-foreground/15">·</span>
+                        <span className="font-mono">{proof.glyph.slice(0, 6)}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* View full proof link */}
+                  <button
+                    onClick={onViewFull}
+                    className="text-[9px] text-primary/40 hover:text-primary/70 transition-colors"
+                  >
+                    View full proof →
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function CopyBtn({ onClick, copied, size = 14, label }: {
   onClick: () => void; copied: boolean; size?: number; label?: string;
 }) {
@@ -1102,94 +1248,24 @@ const SearchPage = () => {
                           )}
                         </div>
 
-                        {/* UOR Proof Card — appears below each completed assistant message */}
+                        {/* UOR Proof Receipt — compact expandable */}
                         {hasProof && msg.proof && (
-                          <div className="relative mt-3 max-w-[88%] w-full">
-                            <motion.div
-                              initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                              className="flex items-stretch gap-0"
-                            >
-                              {/* Chain connector + checkbox column */}
-                              {proofCount >= 2 && (
-                                <div className="flex flex-col items-center w-8 shrink-0 pt-1">
-                                  {/* Always-interactive chain dot */}
-                                  <button
-                                    onClick={() => toggleProofIndex(currentProofIdx)}
-                                    className="transition-all hover:scale-125"
-                                    aria-label={isSelected ? "Deselect proof" : "Select proof for chain"}
-                                  >
-                                    {isSelected ? (
-                                      <motion.div
-                                        initial={{ scale: 0.5 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                                      >
-                                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                                      </motion.div>
-                                    ) : (
-                                      <div className="w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary/15 cursor-pointer hover:bg-primary/40 hover:border-primary/30 transition-colors" />
-                                    )}
-                                  </button>
-                                  {/* Connector line to next proof */}
-                                  {nextProofExists && (
-                                    <div className="flex-1 w-px bg-primary/10 mt-1" style={{ minHeight: 24 }} />
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Proof card */}
-                              <div className={`flex-1 border rounded-xl px-4 py-3 space-y-2 transition-all ${
-                                isSelected
-                                  ? "border-primary/30 bg-primary/[0.06]"
-                                  : "border-primary/10 bg-primary/[0.03]"
-                              }`}>
-                                <div className="flex items-center gap-2">
-                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
-                                  <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
-                                </div>
-
-                                {/* Triword address */}
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-display text-foreground/80 tracking-wide">
-                                    {msg.proof.triwordFormatted}
-                                  </span>
-                                  <CopyBtn
-                                    onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
-                                    copied={copied === `proof-triword-${i}`}
-                                    size={10}
-                                  />
-                                </div>
-
-                                {/* IPv6 address */}
-                                {msg.proof.ipv6 && (
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-[10px] font-mono text-muted-foreground/40 truncate">
-                                      {msg.proof.ipv6}
-                                    </p>
-                                    <CopyBtn
-                                      onClick={() => copy(msg.proof!.ipv6, `proof-ipv6-${i}`)}
-                                      copied={copied === `proof-ipv6-${i}`}
-                                      size={10}
-                                    />
-                                  </div>
-                                )}
-
-                                {/* Clickable to navigate to full proof */}
-                                <button
-                                  onClick={() => {
-                                    setInput(msg.proof!.triword);
-                                    exitAiMode();
-                                    setTimeout(() => handleSearch(msg.proof!.triword), 100);
-                                  }}
-                                  className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
-                                >
-                                  View full proof →
-                                </button>
-                              </div>
-                            </motion.div>
-                          </div>
+                          <ProofReceipt
+                            proof={msg.proof}
+                            index={i}
+                            proofCount={proofCount}
+                            currentProofIdx={currentProofIdx}
+                            isSelected={isSelected}
+                            nextProofExists={nextProofExists}
+                            toggleProofIndex={toggleProofIndex}
+                            copied={copied}
+                            onCopy={copy}
+                            onViewFull={() => {
+                              setInput(msg.proof!.triword);
+                              exitAiMode();
+                              setTimeout(() => handleSearch(msg.proof!.triword), 100);
+                            }}
+                          />
                         )}
                       </div>
                     );
