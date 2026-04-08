@@ -578,11 +578,10 @@ const SearchPage = () => {
       <div
         className="flex-1 flex flex-col overflow-hidden"
         style={{
-          filter: drivePrePhase ? "blur(12px)" : drivePostPhase ? "blur(8px)" : "blur(0px)",
-          opacity: drivePrePhase ? 0.3 : drivePostPhase ? 0.5 : 1,
-          transform: drivePrePhase ? "scale(1.02)" : "scale(1)",
-          animation: drivePrePhase ? "waveWobble 0.6s ease-in-out infinite" : undefined,
-          transition: "filter 0.8s ease, opacity 0.8s ease, transform 0.8s ease",
+          filter: drivePrePhase ? "blur(8px)" : "blur(0px)",
+          opacity: drivePrePhase ? 0.15 : 1,
+          transform: drivePrePhase ? "scale(1.01)" : "scale(1)",
+          transition: "filter 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
         }}
       >
 
