@@ -183,6 +183,15 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
         </div>
       )}
 
+      {/* ── Semantic Web Tower (WebPage only) ── */}
+      {isWebPage && semanticWebLayers && (
+        <SemanticWebTower
+          layers={semanticWebLayers}
+          engine={engineType()}
+          crateVersion={crateVersion()}
+        />
+      )}
+
       {/* ── Metadata footer ── */}
       {metaEntries.length > 0 && (
         <footer
