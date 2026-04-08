@@ -441,12 +441,40 @@ const SearchPage = () => {
     return receipt;
   };
 
+  /** Detect if input looks like a UOR triword address (word.word.word) */
+  const isTriwordAddress = (s: string): boolean => {
+    const t = s.trim().toLowerCase();
+    // Triword = exactly 3 dot-separated all-alpha words
+    if (/^[a-z]+\.[a-z]+\.[a-z]+$/.test(t)) {
+      return isValidTriword(t);
+    }
+    // Also match formatted triwords: "Word · Word · Word"
+    if (/·/.test(t)) return true;
+    return false;
+  };
+
+  /** Detect if input looks like a UOR address (CID, derivation ID, IPv6, triword) */
+  const isUorAddress = (s: string): boolean => {
+    const t = s.trim();
+    if (isTriwordAddress(t)) return true;
+    if (t.startsWith("urn:uor:derivation:")) return true;
+    if (t.startsWith("bafk") || t.startsWith("bafy")) return true;
+    if (/^fd00:0075:6f72:/.test(t)) return true;
+    return false;
+  };
+
   /** Detect if input looks like a URL */
   const isUrl = (s: string) => {
     const t = s.trim();
     if (t.startsWith("http://") || t.startsWith("https://")) return true;
-    // "example.com" pattern — has dot, no spaces, has TLD-like suffix
-    if (!t.includes(" ") && /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(t)) return true;
+    // Don't match UOR triword addresses as URLs
+    if (isUorAddress(t)) return false;
+    // "example.com/path" or known URL patterns with path/query
+    if (!t.includes(" ") && /^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/|$)/.test(t)) {
+      // Extra guard: reject if it's exactly 3 dot-separated alpha words (triword-like)
+      if (/^[a-zA-Z]+\.[a-zA-Z]+\.[a-zA-Z]+$/.test(t)) return false;
+      return true;
+    }
     return false;
   };
 
