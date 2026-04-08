@@ -15,6 +15,8 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import ContextualArticleView from "./ContextualArticleView";
 import SemanticWebTower from "./SemanticWebTower";
+import ExistingSemanticsBadge from "./ExistingSemanticsBadge";
+import InteropBadges from "./InteropBadges";
 import ShadowHtmlRenderer from "./ShadowHtmlRenderer";
 import { engineType, crateVersion } from "@/lib/wasm/uor-bridge";
 
