@@ -1,82 +1,43 @@
 
 
-# Make `/search` the Desktop — Perplexity-Crisp Home Experience
-
-## Vision
-
-The `/search` route becomes the primary desktop experience. Instead of a separate `/desktop` route, the search page **is** the OS home screen. The existing `ImmersiveSearchView` transforms into a Perplexity-inspired clean home with the solar wallpaper behind it, the dock at the bottom, and the menu bar at top. Searching opens results in a desktop window. The `/desktop` route redirects to `/search`.
+# Unified Floating Input Bar with Real-Time Content Refinement
 
 ## What Changes
 
-### 1. Merge Desktop Shell into Search (`ResolvePage.tsx`)
+### 1. Replace `ReaderFloatingBar` with `UnifiedFloatingInput`
 
-When the user is on the **home state** (no query active), render the desktop shell directly:
-- Solar wallpaper background (already there via `ImmersiveBackground`)
-- Top menu bar (`DesktopMenuBar`)
-- Centered Perplexity-style search area (clock + greeting + clean search bar)
-- Bottom dock (`DesktopDock`)
-- Windows layer for any open apps
+The current bottom bar has two separate buttons ("Search..." and "Oracle"). Replace with a single, always-visible input bar that combines search, voice, and live content refinement into one elegant component.
 
-When a search is submitted, it opens in a **desktop window** (Search app) rather than replacing the whole page. The home view stays underneath.
+**Design:**
+- A single frosted-glass pill at the bottom center
+- One text input with placeholder "Refine this page..."
+- A mic button on the right for voice input (reuses `VoiceInput` component)
+- A subtle "Live" dot indicator on the left that pulses green when streaming
+- As the user types (debounced ~600ms) or speaks, the page content re-streams with the new query/refinement applied — the existing `streamKnowledge` pipeline is called with the original topic + the user's refinement instruction
+- Pressing Enter commits the refinement; Escape clears and collapses
 
-### 2. Redesign Home Search to Perplexity Style (`DesktopWidgets.tsx`)
+**Interaction flow:**
+1. User sees the floating bar at the bottom of any rendered knowledge card
+2. They type "focus on the history" or speak it — after a brief pause the content re-renders live with that focus
+3. The bar shows a subtle streaming animation (pulsing dot) while content updates
+4. The original query is preserved; the refinement is appended as a lens/instruction
 
-Replace the current clock+quote widget with a Perplexity-inspired home:
-- **Clock**: Keep the large elegant clock, slightly smaller
-- **Greeting**: Clean, crisp `"Good afternoon"` text
-- **Search bar**: Ultra-clean, Perplexity-style — thin `border-white/[0.08]`, `bg-white/[0.04]`, rounded-2xl (not pill), generous padding, placeholder "Ask anything..."
-- **Context `+` button** inline in the search bar (reuse existing `ContextMenu`)
-- **Quick actions row** below search: subtle chips for "New Thread", "Library", "Oracle"
-- **Quote**: Smaller, more subdued below everything
-- On submit → calls `wm.openApp("search", query)` to open Search in a window
+### 2. Wire Real-Time Refinement into ResolvePage
 
-### 3. Refine Dock Styling (`DesktopDock.tsx`)
+- Add a `refinement` state variable to `SearchPage`
+- When the `UnifiedFloatingInput` emits a refinement, call `streamKnowledge` (or `streamOracle`) with the original query + refinement instruction appended
+- The result streams into the existing `HumanContentView` progressively (the `synthesizing` flag is already supported)
+- Cancel any in-flight stream when a new refinement arrives (cancel-on-resume pattern)
 
-Make it Perplexity-crisp:
-- Monochrome icons on subtle `bg-white/[0.06]` tiles (remove colored gradients)
-- Hover: `bg-white/[0.12]` fill, no color
-- Thinner dock border: `border-white/[0.06]`
-- More subtle background: `bg-black/40 backdrop-blur-3xl`
+### 3. Voice Integration
 
-### 4. Refine Window Chrome (`DesktopWindow.tsx` + `desktop.css`)
+- Embed the existing `VoiceInput` component inside the floating bar
+- Voice transcripts feed directly into the refinement input
+- Interim transcripts show in the input field in real time; final transcript triggers the refinement
 
-- Darker frosted glass: `bg-[#1a1a1a]/85`
-- Thinner borders: `border-white/[0.06]`
-- Content area: solid `bg-[#191919]` for crisp Perplexity-dark inside
-- Slightly brighter title text for active windows
-
-### 5. Refine Menu Bar (`DesktopMenuBar.tsx`)
-
-- Slimmer, crisper
-- Thinner border: `border-white/[0.06]`
-
-### 6. Route Changes (`App.tsx`)
-
-- `/search` renders `DesktopShell` (which includes the home search + windows + dock)
-- `/desktop` redirects to `/search`
-- The old `ResolvePage` search logic gets loaded **inside** a desktop window when search is triggered
-
-### 7. Wire Search Submission to Window
-
-Update `DesktopShell.tsx`:
-- Add a `handleHomeSearch(query)` callback
-- Pass it to `DesktopWidgets`
-- On submit, call `wm.openApp("search", query)` — this opens ResolvePage in a window with the query pre-filled
-- Add query passing to `useWindowManager` (optional initial data per window)
+## Files to Create
+1. **`src/modules/oracle/components/UnifiedFloatingInput.tsx`** — The new single-input floating bar with voice, typing, and live streaming indicator
 
 ## Files to Modify
-
-1. **`src/modules/desktop/DesktopShell.tsx`** — add home search handler, become the `/search` page
-2. **`src/modules/desktop/DesktopWidgets.tsx`** — redesign as Perplexity-style home with search bar, greeting, quick actions
-3. **`src/modules/desktop/DesktopDock.tsx`** — monochrome, crisper styling
-4. **`src/modules/desktop/DesktopWindow.tsx`** — darker, crisper chrome
-5. **`src/modules/desktop/DesktopMenuBar.tsx`** — slimmer, refined
-6. **`src/modules/desktop/desktop.css`** — updated window/dock styles
-7. **`src/App.tsx`** — `/search` → DesktopShell, `/desktop` → redirect
-
-## Technical Notes
-
-- The existing `ImmersiveSearchView` remains available but is superseded by the desktop home for the `/search` route
-- `useWindowManager.openApp` gains an optional `initialData` parameter so search queries can be passed into the Search window
-- Mobile detection (`useIsMobile`) will keep the current mobile search experience unchanged — desktop shell is desktop-only
+1. **`src/modules/oracle/pages/ResolvePage.tsx`** — Replace `ReaderFloatingBar` with `UnifiedFloatingInput`, add refinement state + streaming logic, wire voice
 
