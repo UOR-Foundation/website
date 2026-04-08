@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown, Menu, Maximize2 } from "lucide-react";
 import ImmersiveSearchView from "@/modules/oracle/components/ImmersiveSearchView";
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
+import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
 import ReaderToolbar from "@/modules/oracle/components/ReaderToolbar";
 import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
 import MobileSearchBar from "@/modules/oracle/components/MobileSearchBar";
