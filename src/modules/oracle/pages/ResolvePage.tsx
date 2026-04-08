@@ -2348,12 +2348,51 @@ const SearchPage = () => {
                         </div>
                       </div>
 
-                      {/* Floating compact search pill for immersive reader */}
+                      {/* Floating search + Oracle pill for reader */}
                       {(mobileImmersive || immersiveMode) && (
-                        <MobileImmersiveSearchPill
+                        <ReaderFloatingBar
                           onSearch={(q) => { setInput(q); clearResult(); setTimeout(() => handleSearch(q), 100); }}
+                          onOracleOpen={() => setOracleOverlayOpen(true)}
                         />
                       )}
+
+                      {/* Non-immersive: show a subtle Oracle FAB */}
+                      {!immersiveMode && !mobileImmersive && (
+                        <div className="fixed bottom-6 right-6 z-[60]">
+                          <motion.button
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 24 }}
+                            onClick={() => setOracleOverlayOpen(true)}
+                            className="w-12 h-12 rounded-full bg-primary/15 border border-primary/25 hover:bg-primary/25 hover:border-primary/40 flex items-center justify-center shadow-[0_4px_24px_-4px_hsl(var(--primary)/0.25)] transition-all group"
+                            title="Ask Oracle about this content"
+                          >
+                            <Sparkles className="w-5 h-5 text-primary/80 group-hover:text-primary transition-colors" />
+                          </motion.button>
+                        </div>
+                      )}
+
+                      {/* Oracle overlay panel */}
+                      <OracleOverlay
+                        open={oracleOverlayOpen}
+                        onClose={() => setOracleOverlayOpen(false)}
+                        contextLabel={(() => {
+                          const s = result?.source as Record<string, unknown> | null;
+                          return (typeof s?.["uor:label"] === "string" ? s["uor:label"] : typeof s?.["uor:title"] === "string" ? s["uor:title"] : "") as string;
+                        })()}
+                        contextContent={(() => {
+                          const s = result?.source as Record<string, unknown> | null;
+                          return (typeof s?.["uor:content"] === "string" ? s["uor:content"].slice(0, 1200) : "") as string;
+                        })()}
+                        onExpandToOracle={expandOverlayToOracle}
+                        onRenderAsPage={(query) => {
+                          setOracleOverlayOpen(false);
+                          setInput(query);
+                          clearResult();
+                          setTimeout(() => handleSearch(query), 100);
+                        }}
+                        immersive={immersiveMode}
+                      />
                     </div>
                   </motion.div>
                 );
