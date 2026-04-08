@@ -231,18 +231,64 @@ const SemanticWebPage = () => {
         </div>
       </section>
 
+      {/* See It In Action */}
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
+            Live Demo
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
+            See it in action
+          </h2>
+          <p className="text-fluid-body text-muted-foreground font-body leading-relaxed mb-8 max-w-2xl">
+            The Oracle renders any URL or concept through the full Semantic Web stack in real time.
+            Every object is content-addressed, machine-queryable, and interoperable with W3C standards.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link
+              to="/search?q=https://en.wikipedia.org/wiki/Semantic_Web"
+              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+            >
+              <span className="text-lg mb-2 block">🌐</span>
+              <p className="font-display font-bold text-foreground text-sm mb-1">Encode Wikipedia</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">Absorb the Semantic Web article into UOR space</p>
+            </Link>
+            <Link
+              to="/search?q=semantic+web"
+              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+            >
+              <span className="text-lg mb-2 block">🔮</span>
+              <p className="font-display font-bold text-foreground text-sm mb-1">Ask the Oracle</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">Generate a KnowledgeCard with full W3C layer mapping</p>
+            </Link>
+            <Link
+              to="/search"
+              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+            >
+              <span className="text-lg mb-2 block">🔗</span>
+              <p className="font-display font-bold text-foreground text-sm mb-1">Encode any URL</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">Paste any website and watch UOR absorb its semantics</p>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-section-sm section-dark">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl text-center mx-auto">
           <h2 className="font-display text-fluid-heading font-bold text-section-dark-foreground mb-4">
-            Explore the full framework
+            Your device is the portal
           </h2>
           <p className="text-muted-foreground font-body text-fluid-body leading-relaxed max-w-md mx-auto mb-8">
             Every layer is formally specified, implemented, and independently verifiable.
+            The same semantic surface serves humans and AI agents alike.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/framework" className="btn-primary inline-flex items-center gap-2">
-              UOR Framework <ArrowRight className="w-4 h-4" />
+            <Link to="/search" className="btn-primary inline-flex items-center gap-2">
+              Enter the Rendered Web <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link to="/framework" className="btn-outline inline-flex items-center gap-2">
+              Read the Framework <ArrowRight className="w-4 h-4" />
             </Link>
             <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
               W3C Reference <ExternalLink className="w-4 h-4" />
