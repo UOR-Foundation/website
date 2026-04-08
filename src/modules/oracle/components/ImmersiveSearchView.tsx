@@ -280,10 +280,8 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                 style={{
                   paddingLeft: isAddress ? "7.5rem" : "3.5rem",
                   background: isAddress
-                    ? "linear-gradient(135deg, hsl(165 25% 18% / 0.6), hsl(160 20% 15% / 0.5), hsl(170 25% 17% / 0.55))"
-                    : "linear-gradient(135deg, hsl(200 25% 22% / 0.55), hsl(195 20% 18% / 0.45), hsl(200 30% 20% / 0.5))",
-                  backdropFilter: "blur(40px) saturate(1.6)",
-                  WebkitBackdropFilter: "blur(40px) saturate(1.6)",
+                    ? "linear-gradient(135deg, hsl(165 25% 18% / 0.88), hsl(160 20% 15% / 0.85), hsl(170 25% 17% / 0.88))"
+                    : "linear-gradient(135deg, hsl(200 25% 22% / 0.85), hsl(195 20% 18% / 0.82), hsl(200 30% 20% / 0.85))",
                   border: isAddress
                     ? "1px solid hsl(160 50% 50% / 0.25)"
                     : "1px solid hsl(0 0% 100% / 0.14)",
