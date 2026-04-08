@@ -7,7 +7,7 @@ import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
-import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
+import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
@@ -88,7 +88,10 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   const components = useMemo(() => createDeepDiveComponents(sectionCounter), [sectionCounter]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const bodySections = useMemo(() => splitIntoSections(rest || contentMarkdown), [rest, contentMarkdown]);
-  const images = media?.images || [];
+  const inlineImageMap = useMemo(
+    () => media ? distributeMediaAcrossSections(contentMarkdown, media.images, 3) : new Map(),
+    [contentMarkdown, media]
+  );
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -131,8 +134,8 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       <div style={{ columnCount: 1, columnGap: 32 }} className="lg:[column-count:2]">
         {bodySections.length > 1 ? (
           bodySections.map((section, idx) => {
-            const fig = images[idx];
-            const showFig = fig && idx > 0 && idx <= 3 && !synthesizing;
+            const fig = inlineImageMap.get(idx);
+            const showFig = fig && idx > 0 && !synthesizing;
             return (
               <React.Fragment key={idx}>
                 <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />

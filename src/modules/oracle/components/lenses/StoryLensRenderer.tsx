@@ -6,7 +6,7 @@
 import React, { useMemo } from "react";
 import CitedMarkdown from "../CitedMarkdown";
 import SourcesPills from "../SourcesPills";
-import { InlineFigure, InlineVideo, InlineAudio } from "../InlineMedia";
+import { InlineFigure, InlineVideo, InlineAudio, distributeMediaAcrossSections } from "../InlineMedia";
 import { normalizeSource } from "../../lib/citation-parser";
 import type { SourceMeta } from "../../lib/citation-parser";
 import type { MediaData } from "../../lib/stream-knowledge";
@@ -68,7 +68,10 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
   const sections = useMemo(() => splitIntoSections(contentMarkdown), [contentMarkdown]);
   const heroImage = media?.images?.[0];
-  const inlineImages = media?.images?.slice(1) || [];
+  const inlineImageMap = useMemo(
+    () => media ? distributeMediaAcrossSections(contentMarkdown, media.images.slice(1), 4) : new Map(),
+    [contentMarkdown, media]
+  );
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -114,8 +117,8 @@ const StoryLensRenderer: React.FC<LensRendererProps> = ({
       {/* Content with inline scene-setting images */}
       {sections.length > 1 ? (
         sections.map((section, idx) => {
-          const img = inlineImages[idx];
-          const showImg = img && idx > 0 && idx <= 4 && !synthesizing;
+          const img = inlineImageMap.get(idx);
+          const showImg = img && idx > 0 && !synthesizing;
           return (
             <React.Fragment key={idx}>
               <CitedMarkdown markdown={section} sources={sourceMetas} components={components} />
