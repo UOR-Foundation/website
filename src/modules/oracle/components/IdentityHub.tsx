@@ -175,23 +175,21 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [overlayOpen]);
 
+  // Show only curated formats count
+  const curatedCount = hologram ? CURATED_KEYS.filter(k => hologram.projections[k]).length : 0;
+
   return (
     <>
-      {/* ── Compact single-row identity bar ── */}
-      <div className="flex items-center gap-3 rounded-xl border border-border/12 bg-muted/5 px-4 py-2.5">
-        <code className="text-[13px] font-mono text-primary tracking-wide truncate flex-1">
-          {receipt.ipv6}
-        </code>
-        <CopyBtn onClick={() => copyValue(receipt.ipv6, "ipv6-hero")} copied={copiedKey === "ipv6-hero"} />
-        <button
-          onClick={() => setOverlayOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-medium text-primary/60 hover:text-primary transition-colors shrink-0"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{totalProjections} formats</span>
-          <ChevronRight className="w-3 h-3 opacity-40" />
-        </button>
-      </div>
+      {/* ── Compact format preview row ── */}
+      <button
+        onClick={() => setOverlayOpen(true)}
+        className="w-full flex items-center gap-3 rounded-xl border border-border/12 bg-muted/5 hover:bg-muted/10 hover:border-border/20 transition-all px-4 py-3 group text-left"
+      >
+        <Share2 className="w-4 h-4 text-primary/50 shrink-0" />
+        <span className="text-sm text-foreground/60 font-medium">Share this address</span>
+        <span className="text-xs text-muted-foreground/35 font-mono">{curatedCount} formats</span>
+        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/50 ml-auto transition-colors" />
+      </button>
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* ═══ FULL-SCREEN FORMAT EXPLORER OVERLAY ═══ */}
