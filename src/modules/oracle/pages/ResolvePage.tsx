@@ -44,6 +44,10 @@ import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
+import { computeCoherence, recordDwell, recordLensSwitch, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
+import { getSearchHistory } from "@/modules/oracle/lib/search-history";
+import CoherenceIndicator from "@/modules/oracle/components/CoherenceIndicator";
+import LensSuggestion from "@/modules/oracle/components/LensSuggestion";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
