@@ -5,6 +5,10 @@
 
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import CitedMarkdown from "../CitedMarkdown";
+import SourcesPills from "../SourcesPills";
+import { normalizeSource } from "../../lib/citation-parser";
+import type { SourceMeta } from "../../lib/citation-parser";
 
 interface LensRendererProps {
   title: string;
@@ -152,6 +156,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
   const { abstract, rest } = useMemo(() => extractAbstract(contentMarkdown), [contentMarkdown]);
   const sectionCounter = useMemo(() => ({ current: 0 }), [contentMarkdown]);
   const components = useMemo(() => createDeepDiveComponents(sectionCounter), [sectionCounter]);
+  const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   if (synthesizing && !contentMarkdown.trim()) {
     return (
@@ -188,11 +193,16 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
           fontSize: 12,
           fontFamily: "ui-monospace, monospace",
           letterSpacing: "0.06em",
-          marginBottom: abstract ? 20 : 28,
+          marginBottom: 12,
         }}
       >
         UOR Knowledge · Technical Review
       </p>
+
+      {/* Source pills */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <SourcesPills sources={sourceMetas} />
+      </div>
 
       {/* Abstract */}
       {abstract && (
@@ -243,7 +253,7 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
         }}
         className="lg:[column-count:2]"
       >
-        <ReactMarkdown components={components}>{rest || contentMarkdown}</ReactMarkdown>
+        <CitedMarkdown markdown={rest || contentMarkdown} sources={sourceMetas} components={components} />
 
         {synthesizing && (
           <span className="inline-block bg-primary/70" style={{ width: 2, height: 16, verticalAlign: "text-bottom", marginLeft: 2, animation: "blink-cursor 0.8s steps(2) infinite" }} />
@@ -252,16 +262,19 @@ const DeepDiveLensRenderer: React.FC<LensRendererProps> = ({
       <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
       {/* References (journal style) */}
-      {sources.length > 0 && (
+      {sourceMetas.length > 0 && (
         <div className="border-t border-border/15 mt-8 pt-4">
           <span className="text-foreground/50 text-[11px] uppercase tracking-[0.1em] font-bold">References</span>
           <ol className="mt-2 space-y-1 list-decimal list-inside">
-            {sources.map((url, i) => (
+            {sourceMetas.map((s, i) => (
               <li key={i} className="text-muted-foreground/50" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>
-                <a href={url.startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer"
+                <a href={s.url} target="_blank" rel="noopener noreferrer"
                   className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2 decoration-primary/20">
-                  {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  {s.domain}
                 </a>
+                <span className="text-muted-foreground/30 ml-2" style={{ fontSize: 9 }}>
+                  uor:{s.uorHash}
+                </span>
               </li>
             ))}
           </ol>
