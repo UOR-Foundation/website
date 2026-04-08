@@ -460,8 +460,8 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Screen shake keyframe (gentler) */}
-      {improbabilityActive && (
+      {/* Screen shake + wave wobble keyframes */}
+      {(improbabilityActive || drivePrePhase || drivePostPhase) && (
         <style>{`
           @keyframes improbShake {
             0% { transform: translate(0, 0); }
@@ -469,6 +469,12 @@ const SearchPage = () => {
             50% { transform: translate(-1px, 1px); }
             75% { transform: translate(0.5px, -1px); }
             100% { transform: translate(-0.5px, 0.5px); }
+          }
+          @keyframes waveWobble {
+            0%, 100% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-3px) scale(1.01); }
+            50% { transform: translateY(2px) scale(1.02); }
+            75% { transform: translateY(-2px) scale(1.015); }
           }
         `}</style>
       )}
