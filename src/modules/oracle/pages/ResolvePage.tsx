@@ -780,6 +780,7 @@ const SearchPage = () => {
             } : {}),
             "uor:sources": sources,
             "uor:provenance": provenanceMeta,
+            ...(mediaData ? { "uor:media": mediaData } : {}),
           };
 
           const finalReceipt = await encode(finalSource);

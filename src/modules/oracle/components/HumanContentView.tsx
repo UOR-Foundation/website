@@ -73,6 +73,7 @@ const LABEL_MAP: Record<string, string> = {
   "uor:sources": "Sources",
   "uor:synthesizedAt": "Synthesized At",
   "uor:provenance": "",
+  "uor:media": "",
 };
 
 function humanLabel(key: string): string {
