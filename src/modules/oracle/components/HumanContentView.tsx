@@ -104,9 +104,11 @@ const LONG_TEXT_KEYS = new Set([
 
 interface HumanContentViewProps {
   source: unknown;
+  /** When true, show a shimmer skeleton for the AI content section */
+  synthesizing?: boolean;
 }
 
-const HumanContentView: React.FC<HumanContentViewProps> = ({ source }) => {
+const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizing = false }) => {
   const src = source as Record<string, unknown> | null;
   const isObj = !!src && typeof src === "object";
   const rawHtmlVal = isObj && typeof src["uor:rawHtml"] === "string" ? (src["uor:rawHtml"] as string) : null;
