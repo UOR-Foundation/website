@@ -1,81 +1,86 @@
 
 
-## Assessment & Refinements for the Semantic Web Bridge
+## Wikipedia UOR Encoding — Enhanced Structured Knowledge Showcase
 
-### Current State: What's Working
+### The Opportunity
 
-The pipeline is **correctly wired end-to-end through the WASM Rust crate**:
+Wikipedia is the ideal showcase because it has **two data sources** we can combine:
+1. **Firecrawl scrape** — markdown content, rawHtml (with existing semantic data)
+2. **Wikipedia REST API** (`/api/rest_v1/page/summary/{title}`) — returns structured JSON with Wikidata ID, thumbnail, description, taxonomy, revision info
 
-```text
-URL → Firecrawl scrape → extractSemantics(rawHtml)
-    → Build uor:WebPage JSON-LD
-    → encode(sourceObj)
-        → computeAndRegister()
-            → singleProofHash()        ← URDNA2015 → SHA-256
-            → enrichWithWasm()          ← WASM Rust ring (uor-foundation crate)
-                → bridge.classifyByte() ← WASM or TS fallback
-                → bridge.factorize()
-                → bridge.verifyCriticalIdentity()
-    → Registry indexed by CID, derivationId, triword, IPv6
+By combining both, we produce a richer `uor:WebPage` document than any generic website — and the UI can render Wikipedia articles in a **familiar, Wikipedia-like format** that humans instantly recognize, while the underlying JSON-LD is fully machine-readable.
+
+### What Changes
+
+#### 1. Detect Wikipedia URLs and enrich via REST API (`ResolvePage.tsx`)
+
+In `handleWebEncode`, after scraping via Firecrawl, detect if the URL is a Wikipedia article (`en.wikipedia.org/wiki/`). If so, also call the Wikipedia REST API to get:
+- `wikibase_item` (Wikidata Q-ID, e.g. `Q146`)
+- `thumbnail.source` (image URL)
+- `description` ("Small domesticated carnivorous mammal")
+- `extract` (clean plaintext summary)
+- `revision` + `timestamp` (version provenance)
+
+Merge this into the canonical object as `uor:wikidata` (a structured sub-object containing the Wikidata ID, thumbnail, and classification). The Wikidata Q-ID is particularly powerful — it's already the global identifier used by knowledge graphs, and now it gets folded into the UOR address.
+
+The canonical object becomes:
+```json
+{
+  "@type": "uor:WebPage",
+  "uor:sourceUrl": "https://en.wikipedia.org/wiki/Cat",
+  "uor:title": "Cat",
+  "uor:description": "Small domesticated carnivorous mammal",
+  "uor:content": "<full markdown>",
+  "uor:existingSemantics": { ... },
+  "uor:wikidata": {
+    "qid": "Q146",
+    "thumbnail": "https://upload.wikimedia.org/...",
+    "extract": "The cat, also called domestic cat..."
+  },
+  "uor:semanticWebLayers": { ... }
+}
 ```
 
-The WASM bridge (`src/lib/wasm/uor-bridge.ts`) correctly lazy-loads the compiled Rust `uor-foundation` crate with a mathematically identical TypeScript fallback. Every web page encoding passes through this dual engine. **No changes needed to the WASM pipeline.**
+This is a **pure client-side fetch** to the Wikipedia API — no new edge function needed.
 
-### Critical Issue: Broken Canonicality
+#### 2. Wikipedia-aware rendering in `HumanContentView.tsx`
 
-The current `handleWebEncode` includes **two non-deterministic fields** in the hashed object:
+When the source has `uor:wikidata`, render a Wikipedia-style card at the top of the content:
+- **Thumbnail image** (from Wikipedia API) displayed as a float-right or top banner
+- **Wikidata QID badge** (e.g. "Q146") as a clickable link to `wikidata.org/wiki/Q146`
+- **Description** displayed as a subtitle under the title
+- The markdown content renders below with the existing `ReactMarkdown` renderer
 
-1. **`uor:scrapedAt`** — `new Date().toISOString()` changes every second
-2. **`uor:linkedResources`** — array order may vary between scrapes
+This makes the encoded page **look and feel like Wikipedia** — immediately familiar to humans — while being fully semantic underneath.
 
-This means the **same page scraped twice gets different addresses**, violating the core UOR principle: same content = same address.
+#### 3. Extract Wikipedia infobox/taxonomy from markdown (`semantic-extract.ts`)
 
-### Plan
+Add a `extractWikiInfobox(markdown)` function that parses the taxonomy table at the top of Wikipedia articles (Kingdom, Phylum, Class, Order, etc.) from the markdown. This structured data goes into `uor:wikidata.taxonomy` — making biological classification computationally accessible.
 
-#### 1. Fix canonical determinism in `ResolvePage.tsx`
-
-Split the encoded object into two parts:
-- **Canonical object** (hashed): only content-derived fields — `@type`, `uor:sourceUrl`, `uor:title`, `uor:description`, `uor:content`, `uor:existingSemantics`, `uor:semanticWebLayers`
-- **Metadata envelope** (not hashed): `uor:scrapedAt`, `uor:linkedResources`, `uor:language`
-
-The canonical object gets passed to `encode()`. The metadata is attached to the result display but does not affect the address. Additionally, sort `uor:linkedResources` alphabetically before display to ensure consistency.
-
-#### 2. Add Semantic Web Tower visualization for WebPage results
-
-After encoding a web page, show a compact vertical "tower" indicator next to the identity card, mapping each layer to its status:
-
-```text
-L6 Trust        ● deterministic-trust
-L5 Proof        ● singleProofHash
-L4 Logic        ● canonical-reduction
-L3 Ontology     ● preserved (or none)
-L2 RDF          ● urdna2015
-L1 Schema       ● json-ld
-L0 URI          ● content-addressed
-⧫  Signature    ● CIDv1
-```
-
-Each layer shows a green dot if active, gray if not applicable. This is the "holy shit" visualization — users see exactly how UOR implements every layer of the W3C stack for their specific page.
-
-Create a small `SemanticWebTower` component in `src/modules/oracle/components/SemanticWebTower.tsx` that takes the `uor:semanticWebLayers` object and renders this compact column. Show it in the WebPage result view.
-
-#### 3. Add L4 (Logic) layer mapping
-
-The current `uor:semanticWebLayers` object is missing L4. Add `"L4": "canonical-reduction"` to reflect that URDNA2015 canonicalization implements the logic layer (seven deterministic rules, always terminates).
-
-#### 4. Show engine badge on WebPage results
-
-Display a small badge showing whether WASM or TypeScript engine was used for encoding (already available in `receipt.engine`). This proves to the user that the Rust crate is active. Show it near the tower or identity card: "⚙ wasm · uor-foundation v0.x.x" or "⚙ typescript fallback".
+This is extracted from the already-scraped markdown using simple regex parsing of the table structure that Firecrawl returns.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Split canonical vs metadata fields; add L4; remove `scrapedAt` from hashed object |
-| `src/modules/oracle/components/SemanticWebTower.tsx` | New — compact layer status visualization |
-| `src/modules/oracle/components/HumanContentView.tsx` | Render `SemanticWebTower` for WebPage type; show engine badge |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Detect Wikipedia URLs, fetch REST API summary, merge into canonical object |
+| `src/modules/oracle/components/HumanContentView.tsx` | Render Wikipedia thumbnail, QID badge, description subtitle, taxonomy card |
+| `src/modules/oracle/lib/semantic-extract.ts` | Add `extractWikiInfobox()` for taxonomy table parsing |
 
-### Why This Is the Most Ingenious Showcase
+### No backend changes needed
+- Wikipedia REST API is public (no auth required), fetched client-side
+- Firecrawl scrape already works
+- WASM encoding pipeline unchanged — same `encode()` → `singleProofHash()` → ring engine
 
-The tower visualization directly maps every encoded page to the W3C Semantic Web specification diagram. Users paste a URL and instantly see: "This page is now content-addressed (L0), self-describing (L1), graph-structured (L2), canonically reduced (L4), cryptographically proven (L5), and trustlessly verifiable (L6) — powered by the Rust WASM ring engine." That's the "rewriting the internet" moment.
+### Why This Is Powerful
+
+The user pastes `en.wikipedia.org/wiki/Cat` and sees:
+1. A thumbnail of a cat, "Cat" title, "Small domesticated carnivorous mammal" subtitle
+2. Wikidata QID `Q146` badge — linking to the global knowledge graph
+3. Full article content rendered in familiar Wikipedia style
+4. Semantic Web Tower showing all 8 layers active
+5. A single canonical UOR address (CID, IPv6, triword, glyph) for the entire article
+6. The Human/Machine toggle reveals the full JSON-LD with extracted taxonomy, existing semantics, and Wikidata metadata
+
+Same page. Two views. Humans see Wikipedia. Machines see a computable semantic graph. Both share the same content-addressed identity.
 
