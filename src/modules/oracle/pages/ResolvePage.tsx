@@ -435,7 +435,30 @@ const SearchPage = () => {
     setTimeout(() => setCopied(null), 1500);
   }, []);
 
-  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); };
+  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); setInscribeResult(null); };
+
+  /** Inscribe the current result to IPFS via Pinata */
+  const inscribeToIpfs = async () => {
+    if (!result || inscribing) return;
+    setInscribing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("inscribe-ipfs", {
+        body: { source: result.source, receipt: result.receipt },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Inscription failed");
+      setInscribeResult({ ipfsHash: data.ipfsHash, gatewayUrl: data.gatewayUrl });
+      toast("Inscribed on IPFS.", {
+        description: `Hash: ${data.ipfsHash.slice(0, 16)}…`,
+        icon: "🌐",
+      });
+    } catch (err) {
+      console.error("[Inscribe] Failed:", err);
+      toast.error("IPFS inscription failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setInscribing(false);
+    }
+  };
 
   /* ── AI Oracle ── */
   const sendAiMessage = async () => {
