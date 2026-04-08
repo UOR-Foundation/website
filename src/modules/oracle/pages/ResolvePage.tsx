@@ -1338,6 +1338,19 @@ const SearchPage = () => {
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-[0.15em]">Address</p>
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="flex items-center gap-2.5">
+                      <button onClick={inscribeToIpfs} disabled={inscribing || !!inscribeResult} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
+                        <Globe className="w-3.5 h-3.5" /> {inscribing ? "Inscribing…" : inscribeResult ? "Inscribed ✓" : "Inscribe"}
+                      </button>
+                      {inscribeResult && (
+                        <a
+                          href={inscribeResult.gatewayUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary/60 hover:text-primary/90 transition-colors underline underline-offset-2"
+                        >
+                          View on IPFS →
+                        </a>
+                      )}
                       <button onClick={rederive} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/20 text-sm text-foreground/50 hover:text-foreground/80 hover:border-primary/25 transition-all disabled:opacity-20">
                         <RotateCcw className="w-3.5 h-3.5" /> Verify Integrity
                       </button>
