@@ -466,11 +466,12 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   media,
   immersive = false,
 }) => {
-  const isMobileView = typeof window !== "undefined" && window.innerWidth < 768;
-  const isWideImmersive = immersive && typeof window !== "undefined" && window.innerWidth >= 1024;
+  const { bodyMaxWidth, isWide, isNarrow, width: containerWidth } = useContainerWidth();
+  const isMobileView = isNarrow;
+  const isWideImmersive = immersive && isWide;
   const toc = useMemo(() => parseToc(contentMarkdown), [contentMarkdown]);
   const { lead, body } = useMemo(() => splitLeadAndBody(contentMarkdown), [contentMarkdown]);
-  const markdownComponents = useMemo(() => createMarkdownComponents(immersive), [immersive]);
+  const markdownComponents = useMemo(() => createMarkdownComponents(immersive, bodyMaxWidth), [immersive, bodyMaxWidth]);
   const sourceMetas = useMemo(() => sources.map(normalizeSource), [sources]);
 
   // Show skeleton only when synthesizing AND no content yet
