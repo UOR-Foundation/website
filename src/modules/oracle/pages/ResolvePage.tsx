@@ -1608,9 +1608,48 @@ const SearchPage = () => {
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <pre className="text-base font-mono text-foreground/65 bg-muted/5 rounded-xl p-6 overflow-x-auto max-h-[60vh] overflow-y-auto border border-border/15 leading-relaxed whitespace-pre-wrap break-words">
-                            {JSON.stringify(result.source, null, 2)}
-                          </pre>
+                          {(() => {
+                            const raw = JSON.stringify(result.source, null, 2);
+                            const lines = raw.split("\n");
+                            return (
+                              <div className="space-y-2">
+                                <span className="text-xs font-mono text-muted-foreground/40">.json · {lines.length} lines</span>
+                                <div
+                                  className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[60vh] overflow-y-auto"
+                                  style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}
+                                >
+                                  <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
+                                    {lines.map((line, i) => (
+                                      <div key={i} className="contents group">
+                                        <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">
+                                          {i + 1}
+                                        </div>
+                                        <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                          {line.includes('": "') ? (
+                                            (() => {
+                                              const m = line.match(/^(\s*)"(.+?)":\s*"(.*)"(,?)$/);
+                                              if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">"{m[3]}"</span><span className="text-muted-foreground/20">{m[4]}</span></span>;
+                                              return <span className="text-foreground/55">{line}</span>;
+                                            })()
+                                          ) : line.includes('": ') ? (
+                                            (() => {
+                                              const m = line.match(/^(\s*)"(.+?)":\s*(.+)$/);
+                                              if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-accent-foreground/60">{m[3]}</span></span>;
+                                              return <span className="text-foreground/55">{line}</span>;
+                                            })()
+                                          ) : line.trim() === "{" || line.trim() === "}" || line.trim() === "}," || line.trim() === "[" || line.trim() === "]" || line.trim() === "]," ? (
+                                            <span className="text-muted-foreground/30">{line}</span>
+                                          ) : (
+                                            <span className="text-foreground/50">{line}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </motion.div>
                       )}
                     </AnimatePresence>
