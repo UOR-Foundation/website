@@ -1941,6 +1941,7 @@ const SearchPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <SovereignIdentityPanel open={identityPanelOpen} onClose={() => setIdentityPanelOpen(false)} />
     </div>
   );
 };
