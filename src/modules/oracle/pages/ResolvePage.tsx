@@ -314,15 +314,6 @@ const SearchPage = () => {
               </p>
             </div>
           )}
-                </button>
-              </div>
-
-              {/* Address space count */}
-              <p className="text-[13px] text-muted-foreground/40 mt-5">
-                Searching across <span className="text-foreground/60 font-medium">340 undecillion</span> possible addresses
-              </p>
-            </div>
-          )}
 
           {/* ══════════════ AI MODE — Oracle ══════════════ */}
           {!result && aiMode && (
