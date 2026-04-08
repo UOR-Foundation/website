@@ -79,10 +79,73 @@ async function fetchWikidataFacts(qid: string): Promise<Record<string, string>> 
   return facts;
 }
 
-/* ── Build context-aware system prompt ───────────────────────────────── */
+/* ── Lens system prompts ─────────────────────────────────────────────── */
 
-function buildSystemPrompt(context?: string[]): string {
-  const base = `You are an encyclopedic knowledge writer. Write a comprehensive, Wikipedia-style article about a given topic. Follow these rules strictly:
+function buildLensPrompt(lens: string, context?: string[]): string {
+  const contextSuffix = (context && context.length > 0)
+    ? `\n\nCONTEXTUAL PERSONALIZATION: The user has recently explored these topics: [${context.slice(0, 10).join(", ")}]. Where relevant, emphasize connections between the current topic and their recent exploration. Include a ## Connections section near the end that explicitly draws parallels and relationships to these previously explored topics. This section should feel natural and insightful, not forced.`
+    : "";
+
+  switch (lens) {
+    case "magazine":
+      return `You are a world-class feature writer for a premium magazine like The Atlantic or National Geographic. Write a riveting, beautifully crafted feature article about the given topic. Follow these rules:
+
+1. Open with a cinematic hook — a vivid scene, striking image, or provocative question. Bold the subject on first mention using **Subject**.
+2. Use ## headings for 6-8 sections. Structure like a magazine feature: The Hook, The Discovery, The Science/History, The Human Story, The Controversy, The Future, The Takeaway.
+3. Write 1000-1500 words. Be vivid, sensory, and engaging while remaining accurate.
+4. Use dramatic pacing — short punchy paragraphs alternating with longer descriptive ones.
+5. Include specific quotes (attributed to real experts when possible), concrete anecdotes, and surprising statistics.
+6. Weave in human interest — how does this topic affect real people?
+7. End with a thought-provoking final line that lingers.
+8. Do NOT add citations, reference brackets, or "Sources" sections.
+9. Do NOT use ### sub-headings — only ## level.
+10. Tone: Intelligent, warm, occasionally witty. Like explaining something fascinating at a dinner party.${contextSuffix}`;
+
+    case "explain-like-5":
+      return `You are the world's most magical teacher, explaining things to a curious 8-year-old who asks "why?" about everything. Write about the given topic in a way that sparks wonder. Follow these rules:
+
+1. Start with something amazing — "Did you know…?" or "Imagine if…". Bold the subject on first mention using **Subject**.
+2. Use ## headings for 5-7 sections with fun, kid-friendly titles like "How Does It Work?", "Why Is It So Cool?", "The Biggest Surprise".
+3. Write 600-900 words. Every sentence should be clear enough for a child but never condescending.
+4. Use lots of analogies to everyday things: "It's like when you…", "Think of it as a giant…"
+5. Include "Wow!" moments — surprising facts that make you go "No way!"
+6. Use simple words but don't shy away from teaching real vocabulary — just explain it: "This is called 'photosynthesis' — it's basically how plants eat sunlight!"
+7. Ask rhetorical questions to keep engagement: "Can you guess what happens next?"
+8. End with something that encourages curiosity: "Next time you see a ___, think about…"
+9. Do NOT add citations or reference brackets.
+10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
+
+    case "expert":
+      return `You are a senior researcher writing a technical review for an audience of graduate students and domain experts. Write a rigorous, in-depth analysis of the given topic. Follow these rules:
+
+1. Open with a precise technical summary (NO heading). Bold the subject on first mention using **Subject**. State the current state of knowledge and key open questions.
+2. Use ## headings for 8-12 sections. Choose from: Theoretical Framework, Methodology, Mechanisms, Quantitative Analysis, Current Models, Empirical Evidence, Limitations, Open Problems, Recent Advances, Interdisciplinary Connections, Future Directions.
+3. Write 1200-1800 words. Be precise, rigorous, and data-driven.
+4. Use domain-specific terminology without over-explaining — your audience knows the basics.
+5. Include specific numbers, equations described in words, key parameters, and quantitative comparisons.
+6. Reference key theoretical frameworks, seminal papers (by author name and year), and competing hypotheses.
+7. Discuss limitations, edge cases, and where current understanding breaks down.
+8. Maintain a scholarly but readable tone — not dry, but authoritative.
+9. Do NOT add citation brackets [1] or reference lists — mention authors inline.
+10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
+
+    case "storyteller":
+      return `You are a master storyteller in the tradition of Carl Sagan, David Attenborough, and Bill Bryson. Transform the given topic into a compelling narrative with characters, tension, and drama. Follow these rules:
+
+1. Open in medias res — drop the reader into a moment of discovery, conflict, or wonder. Bold the subject on first mention using **Subject**.
+2. Use ## headings for 6-8 chapters with evocative titles: "The Night Everything Changed", "A Universe in a Grain of Sand", "The Race Against Time".
+3. Write 1000-1500 words. Every paragraph should pull the reader forward.
+4. Build a narrative arc: setup → rising action → revelation → implications → denouement.
+5. Make real people the heroes — scientists, explorers, thinkers. Give them dialogue, motivations, struggles.
+6. Use the present tense for key moments to create immediacy: "She lifts the slide to the microscope. What she sees changes everything."
+7. Weave factual content seamlessly into the story — the reader learns without realizing they're learning.
+8. End with a resonant image or reflection that connects the topic to something universal about human experience.
+9. Do NOT add citations, reference brackets, or "Sources" sections.
+10. Do NOT use ### sub-headings — only ## level.${contextSuffix}`;
+
+    case "encyclopedia":
+    default:
+      return `You are an encyclopedic knowledge writer. Write a comprehensive, Wikipedia-style article about a given topic. Follow these rules strictly:
 
 1. Start with a lead section (NO heading) of 2-3 sentences. Bold the subject name on first mention using **Subject**.
 2. After the lead, include 8-12 sections using ## headings. Choose from these as appropriate:
@@ -93,14 +156,8 @@ function buildSystemPrompt(context?: string[]): string {
 5. Do NOT add citations, reference brackets [1], annotation tags, or "Sources" sections.
 6. Do NOT use ### sub-headings — only ## level.
 7. Write in a neutral, encyclopedic tone. No first person, no hedging, no filler phrases.
-8. Each section should be 2-4 paragraphs of substantive content.`;
-
-  if (!context || context.length === 0) return base;
-
-  const contextList = context.slice(0, 10).join(", ");
-  return `${base}
-
-9. CONTEXTUAL PERSONALIZATION: The user has recently explored these topics: [${contextList}]. Where relevant, emphasize connections between the current topic and their recent exploration. Include a ## Connections section near the end that explicitly draws parallels and relationships to these previously explored topics. This section should feel natural and insightful, not forced.`;
+8. Each section should be 2-4 paragraphs of substantive content.${contextSuffix}`;
+  }
 }
 
 /* ── Main handler ────────────────────────────────────────────────────── */
@@ -111,7 +168,7 @@ serve(async (req) => {
   }
 
   try {
-    const { keyword, context } = await req.json();
+    const { keyword, context, lens } = await req.json();
     if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Missing keyword" }), {
         status: 400,
@@ -121,13 +178,13 @@ serve(async (req) => {
 
     const term = keyword.trim();
     const userContext = Array.isArray(context) ? context.filter((c: unknown) => typeof c === "string").slice(0, 20) : [];
+    const activeLens = typeof lens === "string" ? lens : "encyclopedia";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // ── Phase 1: Wikipedia + Wikidata (fast, non-streaming) ──
     const wiki = await fetchWikipedia(term);
 
-    // Fetch Wikidata structured facts if we have a QID
     let wikidataFacts: Record<string, string> = {};
     if (wiki?.qid) {
       wikidataFacts = await fetchWikidataFacts(wiki.qid);
@@ -143,14 +200,14 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: buildSystemPrompt(userContext) },
+          { role: "system", content: buildLensPrompt(activeLens, userContext) },
           {
             role: "user",
-            content: `Write a comprehensive encyclopedic article about: ${term}`,
+            content: `Write a comprehensive ${activeLens === "encyclopedia" ? "encyclopedic article" : "article"} about: ${term}`,
           },
         ],
-        max_tokens: 2400,
-        temperature: 0.3,
+        max_tokens: activeLens === "expert" ? 3200 : 2400,
+        temperature: activeLens === "storyteller" || activeLens === "magazine" ? 0.6 : 0.3,
         stream: true,
       }),
     });
@@ -170,7 +227,6 @@ serve(async (req) => {
       }
       console.error("AI gateway error:", aiResponse.status, await aiResponse.text());
 
-      // If AI fails but wiki succeeded, return wiki-only as non-streaming JSON
       if (wiki) {
         return new Response(JSON.stringify({
           keyword: term,
@@ -193,11 +249,10 @@ serve(async (req) => {
     if (wiki?.pageUrl) sources.push(wiki.pageUrl);
     if (wiki?.qid) sources.push(`https://www.wikidata.org/wiki/${wiki.qid}`);
 
-    // Create SSE stream: first emit wiki metadata + wikidata facts, then pipe AI tokens
+    // Create SSE stream
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        // Emit wiki metadata + structured facts immediately
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({
             type: "wiki",
@@ -207,7 +262,6 @@ serve(async (req) => {
           })}\n\n`)
         );
 
-        // Pipe AI stream tokens
         if (!aiResponse.body) {
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
           controller.close();
