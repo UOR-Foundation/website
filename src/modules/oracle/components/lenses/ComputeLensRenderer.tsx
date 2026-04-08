@@ -128,14 +128,11 @@ export default function ComputeLensRenderer({
 
   // Auto-query Wolfram when the lens mounts
   useEffect(() => {
-    if (!title || queried) return;
+    if (!title) return;
 
-    abortRef.current?.abort();
     const ac = new AbortController();
-    abortRef.current = ac;
 
     setLoading(true);
-    setQueried(true);
 
     queryWolfram(title, ac.signal).then((res) => {
       if (!ac.signal.aborted) {
@@ -145,7 +142,8 @@ export default function ComputeLensRenderer({
     });
 
     return () => ac.abort();
-  }, [title, queried]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
 
   const isComputable = isComputableQuery(title);
 
