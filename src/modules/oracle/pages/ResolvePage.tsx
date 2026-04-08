@@ -39,6 +39,10 @@ import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecentKeywords, recordSearch } from "@/modules/oracle/lib/search-history";
+import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
+import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
+import VoiceInput from "@/modules/oracle/components/VoiceInput";
+import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -397,6 +401,13 @@ const SearchPage = () => {
   const [immersiveMode, setImmersiveMode] = useState(() => localStorage.getItem("uor-immersive") === "true");
   const [readerMode, setReaderMode] = useState(true);
 
+  // Live mode + voice + prefetch state
+  const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
+  const [prefetchResult, setPrefetchResult] = useState<PrefetchResult | null>(null);
+  const [showPrefetch, setShowPrefetch] = useState(false);
+  const liveAbortRef = useRef<AbortController | null>(null);
+  const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Sync immersive mode with fullscreen API (user may press Esc to exit)
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -437,9 +448,56 @@ const SearchPage = () => {
     setSelectedSuggIdx(-1);
   }, [input]);
 
+  // Speculative prefetch as user types (Wikipedia summary)
+  useEffect(() => {
+    const trimmed = input.trim();
+    if (!trimmed || trimmed.length < 3 || isUorAddress(trimmed) || isUrl(trimmed) || result) {
+      setPrefetchResult(null);
+      setShowPrefetch(false);
+      cancelPrefetch();
+      return;
+    }
+    speculativePrefetch(trimmed, (res) => {
+      setPrefetchResult(res);
+      setShowPrefetch(!!res);
+    });
+    return () => cancelPrefetch();
+  }, [input, result]);
+
+  // Live mode: debounced type-to-stream
+  useEffect(() => {
+    if (!liveMode || !input.trim() || input.trim().length < 3 || result || isUorAddress(input.trim()) || isUrl(input.trim())) return;
+    if (liveTimerRef.current) clearTimeout(liveTimerRef.current);
+    liveTimerRef.current = setTimeout(() => {
+      // Abort previous live stream
+      if (liveAbortRef.current) liveAbortRef.current.abort();
+      setShowPrefetch(false);
+      handleSearch(input);
+    }, 800);
+    return () => { if (liveTimerRef.current) clearTimeout(liveTimerRef.current); };
+  }, [input, liveMode]);
+
+  const toggleLiveMode = useCallback(() => {
+    setLiveMode(prev => {
+      const next = !prev;
+      localStorage.setItem("uor-live-search", String(next));
+      return next;
+    });
+  }, []);
+
+  // Voice input handler
+  const handleVoiceTranscript = useCallback((text: string, isFinal: boolean) => {
+    setInput(text);
+    if (isFinal && text.trim().length >= 2) {
+      setShowPrefetch(false);
+      handleSearch(text.trim());
+    }
+  }, []);
+
   const pickSuggestion = (triword: string) => {
     setInput(triword);
     setShowSuggestions(false);
+    setShowPrefetch(false);
     handleSearch(triword);
   };
 
@@ -668,13 +726,17 @@ const SearchPage = () => {
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
 
-    // ── Show partial card immediately (no client-side wiki fetch) ──
+    // ── Seed from speculative prefetch if available ──
+    const cached = getCachedPrefetch(keyword);
+    const seedContent = cached?.extract || "";
+
+    // ── Show partial card immediately — seeded with Wikipedia extract if available ──
     const partialSource: Record<string, unknown> = {
       "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
       "@type": "uor:KnowledgeCard",
-      "uor:label": keyword.charAt(0).toUpperCase() + keyword.slice(1),
-      "uor:description": "",
-      "uor:content": "",
+      "uor:label": cached?.title || keyword.charAt(0).toUpperCase() + keyword.slice(1),
+      "uor:description": cached?.description || "",
+      "uor:content": seedContent,
       "uor:sources": [],
     };
 
@@ -690,6 +752,11 @@ const SearchPage = () => {
 
     toast("Streaming AI article…", { icon: "✨", id: "keyword-resolve" });
 
+    // ── Prepare AbortController for live mode cancel-on-resume ──
+    if (liveAbortRef.current) liveAbortRef.current.abort();
+    const abortController = new AbortController();
+    liveAbortRef.current = abortController;
+
     // ── Stream AI synthesis (wiki metadata arrives via SSE) ──
     let accumulatedSynthesis = "";
     let wiki: WikiMeta | null = null;
@@ -700,6 +767,7 @@ const SearchPage = () => {
       keyword,
       context: recentContext,
       lens: lensOverride || activeLens,
+      signal: abortController.signal,
       onWiki: (streamWiki, sources, provenance) => {
         // Normalize rich source objects to URL strings
         const normalizedSources = sources.map((s: string | { url: string }) =>
@@ -1338,14 +1406,14 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Loading bar */}
+      {/* Loading / streaming progress bar */}
       <AnimatePresence>
-        {(loading || aiStreaming) && (
+        {(loading || aiStreaming || result?.synthesizing) && (
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: result?.synthesizing ? 12 : 1.5, ease: "easeOut" }}
             className="absolute top-0 left-0 right-0 h-0.5 bg-primary/60 origin-left z-[60]"
           />
         )}
@@ -1597,24 +1665,34 @@ const SearchPage = () => {
                     ref={inputRef}
                     type="text"
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => { setInput(e.target.value); setShowPrefetch(true); }}
                     onKeyDown={(e) => {
                       if (showSuggestions && suggestions.length > 0) {
                         if (e.key === "ArrowDown") { e.preventDefault(); setSelectedSuggIdx(prev => Math.min(prev + 1, suggestions.length - 1)); return; }
                         if (e.key === "ArrowUp") { e.preventDefault(); setSelectedSuggIdx(prev => Math.max(prev - 1, -1)); return; }
                         if (e.key === "Enter" && selectedSuggIdx >= 0) { e.preventDefault(); pickSuggestion(suggestions[selectedSuggIdx].triword); return; }
-                        if (e.key === "Escape") { setShowSuggestions(false); return; }
+                        if (e.key === "Escape") { setShowSuggestions(false); setShowPrefetch(false); return; }
                       }
-                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); submit(); }
+                      if (e.key === "Enter") { e.preventDefault(); setShowSuggestions(false); setShowPrefetch(false); submit(); }
                     }}
-                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); else if (prefetchResult) setShowPrefetch(true); }}
+                    onBlur={() => { setTimeout(() => { setShowSuggestions(false); setShowPrefetch(false); }, 200); }}
                     placeholder=""
                     className="flex-1 bg-transparent py-[17px] px-[6px] text-base text-foreground placeholder:text-muted-foreground/25 focus:outline-none caret-primary"
                   />
 
-                  {/* Right side — separator + AI Mode pill */}
-                  <div className="flex items-center gap-[10px] pr-[17px] shrink-0">
+                  {/* Right side — Voice + Live toggle + separator + AI Mode pill */}
+                  <div className="flex items-center gap-[8px] pr-[17px] shrink-0">
+                    <VoiceInput
+                      onTranscript={handleVoiceTranscript}
+                      onSpeechEnd={() => { if (input.trim().length >= 2) { setShowPrefetch(false); handleSearch(input.trim()); }}}
+                      size="sm"
+                    />
+                    <LiveSearchToggle
+                      active={liveMode}
+                      onToggle={toggleLiveMode}
+                      streaming={!!result?.synthesizing}
+                    />
                     <div className="w-px h-[28px] bg-[hsl(0_0%_30%)]" />
                     <button
                       onClick={() => setAiMode(true)}
@@ -1625,6 +1703,11 @@ const SearchPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Live preview card (prefetch) */}
+                {!showSuggestions && !encodeMode && (
+                  <LivePreviewCard prefetch={prefetchResult} visible={showPrefetch && !result} />
+                )}
 
                 {/* Autocomplete suggestions dropdown */}
                 <AnimatePresence>

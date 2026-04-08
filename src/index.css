@@ -1507,3 +1507,35 @@
   animation: searchGlowRotate 4s linear infinite !important;
   opacity: 1 !important;
 }
+
+/* ── Real-time streaming token animation ── */
+@keyframes tokenFadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.streaming-token {
+  animation: tokenFadeIn 80ms ease-out both;
+}
+
+/* ── Streaming progress bar (ambient, at top of page) ── */
+@keyframes streamProgress {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(0.7); }
+  100% { transform: scaleX(1); }
+}
+
+.stream-progress-bar {
+  animation: streamProgress 8s ease-out forwards;
+  transform-origin: left;
+}
+
+/* ── Live mode search bar pulse ── */
+@keyframes livePulse {
+  0%, 100% { border-color: hsl(var(--primary) / 0.15); }
+  50% { border-color: hsl(var(--primary) / 0.35); }
+}
+
+.live-mode-active {
+  animation: livePulse 2s ease-in-out infinite;
+}

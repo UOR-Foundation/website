@@ -1,10 +1,13 @@
 /**
  * MobileSearchBar — bottom-pinned input bar for mobile search (Perplexity-style).
+ * Now with voice input and live mode toggle.
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Send, Plus, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import VoiceInput from "./VoiceInput";
+import LiveSearchToggle from "./LiveSearchToggle";
 
 interface Props {
   onSubmit: (query: string) => void;
@@ -15,12 +18,30 @@ interface Props {
 
 export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading }: Props) {
   const [value, setValue] = useState("");
+  const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
   const inputRef = useRef<HTMLInputElement>(null);
+  const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSubmit = () => {
     const trimmed = value.trim();
     if (!trimmed || loading) return;
     onSubmit(trimmed);
+  };
+
+  const handleChange = (text: string) => {
+    setValue(text);
+    if (liveMode && text.trim().length >= 3) {
+      if (liveTimerRef.current) clearTimeout(liveTimerRef.current);
+      liveTimerRef.current = setTimeout(() => onSubmit(text.trim()), 800);
+    }
+  };
+
+  const toggleLive = () => {
+    setLiveMode(prev => {
+      const next = !prev;
+      localStorage.setItem("uor-live-search", String(next));
+      return next;
+    });
   };
 
   return (
@@ -49,7 +70,7 @@ export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading 
             ref={inputRef}
             type="text"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => handleChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -59,6 +80,18 @@ export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading 
             placeholder="Search anything…"
             className="flex-1 bg-transparent py-2.5 px-1 text-[15px] text-foreground placeholder:text-muted-foreground/30 focus:outline-none caret-primary"
           />
+
+          {/* Voice input */}
+          <VoiceInput
+            onTranscript={(text, isFinal) => {
+              setValue(text);
+              if (isFinal && text.trim().length >= 2) onSubmit(text.trim());
+            }}
+            size="sm"
+          />
+
+          {/* Live mode toggle */}
+          <LiveSearchToggle active={liveMode} onToggle={toggleLive} streaming={loading} />
 
           {/* AI Oracle pill */}
           <button

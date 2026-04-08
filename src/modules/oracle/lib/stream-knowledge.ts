@@ -55,6 +55,7 @@ export async function streamKnowledge({
   onDelta,
   onDone,
   onError,
+  signal,
 }: {
   keyword: string;
   /** Recent search keywords for contextual personalization */
@@ -71,6 +72,8 @@ export async function streamKnowledge({
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
+  /** Optional AbortSignal for cancelling the stream (live mode / cancel-on-resume) */
+  signal?: AbortSignal;
 }) {
   const resp = await fetch(KNOWLEDGE_URL, {
     method: "POST",
@@ -83,6 +86,7 @@ export async function streamKnowledge({
       context: context?.length ? context : undefined,
       lens: lens || undefined,
     }),
+    signal,
   });
 
   if (!resp.ok || !resp.body) {
