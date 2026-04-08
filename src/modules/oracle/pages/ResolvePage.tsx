@@ -930,6 +930,7 @@ const SearchPage = () => {
           </AnimatePresence>
         </div>
       </div>
+      </div>{/* end main content wrapper */}
     </div>
   );
 };
