@@ -827,7 +827,7 @@ const SearchPage = () => {
               {/* Search bar — golden ratio spacing from title */}
               <div
                 className="w-full relative group"
-                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(3rem * 0.618)" }}
+                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(2.5rem * 0.618)" }}
               >
                 {/* Animated border glow — rotating conic gradient, always subtly alive */}
                 <div
