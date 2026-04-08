@@ -46,6 +46,24 @@ export async function recordSearch(entry: {
     } as any);
 }
 
+/** Find the most recent search entry matching a keyword exactly (case-insensitive). */
+export async function findByKeyword(keyword: string): Promise<SearchHistoryEntry | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("search_history" as any)
+    .select("keyword, cid, wiki_qid, searched_at")
+    .eq("user_id", user.id)
+    .ilike("keyword", keyword.trim())
+    .order("searched_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as unknown as SearchHistoryEntry;
+}
+
 /** Get just the keywords from recent history (for context passing). */
 export async function getRecentKeywords(limit = 15): Promise<string[]> {
   const history = await getSearchHistory(limit);
