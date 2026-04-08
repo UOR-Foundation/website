@@ -349,6 +349,63 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
   );
 }
 
+/* ── Mobile Immersive Search Pill ── */
+function MobileImmersiveSearchPill({ onSearch }: { onSearch: (q: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus();
+  }, [expanded]);
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[60] flex justify-center pb-[env(safe-area-inset-bottom,16px)] px-4 pointer-events-none">
+      <AnimatePresence mode="wait">
+        {expanded ? (
+          <motion.div
+            key="expanded"
+            initial={{ width: 160, opacity: 0.8 }}
+            animate={{ width: "100%", opacity: 1 }}
+            exit={{ width: 160, opacity: 0.8 }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            className="pointer-events-auto rounded-full border border-white/[0.12] bg-black/70 backdrop-blur-xl shadow-[0_-4px_30px_-8px_rgba(0,0,0,0.6)] flex items-center gap-2 px-4 py-2"
+          >
+            <Search className="w-4 h-4 text-white/40 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && value.trim()) { onSearch(value.trim()); setExpanded(false); setValue(""); }
+                if (e.key === "Escape") { setExpanded(false); setValue(""); }
+              }}
+              placeholder="Search anything…"
+              className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/25 focus:outline-none caret-primary"
+            />
+            <button onClick={() => { setExpanded(false); setValue(""); }} className="p-1 text-white/30 hover:text-white/60">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        ) : (
+          <motion.button
+            key="collapsed"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={() => setExpanded(true)}
+            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.1] bg-black/50 backdrop-blur-xl text-white/40 hover:text-white/60 transition-colors shadow-lg"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="text-[13px] font-medium">Search…</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 const SearchPage = () => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
