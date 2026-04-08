@@ -194,7 +194,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="flex items-center justify-between px-8 py-5">
+        <div className="flex flex-col items-center gap-4 px-8 py-6">
           <ImmersiveQuote />
           <div className="flex items-center gap-4">
             <SoundCloudFab />
