@@ -164,9 +164,10 @@ const SearchPage = () => {
   useEffect(() => { if (!result && !aiMode) inputRef.current?.focus(); }, [result, aiMode]);
 
   useEffect(() => {
+    if (!wasmReady) return;
     const addr = searchParams.get("w") ?? searchParams.get("cid") ?? searchParams.get("id");
     if (addr) { setInput(addr); handleSearch(addr); }
-  }, [searchParams]);
+  }, [searchParams, wasmReady]);
 
   // Auto-scroll AI chat
   useEffect(() => {

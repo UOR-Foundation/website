@@ -176,3 +176,19 @@ export function clearRegistry(): void {
 export function registrySize(): number {
   return allEntries().length;
 }
+
+/**
+ * Re-enrich all existing receipts that were created with the TS fallback.
+ * Call this after WASM becomes available to upgrade receipts to WASM-anchored.
+ */
+export async function reEnrichAll(): Promise<number> {
+  let upgraded = 0;
+  const entries = allEntries();
+  for (const entry of entries) {
+    if (entry.receipt.engine === "typescript") {
+      const enriched = await computeAndRegister(entry.source);
+      if (enriched.engine === "wasm") upgraded++;
+    }
+  }
+  return upgraded;
+}
