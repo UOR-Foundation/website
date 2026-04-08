@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MessageCircle, Phone, CircleDot, Settings, Search, Filter } from "lucide-react";
 import ChatList from "./ChatList";
+import SessionBadge from "./SessionBadge";
 import { chats } from "../lib/mock-data";
 
 interface Props {
@@ -53,8 +54,9 @@ export default function ChatSidebar({ activeChatId, onSelect }: Props) {
         {/* Header */}
         <div className="h-[60px] flex items-center justify-between px-4 flex-shrink-0">
           <h1 className="text-[22px] text-[#e9edef] font-bold">Chats</h1>
-          <div className="flex items-center gap-3 text-[#aebac1]">
-            <button className="hover:text-[#e9edef] transition-colors"><Filter size={20} /></button>
+          <div className="flex items-center gap-3">
+            <SessionBadge status="active" compact />
+            <button className="text-[#aebac1] hover:text-[#e9edef] transition-colors"><Filter size={20} /></button>
           </div>
         </div>
 
