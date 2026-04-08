@@ -23,7 +23,7 @@ export interface SnapZone {
 const STORAGE_KEY = "uor:desktop-windows";
 const MIN_W = 360;
 const MIN_H = 280;
-const MENU_BAR_H = 28;
+const MENU_BAR_H = 38;
 const DOCK_H = 68;
 const SNAP_EDGE = 12;
 const GRID_COLS = 4;
@@ -148,7 +148,7 @@ export function useWindowManager() {
   const focusWindow = useCallback((id: string) => {
     setWindows(prev => {
       const z = ++nextZ.current;
-      const next = prev.map(w => w.id === id ? { ...w, zIndex: z } : w);
+      const next = prev.map(w => w.id === id ? { ...w, zIndex: z, minimized: false } : w);
       saveWindows(next);
       return next;
     });
