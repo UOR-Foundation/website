@@ -10,7 +10,7 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Link2, CheckCircle2, Code2, BookOpen, Globe } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -19,6 +19,7 @@ import { allEntries, lookupReceipt } from "@/modules/oracle/lib/receipt-registry
 import { singleProofHash } from "@/lib/uor-canonical";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SURPRISE_MESSAGES = [
   "✨ Look what the universe found!",
@@ -283,6 +284,10 @@ const SearchPage = () => {
   const [selectedProofIndices, setSelectedProofIndices] = useState<Set<number>>(new Set());
   const [chainEncoding, setChainEncoding] = useState(false);
   const [contentViewMode, setContentViewMode] = useState<"human" | "machine">("human");
+
+  // IPFS Inscribe state
+  const [inscribing, setInscribing] = useState(false);
+  const [inscribeResult, setInscribeResult] = useState<{ ipfsHash: string; gatewayUrl: string } | null>(null);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<Array<{ triword: string; formatted: string }>>([]);
