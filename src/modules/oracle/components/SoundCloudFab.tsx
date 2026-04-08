@@ -64,6 +64,9 @@ export default function SoundCloudFab() {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCountRef = useRef(0);
   const spinControls = useAnimationControls();
+  const dragRef = useRef<{ startX: number; startY: number } | null>(null);
+  const isDragging = useRef(false);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSCApi().then(() => {
@@ -118,7 +121,18 @@ export default function SoundCloudFab() {
     });
   }, []);
 
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    dragRef.current = { startX: e.clientX, startY: e.clientY };
+    isDragging.current = false;
+  }, []);
+
+  const handleDrag = useCallback((_: unknown, info: PanInfo) => {
+    const dist = Math.sqrt(info.offset.x ** 2 + info.offset.y ** 2);
+    if (dist > DRAG_THRESHOLD) isDragging.current = true;
+  }, []);
+
   const handleClick = useCallback(() => {
+    if (isDragging.current) return; // was a drag, not a click
     clickCountRef.current += 1;
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     clickTimerRef.current = setTimeout(() => {
