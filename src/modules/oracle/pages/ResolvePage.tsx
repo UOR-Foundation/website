@@ -1279,56 +1279,60 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
-        <header className="flex items-center justify-between px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
-          {/* Left: UOR Logo */}
+        <header className="flex items-center px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
+          {/* Left: UOR Logo — fixed width for symmetry */}
           <button
             onClick={clearResult}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2.5 shrink-0 group w-[220px]"
             title="Back to search"
           >
-            <img src={uorHexagon} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
-            <span className="hidden md:inline text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/50 group-hover:text-muted-foreground/80 transition-colors uppercase whitespace-nowrap">UNIVERSAL OBJECT REFERENCE</span>
+            <img src={uorHexagon} alt="UOR" className="w-7 h-7 brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+            <span className="hidden md:inline text-[11px] font-bold tracking-[0.18em] text-foreground/70 group-hover:text-foreground/90 transition-colors uppercase whitespace-nowrap">Universal Object Reference</span>
           </button>
 
-          {/* Center: Pronounced search bar */}
-          <div className="flex-1 max-w-2xl mx-6 relative">
-            <button
-              onClick={clearResult}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
-              title="Back to search"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
-              placeholder="Search an address or paste a URL…"
-              className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
-            />
-            <button
-              onClick={() => { clearResult(); setTimeout(submit, 50); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
-              title="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+          {/* Center: Search bar — truly centered */}
+          <div className="flex-1 flex justify-center">
+            <div className="w-full max-w-2xl relative">
+              <button
+                onClick={clearResult}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
+                title="Back to search"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
+                placeholder="Search an address or paste a URL…"
+                className="w-full bg-white/[0.08] border border-white/[0.15] rounded-full pl-11 pr-11 py-2.5 text-[15px] font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/15 focus:bg-white/[0.1] transition-all text-center shadow-sm"
+              />
+              <button
+                onClick={() => { clearResult(); setTimeout(submit, 50); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
+                title="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Right: Sovereign Identity avatar */}
-          <button
-            onClick={() => setIdentityPanelOpen(true)}
-            className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
-            title="Sovereign Identity"
-          >
-            <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
-          </button>
+          {/* Right: Sovereign Identity avatar — fixed width for symmetry */}
+          <div className="w-[220px] flex justify-end">
+            <button
+              onClick={() => setIdentityPanelOpen(true)}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.12] flex items-center justify-center shrink-0 hover:border-white/25 transition-all group"
+              title="Sovereign Identity"
+            >
+              <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
+            </button>
+          </div>
         </header>
       ) : null}
 
       <div className="flex-1 overflow-y-auto">
-        <div className="profile-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
@@ -1743,22 +1747,22 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.03 }}
-                  className="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-5 px-4 sm:px-6"
-                  style={{ marginTop: "-2.75rem" }}
+                  className="relative flex flex-col sm:flex-row items-start gap-5 sm:gap-6 px-4 sm:px-8"
+                  style={{ marginTop: "-3.25rem" }}
                 >
                   {/* Glyph Avatar */}
                   <div className="relative shrink-0">
-                    <div className="w-20 h-20 sm:w-[88px] sm:h-[88px] rounded-full bg-primary/8 border-2 border-primary/20 flex items-center justify-center shadow-[0_0_32px_-8px_hsl(var(--primary)/0.25)] ring-4 ring-background">
-                      <span className="text-2xl sm:text-3xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-primary/8 border-[3px] border-primary/20 flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.3)] ring-[5px] ring-background">
+                      <span className="text-3xl sm:text-4xl tracking-widest text-primary/80 font-mono select-none">{glyphChars}</span>
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full border-2 border-background ${result.receipt.engine === "wasm" ? "bg-emerald-400" : "bg-muted-foreground/30"}`} title={result.receipt.engine === "wasm" ? `WASM ${result.receipt.crateVersion ?? ""}` : "TS engine"} />
                   </div>
 
                   {/* Name + badges + actions */}
                   <div className="flex-1 min-w-0 pt-2 sm:pt-4">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <div className="flex items-baseline gap-2 min-w-0">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-foreground tracking-wide leading-tight truncate">
+                        <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-display font-semibold text-foreground tracking-wide leading-tight truncate">
                           {triwordDisplay}
                         </h1>
                         <CopyBtn onClick={() => copy(result.receipt.triword, "triword")} copied={copied === "triword"} />
@@ -1902,8 +1906,8 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.06 }}
-                  className="border-t border-b border-border/10 py-4 px-4 sm:px-6"
-                  style={{ marginTop: "calc(1.25rem * 1.618)" }}
+                  className="border-t border-b border-border/10 py-4 px-4 sm:px-8"
+                  style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   <AddressSocialStats cid={result.receipt.cid} onForkClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }} />
                 </motion.div>
@@ -1913,15 +1917,15 @@ const SearchPage = () => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="px-4 sm:px-6"
-                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                  className="px-4 sm:px-8"
+                  style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   <IdentityHub receipt={result.receipt} />
                 </motion.div>
 
                 {/* ═══ FULL-WIDTH CONTENT ═══ */}
                 <div
-                  className="px-4 sm:px-6"
+                  className="px-4 sm:px-8"
                   style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   {src?.["@type"] === "uor:ChainOfProofs" ? (
