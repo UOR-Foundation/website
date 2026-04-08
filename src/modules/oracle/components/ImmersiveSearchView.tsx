@@ -28,9 +28,11 @@ interface Props {
   onExit: () => void;
   onEncode?: () => void;
   onAiMode?: () => void;
+  /** Whether the browser is currently in fullscreen mode */
+  isFullscreen?: boolean;
 }
 
-export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode }: Props) {
+export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
   const { profile } = useAuth();
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [query, setQuery] = useState("");
