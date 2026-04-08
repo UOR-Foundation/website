@@ -239,7 +239,7 @@ const SearchPage = () => {
     setAiInput("");
   };
 
-  /* ── Infinite Improbability Drive sequence ── */
+  /* ── Infinite Improbability Drive sequence (~4s, themed) ── */
   const fireImprobabilityDrive = () => {
     const entries = allEntries();
     if (entries.length === 0) {
@@ -252,7 +252,7 @@ const SearchPage = () => {
     setImprobExponent(0);
     setImprobSideEffect("");
 
-    // Phase 1: tick exponent counter
+    // Phase 1 (0–1000ms): tick exponent counter slowly
     let expIdx = 0;
     const expInterval = setInterval(() => {
       expIdx++;
@@ -261,9 +261,9 @@ const SearchPage = () => {
       } else {
         clearInterval(expInterval);
       }
-    }, 85);
+    }, 150);
 
-    // Phase 2 at 600ms: cycle side effects
+    // Phase 2 at 1000ms: cycle side effects
     setTimeout(() => {
       setImprobPhase(2);
       let effectIdx = 0;
@@ -272,19 +272,34 @@ const SearchPage = () => {
           IMPROBABILITY_SIDE_EFFECTS[effectIdx % IMPROBABILITY_SIDE_EFFECTS.length]
         );
         effectIdx++;
-      }, 300);
+      }, 500);
 
-      // Phase 3 at 1800ms: DON'T PANIC + pick result
+      // Phase 3 at 2800ms: DON'T PANIC + pick result
       setTimeout(() => {
         clearInterval(effectInterval);
         setImprobPhase(3);
 
         const pick = entries[Math.floor(Math.random() * entries.length)];
-        const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
-        confetti({ particleCount: 160, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 35, gravity: 0.7, ticks: 150 });
-        setTimeout(() => confetti({ particleCount: 60, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 20, gravity: 0.5, ticks: 120 }), 150);
+        // Site-palette confetti
+        const root = document.documentElement;
+        const cs = getComputedStyle(root);
+        const toHex = (v: string) => {
+          const el = document.createElement("div");
+          el.style.color = `hsl(${v})`;
+          document.body.appendChild(el);
+          const c = getComputedStyle(el).color;
+          el.remove();
+          return c;
+        };
+        const colors = [
+          toHex(cs.getPropertyValue("--primary").trim()),
+          toHex(cs.getPropertyValue("--accent").trim()),
+          toHex(cs.getPropertyValue("--foreground").trim()),
+        ];
+        confetti({ particleCount: 120, spread: 110, origin: { y: 0.5 }, colors, startVelocity: 28, gravity: 0.6, ticks: 160 });
+        setTimeout(() => confetti({ particleCount: 50, spread: 140, origin: { y: 0.4 }, colors, startVelocity: 16, gravity: 0.5, ticks: 130 }), 200);
 
-        // At 2500ms: dissolve overlay, show result
+        // At 4000ms: dissolve overlay, show result
         setTimeout(() => {
           setImprobabilityActive(false);
           setImprobPhase(0);
@@ -293,9 +308,9 @@ const SearchPage = () => {
 
           const msg = DONT_PANIC_MESSAGES[Math.floor(Math.random() * DONT_PANIC_MESSAGES.length)];
           toast(msg, { description: pick.receipt.triwordFormatted, icon: "🌌" });
-        }, 700);
-      }, 1200);
-    }, 600);
+        }, 1200);
+      }, 1800);
+    }, 1000);
   };
 
   return (
@@ -308,37 +323,90 @@ const SearchPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background"
             style={{
-              background: improbPhase === 1
-                ? "radial-gradient(ellipse at center, hsl(280 60% 12%), hsl(0 0% 3%))"
-                : improbPhase === 2
-                ? "radial-gradient(ellipse at 30% 40%, hsl(45 90% 18%), hsl(280 60% 10%) 50%, hsl(180 50% 8%))"
-                : "radial-gradient(ellipse at center, hsl(45 80% 8%), hsl(0 0% 2%))",
-              animation: improbPhase === 1 ? "improbShake 0.08s infinite" : undefined,
+              background: improbPhase <= 2
+                ? "radial-gradient(ellipse at center, hsl(var(--primary) / 0.06), hsl(var(--background)))"
+                : "radial-gradient(ellipse at center, hsl(var(--primary) / 0.12), hsl(var(--background)))",
+              animation: improbPhase === 1 ? "improbShake 0.12s infinite" : undefined,
             }}
           >
+            {/* Dimensional shape visualization */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {/* Phase 1: 1D line → 2D square */}
+              {improbPhase === 1 && (
+                <motion.svg width="200" height="200" viewBox="0 0 200 200" className="opacity-20">
+                  {/* 1D line expanding */}
+                  <motion.line
+                    x1="30" y1="100" x2="170" y2="100"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="1"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.4 }}
+                  />
+                  {/* 2D square appearing */}
+                  <motion.rect
+                    x="40" y="40" width="120" height="120"
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="0.5"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  />
+                </motion.svg>
+              )}
+
+              {/* Phase 2: 3D cube rotating → singularity */}
+              {improbPhase === 2 && (
+                <motion.div
+                  className="opacity-15"
+                  initial={{ scale: 1, rotateY: 0 }}
+                  animate={{ scale: [1, 1.2, 0.05], rotateY: [0, 180, 720] }}
+                  transition={{ duration: 1.8, ease: "easeInOut", times: [0, 0.5, 1] }}
+                  style={{ perspective: "600px", transformStyle: "preserve-3d" }}
+                >
+                  <div
+                    className="w-28 h-28 border border-primary/40"
+                    style={{ transform: "rotateX(30deg) rotateY(45deg)", boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.05)" }}
+                  />
+                </motion.div>
+              )}
+
+              {/* Phase 3: singularity expanding back */}
+              {improbPhase === 3 && (
+                <motion.div
+                  className="rounded-full bg-primary/10"
+                  initial={{ width: 4, height: 4, opacity: 1 }}
+                  animate={{ width: 600, height: 600, opacity: 0 }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+              )}
+            </div>
+
             {/* Phase 1 & 2: Improbability counter */}
             {(improbPhase === 1 || improbPhase === 2) && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-6"
+                transition={{ duration: 0.4 }}
+                className="flex flex-col items-center gap-6 z-10"
               >
-                <p className="text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground/50">
-                  {improbPhase === 1 ? "Engaging Infinite Improbability Drive" : "Passing through every point in the universe"}
+                <p className="text-xs font-mono uppercase tracking-[0.3em] text-muted-foreground/40">
+                  {improbPhase === 1 ? "Collapsing into one dimension…" : "Passing through every point in the universe…"}
                 </p>
                 <motion.p
                   key={improbExponent}
-                  initial={{ opacity: 0.3, scale: 1.1 }}
+                  initial={{ opacity: 0.3, scale: 1.08 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="font-mono text-4xl md:text-5xl font-bold"
-                  style={{ color: "hsl(45 90% 60%)" }}
+                  transition={{ duration: 0.12 }}
+                  className="font-mono text-4xl md:text-5xl font-bold text-primary"
                 >
                   {IMPROBABILITY_EXPONENTS[improbExponent] ?? "2^∞"}
                 </motion.p>
-                <p className="text-[10px] font-mono text-muted-foreground/30 tracking-widest">IMPROBABILITY FACTOR</p>
+                <p className="text-[10px] font-mono text-muted-foreground/25 tracking-widest">IMPROBABILITY FACTOR</p>
               </motion.div>
             )}
 
@@ -346,11 +414,11 @@ const SearchPage = () => {
             {improbPhase === 2 && improbSideEffect && (
               <motion.p
                 key={improbSideEffect}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 0.7, y: 0 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 0.5, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-10 text-center text-sm md:text-base italic text-foreground/50 max-w-md px-6"
+                transition={{ duration: 0.3 }}
+                className="mt-10 text-center text-sm md:text-base italic text-muted-foreground/50 max-w-md px-6 z-10"
               >
                 {improbSideEffect}
               </motion.p>
@@ -359,33 +427,33 @@ const SearchPage = () => {
             {/* Phase 3: DON'T PANIC */}
             {improbPhase === 3 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
+                initial={{ opacity: 0, scale: 0.6 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="flex flex-col items-center gap-4"
+                transition={{ type: "spring", stiffness: 160, damping: 18, delay: 0.15 }}
+                className="flex flex-col items-center gap-4 z-10"
               >
                 <h2
-                  className="font-display font-bold tracking-wide text-center"
-                  style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", color: "hsl(45 90% 60%)" }}
+                  className="font-display font-bold tracking-wide text-center text-primary"
+                  style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)" }}
                 >
                   DON'T PANIC
                 </h2>
-                <p className="text-sm text-muted-foreground/40 font-mono">Normality restoring…</p>
+                <p className="text-sm text-muted-foreground/35 font-mono">Normality restoring…</p>
               </motion.div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Screen shake keyframe */}
+      {/* Screen shake keyframe (gentler) */}
       {improbabilityActive && (
         <style>{`
           @keyframes improbShake {
             0% { transform: translate(0, 0); }
-            25% { transform: translate(2px, -1px); }
-            50% { transform: translate(-2px, 2px); }
-            75% { transform: translate(1px, -2px); }
-            100% { transform: translate(-1px, 1px); }
+            25% { transform: translate(1px, -0.5px); }
+            50% { transform: translate(-1px, 1px); }
+            75% { transform: translate(0.5px, -1px); }
+            100% { transform: translate(-0.5px, 0.5px); }
           }
         `}</style>
       )}
