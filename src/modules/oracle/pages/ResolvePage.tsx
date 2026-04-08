@@ -2112,6 +2112,23 @@ const SearchPage = () => {
                             }}
                           />
                         )}
+
+                        {/* Render as rendered internet page */}
+                        {msg.role === "assistant" && !aiStreaming && msg.content.length > 100 && (
+                          <motion.button
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            onClick={() => {
+                              const userQuery = aiMessages.slice(0, i).reverse().find(m => m.role === "user")?.content || "Oracle Response";
+                              renderOracleResponse(userQuery, msg.content);
+                            }}
+                            className="mt-2.5 flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-primary/70 hover:text-primary border border-primary/15 hover:border-primary/30 bg-primary/[0.04] hover:bg-primary/[0.08] transition-all group"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                            Render as page
+                          </motion.button>
+                        )}
                       </div>
                     );
                   });
