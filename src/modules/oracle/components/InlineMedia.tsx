@@ -8,6 +8,19 @@ import React, { useState, useMemo } from "react";
 import { Play, Volume2, X } from "lucide-react";
 import type { MediaData, MediaImage, MediaVideo, MediaAudio } from "../lib/stream-knowledge";
 
+/* ── Source display names ───────────────────────────────────────────── */
+
+const SOURCE_NAMES: Record<string, string> = {
+  "wikimedia-commons": "Wikimedia",
+  "met-museum": "Met Museum",
+  "nasa": "NASA",
+  "loc": "Library of Congress",
+};
+
+function sourceDisplayName(source: string): string {
+  return SOURCE_NAMES[source] || source;
+}
+
 /* ── Lightbox ──────────────────────────────────────────────────────── */
 
 const Lightbox: React.FC<{ image: MediaImage; onClose: () => void }> = ({ image, onClose }) => (
