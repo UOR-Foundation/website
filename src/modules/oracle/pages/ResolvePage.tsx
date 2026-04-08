@@ -1113,10 +1113,7 @@ const SearchPage = () => {
             wiki_qid: wiki?.qid || null,
           }).catch(() => {}); // silent
 
-          toast.success("Knowledge synthesized.", {
-            description: finalReceipt.triwordFormatted,
-            id: "keyword-resolve",
-          });
+          toast.dismiss("keyword-resolve");
         } catch (err) {
           console.error("[KeywordResolve] finalization failed:", err);
           setResult(prev => prev ? { ...prev, synthesizing: false } : prev);
