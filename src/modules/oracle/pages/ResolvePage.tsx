@@ -2550,7 +2550,7 @@ const SearchPage = () => {
                       <AnimatePresence mode="wait">
                         {contentViewMode === "human" ? (
                           <motion.div key="human-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 space-y-4 max-h-[70vh] overflow-y-auto">
-                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} />
+                            <HumanContentView source={result.source} synthesizing={result.synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} onLensChange={handleLensChange} novelty={coherenceState?.novelty || null} />
                           </motion.div>
                         ) : (
                           <motion.div key="machine-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
