@@ -1240,6 +1240,7 @@ const SearchPage = () => {
             title="Back to search"
           >
             <img src={uorHexagon} alt="UOR" className="w-7 h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span className="hidden md:inline text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/50 group-hover:text-muted-foreground/80 transition-colors uppercase whitespace-nowrap">UNIVERSAL OBJECT REFERENCE</span>
           </button>
 
           {/* Center: Pronounced search bar */}
