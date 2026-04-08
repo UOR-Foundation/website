@@ -948,7 +948,7 @@ const SearchPage = () => {
                         </button>
                       )}
                       <button
-                        onClick={encodeChain}
+                        onClick={() => encodeChain()}
                         disabled={chainEncoding}
                         className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
                       >
