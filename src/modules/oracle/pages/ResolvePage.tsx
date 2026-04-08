@@ -12,8 +12,11 @@ import SearchConstellationBg from "@/modules/oracle/components/SearchConstellati
 import uorHexagon from "@/assets/uor-hexagon.png";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck, Shield, Link2, CheckCircle2, Code2, BookOpen, Globe, GitFork, ChevronDown, Menu } from "lucide-react";
 import SovereignIdentityPanel from "@/modules/oracle/components/SovereignIdentityPanel";
+import MobileSearchBar from "@/modules/oracle/components/MobileSearchBar";
+import MobileSearchMenu from "@/modules/oracle/components/MobileSearchMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
@@ -339,6 +342,8 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
 }
 
 const SearchPage = () => {
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -1322,7 +1327,44 @@ const SearchPage = () => {
 
       {/* ── RESULT STATE: Persistent search bar header ── */}
       {result ? (
-        <header className="flex items-center px-4 md:px-6 py-3 shrink-0 border-b border-border/10">
+        <header className={`flex items-center shrink-0 border-b border-border/10 ${isMobile ? 'px-3 py-2.5 gap-2' : 'px-4 md:px-6 py-3'}`}>
+          {isMobile ? (
+            <>
+              {/* Mobile result header */}
+              <button onClick={() => setMobileMenuOpen(true)} className="p-1.5 text-muted-foreground/50 hover:text-foreground/70 transition-colors shrink-0">
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex-1 relative min-w-0">
+                <button
+                  onClick={clearResult}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors z-10"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); clearResult(); setTimeout(submit, 50); } }}
+                  placeholder="Search…"
+                  className="w-full bg-white/[0.06] border border-white/[0.1] rounded-full pl-9 pr-9 py-2 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/25 transition-all text-center"
+                />
+                <button
+                  onClick={() => { clearResult(); setTimeout(submit, 50); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/50 hover:text-foreground/60 transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <button
+                onClick={() => setIdentityPanelOpen(true)}
+                className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.1] flex items-center justify-center shrink-0"
+              >
+                <Shield className="w-3 h-3 text-foreground/60" />
+              </button>
+            </>
+          ) : (
+            <>
           {/* Left: UOR Logo — fixed width for symmetry */}
           <button
             onClick={clearResult}
@@ -1371,6 +1413,8 @@ const SearchPage = () => {
               <Shield className="w-3.5 h-3.5 text-foreground/60 group-hover:text-foreground/80 transition-colors" />
             </button>
           </div>
+            </>
+          )}
         </header>
       ) : null}
 
@@ -1379,6 +1423,57 @@ const SearchPage = () => {
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && (
+            isMobile ? (
+              /* ── MOBILE: Perplexity-style portal ── */
+              <div className="relative flex flex-col" style={{ minHeight: "100dvh" }}>
+                {/* Mobile header */}
+                <div className="flex items-center justify-between px-4 py-3 shrink-0">
+                  <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="p-1.5 text-muted-foreground/50 hover:text-foreground/70 transition-colors"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <img src={uorHexagon} alt="UOR" className="w-6 h-6 brightness-0 invert opacity-70" draggable={false} />
+                    <span className="text-xs font-bold tracking-[0.15em] text-foreground/60 uppercase">UOR</span>
+                  </div>
+                  <button
+                    onClick={() => setIdentityPanelOpen(true)}
+                    className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-white/[0.1] flex items-center justify-center"
+                  >
+                    <Shield className="w-3 h-3 text-foreground/60" />
+                  </button>
+                </div>
+
+                {/* Centered hero text */}
+                <div className="flex-1 flex items-center justify-center px-8" style={{ paddingBottom: "120px" }}>
+                  <h1
+                    className="font-display font-bold text-foreground/90 text-center leading-[1.15] select-none"
+                    style={{ fontSize: "clamp(1.75rem, 7vw, 2.5rem)" }}
+                  >
+                    What do you want<br />to know?
+                  </h1>
+                </div>
+
+                {/* Bottom search bar */}
+                <MobileSearchBar
+                  onSubmit={(query) => { setInput(query); handleSearch(query); }}
+                  onEncode={() => setEncodeMode(true)}
+                  onAiMode={() => setAiMode(true)}
+                  loading={loading}
+                />
+
+                {/* Mobile menu */}
+                <MobileSearchMenu
+                  open={mobileMenuOpen}
+                  onClose={() => setMobileMenuOpen(false)}
+                  onAiMode={() => setAiMode(true)}
+                  onIdentity={() => setIdentityPanelOpen(true)}
+                />
+              </div>
+            ) : (
+              /* ── DESKTOP: Original layout ── */
             <div
               className="relative flex flex-col items-center"
               style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
@@ -1558,6 +1653,7 @@ const SearchPage = () => {
                 address space.
               </p>
             </div>
+            )
           )}
 
           {/* ══════════════ AI MODE — Oracle ══════════════ */}
