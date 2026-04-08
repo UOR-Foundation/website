@@ -1,56 +1,59 @@
 
 
-## Plan: Expand v0.2.0 Type Projections + OS Taxonomy + Containment Fix
+## Plan: Direct Search-to-Window with Adaptive Content
 
-### What's Already Done
-All 25 new files (15 kernel, 5 bridge, 4 enforcement, 1 enum update) and barrel exports are in place. The WASM bridge and shim have been updated.
+### Problem Summary
+1. **Flash of old home screen**: When you search from the desktop, the window opens showing the `ImmersiveSearchView` (clock, photo, search bar) briefly before the query fires and results appear. This is the "intermediate step."
+2. **Window doesn't fill screen**: New search windows open at 960x620 instead of maximized like a browser tab.
+3. **Content doesn't fit the window**: The reader view uses `100vw`/`100dvh` which breaks inside a windowed context — content overflows or misaligns.
 
-### What Remains (5 steps)
+### Solution
 
-**Step 1 — Expand existing User types with v0.2.0 traits**
+#### 1. Skip the home screen when opened with a query
+**File**: `src/modules/oracle/pages/ResolvePage.tsx`
 
-- `user/type.ts`: Add ~18 types — `ModuliSpace`, `LiftChain`, `DeformationFamily`, `GaloisConnection`, `TypeScheme`, `TypeVariable`, `RecursiveType`, `RefinementType`, `DependentType`, `HigherKindedType`, `UniverseLevel`, `TypeEquality`, `Subtyping`, `TypeInference`, `UnificationResult`, `TypeContext`, `TypeJudgment`, `TypeDerivation`
-- `user/morphism.ts`: Add ~12 types — `GroundingMap`, `ProjectionMap`, `Witness`, `SymbolSequence`, `TopologicalDelta`, `FunctorMorphism`, `NaturalTransformation`, `AdjunctionPair`, `MonadMorphism`, `ComonadMorphism`, `DiagramMorphism`, `LimitCone`
-- `user/state.ts`: Add ~7 types — `Session`, `SessionBoundary`, `SharedContext`, `ContextLease`, `ContextMigration`, `StateCheckpoint`, `StateSnapshot`
-- Update `user/index.ts` and main `index.ts` to re-export all new types
+When inside a window with an `initialQuery`, skip rendering the `ImmersiveSearchView` entirely. Instead, show a loading spinner immediately while the search fires. This eliminates the flash.
 
-**Step 2 — Expand existing Bridge types with v0.2.0 traits**
+- Add a flag: if `inWindow && windowInitialQuery`, set `loading = true` on mount and suppress the "empty state" block (`!result && !aiMode`).
+- The existing `useEffect` that calls `handleSearch(q)` already fires — we just need to hide the home screen while it runs.
 
-- `bridge/cert.ts`: Add ~8 types — `GeodesicCertificate`, `LiftChainCertificate`, `DeformationCertificate`, `CompositionCertificate`, `EmbeddingCertificate`, `ActionCertificate`, `SessionCertificate`, `CertificateChain`
-- `bridge/resolver.ts`: Add ~10 types — `HomotopyResolver`, `SessionResolver`, `GeodesicResolver`, `SpectralResolver`, `LiftResolver`, `CascadeResolver`, `EnforcementResolver`, `ReductionResolver`, `CompositeResolver`, `ResolutionPlan`
-- `bridge/observable.ts`: Add ~15 types — `TopologicalObservable`, `SpectralGap`, `SpectralObservable`, `EntropyObservable`, `ComplexityObservable`, `SessionObservable`, `BoundaryObservable`, `FiberObservable`, `ConvergenceObservable`, `ReductionObservable`, `InteractionObservable`, `HomologyObservable`, `CohomologyObservable`, `GroundingObservable`, `AggregateObservable`
-- `bridge/proof.ts`: Add ~6 types — `InductiveProof`, `TacticApplication`, `ProofTerm`, `ProofContext`, `ProofObligation`, `ProofScript`
-- `bridge/partition.ts`: Add ~4 types — `SiteBinding`, `PartitionProduct`, `PartitionRefinement`, `FiberProjection`
-- `bridge/trace.ts`: Add ~4 types — `GeodesicTrace`, `MeasurementEvent`, `TraceAnnotation`, `TraceSegment`
-- Update barrel exports
+#### 2. Open search windows maximized
+**File**: `src/modules/desktop/hooks/useWindowManager.ts`
 
-**Step 3 — Expand Kernel op.ts and schema.ts**
+Add an optional `maximized` flag to `openApp()`. When set, the window opens covering the full usable area (below the tab bar) just like double-clicking a title bar.
 
-- `kernel/op.ts`: Add ~6 types — `DispatchOperation`, `SessionCompositionOperation`, `LiftOperation`, `ReductionOperation`, `ParallelOperation`, `OperationChain`
-- `kernel/schema.ts`: Add ~6 types — `TermExpression`, `VariableBinding`, `W16Ring`, `W32Ring`, `RingHomomorphism`, `RingExtension`
-- Update barrel exports
+**File**: `src/modules/desktop/DesktopWidgets.tsx` (or wherever `onSearch` calls `wm.openApp`)
 
-**Step 4 — OS Taxonomy + Desktop Integration**
+Pass `maximized: true` when opening search windows from the desktop home screen, so results instantly fill the screen like a browser tab.
 
-- Create `src/modules/desktop/lib/os-taxonomy.ts` mapping 9 OS categories to UOR v0.2.0 modules:
-  - RESOLVE → query, resolver, reduction
-  - IDENTITY → proof, cert, conformance
-  - ENFORCE → enforcement, boundary, predicate
-  - COMPUTE → cascade, monoidal, parallel, stream
-  - OBSERVE → observable, trace, derivation
-  - TRANSFORM → morphism, effect, carry, convergence
-  - EXCHANGE → interaction, boundary, state
-  - STRUCTURE → homology, cohomology, operad, region
-  - FAILURE → failure, recursion, linear
-- Add `category` field to `DesktopApp` interface in `desktop-apps.ts`
-- Update `SpotlightSearch.tsx` to group apps by category
+#### 3. Make content adaptive to window bounds (not viewport)
+**File**: `src/modules/oracle/pages/ResolvePage.tsx`
 
-**Step 5 — CSS Containment + Grade Engine**
+When `inWindow`, replace all `100vw`/`100dvh` references with `100%` so the content flows within the window container rather than the browser viewport. The reader's `maxWidth`, padding, and height constraints will reference the parent container.
 
-- Add `contain: layout paint; isolation: isolate;` to `.desktop-window-chrome` in `desktop.css`
-- Update `grade-engine.ts` to reference v0.2.0 and use `constRingEvalQ0` from the WASM bridge for Grade A ring verification
+Key changes:
+- The root `div` uses `w-full h-full` instead of `fixed inset-0` when inside a window.
+- Reader content container uses `max-width: min(1400px, 100%)` instead of `min(1400px, 95vw)`.
+- Remove the `marginLeft: calc(-50vw + 50%)` breakout hack when inside a window.
+- Height uses `100%` instead of `100dvh`.
 
-### Files Modified/Created
+#### 4. Leverage pretext for balanced headings inside windows
+**File**: `src/modules/oracle/components/HumanContentView.tsx`
 
-~15 files modified, 1 new file created (`os-taxonomy.ts`). All type additions are pure TypeScript interfaces with JSDoc anchored to UOR v0.2.0 Rust crate namespaces.
+The `BalancedHeading` component already uses pretext's `balanceWidth()` with a `ResizeObserver`. Since it measures against `parentElement.clientWidth`, it will naturally re-balance when the window is resized. No changes needed to the balancing logic — it already works adaptively.
+
+The key integration point: ensure the `HumanContentView` title rendering uses `BalancedHeading` (verify it does, or wire it up if not).
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/modules/oracle/pages/ResolvePage.tsx` | Skip home screen when `inWindow + initialQuery`; replace viewport units with container-relative units |
+| `src/modules/desktop/hooks/useWindowManager.ts` | Add `maximized` option to `openApp()` |
+| `src/modules/desktop/DesktopShell.tsx` or `DesktopWidgets.tsx` | Pass maximized flag when opening search from desktop |
+| `src/modules/oracle/components/HumanContentView.tsx` | Wire `BalancedHeading` for titles if not already used |
+
+### Result
+- Typing on the desktop home screen → window opens maximized → results render immediately (no intermediate screen).
+- Window is draggable, resizable, closable — all existing window management works.
+- Content inside the window adapts fluidly as you resize — headings re-balance via pretext, text reflows, padding scales.
 
