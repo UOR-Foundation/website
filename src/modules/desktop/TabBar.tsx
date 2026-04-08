@@ -129,9 +129,6 @@ export default function TabBar({
                 marginBottom: 0,
               }}
               onClick={() => {
-                if (isMini) {
-                  // unminimize by focusing
-                }
                 onFocusWindow(win.id);
               }}
               onMouseEnter={(e) => {
