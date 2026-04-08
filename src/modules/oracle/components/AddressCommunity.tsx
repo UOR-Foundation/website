@@ -442,11 +442,12 @@ function CommentNodeView({
                 className="mb-2 overflow-hidden"
               >
                 <CommentInput
-                  placeholder={`Reply to ${node.author.display_name || "Anonymous"}…`}
-                  onSubmit={(text) => onSubmitReply(node.id, text)}
+                  placeholder={`Reply to ${node.author.display_name || "Guest"}…`}
+                  onSubmit={(text, guestName) => onSubmitReply(node.id, text, guestName)}
                   onCancel={() => setReplyingTo(null)}
                   autoFocus
                   compact
+                  showGuestName={!user}
                 />
               </motion.div>
             )}
