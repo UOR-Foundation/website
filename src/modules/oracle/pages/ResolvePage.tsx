@@ -834,6 +834,12 @@ const SearchPage = () => {
     const recentContext = await getRecentKeywords(15);
     setContextKeywords(recentContext);
 
+    // ── Compute coherence for this topic ──
+    const history = await getSearchHistory(50);
+    const coherence = computeCoherence(keyword, history);
+    setCoherenceState(coherence);
+    setLensSuggestionDismissed(false);
+
     // ── Seed from speculative prefetch if available ──
     const cached = getCachedPrefetch(keyword);
     const seedContent = cached?.extract || "";
