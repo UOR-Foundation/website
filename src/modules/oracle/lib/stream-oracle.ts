@@ -1,4 +1,6 @@
-export type Msg = { role: "user" | "assistant"; content: string };
+import type { EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
+
+export type Msg = { role: "user" | "assistant"; content: string; proof?: EnrichedReceipt };
 
 const ORACLE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-oracle`;
 

@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X } from "lucide-react";
+import { Search, ArrowLeft, Copy, Check, RotateCcw, Plus, Sparkles, Send, X, ShieldCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import confetti from "canvas-confetti";
 import { loadWasm } from "@/lib/wasm/uor-bridge";
@@ -143,7 +143,28 @@ const SearchPage = () => {
           return [...prev, { role: "assistant", content: assistantSoFar }];
         });
       },
-      onDone: () => setAiStreaming(false),
+      onDone: async () => {
+        setAiStreaming(false);
+        // Compute UOR proof for this Q&A exchange
+        try {
+          const proofSource = {
+            "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+            "@type": "uor:OracleExchange",
+            "uor:query": trimmed,
+            "uor:response": assistantSoFar,
+            "uor:timestamp": new Date().toISOString(),
+          };
+          const receipt = await encode(proofSource);
+          // Attach proof to the last assistant message
+          setAiMessages(prev => prev.map((m, i) =>
+            i === prev.length - 1 && m.role === "assistant"
+              ? { ...m, proof: receipt }
+              : m
+          ));
+        } catch (e) {
+          console.warn("[Oracle] Proof generation failed:", e);
+        }
+      },
       onError: (err) => {
         toast.error(err);
         setAiStreaming(false);
@@ -337,7 +358,7 @@ const SearchPage = () => {
                 )}
 
                 {aiMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                     <div className={`max-w-[85%] ${
                       msg.role === "user"
                         ? "bg-primary/15 rounded-2xl rounded-br-md px-4 py-3"
@@ -353,6 +374,63 @@ const SearchPage = () => {
                         </div>
                       )}
                     </div>
+
+                    {/* UOR Proof Card — appears below each completed assistant message */}
+                    {msg.role === "assistant" && msg.proof && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                        className="mt-2 max-w-[85%] w-full"
+                      >
+                        <div className="border border-primary/10 rounded-xl bg-primary/[0.03] px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/70" />
+                            <span className="text-[11px] font-semibold text-emerald-400/70 uppercase tracking-[0.12em]">Proof of Thought</span>
+                          </div>
+
+                          {/* Triword address */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-display text-foreground/80 tracking-wide">
+                              {msg.proof.triwordFormatted}
+                            </span>
+                            <CopyBtn
+                              onClick={() => copy(msg.proof!.triword, `proof-triword-${i}`)}
+                              copied={copied === `proof-triword-${i}`}
+                              size={10}
+                            />
+                          </div>
+
+                          {/* Compact proof details */}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-muted-foreground/40">
+                            <span title="Content Identifier">
+                              CID: {msg.proof.cid.slice(0, 16)}…
+                            </span>
+                            <span title="Glyph">
+                              {msg.proof.glyph}
+                            </span>
+                            <span title="Ring partition">
+                              Ring: {msg.proof.ringPartition}
+                            </span>
+                            <span title="Engine">
+                              {msg.proof.engine === "wasm" ? "⚙ WASM" : "⚙ TS"}
+                            </span>
+                          </div>
+
+                          {/* Clickable to navigate to full proof */}
+                          <button
+                            onClick={() => {
+                              setInput(msg.proof!.triword);
+                              exitAiMode();
+                              setTimeout(() => handleSearch(msg.proof!.triword), 100);
+                            }}
+                            className="text-[10px] text-primary/50 hover:text-primary/80 transition-colors underline underline-offset-2"
+                          >
+                            View full proof →
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 ))}
 
