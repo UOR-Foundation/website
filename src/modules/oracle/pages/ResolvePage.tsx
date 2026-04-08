@@ -1410,6 +1410,9 @@ const SearchPage = () => {
                   )}
                 </motion.div>
 
+                {/* ── Community Social Layer — prominent at top ── */}
+                <AddressCommunity cid={result.receipt.cid} />
+
                 {/* ── Continue / Discuss in Oracle CTA — prominent at top ── */}
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -1776,8 +1779,7 @@ const SearchPage = () => {
 
 
 
-                {/* ── Community Social Layer ── */}
-                <AddressCommunity cid={result.receipt.cid} />
+
 
               </motion.div>
             )}
