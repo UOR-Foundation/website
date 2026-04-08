@@ -394,7 +394,7 @@ const SearchPage = () => {
     setTimeout(() => setCopied(null), 1500);
   }, []);
 
-  const clearResult = () => { setResult(null); setRederived(false); setInput(""); };
+  const clearResult = () => { setResult(null); setRederived(false); setInput(""); setContentViewMode("human"); };
 
   /* ── AI Oracle ── */
   const sendAiMessage = async () => {
