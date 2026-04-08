@@ -462,31 +462,43 @@ const SearchPage = () => {
         jsonLd: [], openGraph: {}, meta: {}, hasStructuredData: false,
       };
 
-      // Build canonical UOR WebPage document
-      const sourceObj: Record<string, unknown> = {
+      // Build CANONICAL object (hashed) — only content-derived fields.
+      // Volatile metadata (scrapedAt, linkedResources, language) are excluded
+      // to ensure same content → same address, every time.
+      const semanticWebLayers = {
+        "L0": "content-addressed",
+        "L1": "json-ld",
+        "L2": "urdna2015",
+        "L3": existingSemantics.hasStructuredData ? "preserved" : "none",
+        "L4": "canonical-reduction",
+        "L5": "singleProofHash",
+        "L6": "deterministic-trust",
+        "Signature": "CIDv1",
+      };
+
+      const canonicalObj: Record<string, unknown> = {
         "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
         "@type": "uor:WebPage",
         "uor:sourceUrl": normalizedUrl,
         "uor:title": metadata.title || existingSemantics.meta.title || normalizedUrl,
         "uor:description": metadata.description || existingSemantics.meta.description || existingSemantics.openGraph["og:description"] || "",
-        "uor:language": metadata.language || "en",
         "uor:content": markdown,
-        "uor:linkedResources": (Array.isArray(links) ? links : []).slice(0, 50),
-        "uor:scrapedAt": new Date().toISOString(),
         "uor:existingSemantics": existingSemantics,
-        "uor:semanticWebLayers": {
-          "L0": "content-addressed",
-          "L1": "json-ld",
-          "L2": "urdna2015",
-          "L3": existingSemantics.hasStructuredData ? "preserved" : "none",
-          "L5": "singleProofHash",
-          "L6": "deterministic-trust",
-        },
+        "uor:semanticWebLayers": semanticWebLayers,
       };
 
       toast("Encoding into UOR space…", { icon: "⚛️", id: "web-encode" });
 
-      const receipt = await encode(sourceObj);
+      const receipt = await encode(canonicalObj);
+
+      // Attach volatile metadata to the display source (NOT hashed)
+      const sortedLinks = (Array.isArray(links) ? links : []).slice(0, 50).sort();
+      const sourceObj: Record<string, unknown> = {
+        ...canonicalObj,
+        "uor:language": metadata.language || "en",
+        "uor:linkedResources": sortedLinks,
+        "uor:scrapedAt": new Date().toISOString(),
+      };
 
       setResult({
         source: sourceObj,
