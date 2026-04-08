@@ -46,6 +46,7 @@ import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
 import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
+import OracleOverlay from "@/modules/oracle/components/OracleOverlay";
 import { useVoiceShortcut } from "@/modules/oracle/hooks/useVoiceShortcut";
 import { speculativePrefetch, cancelPrefetch, getCachedPrefetch, type PrefetchResult } from "@/modules/oracle/lib/speculative-prefetch";
 import { computeCoherence, recordDwell, recordLensSwitch, dismissLensSuggestion, type CoherenceState } from "@/modules/oracle/lib/coherence-engine";
@@ -475,6 +476,7 @@ const SearchPage = () => {
     return window.innerWidth < 768;
   });
   const [readerMode, setReaderMode] = useState(true);
+  const [oracleOverlayOpen, setOracleOverlayOpen] = useState(false);
 
   // Live mode + voice + prefetch state
   const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
