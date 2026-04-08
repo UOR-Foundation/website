@@ -2,6 +2,9 @@
  * DesktopWidgets — Home screen: immersive clock, greeting, rich search bar.
  * This IS the desktop — always visible when no windows are maximized.
  * Theme-aware, supports immersive/dark/light via DesktopTheme context.
+ *
+ * Uses Pretext canvas measurement for adaptive clock sizing and
+ * orphan-free greeting text — no CSS clamp() hacks.
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -12,6 +15,8 @@ import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useAuth } from "@/hooks/use-auth";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
+import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
+import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
 
 interface Props {
   windows: WindowState[];
@@ -51,14 +56,23 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+/** Adaptive clock font sizes — Pretext picks the largest that fits on 1 line */
+const CLOCK_SIZES = [
+  { font: FONTS.osClock, lineHeight: 88, fontSize: "80px" },
+  { font: FONTS.osClockMd, lineHeight: 64, fontSize: "56px" },
+  { font: FONTS.osClockSm, lineHeight: 48, fontSize: "40px" },
+];
+
 export default function DesktopWidgets({ windows, onSearch }: Props) {
   const [time, setTime] = useState(new Date());
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { theme, isLight } = useDesktopTheme();
   const { profile } = useAuth();
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
+  const [containerWidth, setContainerWidth] = useState(580);
 
   const detected = useMemo(() => detectAddress(query), [query]);
   const isAddress = detected.kind !== null;
@@ -66,6 +80,20 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
+  }, []);
+
+  // Track container width for Pretext measurements
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0) setContainerWidth(w);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // Auto-focus search on desktop
@@ -77,6 +105,27 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
   const displayName = profile?.displayName || "Explorer";
+  const greetingText = `${getGreeting()}, ${displayName}.`;
+
+  // Pretext-measured adaptive clock size
+  const clockStyle = useMemo(() => {
+    for (const candidate of CLOCK_SIZES) {
+      const lines = measureLineCount(clockStr, candidate.font, containerWidth, candidate.lineHeight);
+      if (lines <= 1) {
+        return { fontSize: candidate.fontSize, lineHeight: `${candidate.lineHeight}px` };
+      }
+    }
+    // Fallback to smallest
+    const sm = CLOCK_SIZES[CLOCK_SIZES.length - 1];
+    return { fontSize: sm.fontSize, lineHeight: `${sm.lineHeight}px` };
+  }, [clockStr, containerWidth]);
+
+  // Pretext-measured adaptive greeting size
+  const greetingFontInfo = useMemo(() => {
+    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 32);
+    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 32, fontSize: "24px" };
+    return { font: FONTS.osGreetingSm, lineHeight: 24, fontSize: "18px" };
+  }, [greetingText, containerWidth]);
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
     e?.preventDefault();
@@ -97,8 +146,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   // Search bar styles
   const searchBg = isImmersive
     ? (isAddress
-        ? "linear-gradient(135deg, hsl(165 25% 18% / 0.6), hsl(160 20% 15% / 0.5), hsl(170 25% 17% / 0.55))"
-        : "linear-gradient(135deg, hsl(200 25% 22% / 0.55), hsl(195 20% 18% / 0.45), hsl(200 30% 20% / 0.5))")
+        ? "hsl(165 20% 14% / 0.92)"
+        : "hsl(200 15% 16% / 0.9)")
     : isLight
       ? (isAddress ? "rgba(0,180,120,0.06)" : "rgba(0,0,0,0.04)")
       : (isAddress ? "rgba(0,180,120,0.08)" : "rgba(255,255,255,0.04)");
@@ -136,8 +185,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
         transition: "opacity 300ms ease-out",
       }}
     >
-      <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "22vh" }}>
-        {/* Clock */}
+      <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "22vh" }}>
+        {/* Clock — Pretext-measured adaptive sizing */}
         <div
           className="text-center mb-4"
           style={{
@@ -148,41 +197,36 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           <h1
             className={`${clockColor} font-bold tracking-tight leading-none select-none`}
             style={{
-              fontSize: "clamp(5rem, 12vw, 10rem)",
+              ...clockStyle,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
               textShadow: clockShadow,
+              transition: "font-size 0.3s ease-out",
             }}
           >
             {clockStr}
           </h1>
-          <p
-            className={`${greetingColor} font-medium tracking-wide mt-3 select-none`}
-            style={{
-              fontSize: "clamp(1.1rem, 2.5vw, 1.75rem)",
-              fontFamily: "'DM Sans', -apple-system, sans-serif",
-              textShadow: isImmersive ? "0 1px 20px rgba(0,0,0,0.3)" : "none",
-            }}
-          >
-            {getGreeting()}, {displayName}.
-          </p>
+          {/* Greeting — BalancedBlock eliminates orphan words */}
+          <div className="mt-3">
+            <BalancedBlock
+              font={greetingFontInfo.font}
+              lineHeight={greetingFontInfo.lineHeight}
+              as="p"
+              className={`${greetingColor} font-medium tracking-wide select-none`}
+              style={{
+                fontSize: greetingFontInfo.fontSize,
+                fontFamily: "'DM Sans', -apple-system, sans-serif",
+                textShadow: isImmersive ? "0 1px 20px rgba(0,0,0,0.3)" : "none",
+              }}
+              center
+            >
+              {greetingText}
+            </BalancedBlock>
+          </div>
         </div>
 
         {/* Search bar */}
         <form onSubmit={handleSubmit} className="w-full mt-8">
           <div className="relative w-full group">
-            {/* Glow ring */}
-            {isImmersive && (
-              <div
-                className="absolute -inset-[1px] rounded-full pointer-events-none"
-                style={{
-                  background: isAddress
-                    ? "linear-gradient(135deg, hsl(160 60% 50% / 0.3), hsl(170 50% 40% / 0.1), hsl(155 60% 55% / 0.25))"
-                    : "linear-gradient(135deg, hsl(195 60% 65% / 0.25), hsl(200 40% 50% / 0.08), hsl(210 50% 60% / 0.2))",
-                  filter: "blur(6px)",
-                }}
-              />
-            )}
-
             {/* Address badge */}
             <AnimatePresence>
               {isAddress && (
@@ -207,12 +251,10 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What is your main focus today?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
+              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-colors duration-300"
               style={{
                 paddingLeft: isAddress ? "7.5rem" : "3.5rem",
                 background: searchBg,
-                backdropFilter: isImmersive ? "blur(40px) saturate(1.6)" : "blur(12px)",
-                WebkitBackdropFilter: isImmersive ? "blur(40px) saturate(1.6)" : "blur(12px)",
                 border: searchBorder,
                 boxShadow: searchShadow,
                 color: inputColor,
