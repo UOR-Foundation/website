@@ -262,11 +262,27 @@ const SearchPage = () => {
                 </button>
                 <button
                   onClick={() => {
-                    if (!input.trim()) {
-                      setAiMode(true);
-                    } else {
-                      submit();
+                    const entries = allEntries();
+                    if (entries.length === 0) {
+                      toast("Nothing mapped yet — search something first!", { icon: "🫧" });
+                      return;
                     }
+                    const pick = entries[Math.floor(Math.random() * entries.length)];
+
+                    // 🎉 Confetti burst
+                    const colors = ["#FFD700", "#A855F7", "#3B82F6", "#F472B6", "#34D399"];
+                    confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors, startVelocity: 30, gravity: 0.8, ticks: 120 });
+                    setTimeout(() => confetti({ particleCount: 40, spread: 120, origin: { y: 0.5 }, colors, startVelocity: 15, gravity: 0.6, ticks: 100 }), 200);
+
+                    // Playful toast
+                    const msg = SURPRISE_MESSAGES[Math.floor(Math.random() * SURPRISE_MESSAGES.length)];
+                    toast(msg, { description: pick.receipt.triwordFormatted });
+
+                    // Show result with a brief delay for the confetti moment
+                    setTimeout(() => {
+                      setInput(pick.receipt.triword);
+                      setResult({ source: pick.source, receipt: pick.receipt });
+                    }, 400);
                   }}
                   className="px-5 h-9 rounded-[4px] bg-[hsl(0_0%_19%)] hover:bg-[hsl(0_0%_24%)] hover:border-[hsl(0_0%_37%)] border border-transparent text-[14px] font-medium text-foreground transition-all"
                 >
