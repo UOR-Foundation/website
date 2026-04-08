@@ -19,108 +19,88 @@ import {
 const Q = "?w=1920&q=80&auto=format&fit=crop";
 const u = (id: string) => `https://images.unsplash.com/${id}${Q}`;
 
+interface PhotoEntry {
+  url: string;
+  description: string;
+}
+
+const p = (id: string, description: string): PhotoEntry => ({ url: u(id), description });
+
 /**
  * Curated Unsplash photos for each solar phase.
- * Every URL is a verified, high-quality landscape that faithfully
- * represents the light conditions of that phase.
  */
-const PHASE_PHOTOS: Record<SolarPhase, string[]> = {
-  /* ── Deep night (00:00–04:00): stars, milky way, dark skies ── */
+const PHASE_PHOTOS: Record<SolarPhase, PhotoEntry[]> = {
   deep_night: [
-    u("photo-1444703686981-a3abbc4d4fe3"),  // starry night sky
-    u("photo-1507400492013-162706c8c05e"),  // night sky stars
-    u("photo-1536431311719-398b6704d40e"),  // milky way landscape
-    u("photo-1489549132488-d00b7eee80f1"),  // dark night mountain
+    p("photo-1444703686981-a3abbc4d4fe3", "Starry night sky over a mountain range"),
+    p("photo-1507400492013-162706c8c05e", "Stars scattered across a clear night sky"),
+    p("photo-1536431311719-398b6704d40e", "Milky Way arching over a desert landscape"),
+    p("photo-1489549132488-d00b7eee80f1", "Dark mountain silhouette under night sky"),
   ],
-
-  /* ── Pre-dawn (04:00–05:00): deep navy blue horizon, first glow ── */
   pre_dawn: [
-    u("photo-1504608524841-42fe6f032b4b"),  // deep blue dawn horizon
-    u("photo-1503424886307-b090341d25d1"),  // dark blue mountain pre-dawn
-    u("photo-1505765050516-f72dcac9c60e"),  // subtle horizon glow
+    p("photo-1504608524841-42fe6f032b4b", "Deep blue horizon before dawn"),
+    p("photo-1503424886307-b090341d25d1", "Dark blue mountain range at pre-dawn"),
+    p("photo-1505765050516-f72dcac9c60e", "Subtle glow on the horizon at first light"),
   ],
-
-  /* ── Dawn (05:00–05:45): pink/purple sky, misty valleys ── */
   dawn: [
-    u("photo-1501436513145-30f24e19fcc8"),  // pink dawn sky over hills
-    u("photo-1470252649378-9c29740c9fa8"),  // purple dawn mountains
-    u("photo-1518837695005-2083093ee35b"),  // misty dawn valley
+    p("photo-1501436513145-30f24e19fcc8", "Pink dawn sky over rolling hills"),
+    p("photo-1470252649378-9c29740c9fa8", "Purple dawn light over mountain peaks"),
+    p("photo-1518837695005-2083093ee35b", "Misty valley at dawn"),
   ],
-
-  /* ── Sunrise (05:45–06:30): sun breaking horizon, golden edge ── */
   sunrise: [
-    u("photo-1470071459604-3b5ec3a7fe05"),  // golden sunrise over valley
-    u("photo-1500382017468-9049fed747ef"),  // warm sunrise landscape
-    u("photo-1464822759023-fed622ff2c3b"),  // alpine sunrise glow
-    u("photo-1509316975850-ff9c5deb0cd9"),  // sun breaking over mountain
+    p("photo-1470071459604-3b5ec3a7fe05", "Golden sunrise over a misty valley"),
+    p("photo-1500382017468-9049fed747ef", "Warm sunrise light over an open landscape"),
+    p("photo-1464822759023-fed622ff2c3b", "Alpine peaks bathed in sunrise glow"),
+    p("photo-1509316975850-ff9c5deb0cd9", "Sun breaking over a mountain ridge"),
   ],
-
-  /* ── Golden morning (06:30–08:00): warm long shadows, amber fields ── */
   golden_morning: [
-    u("photo-1447752875215-b2761acb3c5d"),  // golden woodland path
-    u("photo-1465056836041-7f43ac27dcb5"),  // misty golden morning meadow
-    u("photo-1501785888041-af3ef285b470"),  // warm morning light over hills
+    p("photo-1447752875215-b2761acb3c5d", "Golden light filtering through woodland"),
+    p("photo-1465056836041-7f43ac27dcb5", "Misty golden meadow at morning"),
+    p("photo-1501785888041-af3ef285b470", "Warm morning light over green hills"),
   ],
-
-  /* ── Bright morning (08:00–10:30): crisp daylight, vivid greens ── */
   bright_morning: [
-    u("photo-1441974231531-c6227db76b6e"),  // lush green forest canopy
-    u("photo-1472214103451-9374bd1c798e"),  // vivid green rolling hills
-    u("photo-1469474968028-56623f02e42e"),  // bright mountain vista
-    u("photo-1482938289607-e9573fc25ebb"),  // bright morning river valley
+    p("photo-1441974231531-c6227db76b6e", "Lush green forest canopy in bright light"),
+    p("photo-1472214103451-9374bd1c798e", "Vivid green rolling hills under clear sky"),
+    p("photo-1469474968028-56623f02e42e", "Bright mountain vista with blue sky"),
+    p("photo-1482938289607-e9573fc25ebb", "Bright morning river winding through a valley"),
   ],
-
-  /* ── Midday (10:30–13:30): full sun, vivid colors, blue sky ── */
   midday: [
-    u("photo-1507525428034-b723cf961d3e"),  // tropical beach bright sun
-    u("photo-1506744038136-46273834b3fb"),  // vivid lake mountain midday
-    u("photo-1470770903676-69b98201ea1c"),  // blue sky mountain panorama
-    u("photo-1433086966358-54859d0ed716"),  // waterfall in bright daylight
+    p("photo-1507525428034-b723cf961d3e", "Tropical beach under full midday sun"),
+    p("photo-1506744038136-46273834b3fb", "Vivid lake and mountains at midday"),
+    p("photo-1470770903676-69b98201ea1c", "Blue sky panorama over mountain range"),
+    p("photo-1433086966358-54859d0ed716", "Waterfall cascading in bright daylight"),
   ],
-
-  /* ── Afternoon (13:30–16:30): warm directional light, gentle shadows ── */
   afternoon: [
-    u("photo-1505228395891-9a51e7e86bf6"),  // rolling hills afternoon sun
-    u("photo-1508739773434-c26b3d09e071"),  // calm ocean afternoon light
-    u("photo-1500049242364-642850e61a78"),  // coastal cliffs warm light
-    u("photo-1497436072909-60f360e1d4b1"),  // green valley afternoon
+    p("photo-1505228395891-9a51e7e86bf6", "Rolling hills in warm afternoon light"),
+    p("photo-1508739773434-c26b3d09e071", "Calm ocean reflecting afternoon sun"),
+    p("photo-1500049242364-642850e61a78", "Coastal cliffs in warm afternoon light"),
+    p("photo-1497436072909-60f360e1d4b1", "Green valley under afternoon sky"),
   ],
-
-  /* ── Golden hour (16:30–18:00): amber glow, deep warm tones ── */
   golden_hour: [
-    u("photo-1490730141103-6cac27aaab94"),  // golden horizon over fields
-    u("photo-1472120435266-95a3f747eb08"),  // golden light through forest
-    u("photo-1495616811223-4d98c6e9c869"),  // amber light on meadow
+    p("photo-1490730141103-6cac27aaab94", "Golden horizon over open fields"),
+    p("photo-1472120435266-95a3f747eb08", "Golden light streaming through a forest"),
+    p("photo-1495616811223-4d98c6e9c869", "Amber light warming a meadow"),
   ],
-
-  /* ── Sunset (18:00–18:45): fiery horizon, dramatic silhouettes ── */
   sunset: [
-    u("photo-1495584816685-4bdbf1b5057e"),  // amber ocean sunset
-    u("photo-1476610182048-b716b8515aaa"),  // dramatic warm sunset clouds
-    u("photo-1494548162494-384bba4ab999"),  // fiery mountain sunset
-    u("photo-1504198453319-5ce911bafcbe"),  // red sunset over water
+    p("photo-1495584816685-4bdbf1b5057e", "Amber sunset over the ocean"),
+    p("photo-1476610182048-b716b8515aaa", "Dramatic warm sunset through clouds"),
+    p("photo-1494548162494-384bba4ab999", "Fiery sunset behind mountain peaks"),
+    p("photo-1504198453319-5ce911bafcbe", "Red sunset reflected on still water"),
   ],
-
-  /* ── Dusk (18:45–19:30): purple/pink afterglow ── */
   dusk: [
-    u("photo-1517483000871-1dbf64a6e1c6"),  // purple dusk sky
-    u("photo-1488866022504-f2584929ca5f"),  // pink afterglow over lake
-    u("photo-1500964757134-3ef6a8a8787b"),  // lavender dusk mountain
+    p("photo-1517483000871-1dbf64a6e1c6", "Purple dusk sky fading to night"),
+    p("photo-1488866022504-f2584929ca5f", "Pink afterglow reflected on a lake"),
+    p("photo-1500964757134-3ef6a8a8787b", "Lavender dusk light over mountains"),
   ],
-
-  /* ── Twilight (19:30–20:30): deep blue, first stars appearing ── */
   twilight: [
-    u("photo-1472552944129-b035e9ea3744"),  // deep blue twilight sky
-    u("photo-1531315396756-905d68d21b56"),  // twilight city horizon
-    u("photo-1519681393784-d120267933ba"),  // blue hour mountain stars
+    p("photo-1472552944129-b035e9ea3744", "Deep blue twilight sky"),
+    p("photo-1531315396756-905d68d21b56", "Twilight glow over a city horizon"),
+    p("photo-1519681393784-d120267933ba", "Blue hour stars over snow-capped mountains"),
   ],
-
-  /* ── Night (20:30–00:00): dark sky, stars, city lights ── */
   night: [
-    u("photo-1444703686981-a3abbc4d4fe3"),  // starry night
-    u("photo-1507400492013-162706c8c05e"),  // night landscape
-    u("photo-1536431311719-398b6704d40e"),  // milky way
-    u("photo-1489549132488-d00b7eee80f1"),  // mountain night
+    p("photo-1444703686981-a3abbc4d4fe3", "Starry night sky over a mountain range"),
+    p("photo-1507400492013-162706c8c05e", "Stars scattered across a clear night sky"),
+    p("photo-1536431311719-398b6704d40e", "Milky Way arching over a desert landscape"),
+    p("photo-1489549132488-d00b7eee80f1", "Dark mountain silhouette under night sky"),
   ],
 };
 
@@ -178,10 +158,15 @@ export function initLocation(): Promise<{ lat: number; lng: number }> {
   return locationPromise;
 }
 
-/** Get photo for a specific solar phase, rotating daily */
-function photoForPhase(phase: SolarPhase): string {
+/** Get photo entry for a specific solar phase, rotating daily */
+function photoEntryForPhase(phase: SolarPhase): PhotoEntry {
   const bucket = PHASE_PHOTOS[phase];
   return bucket[dayOfYear() % bucket.length];
+}
+
+/** Get photo for a specific solar phase, rotating daily */
+function photoForPhase(phase: SolarPhase): string {
+  return photoEntryForPhase(phase).url;
 }
 
 /** Get the current solar phase using cached location (sync, uses fallback if no geo yet) */
@@ -195,6 +180,11 @@ export function getCurrentPhase(): SolarPhase {
 /** Get the photo URL for the current solar phase */
 export function getPhasePhoto(): string {
   return photoForPhase(getCurrentPhase());
+}
+
+/** Get the description of the current phase photo */
+export function getPhasePhotoDescription(): string {
+  return photoEntryForPhase(getCurrentPhase()).description;
 }
 
 /** Get hourly fallback photo for current hour */
@@ -223,5 +213,5 @@ export const getDailyPhoto = getPhasePhoto;
 export const getCurrentHour = () => new Date().getHours();
 export const preloadNextHourPhoto = preloadNextPhasePhoto;
 
-/** Flat array of all photos for any code that references it */
-export const UNSPLASH_PHOTOS = Object.values(PHASE_PHOTOS).flat();
+/** Flat array of all photo URLs for any code that references it */
+export const UNSPLASH_PHOTOS = Object.values(PHASE_PHOTOS).flat().map(e => e.url);
