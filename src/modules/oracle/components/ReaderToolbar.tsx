@@ -67,6 +67,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [editValue, setEditValue] = useState("");
   const historyRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
+  const portalBtnRef = useRef<HTMLSpanElement>(null);
 
   const threeWords = triwordDisplay; // Already in "Cricket.Risen.Keep" format
 
@@ -407,9 +408,11 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         {/* ── Right-side actions ── */}
         <div className="flex items-center gap-0.5 shrink-0 relative">
           <IconBtn title="Bookmark" onClick={() => {}}><Star className="w-4 h-4" /></IconBtn>
-          <IconBtn onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
-            <QrCode className={`w-4 h-4 ${portalOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
-          </IconBtn>
+          <span ref={portalBtnRef}>
+            <IconBtn onClick={() => setPortalOpen(!portalOpen)} title="Portal — scan to continue on mobile">
+              <QrCode className={`w-4 h-4 ${portalOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
+            </IconBtn>
+          </span>
           <IconBtn onClick={handleHistoryToggle} title="Search history">
             <Clock className={`w-4 h-4 ${historyOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
           </IconBtn>
@@ -423,6 +426,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             targetUrl={window.location.pathname + window.location.search}
             targetLens={activeLens}
             immersive={immersive}
+            anchorRef={portalBtnRef}
           />
         </div>
       </div>

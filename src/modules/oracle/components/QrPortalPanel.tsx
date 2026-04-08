@@ -1,9 +1,11 @@
 /**
  * QrPortalPanel — Clean QR code panel for cross-device session transfer.
  * Functional, scannable QR that links to the current session.
+ * Uses React Portal to escape overflow-auto clipping in window containers.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, RotateCcw, X, Smartphone } from "lucide-react";
 import QRCode from "qrcode";
@@ -15,6 +17,8 @@ interface QrPortalPanelProps {
   targetUrl: string;
   targetLens: string;
   immersive?: boolean;
+  /** Ref to the trigger button for positioning */
+  anchorRef?: React.RefObject<HTMLElement>;
 }
 
 const PORTAL_TTL = 5 * 60;
@@ -25,6 +29,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   targetUrl,
   targetLens,
   immersive = true,
+  anchorRef,
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,6 +39,17 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [anchorPos, setAnchorPos] = useState<{ top: number; right: number } | null>(null);
+
+  // Compute position from anchor ref
+  useEffect(() => {
+    if (!open || !anchorRef?.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    setAnchorPos({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+  }, [open, anchorRef]);
 
   const generateToken = useCallback(async () => {
     setLoading(true);
@@ -130,13 +146,19 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target) &&
+          !(anchorRef?.current && anchorRef.current.contains(target))) {
         onClose();
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, onClose]);
+    // Delay to avoid catching the opening click
+    const timer = setTimeout(() => document.addEventListener("mousedown", handler), 50);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [open, onClose, anchorRef]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -144,7 +166,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  return (
+  const panelContent = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -153,9 +175,11 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
+          className="fixed z-[9999] rounded-2xl overflow-hidden"
           style={{
             width: "min(340px, 90vw)",
+            top: anchorPos ? `${anchorPos.top}px` : "60px",
+            right: anchorPos ? `${anchorPos.right}px` : "16px",
             background: immersive
               ? "rgba(10, 14, 20, 0.96)"
               : "hsl(var(--background) / 0.97)",
@@ -347,6 +371,9 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
       )}
     </AnimatePresence>
   );
+
+  // Render via portal to escape overflow-auto clipping
+  return createPortal(panelContent, document.body);
 };
 
 export default QrPortalPanel;
