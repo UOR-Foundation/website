@@ -22,6 +22,20 @@ const ICON_MAP: Record<KnowledgeLens["icon"], React.FC<{ className?: string }>> 
   BookText,
 };
 
+const LENS_RENDERERS: Record<string, React.FC<{
+  title: string;
+  contentMarkdown: string;
+  wikidata?: Record<string, unknown> | null;
+  sources: string[];
+  synthesizing?: boolean;
+}>> = {
+  encyclopedia: WikiArticleView,
+  magazine: MagazineLensRenderer,
+  "explain-like-5": SimpleLensRenderer,
+  expert: DeepDiveLensRenderer,
+  storyteller: StoryLensRenderer,
+};
+
 interface ContextualArticleViewProps {
   title: string;
   contentMarkdown: string;
