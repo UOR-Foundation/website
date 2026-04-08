@@ -11,7 +11,7 @@ export interface GuestContextItem {
   text: string;
   mimeType: string;
   addedAt: string;
-  source: "file" | "paste" | "url";
+  source: "file" | "paste" | "url" | "workspace" | "folder";
 }
 
 let items: GuestContextItem[] = [];
@@ -84,6 +84,34 @@ export const guestContext = {
   remove(id: string) {
     items = items.filter((i) => i.id !== id);
     emit();
+  },
+
+  addWorkspace(name: string): GuestContextItem {
+    const item: GuestContextItem = {
+      id: makeId(),
+      filename: name || "Untitled Workspace",
+      text: JSON.stringify({ "@type": "vault:Workspace", name, createdAt: new Date().toISOString() }),
+      mimeType: "application/json",
+      addedAt: new Date().toISOString(),
+      source: "workspace",
+    };
+    items = [...items, item];
+    emit();
+    return item;
+  },
+
+  addFolder(name: string): GuestContextItem {
+    const item: GuestContextItem = {
+      id: makeId(),
+      filename: name || "Untitled Folder",
+      text: JSON.stringify({ "@type": "vault:Folder", name, createdAt: new Date().toISOString() }),
+      mimeType: "application/json",
+      addedAt: new Date().toISOString(),
+      source: "folder",
+    };
+    items = [...items, item];
+    emit();
+    return item;
   },
 
   clear() {
