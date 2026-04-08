@@ -120,7 +120,7 @@ export default function ImmersiveQuote() {
   const current = quotes[index];
 
   return (
-    <div className="max-w-[520px] w-full text-center min-h-[3rem]">
+    <div className="max-w-[620px] w-full text-center min-h-[3rem]">
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
@@ -131,20 +131,24 @@ export default function ImmersiveQuote() {
           className="flex flex-col items-center gap-1.5"
         >
           <p
-            className="text-white/60 leading-relaxed"
+            className="text-white/60 leading-snug"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: "italic",
               fontSize: "clamp(15px, 1.4vw, 19px)",
               letterSpacing: "0.01em",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
-            "{current.text}"
+            &ldquo;{current.text}&rdquo;
           </p>
           <span
             className="text-white/35 tracking-[0.15em] uppercase"
             style={{
-              fontSize: "clamp(9px, 0.7vw, 11px)",
+              fontSize: "clamp(10px, 0.8vw, 12px)",
               fontWeight: 500,
             }}
           >
