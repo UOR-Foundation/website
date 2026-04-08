@@ -356,27 +356,6 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
         )
       )}
 
-      {/* ── Existing Semantics (WebPage only) ── */}
-      {isWebPage && existingSemantics && (
-        <ExistingSemanticsBadge existingSemantics={existingSemantics} />
-      )}
-
-      {/* ── Semantic Web Tower (all object types) ── */}
-      <SemanticWebTower
-        layers={towerLayers}
-        engine={engineType()}
-        crateVersion={crateVersion()}
-      />
-
-      {/* ── Interoperability Badges ── */}
-      <InteropBadges
-        objectType={rawType || undefined}
-        hasWikidata={!!(wikidata?.qid)}
-      />
-
-      {/* ── Signal Leaders — curated thought leaders for this domain ── */}
-      {novelty && <SignalLeaders domain={novelty.domain} />}
-
       {/* ── Context Journal — transparent private context window ── */}
       <ContextJournal />
 
