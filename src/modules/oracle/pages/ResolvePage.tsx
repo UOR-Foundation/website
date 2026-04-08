@@ -1927,11 +1927,11 @@ const SearchPage = () => {
                             : ""
                         }`}
                         style={{
-                          maxWidth: "min(720px, 90vw)",
+                          maxWidth: "clamp(640px, 65vw, 860px)",
                           paddingTop: "calc(1rem * 1.618 * 1.618)",
                           paddingBottom: "calc(1rem * 1.618 * 1.618 * 1.618)",
-                          paddingLeft: "1.5rem",
-                          paddingRight: "1.5rem",
+                          paddingLeft: "clamp(1.5rem, 4vw, 4rem)",
+                          paddingRight: "clamp(1.5rem, 4vw, 4rem)",
                         }}
                       >
                         <div className={immersiveMode ? "[&_*]:!text-white/90 [&_h1]:!text-white [&_h2]:!text-white/95 [&_h3]:!text-white/90 [&_p]:!text-white/75 [&_li]:!text-white/75 [&_blockquote]:!text-white/60 [&_a]:!text-white/80 [&_code]:!text-white/70 [&_.text-muted-foreground]:!text-white/50" : ""}>
@@ -1941,6 +1941,7 @@ const SearchPage = () => {
                             contextKeywords={contextKeywords}
                             activeLens={activeLens}
                             onLensChange={handleLensChange}
+                            isReaderMode
                           />
                         </div>
                       </div>
