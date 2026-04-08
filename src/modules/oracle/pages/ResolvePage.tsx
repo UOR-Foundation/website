@@ -557,15 +557,56 @@ const SearchPage = () => {
 
     setLoading(true); setResult(null); setRederived(false);
     try {
+      // 1. Check local registry first
       const entry = lookup(trimmed);
       if (entry) {
         const upgraded = await ensureWasmReceipt(entry.source, entry.receipt);
         setResult({ source: entry.source, receipt: upgraded });
-      } else {
-        toast("Address not found. Paste content to create an entry.", { icon: "📝" });
+        return;
       }
+
+      // 2. Free keyword → resolve via knowledge bases
+      await handleKeywordResolve(trimmed);
     } catch { toast.error("Search failed."); }
     finally { setLoading(false); }
+  };
+
+  /** Resolve a plain keyword into a multi-source knowledge card */
+  const handleKeywordResolve = async (keyword: string) => {
+    // Step 1: Try Wikipedia first (fast, structured, free)
+    toast("Searching knowledge bases…", { icon: "🔍", id: "keyword-resolve" });
+    try {
+      const wikiRes = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(keyword)}`,
+        { headers: { "Api-User-Agent": "UOR-Framework/1.0" } }
+      );
+      if (wikiRes.ok) {
+        const wikiData = await wikiRes.json();
+        if (wikiData.type === "standard" && wikiData.content_urls?.desktop?.page) {
+          toast("Found on Wikipedia — encoding…", { icon: "📚", id: "keyword-resolve" });
+          setLoading(false); // handleWebEncode sets its own loading
+          return handleWebEncode(wikiData.content_urls.desktop.page);
+        }
+      }
+    } catch (e) {
+      console.warn("[KeywordResolve] Wikipedia lookup failed:", e);
+    }
+
+    // Step 2: Fallback — web search via Firecrawl
+    toast("Searching the web…", { icon: "🌐", id: "keyword-resolve" });
+    try {
+      const searchResult = await firecrawlApi.search(keyword, 1);
+      if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
+        const topResult = searchResult.data[0];
+        toast(`Found: ${topResult.title || topResult.url} — encoding…`, { icon: "✨", id: "keyword-resolve" });
+        setLoading(false);
+        return handleWebEncode(topResult.url);
+      }
+    } catch (e) {
+      console.warn("[KeywordResolve] Web search failed:", e);
+    }
+
+    toast("No results found. Try a URL or different keyword.", { icon: "📝", id: "keyword-resolve" });
   };
 
   const submit = () => {
