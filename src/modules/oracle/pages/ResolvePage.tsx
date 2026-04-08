@@ -1925,7 +1925,7 @@ const SearchPage = () => {
 
                 {/* ═══ FULL-WIDTH CONTENT ═══ */}
                 <div
-                  className="px-4 sm:px-6"
+                  className="px-4 sm:px-8"
                   style={{ marginTop: "calc(1rem * 1.618)" }}
                 >
                   {src?.["@type"] === "uor:ChainOfProofs" ? (
