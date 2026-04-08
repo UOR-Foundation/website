@@ -1608,6 +1608,25 @@ const SearchPage = () => {
                       <Check className="w-3.5 h-3.5" /> Identical
                     </motion.span>
                   )}
+
+                  {/* Fork */}
+                  <button
+                    onClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/20 text-sm font-medium text-foreground/60 hover:text-foreground/80 hover:border-border/35 transition-all"
+                  >
+                    <GitFork className="w-4 h-4" />
+                    Fork
+                  </button>
+                </motion.div>
+
+                {/* ═══ PROVENANCE TREE ═══ */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.13 }}
+                  style={{ marginTop: "calc(1.5rem * 1.618)" }}
+                >
+                  <AddressProvenance cid={result.receipt.cid} onNavigate={(cid) => { setInput(cid); clearResult(); setTimeout(() => handleSearch(cid), 50); }} />
                 </motion.div>
 
                 {/* ═══ 5. CONTENT ═══ */}
