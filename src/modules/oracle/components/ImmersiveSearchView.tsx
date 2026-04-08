@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getPhasePhoto, getCurrentPhase, preloadNextPhasePhoto, initLocation, getHourlyFallback } from "@/modules/oracle/lib/immersive-photos";
+import { getPhasePhoto, getPhasePhotoDescription, getCurrentPhase, preloadNextPhasePhoto, initLocation, getHourlyFallback } from "@/modules/oracle/lib/immersive-photos";
 import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
@@ -376,9 +376,12 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
         </div>
 
         {/* Bottom-right */}
-        <div className="absolute bottom-4 right-4 flex items-center gap-3 z-10">
+        <div className="absolute bottom-4 left-4 flex flex-col gap-0.5 z-10">
+          <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
+          <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
+        </div>
+        <div className="absolute bottom-4 right-4 z-10">
           <SoundCloudFab />
-          <span className="text-white/40 text-xs">Photo · Unsplash</span>
         </div>
       </div>
     </motion.div>
