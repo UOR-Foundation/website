@@ -805,29 +805,29 @@ const SearchPage = () => {
           {!result && !aiMode && (
             <div
               className="relative flex flex-col items-center"
-              style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.18)" }}
+              style={{ minHeight: "100dvh", paddingTop: "calc(100dvh * 0.146)" }}
             >
-              {/* Logo + Title — stacked, centered, golden ratio */}
-              <div className="flex flex-col items-center" style={{ gap: "calc(1.5rem * 0.618)" }}>
+              {/* Logo + Title — stacked, centered, φ gap */}
+              <div className="flex flex-col items-center" style={{ gap: "calc(1rem * 1.618)" }}>
                 <img
                   src={uorHexagon}
                   alt="UOR"
-                  className="w-24 h-24 md:w-32 md:h-32 select-none drop-shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
+                  className="select-none drop-shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
                   draggable={false}
-                  style={{ filter: "none" }}
+                  style={{ width: "calc(3rem * 1.618 * 1.618)", height: "calc(3rem * 1.618 * 1.618)", filter: "none" }}
                 />
                 <h1
                   className="font-display font-bold tracking-[0.03em] text-foreground select-none leading-[1.1] text-center"
-                  style={{ fontSize: "clamp(2.2rem, 5vw, 3.75rem)", maxWidth: "min(600px, 85vw)" }}
+                  style={{ fontSize: "clamp(2.2rem, 5vw, 3.75rem)", maxWidth: "min(618px, 85vw)" }}
                 >
                   Universal Object Reference
                 </h1>
               </div>
 
-              {/* Search bar — golden ratio spacing from title */}
+              {/* Search bar — φ spacing from title */}
               <div
                 className="w-full relative group"
-                style={{ maxWidth: "min(680px, 85vw)", marginTop: "calc(2.5rem * 0.618)" }}
+                style={{ maxWidth: "min(618px, 85vw)", marginTop: "calc(1rem * 1.618 * 1.618)" }}
               >
                 {/* Animated border glow — rotating conic gradient, always subtly alive */}
                 <div
@@ -993,20 +993,22 @@ const SearchPage = () => {
                   <motion.div
                     initial={{ opacity: 1 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="flex items-center gap-4"
-                    style={{ marginTop: "calc(1.85rem * 1.618)" }}
+                    className="flex items-center"
+                    style={{ marginTop: "calc(1rem * 1.618 * 1.618)", gap: "calc(1rem * 1.618)" }}
                   >
                     <button
                       onClick={submit}
                       disabled={!input.trim() || loading}
-                      className="px-7 h-12 rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-30"
+                      className="rounded-md bg-[hsl(0_0%_15%)] hover:bg-[hsl(0_0%_22%)] hover:border-[hsl(0_0%_37%)] border border-[hsl(0_0%_22%)] text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-30"
+                      style={{ paddingInline: "calc(1rem * 1.618)", height: "calc(1rem * 1.618 * 1.618)" }}
                     >
                       UOR Search
                     </button>
                     <button
                       onClick={fireImprobabilityDrive}
                       disabled={improbabilityActive || drivePrePhase}
-                      className="px-7 h-12 rounded-md bg-muted/15 hover:bg-muted/25 hover:border-primary/20 border border-border/20 text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
+                      className="rounded-md bg-muted/15 hover:bg-muted/25 hover:border-primary/20 border border-border/20 text-base font-semibold text-foreground tracking-wide transition-all disabled:opacity-50"
+                      style={{ paddingInline: "calc(1rem * 1.618)", height: "calc(1rem * 1.618 * 1.618)" }}
                     >
                       Surprise Me
                     </button>
@@ -1017,7 +1019,7 @@ const SearchPage = () => {
               {/* Tagline — pinned near bottom */}
               <p
                 className="absolute left-0 right-0 text-center text-lg text-foreground/50 select-none tracking-wide"
-                style={{ bottom: "6vh" }}
+                style={{ bottom: "calc(1rem * 1.618 * 1.618 * 1.618)" }}
               >
                 Searching a{" "}
                 <button
