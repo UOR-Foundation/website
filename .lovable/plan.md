@@ -1,59 +1,114 @@
 
 
-## Plan: Direct Search-to-Window with Adaptive Content
+# Pretext-Powered Adaptive Content Windows — Deep Analysis & Recommendation
 
-### Problem Summary
-1. **Flash of old home screen**: When you search from the desktop, the window opens showing the `ImmersiveSearchView` (clock, photo, search bar) briefly before the query fires and results appear. This is the "intermediate step."
-2. **Window doesn't fill screen**: New search windows open at 960x620 instead of maximized like a browser tab.
-3. **Content doesn't fit the window**: The reader view uses `100vw`/`100dvh` which breaks inside a windowed context — content overflows or misaligns.
+## Current State
 
-### Solution
+Your project already uses `@chenglou/pretext` in three ways:
 
-#### 1. Skip the home screen when opened with a query
+1. **BalancedHeading** — Binary-searches the tightest container width that preserves line count, eliminating orphan lines. Used in all 5 lens renderers (Magazine, Simple, DeepDive, Story, Wiki). Re-balances on resize via `ResizeObserver`.
+2. **WaterfallSection** — Predicts section height during streaming to reserve space and prevent layout shift.
+3. **pretext-layout.ts** — Caching wrapper exposing `predictHeight`, `balanceWidth`, `getLines`, `predictSectionHeight`.
+
+However, only **titles** get the Pretext treatment. Body text, pull-quotes, blockquotes, and section headings all use raw CSS with hardcoded `maxWidth: 720` and `clamp()` values — they don't adapt to actual window width.
+
+## What Pretext Unlocks (That You're Not Using Yet)
+
+From the repo analysis, three powerful APIs are underutilized:
+
+| API | What it does | Current use | Opportunity |
+|-----|-------------|-------------|-------------|
+| `balanceWidth` via `walkLineRanges` | Shrinkwrap text to tightest balanced container | Titles only | **Every heading, pull-quote, blockquote** |
+| `predictHeight` | Zero-DOM height prediction | Streaming sections only | **Dynamic column layout, masonry-like flow** |
+| `prepareRichInline` | Rich inline flow with mixed fonts, chips, atomic items | Not used | **Inline citations, tags, metadata pills that reflow correctly** |
+| `measureLineStats` / `measureNaturalWidth` | Line count + widest line without allocations | Not used | **Responsive font scaling — shrink font if content doesn't fit window** |
+| `layoutNextLineRange` (variable-width) | Per-line width changes for text wrapping around images | Not used | **Text flowing around hero images and inline figures** |
+
+## Recommended Implementation: "Fluid Typography Engine"
+
+The most delightful approach is a **container-aware typography system** where every text element in the window measures itself against the actual available width and adapts — not with CSS clamp hacks, but with precise canvas measurement.
+
+### Architecture
+
+```text
+┌─ Desktop Window (resizable, movable) ─────────────────┐
+│  ┌─ AdaptiveContentContainer ───────────────────────┐  │
+│  │  ResizeObserver → containerWidth                  │  │
+│  │                                                   │  │
+│  │  ┌─ BalancedHeading (already works) ─────────┐   │  │
+│  │  │  Title re-balances on resize              │   │  │
+│  │  └───────────────────────────────────────────┘   │  │
+│  │                                                   │  │
+│  │  ┌─ NEW: BalancedBlockquote ─────────────────┐   │  │
+│  │  │  Pull-quotes balanced like titles         │   │  │
+│  │  └───────────────────────────────────────────┘   │  │
+│  │                                                   │  │
+│  │  ┌─ NEW: FluidBodyText ──────────────────────┐   │  │
+│  │  │  maxWidth = min(720, containerWidth-pad)  │   │  │
+│  │  │  Predicts height for smooth streaming     │   │  │
+│  │  └───────────────────────────────────────────┘   │  │
+│  │                                                   │  │
+│  │  ┌─ NEW: AdaptiveFontScale ──────────────────┐   │  │
+│  │  │  Uses measureLineStats to check if title  │   │  │
+│  │  │  fits at preferred size; steps down if not │   │  │
+│  │  └───────────────────────────────────────────┘   │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Changes
+
+#### 1. Create `AdaptiveContentContainer` wrapper
+A new component that wraps the entire lens renderer content area. It:
+- Uses a `ResizeObserver` to track `containerWidth` in state
+- Passes `containerWidth` down via React context
+- All child components read this instead of using `vw` units or hardcoded widths
+- Replaces every `maxWidth: 720`, `max-width: 95vw`, and `clamp()` call with container-relative values
+
+**File**: `src/modules/oracle/components/AdaptiveContentContainer.tsx`
+
+#### 2. Extend `BalancedHeading` into `BalancedBlock`
+Generalize the balancing logic to work for any block element — pull-quotes, blockquotes, section subheadings. Same binary-search approach, different font configs.
+
+**File**: `src/modules/oracle/components/BalancedBlock.tsx`
+
+#### 3. Add adaptive font scaling to titles
+Use `measureLineStats` to check if a title at the preferred font size produces too many lines for the window width. If it does, step down the font size. This means narrow windows get smaller but still balanced titles automatically — no CSS clamp needed.
+
+**File**: Update `BalancedHeading.tsx` to accept a `fontSizes` array and pick the largest that keeps line count reasonable.
+
+#### 4. Update all 5 lens renderers to be container-aware
+Replace hardcoded `maxWidth: 720`, `fontSize: "clamp(...)"`, and `95vw` references with values derived from `AdaptiveContentContainer` context.
+
+**Files**: 
+- `MagazineLensRenderer.tsx` — body `maxWidth`, drop-cap sizing, pull-quote width
+- `SimpleLensRenderer.tsx` — body maxWidth
+- `DeepDiveLensRenderer.tsx` — body maxWidth, code block width
+- `StoryLensRenderer.tsx` — body maxWidth, opening italic
+- `WikiArticleView.tsx` — body maxWidth
+
+#### 5. Integrate `prepareRichInline` for source citations
+Source pills and inline citations currently use CSS flexbox wrapping. Replace with pretext's `prepareRichInline` to predict exactly how citation pills will flow, enabling pre-reserved space during streaming and pixel-perfect reflow on resize.
+
+**File**: `src/modules/oracle/components/SourcesPills.tsx`
+
+#### 6. Update `WaterfallSection` to use container width
+Currently falls back to `720` if no element ref. With the context, it reads the actual container width for accurate height prediction during streaming.
+
+**File**: `src/modules/oracle/components/WaterfallSection.tsx`
+
+#### 7. Ensure `ResolvePage` reader container uses `w-full h-full`
+Confirm viewport units are fully purged when inside a window context. Content should fill the window, not the browser viewport.
+
 **File**: `src/modules/oracle/pages/ResolvePage.tsx`
 
-When inside a window with an `initialQuery`, skip rendering the `ImmersiveSearchView` entirely. Instead, show a loading spinner immediately while the search fires. This eliminates the flash.
-
-- Add a flag: if `inWindow && windowInitialQuery`, set `loading = true` on mount and suppress the "empty state" block (`!result && !aiMode`).
-- The existing `useEffect` that calls `handleSearch(q)` already fires — we just need to hide the home screen while it runs.
-
-#### 2. Open search windows maximized
-**File**: `src/modules/desktop/hooks/useWindowManager.ts`
-
-Add an optional `maximized` flag to `openApp()`. When set, the window opens covering the full usable area (below the tab bar) just like double-clicking a title bar.
-
-**File**: `src/modules/desktop/DesktopWidgets.tsx` (or wherever `onSearch` calls `wm.openApp`)
-
-Pass `maximized: true` when opening search windows from the desktop home screen, so results instantly fill the screen like a browser tab.
-
-#### 3. Make content adaptive to window bounds (not viewport)
-**File**: `src/modules/oracle/pages/ResolvePage.tsx`
-
-When `inWindow`, replace all `100vw`/`100dvh` references with `100%` so the content flows within the window container rather than the browser viewport. The reader's `maxWidth`, padding, and height constraints will reference the parent container.
-
-Key changes:
-- The root `div` uses `w-full h-full` instead of `fixed inset-0` when inside a window.
-- Reader content container uses `max-width: min(1400px, 100%)` instead of `min(1400px, 95vw)`.
-- Remove the `marginLeft: calc(-50vw + 50%)` breakout hack when inside a window.
-- Height uses `100%` instead of `100dvh`.
-
-#### 4. Leverage pretext for balanced headings inside windows
-**File**: `src/modules/oracle/components/HumanContentView.tsx`
-
-The `BalancedHeading` component already uses pretext's `balanceWidth()` with a `ResizeObserver`. Since it measures against `parentElement.clientWidth`, it will naturally re-balance when the window is resized. No changes needed to the balancing logic — it already works adaptively.
-
-The key integration point: ensure the `HumanContentView` title rendering uses `BalancedHeading` (verify it does, or wire it up if not).
-
-### Files Modified
-| File | Change |
-|------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Skip home screen when `inWindow + initialQuery`; replace viewport units with container-relative units |
-| `src/modules/desktop/hooks/useWindowManager.ts` | Add `maximized` option to `openApp()` |
-| `src/modules/desktop/DesktopShell.tsx` or `DesktopWidgets.tsx` | Pass maximized flag when opening search from desktop |
-| `src/modules/oracle/components/HumanContentView.tsx` | Wire `BalancedHeading` for titles if not already used |
+### Priority Order
+1. `AdaptiveContentContainer` + context (foundation — everything depends on this)
+2. Update lens renderers to use container width (biggest visual impact)
+3. Adaptive font scaling for titles (delight factor)
+4. `BalancedBlock` for pull-quotes and blockquotes (polish)
+5. Rich inline citations (advanced)
 
 ### Result
-- Typing on the desktop home screen → window opens maximized → results render immediately (no intermediate screen).
-- Window is draggable, resizable, closable — all existing window management works.
-- Content inside the window adapts fluidly as you resize — headings re-balance via pretext, text reflows, padding scales.
+Every piece of text in the window — titles, body, quotes, citations, metadata — will dynamically adapt to the window's actual size. Resize the window and watch headings re-balance, body text reflow to the optimal measure, and font sizes step gracefully. No CSS hacks, no viewport units — pure canvas-measured typography.
 
