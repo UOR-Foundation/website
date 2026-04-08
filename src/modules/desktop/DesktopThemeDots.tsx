@@ -1,8 +1,9 @@
 /**
  * DesktopThemeDots — Three small dots to switch desktop themes.
+ * 
+ * Revolut-inspired: CSS transitions only, no framer-motion springs.
  */
 
-import { motion } from "framer-motion";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 
 const DOTS: { id: DesktopTheme; label: string; bg: string; border?: string }[] = [
@@ -16,32 +17,31 @@ export default function DesktopThemeDots() {
 
   return (
     <div className="fixed bottom-5 inset-x-0 z-[195] flex justify-center pointer-events-none">
-      <div className="pointer-events-auto flex items-center gap-2 py-1.5 px-3 rounded-full"
+      <div
+        className="pointer-events-auto flex items-center gap-2 py-1.5 px-3 rounded-full"
         style={{
-          background: "rgba(128,128,128,0.12)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          background: "rgba(128,128,128,0.10)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
         {DOTS.map(dot => {
           const active = theme === dot.id;
           return (
-            <motion.button
+            <button
               key={dot.id}
               onClick={() => setTheme(dot.id)}
               aria-label={dot.label}
               title={dot.label}
-              animate={{
-                scale: active ? 1.25 : 1,
-                opacity: active ? 1 : 0.55,
-              }}
-              whileHover={{ scale: active ? 1.3 : 1.15, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              className="w-[10px] h-[10px] rounded-full"
+              className="rounded-full transition-all duration-150 ease-out"
               style={{
+                width: active ? 12 : 10,
+                height: active ? 12 : 10,
                 background: dot.bg,
                 border: `1.5px solid ${dot.border || "transparent"}`,
-                boxShadow: active ? "0 0 8px rgba(255,255,255,0.15)" : "none",
+                opacity: active ? 1 : 0.5,
+                boxShadow: active ? "0 0 6px rgba(255,255,255,0.1)" : "none",
+                transform: active ? "scale(1)" : "scale(1)",
               }}
             />
           );

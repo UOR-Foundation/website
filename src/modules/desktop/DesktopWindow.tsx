@@ -1,10 +1,11 @@
 /**
  * DesktopWindow — Draggable/resizable window without title bar (tabs handle that).
  * Thin drag strip at top for repositioning. Theme-aware.
+ * 
+ * Revolut-inspired: tight 150ms transitions, reduced blur, no springs.
  */
 
 import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
-import { motion } from "framer-motion";
 import type { WindowState, SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
@@ -26,7 +27,7 @@ interface Props {
 }
 
 const MENU_BAR_H = 38;
-const DRAG_STRIP_H = 6; // thin invisible drag strip at top
+const DRAG_STRIP_H = 6;
 
 export default function DesktopWindow({
   win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
@@ -91,27 +92,24 @@ export default function DesktopWindow({
     ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px - 68px)` }
     : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
-  const glassBg = isLight ? "rgba(245,245,245,0.92)" : "rgba(26,26,26,0.85)";
+  // Revolut-style: solid semi-opaque bg, reduced blur (20px vs 48px)
+  const glassBg = isLight ? "rgba(245,245,245,0.95)" : "rgba(24,24,24,0.92)";
   const borderColor = isActive
-    ? (isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.10)")
-    : (isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)");
+    ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)")
+    : (isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)");
   const contentBg = isLight ? "#f5f5f5" : "#191919";
   const spinnerBorder = isLight ? "border-black/10 border-t-black/40" : "border-white/15 border-t-white/50";
 
   return (
-    <motion.div
-      initial={{ scale: 0.88, opacity: 0, y: 50 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.88, opacity: 0, y: 30 }}
-      transition={{ type: "spring", damping: 26, stiffness: 350, duration: 0.3 }}
+    <div
       className={`desktop-window-chrome fixed ${isActive ? "active" : ""} ${isDragging ? "dragging" : ""}`}
       style={{ ...style, zIndex: win.zIndex }}
       onPointerDown={() => onFocus(win.id)}
     >
       <div className="absolute inset-0 rounded-xl" style={{
         background: glassBg,
-        backdropFilter: "blur(48px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+        backdropFilter: "blur(20px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.2)",
       }} />
 
       <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ border: `1px solid ${borderColor}` }} />
@@ -145,6 +143,6 @@ export default function DesktopWindow({
           <div className="resize-handle resize-handle-s" onPointerDown={onResizeStart} onPointerMove={onResizeMove} onPointerUp={onResizeEnd} />
         </>
       )}
-    </motion.div>
+    </div>
   );
 }

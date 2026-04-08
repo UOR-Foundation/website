@@ -1,12 +1,14 @@
 /**
  * TabBar — Chrome-style tab strip replacing the macOS menu bar.
  * Each open window is a tab. Active tab blends into content below.
+ * 
+ * Revolut-inspired: reduced blur, no decorative icons, tight transitions.
  */
 
 import { useState, useEffect } from "react";
-import { X, Plus, Search, Wifi, Volume2 } from "lucide-react";
+import { X, Plus, Search } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
-import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
+import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -42,22 +44,22 @@ export default function TabBar({
   const formatted = time.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const clock = time.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
-  // Theme colors
-  const stripBg = isLight ? "rgba(222,222,222,0.95)" : "rgba(32,33,36,0.95)";
-  const activeBg = isLight ? "#ffffff" : "#292a2d";
-  const tabText = isLight ? "text-black/70" : "text-white/70";
+  // Theme colors — tighter contrast range, Revolut-style
+  const stripBg = isLight ? "rgba(235,235,235,0.97)" : "rgba(28,28,30,0.97)";
+  const activeBg = isLight ? "#ffffff" : "#252527";
+  const tabText = isLight ? "text-black/60" : "text-white/60";
   const tabTextActive = isLight ? "text-black/90" : "text-white/90";
-  const tabTextMuted = isLight ? "text-black/40" : "text-white/35";
-  const hoverBg = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)";
-  const clockColor = isLight ? "text-black/50" : "text-white/55";
-  const iconMuted = isLight ? "text-black/30" : "text-white/35";
-  const separatorColor = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
+  const tabTextMuted = isLight ? "text-black/30" : "text-white/25";
+  const hoverBg = isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.05)";
+  const clockColor = isLight ? "text-black/45" : "text-white/45";
+  const iconMuted = isLight ? "text-black/25" : "text-white/30";
+  const separatorColor = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)";
   const menuContentClass = isLight
-    ? "border-black/[0.08] bg-white/95 backdrop-blur-xl text-black/70"
-    : "border-white/[0.08] bg-[rgba(30,30,30,0.95)] backdrop-blur-xl text-white/75";
+    ? "border-black/[0.06] bg-white/97 backdrop-blur-lg text-black/70"
+    : "border-white/[0.06] bg-[rgba(28,28,30,0.97)] backdrop-blur-lg text-white/70";
   const menuItemClass = isLight
-    ? "text-[12px] text-black/65 font-medium focus:bg-black/[0.05] focus:text-black/80"
-    : "text-[12px] text-white/70 font-medium focus:bg-white/[0.08] focus:text-white/90";
+    ? "text-[12px] text-black/60 font-medium focus:bg-black/[0.04] focus:text-black/80"
+    : "text-[12px] text-white/60 font-medium focus:bg-white/[0.06] focus:text-white/85";
 
   return (
     <div
@@ -66,25 +68,25 @@ export default function TabBar({
       style={{
         height: TAB_BAR_H,
         background: stripBg,
-        backdropFilter: "blur(24px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+        backdropFilter: "blur(12px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.2)",
       }}
     >
       {/* Left: UOR menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex items-center justify-center shrink-0 px-3 h-full hover:opacity-80 transition-opacity"
+            className="flex items-center justify-center shrink-0 px-3 h-full transition-opacity duration-150 hover:opacity-70"
             style={{ minWidth: 44 }}
           >
-            <span className={`text-[14px] font-bold tracking-tight ${isLight ? "text-black/70" : "text-white/80"}`}>
+            <span className={`text-[14px] font-bold tracking-tight ${isLight ? "text-black/65" : "text-white/70"}`}>
               ⬡
             </span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className={`rounded-xl min-w-[180px] ${menuContentClass}`} align="start" sideOffset={4}>
           <DropdownMenuItem className={menuItemClass} disabled>About UOR OS</DropdownMenuItem>
-          <DropdownMenuSeparator className={isLight ? "bg-black/[0.06]" : "bg-white/[0.06]"} />
+          <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className={menuItemClass}>Appearance</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className={`rounded-xl ${menuContentClass}`}>
@@ -100,7 +102,7 @@ export default function TabBar({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          <DropdownMenuSeparator className={isLight ? "bg-black/[0.06]" : "bg-white/[0.06]"} />
+          <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
           <DropdownMenuItem className={menuItemClass} onSelect={onHideAll}>
             Hide All Windows
           </DropdownMenuItem>
@@ -119,18 +121,16 @@ export default function TabBar({
             <button
               key={win.id}
               className={`chrome-tab group relative flex items-center gap-1.5 min-w-[120px] max-w-[220px] h-[32px] px-3 
-                text-[12px] font-medium whitespace-nowrap transition-colors duration-150 shrink-0
+                text-[12px] font-medium whitespace-nowrap transition-all duration-150 ease-out shrink-0
                 ${isActive ? tabTextActive : isMini ? tabTextMuted : tabText}
                 ${isActive ? "chrome-tab-active" : ""}
               `}
               style={{
                 background: isActive ? activeBg : "transparent",
-                borderRadius: isActive ? "8px 8px 0 0" : "8px 8px 0 0",
+                borderRadius: "8px 8px 0 0",
                 marginBottom: 0,
               }}
-              onClick={() => {
-                onFocusWindow(win.id);
-              }}
+              onClick={() => onFocusWindow(win.id)}
               onMouseEnter={(e) => {
                 if (!isActive) (e.currentTarget as HTMLElement).style.background = hoverBg;
               }}
@@ -147,12 +147,12 @@ export default function TabBar({
                 />
               )}
 
-              {Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-70" />}
+              {Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-60" />}
               <span className="truncate flex-1 text-left">{win.title}</span>
               <span
-                className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all
-                  opacity-0 group-hover:opacity-100 ${isActive ? "opacity-60" : ""}
-                  ${isLight ? "hover:bg-black/10" : "hover:bg-white/15"}
+                className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150
+                  opacity-0 group-hover:opacity-100 ${isActive ? "opacity-50" : ""}
+                  ${isLight ? "hover:bg-black/10" : "hover:bg-white/12"}
                 `}
                 onClick={(e) => { e.stopPropagation(); onCloseWindow(win.id); }}
               >
@@ -164,8 +164,8 @@ export default function TabBar({
 
         {/* New tab "+" */}
         <button
-          className={`flex items-center justify-center w-7 h-7 rounded-full shrink-0 ml-1 mb-[2px] transition-colors
-            ${isLight ? "hover:bg-black/[0.06] text-black/40" : "hover:bg-white/[0.08] text-white/40"}
+          className={`flex items-center justify-center w-7 h-7 rounded-full shrink-0 ml-1 mb-[2px] transition-colors duration-150
+            ${isLight ? "hover:bg-black/[0.04] text-black/35" : "hover:bg-white/[0.06] text-white/35"}
           `}
           onClick={onSpotlight}
           title="New tab (⌘K)"
@@ -174,17 +174,15 @@ export default function TabBar({
         </button>
       </div>
 
-      {/* Right: status icons */}
+      {/* Right: status — search + clock only (removed decorative wifi/volume) */}
       <div className="flex items-center gap-3 shrink-0 px-3 h-full">
         <button
           onClick={onSpotlight}
-          className={`p-0.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
+          className={`p-0.5 rounded transition-colors duration-150 ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.05]"}`}
           title="Spotlight (⌘K)"
         >
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>
-        <Volume2 className={`w-3.5 h-3.5 ${iconMuted}`} />
-        <Wifi className={`w-3.5 h-3.5 ${iconMuted}`} />
         <span className={`text-[12px] ${clockColor} font-medium tabular-nums`}>
           {formatted}&ensp;{clock}
         </span>
