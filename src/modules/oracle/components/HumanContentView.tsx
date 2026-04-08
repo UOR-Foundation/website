@@ -303,6 +303,8 @@ const HumanContentView: React.FC<HumanContentViewProps> = ({ source, synthesizin
           sources={sources}
           synthesizing={synthesizing}
           contextKeywords={contextKeywords}
+          activeLens={activeLens}
+          onLensChange={onLensChange}
         />
       ) : isWebPage && rawHtml && viewMode === "original" ? (
         <ShadowHtmlRenderer html={rawHtml} baseUrl={sourceUrl} maxHeight={600} />
