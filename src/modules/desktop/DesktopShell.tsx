@@ -8,7 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import ImmersiveBackground from "@/modules/oracle/components/ImmersiveBackground";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
-import DesktopDock from "@/modules/desktop/DesktopDock";
+// DesktopDock removed — tabs handle app switching now
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
@@ -79,7 +79,7 @@ function DesktopShellInner() {
         {theme === "immersive" && (
           <>
             <ImmersiveBackground />
-            <div className="fixed bottom-[76px] left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
+            <div className="fixed bottom-8 left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
               <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
               <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
             </div>
@@ -125,7 +125,6 @@ function DesktopShellInner() {
         </AnimatePresence>
 
         <DesktopThemeDots />
-        <DesktopDock windows={wm.windows} onOpenApp={wm.openApp} />
 
         <SpotlightSearch
           open={spotlightOpen}

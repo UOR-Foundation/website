@@ -62,11 +62,12 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[5] flex flex-col items-center justify-center pointer-events-none"
+      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
+      style={{ paddingBottom: 60 }}
       animate={{ opacity: hasMaximized ? 0 : 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
+      <div className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "28vh" }}>
         <motion.div
           className="text-center mb-8"
           animate={{ opacity: hasAnyWindows ? 0.3 : 1, scale: hasAnyWindows ? 0.92 : 1 }}

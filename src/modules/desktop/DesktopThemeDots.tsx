@@ -15,7 +15,7 @@ export default function DesktopThemeDots() {
   const { theme, setTheme } = useDesktopTheme();
 
   return (
-    <div className="fixed bottom-[68px] inset-x-0 z-[195] flex justify-center pointer-events-none">
+    <div className="fixed bottom-5 inset-x-0 z-[195] flex justify-center pointer-events-none">
       <div className="pointer-events-auto flex items-center gap-2 py-1.5 px-3 rounded-full"
         style={{
           background: "rgba(128,128,128,0.12)",
