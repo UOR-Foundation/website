@@ -65,7 +65,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const historyRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
 
-  const uorAddress = `uor://${triwordDisplay.toLowerCase().replace(/\s·\s/g, ".")}`;
+  const threeWords = triwordDisplay; // Already in "Cricket.Risen.Keep" format
 
   const handleAddressClick = useCallback(() => {
     setEditing(true);
@@ -99,12 +99,12 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(uorAddress);
+      await navigator.clipboard.writeText(threeWords);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = uorAddress;
+      ta.value = threeWords;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -112,7 +112,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [uorAddress]);
+  }, [threeWords]);
 
   const handleHistoryToggle = useCallback(async () => {
     if (historyOpen) {
