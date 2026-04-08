@@ -342,6 +342,8 @@ function CopyBtn({ onClick, copied, size = 14, label }: {
 }
 
 const SearchPage = () => {
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
