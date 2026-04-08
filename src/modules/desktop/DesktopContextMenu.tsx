@@ -1,69 +1,120 @@
 /**
- * DesktopContextMenu — Minimal right-click menu. Theme-aware.
+ * DesktopContextMenu — Right-click context menu using Radix ContextMenu.
+ * Theme-aware with submenus, keyboard nav, and accessibility.
  */
 
-import { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuCheckboxItem,
+} from "@/modules/core/ui/context-menu";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 
 interface Props {
-  open: boolean;
-  position: { x: number; y: number };
-  onClose: () => void;
+  children: React.ReactNode;
   onNewSearch: () => void;
   onSpotlight: () => void;
+  onHideAll?: () => void;
+  onToggleWidgets?: () => void;
+  widgetsVisible?: boolean;
 }
 
-export default function DesktopContextMenu({ open, position, onClose, onNewSearch, onSpotlight }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { isLight } = useDesktopTheme();
+export default function DesktopContextMenu({
+  children,
+  onNewSearch,
+  onSpotlight,
+  onHideAll,
+  onToggleWidgets,
+  widgetsVisible = true,
+}: Props) {
+  const { isLight, theme, setTheme } = useDesktopTheme();
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    window.addEventListener("mousedown", handler);
-    return () => window.removeEventListener("mousedown", handler);
-  }, [open, onClose]);
+  const contentClass = isLight
+    ? "border-black/[0.08] bg-white/90 text-black/70 backdrop-blur-xl"
+    : "border-white/[0.08] bg-[rgba(30,30,30,0.88)] text-white/75 backdrop-blur-xl";
 
-  const bg = isLight ? "rgba(255,255,255,0.90)" : "rgba(30,30,30,0.85)";
-  const border = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
-  const shadow = isLight ? "0 12px 40px -8px rgba(0,0,0,0.12)" : "0 12px 40px -8px rgba(0,0,0,0.5)";
-  const divider = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)";
-  const itemHover = isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.08]";
-  const labelColor = isLight ? "text-black/60" : "text-white/70";
-  const shortcutColor = isLight ? "text-black/20" : "text-white/25";
+  const itemClass = isLight
+    ? "text-black/65 text-[12px] font-medium focus:bg-black/[0.05] focus:text-black/80"
+    : "text-white/70 text-[12px] font-medium focus:bg-white/[0.08] focus:text-white/90";
+
+  const shortcutClass = isLight ? "text-black/25" : "text-white/25";
+  const separatorClass = isLight ? "bg-black/[0.06]" : "bg-white/[0.06]";
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.92 }}
-          transition={{ duration: 0.12 }}
-          className="fixed z-[250] py-1.5 rounded-xl overflow-hidden min-w-[180px]"
-          style={{ top: position.y, left: position.x, background: bg, backdropFilter: "blur(48px) saturate(1.4)", WebkitBackdropFilter: "blur(48px) saturate(1.4)", border: `1px solid ${border}`, boxShadow: shadow }}
-        >
-          <MenuItem label="New Search" onClick={() => { onNewSearch(); onClose(); }} hoverBg={itemHover} labelColor={labelColor} shortcutColor={shortcutColor} />
-          <MenuItem label="Spotlight" shortcut="⌘K" onClick={() => { onSpotlight(); onClose(); }} hoverBg={itemHover} labelColor={labelColor} shortcutColor={shortcutColor} />
-          <div className="mx-3 my-1 h-px" style={{ background: divider }} />
-          <MenuItem label="About UOR OS" onClick={onClose} hoverBg={itemHover} labelColor={labelColor} shortcutColor={shortcutColor} />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        {children}
+      </ContextMenuTrigger>
+      <ContextMenuContent className={`min-w-[200px] rounded-xl py-1.5 ${contentClass}`}>
+        <ContextMenuItem className={itemClass} onSelect={onNewSearch}>
+          New Search
+        </ContextMenuItem>
+        <ContextMenuItem className={itemClass} onSelect={onSpotlight}>
+          Spotlight
+          <ContextMenuShortcut className={shortcutClass}>⌘K</ContextMenuShortcut>
+        </ContextMenuItem>
 
-function MenuItem({ label, shortcut, onClick, hoverBg, labelColor, shortcutColor }: {
-  label: string; shortcut?: string; onClick: () => void; hoverBg: string; labelColor: string; shortcutColor: string;
-}) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center justify-between px-3.5 py-1.5 text-left ${hoverBg} transition-colors`}>
-      <span className={`text-[12px] font-medium ${labelColor}`}>{label}</span>
-      {shortcut && <span className={`text-[10px] ${shortcutColor} font-medium`}>{shortcut}</span>}
-    </button>
+        <ContextMenuSeparator className={separatorClass} />
+
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className={itemClass}>
+            Appearance
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className={`rounded-xl py-1 ${contentClass}`}>
+            <ContextMenuCheckboxItem
+              checked={theme === "immersive"}
+              onCheckedChange={() => setTheme("immersive")}
+              className={itemClass}
+            >
+              Immersive
+            </ContextMenuCheckboxItem>
+            <ContextMenuCheckboxItem
+              checked={theme === "dark"}
+              onCheckedChange={() => setTheme("dark")}
+              className={itemClass}
+            >
+              Dark
+            </ContextMenuCheckboxItem>
+            <ContextMenuCheckboxItem
+              checked={theme === "light"}
+              onCheckedChange={() => setTheme("light")}
+              className={itemClass}
+            >
+              Light
+            </ContextMenuCheckboxItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+
+        {onToggleWidgets && (
+          <ContextMenuCheckboxItem
+            checked={widgetsVisible}
+            onCheckedChange={() => onToggleWidgets?.()}
+            className={itemClass}
+          >
+            Show Widgets
+          </ContextMenuCheckboxItem>
+        )}
+
+        {onHideAll && (
+          <ContextMenuItem className={itemClass} onSelect={onHideAll}>
+            Hide All Windows
+            <ContextMenuShortcut className={shortcutClass}>⌘H</ContextMenuShortcut>
+          </ContextMenuItem>
+        )}
+
+        <ContextMenuSeparator className={separatorClass} />
+
+        <ContextMenuItem className={itemClass} disabled>
+          About UOR OS
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

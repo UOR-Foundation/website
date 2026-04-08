@@ -14,17 +14,19 @@ import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
 import DesktopContextMenu from "@/modules/desktop/DesktopContextMenu";
 import SnapOverlay from "@/modules/desktop/SnapOverlay";
 import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
+import MobileShell from "@/modules/desktop/MobileShell";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
   const wm = useWindowManager();
   const { theme } = useDesktopTheme();
+  const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
-  const [ctxMenu, setCtxMenu] = useState<{ open: boolean; x: number; y: number }>({ open: false, x: 0, y: 0 });
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
 
   const handleHomeSearch = useCallback((query: string) => {
@@ -43,83 +45,86 @@ function DesktopShellInner() {
     });
   }, [wm]);
 
+  const handleCloseWindow = useCallback(() => {
+    if (wm.activeWindowId) wm.closeWindow(wm.activeWindowId);
+  }, [wm]);
+
+  const handleMinimizeWindow = useCallback(() => {
+    if (wm.activeWindowId) wm.minimizeWindow(wm.activeWindowId);
+  }, [wm]);
+
   const shortcutHandlers = useMemo(() => ({
     onSpotlight: () => setSpotlightOpen(o => !o),
-    onCloseWindow: () => { if (wm.activeWindowId) wm.closeWindow(wm.activeWindowId); },
-    onMinimizeWindow: () => { if (wm.activeWindowId) wm.minimizeWindow(wm.activeWindowId); },
+    onCloseWindow: handleCloseWindow,
+    onMinimizeWindow: handleMinimizeWindow,
     onHideAll: handleHideAll,
-  }), [wm, handleHideAll]);
+  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll]);
 
   useDesktopShortcuts(shortcutHandlers);
 
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest(".desktop-window-chrome") || target.closest("[data-dock]") || target.closest("[data-menubar]")) return;
-    e.preventDefault();
-    setCtxMenu({ open: true, x: e.clientX, y: e.clientY });
-  }, []);
+  // Mobile: use drawer-based shell
+  if (isMobile) return <MobileShell />;
 
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
 
   return (
-    <div
-      className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}
-      onContextMenu={handleContextMenu}
+    <DesktopContextMenu
+      onNewSearch={() => handleHomeSearch("")}
+      onSpotlight={() => setSpotlightOpen(true)}
+      onHideAll={handleHideAll}
     >
-      {theme === "immersive" && <ImmersiveBackground />}
+      <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}>
+        {theme === "immersive" && <ImmersiveBackground />}
 
-      <DesktopWidgets
-        windows={wm.windows}
-        onSearch={handleHomeSearch}
-        onOpenApp={handleOpenApp}
-      />
+        <DesktopWidgets
+          windows={wm.windows}
+          onSearch={handleHomeSearch}
+          onOpenApp={handleOpenApp}
+        />
 
-      <DesktopMenuBar
-        activeWindowId={wm.activeWindowId}
-        windows={wm.windows}
-        onSpotlight={() => setSpotlightOpen(true)}
-      />
+        <DesktopMenuBar
+          activeWindowId={wm.activeWindowId}
+          windows={wm.windows}
+          onSpotlight={() => setSpotlightOpen(true)}
+          onCloseWindow={handleCloseWindow}
+          onMinimizeWindow={handleMinimizeWindow}
+          onHideAll={handleHideAll}
+          onOpenApp={handleOpenApp}
+        />
 
-      <SnapOverlay zone={snapPreview} />
+        <SnapOverlay zone={snapPreview} />
 
-      <AnimatePresence>
-        {wm.windows
-          .filter(w => !w.minimized)
-          .map(win => (
-            <DesktopWindow
-              key={win.id}
-              win={win}
-              isActive={win.id === wm.activeWindowId}
-              onClose={wm.closeWindow}
-              onMinimize={wm.minimizeWindow}
-              onMaximize={wm.maximizeWindow}
-              onFocus={wm.focusWindow}
-              onMove={wm.moveWindow}
-              onResize={wm.resizeWindow}
-              onSnap={wm.snapWindow}
-              onSnapPreview={setSnapPreview}
-            />
-          ))}
-      </AnimatePresence>
+        <AnimatePresence>
+          {wm.windows
+            .filter(w => !w.minimized)
+            .map(win => (
+              <DesktopWindow
+                key={win.id}
+                win={win}
+                isActive={win.id === wm.activeWindowId}
+                onClose={wm.closeWindow}
+                onMinimize={wm.minimizeWindow}
+                onMaximize={wm.maximizeWindow}
+                onFocus={wm.focusWindow}
+                onMove={wm.moveWindow}
+                onResize={wm.resizeWindow}
+                onSnap={wm.snapWindow}
+                onSnapPreview={setSnapPreview}
+              />
+            ))}
+        </AnimatePresence>
 
-      <DesktopThemeDots />
-      <DesktopDock windows={wm.windows} onOpenApp={wm.openApp} />
+        <DesktopThemeDots />
+        <DesktopDock windows={wm.windows} onOpenApp={wm.openApp} />
 
-      <SpotlightSearch
-        open={spotlightOpen}
-        onClose={() => setSpotlightOpen(false)}
-        onOpenApp={handleOpenApp}
-        onSearch={handleHomeSearch}
-      />
-
-      <DesktopContextMenu
-        open={ctxMenu.open}
-        position={{ x: ctxMenu.x, y: ctxMenu.y }}
-        onClose={() => setCtxMenu(c => ({ ...c, open: false }))}
-        onNewSearch={() => {}}
-        onSpotlight={() => setSpotlightOpen(true)}
-      />
-    </div>
+        <SpotlightSearch
+          open={spotlightOpen}
+          onClose={() => setSpotlightOpen(false)}
+          onOpenApp={handleOpenApp}
+          onSearch={handleHomeSearch}
+        />
+      </div>
+    </DesktopContextMenu>
   );
 }
 
