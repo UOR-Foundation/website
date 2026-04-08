@@ -207,12 +207,12 @@ export default function IdentityHub({ receipt }: IdentityHubProps) {
             <div className="shrink-0 border-b border-border/10">
               <div className="max-w-6xl mx-auto px-6 py-5 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-display font-semibold text-foreground tracking-wide">
-                    Share This Address
-                  </h2>
-                  <p className="text-sm text-muted-foreground/50 mt-0.5">
-                    One object, {totalProjections} ways to reference it — every format points to the same thing
-                  </p>
+                   <h2 className="text-lg font-display font-semibold text-foreground tracking-wide">
+                     Share This Address
+                   </h2>
+                   <p className="text-sm text-muted-foreground/50 mt-0.5">
+                     One object, {curatedCount} ways to share it — every format points to the same thing
+                   </p>
                 </div>
 
                 {/* Search */}
