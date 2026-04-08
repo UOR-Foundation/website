@@ -44,6 +44,7 @@ import { getRecentKeywords, recordSearch, findByKeyword } from "@/modules/oracle
 import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
+import UnifiedFloatingInput from "@/modules/oracle/components/UnifiedFloatingInput";
 import VoiceOverlay from "@/modules/oracle/components/VoiceOverlay";
 import SoundCloudFab from "@/modules/oracle/components/SoundCloudFab";
 import OracleOverlay from "@/modules/oracle/components/OracleOverlay";
@@ -493,6 +494,10 @@ const SearchPage = () => {
   const [showPrefetch, setShowPrefetch] = useState(false);
   const liveAbortRef = useRef<AbortController | null>(null);
   const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Refinement streaming state
+  const [refining, setRefining] = useState(false);
+  const refineAbortRef = useRef<AbortController | null>(null);
 
   // Track fullscreen state
   useEffect(() => {
@@ -1143,6 +1148,58 @@ const SearchPage = () => {
       handleKeywordResolve(keyword, lensId);
     }
   }, [result, coherenceState]);
+
+  /** Handle real-time refinement from UnifiedFloatingInput */
+  const handleRefine = useCallback((instruction: string) => {
+    const src = result?.source as Record<string, unknown> | null;
+    const keyword = typeof src?.["uor:label"] === "string" ? (src["uor:label"] as string) : null;
+    if (!keyword || src?.["@type"] !== "uor:KnowledgeCard") return;
+
+    // Cancel any in-flight refinement
+    if (refineAbortRef.current) refineAbortRef.current.abort();
+    const abortController = new AbortController();
+    refineAbortRef.current = abortController;
+    setRefining(true);
+
+    // Re-stream with instruction appended as context
+    const tokenBuffer = new TokenBuffer((text: string) => {
+      setResult(prev => {
+        if (!prev) return prev;
+        const s = prev.source as Record<string, unknown>;
+        return { ...prev, source: { ...s, "uor:content": text }, synthesizing: true };
+      });
+    });
+    tokenBuffer.start();
+
+    let accum = "";
+    streamKnowledge({
+      keyword: `${keyword} — ${instruction}`,
+      context: contextKeywords,
+      lens: activeLens,
+      signal: abortController.signal,
+      onWiki: () => {},
+      onDelta: (text) => { accum += text; tokenBuffer.push(text); },
+      onDone: () => {
+        tokenBuffer.stop();
+        setRefining(false);
+        setResult(prev => {
+          if (!prev) return prev;
+          const s = prev.source as Record<string, unknown>;
+          return { ...prev, source: { ...s, "uor:content": accum }, synthesizing: false };
+        });
+      },
+      onError: (err) => {
+        tokenBuffer.stop();
+        setRefining(false);
+        console.error("[Refine] error:", err);
+      },
+    });
+  }, [result, contextKeywords, activeLens]);
+
+  const handleCancelRefine = useCallback(() => {
+    if (refineAbortRef.current) refineAbortRef.current.abort();
+    setRefining(false);
+  }, []);
 
   /** Apply a full blueprint — re-stream with custom parameters */
   const handleBlueprintApply = useCallback((bp: LensBlueprint) => {
@@ -2165,11 +2222,12 @@ const SearchPage = () => {
                         </div>
                       </div>
 
-                      {/* Floating search + Oracle pill for reader */}
+                      {/* Unified floating input for real-time refinement */}
                       {(mobileImmersive || immersiveMode) && (
-                        <ReaderFloatingBar
-                          onSearch={(q) => { setInput(q); clearResult(); setTimeout(() => handleSearch(q), 100); }}
-                          onOracleOpen={() => setOracleOverlayOpen(true)}
+                        <UnifiedFloatingInput
+                          onRefine={handleRefine}
+                          streaming={refining}
+                          onCancel={handleCancelRefine}
                         />
                       )}
 
