@@ -4,11 +4,13 @@ import ConversationView from "../components/ConversationView";
 import NewConversationDialog from "../components/NewConversationDialog";
 import { useConversations } from "../lib/use-conversations";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
 
 export default function MessengerPage() {
   const { user, loading: authLoading } = useAuth();
+  const { prompt: authPrompt } = useAuthPrompt();
   const { conversations, loading: convosLoading, refetch } = useConversations();
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
@@ -38,7 +40,16 @@ export default function MessengerPage() {
         <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-6">
           Private conversations, end-to-end encrypted. Sign in to continue.
         </p>
-        <div className="flex items-center gap-2 text-white/25 text-xs">
+        <button
+          onClick={() => authPrompt("messenger")}
+          className="px-6 py-3 rounded-xl text-sm font-semibold transition-all"
+          style={{ background: "rgba(255,255,255,0.92)", color: "#1a1a1a" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,1)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.92)"; }}
+        >
+          Sign in to message
+        </button>
+        <div className="flex items-center gap-2 mt-6 text-white/25 text-xs">
           <Lock size={11} />
           <span>End-to-end encrypted</span>
         </div>

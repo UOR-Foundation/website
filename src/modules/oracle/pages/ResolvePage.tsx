@@ -49,6 +49,7 @@ import { Eye } from "lucide-react";
 import ProvenanceTree from "@/modules/oracle/components/ProvenanceTree";
 import ProfileCover from "@/modules/oracle/components/ProfileCover";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 import { getRecentKeywords, recordSearch, findByKeyword } from "@/modules/oracle/lib/search-history";
 import LivePreviewCard from "@/modules/oracle/components/LivePreviewCard";
 import LiveSearchToggle from "@/modules/oracle/components/LiveSearchToggle";
@@ -672,6 +673,7 @@ const SearchPage = () => {
   const [forkNote, setForkNote] = useState("");
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
+  const { prompt: authPrompt } = useAuthPrompt();
   const immersiveMode = !isLight; // Immersive styling only on dark/immersive themes
   const showImmersiveBackdrop = immersiveMode && !inWindow;
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
@@ -2538,7 +2540,7 @@ const SearchPage = () => {
                               <RotateCcw className="w-3.5 h-3.5 mr-2" />
                               Verify Integrity {rederived ? "✓" : ""}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }}>
+                            <DropdownMenuItem onClick={() => { if (!user) { authPrompt("fork"); return; } setForkModalOpen(true); }}>
                               <GitFork className="w-3.5 h-3.5 mr-2" />
                               Fork
                             </DropdownMenuItem>

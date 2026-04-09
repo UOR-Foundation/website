@@ -19,6 +19,7 @@ import {
 import { useVault } from "../hooks/useVault";
 import { toast } from "sonner";
 import type { VaultDocument } from "../lib/types";
+import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 
 // ── Folder model (in-memory, mirrors guest-context patterns) ────────
 
@@ -100,6 +101,7 @@ function formatDate(iso: string): string {
 
 export default function VaultPanel() {
   const vault = useVault();
+  const { prompt: authPrompt } = useAuthPrompt();
   const [dragOver, setDragOver] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -212,12 +214,15 @@ export default function VaultPanel() {
     <div className="flex flex-col h-full bg-background text-foreground select-none overflow-hidden">
       {/* Guest banner */}
       {vault.isGuest && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 border-b border-accent/20 shrink-0">
+        <button
+          onClick={() => authPrompt("vault")}
+          className="flex items-center gap-2 px-4 py-2.5 bg-accent/10 border-b border-accent/20 shrink-0 w-full text-left hover:bg-accent/15 transition-colors"
+        >
           <Info className="w-3.5 h-3.5 text-accent-foreground/60 shrink-0" />
           <p className="text-xs text-accent-foreground/70">
-            Guest mode — files are stored in memory and will be lost on refresh. Sign in to persist your vault.
+            Guest mode — files are stored in memory. <span className="font-medium text-accent-foreground/90 underline underline-offset-2">Sign in to persist your vault →</span>
           </p>
-        </div>
+        </button>
       )}
 
       {/* ── Toolbar ── */}
