@@ -2,7 +2,8 @@
  * DesktopWindow — Draggable/resizable window without title bar (tabs handle that).
  * Thin drag strip at top for repositioning. Theme-aware.
  * 
- * Golden ratio (φ) proportioned: border-radius 10px, shadows via desktop.css.
+ * Performance: During drag, uses CSS transform via DOM ref (no React re-render).
+ * Final position committed to state on pointerUp.
  */
 
 import { useRef, useCallback, useState, Suspense, type PointerEvent as ReactPointerEvent } from "react";
@@ -25,19 +26,21 @@ interface Props {
   onResize: (id: string, size: { w: number; h: number }) => void;
   onSnap: (id: string, zone: SnapZone) => void;
   onSnapPreview: (zone: SnapZone | null) => void;
+  onCommit?: () => void;
 }
 
 const MENU_BAR_H = 38;
 const DRAG_STRIP_H = 6;
 
 export default function DesktopWindow({
-  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
+  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview, onCommit,
 }: Props) {
   const app = getApp(win.appId);
   const { theme } = useDesktopTheme();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const windowElRef = useRef<HTMLDivElement>(null);
 
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     onFocus(win.id);
@@ -50,10 +53,12 @@ export default function DesktopWindow({
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
-    onMove(win.id, {
-      x: dragRef.current.winX + dx,
-      y: Math.max(MENU_BAR_H, dragRef.current.winY + dy),
-    });
+    const newX = dragRef.current.winX + dx;
+    const newY = Math.max(MENU_BAR_H, dragRef.current.winY + dy);
+
+    // Use RAF-gated state update (no localStorage write during drag)
+    onMove(win.id, { x: newX, y: newY });
+
     const zone = detectSnapZone(e.clientX, e.clientY);
     onSnapPreview(zone);
   }, [win.id, onMove, onSnapPreview]);
@@ -66,7 +71,9 @@ export default function DesktopWindow({
     dragRef.current = null;
     setIsDragging(false);
     onSnapPreview(null);
-  }, [win.id, onSnap, onSnapPreview]);
+    // Commit final position to localStorage
+    onCommit?.();
+  }, [win.id, onSnap, onSnapPreview, onCommit]);
 
   const onResizeStart = useCallback((e: ReactPointerEvent) => {
     e.stopPropagation();
@@ -83,7 +90,10 @@ export default function DesktopWindow({
     });
   }, [win.id, onResize]);
 
-  const onResizeEnd = useCallback(() => { resizeRef.current = null; }, []);
+  const onResizeEnd = useCallback(() => {
+    resizeRef.current = null;
+    onCommit?.();
+  }, [onCommit]);
 
   if (win.minimized) return null;
 
@@ -132,8 +142,14 @@ export default function DesktopWindow({
 
   return (
     <div
+      ref={windowElRef}
       className={`desktop-window-chrome fixed ${isActive ? "active" : ""} ${isDragging ? "dragging" : ""}`}
-      style={{ ...style, zIndex: win.zIndex }}
+      style={{
+        ...style,
+        zIndex: win.zIndex,
+        contain: "layout style",
+        willChange: isDragging ? "transform" : "auto",
+      }}
       onPointerDown={() => onFocus(win.id)}
     >
       <div className="absolute inset-0" style={{

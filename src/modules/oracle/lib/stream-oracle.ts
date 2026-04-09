@@ -5,6 +5,23 @@ export type Msg = { role: "user" | "assistant"; content: string; proof?: Enriche
 
 const ORACLE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/uor-oracle`;
 
+/**
+ * Efficient SSE line parser — avoids O(n²) string slicing by tracking
+ * a read cursor instead of repeatedly creating substrings.
+ */
+function* parseSSELines(chunk: string, carry: string): Generator<string, string> {
+  let buf = carry + chunk;
+  let start = 0;
+  let idx: number;
+  while ((idx = buf.indexOf("\n", start)) !== -1) {
+    let line = buf.slice(start, idx);
+    if (line.endsWith("\r")) line = line.slice(0, -1);
+    start = idx + 1;
+    yield line;
+  }
+  return buf.slice(start); // leftover
+}
+
 export async function streamOracle({
   messages,
   scaffoldFragment,
@@ -23,7 +40,6 @@ export async function streamOracle({
   const ttft = createTTFTMeasure();
   const latencyTier = getPreferredTier();
 
-  // Early offline check
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     onError("You're currently offline. The Oracle will be available when your connection returns.");
     return;
@@ -36,6 +52,7 @@ export async function streamOracle({
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
     body: JSON.stringify({ messages, scaffoldFragment, temperature, latencyTier }),
+    keepalive: true,
   });
 
   if (!resp.ok || !resp.body) {
@@ -46,22 +63,22 @@ export async function streamOracle({
 
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  let carry = "";
   let done = false;
 
   while (!done) {
     const { done: readerDone, value } = await reader.read();
     if (readerDone) break;
-    buffer += decoder.decode(value, { stream: true });
+    const chunk = decoder.decode(value, { stream: true });
 
-    let newlineIdx: number;
-    while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
-      let line = buffer.slice(0, newlineIdx);
-      buffer = buffer.slice(newlineIdx + 1);
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (line.startsWith(":") || line.trim() === "") continue;
-      if (!line.startsWith("data: ")) continue;
-
+    const gen = parseSSELines(chunk, carry);
+    let result = gen.next();
+    while (!result.done) {
+      const line = result.value as string;
+      if (line.startsWith(":") || line.trim() === "" || !line.startsWith("data: ")) {
+        result = gen.next();
+        continue;
+      }
       const jsonStr = line.slice(6).trim();
       if (jsonStr === "[DONE]") { done = true; break; }
 
@@ -70,19 +87,19 @@ export async function streamOracle({
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
         if (content) { ttft.markFirstToken(); onDelta(content); }
       } catch {
-        buffer = line + "\n" + buffer;
-        break;
+        // Incomplete JSON — will be handled in next chunk
       }
+      result = gen.next();
     }
+    // Capture leftover from generator return
+    if (result.done) carry = result.value as string;
   }
 
   // Flush remaining
-  if (buffer.trim()) {
-    for (let raw of buffer.split("\n")) {
-      if (!raw) continue;
-      if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-      if (!raw.startsWith("data: ")) continue;
-      const jsonStr = raw.slice(6).trim();
+  if (carry.trim()) {
+    for (const raw of carry.split("\n")) {
+      if (!raw || !raw.startsWith("data: ")) continue;
+      const jsonStr = raw.replace(/\r$/, "").slice(6).trim();
       if (jsonStr === "[DONE]") continue;
       try {
         const parsed = JSON.parse(jsonStr);

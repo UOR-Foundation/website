@@ -150,8 +150,8 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
               top: `${CONTENT.opticalCenter}%`,
               borderRadius: `${RADIUS.xl}px`,
               background: panelBg,
-              backdropFilter: "blur(48px) saturate(1.4)",
-              WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+              backdropFilter: "blur(16px) saturate(1.4)",
+              WebkitBackdropFilter: "blur(16px) saturate(1.4)",
               border: `1px solid ${panelBorder}`,
               boxShadow: panelShadow,
             }}

@@ -286,10 +286,10 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             setBootPhase("done");
             setTimeout(() => {
               if (!cancelled) setShowDesktop(true);
-            }, 1600);
+            }, 600);
             setTimeout(() => {
               if (!cancelled) onComplete();
-            }, 2400);
+            }, 1000);
             return;
           }
 
@@ -299,16 +299,16 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
           idx++;
 
           let delay: number;
-          if (line.level === "header") delay = 200;
-          else if (line.level === "divider") delay = 60;
-          else if (line.level === "ascii") delay = 30;
-          else if (line.text === "") delay = 80;
-          else delay = 75 + Math.random() * 45;
+          if (line.level === "header") delay = 80;
+          else if (line.level === "divider") delay = 20;
+          else if (line.level === "ascii") delay = 12;
+          else if (line.text === "") delay = 30;
+          else delay = 30 + Math.random() * 20;
 
           setTimeout(replayNext, delay);
         }
 
-        setTimeout(replayNext, 400);
+        setTimeout(replayNext, 200);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -526,6 +526,14 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
               {/* Right side: actions */}
               <div className="flex items-center gap-2">
+                {(bootPhase === "booting" || bootPhase === "replaying") && (
+                  <button
+                    onClick={() => { setShowDesktop(true); onComplete(); }}
+                    className="px-3 py-1 text-[10px] tracking-[0.1em] text-white/40 border border-white/8 rounded hover:bg-white/5 hover:text-white/60 transition-colors font-mono"
+                  >
+                    SKIP ▸
+                  </button>
+                )}
                 {bootPhase === "error" && (
                   <>
                     <button

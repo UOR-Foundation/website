@@ -91,8 +91,8 @@ export default function ShortcutCheatSheet({ open, onClose }: Props) {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10001] w-[420px] max-w-[90vw] max-h-[80vh] overflow-y-auto rounded-2xl border p-6 ${bgClass}`}
             style={{
-              backdropFilter: "blur(40px) saturate(1.4)",
-              WebkitBackdropFilter: "blur(40px) saturate(1.4)",
+              backdropFilter: "blur(16px) saturate(1.4)",
+              WebkitBackdropFilter: "blur(16px) saturate(1.4)",
             }}
           >
             <div className="flex items-center justify-between mb-5">

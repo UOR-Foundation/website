@@ -27,7 +27,7 @@ export default function SnapOverlay({ zone }: Props) {
           exit={{ opacity: 0, scale: 0.96 }}
           transition={{ duration: 0.15 }}
           className="fixed z-[180] pointer-events-none rounded-xl"
-          style={{ top: rect.y, left: rect.x, width: rect.w, height: rect.h, background: bg, border, backdropFilter: "blur(8px)" }}
+          style={{ top: rect.y, left: rect.x, width: rect.w, height: rect.h, background: bg, border }}
         />
       )}
     </AnimatePresence>
