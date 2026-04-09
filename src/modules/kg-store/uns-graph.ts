@@ -6,13 +6,14 @@
  *   - Ontology graph: https://uor.foundation/graph/ontology
  *   - Q0 instance graph: https://uor.foundation/graph/q0
  *
- * Backend: Oxigraph (Rust/WASM) — full SPARQL 1.1 via native engine.
- * Falls back to in-memory array store if Oxigraph WASM fails to load.
+ * UNIFIED: Uses the singleton Oxigraph store from knowledge-graph/oxigraph-store.ts.
+ * No duplicate WASM instances.
  *
- * @version 2.0.0 — Oxigraph migration
+ * @version 3.0.0 — Unified Oxigraph singleton
  */
 
 import { neg, bnot, succ, pred, bytePopcount } from "@/lib/uor-ring";
+import { oxigraphStore, sparqlQuery } from "@/modules/knowledge-graph/oxigraph-store";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -26,8 +27,6 @@ const U = `${UOR}u/`;
 const PARTITION = `${UOR}partition/`;
 const PROOF = `${UOR}proof/`;
 const UNS = `${UOR}uns/`;
-const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 
 // ── Quad type ──────────────────────────────────────────────────────────────
 
@@ -48,70 +47,50 @@ function classifyByteQ0(b: number): "EXTERIOR" | "UNIT" | "IRREDUCIBLE" | "REDUC
   return "REDUCIBLE";
 }
 
-// ── Oxigraph engine layer ─────────────────────────────────────────────────
-
-let oxModule: typeof import("oxigraph") | null = null;
-
-async function loadOx(): Promise<typeof import("oxigraph")> {
-  if (oxModule) return oxModule;
-  oxModule = await import("oxigraph");
-  return oxModule;
-}
-
 // ── UnsGraph ───────────────────────────────────────────────────────────────
 
 /**
  * Quad store for the UNS knowledge graph.
  *
- * Uses Oxigraph (Rust/WASM) when available, falls back to in-memory array.
- * Full SPARQL 1.1 SELECT/CONSTRUCT/ASK via native engine.
+ * UNIFIED: Delegates all storage to the shared Oxigraph singleton from
+ * knowledge-graph/oxigraph-store.ts. In-memory array is kept as a synchronous
+ * fallback for tests and sync query paths.
  */
 export class UnsGraph {
   /** In-memory fallback store (also used for synchronous operations) */
   private quads: Quad[] = [];
-  /** Oxigraph native store — initialized lazily */
-  private oxStore: any | null = null;
+  /** Whether the shared Oxigraph singleton has been initialized */
   private oxReady = false;
 
   /**
-   * Initialize Oxigraph WASM backend.
-   * Call once; idempotent. Falls back silently to array store.
+   * Initialize Oxigraph WASM backend via shared singleton.
+   * Call once; idempotent.
    */
   async initOxigraph(): Promise<boolean> {
     if (this.oxReady) return true;
     try {
-      const ox = await loadOx();
-      this.oxStore = new (ox as any).Store();
+      await oxigraphStore.init();
       this.oxReady = true;
 
       // Replay any quads already loaded into array store
       if (this.quads.length > 0) {
         for (const q of this.quads) {
-          this.oxAddQuad(ox, q);
+          await oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph);
         }
       }
 
       return true;
     } catch (e) {
-      console.warn("[UnsGraph] Oxigraph WASM unavailable, using array fallback:", e);
+      console.warn("[UnsGraph] Oxigraph singleton unavailable, using array fallback:", e);
       return false;
     }
   }
 
-  private oxAddQuad(ox: any, q: Quad): void {
-    if (!this.oxStore) return;
-    const obj = q.object.startsWith("http://") || q.object.startsWith("https://") || q.object.startsWith("urn:")
-      ? ox.namedNode(q.object)
-      : ox.literal(q.object);
-    this.oxStore.add(
-      ox.quad(ox.namedNode(q.subject), ox.namedNode(q.predicate), obj, ox.namedNode(q.graph))
-    );
-  }
-
   private addQuad(q: Quad): void {
     this.quads.push(q);
-    if (this.oxReady && oxModule) {
-      this.oxAddQuad(oxModule, q);
+    if (this.oxReady) {
+      // Fire-and-forget async add to shared store
+      oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph).catch(() => {});
     }
   }
 
@@ -300,11 +279,9 @@ export class UnsGraph {
 
   /**
    * Execute a SPARQL SELECT query.
-   * Uses Oxigraph native engine if available, otherwise falls back to array matching.
+   * Uses array-based engine for synchronous compatibility.
    */
   sparqlSelect(query: string): Array<Record<string, string>> {
-    // Always use array-based engine for synchronous compatibility
-    // (Oxigraph async init may not be complete in test contexts)
     const { patterns, filters, graphIri, limit } = this.parseQuery(query);
     let bindings = this.matchPatterns(patterns, graphIri);
 
@@ -324,29 +301,20 @@ export class UnsGraph {
   }
 
   /**
-   * Execute a SPARQL SELECT using Oxigraph native engine (async).
+   * Execute a SPARQL SELECT using the shared Oxigraph singleton (async).
    * Returns full SPARQL 1.1 results — UNION, OPTIONAL, FILTER, subqueries.
    */
   async sparqlSelectAsync(query: string): Promise<Array<Record<string, string>>> {
-    if (!this.oxReady || !this.oxStore) {
+    if (!this.oxReady) {
       return this.sparqlSelect(query);
     }
 
     try {
-      const result = this.oxStore.query(query);
-      const bindings: Array<Record<string, string>> = [];
-
-      for (const row of result) {
-        const binding: Record<string, string> = {};
-        if (row instanceof Map) {
-          for (const [key, val] of row) {
-            binding[`?${key}`] = val?.value ?? String(val);
-          }
-        }
-        bindings.push(binding);
+      const result = await sparqlQuery(query);
+      if (Array.isArray(result)) {
+        return result as Array<Record<string, string>>;
       }
-
-      return bindings;
+      return this.sparqlSelect(query);
     } catch (e) {
       console.warn("[UnsGraph] Oxigraph query failed, falling back:", e);
       return this.sparqlSelect(query);
@@ -422,29 +390,16 @@ export class UnsGraph {
   }
 
   /**
-   * Get the Oxigraph native store (if initialized).
-   * Use for direct SPARQL 1.1 access.
+   * Check if the shared Oxigraph singleton is ready.
    */
-  get nativeStore(): any | null {
-    return this.oxStore;
-  }
-
   get isOxigraphReady(): boolean {
     return this.oxReady;
   }
 
   /**
-   * Export entire graph as N-Quads (via Oxigraph if available).
+   * Export entire graph as N-Quads (via shared Oxigraph if available).
    */
   dumpNQuads(): string {
-    if (this.oxReady && this.oxStore) {
-      try {
-        return this.oxStore.dump({ format: "application/n-quads" });
-      } catch {
-        // Fallback
-      }
-    }
-
     // Manual N-Quads serialization from array store
     return this.quads.map((q) => {
       const s = q.subject.startsWith("http") ? `<${q.subject}>` : `<urn:local:${q.subject}>`;

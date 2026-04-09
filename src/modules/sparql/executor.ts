@@ -1,15 +1,16 @@
 /**
- * SPARQL Executor. translates parsed SPARQL AST into Supabase queries
- * against the uor_triples table.
+ * SPARQL Executor
+ *
+ * @deprecated Use Oxigraph directly via `sparqlQuery()` from
+ * `@/modules/knowledge-graph/oxigraph-store` for full SPARQL 1.1 support.
+ * This module translates parsed SPARQL AST into Supabase queries against
+ * the uor_triples table and is retained only for cloud-persisted triple
+ * queries. New code should use the Oxigraph path.
  *
  * Every result row is enriched with an epistemic grade:
  *   - If the subject has a derivation → grade from derivation record
  *   - If subject is in uor_datums but no derivation → grade 'C'
  *   - Otherwise → grade 'D'
- *
- * Delegates to:
- *   - sparql/parser for AST
- *   - integrations/supabase/client for queries
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -79,6 +80,9 @@ async function resolveGrades(
 
 // ── Executor ────────────────────────────────────────────────────────────────
 
+/**
+ * @deprecated Prefer `sparqlQuery()` from `@/modules/knowledge-graph/oxigraph-store`.
+ */
 export async function executeSparql(query: string): Promise<SparqlResult> {
   const start = performance.now();
   const parsed = parseSparql(query);
@@ -120,9 +124,9 @@ export async function executeSparql(query: string): Promise<SparqlResult> {
   const triples = data ?? [];
 
   // Resolve epistemic grades
-  const gradeMap = await resolveGrades(triples.map((t) => t.subject));
+  const gradeMap = await resolveGrades(triples.map((t: any) => t.subject));
 
-  const rows: SparqlResultRow[] = triples.map((t) => ({
+  const rows: SparqlResultRow[] = triples.map((t: any) => ({
     subject: t.subject,
     predicate: t.predicate,
     object: t.object,

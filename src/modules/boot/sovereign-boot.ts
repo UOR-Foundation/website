@@ -34,6 +34,8 @@ import { bus } from "@/modules/bus";
 import { BUS_MANIFEST } from "@/modules/bus/manifest";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
 import { startSealMonitor } from "./seal-monitor";
+import { validateStack } from "./tech-stack";
+import type { StackComponentStatus } from "./types";
 
 // ── Module-private seal storage (Finding 2: closure, not sessionStorage) ──
 
@@ -268,8 +270,20 @@ export async function sovereignBoot(
     onProgress?.({ phase: "device-fingerprint", progress: 0, detail: "Detecting device" });
     const provenance = await buildDeviceProvenance();
 
+    // Phase 0.5: Stack validation
+    onProgress?.({ phase: "stack-validation", progress: 0.1, detail: "Validating tech stack" });
+    const stackHealth = await validateStack();
+    const stackComponents: StackComponentStatus[] = stackHealth.results.map((r) => ({
+      name: r.entry.name,
+      role: r.entry.role,
+      available: r.available,
+      version: r.version,
+      criticality: r.entry.criticality,
+      fallback: r.entry.fallback,
+    }));
+
     // Phase 1: Engine init
-    onProgress?.({ phase: "engine-init", progress: 0.2, detail: "Loading engine" });
+    onProgress?.({ phase: "engine-init", progress: 0.25, detail: "Loading engine" });
     await initEngine();
     const ringTableHash = await computeRingTableHash();
     const wasmBinaryHash = await computeWasmBinaryHash();
@@ -280,7 +294,7 @@ export async function sovereignBoot(
     const manifestHash = await computeManifestHash();
     const moduleCount = BUS_MANIFEST.modules.length;
 
-    // Phase 3: Seal
+    // Phase 3: Seal (now includes stack hash in seal input)
     onProgress?.({ phase: "seal", progress: 0.7, detail: "Computing seal" });
     const sessionNonce = generateSessionNonce();
     const bootedAt = new Date().toISOString();
@@ -302,6 +316,11 @@ export async function sovereignBoot(
       engineType: getEngine().engine,
       bootTimeMs,
       moduleCount,
+      stackHealth: {
+        components: stackComponents,
+        allCriticalPresent: stackHealth.allCriticalPresent,
+        stackHash: stackHealth.stackHash,
+      },
       lastVerified: new Date().toISOString(),
     };
 
