@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useBootStatus } from "./useBootStatus";
+import { useCompositeHealth } from "./useCompositeHealth";
 import type { SealStatus, BootReceipt } from "./types";
 import { getEngine, getWasmDiagnostics } from "@/modules/engine";
 import { TECH_STACK, SELECTION_POLICY } from "./tech-stack";
