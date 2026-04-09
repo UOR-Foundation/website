@@ -1,84 +1,188 @@
 
 
-# Knowledge Graph Engine: Oxigraph Integration
+# Crate Version Sync Strategy — Seamless UOR Engine Updates
 
-## Recommendation: Oxigraph
+## Problem
 
-**Oxigraph** is the clear winner for this system. Here's why it's the right — and only — choice:
+When `uor-foundation` on crates.io bumps from v0.2.0 → v0.3.0+, the current system has three tightly coupled layers that all need manual updates:
+1. **WASM binary + shim** (`src/lib/wasm/uor-foundation/`) — the compiled crate
+2. **Bridge adapter** (`src/lib/wasm/uor-bridge.ts`) — 30+ hand-wired function wrappers
+3. **TypeScript type projection** (`src/types/uor-foundation/`) — 441 traits → TS interfaces
 
-- **Rust-native, WASM-compiled**: Written in Rust, officially compiles to WebAssembly. Same engine runs in browser, Node.js, Deno, Cloudflare Workers, and native server. One codebase, every environment.
-- **Full SPARQL 1.1**: SELECT, CONSTRUCT, ASK, DESCRIBE, UPDATE — complete spec compliance. No partial implementations.
-- **Battle-tested**: v0.5.6 (March 2026), used in production by Wikidata tooling, EU open data projects, and multiple academic systems. 15k+ GitHub stars.
-- **Apache 2.0 + MIT dual-licensed**: Fully open source, no restrictions.
-- **Named graphs / Quads**: Native quad store — aligns perfectly with the existing `UnsGraph` ontology and Q0 named graph architecture.
-- **RDF format support**: Turtle, TriG, N-Triples, N-Quads, RDF/XML — built-in serialization/deserialization.
-- **npm package**: `npm install oxigraph` — drop-in, no build toolchain needed.
+Today, adding a single new export to the crate requires touching all three layers plus every consumer. The goal: **swap the WASM binary, run one command, done**.
 
-No other option comes close. Apache Jena is Java-only (no browser). RDFox is proprietary. N3.js is a parser, not a store. Comunica is a query engine without persistence. Oxigraph is the only production-grade, WASM-portable, full SPARQL graph database.
+## Architecture
 
-## Current State
-
-The system currently has two custom graph stores:
-
-1. **`local-store.ts`** — IndexedDB-backed triple store with manual index management. ~620 lines of hand-rolled cursor/transaction code. No SPARQL — queries are imperative JavaScript (queryBySubject, queryByPredicate).
-
-2. **`uns-graph.ts`** — In-memory quad store with a hand-written SPARQL parser (~630 lines). Supports SELECT/CONSTRUCT/ASK but the parser is a custom regex-based implementation, not spec-compliant.
-
-Both work, but they're fragile, limited, and would need to be rewritten for every new query pattern. Oxigraph replaces both with a single, spec-compliant engine.
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Upstream consumers (bus, oracle, KG, UI)                │
+│  import ONLY from: @/modules/engine                      │
+│  ↓ stable contract — never changes shape                │
+├─────────────────────────────────────────────────────────┤
+│  ENGINE CONTRACT  (src/modules/engine/contract.ts)       │
+│  One interface: UorEngineContract                        │
+│  Versioned: { version, ring, address, meta }             │
+│  All methods typed, all with TS fallback guarantee       │
+├─────────────────────────────────────────────────────────┤
+│  ENGINE ADAPTER   (src/modules/engine/adapter.ts)        │
+│  Implements contract by delegating to WASM or TS         │
+│  AUTO-GENERATED from .d.ts via sync script               │
+├─────────────────────────────────────────────────────────┤
+│  WASM BINARY      (src/lib/wasm/uor-foundation/)         │
+│  Drop-in replacement — swap files, run sync              │
+├─────────────────────────────────────────────────────────┤
+│  VERSION MANIFEST (src/modules/engine/crate-manifest.ts) │
+│  Expected version, export list hash, namespace count     │
+│  Boot-time validation: actual exports vs manifest        │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Implementation
 
-### Phase 1 — Install and Create Oxigraph Adapter
+### 1. Create `src/modules/engine/contract.ts` — The Stable API
 
-Install the `oxigraph` npm package. Create `src/modules/knowledge-graph/oxigraph-store.ts` that wraps the Oxigraph WASM store with the same interface the bus currently expects (`putNode`, `putEdge`, `getNode`, `queryBySubject`, etc.). This adapter:
-
-- Initializes Oxigraph's in-memory store (WASM)
-- Translates KGNode/KGEdge objects to/from RDF quads using the existing UOR IRI conventions
-- Exposes raw `sparqlQuery(sparql: string)` for full SPARQL 1.1
-- Persists to IndexedDB by serializing the store as N-Quads on `flush()` and reloading on init
-- Handles named graphs (ontology graph, Q0 graph, user graphs)
-
-### Phase 2 — Migrate UnsGraph to Oxigraph Backend
-
-Update `src/modules/kg-store/uns-graph.ts` to use Oxigraph internally instead of the hand-rolled quad array + regex SPARQL parser. The public API (`sparqlSelect`, `sparqlConstruct`, `sparqlAsk`, `loadOntologyGraph`, `materializeQ0`) stays identical — only the backend changes from `this.quads[]` to `oxStore.query()`.
-
-### Phase 3 — Update Bus Graph Module
-
-Update `src/modules/bus/modules/graph.ts` to add a `sparql` operation that passes raw SPARQL strings directly to Oxigraph. This gives the full power of SPARQL 1.1 through the bus:
+A single TypeScript interface that **never breaks**:
 
 ```typescript
-bus.call("graph/sparql", { query: "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 10" })
+export interface UorEngineContract {
+  // Identity
+  readonly version: string;           // crate version
+  readonly engine: "wasm" | "typescript";
+
+  // Ring R_8
+  neg(x: number): number;
+  bnot(x: number): number;
+  succ(x: number): number;
+  pred(x: number): number;
+  add(a: number, b: number): number;
+  sub(a: number, b: number): number;
+  mul(a: number, b: number): number;
+  xor(a: number, b: number): number;
+  and(a: number, b: number): number;
+  or(a: number, b: number): number;
+
+  // Verification
+  verifyCriticalIdentity(x: number): boolean;
+  verifyAllCriticalIdentity(): boolean;
+
+  // Analysis
+  bytePopcount(x: number): number;
+  byteBasis(x: number): number[];
+  classifyByte(x: number): string;
+  factorize(x: number): number[];
+  evaluateExpr(expr: string): number;
+
+  // Meta (version-extensible)
+  listNamespaces(): string[];
+  listEnums(): string[];
+
+  // Extension point: new crate exports land here
+  // without breaking existing consumers
+  extensions: Record<string, (...args: any[]) => any>;
+}
 ```
 
-### Phase 4 — Persistence Bridge
+All upstream code imports `getEngine()` which returns this contract. When the crate adds new exports, they appear in `extensions` first — zero breakage. Once stabilized, they get promoted to the contract interface in a minor version bump.
 
-Create a persistence layer that:
-- On every write batch, serializes changed named graphs to N-Quads and stores in IndexedDB
-- On boot, deserializes N-Quads back into Oxigraph
-- On cloud sync, sends N-Quads to the backend for replication
-- This replaces the current manual IndexedDB cursor management with a clean serialize/deserialize cycle
+### 2. Create `src/modules/engine/crate-manifest.ts` — Version Anchor
 
-### Phase 5 — Include in Boot Sequence
+```typescript
+export const CRATE_MANIFEST = {
+  version: "0.2.0",
+  expectedExports: [
+    "neg", "bnot", "succ", "pred", "ring_add", ...
+  ],
+  exportHash: "sha256:<hash-of-sorted-export-names>",
+  namespaceCount: 33,
+  classCount: 441,
+  propertyCount: 892,
+} as const;
+```
 
-Wire Oxigraph initialization into the sovereign boot (Phase 1, Layer 0):
-- Load WASM (Oxigraph ships its own `.wasm`)
-- Restore persisted N-Quads from IndexedDB
-- Materialize Q0 ontology
-- Report quad count in boot receipt
+At boot, the engine adapter compares `Object.keys(wasmModule)` against this manifest. Mismatches are logged as "crate version drift" — new exports are auto-discovered and wired into `extensions`, removed exports trigger a degraded status.
+
+### 3. Create `src/modules/engine/adapter.ts` — Auto-Wiring Layer
+
+Replaces the current hand-coded `uor-bridge.ts`. Instead of 30+ individual wrapper functions, it:
+
+- Reads all exports from the loaded WASM module dynamically
+- Maps known exports to the contract interface
+- Routes unknown new exports to `extensions`
+- Falls back to the TS ring engine (`@/lib/uor-ring`) for any missing export
+- Logs which functions are WASM-accelerated vs TS-fallback
+
+### 4. Create `scripts/sync-crate.ts` — The Update Script
+
+A single command that automates the entire update process:
+
+```bash
+npx ts-node scripts/sync-crate.ts --wasm-dir src/lib/wasm/uor-foundation
+```
+
+What it does:
+1. Reads the new `uor_wasm_shim.d.ts` to extract all exported function signatures
+2. Reads the current `crate-manifest.ts` to detect what changed (added/removed/modified)
+3. Generates a diff report: "3 new exports, 0 removed, 1 signature changed"
+4. Auto-updates `crate-manifest.ts` with the new export list + hash
+5. Auto-generates `adapter.ts` wiring for any new exports (with TS fallback stubs)
+6. Flags any **removed** exports that existing code depends on (searches `src/` for usages)
+7. Updates the version string in the manifest
+
+The script is **non-destructive** — it writes to a staging file first and shows a diff before overwriting.
+
+### 5. Update `src/modules/engine/index.ts` — Single Entry Point
+
+The barrel export becomes the **only** import path:
+
+```typescript
+export { getEngine, initEngine } from "./adapter";
+export type { UorEngineContract } from "./contract";
+export { CRATE_MANIFEST } from "./crate-manifest";
+
+// Re-export convenience functions (delegate to getEngine())
+export const neg = (x: number) => getEngine().neg(x);
+// ... etc — backward compatible
+```
+
+Existing code that does `import { neg } from "@/modules/engine"` keeps working unchanged. New code can use `getEngine()` for the full contract.
+
+### 6. Type Projection Sync Strategy
+
+For `src/types/uor-foundation/`, create a **type version tag** at the top of `index.ts`:
+
+```typescript
+export const TYPE_PROJECTION_VERSION = "0.2.0";
+export const TYPE_PROJECTION_HASH = "sha256:<hash-of-all-type-files>";
+```
+
+The boot sequence compares this against `CRATE_MANIFEST.version`. If they diverge, the system logs a warning but **does not break** — types are structural in TypeScript, so additive changes (new interfaces) are non-breaking. Only removals or signature changes need attention.
+
+The sync script also generates a `type-drift-report.md` showing which Rust traits have no TypeScript counterpart and vice versa.
+
+## Update Workflow (When Crate Bumps)
+
+```text
+1. Download new WASM artifacts (3 files) into src/lib/wasm/uor-foundation/
+2. Run: npx ts-node scripts/sync-crate.ts
+3. Script outputs:
+   ✓ crate-manifest.ts updated (v0.2.0 → v0.3.0)
+   ✓ 5 new exports auto-wired to extensions
+   ✓ 0 breaking changes detected
+   ✓ adapter.ts regenerated
+   ⚠ Type projection drift: 12 new traits not yet projected
+4. Boot the app — seal recomputes automatically (new version → new seal)
+5. Done. Zero upstream refactoring.
+```
 
 ## Files Summary
 
-| Action | File |
-|---|---|
-| Install | `oxigraph` npm package |
-| Create | `src/modules/knowledge-graph/oxigraph-store.ts` — adapter wrapping Oxigraph |
-| Modify | `src/modules/kg-store/uns-graph.ts` — swap backend to Oxigraph |
-| Modify | `src/modules/bus/modules/graph.ts` — add `sparql` operation |
-| Modify | `src/modules/knowledge-graph/local-store.ts` — delegate to Oxigraph adapter |
-| Modify | `src/modules/knowledge-graph/index.ts` — export Oxigraph store |
-| Modify | `src/modules/boot/sovereign-boot.ts` — init Oxigraph in Phase 1 |
-
-## Why This Is the Right Move
-
-The current system has ~1250 lines of hand-rolled graph code that Oxigraph replaces with a battle-tested Rust engine. You get full SPARQL 1.1 for free, proper query optimization, standard RDF serialization, and the exact same WASM binary runs in browser, edge function, or cloud server. The UOR ontology, Q0 materialization, and named graph architecture all map directly to Oxigraph's native quad model with zero impedance mismatch.
+| Action | File | Purpose |
+|---|---|---|
+| Create | `src/modules/engine/contract.ts` | Stable interface all consumers depend on |
+| Create | `src/modules/engine/crate-manifest.ts` | Version + export inventory for drift detection |
+| Create | `src/modules/engine/adapter.ts` | Dynamic WASM→Contract wiring with TS fallback |
+| Create | `scripts/sync-crate.ts` | One-command update automation |
+| Modify | `src/modules/engine/index.ts` | Re-export via contract + backward compat shims |
+| Modify | `src/lib/wasm/uor-bridge.ts` | Thin wrapper delegating to adapter (deprecate gradually) |
+| Modify | `src/types/uor-foundation/index.ts` | Add version tag + drift hash |
 
