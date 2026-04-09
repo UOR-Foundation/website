@@ -2538,7 +2538,7 @@ const SearchPage = () => {
                               <RotateCcw className="w-3.5 h-3.5 mr-2" />
                               Verify Integrity {rederived ? "✓" : ""}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { if (!user) { toast("Sign in to fork", { icon: "🔒" }); return; } setForkModalOpen(true); }}>
+                            <DropdownMenuItem onClick={() => { if (!user) { authPrompt("fork"); return; } setForkModalOpen(true); }}>
                               <GitFork className="w-3.5 h-3.5 mr-2" />
                               Fork
                             </DropdownMenuItem>
