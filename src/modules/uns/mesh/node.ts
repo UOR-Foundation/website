@@ -23,6 +23,7 @@ export interface UnsNodeConfig {
   enableStore: boolean;
   enableLedger: boolean;
   enableTrust: boolean;
+  enableSync: boolean;
 }
 
 export interface ServiceStatus {
@@ -34,6 +35,7 @@ export interface ServiceStatus {
   cache: boolean;
   ledger: boolean;
   trust: boolean;
+  sync: boolean;
 }
 
 export interface HealthResponse {
@@ -59,6 +61,7 @@ export class UnsNode {
     cache: false,
     ledger: false,
     trust: false,
+    sync: false,
   };
 
   constructor(config: UnsNodeConfig) {
@@ -88,6 +91,7 @@ export class UnsNode {
     this._services.cache = this.config.enableStore; // Cache depends on store
     this._services.ledger = this.config.enableLedger;
     this._services.trust = this.config.enableTrust;
+    this._services.sync = this.config.enableSync;
 
     this._running = true;
     this._startedAt = Date.now();
@@ -101,7 +105,7 @@ export class UnsNode {
     this._services = {
       resolver: false, shield: false, compute: false,
       store: false, kv: false, cache: false,
-      ledger: false, trust: false,
+      ledger: false, trust: false, sync: false,
     };
     this._running = false;
     this._startedAt = 0;
