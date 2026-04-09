@@ -48,18 +48,20 @@ export interface UorEngineContract {
   // ── Ring dispatch by opcode ────────────────────────────────────────────
   constRingEvalQ0(op: number, a: number, b?: number): number;
 
-  // ── Bulk Operations (worker-offloadable) ──────────────────────────────
+  // ── Bulk Operations (SIMD-accelerated when WASM available) ──────────
   /**
    * Apply a named ring operation to every byte in the array.
-   * Delegates to Web Worker when available for off-main-thread compute.
+   * WASM path uses auto-vectorized SIMD128 (16 bytes/instruction).
+   * TS path uses scalar loops (functionally identical).
    */
-  bulkApply?(op: string, data: Uint8Array, operand?: number): Promise<Uint8Array>;
+  bulkApply(op: string, data: Uint8Array, operand?: number): Promise<Uint8Array>;
 
   /**
-   * Verify critical identity for all 256 byte values in parallel.
+   * Verify critical identity for all 256 byte values.
+   * WASM path uses bulk_verify_all (SIMD-accelerated).
    * Returns per-value results and aggregate pass/fail.
    */
-  bulkVerify?(): Promise<{ results: boolean[]; allPassed: boolean }>;
+  bulkVerify(): Promise<{ results: boolean[]; allPassed: boolean }>;
 
   // ── Meta ───────────────────────────────────────────────────────────────
   listNamespaces(): string[];

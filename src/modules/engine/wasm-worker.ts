@@ -9,8 +9,9 @@
  *   - bulkVerify: Verify critical identities for all 256 values
  *   - batchFactorize: Factorize a range of values
  *
- * Uses SharedArrayBuffer for zero-copy data transfer when available,
- * falling back to structured clone (Transferable ArrayBuffer).
+ * When WASM is available, the worker loads the WASM module for
+ * SIMD128-accelerated bulk operations (16 bytes/instruction).
+ * Falls back to pure JS ring ops if WASM is unavailable.
  *
  * @layer 0
  * @module engine/wasm-worker
@@ -23,12 +24,14 @@ import type { UorEngineContract } from "./contract";
 export type WorkerCommand =
   | { type: "bulkApply"; op: string; data: Uint8Array; operand?: number; id: string }
   | { type: "bulkVerify"; id: string }
-  | { type: "batchFactorize"; start: number; end: number; id: string };
+  | { type: "batchFactorize"; start: number; end: number; id: string }
+  | { type: "initWasm"; wasmUrl: string; id: string };
 
 export type WorkerResult =
   | { type: "bulkApply"; data: Uint8Array; id: string }
   | { type: "bulkVerify"; results: boolean[]; allPassed: boolean; id: string }
   | { type: "batchFactorize"; results: number[][]; id: string }
+  | { type: "initWasm"; success: boolean; id: string }
   | { type: "error"; message: string; id: string };
 
 // ── Worker Manager (runs on main thread) ────────────────────────────────
@@ -41,6 +44,7 @@ export class WasmWorkerManager {
   }>();
   private idCounter = 0;
   private readonly hasSharedMemory: boolean;
+  private wasmReady = false;
 
   constructor() {
     this.hasSharedMemory = typeof SharedArrayBuffer !== "undefined";
@@ -55,9 +59,10 @@ export class WasmWorkerManager {
 
   /**
    * Initialize the worker. Must be called before sending commands.
-   * Creates an inline worker from a blob URL to avoid separate file serving.
+   * If wasmUrl is provided, the worker will load the WASM module
+   * for SIMD-accelerated bulk operations.
    */
-  async init(engine: UorEngineContract): Promise<void> {
+  async init(engine: UorEngineContract, wasmUrl?: string): Promise<void> {
     if (this.worker) return;
 
     // Create inline worker script
@@ -82,6 +87,23 @@ export class WasmWorkerManager {
       this.worker.onerror = (e) => {
         console.warn("[WASM Worker] Error:", e.message);
       };
+
+      // If WASM is available on main thread, try to init in worker too
+      if (wasmUrl && engine.engine === "wasm") {
+        try {
+          const id = String(++this.idCounter);
+          const result = await new Promise<WorkerResult>((resolve, reject) => {
+            this.pending.set(id, { resolve, reject });
+            this.worker!.postMessage({ type: "initWasm", wasmUrl, id } as WorkerCommand);
+          });
+          if (result.type === "initWasm" && result.success) {
+            this.wasmReady = true;
+            console.log("[WASM Worker] SIMD-accelerated worker ready");
+          }
+        } catch {
+          // Worker will use JS fallback — fine
+        }
+      }
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -172,6 +194,7 @@ export class WasmWorkerManager {
       handler.reject(new Error("Worker disposed"));
     }
     this.pending.clear();
+    this.wasmReady = false;
   }
 }
 
@@ -179,9 +202,11 @@ export class WasmWorkerManager {
 
 function createWorkerScript(): string {
   return `
-// UOR Ring Z/256Z — pure math worker (no WASM import in worker context)
+// UOR Ring Z/256Z — WASM-aware worker with JS fallback
 const M = 256;
+let wasmMod = null;
 
+// ── JS scalar ops (fallback) ────────────────────────────────────────
 const OPS = {
   neg: (x) => ((-x) & 0xFF) >>> 0,
   bnot: (x) => (~x & 0xFF) >>> 0,
@@ -193,6 +218,13 @@ const OPS = {
   xor: (x, b) => x ^ b,
   and: (x, b) => x & b,
   or:  (x, b) => x | b,
+};
+
+// ── WASM SIMD bulk op mapping ───────────────────────────────────────
+const BULK_WASM_OPS = {
+  neg: "bulk_ring_neg",
+  add: "bulk_ring_add",
+  xor: "bulk_ring_xor",
 };
 
 function verifyCritical(x) {
@@ -211,21 +243,67 @@ function factorize(x) {
   return factors;
 }
 
-self.onmessage = function(e) {
+function bulkApplyJS(op, data, operand) {
+  const fn = OPS[op];
+  if (!fn) throw new Error("Unknown op: " + op);
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    result[i] = fn(data[i], operand);
+  }
+  return result;
+}
+
+function bulkApplyWasm(op, data, operand) {
+  const bulkName = BULK_WASM_OPS[op];
+  if (bulkName && wasmMod && typeof wasmMod[bulkName] === "function") {
+    try {
+      const result = operand !== undefined
+        ? wasmMod[bulkName](data, operand)
+        : wasmMod[bulkName](data);
+      return result instanceof Uint8Array ? result : new Uint8Array(result);
+    } catch (e) {
+      // Fall through to JS
+    }
+  }
+  return bulkApplyJS(op, data, operand);
+}
+
+self.onmessage = async function(e) {
   const msg = e.data;
   try {
     switch (msg.type) {
-      case "bulkApply": {
-        const fn = OPS[msg.op];
-        if (!fn) { self.postMessage({ type: "error", message: "Unknown op: " + msg.op, id: msg.id }); return; }
-        const result = new Uint8Array(msg.data.length);
-        for (let i = 0; i < msg.data.length; i++) {
-          result[i] = fn(msg.data[i], msg.operand);
+      case "initWasm": {
+        try {
+          const response = await fetch(msg.wasmUrl);
+          const bytes = await response.arrayBuffer();
+          const result = await WebAssembly.instantiate(bytes, {});
+          wasmMod = result.instance.exports;
+          self.postMessage({ type: "initWasm", success: true, id: msg.id });
+        } catch (err) {
+          self.postMessage({ type: "initWasm", success: false, id: msg.id });
         }
+        break;
+      }
+      case "bulkApply": {
+        const result = wasmMod
+          ? bulkApplyWasm(msg.op, msg.data, msg.operand)
+          : bulkApplyJS(msg.op, msg.data, msg.operand);
         self.postMessage({ type: "bulkApply", data: result, id: msg.id }, [result.buffer]);
         break;
       }
       case "bulkVerify": {
+        // If WASM has bulk_verify_all, use it
+        if (wasmMod && typeof wasmMod.bulk_verify_all === "function") {
+          try {
+            const raw = wasmMod.bulk_verify_all();
+            const results = Array.isArray(raw)
+              ? raw.map(v => v === 1 || v === true)
+              : new Array(256).fill(false).map((_, i) => verifyCritical(i));
+            const allPassed = results.every(Boolean);
+            self.postMessage({ type: "bulkVerify", results, allPassed, id: msg.id });
+            break;
+          } catch (e) { /* fall through */ }
+        }
         const results = new Array(256);
         let allPassed = true;
         for (let i = 0; i < 256; i++) {
