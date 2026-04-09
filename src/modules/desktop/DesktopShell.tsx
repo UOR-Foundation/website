@@ -4,11 +4,9 @@
  */
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-// AnimatePresence removed — windows use CSS transitions now (Revolut-style)
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
-// DesktopDock removed — tabs handle app switching now
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import SpotlightSearch from "@/modules/desktop/SpotlightSearch";
@@ -29,7 +27,6 @@ function DesktopShellInner() {
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
-  
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -64,7 +61,6 @@ function DesktopShellInner() {
 
   useDesktopShortcuts(shortcutHandlers);
 
-  // Listen for open-app events from within windows
   useEffect(() => {
     const handler = (e: Event) => {
       const appId = (e as CustomEvent).detail;
@@ -74,7 +70,6 @@ function DesktopShellInner() {
     return () => window.removeEventListener("uor:open-app", handler);
   }, [handleOpenApp]);
 
-  // Mobile: use drawer-based shell
   if (isMobile) return <MobileShell />;
 
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
@@ -89,7 +84,6 @@ function DesktopShellInner() {
         {theme === "immersive" && (
           <>
             <DesktopImmersiveWallpaper />
-            {/* Dark overlay when windows are open — hides wallpaper for readability */}
             {wm.windows.some(w => !w.minimized) && (
               <div
                 className="fixed inset-0 z-[1] pointer-events-none transition-opacity duration-500"
@@ -123,6 +117,11 @@ function DesktopShellInner() {
           onOpenApp={handleOpenApp}
           hideTime={!wm.windows.some(w => !w.minimized)}
           onProfileOpen={() => handleOpenApp("identity")}
+          onReorderWindows={wm.reorderWindows}
+          onTogglePin={wm.togglePin}
+          onMergeTabs={wm.mergeTabs}
+          onUnmergeTabs={wm.unmergeTabs}
+          onSnapMultiple={wm.snapMultiple}
         />
 
         <SnapOverlay zone={snapPreview} />

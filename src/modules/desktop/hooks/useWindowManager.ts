@@ -9,6 +9,11 @@ export interface WindowState {
   zIndex: number;
   minimized: boolean;
   maximized: boolean;
+  pinned: boolean;
+  /** IDs of child windows merged into this tab */
+  mergedChildren?: string[];
+  /** If this window is merged into another, the parent ID */
+  mergedParent?: string;
   /** Pre-snap geometry so we can restore */
   preSnap?: { position: { x: number; y: number }; size: { w: number; h: number } } | null;
 }
@@ -36,7 +41,14 @@ function loadWindows(): WindowState[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.map(w => ({
+          ...w,
+          pinned: w.pinned ?? false,
+          mergedChildren: w.mergedChildren ?? undefined,
+          mergedParent: w.mergedParent ?? undefined,
+        }));
+      }
     }
   } catch {}
   return [];
@@ -55,7 +67,6 @@ export function detectSnapZone(clientX: number, clientY: number): SnapZone | nul
   const usableTop = MENU_BAR_H;
   const usableH = vh - MENU_BAR_H - DOCK_H;
 
-  // Corners — 2x2 quadrants
   if (clientX <= SNAP_EDGE && clientY <= usableTop + SNAP_EDGE) {
     return { col: 0, row: 0, colSpan: 2, rowSpan: 2 };
   }
@@ -68,8 +79,6 @@ export function detectSnapZone(clientX: number, clientY: number): SnapZone | nul
   if (clientX >= vw - SNAP_EDGE && clientY >= usableTop + usableH - SNAP_EDGE) {
     return { col: 2, row: 2, colSpan: 2, rowSpan: 2 };
   }
-
-  // Edges — half screen
   if (clientX <= SNAP_EDGE) {
     return { col: 0, row: 0, colSpan: 2, rowSpan: 4 };
   }
@@ -77,9 +86,8 @@ export function detectSnapZone(clientX: number, clientY: number): SnapZone | nul
     return { col: 2, row: 0, colSpan: 2, rowSpan: 4 };
   }
   if (clientY <= usableTop + SNAP_EDGE) {
-    return { col: 0, row: 0, colSpan: 4, rowSpan: 4 }; // maximize
+    return { col: 0, row: 0, colSpan: 4, rowSpan: 4 };
   }
-
   return null;
 }
 
@@ -89,6 +97,22 @@ export function snapZoneToRect(zone: SnapZone): { x: number; y: number; w: numbe
   const usableH = window.innerHeight - MENU_BAR_H - DOCK_H;
   const cellW = vw / GRID_COLS;
   const cellH = usableH / GRID_ROWS;
+  const pad = 6;
+
+  return {
+    x: zone.col * cellW + pad,
+    y: MENU_BAR_H + zone.row * cellH + pad,
+    w: zone.colSpan * cellW - pad * 2,
+    h: zone.rowSpan * cellH - pad * 2,
+  };
+}
+
+/** Convert a snap zone to pixel geometry with custom grid dimensions */
+export function snapZoneToRectCustom(zone: SnapZone, cols: number, rows: number): { x: number; y: number; w: number; h: number } {
+  const vw = window.innerWidth;
+  const usableH = window.innerHeight - MENU_BAR_H - DOCK_H;
+  const cellW = vw / cols;
+  const cellH = usableH / rows;
   const pad = 6;
 
   return {
@@ -132,6 +156,7 @@ export function useWindowManager() {
         zIndex: ++nextZ.current,
         minimized: false,
         maximized: shouldMaximize,
+        pinned: false,
         preSnap: null,
       };
       const next = [...prev, newWin];
@@ -225,8 +250,103 @@ export function useWindowManager() {
     });
   }, []);
 
+  // --- New: reorder windows ---
+  const reorderWindows = useCallback((fromIndex: number, toIndex: number) => {
+    setWindows(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
+  // --- New: toggle pin ---
+  const togglePin = useCallback((id: string) => {
+    setWindows(prev => {
+      const next = prev.map(w => w.id === id ? { ...w, pinned: !w.pinned } : w);
+      // Sort: pinned first, then unpinned in current order
+      const pinned = next.filter(w => w.pinned);
+      const unpinned = next.filter(w => !w.pinned);
+      const sorted = [...pinned, ...unpinned];
+      saveWindows(sorted);
+      return sorted;
+    });
+  }, []);
+
+  // --- New: merge tabs ---
+  const mergeTabs = useCallback((ids: string[]) => {
+    if (ids.length < 2) return;
+    setWindows(prev => {
+      const primaryId = ids[0];
+      const childIds = ids.slice(1);
+      const next = prev.map(w => {
+        if (w.id === primaryId) {
+          return { ...w, mergedChildren: childIds };
+        }
+        if (childIds.includes(w.id)) {
+          return { ...w, mergedParent: primaryId, minimized: true };
+        }
+        return w;
+      });
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
+  const unmergeTabs = useCallback((parentId: string) => {
+    setWindows(prev => {
+      const parent = prev.find(w => w.id === parentId);
+      if (!parent?.mergedChildren) return prev;
+      const childIds = parent.mergedChildren;
+      const next = prev.map(w => {
+        if (w.id === parentId) {
+          return { ...w, mergedChildren: undefined };
+        }
+        if (childIds.includes(w.id)) {
+          return { ...w, mergedParent: undefined, minimized: false, zIndex: ++nextZ.current };
+        }
+        return w;
+      });
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
+  // --- New: snap multiple windows at once ---
+  const snapMultiple = useCallback((assignments: { id: string; zone: SnapZone; cols?: number; rows?: number }[]) => {
+    setWindows(prev => {
+      const assignMap = new Map(assignments.map(a => [a.id, a]));
+      const assignedIds = new Set(assignments.map(a => a.id));
+      const next = prev.map(w => {
+        const a = assignMap.get(w.id);
+        if (a) {
+          const rect = a.cols && a.rows
+            ? snapZoneToRectCustom(a.zone, a.cols, a.rows)
+            : snapZoneToRect(a.zone);
+          return {
+            ...w,
+            preSnap: w.preSnap || { position: { ...w.position }, size: { ...w.size } },
+            position: { x: rect.x, y: rect.y },
+            size: { w: rect.w, h: rect.h },
+            maximized: false,
+            minimized: false,
+            zIndex: ++nextZ.current,
+          };
+        }
+        // Minimize windows not in the layout
+        if (!assignedIds.has(w.id) && !w.minimized) {
+          return { ...w, minimized: true };
+        }
+        return w;
+      });
+      saveWindows(next);
+      return next;
+    });
+  }, []);
+
   const activeWindowId = windows
-    .filter(w => !w.minimized)
+    .filter(w => !w.minimized && !w.mergedParent)
     .sort((a, b) => b.zIndex - a.zIndex)[0]?.id || null;
 
   return {
@@ -241,5 +361,10 @@ export function useWindowManager() {
     resizeWindow,
     snapWindow,
     unsnap,
+    reorderWindows,
+    togglePin,
+    mergeTabs,
+    unmergeTabs,
+    snapMultiple,
   };
 }
