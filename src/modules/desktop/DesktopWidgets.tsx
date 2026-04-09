@@ -19,6 +19,7 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
 import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
+import DayRingClock from "@/modules/desktop/components/DayRingClock";
 import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/lib/search-suggestions";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
 import { loadProfile as loadAttentionProfile } from "@/modules/oracle/lib/attention-tracker";
@@ -63,11 +64,6 @@ function getGreeting(): string {
 }
 
 /** Adaptive clock font sizes — Pretext picks the largest that fits on 1 line */
-const CLOCK_SIZES = [
-  { font: FONTS.osClock, lineHeight: 88, fontSize: "80px" },
-  { font: FONTS.osClockMd, lineHeight: 64, fontSize: "56px" },
-  { font: FONTS.osClockSm, lineHeight: 48, fontSize: "40px" },
-];
 
 export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) {
   const [time, setTime] = useState(new Date());
@@ -151,22 +147,11 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
     }
   }, []);
 
-  const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); // kept for suggestion engine
   const displayName = profile?.displayName || "friend";
   // No trailing period — Apple-style
   const greetingText = `${getGreeting()}, ${displayName}`;
 
-  // Pretext-measured adaptive clock size
-  const clockStyle = useMemo(() => {
-    for (const candidate of CLOCK_SIZES) {
-      const lines = measureLineCount(clockStr, candidate.font, containerWidth, candidate.lineHeight);
-      if (lines <= 1) {
-        return { fontSize: candidate.fontSize, lineHeight: `${candidate.lineHeight}px` };
-      }
-    }
-    const sm = CLOCK_SIZES[CLOCK_SIZES.length - 1];
-    return { fontSize: sm.fontSize, lineHeight: `${sm.lineHeight}px` };
-  }, [clockStr, containerWidth]);
 
   // Pretext-measured adaptive greeting size
   const greetingFontInfo = useMemo(() => {
@@ -211,10 +196,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   // Theme-aware colors
   const isImmersive = theme === "immersive";
   // Lighter clock — ethereal, weightless
-  const clockColor = isImmersive ? "text-white/70" : isLight ? "text-black/65" : "text-white/70";
-  const clockShadow = isImmersive
-    ? "0 2px 30px rgba(0,0,0,0.2)"
-    : isLight ? "0 2px 24px rgba(0,0,0,0.04)" : "0 2px 24px rgba(0,0,0,0.15)";
+  
   // Greeting defers to clock — lower opacity
   const greetingColor = isImmersive ? "text-white/70" : isLight ? "text-black/30" : "text-white/35";
 
@@ -261,44 +243,29 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
       <div style={{ flex: "1.2" }} />
 
       <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
-        {/* Clock — light weight, generous letter-spacing */}
+        {/* Day-progress ring clock */}
+        <DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />
+
+        {/* Greeting */}
         <div
-          className="text-center mb-4"
-          style={{
-            opacity: clockOpacity,
-            transition: "opacity 300ms ease-out",
-          }}
+          className="mt-2 text-center"
+          style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
         >
-          <h1
-            className={`${clockColor} font-extralight leading-none select-none`}
+          <BalancedBlock
+            font={greetingFontInfo.font}
+            lineHeight={greetingFontInfo.lineHeight}
+            as="p"
+            className={`${greetingColor} font-normal select-none`}
             style={{
-              ...clockStyle,
+              fontSize: greetingFontInfo.fontSize,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
-              textShadow: clockShadow,
-              letterSpacing: "0.08em",
-              transition: "font-size 0.3s ease-out",
+              textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
+              letterSpacing: "0",
             }}
+            center
           >
-            {clockStr}
-          </h1>
-          {/* Greeting — more breathing room, no period, tracking-normal */}
-          <div className="mt-5">
-            <BalancedBlock
-              font={greetingFontInfo.font}
-              lineHeight={greetingFontInfo.lineHeight}
-              as="p"
-              className={`${greetingColor} font-normal select-none`}
-              style={{
-                fontSize: greetingFontInfo.fontSize,
-                fontFamily: "'DM Sans', -apple-system, sans-serif",
-                textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
-                letterSpacing: "0",
-              }}
-              center
-            >
-              {greetingText}
-            </BalancedBlock>
-          </div>
+            {greetingText}
+          </BalancedBlock>
         </div>
 
         {/* Search bar — tighter gap, frosted glass */}
