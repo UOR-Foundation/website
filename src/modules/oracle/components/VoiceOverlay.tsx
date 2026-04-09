@@ -1,6 +1,7 @@
 /**
  * VoiceOverlay — Full-screen immersive voice dictation overlay.
  * Pulsing mic orb, live transcript, privacy badge, Whisper download prompt.
+ * Now uses real AudioWorklet for audio level visualization.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -8,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Shield, ShieldCheck, Download, X } from "lucide-react";
 import { getHologramStt } from "@/modules/uns/core/hologram/stt-engine";
 import { getWhisperEngine, type WhisperLoadProgress } from "@/modules/uns/core/hologram/whisper-engine";
+import { startElevenLabsScribe, type ElevenLabsSttHandle } from "@/modules/uns/core/hologram/elevenlabs-stt";
+import { cleanVoiceTranscript } from "@/modules/oracle/lib/voice-cleanup";
 import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 interface Props {
@@ -22,24 +25,30 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
   const [interim, setInterim] = useState("");
   const [final, setFinal] = useState("");
   const [level, setLevel] = useState(0);
+  const [cleaning, setCleaning] = useState(false);
   const [whisperLoading, setWhisperLoading] = useState(false);
   const [whisperProgress, setWhisperProgress] = useState(0);
-  const handleRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
-  const levelInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const handleRef = useRef<ElevenLabsSttHandle | { stop: () => void; abort: () => void } | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const workletRef = useRef<AudioWorkletNode | null>(null);
 
   const stt = getHologramStt();
   const privacy = stt.privacy;
   const whisperReady = stt.whisperAvailable;
+  const useElevenLabs = stt.elevenLabsAvailable;
 
   // Start listening when overlay opens
   useEffect(() => {
     if (!open) {
       handleRef.current?.abort();
       handleRef.current = null;
+      cleanupAudio();
       setListening(false);
       setInterim("");
       setFinal("");
       setLevel(0);
+      setCleaning(false);
       return;
     }
 
@@ -49,14 +58,85 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
     return () => {
       handleRef.current?.abort();
       handleRef.current = null;
-      if (levelInterval.current) clearInterval(levelInterval.current);
+      cleanupAudio();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const startListening = useCallback(() => {
+  const cleanupAudio = useCallback(() => {
+    workletRef.current?.disconnect();
+    workletRef.current = null;
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+    audioStreamRef.current = null;
+  }, []);
+
+  /** Set up real AudioWorklet for level metering */
+  const setupAudioLevels = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+      });
+      audioStreamRef.current = stream;
+
+      const ctx = new AudioContext();
+      await ctx.audioWorklet.addModule("/audio-capture-worklet.js");
+      audioCtxRef.current = ctx;
+
+      const source = ctx.createMediaStreamSource(stream);
+      const worklet = new AudioWorkletNode(ctx, "audio-capture-processor");
+      workletRef.current = worklet;
+
+      worklet.port.onmessage = (event) => {
+        if (event.data.type === "level") {
+          setLevel(event.data.level);
+        }
+      };
+
+      source.connect(worklet);
+      worklet.connect(ctx.destination);
+    } catch {
+      // Fallback: no audio levels
+    }
+  }, []);
+
+  const startListening = useCallback(async () => {
     setFinal("");
     setInterim("");
+
+    if (useElevenLabs) {
+      // Use ElevenLabs Scribe — it handles its own audio capture
+      try {
+        const handle = await startElevenLabsScribe({
+          onPartial: (text) => setInterim(text),
+          onCommitted: (text) => {
+            setFinal((prev) => (prev ? prev + " " : "") + text);
+            setInterim("");
+          },
+          onLevel: (l) => setLevel(l),
+          onError: (err) => {
+            console.warn("[VoiceOverlay] ElevenLabs error:", err);
+            // Fall back to native
+            startNativeFallback();
+          },
+          onEnd: () => {
+            setListening(false);
+          },
+        });
+        handleRef.current = handle;
+        setListening(true);
+      } catch {
+        startNativeFallback();
+      }
+    } else {
+      startNativeFallback();
+    }
+  }, [useElevenLabs, stt]);
+
+  const startNativeFallback = useCallback(async () => {
+    // Set up real audio levels
+    await setupAudioLevels();
 
     const handle = stt.startContinuousNative({
       onInterim: (text) => setInterim(text),
@@ -64,11 +144,20 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
         setFinal(text);
         setInterim("");
       },
-      onEnd: (finalText) => {
+      onEnd: async (finalText) => {
         setListening(false);
         const result = finalText.trim();
         if (result.length >= 2) {
-          onSubmit(result);
+          // AI cleanup
+          setCleaning(true);
+          try {
+            const cleaned = await cleanVoiceTranscript(result, "search");
+            onSubmit(cleaned);
+          } catch {
+            onSubmit(result);
+          } finally {
+            setCleaning(false);
+          }
           onClose();
         }
       },
@@ -77,19 +166,28 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
 
     handleRef.current = handle;
     setListening(true);
+  }, [stt, onSubmit, onClose, setupAudioLevels]);
 
-    // Simulate level animation (real AudioWorklet integration can be added later)
-    levelInterval.current = setInterval(() => {
-      setLevel(Math.random() * 0.6 + 0.1);
-    }, 120);
-  }, [stt, onSubmit, onClose]);
-
-  const stopListening = useCallback(() => {
+  const stopListening = useCallback(async () => {
     handleRef.current?.stop();
     handleRef.current = null;
-    if (levelInterval.current) clearInterval(levelInterval.current);
+    cleanupAudio();
     setLevel(0);
-  }, []);
+
+    // If using ElevenLabs, run cleanup on accumulated text
+    if (useElevenLabs && final) {
+      setCleaning(true);
+      try {
+        const cleaned = await cleanVoiceTranscript(final, "search");
+        onSubmit(cleaned);
+      } catch {
+        onSubmit(final);
+      } finally {
+        setCleaning(false);
+      }
+      onClose();
+    }
+  }, [useElevenLabs, final, cleanupAudio, onSubmit, onClose]);
 
   const handleDownloadWhisper = async () => {
     setWhisperLoading(true);
@@ -101,13 +199,13 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
       });
       stt.autoSelect();
     } catch {
-      // Whisper load failed — stay on native
+      // Whisper load failed — stay on current strategy
     } finally {
       setWhisperLoading(false);
     }
   };
 
-  const displayText = final || interim;
+  const displayText = cleaning ? "Cleaning up…" : (final || interim);
   const isFinalText = !!final && !interim;
 
   return (
@@ -149,7 +247,9 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
             ) : (
               <>
                 <Shield size={14} className="text-amber-400" />
-                <span className="text-xs text-amber-400/80 font-medium">Cloud speech</span>
+                <span className="text-xs text-amber-400/80 font-medium">
+                  {useElevenLabs ? "ElevenLabs Scribe" : "Cloud speech"}
+                </span>
               </>
             )}
           </motion.div>
@@ -161,7 +261,7 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {modKey}+Shift+V to toggle • Esc to cancel
+            Ring (⌘.) → V to toggle • Esc to cancel
           </motion.div>
 
           {/* Mic orb */}
@@ -171,7 +271,7 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", damping: 20, stiffness: 200 }}
           >
-            {/* Outer breathing ring */}
+            {/* Outer breathing ring — driven by real audio level */}
             {listening && (
               <motion.div
                 className="absolute rounded-full border-2 border-primary/20"
@@ -219,9 +319,9 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
             transition={{ delay: 0.15 }}
           >
             {displayText ? (
-              <p className={`text-xl font-medium leading-relaxed ${isFinalText ? "text-foreground" : "text-foreground/50"}`}>
+              <p className={`text-xl font-medium leading-relaxed ${isFinalText || cleaning ? "text-foreground" : "text-foreground/50"}`}>
                 {displayText}
-                {!isFinalText && (
+                {!isFinalText && !cleaning && (
                   <motion.span
                     className="inline-block w-0.5 h-5 bg-primary/60 ml-1 align-middle"
                     animate={{ opacity: [1, 0, 1] }}

@@ -2,21 +2,20 @@
  * HologramSttEngine. Unified Speech-to-Text for Hologram
  * ════════════════════════════════════════════════════════
  *
- * Single abstraction over two STT strategies:
+ * Three-tier STT strategy:
  *
- *   1. **Native SpeechRecognition** (browser-native)
- *      - Instant, zero download, works in all Chromium browsers
- *      - ⚠️ Audio leaves the device (processed by browser vendor cloud)
- *      - Privacy level: "cloud". user should be informed
+ *   1. **ElevenLabs Scribe** (cloud, best quality)
+ *      - Ultra-low latency streaming via WebSocket
+ *      - 99+ languages, VAD built-in
+ *      - Requires ELEVENLABS_API_KEY configured server-side
  *
- *   2. **Whisper ONNX** (self-hosted, vGPU-accelerated)
- *      - True on-device inference, audio never leaves the browser
- *      - Requires ~40MB model (cached permanently after first load)
- *      - Privacy level: "local". fully sovereign
+ *   2. **Whisper ONNX** (local, fully sovereign)
+ *      - On-device inference, audio never leaves the browser
+ *      - Requires ~40MB model download (cached after first load)
  *
- * The engine selects the best available strategy automatically:
- *   - If Whisper ONNX is cached → use it (maximum privacy)
- *   - Otherwise → use native STT with privacy indicator
+ *   3. **Native SpeechRecognition** (browser fallback)
+ *      - Instant, zero download, all Chromium browsers
+ *      - Audio processed by browser vendor cloud
  *
  * @module uns/core/hologram/stt-engine
  */
@@ -25,7 +24,7 @@ import { getWhisperEngine } from "./whisper-engine";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type SttStrategy = "whisper" | "native";
+export type SttStrategy = "elevenlabs" | "whisper" | "native";
 
 export type SttPrivacyLevel = "local" | "cloud";
 
@@ -35,7 +34,6 @@ export interface SttResult {
   strategy: SttStrategy;
   privacy: SttPrivacyLevel;
   inferenceTimeMs: number;
-  /** Content-addressed proof (Whisper only) */
   inputCid?: string;
   outputCid?: string;
 }
@@ -45,6 +43,7 @@ export interface SttEngineInfo {
   privacy: SttPrivacyLevel;
   whisperAvailable: boolean;
   nativeAvailable: boolean;
+  elevenLabsAvailable: boolean;
   whisperModelId: string;
   privacyWarning: string | null;
 }
@@ -62,6 +61,24 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
   return (w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null) as SpeechRecognitionCtor | null;
 }
 
+// ── ElevenLabs availability ─────────────────────────────────────────────────
+
+let _elevenLabsAvail: boolean | null = null;
+
+async function checkElevenLabsAvail(): Promise<boolean> {
+  if (_elevenLabsAvail !== null) return _elevenLabsAvail;
+  try {
+    const { isElevenLabsScribeAvailable } = await import("./elevenlabs-stt");
+    _elevenLabsAvail = await isElevenLabsScribeAvailable();
+  } catch {
+    _elevenLabsAvail = false;
+  }
+  return _elevenLabsAvail;
+}
+
+// Kick off availability check immediately
+checkElevenLabsAvail();
+
 // ── HologramSttEngine ──────────────────────────────────────────────────────
 
 export class HologramSttEngine {
@@ -75,12 +92,16 @@ export class HologramSttEngine {
   get activeStrategy(): SttStrategy { return this._activeStrategy; }
 
   get privacy(): SttPrivacyLevel {
-    return this._activeStrategy === "whisper" ? "local" : "cloud";
+    if (this._activeStrategy === "whisper") return "local";
+    return "cloud";
   }
 
   get privacyWarning(): string | null {
     if (this._activeStrategy === "native") {
       return "Audio is processed by your browser's cloud speech service. For full privacy, load the Whisper model.";
+    }
+    if (this._activeStrategy === "elevenlabs") {
+      return "Audio is processed by ElevenLabs cloud for best quality. For full privacy, load the Whisper model.";
     }
     return null;
   }
@@ -93,12 +114,17 @@ export class HologramSttEngine {
     return !!getSpeechRecognitionCtor();
   }
 
+  get elevenLabsAvailable(): boolean {
+    return _elevenLabsAvail === true;
+  }
+
   info(): SttEngineInfo {
     return {
       activeStrategy: this._activeStrategy,
       privacy: this.privacy,
       whisperAvailable: this.whisperAvailable,
       nativeAvailable: this.nativeAvailable,
+      elevenLabsAvailable: this.elevenLabsAvailable,
       whisperModelId: getWhisperEngine().modelId,
       privacyWarning: this.privacyWarning,
     };
@@ -107,12 +133,16 @@ export class HologramSttEngine {
   // ── Strategy selection ──────────────────────────────────────────────
 
   /**
-   * Auto-select the best strategy based on availability.
-   * Prioritizes Whisper (local privacy) over native (cloud).
+   * Auto-select best strategy. Priority:
+   *   1. Whisper ONNX (if loaded — maximum privacy)
+   *   2. ElevenLabs Scribe (if available — best quality)
+   *   3. Native SpeechRecognition (fallback)
    */
   autoSelect(): SttStrategy {
     if (this.whisperAvailable) {
       this._activeStrategy = "whisper";
+    } else if (this.elevenLabsAvailable) {
+      this._activeStrategy = "elevenlabs";
     } else if (this.nativeAvailable) {
       this._activeStrategy = "native";
     }
@@ -126,12 +156,6 @@ export class HologramSttEngine {
 
   // ── Continuous recognition (native) ────────────────────────────────
 
-  /**
-   * Start continuous native SpeechRecognition.
-   * Audio is sent to browser vendor's cloud for processing.
-   *
-   * @returns A handle to get accumulated transcript and stop
-   */
   startContinuousNative(options: {
     lang?: string;
     onInterim?: (text: string) => void;
@@ -187,9 +211,6 @@ export class HologramSttEngine {
 
   // ── One-shot recognition (native) ──────────────────────────────────
 
-  /**
-   * Run a single utterance recognition via native SpeechRecognition.
-   */
   async recognizeOneShotNative(options: {
     timeoutMs?: number;
     lang?: string;
@@ -248,10 +269,6 @@ export class HologramSttEngine {
 
   // ── Whisper transcription ──────────────────────────────────────────
 
-  /**
-   * Transcribe audio via self-hosted Whisper ONNX on the vGPU.
-   * Audio never leaves the device. full sovereignty.
-   */
   async transcribeWhisper(
     audio: Float32Array,
     sampleRate: number,
@@ -299,5 +316,5 @@ export function getHologramStt(): HologramSttEngine {
  */
 export function isSttAvailable(): boolean {
   const stt = getHologramStt();
-  return stt.whisperAvailable || stt.nativeAvailable;
+  return stt.elevenLabsAvailable || stt.whisperAvailable || stt.nativeAvailable;
 }
