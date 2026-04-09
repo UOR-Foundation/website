@@ -1058,19 +1058,27 @@ function GrafanaPanel({
   title,
   icon,
   children,
+  onClick,
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
+  onClick?: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden">
+    <div
+      className={`rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden group ${
+        onClick ? "cursor-pointer hover:border-border transition-all duration-200 hover:shadow-lg hover:shadow-primary/5" : ""
+      }`}
+      onClick={onClick}
+    >
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
       <div className="flex items-center gap-2">
         {icon && <span className="text-muted-foreground/60">{icon}</span>}
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
+        {onClick && <IconChevronRight size={12} className="ml-auto text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />}
       </div>
       {children}
     </div>
@@ -1088,6 +1096,7 @@ function GrafanaCard({
   sparkData,
   sparkColor,
   thresholds,
+  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -1098,23 +1107,32 @@ function GrafanaCard({
   sparkData?: number[];
   sparkColor?: string;
   thresholds?: { max: number; color: string }[];
+  onClick?: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-colors duration-200">
+    <div
+      className={`rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-all duration-200 ${
+        onClick ? "cursor-pointer hover:shadow-lg hover:shadow-primary/5" : ""
+      }`}
+      onClick={onClick}
+    >
       <div
         className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity"
         style={{ background: accent }}
       />
       <div className="flex items-center justify-between">
         <span style={{ color: accent }} className="opacity-80">{icon}</span>
-        {badge && (
-          <span
-            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-            style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
-          >
-            {badge}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {badge && (
+            <span
+              className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+              style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
+            >
+              {badge}
+            </span>
+          )}
+          {onClick && <IconChevronRight size={12} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />}
+        </div>
       </div>
       <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{title}</div>
       <div className="text-sm font-semibold text-foreground/90">{value}</div>
