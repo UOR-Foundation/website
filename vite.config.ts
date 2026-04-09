@@ -10,6 +10,7 @@ import topLevelAwait from "vite-plugin-top-level-await";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: mode === "tauri" ? "./" : "/",
   server: {
     host: "::",
     port: 8080,
