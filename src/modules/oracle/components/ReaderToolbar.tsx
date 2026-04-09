@@ -449,7 +449,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           <QrPortalPanel
             open={portalOpen}
             onClose={() => setPortalOpen(false)}
-            targetUrl={window.location.pathname + window.location.search}
+            targetUrl={`/search?q=${encodeURIComponent(triwordDisplay.replace(/\./g, " "))}`}
             targetLens={activeLens}
             immersive={immersive}
             anchorRef={portalBtnRef}
