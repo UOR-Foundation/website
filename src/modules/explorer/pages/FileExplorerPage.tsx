@@ -103,27 +103,21 @@ export default function FileExplorerPage() {
     if (!files) return;
     for (const file of Array.from(files)) {
       try {
-        // Duplicate detection via UOR
-        const reader = new FileReader();
-        const text = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string || "");
-          reader.readAsText(file);
-        });
-        const addr = await computeFileUorAddress(text);
-        const existingTexts = ctx.contextItems.filter(i => i.text);
-        let isDuplicate = false;
-        for (const existing of existingTexts) {
-          if (existing.text) {
-            const existingAddr = await computeFileUorAddress(existing.text);
-            if (existingAddr === addr) {
-              toast.info(`"${file.name}" has identical content to "${existing.filename}"`, { description: "Same content, same identity — skipped duplicate." });
-              isDuplicate = true;
-              break;
-            }
+        const newItem = await ctx.addFile(file);
+        // Duplicate detection: check if another item shares the same UOR address
+        const guestItem = ctx.guestItems.find(i => i.id === (newItem as any)?.id);
+        if (guestItem?.uorAddress) {
+          const duplicate = ctx.guestItems.find(
+            i => i.id !== guestItem.id && i.uorAddress === guestItem.uorAddress
+          );
+          if (duplicate) {
+            toast.info(`"${file.name}" has identical content to "${duplicate.filename}"`, {
+              description: "Same content, same identity."
+            });
+          } else {
+            toast.success(`Added ${file.name}`);
           }
-        }
-        if (!isDuplicate) {
-          await ctx.addFile(file);
+        } else {
           toast.success(`Added ${file.name}`);
         }
       } catch {
