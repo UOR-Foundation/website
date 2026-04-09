@@ -1,103 +1,81 @@
 
 
-# Tech Stack Manifest v2 — Selection Criteria + Framework Audit
+# WASM Optimization + GitHub Actions Fix + Tech Stack Manifest Update
 
-## Selection Criteria (to be inscribed in the manifest)
+## Part 1: GitHub Actions Deployment
 
-Every framework in the canonical tech stack must satisfy **all** of these criteria:
+The `deploy.yml` workflow looks structurally correct (checkout → bun install → bun build → upload → deploy-pages). The `cancel-in-progress: false` setting is correct — it prevents new pushes from cancelling in-flight deployments. The "Cancelled" runs you're seeing are likely from GitHub's concurrency queue: when multiple pushes arrive quickly, the queued (not yet started) runs get cancelled while the active one continues.
 
-| Criterion | Definition |
-|---|---|
-| **Open Source** | OSI-approved license (MIT, Apache 2.0, BSD). No proprietary dependencies. |
-| **Interoperability** | W3C/IETF/ISO standards-based. Speaks standard protocols (HTTP, RDF, SPARQL, WebSocket). No vendor lock-in. |
-| **Performance** | Battle-tested at scale by large organizations. WASM-capable or near-native where applicable. |
-| **Portability** | Runs identically on edge (Service Worker), local (browser/desktop), and cloud (Node/Deno/Bun). |
-| **Maturity** | 3+ years in production use, active maintenance, >1000 GitHub stars or equivalent adoption signal. |
-| **Minimality** | One framework per function. No overlapping responsibilities. |
-| **Future-Proof** | Aligned with emerging standards (Web Components, WASM, HTTP/3, post-quantum). |
+**No code changes needed** for the workflow itself. The pending run #3003 should complete once the queue clears. If it fails, the error will be in the build step (likely a TypeScript compilation error from recent changes).
 
-## Current Audit Findings
+**Action**: We should verify the build compiles cleanly by checking for any TS errors in the current codebase. If there are errors, we fix them.
 
-### Already Canonical (keep as-is)
+## Part 2: Frontier WASM Optimizations
 
-| Framework | Role | Meets All Criteria |
-|---|---|---|
-| Oxigraph 0.5.x | SPARQL 1.1 quad store | Yes — Rust/WASM, W3C SPARQL, Apache 2.0 |
-| UOR Foundation | Ring algebra engine | Yes — custom Rust crate, WASM |
-| Web Crypto API | SHA-256 + randomness | Yes — W3C native, every browser/runtime |
-| jsonld 9.x | URDNA2015 canonicalization | Yes — W3C standard, BSD |
-| React 18 | UI rendering | Yes — MIT, 230k+ stars, concurrent mode |
-| Vite 5 | Build + HMR | Yes — MIT, ESM-native, 70k+ stars |
-| TanStack Query 5 | Server state | Yes — MIT, 45k+ stars, framework-agnostic core |
-| Tailwind CSS 3 | Utility CSS | Yes — MIT, 85k+ stars |
-| @noble/post-quantum | PQ crypto | Yes — MIT, audited, pure JS, no native deps |
-| IndexedDB | Local persistence | Yes — W3C standard, every browser |
+Based on research into the latest WASM developments (2025-2026), here are concrete optimizations we can implement:
 
-### Replace or Consolidate
+### 2a. SIMD-Accelerated Ring Operations
 
-| Current | Issue | Proposed Replacement | Rationale |
-|---|---|---|---|
-| `framer-motion` (130KB) | Heavy animation lib, 20+ imports but mostly just fade/slide | **CSS animations + `motion` (mini framer fork, 2.5KB)** | Framer Motion is excellent but oversized for our usage pattern. The `motion` package by Matt Perry (same author) provides identical API at 1/50th the size. Alternatively, we mark framer-motion as the canonical animation choice and document it. |
-| `Three.js + R3F` (1.2MB) | Only used in 1 file (`AtlasManifold3D.tsx`) | **Keep but mark as lazy-loaded optional** | Massive bundle for one view. Already optional in manifest. No replacement needed — Three.js is the canonical WebGL framework. |
-| `d3-force` | Used in 3 components for graph layout | **Keep — canonical for force-directed layout** | MIT, battle-tested, minimal. Used correctly. |
-| `canvas-confetti` | Used in 1 file for celebration effect | **Remove** | Trivial effect, can be done with CSS or kept as lazy import |
-| `@dnd-kit` | Used in 1 file only | **Keep as lazy optional** | MIT, accessible DnD. Low usage but no better alternative. |
+128-bit SIMD is now supported across all major browsers (Chrome, Firefox, Safari, Edge). The UOR ring operates on Z/256Z — batch operations on byte arrays are a perfect SIMD target. The Rust crate can be recompiled with `RUSTFLAGS="-C target-feature=+simd128"` to auto-vectorize ring operations, achieving 10-15x speedups on bulk compute.
 
-### Missing from Manifest (should be declared)
+**Implementation**: Add a `wasm.simd` entry to the tech stack manifest and document the build flag. The LUT engine already does bulk `Uint8Array` operations — these are the primary beneficiaries.
 
-| Framework | Role | Category |
-|---|---|---|
-| `framer-motion` | Animation engine | `animation` |
-| `Radix UI` | Accessible headless components | `a11y-primitives` |
-| `react-router-dom` | Client-side routing | `routing` |
-| `Zod` (not installed but should be) | Runtime schema validation | `validation` |
-| `fflate` | Compression (gzip/deflate) | `compression` |
-| `hls.js` | Adaptive media streaming | `media` |
+### 2b. WASM Streaming Compilation
 
-## Implementation Plan
+Currently the loader uses `WebAssembly.instantiateStreaming` with a fallback, which is correct. But we can add **compilation caching** via `WebAssembly.compileStreaming` + IndexedDB to cache the compiled module across page loads, eliminating recompilation on revisit (saves 50-200ms on cold start).
 
-### Step 1: Expand StackEntry with Selection Criteria
+**Implementation**: Modify the WASM loader in `uor_wasm_shim.js` to check IndexedDB for a cached `WebAssembly.Module` before fetching the `.wasm` file.
 
-Add a `criteria` field to `StackEntry` so each framework self-documents WHY it was chosen:
+### 2c. SharedArrayBuffer + Web Workers for Off-Main-Thread Compute
 
-```typescript
-interface SelectionCriteria {
-  license: string;           // "MIT" | "Apache-2.0" | "BSD-3" | "W3C"
-  standard?: string;         // "W3C SPARQL 1.1" | "IETF RFC 8446" etc
-  portability: string[];     // ["browser", "node", "deno", "edge-worker"]
-  adoptionSignal: string;    // "85k GitHub stars" | "W3C native API"
-  replacedBy?: never;        // If set, this entry is deprecated
-}
-```
+The ring engine currently runs on the main thread. For bulk operations (verify all 256 critical identities, batch factorization), we can offload to a dedicated Web Worker with `SharedArrayBuffer` for zero-copy data transfer. This keeps the UI thread responsive during heavy compute.
 
-### Step 2: Add Missing Entries to Manifest
+**Implementation**: Create a `wasm-worker.ts` that imports the engine and exposes bulk operations via `postMessage`. Use `SharedArrayBuffer` when available (requires COOP/COEP headers).
 
-Add entries for: `framer-motion`, `Radix UI`, `react-router-dom`, `fflate`, `hls.js`, `@diffusionstudio/vits-web`, `@chenglou/pretext`.
+### 2d. WASM Component Model Awareness
 
-### Step 3: Evaluate framer-motion → motion swap
+The Component Model (WASI 0.2+) is the future of WASM interop. While browser support is still maturing, we should declare our architecture as "Component Model-ready" in the manifest — the current contract-based adapter pattern already mirrors the WIT interface concept.
 
-Framer Motion is used in ~30 files but mostly for `motion.div` with simple opacity/translate. The `motion` mini-package (by the same author, Matt Perry) provides the same API at 2.5KB vs 130KB. We will evaluate if this swap is feasible or if we keep framer-motion as-is and just declare it canonical.
+### 2e. Module Caching + Lazy WASM Loading
 
-**Decision: Keep framer-motion** — it's MIT, battle-tested, and the import tree-shakes well with Vite. The mini version lacks `AnimatePresence` which we use extensively. Mark as canonical.
+Currently `initEngine()` loads WASM eagerly on first `getEngine()` call. We can implement a tiered strategy:
+1. **Instant**: TS fallback (0ms)
+2. **Cached**: IndexedDB compiled module (5-20ms)  
+3. **Fresh**: Network fetch + compile (100-500ms)
 
-### Step 4: Update `tech-stack.ts`
+## Part 3: Tech Stack Manifest Updates
 
-Rewrite the manifest with:
-- Selection criteria on every entry
-- New category types for missing categories
-- All 16 canonical frameworks declared
-- A `SELECTION_POLICY` constant documenting the 7 criteria
+Add these WASM-specific entries and update existing ones:
 
-### Step 5: Update EngineStatusIndicator
+| Entry | Category | Role |
+|-------|----------|------|
+| `WebAssembly SIMD` | `compute` | 128-bit vectorized batch ring operations |
+| `WebAssembly Streaming` | `compute` | Compile-cache for instant cold starts |
+| `SharedArrayBuffer` | `compute` | Zero-copy worker↔main thread data transfer |
+| `WASM Component Model` | `compute` | Future-proof typed interface boundary (roadmap) |
 
-Show the selection criteria summary in the diagnostic panel header so the system literally self-declares its policy.
-
----
+Update the UOR Foundation entry criteria to include SIMD capability and the new caching strategy.
 
 ## Files to Modify
 
-| Action | File | Purpose |
-|---|---|---|
-| Modify | `src/modules/boot/tech-stack.ts` | Add criteria fields, new entries, SELECTION_POLICY constant |
-| Modify | `src/modules/boot/EngineStatusIndicator.tsx` | Show policy + criteria in diagnostic panel |
+| File | Change |
+|------|--------|
+| `src/modules/boot/tech-stack.ts` | Add WASM optimization entries, update UOR Foundation entry |
+| `src/lib/wasm/uor-foundation/uor_wasm_shim.js` | Add IndexedDB module caching for compiled WASM |
+| `src/modules/engine/adapter.ts` | Add cached-module loading path in `initEngine()` |
+| `src/modules/engine/wasm-cache.ts` | **New** — IndexedDB compile cache for WASM modules |
+| `src/modules/engine/wasm-worker.ts` | **New** — Web Worker for off-main-thread bulk compute |
+| `src/modules/engine/contract.ts` | Add `bulkApply` and `bulkVerify` to contract for worker offload |
+| `src/modules/engine/index.ts` | Export new modules |
+
+## Execution Order
+
+1. Fix any TS build errors blocking GitHub Actions
+2. Create `wasm-cache.ts` — IndexedDB compile cache
+3. Update `uor_wasm_shim.js` — integrate compile cache
+4. Update `adapter.ts` — tiered loading (cache → network → TS fallback)
+5. Create `wasm-worker.ts` — off-main-thread bulk compute
+6. Update `contract.ts` — add bulk operation methods
+7. Update `tech-stack.ts` — add WASM optimization entries
+8. Update exports in `index.ts`
 
