@@ -10,6 +10,7 @@
 
 // ── Layer 0: Engine (pure computation) ────────────────────────────────
 import "./kernel";
+import "./ring";
 import "./identity";
 import "./morphism";
 import "./verify";
