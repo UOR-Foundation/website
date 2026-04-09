@@ -3,7 +3,8 @@
  * Uses pointer events for drag reorder; right-click context menu for pin/merge.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
@@ -64,6 +65,78 @@ function FullscreenToggle({ isLight }: { isLight: boolean }) {
     </button>
   );
 }
+
+/** Sovereign profile button — auth-aware avatar with rotating ring glow */
+function SovereignProfileButton({ isLight, onClick }: { isLight: boolean; onClick: () => void }) {
+  const { user, profile } = useAuth();
+  const isSignedIn = !!user;
+
+  // Avatar source priority: profile.avatarUrl → user_metadata.avatar_url → picture → null
+  const avatarUrl = profile?.avatarUrl
+    || user?.user_metadata?.avatar_url
+    || user?.user_metadata?.picture
+    || null;
+
+  // Initials fallback
+  const initials = useMemo(() => {
+    const name = profile?.displayName || user?.user_metadata?.full_name || user?.email || "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase() || "?";
+  }, [profile?.displayName, user?.user_metadata?.full_name, user?.email]);
+
+  // Ceremony moon phase badge
+  const moonGlyph = profile?.uorGlyph && profile?.ceremonyCid ? profile.uorGlyph.slice(0, 2) : null;
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150 shrink-0"
+      title={isSignedIn ? (profile?.displayName || "Profile") : "Sign in"}
+    >
+      {/* Sovereign ring glow (only when signed in) */}
+      {isSignedIn && <div className="sovereign-ring absolute inset-0 rounded-full" />}
+
+      {/* Avatar content */}
+      <div
+        className={`flex items-center justify-center w-full h-full rounded-full overflow-hidden transition-all duration-150
+          ${isSignedIn
+            ? "bg-emerald-900/40 border border-emerald-500/30"
+            : isLight
+              ? "bg-black/[0.08] hover:bg-black/[0.12] border border-black/[0.08]"
+              : "bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08]"
+          }
+        `}
+      >
+        {isSignedIn && avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="Profile"
+            className="w-full h-full object-cover rounded-full"
+            referrerPolicy="no-referrer"
+          />
+        ) : isSignedIn ? (
+          <span className="text-[9px] font-semibold text-emerald-300/90 leading-none select-none">
+            {initials}
+          </span>
+        ) : (
+          <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
+        )}
+      </div>
+
+      {/* Ceremony moon phase badge */}
+      {moonGlyph && (
+        <span
+          className="absolute -bottom-0.5 -right-0.5 text-[7px] leading-none select-none"
+          title="Founding ceremony sealed"
+        >
+          {moonGlyph}
+        </span>
+      )}
+    </button>
+  );
+}
+
 /** Connectivity indicator for the tab bar */
 function TabBarConnectivity({ isLight }: { isLight: boolean }) {
   const conn = useConnectivity();
@@ -125,6 +198,8 @@ export default function TabBar({
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
   const { ringKey } = usePlatform();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   // Drag state
   const [dragId, setDragId] = useState<string | null>(null);
@@ -232,7 +307,7 @@ export default function TabBar({
   return (
     <div
       data-tabbar
-      className="fixed top-0 inset-x-0 z-[200] flex items-center select-none"
+      className={`fixed top-0 inset-x-0 z-[200] flex items-center select-none ${isAuthenticated ? "tabbar-sovereign-border" : ""}`}
       style={{
         height: TAB_BAR_H,
         background: stripBg,
@@ -509,7 +584,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile + connectivity + fullscreen */}
+      {/* Right: time → connectivity → engine → fullscreen → profile */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -517,21 +592,10 @@ export default function TabBar({
         >
           {formatted}&ensp;{clock}
         </span>
-        <button
-          onClick={onProfileOpen}
-          className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150 overflow-hidden
-            ${isLight
-              ? "bg-black/[0.08] hover:bg-black/[0.12] border border-black/[0.08]"
-              : "bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08]"
-            }
-          `}
-          title="Profile"
-        >
-          <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
-        </button>
         <TabBarConnectivity isLight={isLight} />
         <EngineStatusIndicator isLight={isLight} />
         <FullscreenToggle isLight={isLight} />
+        <SovereignProfileButton isLight={isLight} onClick={onProfileOpen} />
       </div>
     </div>
   );
