@@ -36,7 +36,7 @@ export default function DesktopContextMenu({
   widgetsVisible = true,
 }: Props) {
   const { isLight, theme, setTheme } = useDesktopTheme();
-  const { modKey } = usePlatform();
+  const { ringKey } = usePlatform();
 
   const contentClass = isLight
     ? "border-black/[0.08] bg-white/90 text-black/70 backdrop-blur-xl"
@@ -60,7 +60,7 @@ export default function DesktopContextMenu({
         </ContextMenuItem>
         <ContextMenuItem className={itemClass} onSelect={onSpotlight}>
           Spotlight
-          <ContextMenuShortcut className={shortcutClass}>{modKey}K</ContextMenuShortcut>
+          <ContextMenuShortcut className={shortcutClass}>{ringKey} K</ContextMenuShortcut>
         </ContextMenuItem>
 
         <ContextMenuSeparator className={separatorClass} />
@@ -107,7 +107,7 @@ export default function DesktopContextMenu({
         {onHideAll && (
           <ContextMenuItem className={itemClass} onSelect={onHideAll}>
             Hide All Windows
-            <ContextMenuShortcut className={shortcutClass}>{modKey}H</ContextMenuShortcut>
+            <ContextMenuShortcut className={shortcutClass}>{ringKey} H</ContextMenuShortcut>
           </ContextMenuItem>
         )}
 

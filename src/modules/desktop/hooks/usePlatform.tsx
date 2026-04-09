@@ -22,6 +22,8 @@ export interface PlatformInfo {
   modKeyCode: "metaKey" | "ctrlKey";
   /** Display glyph for the alt/option key */
   altKey: string;
+  /** Display string for the Ring chord prefix */
+  ringKey: string;
   /** Platform-native system font stack */
   fontStack: string;
   /** Side for window control buttons */
@@ -69,6 +71,7 @@ function buildPlatformInfo(platform: Platform): PlatformInfo {
   const modKey = isMac ? "⌘" : "Ctrl";
   const modKeyCode: "metaKey" | "ctrlKey" = isMac ? "metaKey" : "ctrlKey";
   const altKey = isMac ? "⌥" : "Alt";
+  const ringKey = isMac ? "⌘." : "Ctrl+.";
 
   const fontStack = isWindows
     ? "'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif"
@@ -83,7 +86,7 @@ function buildPlatformInfo(platform: Platform): PlatformInfo {
 
   return {
     platform, isMac, isWindows, isAndroid, isLinux, isTouchDevice,
-    modKey, modKeyCode, altKey, fontStack,
+    modKey, modKeyCode, altKey, ringKey, fontStack,
     windowControls, scrollbarStyle, cornerRadius, mobileNavStyle,
   };
 }
