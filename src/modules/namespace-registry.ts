@@ -251,7 +251,7 @@ export const ONTOLOGICAL_MODULES = new Set(
   CANONICAL_NAMESPACES.flatMap((ns) => ns.modules)
 );
 
-/** Count: 16 canonical namespaces (14 original + audio + tee) */
+/** Count: canonical namespaces (14 original + audio + tee) */
 export const NAMESPACE_COUNT = CANONICAL_NAMESPACES.length;
 
 /**
