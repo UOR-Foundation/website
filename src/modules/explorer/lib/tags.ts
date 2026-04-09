@@ -1,6 +1,6 @@
 /**
  * tags — macOS Finder-style colored tag definitions and state management.
- * Tags are stored in-memory (ephemeral, like guest context).
+ * Tags are persisted to localStorage for commitment consistency.
  */
 
 export interface FileTag {
@@ -20,9 +20,39 @@ export const DEFAULT_TAGS: FileTag[] = [
   { id: "gray",   label: "Gray",   color: "hsl(0 0% 55%)" },
 ];
 
+const STORAGE_KEY = "uor:file-tags";
+
 // Map of itemId → Set of tagIds
 let tagMap: Record<string, Set<string>> = {};
 let listeners: Array<() => void> = [];
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed: Record<string, string[]> = JSON.parse(raw);
+      tagMap = {};
+      for (const [itemId, tags] of Object.entries(parsed)) {
+        if (Array.isArray(tags) && tags.length > 0) {
+          tagMap[itemId] = new Set(tags);
+        }
+      }
+    }
+  } catch {}
+}
+
+function saveToStorage() {
+  try {
+    const serializable: Record<string, string[]> = {};
+    for (const [itemId, tags] of Object.entries(tagMap)) {
+      if (tags.size > 0) serializable[itemId] = Array.from(tags);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+  } catch {}
+}
+
+// Load on module init
+loadFromStorage();
 
 function emit() {
   listeners.forEach((fn) => fn());
@@ -63,11 +93,13 @@ export const tagStore = {
     } else {
       tagMap[itemId].add(tagId);
     }
+    saveToStorage();
     emit();
   },
 
   clearTagsForItem(itemId: string) {
     delete tagMap[itemId];
+    saveToStorage();
     emit();
   },
 
