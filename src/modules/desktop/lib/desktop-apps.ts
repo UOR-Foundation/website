@@ -69,7 +69,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     label: "System Monitor",
     icon: Activity,
     component: lazy(() => import("@/modules/boot/SystemMonitorApp")),
-    defaultSize: { w: 820, h: 560 },
+    defaultSize: { w: 1020, h: 680 },
     color: "hsl(142 60% 50%)",
     category: "OBSERVE",
   },
