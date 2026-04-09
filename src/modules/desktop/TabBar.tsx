@@ -63,8 +63,34 @@ function FullscreenToggle({ isLight }: { isLight: boolean }) {
     </button>
   );
 }
+/** Connectivity indicator for the tab bar */
+function TabBarConnectivity({ isLight }: { isLight: boolean }) {
+  const conn = useConnectivity();
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
-interface Props {
+  return (
+    <div className="relative flex items-center">
+      <button
+        onClick={() => setPopoverOpen(o => !o)}
+        className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150
+          ${isLight ? "hover:bg-black/[0.08]" : "hover:bg-white/[0.08]"}
+        `}
+        title={conn.online ? "Online" : "Offline"}
+      >
+        <span
+          className={`block w-[7px] h-[7px] rounded-full transition-colors ${
+            conn.online
+              ? "bg-emerald-500 shadow-[0_0_6px_1px_rgba(16,185,129,0.5)]"
+              : "bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.5)]"
+          }`}
+        />
+      </button>
+      <ConnectivityPopover open={popoverOpen} onClose={() => setPopoverOpen(false)} isLight={isLight} />
+    </div>
+  );
+}
+
+
   activeWindowId: string | null;
   windows: WindowState[];
   onFocusWindow: (id: string) => void;
