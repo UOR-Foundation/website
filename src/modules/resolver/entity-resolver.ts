@@ -15,7 +15,7 @@
  */
 
 import { singleProofHash } from "@/modules/uns/core/identity";
-import type { UnsGraph } from "@/modules/kg-store/uns-graph";
+import type { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 

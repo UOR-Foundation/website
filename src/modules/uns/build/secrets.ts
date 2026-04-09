@@ -255,7 +255,7 @@ async function decryptAesGcm(
 
 async function hashBytes(bytes: Uint8Array): Promise<string> {
   const buf = new Uint8Array(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
-  const hashBuffer = sha256(new Uint8Array(buf as BufferSource));
+  const hashBuffer = sha256(buf);
   return Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");

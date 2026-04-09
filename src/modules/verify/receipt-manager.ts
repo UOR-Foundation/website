@@ -11,7 +11,7 @@
 
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 import { singleProofHash } from "@/lib/uor-canonical";
-import { ingestReceipt } from "@/modules/kg-store/store";
+import { ingestReceipt } from "@/modules/knowledge-graph/store";
 
 // ── URDNA2015-compliant hashing ─────────────────────────────────────────────
 

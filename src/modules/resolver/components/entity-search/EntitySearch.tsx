@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { buildIndex, resolveEntity, findSimilar } from "@/modules/semantic-index";
-import type { SemanticIndex, EntityResolution, SimilarEntry } from "@/modules/semantic-index";
-import { getDatum } from "@/modules/kg-store/store";
+import { buildIndex, findSimilar } from "@/modules/resolver/index-builder";
+import { resolveEntity } from "@/modules/resolver/entity-linker";
+import type { SemanticIndex, SimilarEntry } from "@/modules/resolver/index-builder";
+import type { EntityResolution } from "@/modules/resolver/entity-linker";
+import { getDatum } from "@/modules/knowledge-graph/store";
 import { EpistemicBadge } from "@/modules/epistemic";
 
 export function EntitySearch() {

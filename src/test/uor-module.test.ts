@@ -8,7 +8,7 @@ import { describe, it, expect } from "vitest";
 import { UorModule, type OperationRecord, type ModuleCertificate } from "@/modules/core/uor-module";
 import { RingCoreModule } from "@/modules/ring-core/ring-module";
 import { MorphismModule } from "@/modules/morphism/morphism-module";
-import { TraceModule } from "@/modules/trace/trace-module";
+import { TraceModule } from "@/modules/verify/trace-module";
 import { CertificateModule } from "@/modules/certificate/certificate-module";
 
 // ── Generic Base Class Tests ────────────────────────────────────────────────

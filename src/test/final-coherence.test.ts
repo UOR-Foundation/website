@@ -34,7 +34,7 @@ import {
 } from "@/modules/observable/geometry";
 
 // ── Knowledge Graph ─────────────────────────────────────────────────────────
-import { UnsGraph, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
+import { UnsGraph, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
 
 // ── Conformance Suite ───────────────────────────────────────────────────────
 import { runConformanceSuite } from "@/modules/shacl/conformance";

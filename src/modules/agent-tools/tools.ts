@@ -24,7 +24,7 @@ import type { Derivation } from "@/modules/derivation/derivation";
 import { generateReceipt } from "@/modules/derivation/receipt";
 import type { DerivationReceipt } from "@/modules/derivation/receipt";
 import { issueCertificate } from "@/modules/derivation/certificate";
-import { ingestDerivation, ingestReceipt, getDerivation } from "@/modules/kg-store/store";
+import { ingestDerivation, ingestReceipt, getDerivation } from "@/modules/knowledge-graph/store";
 import { executeSparql } from "@/modules/sparql/executor";
 import type { SparqlResult } from "@/modules/sparql/executor";
 import { correlate } from "@/modules/resolver/correlation";
@@ -33,8 +33,8 @@ import { computePartition } from "@/modules/resolver/partition";
 import type { PartitionResult, ClosureMode } from "@/modules/resolver/partition";
 import { parseTerm } from "./parser";
 import { serializeTerm } from "@/modules/ring-core/canonicalization";
-import { recordTrace } from "@/modules/trace";
-import type { TraceStep } from "@/modules/trace";
+import { recordTrace } from "@/modules/verify";
+import type { TraceStep } from "@/modules/verify";
 
 // ── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -125,7 +125,7 @@ export async function uor_derive(input: DeriveInput): Promise<DeriveOutput> {
 
 import { UnsQuery } from "@/modules/sparql/query";
 import type { QueryResult as IntentQueryResult, SparqlQueryResult, QueryIntent } from "@/modules/sparql/query";
-import { UnsGraph } from "@/modules/kg-store/uns-graph";
+import { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
 
 export interface QueryInput {
   /** Natural-language intent for DihedralFactorization resolution. */

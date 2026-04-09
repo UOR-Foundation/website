@@ -328,11 +328,8 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
 
 // ── SHA-256 helpers ─────────────────────────────────────────────────────────
 
-async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
-  const ab = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(ab).set(bytes);
-  const digest = sha256(new Uint8Array(ab));
-  return new Uint8Array(digest);
+async function sha256Hash(bytes: Uint8Array): Promise<Uint8Array> {
+  return sha256(bytes);
 }
 
 function bytesToHex(bytes: Uint8Array): string {

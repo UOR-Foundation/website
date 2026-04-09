@@ -11,7 +11,7 @@ import {
   serializeSchemaOrg,
   generateSitemap,
   generateRobotsTxt,
-} from "@/modules/kg-store/schema-org";
+} from "@/modules/knowledge-graph/schema-org";
 import { validateShaclShapes } from "@/modules/shacl/shacl-engine";
 
 const VALID_CID = "urn:uor:derivation:sha256:" + "ab".repeat(32);

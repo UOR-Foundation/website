@@ -1,5 +1,5 @@
-/**
 import { sha256 } from "@noble/hashes/sha2.js";
+/**
  * UOR SDK. WebGPU Compute Layer
  *
  * Provides GPU-accelerated computation for the Hologram virtual

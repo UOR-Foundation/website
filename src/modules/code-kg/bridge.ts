@@ -15,7 +15,7 @@ import type { UORRing } from "@/modules/ring-core/ring";
 import { derive } from "@/modules/derivation/derivation";
 import type { Derivation } from "@/modules/derivation/derivation";
 import type { Term } from "@/modules/ring-core/canonicalization";
-import { ingestTriples, ingestDerivation } from "@/modules/kg-store/store";
+import { ingestTriples, ingestDerivation } from "@/modules/knowledge-graph/store";
 import { emitContext } from "@/modules/jsonld/context";
 import type { JsonLdDocument, JsonLdNode } from "@/modules/jsonld/emitter";
 import type { CodeEntity, CodeRelation, AnalysisResult } from "./analyzer";
