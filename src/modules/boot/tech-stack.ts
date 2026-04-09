@@ -190,14 +190,14 @@ export const TECH_STACK: readonly StackEntry[] = [
     },
     verify: async () => {
       try {
-        const { sha256 } = await import("@noble/hashes/sha2");
+        const { sha256 } = await import("@noble/hashes/sha2.js");
         return typeof sha256 === "function";
       } catch {
         return false;
       }
     },
     detectVersion: async () => {
-      try { await import("@noble/hashes/sha2"); return "2.x"; } catch { return null; }
+      try { await import("@noble/hashes/sha2.js"); return "2.x"; } catch { return null; }
     },
   },
   {

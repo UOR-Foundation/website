@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 import tailwindcss from "tailwindcss";
 import autoprefixer from "autoprefixer";
 import { VitePWA } from "vite-plugin-pwa";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -16,6 +18,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    wasm(),
+    topLevelAwait(),
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
@@ -86,6 +90,14 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  optimizeDeps: {
+    exclude: ["@grafeo-db/web", "@grafeo-db/wasm"],
+  },
+  build: {
+    rollupOptions: {
+      external: ["@grafeo-db/wasm"],
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
