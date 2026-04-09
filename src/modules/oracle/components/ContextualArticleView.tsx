@@ -84,6 +84,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
           model={provenance?.model}
           personalized={provenance?.personalized}
           personalizedTopics={provenance?.personalizedTopics}
+          queryDomain={provenance?.queryDomain}
         />
       )}
 
