@@ -1,39 +1,65 @@
 
 
-## Plan: Redesign Context Upload as a Full Window Experience
+## Plan: File Explorer — A Standalone Desktop App
 
-### Problem
-The current "Add Context" button opens a small inline overlay dropdown (ContextMenu). It feels cramped and doesn't give users a clear overview of their uploaded files. The user wants a proper, standalone upload interface that opens as a window/dialog.
+### Overview
+Create a macOS Finder-inspired File Explorer app that opens as a full desktop window (like Oracle, Library, Messenger). It replaces the cramped context dropdown with a familiar, spatial file management experience. Users can drag-and-drop files, create folders/workspaces, and browse their context library — all within the OS metaphor.
+
+### Design Reference
+Inspired by macOS Finder: left sidebar with categories (Recents, Favorites, Tags), main content area with icon/list view, toolbar with view toggles and actions. Clean, spacious, native-feeling.
 
 ### Changes
 
-**1. Change trigger icon to Upload (`Plus` → `Upload` or keep `Plus`)**
-- Files: `ImmersiveSearchView.tsx`, `MobileSearchBar.tsx`
-- The trigger buttons already use `Plus` — we'll keep `Plus` as it's intuitive for "add content". Alternatively switch to `Upload` if preferred. Based on the user's request ("plus or even an upload icon"), we'll use `Plus` with an upload-style tooltip.
+**1. Register "Files" as a desktop app**
+- File: `src/modules/desktop/lib/desktop-apps.ts`
+- Add a new app entry with `id: "files"`, `label: "Files"`, icon: `FolderOpen` from lucide, category: `"STRUCTURE"`, lazy-loading a new `FileExplorerPage` component.
+- Update `os-taxonomy.ts` to add `"files"` to the `STRUCTURE` category's `appIds` and set `userFacing: true`.
 
-**2. Replace inline ContextMenu with a full Dialog/Window**
-- **New component**: `VaultUploadWindow.tsx` — a full-screen dialog (using the existing `Dialog` from `@/modules/core/ui/dialog`) that serves as the standalone upload interface.
-- Layout inside the dialog:
-  - **Header**: "Context Library" title with file count
-  - **Upload area**: Large drag-and-drop zone for files (PDF, TXT, MD, CSV, JSON, etc.)
-  - **Action row**: Buttons for "Paste Text", "Import URL", "New Workspace", "New Folder"
-  - **File list**: Bird's-eye grid/list of all current context items showing filename, source type (file/paste/url), and a remove button
-  - **Vault section** (if authenticated): Access to Sovereign Vault documents
-  - **Guest notice** (if not authenticated): Session-only warning
+**2. Create the File Explorer page**
+- File: `src/modules/explorer/pages/FileExplorerPage.tsx`
+- Full-window layout with three regions:
+  - **Sidebar** (~180px): Sections for "Favorites" (All Files, Recents, Uploads), "Organize" (Workspaces, Folders), and a guest/vault status indicator at the bottom.
+  - **Toolbar**: Current location breadcrumb, view toggle (grid/list icons), "Upload" button, "New Folder" button, search filter input.
+  - **Content area**: Displays context items as a grid of file cards (icon + filename + type badge + date) or a list view. Supports drag-and-drop onto the content area. Empty state shows a large drop zone with instructions.
+- Wired to `useContextManager` for all data operations.
+- Theme-aware using semantic tokens (`bg-background`, `text-foreground`, `border-border`).
 
-**3. Update trigger points**
-- `ImmersiveSearchView.tsx`: Replace `ContextMenu` with the new `VaultUploadWindow` dialog
-- `MobileSearchBar.tsx`: Same replacement
-- The `ContextMenu.tsx` component stays in the codebase but is no longer used by these two entry points
+**3. File item cards**
+- File: `src/modules/explorer/components/FileCard.tsx`
+- Grid mode: icon thumbnail (file type icon), filename below, subtle type/source badge. Hover shows delete action.
+- List mode: single row with icon, name, source type, date added, size indicator, delete button.
+- Right-click context menu with "Get Info", "Remove", "Rename" options.
 
-**4. Theme awareness**
-- Use semantic Tailwind tokens (`bg-background`, `text-foreground`, `border-border`) throughout so the dialog works in both light and dark modes with full contrast.
+**4. Update the search view trigger**
+- File: `src/modules/oracle/components/ImmersiveSearchView.tsx`
+- Change the `+` button behavior: instead of opening the inline `ContextMenu` dropdown, it opens the Files app as a desktop window via `wm.openApp("files", ...)`.
+- Keep drag-and-drop on the search view as a quick-add shortcut.
+- Keep ContextPills below the search bar to show what's selected.
+
+**5. File type icons and utilities**
+- File: `src/modules/explorer/lib/file-icons.ts`
+- Map MIME types / extensions to appropriate lucide icons and colors (e.g., PDF → red FileText, JSON → amber Braces, Folder → blue FolderOpen, URL → green Globe).
 
 ### Technical Details
 
-- The new dialog will reuse the existing `useContextManager` hook (same `ctx` prop) for all operations: `addFile`, `addPaste`, `addUrl`, `addWorkspace`, `addFolder`, `remove`
-- Drag-and-drop handling reuses the same pattern from `ContextMenu.tsx`
-- Sub-views (paste text, URL input, workspace/folder name) will be inline sections within the dialog rather than separate navigation states — keeping everything visible at a glance
-- The file list will show `ctx.contextItems` with type badges and delete buttons
-- Dialog size: `sm:max-w-2xl` for comfortable browsing on desktop, full-width on mobile
+- The File Explorer reuses `useContextManager` and `guestContext` — no new data layer needed.
+- Sidebar navigation uses local state to filter the view (all / files only / pastes only / URLs / workspaces / folders).
+- View mode (grid/list) persisted in localStorage.
+- File upload reuses the same `ctx.addFile()` flow with a hidden `<input type="file">`.
+- Drag-and-drop: the content area acts as a drop zone, calling `ctx.addFile()` for each dropped file.
+- Sidebar "Workspaces" and "Folders" entries are derived from `ctx.contextItems.filter(i => i.source === "workspace" | "folder")`.
+- The old `ContextMenu.tsx` component remains in the codebase but is no longer triggered from the search view.
+
+### File Structure
+```text
+src/modules/explorer/
+  pages/
+    FileExplorerPage.tsx      ← Main app (sidebar + toolbar + content)
+  components/
+    FileCard.tsx               ← Grid/list item rendering
+    ExplorerSidebar.tsx        ← Left sidebar with categories
+    ExplorerToolbar.tsx        ← Top bar with view toggles + actions
+  lib/
+    file-icons.ts              ← MIME → icon mapping
+```
 
