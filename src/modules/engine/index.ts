@@ -25,7 +25,8 @@
 
 // ── Contract + Adapter (the new way) ─────────────────────────────────────
 
-export { getEngine, initEngine, engineType, crateVersion, getCapabilities } from "./adapter";
+export { getEngine, initEngine, engineType, crateVersion, getCapabilities, getWasmDiagnostics, isEngineReady, onEngineChange } from "./adapter";
+export type { EngineMode, WasmDiagnostics } from "./adapter";
 export type { UorEngineContract } from "./contract";
 export { CRATE_MANIFEST } from "./crate-manifest";
 export type { CrateExportName } from "./crate-manifest";

@@ -274,8 +274,14 @@ export async function sovereignBoot(
     onProgress?.({ phase: "device-fingerprint", progress: 0, detail: "Detecting device" });
     const provenance = await buildDeviceProvenance();
 
-    // Phase 0.5: Stack validation
-    onProgress?.({ phase: "stack-validation", progress: 0.1, detail: "Validating tech stack" });
+    // Phase 1: Engine init — MUST happen BEFORE stack validation
+    // KEY FIX: Previously validateStack() called getEngine() which permanently
+    // locked the system into TypeScript fallback before WASM had a chance to load.
+    onProgress?.({ phase: "engine-init", progress: 0.1, detail: "Loading engine" });
+    await initEngine();
+
+    // Phase 1.5: Stack validation (now safe — engine is committed)
+    onProgress?.({ phase: "stack-validation", progress: 0.2, detail: "Validating tech stack" });
     const stackHealth = await validateStack();
     const stackComponents: StackComponentStatus[] = stackHealth.results.map((r) => ({
       name: r.entry.name,
@@ -285,10 +291,6 @@ export async function sovereignBoot(
       criticality: r.entry.criticality,
       fallback: r.entry.fallback,
     }));
-
-    // Phase 1: Engine init
-    onProgress?.({ phase: "engine-init", progress: 0.2, detail: "Loading engine" });
-    await initEngine();
 
     // Phase 1.25: Kernel declaration verification — THE ENGINE ENFORCES ITSELF
     onProgress?.({ phase: "engine-init", progress: 0.3, detail: "Verifying kernel declaration" });
