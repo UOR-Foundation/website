@@ -1,117 +1,129 @@
 
 
-## Plan: Hardened Data Ingestion — Anima-Grade Pipeline into UOR Knowledge Graph
+## Plan: Edge-Defined Nodes — UOR Object Blueprints with Dehydration/Rehydration
 
-### Audit Summary
+### The Insight
 
-After thoroughly comparing our implementation against Anima's ADEE (Adaptive Data Engineering Engine), the KG infrastructure is **structurally sound** but has six concrete gaps that prevent it from being truly robust for arbitrary data of any size or type. The architecture (IndexedDB triple store, ingest bridge, graph compute, sync bridge, React hook) is complete and elegant. What follows are targeted hardening changes — no architectural rewrites.
+The existing infrastructure is 80% there. The holographic lens system already has `dehydrate()` (object → canonical UOR form) and `rehydrate()` (canonical form → object). The KG already stores edges as first-class triples. What's missing is the **bridge**: a formal `ObjectBlueprint` schema that defines a node purely by its attribute edges, and the runtime functions to decompose any KG node into that blueprint and reconstruct it back.
 
-### What's Already Strong
+The key shift: instead of a KGNode being a flat bag of properties with edges attached, the **edges become the definition** — the node is nothing more than what its edges declare. The `properties` field on KGNode becomes derived from edges, not the other way around.
 
-- **IndexedDB local-store.ts**: Full triple store with BFS traversal, pattern queries, JSON-LD import/export — solid
-- **Ingest bridge**: Entity extraction (URLs, emails, proper nouns), column sub-nodes for tabular data, dedup via UOR address — correct
-- **Graph compute**: Canonicalization compression, D/I/A reasoning, similarity search, coherence verification — all functional
-- **Sync bridge**: Device-namespaced cloud sync, conflict resolution via CID comparison — working
-- **Pipeline (ingest-pipeline.ts)**: CSV/JSON structured extraction, quality scoring, UOR content-addressing — good foundation
-
-### Gaps Found (Compared to Anima's ADEE)
+### Architecture
 
 ```text
-Anima's ADEE Pipeline:
-  Raw bytes → RawStore (immutable audit) → ADEE Engine → Knowledge Graph
-                                             ↓
-                              AutoProfiler (learns structure)
-                              ProcessingProfile (adaptive cleaning)
-                              QualityScore (0.0-1.0)
-                              LazyDataFrameRegistry (LRU, Parquet)
-                              ProcessedDataPacket (lineage chain)
-
-Our pipeline:
-  File → extractText → ingest (UOR CID) → structured-extractor → guest-context → KG
-                                                                        ↑
-                                                              Only CSV & JSON parsed
-                                                              No Markdown/YAML/XML
-                                                              5MB truncation
-                                                              Entity nodes use FNV hash (not UOR)
+Any Object
+    ↓ decomposeToBlueprint()
+ObjectBlueprint (JSON-LD, serializable, shareable)
+  ├── spaceDefinition: { kind, domain, rdfType }
+  ├── attributes: [ { predicate, valueType, value?, targetAddress? } ]
+  ├── compositionRules: [ { parentPredicate, childBlueprint? } ]
+  └── derivationRules: [ { operation, inputs[] } ]
+    ↓ content-address via singleProofHash()
+GroundBlueprint (blueprint + UOR identity)
+    ↓ materializeFromBlueprint()
+Fully reconstructed KGNode + all edges
 ```
 
 ### Changes
 
-**1. Expand format support in structured-extractor.ts**
-File: `src/modules/sovereign-vault/lib/structured-extractor.ts`
-- Add `parseMarkdownTable()`: Extract tables from Markdown (`| col | col |` syntax) into `StructuredData`
-- Add `parseYAML()`: Parse YAML key-value and list structures into structured data (using simple regex-based parser — no dependency)
-- Add `parseXML()`: Use browser-native `DOMParser` to extract XML into tabular form (tag → column mapping)
-- Add `parseTSV()`: Explicit TSV support (currently only handled via delimiter detection — make it first-class)
-- Update `toSearchableText()` to include data type summaries for richer KG entity extraction
+**1. New: `src/modules/knowledge-graph/blueprint.ts`**
 
-**2. Fix entity/column addresses to use UOR content-addressing**
-File: `src/modules/knowledge-graph/ingest-bridge.ts`
-- Replace `entityAddress()` FNV-1a hash with proper SHA-256 via `crypto.subtle.digest` → `urn:uor:entity:{hex}`
-- Replace `columnAddress()` similarly — ensures entity nodes are truly content-addressed and deduplicate correctly across sessions and devices
-- Both functions become async (minor signature change)
+The core module. Contains:
 
-**3. Add immutable raw-bytes audit store**
-File: `src/modules/knowledge-graph/raw-store.ts` (new)
-- IndexedDB object store `raw-bytes` keyed by UOR address
-- Stores: `{ uorAddress, rawHash (SHA-256 of original bytes), size, mimeType, createdAt }`
-- Text content stored only for files <1MB; for larger files, stores only the hash + metadata
-- Purpose: every ingested item has an immutable audit record before any processing happens — mirrors Anima's RawStore
-- `putRaw()`, `getRaw()`, `hasRaw()` API
+- `ObjectBlueprint` interface — the JSON-LD schema that defines a node by its attributes/edges:
+  ```
+  {
+    "@context": "https://uor.foundation/contexts/object-blueprint-v1.jsonld",
+    "@type": "uor:ObjectBlueprint",
+    spaceDefinition: { kind, localDomain, rdfType },
+    attributes: [
+      { predicate: "schema:hasColumn", valueType: "reference", targetAddress: "urn:uor:column:..." },
+      { predicate: "schema:name", valueType: "literal", value: "revenue.csv" },
+      { predicate: "schema:dateCreated", valueType: "literal", value: "2026-04-09" }
+    ],
+    compositionRules: [
+      { parentPredicate: "schema:hasPart", decomposition: "recursive" }
+    ],
+    derivationRules: [
+      { operation: "sha256", inputs: ["content-bytes"], plan: "UOR-v2" }
+    ]
+  }
+  ```
 
-**4. Streaming chunked ingestion for large files**
-File: `src/modules/sovereign-vault/lib/ingest-pipeline.ts`
-- Remove the 5MB truncation for UOR identity — instead, compute SHA-256 using streaming `crypto.subtle.digest` on the full `ArrayBuffer` (works natively in browsers for any file size)
-- For text extraction of very large text files (>10MB), process in 1MB chunks for search indexing but still hash the full content
-- Add `ingestBinary()` for binary files that can't be text-extracted — they still get UOR identity + KG node (metadata-only node)
+- `GroundObjectBlueprint` — blueprint + UOR identity (via `singleProofHash`)
 
-**5. Richer entity extraction in ingest-bridge**
-File: `src/modules/knowledge-graph/ingest-bridge.ts`
-- Add date extraction: `YYYY-MM-DD` and common date formats → `schema:Date` entity nodes
-- Add number/currency extraction: `$1,234.56`, `€500` → `schema:MonetaryAmount` entity nodes (useful for financial data cross-referencing)
-- Increase proper noun scan window from 2000 to 5000 chars
-- For structured data: create edges between column nodes that share the same data type (`schema:sameDataType`)
-- Add `schema:derivedFrom` edge when a paste/URL produces structured data that overlaps with existing file columns
+- `decomposeToBlueprint(nodeAddress: string): Promise<GroundObjectBlueprint>` — reads a KGNode + all its outgoing edges from the store, converts the node's properties into attribute entries with `valueType: "literal"`, converts edges into attribute entries with `valueType: "reference"`, and content-addresses the whole blueprint. This is **dehydration at the KG level**.
 
-**6. Processing lineage as KG derivations**
-File: `src/modules/knowledge-graph/ingest-bridge.ts`
-- When ingesting an item with `lineage` entries, create a `KGDerivation` for each stage
-- This connects the pipeline audit trail to the graph's derivation store, making the processing history queryable via the KG
-- Each derivation gets an epistemic grade based on the pipeline stage (e.g., "extract" = "A", "fallback" = "C")
+- `materializeFromBlueprint(blueprint: ObjectBlueprint): Promise<{ node: KGNode, edges: KGEdge[] }>` — takes a blueprint and produces the KGNode + edges, computing the UOR address from the blueprint's content hash. This is **rehydration at the KG level**. Does not write to the store — caller decides.
 
-**7. Wire raw-store into the pipeline**
-File: `src/modules/sovereign-vault/lib/ingest-pipeline.ts`
-- After UOR identity computation but before structured extraction, write to `raw-store`
-- This ensures the immutable audit record exists even if downstream processing fails
+- `decomposeRecursive(nodeAddress: string, maxDepth?: number): Promise<GroundObjectBlueprint>` — follows reference attributes recursively, embedding child blueprints inline up to `maxDepth`. Produces a single self-contained blueprint for an entire subgraph.
 
-**8. Update local-store DB version for raw-bytes store**
-File: `src/modules/knowledge-graph/local-store.ts`
-- Bump `DB_VERSION` to 2
-- Add `raw-bytes` object store in `onupgradeneeded`
-- Add migration logic (version 1 → 2 is additive only, no data loss)
+- `serializeBlueprint(bp: GroundObjectBlueprint): string` — deterministic JSON serialization (sorted keys)
+
+- `deserializeBlueprint(json: string): GroundObjectBlueprint` — parse + validate
+
+- `verifyBlueprint(bp: GroundObjectBlueprint): Promise<boolean>` — recompute the UOR address from the blueprint content and check it matches the stored identity. Integrity verification.
+
+**2. New: `src/modules/knowledge-graph/blueprint-registry.ts`**
+
+A type registry mapping `rdfType` → attribute schema expectations. This ensures blueprints conform to known types:
+
+- `registerNodeType(rdfType: string, schema: AttributeSchema)` — registers what attributes a node of this type must/may have
+- `validateBlueprint(bp: ObjectBlueprint): ValidationResult` — checks a blueprint against the registered schema for its `rdfType`
+- Pre-registers the existing types: `schema:Dataset`, `schema:MediaObject`, `schema:WebPage`, `schema:Column`, `schema:URL`, `schema:ContactPoint`, `schema:Date`, `schema:MonetaryAmount`, `schema:Thing`
+
+This is the UOR framework's type system applied to graph nodes — "the definitions of the attributes and how they're transformed."
+
+**3. Update: `src/modules/knowledge-graph/ingest-bridge.ts`**
+
+After creating a node + edges in `addToGraph()`, also produce and store the `GroundObjectBlueprint`:
+- Call `decomposeToBlueprint()` on the newly created node
+- Store the serialized blueprint as a derivation record (the blueprint IS a derivation — it's the canonical decomposition)
+- This ensures every ingested item has a shareable, self-contained blueprint from the moment it enters the graph
+
+**4. Update: `src/modules/knowledge-graph/local-store.ts`**
+
+Add a `blueprints` object store (DB_VERSION → 3) keyed by UOR address:
+- `putBlueprint(address: string, blueprint: string): Promise<void>`
+- `getBlueprint(address: string): Promise<string | undefined>`
+- `getAllBlueprints(): Promise<Array<{ address: string; blueprint: string }>>`
+
+**5. Update: `src/modules/knowledge-graph/index.ts`**
+
+Export the new blueprint module:
+- `decomposeToBlueprint`, `materializeFromBlueprint`, `decomposeRecursive`
+- `serializeBlueprint`, `deserializeBlueprint`, `verifyBlueprint`
+- `registerNodeType`, `validateBlueprint`
+- Types: `ObjectBlueprint`, `GroundObjectBlueprint`, `AttributeSchema`
+
+**6. New: `src/test/kg-blueprint.test.ts`**
+
+Test suite covering:
+- Decompose a KGNode with edges into a blueprint → verify all edges appear as attributes
+- Materialize a blueprint back → verify it produces identical node + edges
+- Round-trip: decompose → serialize → deserialize → materialize → compare
+- Recursive decomposition: node with child nodes → single nested blueprint
+- Blueprint verification: tamper with an attribute → `verifyBlueprint` returns false
+- Type validation: blueprint missing required attributes → validation fails
+
+### How This Connects to the Existing Holographic Lens
+
+The `ObjectBlueprint` is the KG-level equivalent of `LensBlueprint`. Just as a `LensBlueprint` defines a lens circuit by its element specifications (not live functions), an `ObjectBlueprint` defines a graph node by its attribute edges (not stored property values). Both use `singleProofHash()` for content-addressing. Both are serializable JSON-LD. Both can be shared and instantiated anywhere.
+
+The existing `dehydrate()` in `lens.ts` operates on arbitrary JS objects. The new `decomposeToBlueprint()` operates specifically on KG nodes, producing a schema-aware decomposition that the LLM can later use for demand-driven materialization.
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/sovereign-vault/lib/structured-extractor.ts` | Add Markdown table, YAML, XML parsers |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | UOR content-addressed entities, richer extraction, lineage→derivations |
-| `src/modules/knowledge-graph/raw-store.ts` | New — Immutable raw-bytes audit store |
-| `src/modules/sovereign-vault/lib/ingest-pipeline.ts` | Streaming hash for large files, wire raw-store |
-| `src/modules/knowledge-graph/local-store.ts` | DB v2 with raw-bytes store |
-| `src/modules/knowledge-graph/index.ts` | Export raw-store |
+| `src/modules/knowledge-graph/blueprint.ts` | New — Core decompose/materialize/verify |
+| `src/modules/knowledge-graph/blueprint-registry.ts` | New — Type registry + validation |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | Store blueprint on ingestion |
+| `src/modules/knowledge-graph/local-store.ts` | Add blueprints store (DB v3) |
+| `src/modules/knowledge-graph/index.ts` | Export blueprint API |
+| `src/test/kg-blueprint.test.ts` | New — Full test suite |
 
-### What This Achieves
+### The Result
 
-After this pass, any file — a 500MB CSV, a 2KB YAML config, a pasted JSON array, a scraped web page, a PDF document, an image — follows the same deterministic path:
-
-1. Raw bytes recorded immutably (audit trail)
-2. Full-content SHA-256 computed regardless of size (no truncation)
-3. Format-aware structured extraction (CSV, JSON, YAML, XML, Markdown tables, or plain text)
-4. Content-addressed entity nodes (URLs, emails, dates, currencies, proper nouns)
-5. Typed edges linking documents to shared entities and columns
-6. Processing lineage stored as queryable graph derivations
-7. All operations work offline in IndexedDB, sync to cloud when available
-
-Same content, same address, everywhere. Every piece of data, one unified knowledge graph.
+After this, any KG node can be decomposed into a portable JSON blueprint where edges define the node. Share the blueprint → anyone can reconstruct the exact node. Change an attribute → the UOR address changes (content-addressing enforces integrity). The LLM can consume blueprints as structured prompts, constrained by the type registry. Dehydration at any hierarchy level — a single node, a subtree, or the entire graph — produces a single deterministic JSON file that is its own identity.
 
