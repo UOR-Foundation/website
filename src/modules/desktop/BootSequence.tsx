@@ -301,18 +301,18 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
         setTimeout(replayNext, 400);
       })
       .catch((err) => {
-        if (cancelledRef.current) return;
+        if (cancelled) return;
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
         setBootPhase("error");
         setDisplayedLines(prev => [
           ...prev,
           DIVIDER,
-          { tag: "FATAL", text: `Boot failed: ${msg}`, level: "fail" },
+          { tag: "FATAL", text: `Boot failed: ${msg}`, level: "fail" as const },
         ]);
       });
 
-    return () => { cancelledRef.current = true; };
+    return () => { cancelled = true; };
   }, [onComplete]);
 
   // Export log
