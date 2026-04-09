@@ -64,9 +64,9 @@ export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest
       <div className="px-4 pb-3 mb-2 border-b border-primary/15">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-primary" />
-          <span className="text-[15px] font-semibold text-foreground tracking-tight">Your Space</span>
+          <span className="text-[15px] font-semibold text-foreground tracking-tight">Home</span>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1">Private &amp; sovereign</p>
+        <p className="text-[11px] text-muted-foreground mt-1">Private · only yours</p>
       </div>
 
       {/* Favorites */}
@@ -139,12 +139,12 @@ export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest
           {isGuest ? (
             <>
               <HardDrive className="w-4 h-4" />
-              <span>Local · Session Only</span>
+              <span>Stored on this device</span>
             </>
           ) : (
             <>
               <Lock className="w-4 h-4 text-primary/70" />
-              <span>Sovereign Vault · Encrypted</span>
+              <span>Encrypted · always yours</span>
             </>
           )}
         </div>
@@ -155,7 +155,7 @@ export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest
           />
         </div>
         <p className="text-[11px] text-muted-foreground/70 mt-1.5">
-          {items.length} item{items.length !== 1 ? "s" : ""} · Your files. Your control.
+          {items.length} item{items.length !== 1 ? "s" : ""} · always private
         </p>
       </div>
     </div>

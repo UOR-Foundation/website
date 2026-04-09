@@ -34,14 +34,13 @@ export default function MessengerPage() {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center mb-6">
           <ShieldCheck size={28} className="text-teal-400/70" />
         </div>
-        <h2 className="text-2xl text-white/90 font-light mb-3">UOR Messenger</h2>
+        <h2 className="text-2xl text-white/90 font-light mb-3">Messages</h2>
         <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-6">
-          Post-quantum encrypted messaging powered by the Universal Object Reference framework.
-          Sign in to access your conversations.
+          Private conversations, end-to-end encrypted. Sign in to continue.
         </p>
         <div className="flex items-center gap-2 text-white/25 text-xs">
           <Lock size={11} />
-          <span>Kyber-1024 + AES-256-GCM · ML-DSA-65</span>
+          <span>End-to-end encrypted</span>
         </div>
       </div>
     );
@@ -80,14 +79,13 @@ export default function MessengerPage() {
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500/10 to-indigo-500/10 border border-white/[0.06] flex items-center justify-center mb-6">
                 <MessageSquare size={32} className="text-white/15" />
               </div>
-              <h2 className="text-2xl text-white/80 font-light mb-3">UOR Messenger</h2>
+              <h2 className="text-2xl text-white/80 font-light mb-3">Messages</h2>
               <p className="text-sm text-white/30 max-w-md leading-relaxed">
-                Select a conversation or start a new one.
-                All messages are content-addressed and coherence-verified.
+                Start a conversation. Everything here is private.
               </p>
               <div className="flex items-center gap-2 mt-6 text-white/20 text-xs">
                 <Lock size={11} />
-                <span>End-to-end encrypted · Post-quantum secure</span>
+                <span>Private · encrypted</span>
               </div>
             </div>
           )}

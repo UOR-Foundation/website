@@ -206,8 +206,8 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                   <div className="px-2 pb-2">
                     <MenuItem
                       icon={<Shield className="w-4 h-4" />}
-                      label="Sovereign Vault"
-                      hint="Persistent encrypted documents"
+                      label="Saved Files"
+                      hint="Encrypted · always available"
                       onClick={() => setSubView("vault")}
                       gradient="from-primary/15 to-primary/5"
                       iconColor="text-primary"
@@ -229,7 +229,7 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                           Context is <span className="text-foreground/60 font-medium">session-only</span> for guests.
                         </p>
                         <p className="text-[10px] text-muted-foreground/30 mt-0.5">
-                          Create a Sovereign ID to persist your vault.
+                          Sign in to keep files across sessions.
                         </p>
                       </div>
                     </div>
@@ -401,7 +401,7 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                 className="flex flex-col max-h-[50vh]"
               >
                 <div className="px-4 pt-3.5 pb-1">
-                  <SubViewHeader title="Sovereign Vault" onBack={() => setSubView(null)} count={ctx.vault.count} />
+                  <SubViewHeader title="Saved Files" onBack={() => setSubView(null)} count={ctx.vault.count} />
                 </div>
                 <VaultContextPicker
                   open={true}

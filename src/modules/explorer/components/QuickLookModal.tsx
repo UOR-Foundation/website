@@ -78,7 +78,7 @@ function UorIdentitySection({ item }: { item: ContextItem }) {
         </button>
       </div>
       <p className="text-[10px] text-muted-foreground/30 mt-1.5 italic">
-        This address is derived from the content itself — same content produces the same address, everywhere.
+        Permanent. Same content, same address — everywhere.
       </p>
     </div>
   );

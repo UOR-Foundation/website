@@ -242,8 +242,8 @@ export default function FileExplorerPage() {
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary/30 rounded-lg m-2 pointer-events-none">
               <div className="flex flex-col items-center gap-3 text-primary/70">
                 <Upload className="w-12 h-12" />
-                <p className="text-base font-medium">Drop files here</p>
-                <p className="text-sm text-primary/50">Your files stay private</p>
+                <p className="text-base font-medium">Drop here</p>
+                <p className="text-sm text-primary/50">Always private</p>
               </div>
             </div>
           )}
@@ -343,11 +343,11 @@ export default function FileExplorerPage() {
           </div>
           <span className="flex items-center gap-1.5">
             {ctx.isGuest ? (
-              <>Local session · KG persisted offline</>
+              <>On this device</>
             ) : (
               <>
                 <Lock className="w-3 h-3" />
-                Sovereign Vault · encrypted &amp; synced
+                Encrypted · synced
               </>
             )}
           </span>
@@ -416,7 +416,7 @@ function EmptyState({
   if (hasItems) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
-        <p className="text-base text-muted-foreground/40">No items match this filter</p>
+        <p className="text-base text-muted-foreground/40">Nothing here</p>
       </div>
     );
   }
@@ -431,14 +431,14 @@ function EmptyState({
           <div className="w-20 h-20 rounded-2xl bg-muted/40 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
             <ShieldCheck className="w-10 h-10 text-muted-foreground/30 group-hover:text-primary/60 transition-colors" />
           </div>
-          <div className="text-center">
-            <p className="text-base font-medium text-foreground/80 group-hover:text-foreground/90">
-              This is your private space
-            </p>
-            <p className="text-sm text-muted-foreground/50 mt-1.5">
-              Drop files or click to upload — everything here stays yours
-            </p>
-          </div>
+           <div className="text-center">
+             <p className="text-base font-medium text-foreground/80 group-hover:text-foreground/90">
+               Nothing here yet
+             </p>
+             <p className="text-sm text-muted-foreground/50 mt-1.5">
+               Drop anything here. It stays with you.
+             </p>
+           </div>
         </button>
 
         <div className="flex items-center gap-2.5 flex-wrap justify-center">

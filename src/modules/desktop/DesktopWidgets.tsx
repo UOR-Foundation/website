@@ -150,7 +150,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   }, []);
 
   const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-  const displayName = profile?.displayName || "Explorer";
+  const displayName = profile?.displayName || "friend";
   // No trailing period — Apple-style
   const greetingText = `${getGreeting()}, ${displayName}`;
 
@@ -310,7 +310,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
               onKeyDown={handleKeyDown}
               onFocus={() => { if (query.trim() && suggestions.length > 0) setShowSuggestions(true); }}
               onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
-              placeholder="What is your main focus today?"
+              placeholder="What's on your mind?"
               className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none"
               style={{
                 paddingLeft: "3.5rem",
