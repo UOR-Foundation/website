@@ -60,8 +60,8 @@ function UorIdentitySection({ item }: { item: ContextItem }) {
       <div className="flex items-center gap-2 mb-2">
         <Fingerprint className="w-3.5 h-3.5 text-primary/60" />
         <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">Content Identity</span>
-        <ShieldCheck className="w-3 h-3 text-green-500/60" />
-        <span className="text-[10px] text-green-500/60">Verified</span>
+        <ShieldCheck className="w-3 h-3 text-primary/60" />
+        <span className="text-[10px] text-primary/60">Verified</span>
       </div>
       <div className="flex items-center gap-2">
         <code className="text-[11px] font-mono text-muted-foreground/50 bg-muted/30 px-2 py-1 rounded break-all flex-1">
