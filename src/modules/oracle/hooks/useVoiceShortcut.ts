@@ -4,8 +4,10 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 export function useVoiceShortcut() {
+  const { modKeyCode } = usePlatform();
   const [active, setActive] = useState(false);
   const [transcript, setTranscript] = useState("");
 
@@ -14,8 +16,7 @@ export function useVoiceShortcut() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ctrl+Shift+V or Cmd+Shift+V
-      if (e.shiftKey && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+      if (e.shiftKey && e[modKeyCode] && e.key.toLowerCase() === "v") {
         e.preventDefault();
         e.stopPropagation();
         setActive((prev) => !prev);
@@ -28,7 +29,7 @@ export function useVoiceShortcut() {
 
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [active]);
+  }, [active, modKeyCode]);
 
   return { active, open, close, transcript, setTranscript };
 }
