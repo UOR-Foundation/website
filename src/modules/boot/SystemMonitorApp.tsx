@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useBootStatus } from "./useBootStatus";
 import type { SealStatus, BootReceipt } from "./types";
-import { getEngine } from "@/modules/engine";
+import { getEngine, getWasmDiagnostics } from "@/modules/engine";
 import { TECH_STACK, SELECTION_POLICY } from "./tech-stack";
 import {
   getKernelDeclaration,
@@ -108,14 +108,21 @@ function buildDegradationLog(
       });
     return entries;
   }
-  if (receipt.engineType === "typescript")
+  if (receipt.engineType === "typescript") {
+    const diag = getWasmDiagnostics();
+    const detail = diag.lastError
+      ? `WASM load error: ${diag.lastError}`
+      : "WASM → TypeScript fallback";
     entries.push({
       component: "Compute Engine",
-      issue: "WASM → TypeScript fallback",
+      issue: detail,
       impact: "Binary integrity hash absent",
       severity: "warning",
-      recommendation: "Check WASM binary accessibility/CORS.",
+      recommendation: diag.lastError
+        ? `Fix: ${diag.lastError}`
+        : "Check WASM binary accessibility/CORS.",
     });
+  }
   if (receipt.stackHealth) {
     for (const c of receipt.stackHealth.components) {
       if (!c.available && c.criticality === "critical")
