@@ -20,10 +20,9 @@ interface Props {
 export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below", className = "" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [subView, setSubView] = useState<null | "paste" | "url" | "vault" | "workspace" | "folder">(null);
+  const [subView, setSubView] = useState<null | "paste" | "url" | "vault">(null);
   const [pasteText, setPasteText] = useState("");
   const [urlText, setUrlText] = useState("");
-  const [nameText, setNameText] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
