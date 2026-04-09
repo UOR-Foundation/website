@@ -1,85 +1,71 @@
 
 
-# UOR Topic Anchoring Card — Automatic Classification and Framework Grounding
+# Home Screen UX Audit and Refinement Plan
 
-## What This Builds
+## Current Assessment
 
-A new **UOR Anchoring Card** component that appears above every article, immediately after the ProvenanceBanner. When a user searches any term, the system automatically:
+Looking at the screenshot and code, the home screen has strong bones — the immersive wallpaper, centered clock, greeting, and search bar create a calm, focused environment. But several elements break the spell of effortlessness that an Apple-grade experience demands.
 
-1. **Classifies the topic** into a precise domain and sub-category using the existing `classifyQueryDomain()` on the backend and `detectDomain()` on the frontend
-2. **Maps it to UOR framework coordinates** — showing the OS taxonomy category (RESOLVE, IDENTITY, COMPUTE, etc.), the knowledge domain, and the coherence engine's novelty/depth signals
-3. **Displays this as a compact, beautifully designed anchoring card** that serves as a "guide before exploration"
+## Issues and Recommendations
 
-The card answers: *"What kind of knowledge is this, how does UOR anchor it, and what should you know before diving in?"*
+### 1. Clock Typography — Too Heavy, Not Enough Air
 
-## Visual Design
+**Problem:** The clock uses `font-bold` at 80px with a tight `tracking-tight`. It feels dense and heavy against the landscape photo. Apple's lock screen clock is bold but uses generous letter-spacing and a lighter optical weight to float above the wallpaper rather than compete with it.
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ⚛️ Physics · Quantum Mechanics                        │
-│                                                         │
-│  UOR Domain    Physics                                  │
-│  Category      RESOLVE → Query resolution               │
-│  Anchoring     Content-addressed via R₈ ring arithmetic │
-│  Depth         ██████░░░░ 3 prior explorations          │
-│  Novelty       72% — Familiar territory                 │
-│                                                         │
-│  ▸ How UOR anchors this topic                           │
-└─────────────────────────────────────────────────────────┘
-```
+**Fix:** Switch to `font-light` or `font-extralight` (weight 300/200) and increase letter-spacing to `0.08em`. This creates the ethereal, weightless quality that makes it feel like the time is painted onto the air rather than stamped onto the screen. Drop the text-shadow intensity by ~50%.
 
-Expandable section shows: *"This topic is content-addressed through UOR's canonical identity system. The search term is decomposed into its prime factorization within R₈, producing a unique cryptographic address. Sources are dynamically rebalanced toward physics-authoritative repositories (arXiv, Nature, NASA)."*
+### 2. Greeting — Lacks Breathing Room and Feels Generic
 
-## Technical Approach
+**Problem:** "Good morning, Explorer." sits 12px (`mt-3`) below the clock — too tight. The period at the end feels formal/robotic. The `tracking-wide` letter-spacing on the greeting fights with the clock's `tracking-tight`, creating a subtle dissonance.
 
-### 1. New Component: `UorAnchoringCard.tsx`
+**Fix:** Increase gap to `mt-5` (20px). Remove the trailing period — Apple never punctuates greetings. Reduce letter-spacing to `tracking-normal` for warmth. Lower opacity slightly (from 0.9 to 0.7 in immersive) so the greeting defers to the clock as the clear visual anchor.
 
-A new component in `src/modules/oracle/components/` that receives:
-- `queryDomain` — from the edge function's classifier (already emitted in SSE)
-- `keyword` — the search term
-- `noveltyScore` / `noveltyLabel` — from the coherence engine (already computed client-side)
-- `domainDepth` — from the coherence engine
-- `sessionCoherence` — from the coherence engine
+### 3. Search Bar — Gap Too Large, Capsule Too Dark
 
-Renders a compact card with:
-- Domain icon + label (reusing `DOMAIN_LABELS` from ProvenanceBanner, extended with sub-categories)
-- OS taxonomy mapping (from `os-taxonomy.ts` — maps to the RESOLVE category for search/oracle)
-- A mini progress bar for domain depth
-- Novelty percentage badge
-- Expandable "How UOR anchors this topic" section with a 2-3 sentence human-readable explanation of how content-addressing works for this specific domain
+**Problem:** The search bar sits `mt-8` (32px) below the greeting — this pushes it into a separate visual zone instead of feeling like part of one unified cluster. The dark background (`hsl(200 15% 16% / 0.9)`) at 90% opacity is too opaque, killing the immersive glass quality.
 
-### 2. Extend `ProvenanceMeta` in `stream-knowledge.ts`
+**Fix:** Reduce gap to `mt-6`. Lower search bar opacity to 0.6 and increase backdrop-filter blur to `blur(40px)` to create a true frosted-glass effect. Increase border-radius from `rounded-full` to keep it, but add inner padding symmetry (equal left/right padding). Remove the outer box-shadow in immersive mode — the blur is enough.
 
-Add an optional `domainSubcategory` field. The edge function will emit a more precise sub-label (e.g., "Quantum Mechanics" within "Physics") derived from the keyword pattern match. This gives finer granularity than just the top-level domain.
+### 4. Plus (+) Button — Unclear Affordance
 
-### 3. Emit Sub-Category from Edge Function
+**Problem:** The `+` icon on the left of the search bar has no clear meaning. Users won't know it opens a context menu. It looks like it might create a new tab or add something.
 
-In `uor-knowledge/index.ts`, extend `classifyQueryDomain()` to also return a `subcategory` string. This uses the same regex infrastructure but picks a more specific label based on which keyword pattern matched (e.g., if "quantum" matched within physics, subcategory = "Quantum Mechanics").
+**Fix:** Replace with a subtle pill/chip that says "Context" or use a small sparkle/brain icon that hints at intelligence. Alternatively, move context attachment to a secondary interaction (long-press or a subtle row below the search bar) and remove the `+` entirely to keep the search bar pristine.
 
-### 4. Wire into `ContextualArticleView.tsx`
+### 5. Theme Dots — Too Small, No Context
 
-Add the `UorAnchoringCard` between the ProvenanceBanner and the Context Banner. Pass through the provenance data (queryDomain, subcategory) and coherence data (novelty, depth).
+**Problem:** The three dots at the bottom are 7px circles with no labels. They look like pagination indicators (carousel dots), not theme switchers. Users will either miss them entirely or misinterpret them.
 
-### 5. Wire Coherence Data into `HumanContentView.tsx`
+**Fix:** Increase to 8-9px. Add a subtle label that appears on hover (tooltip). Use distinct visual identities: the immersive dot should show a tiny gradient, dark should be a filled dark circle with a light ring, light should be a white circle with a subtle border. This makes the function self-evident.
 
-The coherence engine already runs client-side. Pass `noveltyScore`, `domainDepth`, and `sessionCoherence` from `ResolvePage.tsx` through `HumanContentView` into `ContextualArticleView` and then into `UorAnchoringCard`.
+### 6. Tab Bar — Date/Time Redundancy
 
-## Files Modified
+**Problem:** The TabBar in the top-right shows "Thu, Apr 9 8:40 AM" — duplicating the large clock in the center. This is visual noise. On the home screen, seeing two clocks breaks the "less is more" principle.
+
+**Fix:** When on the home screen (no windows open), fade the TabBar time to 0 opacity or hide it entirely. Only show it when windows are open and the home screen clock is hidden.
+
+### 7. Vertical Centering — Not Quite Right
+
+**Problem:** The content cluster starts at `marginTop: 22vh`. This is a fixed value that doesn't account for the search bar height, meaning the visual center of the entire cluster (clock + greeting + search) is slightly above true center. On taller screens, it floats too high.
+
+**Fix:** Use flexbox vertical centering with a slight upward bias: replace the fixed `22vh` margin with `flex-1` spacers above and below the cluster, with the top spacer at `flex-[1.2]` and bottom at `flex-[1.618]` (golden ratio). This keeps it optically centered across all screen sizes.
+
+### 8. Wallpaper Photo Attribution — Too Prominent
+
+**Problem:** "Bright morning river winding through a valley / Photo · Unsplash" in the bottom-left is readable text that draws the eye away from the center. It competes with the theme dots.
+
+**Fix:** Reduce opacity from `white/30` and `white/20` to `white/15` and `white/10`. Move to bottom-right to avoid competing with the theme dots. Make it appear only on hover of the bottom edge.
+
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/modules/oracle/components/UorAnchoringCard.tsx` | **New** — The anchoring card component |
-| `src/modules/oracle/components/ContextualArticleView.tsx` | Add UorAnchoringCard between ProvenanceBanner and Context Banner, accept new props |
-| `src/modules/oracle/components/HumanContentView.tsx` | Pass coherence/novelty data through to ContextualArticleView |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Extend `ProvenanceMeta` with `domainSubcategory` |
-| `supabase/functions/uor-knowledge/index.ts` | Extend classifier to emit `domainSubcategory` in SSE |
-| `src/modules/oracle/pages/ResolvePage.tsx` | Pass coherence state (novelty, depth) to HumanContentView |
+| `src/modules/desktop/DesktopWidgets.tsx` | Clock weight → light, spacing adjustments, search bar glass refinement, remove + icon or redesign, vertical centering via flex |
+| `src/modules/desktop/DesktopThemeDots.tsx` | Larger dots with distinct visual identity per theme, hover labels |
+| `src/modules/desktop/TabBar.tsx` | Hide time display when home screen is visible (no open windows) |
+| `src/modules/desktop/DesktopShell.tsx` | Reduce photo attribution opacity, reposition |
 
-## Design Details
+## Design Philosophy
 
-- Glass-effect card with subtle border, matching the existing ProvenanceBanner aesthetic
-- Domain emoji + bold label as the card header
-- 5 compact key-value rows using muted foreground text
-- Expandable section with a smooth `framer-motion` animation
-- Dark theme compatible, no new dependencies
+Every change follows one principle: **reduce friction between the human and the content**. The home screen should feel like looking through a window, not at a screen. Typography should float, glass should breathe, and every element should justify its existence or be removed.
 
