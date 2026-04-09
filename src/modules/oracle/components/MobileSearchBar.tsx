@@ -4,11 +4,10 @@
  */
 
 import { useState, useRef, useCallback } from "react";
-import { Send, Plus, Sparkles } from "lucide-react";
+import { Send, Upload, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import VoiceInput from "./VoiceInput";
 import LiveSearchToggle from "./LiveSearchToggle";
-import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 
