@@ -88,7 +88,7 @@ export default function TabBar({
   return (
     <div
       data-tabbar
-      className="fixed top-0 inset-x-0 z-[200] flex items-end select-none"
+      className="fixed top-0 inset-x-0 z-[200] flex items-center select-none"
       style={{
         height: TAB_BAR_H,
         background: stripBg,
@@ -100,10 +100,10 @@ export default function TabBar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex items-center justify-center shrink-0 px-3 h-full transition-opacity duration-150 hover:opacity-70"
-            style={{ minWidth: 44 }}
+            className="flex items-center justify-center shrink-0 h-full transition-opacity duration-150 hover:opacity-70"
+            style={{ width: 46 }}
           >
-            <span className={`text-[14px] font-bold tracking-tight ${isLight ? "text-black/65" : "text-white/70"}`}>
+            <span className={`text-[18px] leading-none ${isLight ? "text-black/60" : "text-white/60"}`}>
               ⬡
             </span>
           </button>
@@ -189,26 +189,27 @@ export default function TabBar({
           );
         })}
 
-        {/* New tab "+" */}
+        {/* New tab "+" — vertically centered */}
         <button
-          className={`flex items-center justify-center w-7 h-7 rounded-full shrink-0 ml-1 mb-[2px] transition-colors duration-150
-            ${isLight ? "hover:bg-black/[0.04] text-black/35" : "hover:bg-white/[0.06] text-white/35"}
+          className={`flex items-center justify-center w-[28px] h-[28px] rounded-full shrink-0 ml-1 transition-colors duration-150
+            ${isLight ? "hover:bg-black/[0.05] text-black/40" : "hover:bg-white/[0.07] text-white/40"}
           `}
+          style={{ marginTop: "auto", marginBottom: "auto" }}
           onClick={onSpotlight}
           title="New tab (⌘K)"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-[16px] h-[16px]" />
         </button>
       </div>
 
-      {/* Right: status — search + clock only, φ-scale gap */}
-      <div className="flex items-center shrink-0 px-3 h-full" style={{ gap: `${SPACE.md}px` }}>
+      {/* Right: search + time + sovereign profile */}
+      <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <button
           onClick={onSpotlight}
-          className={`p-0.5 rounded transition-colors duration-150 ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.05]"}`}
-          title="Spotlight (⌘K)"
+          className={`flex items-center justify-center w-[28px] h-[28px] rounded-md transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
+          title="Search (⌘K)"
         >
-          <Search className={`w-3 h-3 ${iconMuted}`} />
+          <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/40" : "text-white/40"}`} />
         </button>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -216,6 +217,19 @@ export default function TabBar({
         >
           {formatted}&ensp;{clock}
         </span>
+        {/* Sovereign profile avatar */}
+        <button
+          onClick={onProfileOpen}
+          className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150 overflow-hidden
+            ${isLight
+              ? "bg-black/[0.08] hover:bg-black/[0.12] border border-black/[0.08]"
+              : "bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08]"
+            }
+          `}
+          title="Profile"
+        >
+          <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
+        </button>
       </div>
     </div>
   );
