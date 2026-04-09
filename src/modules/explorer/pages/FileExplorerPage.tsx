@@ -60,6 +60,7 @@ function sortItems(items: ContextItem[], field: SortField, dir: SortDir): Contex
 
 export default function FileExplorerPage() {
   const ctx = useContextManager();
+  const kg = useKnowledgeGraph();
   const [filter, setFilter] = useState<SidebarFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>(loadViewMode);
   const [searchQuery, setSearchQuery] = useState("");
