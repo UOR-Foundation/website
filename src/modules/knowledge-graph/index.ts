@@ -51,6 +51,9 @@ export type { AttributeSchema, ValidationResult, ValidationIssue } from "./bluep
 export { useKnowledgeGraph } from "./hooks/useKnowledgeGraph";
 export type { KnowledgeGraphHandle } from "./hooks/useKnowledgeGraph";
 
+export { oxigraphStore, sparqlQuery, sparqlUpdate } from "./oxigraph-store";
+export type { SparqlBinding } from "./oxigraph-store";
+
 export { processTabular, autoProfiler, deriveSourceKey } from "./data-engine";
 export type {
   ProcessedDataPacket,
