@@ -2036,7 +2036,7 @@ const SearchPage = () => {
       ) : null}
 
       <div className={`flex-1 overflow-y-auto ${immersiveMode ? "relative z-10" : ""}`}>
-        <div className="profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className={result && readerMode ? "w-full" : "profile-container max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10"}>
 
           {/* ══════════════ EMPTY STATE — Homepage ══════════════ */}
           {!result && !aiMode && !(inWindow && windowInitialQuery) && (
@@ -2305,12 +2305,9 @@ const SearchPage = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
+                    className={`flex flex-col relative w-full ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
                     style={{
                       minHeight: "100dvh",
-                      width: inWindow ? "100%" : "100vw",
-                      maxWidth: inWindow ? "100%" : "100vw",
-                      marginLeft: inWindow ? 0 : "calc(-50vw + 50%)",
                       overflowX: "clip",
                     }}
                     onScroll={mobileImmersive ? (e) => {
