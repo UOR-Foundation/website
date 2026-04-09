@@ -141,10 +141,8 @@ export async function sendMatrixMessage(
 ): Promise<string> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
 
-  const response = await _client.sendMessage(roomId, {
-    msgtype: msgtype as sdk.MsgType,
-    body,
-  });
+  const content: Record<string, unknown> = { msgtype, body };
+  const response = await _client.sendMessage(roomId, content as any);
 
   return response.event_id ?? "";
 }
