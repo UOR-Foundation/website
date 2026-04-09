@@ -40,15 +40,29 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [anchorPos, setAnchorPos] = useState<{ top: number; right: number } | null>(null);
+  const justOpenedRef = useRef(false);
 
   // Compute position from anchor ref
   useEffect(() => {
-    if (!open || !anchorRef?.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    setAnchorPos({
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-    });
+    if (!open) return;
+    
+    const updatePos = () => {
+      if (anchorRef?.current) {
+        const rect = anchorRef.current.getBoundingClientRect();
+        setAnchorPos({
+          top: rect.bottom + 8,
+          right: Math.max(8, window.innerWidth - rect.right),
+        });
+      } else {
+        // Fallback: position near top-right
+        setAnchorPos({ top: 60, right: 16 });
+      }
+    };
+    
+    updatePos();
+    // Recalculate on resize/scroll
+    window.addEventListener("resize", updatePos);
+    return () => window.removeEventListener("resize", updatePos);
   }, [open, anchorRef]);
 
   const generateToken = useCallback(async () => {
@@ -134,7 +148,11 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
 
   useEffect(() => {
     if (open) {
+      justOpenedRef.current = true;
       generateToken();
+      // Reset justOpened flag after a short delay
+      const t = setTimeout(() => { justOpenedRef.current = false; }, 200);
+      return () => clearTimeout(t);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
@@ -143,20 +161,31 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     };
   }, [open, generateToken]);
 
+  // Outside click handler — uses pointerdown for reliability
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
+    
+    const handler = (e: PointerEvent) => {
+      // Skip if we just opened
+      if (justOpenedRef.current) return;
+      
       const target = e.target as Node;
-      if (panelRef.current && !panelRef.current.contains(target) &&
-          !(anchorRef?.current && anchorRef.current.contains(target))) {
-        onClose();
-      }
+      // Check if click is inside the panel
+      if (panelRef.current && panelRef.current.contains(target)) return;
+      // Check if click is on the anchor button
+      if (anchorRef?.current && anchorRef.current.contains(target)) return;
+      
+      onClose();
     };
-    // Delay to avoid catching the opening click
-    const timer = setTimeout(() => document.addEventListener("mousedown", handler), 50);
+    
+    // Use a longer delay to avoid catching the opening interaction
+    const timer = setTimeout(() => {
+      document.addEventListener("pointerdown", handler, true);
+    }, 150);
+    
     return () => {
       clearTimeout(timer);
-      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("pointerdown", handler, true);
     };
   }, [open, onClose, anchorRef]);
 
@@ -165,6 +194,8 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
+
+  if (!open) return null;
 
   const panelContent = (
     <AnimatePresence>
@@ -214,7 +245,10 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
               </span>
             </div>
             <button
-              onClick={onClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
               className={`p-1.5 rounded-lg transition-colors ${
                 immersive
                   ? "text-white/25 hover:text-white/50 hover:bg-white/[0.06]"
