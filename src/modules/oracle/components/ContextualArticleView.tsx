@@ -20,6 +20,7 @@ import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import ComputeLensRenderer from "./lenses/ComputeLensRenderer";
 import ProvenanceBanner from "./ProvenanceBanner";
+import UorAnchoringCard from "./UorAnchoringCard";
 
 const LENS_RENDERERS: Record<string, React.FC<{
   title: string;
@@ -52,9 +53,17 @@ interface ContextualArticleViewProps {
     personalized?: boolean;
     personalizedTopics?: string[];
     queryDomain?: string;
+    domainSubcategory?: string;
   };
   media?: MediaData;
   immersive?: boolean;
+  /** Coherence engine data for the anchoring card */
+  coherenceData?: {
+    noveltyScore?: number;
+    noveltyLabel?: string;
+    domainDepth?: number;
+    sessionCoherence?: number;
+  };
 }
 
 const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
@@ -86,6 +95,19 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
           personalized={provenance?.personalized}
           personalizedTopics={provenance?.personalizedTopics}
           queryDomain={provenance?.queryDomain}
+        />
+      )}
+
+      {/* ── UOR Anchoring Card ── */}
+      {!synthesizing && contentMarkdown.trim().length > 50 && (
+        <UorAnchoringCard
+          keyword={title}
+          queryDomain={provenance?.queryDomain || "general"}
+          domainSubcategory={provenance?.domainSubcategory}
+          noveltyScore={coherenceData?.noveltyScore}
+          noveltyLabel={coherenceData?.noveltyLabel}
+          domainDepth={coherenceData?.domainDepth}
+          sessionCoherence={coherenceData?.sessionCoherence}
         />
       )}
 
