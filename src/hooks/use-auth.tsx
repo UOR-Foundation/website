@@ -10,6 +10,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { runFoundingCeremony } from "@/modules/ceremony/founding-forge";
 
 export interface PrivacyRules {
   name?: boolean;
@@ -115,7 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
         if (newSession?.user) {
           // Use setTimeout to avoid Supabase deadlock
-          setTimeout(() => fetchProfile(newSession.user.id), 0);
+          setTimeout(async () => {
+            await fetchProfile(newSession.user.id);
+            // Run founding ceremony in parallel (fire-and-forget)
+            if (event === "SIGNED_IN") {
+              runFoundingCeremony(newSession.user.id).then((result) => {
+                if (result) fetchProfile(newSession.user.id); // refresh to pick up ceremony_cid
+              });
+            }
+          }, 0);
           // Handle post-OAuth redirect: if we stored a return path, navigate there
           if (event === "SIGNED_IN") {
             const returnTo = sessionStorage.getItem("auth_return_to");

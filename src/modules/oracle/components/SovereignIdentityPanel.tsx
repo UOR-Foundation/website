@@ -199,13 +199,45 @@ export default function SovereignIdentityPanel({ open, onClose }: Props) {
               )}
 
               {/* Ceremony status */}
-              {profile?.ceremonyCid && (
+              {profile?.ceremonyCid ? (
                 <div
-                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-lg"
                   style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.1)" }}
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" style={{ color: "rgba(52,211,153,0.6)" }} />
-                  <p style={{ fontSize: 12, color: "rgba(52,211,153,0.7)" }}>Ceremony verified</p>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>
+                    {(() => {
+                      // Derive moon phase from ceremony glyph if available
+                      const phases = ["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗"];
+                      if (profile.uorGlyph) {
+                        const cp = profile.uorGlyph.codePointAt(0) ?? 0x2800;
+                        const byte = cp - 0x2800;
+                        let pop = 0;
+                        for (let i = 0; i < 6; i++) if (byte & (1 << i)) pop++;
+                        return phases[Math.min(pop, 6)];
+                      }
+                      return "🌑";
+                    })()}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5" style={{ color: "rgba(52,211,153,0.6)" }} />
+                      <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(52,211,153,0.7)" }}>Sovereign blade forged</p>
+                    </div>
+                    <p style={{ fontSize: 10, color: "rgba(52,211,153,0.4)", fontFamily: "monospace", marginTop: 2 }}>
+                      Z/(2⁶)Z lattice • genesis node
+                    </p>
+                  </div>
+                </div>
+              ) : user && (
+                <div
+                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div
+                    className="w-3.5 h-3.5 border-2 rounded-full animate-spin"
+                    style={{ borderColor: "rgba(255,255,255,0.08)", borderTopColor: "rgba(255,255,255,0.3)" }}
+                  />
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>Forging sovereign blade…</p>
                 </div>
               )}
 
