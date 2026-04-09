@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import {
-  Search, Sparkles, BookOpen, MessageCircle, Shield, Activity,
+  Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -72,6 +72,15 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 1020, h: 680 },
     color: "hsl(142 60% 50%)",
     category: "OBSERVE",
+  },
+  {
+    id: "files",
+    label: "Files",
+    icon: FolderOpen,
+    component: lazy(() => import("@/modules/sovereign-vault/components/VaultPanel")),
+    defaultSize: { w: 800, h: 560 },
+    color: "hsl(45 80% 55%)",
+    category: "STRUCTURE",
   },
 ];
 
