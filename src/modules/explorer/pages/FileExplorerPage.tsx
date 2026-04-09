@@ -14,7 +14,7 @@ import QuickLookModal from "../components/QuickLookModal";
 import PasteModal from "../components/PasteModal";
 import ImportUrlModal from "../components/ImportUrlModal";
 import { tagStore, DEFAULT_TAGS } from "../lib/tags";
-import { computeFileUorAddress } from "../lib/file-identity";
+import { toast } from "sonner";
 import { toast } from "sonner";
 import TagMenu from "../components/TagMenu";
 
