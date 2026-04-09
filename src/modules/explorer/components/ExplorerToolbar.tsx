@@ -2,7 +2,8 @@
  * ExplorerToolbar — Top toolbar with breadcrumb, view toggle, search, and actions.
  */
 
-import { LayoutGrid, List, Upload, FolderPlus, Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { LayoutGrid, List, Upload, FolderPlus, Search, X } from "lucide-react";
 import type { SidebarFilter } from "./ExplorerSidebar";
 
 export type ViewMode = "grid" | "list";
@@ -14,7 +15,7 @@ interface Props {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onUploadClick: () => void;
-  onNewFolder: () => void;
+  onNewFolder: (name: string) => void;
 }
 
 const FILTER_LABELS: Record<SidebarFilter, string> = {
@@ -31,26 +32,72 @@ export default function ExplorerToolbar({
   filter, viewMode, onViewModeChange, searchQuery, onSearchChange,
   onUploadClick, onNewFolder,
 }: Props) {
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (creatingFolder) folderInputRef.current?.focus();
+  }, [creatingFolder]);
+
+  const submitFolder = () => {
+    if (folderName.trim()) {
+      onNewFolder(folderName.trim());
+    }
+    setFolderName("");
+    setCreatingFolder(false);
+  };
+
   return (
-    <div className="flex items-center gap-3 px-4 py-2 border-b border-border/40 bg-muted/20">
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/40 bg-muted/20">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm min-w-0">
-        <span className="text-muted-foreground/60 text-xs">Files</span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-muted-foreground/60 text-sm">Files</span>
         <span className="text-muted-foreground/40">›</span>
-        <span className="font-medium text-foreground/90 truncate">{FILTER_LABELS[filter]}</span>
+        <span className="font-medium text-foreground/90 text-base truncate">{FILTER_LABELS[filter]}</span>
       </div>
 
       <div className="flex-1" />
 
+      {/* Inline folder creation */}
+      {creatingFolder && (
+        <div className="flex items-center gap-1.5">
+          <input
+            ref={folderInputRef}
+            type="text"
+            placeholder="Folder name…"
+            value={folderName}
+            onChange={e => setFolderName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter") submitFolder();
+              if (e.key === "Escape") { setCreatingFolder(false); setFolderName(""); }
+            }}
+            className="h-8 w-36 px-3 text-sm rounded-md bg-muted/40 border border-border/40 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+          />
+          <button
+            onClick={submitFolder}
+            className="h-8 px-2.5 text-sm rounded-md bg-primary/90 text-primary-foreground hover:bg-primary transition-colors font-medium"
+          >
+            Create
+          </button>
+          <button
+            onClick={() => { setCreatingFolder(false); setFolderName(""); }}
+            className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
         <input
           type="text"
           placeholder="Search files…"
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
-          className="h-7 w-40 pl-8 pr-3 text-xs rounded-md bg-muted/40 border border-border/30 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+          className="h-8 w-44 pl-9 pr-3 text-sm rounded-md bg-muted/40 border border-border/30 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
         />
       </div>
 
@@ -61,33 +108,35 @@ export default function ExplorerToolbar({
           className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-primary/10 text-primary" : "text-muted-foreground/50 hover:text-foreground/70"}`}
           title="Grid view"
         >
-          <LayoutGrid className="w-3.5 h-3.5" />
+          <LayoutGrid className="w-4 h-4" />
         </button>
         <button
           onClick={() => onViewModeChange("list")}
           className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-primary/10 text-primary" : "text-muted-foreground/50 hover:text-foreground/70"}`}
           title="List view"
         >
-          <List className="w-3.5 h-3.5" />
+          <List className="w-4 h-4" />
         </button>
       </div>
 
       {/* Actions */}
-      <button
-        onClick={onNewFolder}
-        className="h-7 px-2.5 text-xs rounded-md border border-border/30 text-foreground/70 hover:bg-muted/50 transition-colors flex items-center gap-1.5"
-        title="New Folder"
-      >
-        <FolderPlus className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">New Folder</span>
-      </button>
+      {!creatingFolder && (
+        <button
+          onClick={() => setCreatingFolder(true)}
+          className="h-8 px-3 text-sm rounded-md border border-border/30 text-foreground/70 hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+          title="New Folder"
+        >
+          <FolderPlus className="w-4 h-4" />
+          <span className="hidden sm:inline">New Folder</span>
+        </button>
+      )}
 
       <button
         onClick={onUploadClick}
-        className="h-7 px-3 text-xs rounded-md bg-primary/90 text-primary-foreground hover:bg-primary transition-colors flex items-center gap-1.5 font-medium"
+        className="h-8 px-3.5 text-sm rounded-md bg-primary/90 text-primary-foreground hover:bg-primary transition-colors flex items-center gap-1.5 font-medium"
         title="Upload files"
       >
-        <Upload className="w-3.5 h-3.5" />
+        <Upload className="w-4 h-4" />
         <span>Upload</span>
       </button>
     </div>
