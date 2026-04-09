@@ -84,6 +84,7 @@ export function onDeepLink(handler: DeepLinkHandler): () => void {
 export async function initDeepLinks(): Promise<void> {
   if (isLocal()) {
     try {
+      // @ts-ignore — Tauri plugin only available in desktop builds
       const mod = await import("@tauri-apps/plugin-deep-link");
       // Listen for incoming URLs
       await mod.onOpenUrl((urls: string[]) => {

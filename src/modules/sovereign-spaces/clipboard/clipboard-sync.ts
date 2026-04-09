@@ -36,6 +36,7 @@ let _pollInterval: ReturnType<typeof setInterval> | null = null;
 export async function readClipboard(): Promise<string> {
   if (isLocal()) {
     try {
+      // @ts-ignore — Tauri plugin only available in desktop builds
       const mod = await import("@tauri-apps/plugin-clipboard-manager");
       const text = await mod.readText();
       return text ?? "";
@@ -57,6 +58,7 @@ export async function readClipboard(): Promise<string> {
 export async function writeClipboard(content: string): Promise<void> {
   if (isLocal()) {
     try {
+      // @ts-ignore — Tauri plugin only available in desktop builds
       const mod = await import("@tauri-apps/plugin-clipboard-manager");
       await mod.writeText(content);
       _lastContent = content;

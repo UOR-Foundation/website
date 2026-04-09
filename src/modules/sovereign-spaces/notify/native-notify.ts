@@ -34,6 +34,7 @@ export interface NotifyOptions {
 export async function notify(opts: NotifyOptions): Promise<void> {
   if (isLocal()) {
     try {
+      // @ts-ignore — Tauri plugin only available in desktop builds
       const mod = await import("@tauri-apps/plugin-notification");
       let permResult = await mod.isPermissionGranted();
       if (!permResult) {

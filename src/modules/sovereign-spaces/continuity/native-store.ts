@@ -34,6 +34,7 @@ class TauriStore implements SovereignStore {
   private async getStore(): Promise<any> {
     if (this.storeHandle) return this.storeHandle;
     try {
+      // @ts-ignore — Tauri plugin only available in desktop builds
       const mod = await import("@tauri-apps/plugin-store");
       const Store = (mod as any).Store ?? (mod as any).default;
       this.storeHandle = await Store.load(this.storePath);

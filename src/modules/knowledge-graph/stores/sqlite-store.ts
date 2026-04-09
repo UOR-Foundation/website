@@ -42,6 +42,7 @@ let _db: any = null;
 async function getDb(): Promise<any> {
   if (_db) return _db;
   try {
+    // @ts-ignore — Tauri plugin only available in desktop builds
     const mod = await import("@tauri-apps/plugin-sql");
     const Database = (mod as any).default ?? (mod as any).Database;
     _db = await Database.load("sqlite:uor-knowledge-graph.db");

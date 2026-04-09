@@ -12,7 +12,7 @@
  * @layer bus/modules
  */
 
-import { bus } from "@/modules/bus/sovereign-bus";
+import { bus } from "@/modules/bus";
 import {
   readClipboard,
   writeClipboard,
