@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import {
-  Search, Sparkles, BookOpen, MessageCircle, Shield,
+  Search, Sparkles, BookOpen, MessageCircle, Shield, Activity,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 

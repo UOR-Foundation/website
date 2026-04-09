@@ -90,8 +90,8 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Observe",
     description: "Metrics, traces, and real-time system observation",
     uorModules: ["observable", "trace", "derivation"],
-    appIds: [],
-    userFacing: false,
+    appIds: ["system-monitor"],
+    userFacing: true,
   },
   TRANSFORM: {
     id: "TRANSFORM",
