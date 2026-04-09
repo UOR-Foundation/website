@@ -1,94 +1,85 @@
 
 
-# Frontier Performance Enforcement — UOR Engine Evaluation
+# Module Consolidation Plan — 3341 → ~2800 Modules
 
-## Evaluation Summary
+## Diagnosis
 
-The SIMD128 crate is compiled and deployed, but **the performance gains are largely unrealized** because the pipeline has 5 disconnection points where the SIMD bulk ops never actually reach the hot paths. Here's what's built vs what's actually wired:
+The 3341 Vite module count comes from three sources:
+1. **41 top-level modules** under `src/modules/`, several with overlapping responsibilities
+2. **26 bus registrations** imported eagerly via side-effect in `App.tsx` — every bus handler and its transitive deps are in the initial bundle
+3. **Dead dependencies** (`oxigraph` 7.6 MB still installed; `oxigraphStore` alias exported but zero consumers)
 
-| Layer | Status | Issue |
-|-------|--------|-------|
-| WASM SIMD binary | Built | 56 SIMD instructions confirmed |
-| Bulk exports (`bulk_ring_add`, etc.) | Declared in manifest + .d.ts | **Never wired into the adapter** — they land in `extensions` silently |
-| Web Worker | Running | **Uses pure JS**, not the WASM module — gets zero SIMD benefit |
-| WASM compile cache (`loadWithCache`) | Implemented | **Never called** — adapter uses raw `import()` instead |
-| LUT engine GPU path | Implemented | **Disconnected from WASM bulk ops** — CPU fallback does scalar loops |
-| Kernel hash | Computed | **String concat, not SHA-256** — not a real cryptographic proof |
+## Consolidation Opportunities (7 actions)
 
-## 5 Surgical Fixes (All UOR-Engine-Derived)
+### 1. Merge `kg-store` into `knowledge-graph` (eliminate 1 module)
 
-### 1. Wire SIMD bulk ops into the engine contract
+Both are graph storage layers. `kg-store` (7 files, 11 consumers) wraps ingest/query ops; `knowledge-graph` (14 files, 10 consumers) owns the GrafeoDB store. They share the same underlying store and `kg-store/uns-graph.ts` already imports from `knowledge-graph`. Merge `kg-store/*` into `knowledge-graph/` and re-export from `knowledge-graph/index.ts`. Update 18 import sites.
 
-The adapter's `buildFromWasm()` maps scalar ops but ignores the 4 bulk SIMD exports. They exist in `extensions` but nobody calls them. Wire them directly onto `bulkApply` and `bulkVerify` on the contract, with TS fallback loops.
+### 2. Merge `trace` into `verify` (eliminate 1 module)
 
-**File:** `src/modules/engine/adapter.ts`
-- In `buildFromWasm()`, add explicit mappings for `bulk_ring_add`, `bulk_ring_xor`, `bulk_ring_neg`, `bulk_verify_all`
-- Implement `bulkApply` that dispatches to the correct SIMD export based on `op` name
-- Implement `bulkVerify` using `bulk_verify_all`
-- Add TS fallback implementations in `TS_FALLBACKS`
+`trace` is 3 files (record/get/recent traces). `verify` is the audit module (receipts, integrity checks). Traces are a subset of the audit pipeline. Merge `trace/trace.ts` and `trace/trace-module.ts` into `verify/`. Update 6 import sites.
 
-**File:** `src/modules/engine/contract.ts`
-- Make `bulkApply` and `bulkVerify` required (not optional `?`) since both WASM and TS paths exist
+### 3. Merge `semantic-index` into `resolver` (eliminate 1 module)
 
-### 2. Use IndexedDB compile cache for WASM loading
+`semantic-index` has 5 files (entity linking, deduplication, index building). `resolver` already has entity resolution (`entity-resolver.ts`) and correlation. Both deal with entity lookup/matching. Only 1 external consumer of `semantic-index`. Merge into `resolver/`. Update 1 import site.
 
-`loadWithCache()` exists but `initEngine()` uses raw `import()` + `mod.default()`. Switch to cached compilation so repeat page loads skip the ~100-500ms compile step entirely.
+### 4. Delete dead modules: `uor-terms`, `framework`, `interoperability` (eliminate 3 modules)
 
-**File:** `src/modules/engine/adapter.ts`
-- In `initEngine()`, try `loadWithCache(wasmUrl, CRATE_MANIFEST.version, imports)` first
-- Fall back to the current `import()` path if cache fails
-- After successful `import()`, call `cacheModule()` to persist for next load
+- **`uor-terms`**: 0 external refs. Exports only a page component. Move page to `core/pages/`.
+- **`framework`**: 0 external refs. Exports `StandardPage` and `SemanticWebPage`. Move pages to `core/pages/`. Already imported in `App.tsx` directly.
+- **`interoperability`**: 1 external ref (likely a route). 4 files, pure UI. Move to `core/pages/`.
 
-### 3. Make the worker WASM-aware
+### 5. Fold `ns` namespace barrel into direct imports (eliminate 1 module)
 
-The inline worker reimplements ring ops in plain JS. When WASM is available on the main thread, serialize the WASM URL to the worker so it can instantiate its own WASM module with SIMD bulk ops.
+`ns` is a re-export barrel with exactly 1 consumer (`namespace-registry.ts`). The barrel itself says "non-ontological modules import from their module dirs directly." Follow that advice — replace the single consumer's `ns/*` imports with direct module imports and delete `ns/`.
 
-**File:** `src/modules/engine/wasm-worker.ts`
-- Modify `createWorkerScript()` to accept an optional WASM URL
-- If WASM URL is provided, the worker loads the WASM module and uses `bulk_ring_add` etc. for `bulkApply`
-- Fall back to the current JS ring ops if WASM load fails in worker context
-- In `init()`, pass the WASM URL if main thread detected WASM successfully
+### 6. Remove `oxigraph` package dependency
 
-### 4. Cryptographic kernel hash
+`oxigraph` (7.6 MB) is still in `node_modules`. The `oxigraphStore` export alias has zero consumers. Remove from `package.json`, delete the re-export alias from `grafeo-store.ts` and `knowledge-graph/index.ts`.
 
-`verifyKernel()` produces a string concat (`"encode:1|decode:1|..."`) not a SHA-256. For the seal to be a real cryptographic proof, the kernel hash must be a proper digest.
+### 7. Lazy-load bus module registrations
 
-**File:** `src/modules/engine/kernel-declaration.ts`
-- Change `verifyKernel()` to return a `Promise` (or compute synchronously using the engine's own ring ops)
-- Hash the kernel state string through `sha256hex()` to produce a real 256-bit digest
-- Update callers in `sovereign-boot.ts` to `await` the hash
+Currently `App.tsx` line 9 does `import "@/modules/bus/modules"` which eagerly pulls in all 26 bus handler modules and their transitive deps (the largest contributor to the 3341 count). Change to a dynamic `import()` triggered after first render or on `requestIdleCallback`, so the initial bundle only includes route-critical code.
 
-### 5. Idle-time LUT pre-warming
+## Impact Estimate
 
-The LUT engine builds 14 tables on first access. Use `requestIdleCallback` to pre-compute during browser idle time so the first bulk operation is instant.
+| Action | Modules Eliminated | Vite Modules Saved |
+|--------|-------------------|-------------------|
+| Merge kg-store → knowledge-graph | 1 top-level | ~30-50 |
+| Merge trace → verify | 1 top-level | ~15 |
+| Merge semantic-index → resolver | 1 top-level | ~20 |
+| Delete uor-terms/framework/interoperability | 3 top-level | ~60 |
+| Fold ns barrel | 1 top-level | ~25 |
+| Remove oxigraph dep | 0 | ~100 (dead tree-shake) |
+| Lazy bus registrations | 0 | ~300 (deferred to async chunk) |
+| **Total** | **7 top-level modules** | **~550 fewer in initial bundle** |
 
-**File:** `src/modules/uns/core/hologram/gpu/lut-engine.ts`
-- Add a `warmup()` method that pre-computes all CIDs (the expensive part) during idle
-- Export a `scheduleLutWarmup()` that calls `requestIdleCallback(() => getLutEngine().warmup())`
+Module count drops from 41 → 34 top-level modules (under the pruning gate's 40 budget with margin). Initial Vite transform count drops to ~2800.
 
-**File:** `src/modules/boot/sovereign-boot.ts`
-- After seal computation, call `scheduleLutWarmup()` to prime the engine during idle
+## Files Modified
 
-## Files to Modify
+```text
+DELETE  src/modules/kg-store/          → merge into knowledge-graph/
+DELETE  src/modules/trace/             → merge into verify/
+DELETE  src/modules/semantic-index/    → merge into resolver/
+DELETE  src/modules/uor-terms/         → move page to core/pages/
+DELETE  src/modules/framework/         → move pages to core/pages/
+DELETE  src/modules/interoperability/  → move page to core/pages/
+DELETE  src/modules/ns/               → inline imports at call sites
 
-| File | Change |
-|------|--------|
-| `src/modules/engine/adapter.ts` | Wire SIMD bulk ops + use compile cache |
-| `src/modules/engine/contract.ts` | Make bulk ops required |
-| `src/modules/engine/wasm-worker.ts` | WASM-aware worker with SIMD delegation |
-| `src/modules/engine/kernel-declaration.ts` | SHA-256 kernel hash |
-| `src/modules/uns/core/hologram/gpu/lut-engine.ts` | Idle-time warmup |
-| `src/modules/boot/sovereign-boot.ts` | Await kernel hash + schedule LUT warmup |
+EDIT    src/modules/knowledge-graph/index.ts   (add kg-store exports, remove oxigraphStore)
+EDIT    src/modules/knowledge-graph/grafeo-store.ts (remove oxigraphStore alias)
+EDIT    src/modules/verify/index.ts            (add trace exports)
+EDIT    src/modules/resolver/index.ts          (add semantic-index exports)
+EDIT    src/App.tsx                            (lazy bus import, update page imports)
+EDIT    package.json                           (remove oxigraph)
+EDIT    ~25 files with import path updates
+```
 
-## Performance Impact
+## Constraints
 
-| Optimization | Before | After |
-|-------------|--------|-------|
-| Bulk ring ops | Scalar JS (1 byte/cycle) | WASM SIMD (16 bytes/cycle) |
-| Repeat WASM load | ~100-500ms compile | ~5-20ms from IndexedDB |
-| Worker bulk ops | JS scalar loops | WASM SIMD in worker thread |
-| Kernel hash integrity | String concat (forgeable) | SHA-256 (cryptographic) |
-| First LUT operation | Cold (CID compute ~5ms) | Pre-warmed during idle |
-
-Every optimization derives from the engine's own declared operations. No new dependencies. No new frameworks. The Fano-mapped kernel functions remain the root authority.
+- No API surface changes — all public exports are preserved via new barrel locations
+- No kernel function changes — P₀–P₆ frameworks untouched
+- Bus handlers remain identical — only their registration timing changes (eager → idle)
+- Pruning gate test remains green (34 < 40 modules)
 
