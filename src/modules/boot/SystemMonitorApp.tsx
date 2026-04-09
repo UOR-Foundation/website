@@ -1018,6 +1018,45 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
       </div>
 
+      {/* ── Audit & Verification ── */}
+      <div className="px-4 pb-3">
+        <GrafanaPanel title="Audit & Verification" icon={<IconClipboardCheck size={15} />}>
+          {compositeHealth.audit.loading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse" />
+              Loading audit data…
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { label: "Receipts", value: compositeHealth.audit.receipts, sub: `${compositeHealth.audit.receiptPassRate}% self-verified`, color: compositeHealth.audit.receiptPassRate >= 80 ? "#22c55e" : compositeHealth.audit.receiptPassRate > 0 ? "#f59e0b" : undefined },
+                  { label: "Derivations", value: compositeHealth.audit.derivations, sub: `${compositeHealth.audit.gradeARate}% Grade A`, color: compositeHealth.audit.gradeARate >= 80 ? "#22c55e" : compositeHealth.audit.gradeARate > 0 ? "#3b82f6" : undefined },
+                  { label: "Certificates", value: compositeHealth.audit.certificates, sub: `${compositeHealth.audit.certValidRate}% valid`, color: compositeHealth.audit.certValidRate >= 80 ? "#22c55e" : compositeHealth.audit.certValidRate > 0 ? "#f59e0b" : undefined },
+                  { label: "Traces", value: compositeHealth.audit.traces, sub: "computation logs", color: undefined },
+                ].map((c) => (
+                  <div key={c.label} className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</span>
+                    <div className="text-xl font-bold font-mono text-foreground">{c.value}</div>
+                    <span className="text-xs" style={c.color ? { color: c.color } : undefined}>
+                      {c.sub}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-6 pt-3 border-t border-border/50 text-xs text-muted-foreground font-mono">
+                <span>Seal: <span className="text-foreground">{compositeHealth.signals.sealWeight}%</span></span>
+                <span>Error Budget: <span className="text-foreground">{compositeHealth.signals.errorBudget}%</span></span>
+                <span>Audit: <span className="text-foreground">{compositeHealth.signals.auditHealth}%</span></span>
+                <span className="ml-auto font-semibold" style={{ color: unifiedColor }}>
+                  Composite: {compositeHealth.score}%
+                </span>
+              </div>
+            </>
+          )}
+        </GrafanaPanel>
+      </div>
+
       {/* ── Active Alerts ── */}
       {isDegraded && degradationLog.length > 0 && (
         <div className="px-4 pb-3">
