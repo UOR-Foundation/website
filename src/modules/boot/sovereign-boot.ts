@@ -30,12 +30,12 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { canonicalJsonLd } from "@/lib/uor-address";
 import { sha256hex } from "@/lib/crypto";
 import { initEngine, getEngine } from "@/modules/engine";
-import { verifyKernel } from "@/modules/engine/kernel-declaration";
+import { verifyKernel, auditNamespaceCoverage } from "@/modules/engine/kernel-declaration";
 import { bus } from "@/modules/bus";
-import { BUS_MANIFEST } from "@/modules/bus/manifest";
+import { BUS_MANIFEST, validateManifestTraceability } from "@/modules/bus/manifest";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
 import { startSealMonitor } from "./seal-monitor";
-import { validateStack } from "./tech-stack";
+import { validateStack, validateMinimality } from "./tech-stack";
 import type { StackComponentStatus } from "./types";
 
 // ── Module-private seal storage (Finding 2: closure, not sessionStorage) ──
