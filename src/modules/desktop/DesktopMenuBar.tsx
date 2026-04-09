@@ -75,8 +75,8 @@ export default function DesktopMenuBar({
       className="fixed top-0 inset-x-0 z-[200] h-7 flex items-center justify-between px-2 select-none"
       style={{
         background: bg,
-        backdropFilter: "blur(48px) saturate(1.5)",
-        WebkitBackdropFilter: "blur(48px) saturate(1.5)",
+        backdropFilter: "blur(16px) saturate(1.5)",
+        WebkitBackdropFilter: "blur(16px) saturate(1.5)",
         borderBottom: `1px solid ${border}`,
       }}
     >

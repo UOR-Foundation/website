@@ -30,8 +30,8 @@ export default function DesktopDock({ windows, onOpenApp }: Props) {
         className="pointer-events-auto flex items-end gap-1 px-2.5 py-1.5 rounded-2xl"
         style={{
           background: dockBg,
-          backdropFilter: "blur(48px) saturate(1.4)",
-          WebkitBackdropFilter: "blur(48px) saturate(1.4)",
+          backdropFilter: "blur(16px) saturate(1.4)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.4)",
           border: `1px solid ${dockBorder}`,
         }}
       >
