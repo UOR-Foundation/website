@@ -1,5 +1,5 @@
 /**
- * SpotlightSearch — Universal command palette (⌘K) powered by cmdk.
+ * SpotlightSearch — Universal command palette powered by cmdk.
  * Theme-aware with fuzzy search, ARIA support, and grouped sections.
  * v0.3.0: Adds predictive search suggestions from history + context + Wikipedia.
  */
