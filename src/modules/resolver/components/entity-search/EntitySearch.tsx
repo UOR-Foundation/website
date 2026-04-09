@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { buildIndex, findSimilar } from "@/modules/resolver/index-builder";
 import { resolveEntity } from "@/modules/resolver/entity-linker";
 import type { SemanticIndex, SimilarEntry } from "@/modules/resolver/index-builder";
-import type { SemEntityResolution as SemSemEntityResolution } from "@/modules/resolver/entity-linker";
+import type { EntityResolution } from "@/modules/resolver/entity-linker";
 import { getDatum } from "@/modules/knowledge-graph/store";
 import { EpistemicBadge } from "@/modules/epistemic";
 
