@@ -9,9 +9,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
-import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Upload } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useAuth } from "@/hooks/use-auth";
@@ -69,7 +68,7 @@ const CLOCK_SIZES = [
   { font: FONTS.osClockSm, lineHeight: 48, fontSize: "40px" },
 ];
 
-export default function DesktopWidgets({ windows, onSearch }: Props) {
+export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) {
   const [time, setTime] = useState(new Date());
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +77,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
   const { theme, isLight } = useDesktopTheme();
   const { profile } = useAuth();
   const ctx = useContextManager();
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
   const [containerWidth, setContainerWidth] = useState(580);
@@ -342,28 +341,20 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               onActiveIndexChange={setActiveIdx}
             />
 
-            {/* Context button — sparkle icon instead of ambiguous + */}
+            {/* Context button — opens File Explorer */}
             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
               <button
                 ref={plusBtnRef}
                 type="button"
-                onClick={() => setContextMenuOpen((o) => !o)}
+                onClick={() => onOpenApp?.("files")}
                 className="flex items-center justify-center transition-all relative p-1"
                 style={{
                   color: isImmersive ? "hsl(0 0% 100% / 0.40)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.30)",
                 }}
-                title="Add context"
+                title="Open File Explorer"
               >
-                <Sparkles className="w-4 h-4" />
+                <Upload className="w-4 h-4" />
               </button>
-              {/* Context Menu anchored above the button */}
-              <ContextMenu
-                open={contextMenuOpen}
-                onOpenChange={setContextMenuOpen}
-                ctx={ctx}
-                anchor="above"
-                className="bottom-full left-0 mb-2"
-              />
             </div>
 
             {/* Right-side actions */}
