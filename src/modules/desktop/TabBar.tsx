@@ -182,30 +182,117 @@ export default function TabBar({
             <Home className={`w-[16px] h-[16px] ${isLight ? "text-black/60" : "text-white/60"}`} />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={`rounded-xl min-w-[180px] ${menuContentClass}`} align="start" sideOffset={4}>
-          <DropdownMenuItem className={menuItemClass} disabled>About UOR OS</DropdownMenuItem>
+        <DropdownMenuContent
+          className={`rounded-xl min-w-[340px] p-0 ${menuContentClass}`}
+          align="start"
+          sideOffset={4}
+        >
+          {/* Header */}
+          <div className={`px-4 pt-3 pb-2 flex items-center gap-2 ${isLight ? "text-black/80" : "text-white/80"}`}>
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isLight ? "bg-black/[0.06]" : "bg-white/[0.08]"}`}>
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-[13px] font-semibold tracking-tight">UOR OS</span>
+              <span className={`ml-1.5 text-[10px] font-medium ${isLight ? "text-black/30" : "text-white/25"}`}>v0.2</span>
+            </div>
+          </div>
+
           <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className={menuItemClass}>Appearance</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className={`rounded-xl ${menuContentClass}`}>
-              {(["immersive", "dark", "light"] as DesktopTheme[]).map(t => (
-                <DropdownMenuCheckboxItem
-                  key={t}
-                  checked={theme === t}
-                  onCheckedChange={() => setTheme(t)}
-                  className={menuItemClass}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+
+          {/* App grid by category */}
+          <div className="px-2 py-2">
+            {(() => {
+              const visibleApps = DESKTOP_APPS.filter(a => !a.hidden);
+              const categories = [...new Set(visibleApps.map(a => a.category))] as OsCategory[];
+              return categories.map(cat => {
+                const catApps = visibleApps.filter(a => a.category === cat);
+                const catInfo = OS_TAXONOMY[cat];
+                return (
+                  <div key={cat} className="mb-2 last:mb-0">
+                    <div className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-widest ${isLight ? "text-black/25" : "text-white/20"}`}>
+                      {catInfo.label}
+                    </div>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      {catApps.map(app => {
+                        const AppIcon = app.icon;
+                        return (
+                          <DropdownMenuItem
+                            key={app.id}
+                            className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg cursor-pointer ${menuItemClass}`}
+                            onSelect={() => onOpenApp?.(app.id)}
+                          >
+                            <div
+                              className="w-9 h-9 rounded-xl flex items-center justify-center"
+                              style={{
+                                background: isLight
+                                  ? `${app.color.replace(")", " / 0.12)").replace("hsl(", "hsla(")}`
+                                  : `${app.color.replace(")", " / 0.18)").replace("hsl(", "hsla(")}`,
+                              }}
+                            >
+                              <AppIcon className="w-[18px] h-[18px]" style={{ color: app.color }} />
+                            </div>
+                            <span className={`text-[11px] font-medium leading-tight ${isLight ? "text-black/70" : "text-white/70"}`}>
+                              {app.label}
+                            </span>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+
           <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
-          <DropdownMenuItem className={menuItemClass} onSelect={onHideAll}>
-            Hide All Windows
-          </DropdownMenuItem>
+
+          {/* System section */}
+          <div className="py-1">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className={menuItemClass}>
+                <Monitor className="w-3.5 h-3.5 mr-2 opacity-50" />
+                Appearance
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className={`rounded-xl ${menuContentClass}`}>
+                {([
+                  { key: "immersive" as DesktopTheme, label: "Immersive", icon: Sparkles },
+                  { key: "dark" as DesktopTheme, label: "Dark", icon: Moon },
+                  { key: "light" as DesktopTheme, label: "Light", icon: Sun },
+                ] as const).map(t => (
+                  <DropdownMenuCheckboxItem
+                    key={t.key}
+                    checked={theme === t.key}
+                    onCheckedChange={() => setTheme(t.key)}
+                    className={menuItemClass}
+                  >
+                    <t.icon className="w-3.5 h-3.5 mr-2 opacity-50" />
+                    {t.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuItem className={menuItemClass} onSelect={onHideAll}>
+              <EyeOff className="w-3.5 h-3.5 mr-2 opacity-50" />
+              Hide All Windows
+              <span className="ml-auto text-[10px] opacity-40">⌘H</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
+
+            <DropdownMenuItem className={menuItemClass} onSelect={onSpotlight}>
+              <Keyboard className="w-3.5 h-3.5 mr-2 opacity-50" />
+              Search
+              <span className="ml-auto text-[10px] opacity-40">⌘K</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem className={menuItemClass} disabled>
+              <Info className="w-3.5 h-3.5 mr-2 opacity-50" />
+              About UOR OS
+            </DropdownMenuItem>
+          </div>
         </DropdownMenuContent>
-      </DropdownMenu>
 
       {/* Search button */}
       <button
