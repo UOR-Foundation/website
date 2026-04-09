@@ -202,5 +202,51 @@ register({
         },
       },
     },
+    "space-list": {
+      handler: async () => {
+        const { spaceManager } = await import("@/modules/sovereign-spaces");
+        return spaceManager.getSpaces();
+      },
+      description: "List all sovereign spaces the user belongs to",
+    },
+    "space-create": {
+      handler: async (params: any) => {
+        const { spaceManager } = await import("@/modules/sovereign-spaces");
+        if (!params?.name) throw new Error("Provide a name for the space");
+        return spaceManager.create(params.name, params.type ?? "shared");
+      },
+      description: "Create a new sovereign space",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          type: { type: "string", default: "shared" },
+        },
+        required: ["name"],
+      },
+    },
+    "space-switch": {
+      handler: async (params: any) => {
+        const { spaceManager } = await import("@/modules/sovereign-spaces");
+        if (!params?.spaceId) throw new Error("Provide a spaceId");
+        spaceManager.setActiveSpace(params.spaceId);
+        return { ok: true, activeSpace: spaceManager.getActiveSpace() };
+      },
+      description: "Switch the active sovereign space context",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          spaceId: { type: "string" },
+        },
+        required: ["spaceId"],
+      },
+    },
+    "space-sync": {
+      handler: async () => {
+        const { syncBridge } = await import("@/modules/knowledge-graph/sync-bridge");
+        return syncBridge.sync();
+      },
+      description: "Trigger manual sync for the active space",
+    },
   },
 });
