@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
+import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
   X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
   Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
@@ -479,7 +481,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile + fullscreen */}
+      {/* Right: time + profile + connectivity + fullscreen */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -499,6 +501,7 @@ export default function TabBar({
         >
           <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
         </button>
+        <TabBarConnectivity isLight={isLight} />
         <FullscreenToggle isLight={isLight} />
       </div>
     </div>
