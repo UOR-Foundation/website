@@ -1,97 +1,85 @@
 
 
-## Streamline the Data Profile Page
+# Encyclopedia: High-Value Sources and Dynamic Rebalancing
 
-The profile page (non-reader view in ResolvePage.tsx) currently has ~10 distinct sections stacked vertically, several of which are redundant or overwhelming for a first-time visitor. The goal is to make it feel like a clean, standardized "home page" for any data object: instantly legible, socially familiar, and minimal.
+## Current State
 
-### Current Page Anatomy (top to bottom)
+The `uor-knowledge` edge function already has:
+- **Tier 1-3 domain reputation scoring** (lines 74-131)
+- **5 auxiliary source fetchers**: DuckDuckGo Instant, Britannica, Stanford Encyclopedia of Philosophy, Library of Congress, PubMed (lines 311-457)
+- **Firecrawl web search** for additional sources (lines 233-285)
+- A flat scoring formula: `domainRep * 0.6 + titleRel * 0.4` (line 216)
 
-1. Cover image (ProfileCover)
-2. Profile header: avatar, triword name, action buttons (Reader, Oracle, IPFS, Verify, Fork)
-3. Type badges + status row
-4. Social stats bar + IPv6 address (AddressSocialStats)
-5. Identity Hub (12 sharing formats, expandable)
-6. Content section with Human/Machine toggle + full JSON/markdown
-7. Provenance Tree
-8. Discussion (comments, voting)
+## Part 1: New High-Value Source Fetchers
 
-### Problems
+Add these definitive, no-API-key-required sources to `fetchAuxiliarySources()`:
 
-- **Action bar overload**: 5+ buttons (Reader, Oracle, IPFS, Verify, Fork) all compete for attention on first load. Most users do not need IPFS or Verify on first visit.
-- **Identity Hub** takes significant vertical space by default; most visitors just want to see what this object IS, not share it in 12 formats.
-- **Content section** with Human/Machine toggle and raw JSON is developer-facing, not "social homepage" material.
-- **Provenance Tree** is niche; valuable but should be tucked away.
-- **Discussion** is good but the full Reddit-style thread dominates the page length.
-- **IPv6 address** shown prominently in the social stats bar is technical noise for most users.
+| Source | Domain | Why Definitive | Query Method |
+|--------|--------|----------------|--------------|
+| **OpenAlex** | openalex.org | 250M+ scholarly works, open metadata | `api.openalex.org/works?search=...` |
+| **Internet Archive** | archive.org | Historical verification, primary documents | `archive.org/advancedsearch.php?q=...&output=json` |
+| **arXiv** | arxiv.org | Preprint canon for physics/math/CS | `export.arxiv.org/api/query?search_query=...` |
+| **Wolfram MathWorld** | mathworld.wolfram.com | Definitive math reference | HEAD check on `/topic/` slug |
+| **WHO** | who.int | Global health authority | `search.who.int` with JSON output |
 
-### Redesigned Layout
+Each fetcher follows the existing pattern: individual 2s timeout via `AbortSignal.timeout()`, graceful `null` return on failure, returns a `RankedSource` object.
 
-A clean three-zone layout: **Hero → Content → Social**, with everything else progressive disclosure.
+## Part 2: Dynamic Rebalancing Module
 
-#### Zone 1: Hero Card (cover + identity)
-- **Keep**: Cover image, glyph avatar, triword display name, type badge, status badge (Discovered/Confirmed).
-- **Remove**: Inline action buttons from the header row. Replace with a single **overflow menu** (three dots) that contains: Oracle, IPFS, Verify, Fork.
-- **Keep prominent**: Only **Reader** button (for KnowledgeCard/WebPage types) as the primary CTA since that is the main way to consume content.
-- **Simplify social stats**: Show visitor count, comment count, fork count as compact inline text below the name (like "42 visitors · 3 comments · 1 fork"). Remove the full-width bordered section.
-- **Move IPv6**: Into the Identity Hub (already there), remove from stats bar.
+### 2a. Query Domain Classifier
 
-#### Zone 2: Content (what this object IS)
-- **Default to Human view only**. Remove the Human/Machine toggle from the main layout.
-- For KnowledgeCard/WebPage: show a 3-4 line description/excerpt with a "Read full article" button that switches to reader mode.
-- For other types (Concept, Fork, etc.): show the HumanContentView directly but capped at a readable height with "Show more".
-- **Machine view**: Move to a collapsible section at the bottom or inside the overflow menu as "View source".
-
-#### Zone 3: Social & Sharing
-- **Identity Hub**: Collapsed by default into a single row: "Share this address · 12 formats ›" (already implemented this way, keep it).
-- **Discussion**: Keep but collapse by default if zero comments. Show "Start a discussion" CTA instead.
-- **Provenance Tree**: Move inside a tab or collapsible, not visible by default.
-
-### Technical Changes
-
-**File: `src/modules/oracle/pages/ResolvePage.tsx`** (lines ~2249-2627, the non-reader result block)
-
-1. **Refactor profile header** (lines 2264-2434):
-   - Remove the 5 action buttons from the flex row
-   - Add a minimal overflow menu (ellipsis icon) that opens a dropdown with: Oracle, IPFS, Verify, Fork
-   - Keep only "Reader" as a visible pill button for readable types
-   - Inline social stats as a single text line below the type badges
-
-2. **Simplify content zone** (lines 2458-2601):
-   - Remove the Human/Machine toggle from the default view
-   - For KnowledgeCard: show description + truncated content with "Read full article →" CTA
-   - For other types: keep HumanContentView with max-height and "Show more"
-   - Move Machine view into a "View source" collapsible at the bottom
-
-3. **Collapse secondary sections**:
-   - Provenance Tree: wrap in a collapsible with `details/summary` or a toggle, closed by default
-   - Discussion: if 0 comments, show a minimal "Be the first to comment" prompt instead of the full thread UI
-
-4. **Remove AddressSocialStats full-width bar** — replace with inline counts in the header
-
-**File: `src/modules/oracle/components/AddressCommunity.tsx`**
-- Add a `collapsed` prop or initial state that renders a minimal single-line prompt when there are zero comments
-
-### Visual Result
+Add a `classifyQueryDomain()` function that uses keyword pattern matching (no LLM call needed) to return a domain category:
 
 ```text
-┌─────────────────────────────────────────┐
-│         [Cover Image - parallax]        │
-│                                         │
-│  (●) ROOT.EMERALD.KEEP          [⋯] [Reader]
-│  KNOWLEDGECARD · ✨ DISCOVERED          │
-│  1 visitor · 0 comments · 0 forks       │
-├─────────────────────────────────────────┤
-│  [Description excerpt, 3-4 lines]       │
-│  Read full article →                    │
-├─────────────────────────────────────────┤
-│  ↗ Share this address  12 formats   ›   │
-├─────────────────────────────────────────┤
-│  💬 Be the first to comment             │
-├─────────────────────────────────────────┤
-│  ▸ Provenance                           │
-│  ▸ View source (JSON-LD)                │
-└─────────────────────────────────────────┘
+biomedical  -> "cancer", "gene", "protein", "clinical", "disease", "pathogen"...
+physics     -> "quantum", "relativity", "particle", "photon", "thermodynamics"...
+mathematics -> "theorem", "algebra", "topology", "calculus", "conjecture"...
+philosophy  -> "ethics", "epistemology", "ontology", "metaphysics", "Kant"...
+history     -> "war", "empire", "dynasty", "revolution", "colonial"...
+law         -> "statute", "constitutional", "tort", "jurisdiction"...
+technology  -> "software", "algorithm", "machine learning", "neural network"...
+environment -> "climate", "ecosystem", "biodiversity", "carbon"...
+economics   -> "GDP", "inflation", "monetary", "fiscal", "trade"...
+general     -> (fallback)
 ```
 
-This reduces vertical scroll by ~60%, surfaces the most valuable information first, and makes every profile feel like a clean, consistent "homepage" regardless of object type.
+### 2b. Domain-Specific Source Boost Map
+
+A `DOMAIN_SOURCE_BOOSTS` map that adds priority points to domain-specific authoritative sources when a matching query domain is detected:
+
+```text
+biomedical:  pubmed +15, nih.gov +12, who.int +10, mayoclinic.org +8
+physics:     arxiv.org +15, nature.com +10, nasa.gov +8
+mathematics: mathworld.wolfram.com +15, arxiv.org +10
+philosophy:  plato.stanford.edu +15, britannica.com +8
+history:     loc.gov +15, archive.org +12, britannica.com +8
+law:         .gov domains +12, britannica.com +6
+technology:  arxiv.org +10, ieee.org +10, acm.org +10
+environment: ipcc.ch +15, epa.gov +12, who.int +8, nature.com +8
+economics:   worldbank.org +12, oecd.org +12, imf.org +10
+```
+
+### 2c. Modified `rankSources()` 
+
+The existing flat formula (`domainRep * 0.6 + titleRel * 0.4`) gets an additional term:
+
+```
+score = round(domainRep * 0.55 + titleRel * 0.35 + domainBoost * 0.10)
+```
+
+Where `domainBoost` is 0 for unmatched domains and the boost value (scaled to 0-100) for matched ones. This slightly reduces the weight of generic reputation in favor of domain-specific authority.
+
+### 2d. Emit Domain Classification in SSE
+
+The `wiki` SSE event will include `queryDomain` so the frontend can optionally display "Research domain: Biomedical" or similar in the ProvenanceBanner.
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `supabase/functions/uor-knowledge/index.ts` | Add 5 new fetchers, `classifyQueryDomain()`, `DOMAIN_SOURCE_BOOSTS`, modify `rankSources()` signature, emit `queryDomain` in SSE |
+| `src/modules/oracle/lib/stream-knowledge.ts` | Extend `ProvenanceMeta` with optional `queryDomain` field |
+| `src/modules/oracle/components/ProvenanceBanner.tsx` | Display detected research domain when present |
+
+No new dependencies or secrets required. All new source APIs are free and keyless.
 
