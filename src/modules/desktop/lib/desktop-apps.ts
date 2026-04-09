@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import {
-  Search, Sparkles, BookOpen, MessageCircle, Shield, Settings, Music, FolderOpen,
+  Search, Sparkles, BookOpen, MessageCircle, Shield,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -63,15 +63,6 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 720, h: 520 },
     color: "hsl(200 70% 55%)",
     category: "IDENTITY",
-  },
-  {
-    id: "files",
-    label: "Files",
-    icon: FolderOpen,
-    component: lazy(() => import("@/modules/explorer/pages/FileExplorerPage")),
-    defaultSize: { w: 920, h: 580 },
-    color: "hsl(35 70% 55%)",
-    category: "STRUCTURE",
   },
 ];
 
