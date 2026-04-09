@@ -24,9 +24,6 @@ const TYPE_LABELS: Record<string, string> = {
 const SourcesPills: React.FC<SourcesPillsProps> = ({ sources }) => {
   if (!sources.length) return null;
 
-  const isHighSignal = (s: SourceMeta) =>
-    s.type === "academic" || s.type === "institutional" || s.type === "wikipedia" || (s.score && s.score >= 80);
-
   return (
     <div
       className="flex items-center gap-2 overflow-x-auto pb-1 mb-4"
