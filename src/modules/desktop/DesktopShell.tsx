@@ -2,12 +2,14 @@
  * DesktopShell — UOR OS shell.
  * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
  * Shows a real boot sequence on every fresh page load.
+ * Includes global dictation (Wispr Flow-style voice input anywhere).
  */
 
-import { useCallback, useState, useMemo, useEffect, lazy, Suspense } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import QuickCapture from "@/modules/oracle/components/QuickCapture";
 import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
+import FloatingDictationPill from "@/modules/oracle/components/FloatingDictationPill";
 import { getPhasePhotoDescription, getPhasePhotoPhotographer, getPhasePhotoUnsplashUrl } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
@@ -25,6 +27,7 @@ import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
+import { useGlobalDictation } from "@/modules/oracle/hooks/useGlobalDictation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
@@ -38,6 +41,9 @@ function DesktopShellInner() {
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
+
+  // Global dictation (Wispr Flow-style)
+  const [dictationState, dictationActions] = useGlobalDictation();
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -78,9 +84,10 @@ function DesktopShellInner() {
     onHideAll: handleHideAll,
     onShowShortcuts: () => setCheatSheetOpen(o => !o),
     onFullscreen: handleFullscreen,
+    onVoice: () => dictationActions.toggle(),
     onQuickCapture: () => setQuickCaptureOpen(o => !o),
     onDailyNote: () => handleOpenApp("daily-notes"),
-  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen, handleOpenApp]);
+  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen, handleOpenApp, dictationActions]);
 
   const { ringActive } = useDesktopShortcuts(shortcutHandlers);
 
@@ -208,6 +215,13 @@ function DesktopShellInner() {
         <RingIndicator active={ringActive} />
         <ShortcutCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
         <QuickCapture open={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
+
+        {/* Global dictation floating pill (Wispr Flow-style) */}
+        <FloatingDictationPill
+          state={dictationState}
+          onStop={dictationActions.stop}
+          onCancel={dictationActions.cancel}
+        />
       </div>
     </DesktopContextMenu>
   );
