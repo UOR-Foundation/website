@@ -286,10 +286,10 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             setBootPhase("done");
             setTimeout(() => {
               if (!cancelled) setShowDesktop(true);
-            }, 1600);
+            }, 600);
             setTimeout(() => {
               if (!cancelled) onComplete();
-            }, 2400);
+            }, 1000);
             return;
           }
 
@@ -299,11 +299,11 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
           idx++;
 
           let delay: number;
-          if (line.level === "header") delay = 200;
-          else if (line.level === "divider") delay = 60;
-          else if (line.level === "ascii") delay = 30;
-          else if (line.text === "") delay = 80;
-          else delay = 75 + Math.random() * 45;
+          if (line.level === "header") delay = 80;
+          else if (line.level === "divider") delay = 20;
+          else if (line.level === "ascii") delay = 12;
+          else if (line.text === "") delay = 30;
+          else delay = 30 + Math.random() * 20;
 
           setTimeout(replayNext, delay);
         }
