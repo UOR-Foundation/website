@@ -36,3 +36,6 @@ import "./audio";
 import "./social";
 import "./sparql";
 import "./mcp";
+
+// ── Layer 3: Mesh Sync ───────────────────────────────────────────────
+import "./mesh-sync";
