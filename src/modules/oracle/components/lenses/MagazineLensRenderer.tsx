@@ -303,7 +303,7 @@ const MagazineLensRenderer: React.FC<LensRendererProps> = ({
               Feature
             </span>
             <span style={{ fontSize: 13, opacity: OPACITY.tertiary }}>{readTime} min read</span>
-            <span style={{ fontSize: 13, opacity: OPACITY.quaternary }}>·</span>
+            <span style={{ fontSize: 13, opacity: OPACITY.ghost }}>·</span>
             <span style={{ fontSize: 13, opacity: OPACITY.tertiary }}>{today}</span>
           </div>
           {/* Thin rule below byline */}
