@@ -16,7 +16,9 @@ import { SystemEventBus } from "@/modules/observable/system-event-bus";
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 async function sha256Bytes(data: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", data);
+  const ab = new ArrayBuffer(data.byteLength);
+  new Uint8Array(ab).set(data);
+  const digest = await crypto.subtle.digest("SHA-256", ab);
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
