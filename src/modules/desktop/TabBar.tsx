@@ -439,15 +439,18 @@ export default function TabBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Center wordmark — vector logo + crisp text */}
-      <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center pointer-events-none z-[1] gap-[6px]">
+      {/* Center wordmark — space switcher + logo + sync indicator */}
+      <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center z-[1] gap-[6px]">
+        {/* Space Switcher */}
+        <SpaceSwitcher isLight={isLight} />
+
         {/* UOR glyph — inline SVG for crispness */}
         <svg
           width="14"
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          className="shrink-0"
+          className="shrink-0 pointer-events-none"
           style={{ opacity: isLight ? 0.6 : 0.45 }}
         >
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
@@ -458,11 +461,14 @@ export default function TabBar({
           <line x1="16" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
         </svg>
         <span
-          className="text-[10.5px] font-medium tracking-[0.22em] uppercase select-none text-foreground"
+          className="text-[10.5px] font-medium tracking-[0.22em] uppercase select-none text-foreground pointer-events-none"
           style={{ opacity: isLight ? 0.6 : 0.45, letterSpacing: "0.22em" }}
         >
           Universal Object Reference
         </span>
+
+        {/* Sync Status Indicator */}
+        <SyncIndicator isLight={isLight} />
       </div>
 
       {/* Tabs with drag support */}
