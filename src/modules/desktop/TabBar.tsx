@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
-  Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info,
+  Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
 } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
@@ -25,6 +25,42 @@ import {
   ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem,
   ContextMenuSeparator,
 } from "@/modules/core/ui/context-menu";
+
+/** Fullscreen toggle button — uses Fullscreen API on any device. */
+function FullscreenToggle({ isLight }: { isLight: boolean }) {
+  const [isFs, setIsFs] = useState(false);
+
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const Icon = isFs ? Minimize2 : Maximize;
+
+  return (
+    <button
+      onClick={toggle}
+      className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150
+        ${isLight
+          ? "hover:bg-black/[0.08] active:bg-black/[0.12]"
+          : "hover:bg-white/[0.08] active:bg-white/[0.12]"
+        }
+      `}
+      title={isFs ? "Exit full screen" : "Enter full screen"}
+    >
+      <Icon className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
+    </button>
+  );
+}
 
 interface Props {
   activeWindowId: string | null;
@@ -443,7 +479,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile */}
+      {/* Right: time + profile + fullscreen */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -463,6 +499,7 @@ export default function TabBar({
         >
           <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
         </button>
+        <FullscreenToggle isLight={isLight} />
       </div>
     </div>
   );
