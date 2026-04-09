@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getCachedSession } from "./messaging-protocol";
 import { sealMessage } from "@/modules/uns/trust/messaging";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 export function useSendMessage(sessionId: string | null, sessionHash?: string) {
   const { user } = useAuth();
@@ -43,8 +44,7 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
         for (const b of bytes) bin += String.fromCharCode(b);
         const b64 = btoa(bin);
 
-        const hash = Array.from(new Uint8Array(
-          await crypto.subtle.digest("SHA-256", encoder.encode(plaintext + Date.now()))
+        const hash = Array.from(sha256(new Uint8Array(encoder.encode(plaintext + Date.now()))
         )).map(b => b.toString(16).padStart(2, "0")).join("");
 
         await supabase.from("encrypted_messages").insert({

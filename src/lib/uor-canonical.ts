@@ -19,6 +19,7 @@
 // @ts-ignore. jsonld v8 types may not resolve perfectly in all configurations
 import jsonld from "jsonld";
 import { computeCid, computeUorAddress, canonicalJsonLd, computeIpv6Address } from "./uor-address";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── UOR inline context for wrapping non-JSON-LD objects ─────────────────────
 // Inline to avoid network dependency. any agent can reproduce this locally.
@@ -330,7 +331,7 @@ export async function canonicalizeToNQuads(obj: unknown): Promise<string> {
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
   const ab = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(ab).set(bytes);
-  const digest = await crypto.subtle.digest("SHA-256", ab);
+  const digest = sha256(new Uint8Array(ab));
   return new Uint8Array(digest);
 }
 

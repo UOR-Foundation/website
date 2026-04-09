@@ -12,13 +12,14 @@
 import type { UorSeal, BootReceipt } from "./types";
 import { getEngine } from "@/modules/engine";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 async function sha256Bytes(data: Uint8Array): Promise<string> {
   const ab = new ArrayBuffer(data.byteLength);
   new Uint8Array(ab).set(data);
-  const digest = await crypto.subtle.digest("SHA-256", ab);
+  const digest = sha256(new Uint8Array(ab));
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

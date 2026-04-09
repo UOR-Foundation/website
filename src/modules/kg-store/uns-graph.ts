@@ -1,19 +1,19 @@
 /**
- * UNS Knowledge Graph — Oxigraph-backed Quad Store with Named Graphs.
+ * UNS Knowledge Graph — GrafeoDB-backed Quad Store with Named Graphs.
  *
  * Provides a SPARQL 1.1-compatible knowledge graph over the UOR ring substrate.
  * Two canonical named graphs:
  *   - Ontology graph: https://uor.foundation/graph/ontology
  *   - Q0 instance graph: https://uor.foundation/graph/q0
  *
- * UNIFIED: Uses the singleton Oxigraph store from knowledge-graph/oxigraph-store.ts.
+ * UNIFIED: Uses the singleton GrafeoDB store from knowledge-graph/grafeo-store.ts.
  * No duplicate WASM instances.
  *
- * @version 3.0.0 — Unified Oxigraph singleton
+ * @version 4.0.0 — Unified GrafeoDB singleton
  */
 
 import { neg, bnot, succ, pred, bytePopcount } from "@/lib/uor-ring";
-import { grafeoStore as oxigraphStore, sparqlQuery } from "@/modules/knowledge-graph/grafeo-store";
+import { grafeoStore, sparqlQuery } from "@/modules/knowledge-graph/grafeo-store";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -52,45 +52,45 @@ function classifyByteQ0(b: number): "EXTERIOR" | "UNIT" | "IRREDUCIBLE" | "REDUC
 /**
  * Quad store for the UNS knowledge graph.
  *
- * UNIFIED: Delegates all storage to the shared Oxigraph singleton from
- * knowledge-graph/oxigraph-store.ts. In-memory array is kept as a synchronous
+ * UNIFIED: Delegates all storage to the shared GrafeoDB singleton from
+ * knowledge-graph/grafeo-store.ts. In-memory array is kept as a synchronous
  * fallback for tests and sync query paths.
  */
 export class UnsGraph {
   /** In-memory fallback store (also used for synchronous operations) */
   private quads: Quad[] = [];
-  /** Whether the shared Oxigraph singleton has been initialized */
-  private oxReady = false;
+  /** Whether the shared GrafeoDB singleton has been initialized */
+  private dbReady = false;
 
   /**
-   * Initialize Oxigraph WASM backend via shared singleton.
+   * Initialize GrafeoDB WASM backend via shared singleton.
    * Call once; idempotent.
    */
-  async initOxigraph(): Promise<boolean> {
-    if (this.oxReady) return true;
+  async initGrafeoDB(): Promise<boolean> {
+    if (this.dbReady) return true;
     try {
-      await oxigraphStore.init();
-      this.oxReady = true;
+      await grafeoStore.init();
+      this.dbReady = true;
 
       // Replay any quads already loaded into array store
       if (this.quads.length > 0) {
         for (const q of this.quads) {
-          await oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph);
+          await grafeoStore.addQuad(q.subject, q.predicate, q.object, q.graph);
         }
       }
 
       return true;
     } catch (e) {
-      console.warn("[UnsGraph] Oxigraph singleton unavailable, using array fallback:", e);
+      console.warn("[UnsGraph] GrafeoDB singleton unavailable, using array fallback:", e);
       return false;
     }
   }
 
   private addQuad(q: Quad): void {
     this.quads.push(q);
-    if (this.oxReady) {
+    if (this.dbReady) {
       // Fire-and-forget async add to shared store
-      oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph).catch(() => {});
+      grafeoStore.addQuad(q.subject, q.predicate, q.object, q.graph).catch(() => {});
     }
   }
 
@@ -301,11 +301,11 @@ export class UnsGraph {
   }
 
   /**
-   * Execute a SPARQL SELECT using the shared Oxigraph singleton (async).
+   * Execute a SPARQL SELECT using the shared GrafeoDB singleton (async).
    * Returns full SPARQL 1.1 results — UNION, OPTIONAL, FILTER, subqueries.
    */
   async sparqlSelectAsync(query: string): Promise<Array<Record<string, string>>> {
-    if (!this.oxReady) {
+    if (!this.dbReady) {
       return this.sparqlSelect(query);
     }
 
@@ -316,7 +316,7 @@ export class UnsGraph {
       }
       return this.sparqlSelect(query);
     } catch (e) {
-      console.warn("[UnsGraph] Oxigraph query failed, falling back:", e);
+      console.warn("[UnsGraph] GrafeoDB query failed, falling back:", e);
       return this.sparqlSelect(query);
     }
   }
@@ -390,14 +390,14 @@ export class UnsGraph {
   }
 
   /**
-   * Check if the shared Oxigraph singleton is ready.
+   * Check if the shared GrafeoDB singleton is ready.
    */
-  get isOxigraphReady(): boolean {
-    return this.oxReady;
+  get isGrafeoDBReady(): boolean {
+    return this.dbReady;
   }
 
   /**
-   * Export entire graph as N-Quads (via shared Oxigraph if available).
+   * Export entire graph as N-Quads (via shared GrafeoDB if available).
    */
   dumpNQuads(): string {
     // Manual N-Quads serialization from array store

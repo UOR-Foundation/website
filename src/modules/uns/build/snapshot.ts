@@ -21,6 +21,7 @@
 
 import { singleProofHash } from "../core/identity";
 import { UnsKv } from "../store/kv";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -220,7 +221,7 @@ export async function hashComponentBytes(
     fingerprint: bytesToBase64(bytes.slice(0, 64)),
     fullHash: bytesToHex(
       new Uint8Array(
-        await crypto.subtle.digest("SHA-256", bytes as unknown as ArrayBuffer),
+        sha256(new Uint8Array(bytes as unknown as ArrayBuffer)),
       ),
     ),
   });

@@ -40,6 +40,7 @@ import {
 } from "./executable-blueprint";
 import type { HologramEngine } from "./engine";
 import type { SchedulerSpec } from "./executable-blueprint";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -226,7 +227,7 @@ export async function ingest(
   const { bytes, payload, format } = normalizeInput(input, options?.format);
 
   // 2. Compute raw content hash
-  const rawHashBytes = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes) as unknown as ArrayBuffer);
+  const rawHashBytes = sha256(new Uint8Array(new Uint8Array(bytes)) as unknown as ArrayBuffer);
   const contentHash = Array.from(new Uint8Array(rawHashBytes))
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");
