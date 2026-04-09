@@ -49,6 +49,15 @@ export interface MessageBridge {
   /** Map an external identity to UOR canonical identity. */
   mapIdentity(externalId: string): Promise<UorIdentityMapping | null>;
 
+  /** Sync contacts from the platform into the local contact graph. */
+  syncContacts?(): Promise<Array<{ externalId: string; displayName: string; avatarUrl?: string }>>;
+
+  /** List all conversations from the platform. */
+  getConversations?(): Promise<Array<{ externalId: string; title: string; lastActivity?: string }>>;
+
+  /** Mark a message as read on the external platform. */
+  markRead?(externalMessageId: string): Promise<void>;
+
   /** Get bridge status and health info. */
   getStatus(): { connected: boolean; lastSync?: string; error?: string };
 }

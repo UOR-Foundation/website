@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.parse-document]
 verify_jwt = false
+
+[functions.matrix-bridge-gateway]
+verify_jwt = false

@@ -117,6 +117,8 @@ export interface DecryptedMessage {
   selfDestructSeconds?: number | null;
   editedAt?: string | null;
   deletedAt?: string | null;
+  /** Source platform for bridged messages */
+  sourcePlatform?: BridgePlatform | "matrix" | "native";
 }
 
 // ── Presence ────────────────────────────────────────────────────────────────
@@ -139,7 +141,7 @@ export interface P2PChannel {
 
 // ── Bridge Protocol ─────────────────────────────────────────────────────────
 
-export type BridgePlatform = "whatsapp" | "telegram" | "signal" | "email";
+export type BridgePlatform = "whatsapp" | "telegram" | "signal" | "email" | "discord" | "slack" | "linkedin" | "twitter" | "instagram" | "sms";
 
 export interface BridgeMessage {
   platform: BridgePlatform;
