@@ -33,7 +33,9 @@ import {
   IconClipboardCheck,
   IconHeartbeat,
   IconClock,
+  IconChevronRight,
 } from "@tabler/icons-react";
+import { DetailViewRouter, type DetailViewId } from "./SystemMonitorDetailViews";
 
 // ── Status config ──────────────────────────────────────────────
 
@@ -668,6 +670,7 @@ function useSparkline(getValue: () => number, deps: unknown[] = []) {
 export default function SystemMonitorApp() {
   const { receipt, status, lastVerified } = useBootStatus();
   const [copied, setCopied] = useState(false);
+  const [activeView, setActiveView] = useState<DetailViewId | null>(null);
 
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.booting;
   const degradationLog = useMemo(
@@ -800,6 +803,21 @@ export default function SystemMonitorApp() {
     ? Math.round((stackSummary.available / stackSummary.total) * 100)
     : 0;
 
+  if (activeView) {
+    return (
+      <DetailViewRouter
+        viewId={activeView}
+        receipt={receipt}
+        status={status}
+        statusColor={config.color}
+        statusLabel={config.label}
+        uptimeMs={uptimeMs}
+        lastVerified={lastVerified}
+        onBack={() => setActiveView(null)}
+      />
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-background text-foreground select-none overflow-y-auto overflow-x-hidden">
       {/* ── Top Metric Cards ── */}
@@ -813,6 +831,7 @@ export default function SystemMonitorApp() {
           badgeColor={config.color}
           sparkData={uptimeSparkline}
           sparkColor={config.color}
+          onClick={() => setActiveView("vm")}
         />
         <GrafanaCard
           icon={<IconCpu size={18} />}
@@ -826,6 +845,7 @@ export default function SystemMonitorApp() {
             { max: 80, color: "hsl(40, 90%, 55%)" },
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
+          onClick={() => setActiveView("cpu")}
         />
         <GrafanaCard
           icon={<IconDeviceDesktop size={18} />}
@@ -839,6 +859,7 @@ export default function SystemMonitorApp() {
             { max: 85, color: "hsl(40, 90%, 55%)" },
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
+          onClick={() => setActiveView("memory")}
         />
         <GrafanaCard
           icon={<IconStack2 size={18} />}
@@ -847,6 +868,7 @@ export default function SystemMonitorApp() {
           accent="hsl(270, 60%, 60%)"
           sparkData={moduleSparkline}
           sparkColor="hsl(270, 60%, 60%)"
+          onClick={() => setActiveView("modules")}
         />
         <GrafanaCard
           icon={<IconActivity size={18} />}
@@ -859,13 +881,14 @@ export default function SystemMonitorApp() {
             </div>
           }
           accent="hsl(var(--primary))"
+          onClick={() => setActiveView("capabilities")}
         />
       </div>
 
       {/* ── Middle Row: Availability + Kernel ── */}
       <div className="grid grid-cols-[320px_1fr] gap-3 p-4">
         {/* System Availability */}
-        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />}>
+        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
             {/* Availability ring */}
             <div className="relative w-20 h-20 shrink-0">
@@ -896,7 +919,7 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
 
         {/* Kernel Primitives */}
-        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />}>
+        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />} onClick={() => setActiveView("kernel")}>
           {kernelData ? (
             <>
               <div className="grid grid-cols-2 gap-x-8 gap-y-2">
@@ -932,7 +955,7 @@ export default function SystemMonitorApp() {
       {/* ── Bottom Row: Stack Health + Host Hardware ── */}
       <div className="grid grid-cols-[320px_1fr] gap-3 px-4 pb-3">
         {/* Stack Health */}
-        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />}>
+        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />} onClick={() => setActiveView("stack")}>
           {stackSummary && (
             <>
               <div className="flex items-center justify-between text-sm">
@@ -967,7 +990,7 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
 
         {/* Host Hardware */}
-        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />}>
+        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />} onClick={() => setActiveView("hardware")}>
           <div
             className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${
               receipt.provenance.context === "local" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
@@ -1040,19 +1063,27 @@ function GrafanaPanel({
   title,
   icon,
   children,
+  onClick,
 }: {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
+  onClick?: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden">
+    <div
+      className={`rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden group ${
+        onClick ? "cursor-pointer hover:border-border transition-all duration-200 hover:shadow-lg hover:shadow-primary/5" : ""
+      }`}
+      onClick={onClick}
+    >
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
       <div className="flex items-center gap-2">
         {icon && <span className="text-muted-foreground/60">{icon}</span>}
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
+        {onClick && <IconChevronRight size={12} className="ml-auto text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />}
       </div>
       {children}
     </div>
@@ -1070,6 +1101,7 @@ function GrafanaCard({
   sparkData,
   sparkColor,
   thresholds,
+  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -1080,23 +1112,32 @@ function GrafanaCard({
   sparkData?: number[];
   sparkColor?: string;
   thresholds?: { max: number; color: string }[];
+  onClick?: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-colors duration-200">
+    <div
+      className={`rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-all duration-200 ${
+        onClick ? "cursor-pointer hover:shadow-lg hover:shadow-primary/5" : ""
+      }`}
+      onClick={onClick}
+    >
       <div
         className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity"
         style={{ background: accent }}
       />
       <div className="flex items-center justify-between">
         <span style={{ color: accent }} className="opacity-80">{icon}</span>
-        {badge && (
-          <span
-            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-            style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
-          >
-            {badge}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {badge && (
+            <span
+              className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+              style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
+            >
+              {badge}
+            </span>
+          )}
+          {onClick && <IconChevronRight size={12} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />}
+        </div>
       </div>
       <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{title}</div>
       <div className="text-sm font-semibold text-foreground/90">{value}</div>
