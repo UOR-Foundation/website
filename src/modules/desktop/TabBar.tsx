@@ -4,9 +4,13 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal } from "lucide-react";
+import {
+  X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
+  Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info,
+} from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
-import { getApp } from "@/modules/desktop/lib/desktop-apps";
+import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
+import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { smartTruncate, FONTS } from "@/modules/oracle/lib/pretext-layout";
 import { SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
