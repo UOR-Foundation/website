@@ -19,17 +19,17 @@ export {
   getDatum,
   getDatumByValue,
   getDerivation,
-} from "@/modules/kg-store/store";
+} from "@/modules/knowledge-graph/store";
 export {
   getGraphStats,
   listGraphs,
   getNamedGraphTripleCount,
-} from "@/modules/kg-store/graph-manager";
-export type { GraphStats } from "@/modules/kg-store/graph-manager";
-export { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
-export type { Quad } from "@/modules/kg-store/uns-graph";
-export { generateVoID, CANONICAL_QUERIES } from "@/modules/kg-store/void-descriptor";
-export type { VoIDDescriptor } from "@/modules/kg-store/void-descriptor";
+} from "@/modules/knowledge-graph/graph-manager";
+export type { GraphStats } from "@/modules/knowledge-graph/graph-manager";
+export { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
+export type { Quad } from "@/modules/knowledge-graph/uns-graph";
+export { generateVoID, CANONICAL_QUERIES } from "@/modules/knowledge-graph/void-descriptor";
+export type { VoIDDescriptor } from "@/modules/knowledge-graph/void-descriptor";
 export {
   recordToSchemaOrg,
   functionToSchemaOrg,
@@ -39,14 +39,14 @@ export {
   serializeSchemaOrg,
   generateSitemap,
   generateRobotsTxt,
-} from "@/modules/kg-store/schema-org";
+} from "@/modules/knowledge-graph/schema-org";
 export type {
   SchemaOrgRecord,
   SchemaOrgFunction,
   SchemaOrgStoredObject,
   SitemapEntry,
   SerializationFormat,
-} from "@/modules/kg-store/schema-org";
+} from "@/modules/knowledge-graph/schema-org";
 export { default as KnowledgeGraphPage } from "@/modules/kg-store/pages/KnowledgeGraphPage";
 
 // ── Code Knowledge Graph (from code-kg/) ───────────────────────────────────

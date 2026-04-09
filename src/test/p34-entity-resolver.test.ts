@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { UnsGraph, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
+import { UnsGraph, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
 import { resolveEntity } from "@/modules/resolver/entity-resolver";
 import { hScoreMultiByte } from "@/modules/observable/h-score";
 import { assignZone } from "@/modules/observable/observer";

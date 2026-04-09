@@ -34,7 +34,7 @@ import { validateShaclShapes } from "@/modules/shacl/shacl-engine";
 
 // ── Observer Theory ─────────────────────────────────────────────────────────
 import { UnsObserver } from "@/modules/observable/observer";
-import { UnsGraph } from "@/modules/kg-store/uns-graph";
+import { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
 
 // ── Attribution Protocol ────────────────────────────────────────────────────
 import { UnsAttribution } from "@/modules/uns/trust/attribution";
@@ -46,7 +46,7 @@ import { UnsStateMachine } from "@/modules/state/state-machine";
 import { typeCheck, U8 } from "@/modules/state/type-system";
 
 // ── Schema.org Extension ────────────────────────────────────────────────────
-import { recordToSchemaOrg } from "@/modules/kg-store/schema-org";
+import { recordToSchemaOrg } from "@/modules/knowledge-graph/schema-org";
 
 // Cross-quantum morphism verification uses negQ/bnotQ/succQ (already imported)
 

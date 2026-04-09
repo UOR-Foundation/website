@@ -30,8 +30,8 @@ import type { Observable } from "@/modules/observable";
 import { derive } from "@/modules/derivation/derivation";
 import { issueCertificate } from "@/modules/derivation/certificate";
 import type { Certificate } from "@/modules/derivation/certificate";
-import { recordTrace } from "@/modules/trace";
-import type { ComputationTrace, TraceStep } from "@/modules/trace";
+import { recordTrace } from "@/modules/verify";
+import type { ComputationTrace, TraceStep } from "@/modules/verify";
 import { parseTerm } from "./parser";
 import { singleProofHash } from "@/lib/uor-canonical";
 

@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from "vitest";
 import { UnsQuery } from "@/modules/sparql/query";
-import { UnsGraph } from "@/modules/kg-store/uns-graph";
+import { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
 
 function makeTestGraph(): UnsGraph {
   const g = new UnsGraph();

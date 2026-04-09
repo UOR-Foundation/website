@@ -13,7 +13,7 @@
 import type { UORRing } from "@/modules/ring-core/ring";
 import { contentAddress } from "@/modules/identity";
 import { singleProofHash } from "@/lib/uor-canonical";
-import { ingestTriples } from "@/modules/kg-store/store";
+import { ingestTriples } from "@/modules/knowledge-graph/store";
 import { emitContext } from "@/modules/jsonld/context";
 
 // ── Types ───────────────────────────────────────────────────────────────────

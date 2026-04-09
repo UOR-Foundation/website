@@ -13,7 +13,7 @@ import type { GraphStats } from "../graph-manager";
 import { contentAddress } from "@/modules/identity";
 import { PartitionVisualizer } from "@/modules/resolver/components/PartitionVisualizer";
 import { CorrelationTool } from "@/modules/resolver/components/CorrelationTool";
-import { EntitySearch } from "@/modules/semantic-index/components/EntitySearch";
+import { EntitySearch } from "@/modules/resolver/components/entity-search/EntitySearch";
 
 const KnowledgeGraphPage = () => {
   const [stats, setStats] = useState<GraphStats | null>(null);

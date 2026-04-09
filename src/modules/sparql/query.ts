@@ -26,7 +26,7 @@ import {
   type PartitionResultFast,
 } from "@/modules/uns/shield/partition";
 import { popcount } from "@/modules/observable/h-score";
-import { UnsGraph, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
+import { UnsGraph, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
 import type { EpistemicGrade } from "@/types/uor";
 
 // ── Types ───────────────────────────────────────────────────────────────────

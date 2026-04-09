@@ -17,7 +17,7 @@
  * @module atlas/morphism-map
  */
 
-import { ECOSYSTEMS, type Ecosystem } from "@/modules/interoperability/data/ecosystem-taxonomy";
+import { ECOSYSTEMS, type Ecosystem } from "@/modules/atlas/data/ecosystem-taxonomy";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

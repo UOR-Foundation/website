@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { recordTrace, getTrace, getRecentTraces } from "@/modules/trace";
-import type { TraceStep } from "@/modules/trace";
+import { recordTrace, getTrace, getRecentTraces } from "@/modules/verify";
+import type { TraceStep } from "@/modules/verify";
 
 describe("trace module", () => {
   const steps: TraceStep[] = [

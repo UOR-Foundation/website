@@ -17,7 +17,7 @@ import { derive } from "@/modules/derivation/derivation";
 import { issueCertificate } from "@/modules/derivation/certificate";
 import type { Derivation } from "@/modules/derivation/derivation";
 import type { Certificate } from "@/modules/derivation/certificate";
-import { ingestDerivation, ingestCertificate } from "@/modules/kg-store/store";
+import { ingestDerivation, ingestCertificate } from "@/modules/knowledge-graph/store";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 

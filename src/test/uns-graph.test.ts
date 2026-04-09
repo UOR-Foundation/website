@@ -11,8 +11,8 @@
  *   - Partition cardinality via SPARQL
  */
 import { describe, it, expect, beforeAll } from "vitest";
-import { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "@/modules/kg-store/uns-graph";
-import { generateVoID, CANONICAL_QUERIES } from "@/modules/kg-store/void-descriptor";
+import { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
+import { generateVoID, CANONICAL_QUERIES } from "@/modules/knowledge-graph/void-descriptor";
 
 describe("P24. UNS SPARQL Knowledge Graph", () => {
   let graph: UnsGraph;
