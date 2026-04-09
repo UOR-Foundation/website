@@ -670,6 +670,7 @@ function useSparkline(getValue: () => number, deps: unknown[] = []) {
 export default function SystemMonitorApp() {
   const { receipt, status, lastVerified } = useBootStatus();
   const [copied, setCopied] = useState(false);
+  const [activeView, setActiveView] = useState<DetailViewId | null>(null);
 
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.booting;
   const degradationLog = useMemo(

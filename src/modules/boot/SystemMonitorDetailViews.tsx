@@ -209,6 +209,7 @@ function VmDetail({ receipt, status, statusColor, statusLabel, uptimeMs, lastVer
         { label: "Sealed At", value: receipt.seal.bootedAt },
         { label: "Last Verified", value: lastVerified ?? "pending" },
         ...(diag.loadTimeMs != null ? [{ label: "WASM Load Time", value: `${diag.loadTimeMs}ms` }] : []),
+        ...(diag.lastError ? [{ label: "Last WASM Error", value: <span className="text-destructive">{diag.lastError}</span> }] : []),
       ]} />
     </div>
   );
