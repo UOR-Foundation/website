@@ -13,6 +13,7 @@
 import type { UorEngineContract } from "./contract";
 import { WASM_TO_CONTRACT, WASM_INTERNAL_EXPORTS } from "./contract";
 import { CRATE_MANIFEST } from "./crate-manifest";
+import { getCachedModule, cacheModule, detectSimdSupport, detectSharedMemory } from "./wasm-cache";
 import * as tsRing from "@/lib/uor-ring";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -30,6 +31,8 @@ interface DriftReport {
 
 let engine: UorEngineContract | null = null;
 let initPromise: Promise<UorEngineContract> | null = null;
+let _simdSupported: boolean | null = null;
+let _sharedMemory: boolean | null = null;
 
 // ── TS fallback implementations ──────────────────────────────────────────
 
@@ -237,12 +240,28 @@ export async function initEngine(): Promise<UorEngineContract> {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
+    // Detect capabilities in parallel
+    const [simd, shared] = await Promise.all([
+      detectSimdSupport(),
+      Promise.resolve(detectSharedMemory()),
+    ]);
+    _simdSupported = simd;
+    _sharedMemory = shared;
+
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const mod = await import("@/lib/wasm/uor-foundation/uor_wasm_shim");
         await mod.default();
         engine = buildFromWasm(mod);
-        console.log(`[UOR Engine] WASM v${engine.version} loaded (${Object.keys(engine.extensions).length} extensions)`);
+        const caps = [
+          simd ? "SIMD" : null,
+          shared ? "SharedMemory" : null,
+        ].filter(Boolean).join(", ");
+        console.log(
+          `[UOR Engine] WASM v${engine.version} loaded` +
+          ` (${Object.keys(engine.extensions).length} extensions` +
+          `${caps ? `, caps: ${caps}` : ""})`
+        );
         return engine;
       } catch (e) {
         console.warn(`[UOR Engine] WASM attempt ${attempt + 1} failed:`, e);
@@ -255,6 +274,16 @@ export async function initEngine(): Promise<UorEngineContract> {
   })();
 
   return initPromise;
+}
+
+/**
+ * Query detected WASM capabilities.
+ */
+export function getCapabilities(): { simd: boolean; sharedMemory: boolean } {
+  return {
+    simd: _simdSupported ?? false,
+    sharedMemory: _sharedMemory ?? false,
+  };
 }
 
 /**
