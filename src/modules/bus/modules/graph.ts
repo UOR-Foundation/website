@@ -172,5 +172,35 @@ register({
         required: ["text"],
       },
     },
+    "unlinked-refs": {
+      handler: async (params: any) => {
+        const { findUnlinkedReferences } = await import("@/modules/knowledge-graph/backlinks");
+        if (!params?.topic) throw new Error("Provide a topic to search for unlinked references");
+        return findUnlinkedReferences(params.topic, params.targetAddress || "", params.limit);
+      },
+      description: "Find nodes mentioning a topic without explicit graph edges",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          topic: { type: "string", description: "Topic label to search for" },
+          targetAddress: { type: "string", description: "UOR address of the target node" },
+          limit: { type: "number", default: 10 },
+        },
+        required: ["topic"],
+      },
+    },
+    resurface: {
+      handler: async (params: any) => {
+        const { getResurfacingSuggestions } = await import("@/modules/oracle/lib/resurfacing");
+        return getResurfacingSuggestions(params?.limit || 3);
+      },
+      description: "Get spaced-repetition suggestions for knowledge rediscovery",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          limit: { type: "number", default: 3 },
+        },
+      },
+    },
   },
 });

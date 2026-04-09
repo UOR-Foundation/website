@@ -1,7 +1,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
-  Network,
+  Network, CalendarDays,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -91,6 +91,15 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 1100, h: 720 },
     color: "hsl(160 70% 45%)",
     category: "OBSERVE",
+  },
+  {
+    id: "daily-notes",
+    label: "Daily Notes",
+    icon: CalendarDays,
+    component: lazy(() => import("@/modules/oracle/pages/DailyNotesPage")),
+    defaultSize: { w: 860, h: 640 },
+    color: "hsl(24 85% 58%)",
+    category: "STRUCTURE",
   },
 ];
 
