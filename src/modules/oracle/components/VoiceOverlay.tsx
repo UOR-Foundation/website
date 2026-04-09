@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Shield, ShieldCheck, Download, X } from "lucide-react";
 import { getHologramStt } from "@/modules/uns/core/hologram/stt-engine";
 import { getWhisperEngine, type WhisperLoadProgress } from "@/modules/uns/core/hologram/whisper-engine";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 interface Props {
   open: boolean;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
+  const { modKey } = usePlatform();
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [final, setFinal] = useState("");
@@ -159,7 +161,7 @@ export default function VoiceOverlay({ open, onClose, onSubmit }: Props) {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}+Shift+V to toggle • Esc to cancel
+            {modKey}+Shift+V to toggle • Esc to cancel
           </motion.div>
 
           {/* Mic orb */}

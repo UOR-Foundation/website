@@ -8,6 +8,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff } from "lucide-react";
 import { getHologramStt } from "@/modules/uns/core/hologram/stt-engine";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 interface Props {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function VoiceInput({ onTranscript, onSpeechEnd, className = "", size = "md" }: Props) {
+  const { modKey } = usePlatform();
   const [listening, setListening] = useState(false);
   const handleRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
   const stt = getHologramStt();
@@ -70,7 +72,7 @@ export default function VoiceInput({ onTranscript, onSpeechEnd, className = "", 
         }
         ${className}
       `}
-      title={listening ? "Stop listening" : `Voice search (${navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}+Shift+V)`}
+      title={listening ? "Stop listening" : `Voice search (${modKey}+Shift+V)`}
     >
       {/* Privacy indicator dot */}
       <span
