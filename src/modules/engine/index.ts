@@ -5,28 +5,30 @@
  * THE foundational computational kernel of the UOR framework.
  * Pure math. Zero storage. Zero network. Zero side-effects.
  *
- * Pipeline:  obj → URDNA2015 → UTF-8 → SHA-256 → derive all identity forms
+ * ARCHITECTURE:
+ *   contract.ts  — Stable UorEngineContract interface (never breaks)
+ *   adapter.ts   — Dynamic WASM→Contract wiring with TS fallback
+ *   crate-manifest.ts — Version anchor for drift detection
  *
- * This module owns:
- *   - singleProofHash()      — THE single proof hash
- *   - verifySingleProof()    — Verify derivation ID
- *   - canonicalizeToNQuads() — W3C URDNA2015 canonicalization
- *   - sha256hex()            — SHA-256 hex digest
- *   - computeCid()           — CIDv1 content identifier
- *   - computeUorAddress()    — Braille bijection address
- *   - computeIpv6Address()   — IPv6 ULA address
- *   - canonicalJsonLd()      — Deterministic JSON-LD serialization
+ * Upstream consumers use EITHER:
+ *   1. getEngine() — returns full UorEngineContract
+ *   2. Direct named imports (backward-compatible convenience)
  *
- * Every other module in the system accesses Layer 0 through:
- *   1. Direct import from "@/modules/engine" (for Layer 0 internals)
- *   2. bus.call("kernel/*") (for Layer 1+ consumers)
- *
- * Layer 0 has NO imports from Layer 1 (Knowledge Graph), Layer 2 (Bus),
- * or Layer 3 (UI). The dependency arrow points strictly upward.
+ * When the `uor-foundation` crate bumps:
+ *   1. Drop new WASM artifacts into src/lib/wasm/uor-foundation/
+ *   2. Run: npx ts-node scripts/sync-crate.ts
+ *   3. Done. Zero upstream refactoring.
  *
  * @layer 0
  * @module engine
  */
+
+// ── Contract + Adapter (the new way) ─────────────────────────────────────
+
+export { getEngine, initEngine, engineType, crateVersion } from "./adapter";
+export type { UorEngineContract } from "./contract";
+export { CRATE_MANIFEST } from "./crate-manifest";
+export type { CrateExportName } from "./crate-manifest";
 
 // ── Core: Single Proof Hash (the heart of UOR) ────────────────────────────
 
@@ -70,3 +72,24 @@ export {
 } from "@/lib/uor-address";
 
 export type { ModuleIdentity } from "@/lib/uor-address";
+
+// ── Backward-compatible ring re-exports ──────────────────────────────────
+// These delegate to getEngine() so WASM is used when available.
+// Existing `import { neg } from "@/modules/engine"` keeps working.
+
+import { getEngine } from "./adapter";
+
+/** @deprecated Use getEngine().neg() */
+export const neg = (x: number) => getEngine().neg(x);
+/** @deprecated Use getEngine().bnot() */
+export const bnot = (x: number) => getEngine().bnot(x);
+/** @deprecated Use getEngine().succ() */
+export const succ = (x: number) => getEngine().succ(x);
+/** @deprecated Use getEngine().pred() */
+export const pred = (x: number) => getEngine().pred(x);
+/** @deprecated Use getEngine().add() */
+export const add = (a: number, b: number) => getEngine().add(a, b);
+/** @deprecated Use getEngine().sub() */
+export const sub = (a: number, b: number) => getEngine().sub(a, b);
+/** @deprecated Use getEngine().mul() */
+export const mul = (a: number, b: number) => getEngine().mul(a, b);
