@@ -705,13 +705,15 @@ export default function SystemMonitorApp() {
     []
   );
 
-  const handleCopyReport = useCallback(() => {
-    const md = formatMarkdownReport(
+  const handleCopyReport = useCallback(async () => {
+    const metrics = await collectRuntimeMetrics();
+    const md = await formatMarkdownReport(
       receipt,
       status,
       lastVerified,
       degradationLog,
-      uptimeMs
+      uptimeMs,
+      metrics
     );
     navigator.clipboard.writeText(md).then(() => {
       setCopied(true);
