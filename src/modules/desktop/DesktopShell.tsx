@@ -3,7 +3,7 @@
  * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
  */
 
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 // AnimatePresence removed — windows use CSS transitions now (Revolut-style)
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
@@ -63,6 +63,16 @@ function DesktopShellInner() {
   }), [handleCloseWindow, handleMinimizeWindow, handleHideAll]);
 
   useDesktopShortcuts(shortcutHandlers);
+
+  // Listen for open-app events from within windows
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const appId = (e as CustomEvent).detail;
+      if (typeof appId === "string") handleOpenApp(appId);
+    };
+    window.addEventListener("uor:open-app", handler);
+    return () => window.removeEventListener("uor:open-app", handler);
+  }, [handleOpenApp]);
 
   // Mobile: use drawer-based shell
   if (isMobile) return <MobileShell />;
