@@ -24,6 +24,7 @@ import "./observable";
 import "./trace";
 import "./vault";
 import "./continuity";
+import "./local-llm";
 
 // ── Layer 2: Bus / API Surface ────────────────────────────────────────
 import "./data-engine";
