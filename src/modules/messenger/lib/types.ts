@@ -14,10 +14,10 @@ export interface FileManifest {
   mimeType: string;
   sizeBytes: number;
   chunkCount: number;
-  chunkCids: string[];        // content-addressed chunk references
-  fileCid: string;            // whole-file CID for verification
-  thumbnailUrl?: string;      // encrypted thumbnail for images
-  storagePaths: string[];     // storage bucket paths for each chunk
+  chunkCids: string[];
+  fileCid: string;
+  thumbnailUrl?: string;
+  storagePaths: string[];
 }
 
 export interface FileChunk {
@@ -33,10 +33,40 @@ export interface Reaction {
   createdAt: string;
 }
 
+// ── Group ───────────────────────────────────────────────────────────────────
+
+export interface GroupMeta {
+  name: string;
+  description?: string | null;
+  avatarUrl?: string | null;
+  createdBy: string;
+  isPublic: boolean;
+}
+
+export interface GroupMember {
+  userId: string;
+  role: "admin" | "member";
+  joinedAt: string;
+  invitedBy?: string | null;
+  mutedUntil?: string | null;
+  displayName?: string;
+  handle?: string | null;
+  avatarUrl?: string | null;
+  uorGlyph?: string | null;
+}
+
+// ── Conversation Settings ───────────────────────────────────────────────────
+
+export interface ConversationSettings {
+  pinned: boolean;
+  mutedUntil?: string | null;
+  archived: boolean;
+}
+
 // ── Conversation ────────────────────────────────────────────────────────────
 
 export interface Conversation {
-  id: string;               // conduit_sessions.id
+  id: string;
   sessionHash: string;
   sessionType: "direct" | "group";
   createdAt: string;
@@ -48,6 +78,10 @@ export interface Conversation {
     avatarUrl: string | null;
     uorGlyph: string | null;
   };
+  /** Group metadata — only present for group conversations */
+  groupMeta?: GroupMeta;
+  /** Group members — only present for group conversations */
+  members?: GroupMember[];
   lastMessage?: {
     plaintext: string;
     sentByMe: boolean;
@@ -57,6 +91,8 @@ export interface Conversation {
   unread: number;
   pinned?: boolean;
   muted?: boolean;
+  archived?: boolean;
+  settings?: ConversationSettings;
 }
 
 // ── Decrypted Message ───────────────────────────────────────────────────────
@@ -65,6 +101,7 @@ export interface DecryptedMessage {
   id: string;
   sessionId: string;
   senderId: string;
+  senderName?: string;
   plaintext: string;
   createdAt: string;
   messageHash: string;
@@ -77,6 +114,9 @@ export interface DecryptedMessage {
   replyToHash?: string | null;
   fileManifest?: FileManifest | null;
   reactions?: Reaction[];
+  selfDestructSeconds?: number | null;
+  editedAt?: string | null;
+  deletedAt?: string | null;
 }
 
 // ── Presence ────────────────────────────────────────────────────────────────

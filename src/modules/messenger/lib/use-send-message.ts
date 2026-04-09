@@ -1,6 +1,6 @@
 /**
  * useSendMessage — encrypts plaintext via UMP and inserts into encrypted_messages.
- * Supports text, file, voice, image, and reply message types.
+ * Supports text, file, voice, image, reply, edit, and delete operations.
  */
 
 import { useState } from "react";
@@ -16,6 +16,7 @@ interface SendOptions {
   messageType?: MessageType;
   fileManifest?: FileManifest;
   replyToHash?: string;
+  selfDestructSeconds?: number | null;
 }
 
 export function useSendMessage(sessionId: string | null, sessionHash?: string) {
@@ -26,7 +27,7 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
     if (!sessionId || !user || !plaintext.trim()) return;
     setSending(true);
 
-    const { messageType = "text", fileManifest, replyToHash } = options;
+    const { messageType = "text", fileManifest, replyToHash, selfDestructSeconds } = options;
 
     try {
       const session = sessionHash ? getCachedSession(sessionHash) : undefined;
@@ -67,6 +68,7 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
         message_type: messageType,
         file_manifest: fileManifest ?? null,
         reply_to_hash: replyToHash ?? null,
+        self_destruct_seconds: selfDestructSeconds ?? null,
       };
 
       if (!navigator.onLine) {
@@ -97,5 +99,48 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
     }
   };
 
-  return { send, sending };
+  const editMessage = async (messageId: string, newPlaintext: string) => {
+    if (!user) return;
+
+    try {
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(newPlaintext);
+      let bin = "";
+      for (const b of bytes) bin += String.fromCharCode(b);
+      const newCiphertext = btoa(bin);
+
+      const { error } = await supabase
+        .from("encrypted_messages")
+        .update({
+          ciphertext: newCiphertext,
+          edited_at: new Date().toISOString(),
+        } as any)
+        .eq("id", messageId)
+        .eq("sender_id", user.id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Failed to edit message:", err);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("encrypted_messages")
+        .update({
+          deleted_at: new Date().toISOString(),
+        } as any)
+        .eq("id", messageId)
+        .eq("sender_id", user.id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+    }
+  };
+
+  return { send, sending, editMessage, deleteMessage };
 }
