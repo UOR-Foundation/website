@@ -390,8 +390,8 @@ function InlineSocialStats({ cid }: { cid: string }) {
   );
 }
 
-/* ── Content Preview (Human view with truncation) ── */
-function ContentPreview({ source, synthesizing, contextKeywords, activeLens, novelty, isReadableType, onReadMore }: {
+/* ── Content View (Full content with human/machine toggle) ── */
+function ContentSection({ source, synthesizing, contextKeywords, activeLens, novelty, isReadableType, onReadMore, contentViewMode, setContentViewMode, onCopy, copied }: {
   source: unknown;
   synthesizing?: boolean;
   contextKeywords?: string[];
@@ -399,25 +399,81 @@ function ContentPreview({ source, synthesizing, contextKeywords, activeLens, nov
   novelty?: import("@/modules/oracle/lib/novelty-scorer").NoveltyResult | null;
   isReadableType: boolean;
   onReadMore: () => void;
+  contentViewMode: "human" | "machine";
+  setContentViewMode: (m: "human" | "machine") => void;
+  onCopy: (text: string, key: string) => void;
+  copied: string | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const jsonStr = JSON.stringify(source, null, 2);
+  const lines = jsonStr.split("\n");
+
   return (
-    <div className="space-y-3">
-      <div className={`bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 overflow-hidden transition-all ${expanded ? "max-h-[70vh] overflow-y-auto" : "max-h-[260px]"}`}>
-        <HumanContentView source={source} synthesizing={synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} novelty={novelty} />
-      </div>
-      {!expanded && (
-        <div className="flex items-center gap-3">
-          {isReadableType ? (
-            <button onClick={onReadMore} className="text-sm font-medium text-primary/70 hover:text-primary transition-colors flex items-center gap-1.5">
-              Read full article <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button onClick={() => setExpanded(true)} className="text-sm font-medium text-primary/70 hover:text-primary transition-colors flex items-center gap-1.5">
-              Show more <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-          )}
+    <div className="space-y-4">
+      {/* Toggle bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center rounded-lg border border-border/15 bg-muted/5 p-0.5">
+          <button
+            onClick={() => setContentViewMode("human")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+              contentViewMode === "human"
+                ? "bg-primary/15 text-foreground/80 border border-primary/20"
+                : "text-muted-foreground/50 hover:text-foreground/60 border border-transparent"
+            }`}
+          >
+            Human
+          </button>
+          <button
+            onClick={() => setContentViewMode("machine")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+              contentViewMode === "machine"
+                ? "bg-primary/15 text-foreground/80 border border-primary/20"
+                : "text-muted-foreground/50 hover:text-foreground/60 border border-transparent"
+            }`}
+          >
+            Machine
+          </button>
         </div>
+        <CopyBtn
+          onClick={() => onCopy(
+            contentViewMode === "machine" ? jsonStr : (typeof (source as any)?.["uor:content"] === "string" ? (source as any)["uor:content"] : jsonStr),
+            "content-copy"
+          )}
+          copied={copied === "content-copy"}
+          label="Copy"
+        />
+      </div>
+
+      {/* Content area */}
+      {contentViewMode === "human" ? (
+        <div className="bg-muted/5 rounded-2xl p-6 sm:p-8 border border-border/15 overflow-y-auto" style={{ maxHeight: "70vh" }}>
+          <HumanContentView source={source} synthesizing={synthesizing} contextKeywords={contextKeywords} activeLens={activeLens} novelty={novelty} />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <span className="text-xs font-mono text-muted-foreground/40">.json · {lines.length} lines</span>
+          <div className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[70vh] overflow-y-auto" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}>
+            <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
+              {lines.map((line, i) => (
+                <div key={i} className="contents group">
+                  <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">{i + 1}</div>
+                  <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {line.includes('": "') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*"(.*)"(,?)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">"{m[3]}"</span><span className="text-muted-foreground/20">{m[4]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
+                    : line.includes('": ') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*(.+)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-accent-foreground/60">{m[3]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
+                    : line.trim() === "{" || line.trim() === "}" || line.trim() === "}," || line.trim() === "[" || line.trim() === "]" || line.trim() === "]," ? <span className="text-muted-foreground/30">{line}</span>
+                    : <span className="text-foreground/50">{line}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Read full article link (human mode only, readable types) */}
+      {contentViewMode === "human" && isReadableType && (
+        <button onClick={onReadMore} className="text-sm font-medium text-primary/70 hover:text-primary transition-colors flex items-center gap-1.5">
+          Read full article <ChevronRight className="w-3.5 h-3.5" />
+        </button>
       )}
     </div>
   );
