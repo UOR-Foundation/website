@@ -18,7 +18,7 @@
  */
 
 import { localGraphStore, type KGNode, type KGEdge } from "./local-store";
-import { singleProofHash } from "@/modules/uns/core/identity";
+import { sha256, buildIdentity } from "@/modules/uns/core/address";
 import { canonicalJsonLd } from "@/lib/uor-address";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -324,7 +324,12 @@ function domainFromType(rdfType: string): string {
 async function groundBlueprint(blueprint: ObjectBlueprint): Promise<GroundObjectBlueprint> {
   // Strip createdAt for identity computation (it changes every call)
   const forHashing = { ...blueprint, createdAt: undefined };
-  const identity = await singleProofHash(forHashing);
+  // Use canonical JSON serialization → SHA-256 → UOR identity
+  // (URDNA2015 cannot process blueprint-specific keys; canonical JSON is deterministic)
+  const canonical = canonicalJsonLd(forHashing);
+  const canonicalBytes = new TextEncoder().encode(canonical);
+  const hashBytes = await sha256(canonicalBytes);
+  const identity = buildIdentity(hashBytes, canonicalBytes);
 
   return {
     blueprint,
