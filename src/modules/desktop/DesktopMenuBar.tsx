@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Volume2, Wifi, WifiOff } from "lucide-react";
+import { Search, Volume2 } from "lucide-react";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
