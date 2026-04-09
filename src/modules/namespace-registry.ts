@@ -64,6 +64,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 1,
     icon: "∞",
     crateModule: "kernel/u/",
+    busNs: "kernel",
+    busOperations: ["encode", "decode", "verify", "derive"],
   },
   {
     prefix: "schema:",
