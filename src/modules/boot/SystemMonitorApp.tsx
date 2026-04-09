@@ -1056,81 +1056,42 @@ function ThresholdBar({
   }
 
   return (
-    <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden relative">
-      {/* Threshold markers */}
+    <div className="h-2 bg-muted/20 rounded-full overflow-hidden relative">
       {thresholds.slice(0, -1).map((t, i) => (
-        <div
-          key={i}
-          className="absolute top-0 bottom-0 w-[1px] opacity-20"
-          style={{ left: `${t.max}%`, backgroundColor: t.color }}
-        />
+        <div key={i} className="absolute top-0 bottom-0 w-[1px] opacity-20" style={{ left: `${t.max}%`, backgroundColor: t.color }} />
       ))}
       <div
         className="h-full rounded-full transition-all duration-700 ease-out"
-        style={{
-          width: `${Math.max(value, value > 0 ? 2 : 0)}%`,
-          backgroundColor: barColor,
-          boxShadow: `0 0 8px ${barColor}30`,
-        }}
+        style={{ width: `${Math.max(value, value > 0 ? 2 : 0)}%`, backgroundColor: barColor, boxShadow: `0 0 10px ${barColor}30` }}
       />
     </div>
   );
 }
 
 /** Animated pulsing status dot */
-function PulseDot({ color, size = 6 }: { color: string; size?: number }) {
+function PulseDot({ color, size = 7 }: { color: string; size?: number }) {
   return (
     <span className="relative inline-flex shrink-0" style={{ width: size * 2.5, height: size * 2.5 }}>
-      <span
-        className="absolute inset-0 rounded-full animate-ping opacity-30"
-        style={{ backgroundColor: color }}
-      />
-      <span
-        className="relative inline-flex rounded-full m-auto"
-        style={{
-          width: size,
-          height: size,
-          backgroundColor: color,
-          boxShadow: `0 0 6px ${color}60`,
-        }}
-      />
+      <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: color }} />
+      <span className="relative inline-flex rounded-full m-auto" style={{ width: size, height: size, backgroundColor: color, boxShadow: `0 0 8px ${color}60` }} />
     </span>
   );
 }
 
 function CapChip({ label, ok }: { label: string; ok: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded transition-colors ${
-        ok
-          ? "bg-green-500/10 text-green-500"
-          : "bg-red-500/10 text-red-400"
-      }`}
-    >
-      {ok ? <IconCheck size={9} /> : <IconX size={9} />}
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors ${ok ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-400"}`}>
+      {ok ? <IconCheck size={12} /> : <IconX size={12} />}
       {label}
     </span>
   );
 }
 
-function GrafanaRow({
-  label,
-  children,
-  color,
-}: {
-  label: string;
-  children: React.ReactNode;
-  color?: string;
-}) {
+function GrafanaRow({ label, children, color }: { label: string; children: React.ReactNode; color?: string }) {
   return (
-    <div className="flex justify-between items-center gap-2">
-      <span className="text-muted-foreground/70">{label}</span>
-      <span
-        className="text-right font-medium"
-        style={color ? { color } : undefined}
-      >
-        {children}
-      </span>
+    <div className="flex justify-between items-center gap-3">
+      <span className="text-muted-foreground/70 text-xs">{label}</span>
+      <span className="text-right font-semibold text-sm" style={color ? { color } : undefined}>{children}</span>
     </div>
   );
 }
