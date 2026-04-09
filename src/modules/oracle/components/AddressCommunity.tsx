@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import AuthPromptModal, { type AuthContext as AuthCtx } from "@/modules/auth/AuthPromptModal";
 
 /* ── Types ── */
 
@@ -134,7 +135,7 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
   }, [cid, user, load]);
 
   const handleReaction = useCallback(async (reactionKey: string) => {
-    if (!user) { toast("Sign in to react", { icon: "🔒" }); return; }
+    if (!user) { setAuthPromptCtx("react"); return; }
     if (reacting) return;
     setReacting(true);
     const prevReaction = myReaction;
@@ -397,7 +398,7 @@ function CommentNodeView({
             score={node.score}
             myVote={myVotes[node.id] ?? null}
             onVote={(v) => {
-              if (!user) { toast("Sign in to vote", { icon: "🔒" }); return; }
+              if (!user) { setAuthPromptCtx("vote"); return; }
               onVote(node.id, v);
             }}
           />
