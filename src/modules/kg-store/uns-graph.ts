@@ -13,7 +13,7 @@
  */
 
 import { neg, bnot, succ, pred, bytePopcount } from "@/lib/uor-ring";
-import { oxigraphStore, sparqlQuery } from "@/modules/knowledge-graph/oxigraph-store";
+import { grafeoStore as oxigraphStore, sparqlQuery } from "@/modules/knowledge-graph/grafeo-store";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 

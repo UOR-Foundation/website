@@ -124,22 +124,22 @@ export interface StackHealth {
 export const TECH_STACK: readonly StackEntry[] = [
   // ─── CRITICAL ─────────────────────────────────────────────────────
   {
-    name: "Oxigraph",
-    role: "SPARQL 1.1 quad store — single canonical graph engine for all RDF data",
+    name: "GrafeoDB",
+    role: "Multi-model graph database — SPARQL + Cypher + GQL + SQL via WASM, built-in IndexedDB persistence",
     category: "graph",
     criticality: "critical",
-    fallback: "Array-based in-memory fallback (no SPARQL 1.1 support)",
+    fallback: "Array-based in-memory fallback (no multi-language graph queries)",
     kernelFunction: "store",
     criteria: {
       license: "Apache-2.0",
-      standard: "W3C SPARQL 1.1, W3C RDF 1.1",
+      standard: "W3C SPARQL 1.1, ISO GQL, openCypher",
       portability: ["browser", "node", "deno", "edge-worker"],
-      adoptionSignal: "Rust/WASM, used by Wikidata query tooling",
+      adoptionSignal: "Rust/WASM, 6 query languages, built-in persistence",
     },
     verify: async () => {
       try {
-        const ox = await import("oxigraph");
-        return typeof (ox as any).Store === "function" || typeof ox.default?.Store === "function";
+        const { GrafeoDB } = await import("@grafeo-db/web");
+        return typeof GrafeoDB?.create === "function";
       } catch {
         return false;
       }
@@ -176,20 +176,29 @@ export const TECH_STACK: readonly StackEntry[] = [
     },
   },
   {
-    name: "Web Crypto API",
-    role: "SHA-256 hashing and cryptographic randomness — underlying primitive for the encode pipeline",
+    name: "@noble/hashes",
+    role: "Audited synchronous SHA-256/BLAKE3 — encode pipeline and seal integrity",
     category: "crypto",
-    criticality: "recommended",
-    fallback: "None — system cannot produce seals without crypto.subtle",
+    criticality: "critical",
+    fallback: "Web Crypto API (async-only, no streaming, no BLAKE3)",
     kernelFunction: "encode",
     criteria: {
-      license: "W3C",
-      standard: "W3C Web Cryptography API",
+      license: "MIT",
+      standard: "NIST FIPS 180-4 (SHA-2), NIST SP 800-185",
       portability: ["browser", "node", "deno", "edge-worker", "bun"],
-      adoptionSignal: "W3C native API — every modern runtime",
+      adoptionSignal: "3M+ weekly npm downloads, audited by Cure53, used by ethers.js/viem",
     },
-    verify: async () => typeof crypto !== "undefined" && typeof crypto.subtle?.digest === "function",
-    detectVersion: async () => typeof crypto !== "undefined" ? "native" : null,
+    verify: async () => {
+      try {
+        const { sha256 } = await import("@noble/hashes/sha2");
+        return typeof sha256 === "function";
+      } catch {
+        return false;
+      }
+    },
+    detectVersion: async () => {
+      try { await import("@noble/hashes/sha2"); return "2.x"; } catch { return null; }
+    },
   },
   {
     name: "jsonld",
