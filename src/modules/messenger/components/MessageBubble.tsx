@@ -9,6 +9,7 @@ import ImageMessage from "./ImageMessage";
 import ReplyBubble from "./ReplyBubble";
 import ReactionPicker from "./ReactionPicker";
 import MessageContextMenu from "./MessageContextMenu";
+import PlatformBadge from "./PlatformBadge";
 import { formatFileSize } from "../lib/file-transfer";
 import { getTimeRemaining } from "../lib/ephemeral";
 import { toast } from "sonner";
@@ -174,11 +175,19 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
             setContextMenu({ show: true, x: e.clientX, y: e.clientY });
           }}
         >
-          {/* Sender name in group chats */}
+          {/* Sender name in group chats + platform badge for bridged messages */}
           {isGroup && !sent && message.senderName && (
-            <p className="text-[11px] font-medium text-teal-400/60 mb-0.5 truncate">
+            <p className="text-[11px] font-medium text-teal-400/60 mb-0.5 truncate flex items-center gap-1">
+              {message.sourcePlatform && message.sourcePlatform !== "native" && (
+                <PlatformBadge platform={message.sourcePlatform} size="sm" />
+              )}
               {message.senderName}
             </p>
+          )}
+          {!isGroup && message.sourcePlatform && message.sourcePlatform !== "native" && !sent && (
+            <div className="mb-0.5">
+              <PlatformBadge platform={message.sourcePlatform} size="sm" showLabel />
+            </div>
           )}
 
           {/* Reply reference */}
