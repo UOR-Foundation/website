@@ -4,11 +4,12 @@
  *
  * Drag-drop file zone, document list with CID badges,
  * tag management, and storage indicators.
+ * Works for both guests (ephemeral) and signed-in users (persistent).
  */
 
 import React, { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, File, X, Tag, Shield, Search, Loader2, Link2, Trash2 } from "lucide-react";
+import { Upload, File, X, Tag, Shield, Search, Loader2, Link2, Trash2, Info } from "lucide-react";
 import { useVault } from "../hooks/useVault";
 import { toast } from "sonner";
 
@@ -65,26 +66,30 @@ export default function VaultPanel() {
     }
   }, [vault, searchQuery]);
 
-  if (!vault.ready) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <Shield className="w-12 h-12 text-muted-foreground/40" />
-        <p className="text-muted-foreground text-sm">Sign in to access your Sovereign Vault</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
+      {/* Guest banner */}
+      {vault.isGuest && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/10 border border-accent/20">
+          <Info className="w-4 h-4 text-accent-foreground/60 shrink-0" />
+          <p className="text-xs text-accent-foreground/70">
+            Guest mode — files are stored in memory and will be lost on refresh. Sign in to persist your vault.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Shield className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Sovereign Vault</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {vault.isGuest ? "File Explorer" : "Sovereign Vault"}
+          </h2>
           <p className="text-xs text-muted-foreground">
-            {vault.count} document{vault.count !== 1 ? "s" : ""} · Zero-knowledge encrypted
+            {vault.count} document{vault.count !== 1 ? "s" : ""}
+            {vault.isGuest ? " · Ephemeral session" : " · Zero-knowledge encrypted"}
           </p>
         </div>
       </div>
