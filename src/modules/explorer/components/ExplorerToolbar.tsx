@@ -27,6 +27,16 @@ function getFilterLabel(filter: SidebarFilter): string {
   return FILTER_LABELS[filter] || "All Files";
 }
 
+interface Props {
+  filter: SidebarFilter;
+  viewMode: ViewMode;
+  onViewModeChange: (v: ViewMode) => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  onUploadClick: () => void;
+  onNewFolder: (name: string) => void;
+}
+
 export default function ExplorerToolbar({
   filter, viewMode, onViewModeChange, searchQuery, onSearchChange,
   onUploadClick, onNewFolder,
@@ -53,7 +63,7 @@ export default function ExplorerToolbar({
       <div className="flex items-center gap-1.5 min-w-0">
         <span className="text-muted-foreground/60 text-sm">Files</span>
         <span className="text-muted-foreground/40">›</span>
-        <span className="font-medium text-foreground/90 text-base truncate">{FILTER_LABELS[filter]}</span>
+        <span className="font-medium text-foreground/90 text-base truncate">{getFilterLabel(filter)}</span>
       </div>
 
       <div className="flex-1" />
