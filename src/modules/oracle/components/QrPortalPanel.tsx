@@ -48,19 +48,27 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     setIsGuest(false);
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      const PUBLISHED_ORIGIN = "https://univeral-coordinate-hub.lovable.app";
+      const origin = window.location.origin;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+      let accessToken: string | undefined;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        accessToken = sessionData?.session?.access_token ?? undefined;
+      } catch (authErr) {
+        console.warn("[QrPortal] Auth session check failed, using guest mode:", authErr);
+        accessToken = undefined;
+      }
+
       let portalUrl: string;
 
-      if (!accessToken) {
+      if (!accessToken || !supabaseUrl) {
         setIsGuest(true);
         const params = new URLSearchParams({ lens: targetLens });
-        portalUrl = `${PUBLISHED_ORIGIN}${targetUrl}?${params.toString()}`;
+        portalUrl = `${origin}${targetUrl}?${params.toString()}`;
       } else {
         const res = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/portal-transfer`,
+          `${supabaseUrl}/functions/v1/portal-transfer`,
           {
             method: "POST",
             headers: {
@@ -76,7 +84,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
           throw new Error(errBody.error || "Failed to create portal");
         }
         const { token } = await res.json();
-        portalUrl = `${PUBLISHED_ORIGIN}/search?portal=${token}`;
+        portalUrl = `${origin}/search?portal=${token}`;
       }
 
       const dataUrl = await QRCode.toDataURL(portalUrl, {
@@ -100,6 +108,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
         }
       }, 1000);
     } catch (e: unknown) {
+      console.warn("[QrPortal] generateToken error:", e);
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
