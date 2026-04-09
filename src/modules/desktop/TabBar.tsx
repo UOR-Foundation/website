@@ -293,8 +293,8 @@ export default function TabBar({
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>
+      </DropdownMenu>
 
-      {/* Search button */}
       <button
         onClick={onSpotlight}
         className={`flex items-center justify-center w-[28px] h-[28px] rounded-md shrink-0 transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
