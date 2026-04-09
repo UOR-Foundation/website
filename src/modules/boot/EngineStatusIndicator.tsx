@@ -20,6 +20,7 @@ import { useBootStatus } from "./useBootStatus";
 import type { SealStatus, BootReceipt } from "./types";
 import { motion, AnimatePresence } from "framer-motion";
 import { getEngine } from "@/modules/engine";
+import { SELECTION_POLICY } from "./tech-stack";
 
 // ── Status configuration ────────────────────────────────────────────────
 
@@ -410,6 +411,20 @@ export default function EngineStatusIndicator({
                     value={`v${getEngine().version}`}
                     isLight={isLight}
                   />
+                </Section>
+
+                {/* ── Section: Selection Policy ── */}
+                <Section title="Selection Policy" isLight={isLight}>
+                  <div className={`text-[8px] leading-snug space-y-0.5 ${isLight ? "text-black/40" : "text-white/40"}`}>
+                    {SELECTION_POLICY.map((c) => (
+                      <div key={c.name} className="flex gap-1">
+                        <span className={`font-semibold shrink-0 ${isLight ? "text-black/60" : "text-white/60"}`}>
+                          {c.name}:
+                        </span>
+                        <span>{c.definition}</span>
+                      </div>
+                    ))}
+                  </div>
                 </Section>
 
                 {/* ── Section: Tech Stack ── */}
