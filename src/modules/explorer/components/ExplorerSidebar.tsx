@@ -4,7 +4,7 @@
 
 import {
   Files, Clock, Upload, FolderOpen, Layers, Globe,
-  ClipboardPaste, HardDrive, Lock, ShieldCheck,
+  ClipboardPaste, ShieldCheck,
 } from "lucide-react";
 import { DEFAULT_TAGS, tagStore } from "../lib/tags";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
