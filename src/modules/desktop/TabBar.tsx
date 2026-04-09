@@ -443,7 +443,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile */}
+      {/* Right: time + profile + fullscreen */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -463,6 +463,7 @@ export default function TabBar({
         >
           <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
         </button>
+        <FullscreenToggle isLight={isLight} />
       </div>
     </div>
   );
