@@ -53,7 +53,7 @@ function classifyByteQ0(b: number): "EXTERIOR" | "UNIT" | "IRREDUCIBLE" | "REDUC
  * Quad store for the UNS knowledge graph.
  *
  * UNIFIED: Delegates all storage to the shared GrafeoDB singleton from
- * knowledge-graph/oxigraph-store.ts. In-memory array is kept as a synchronous
+ * knowledge-graph/grafeo-store.ts. In-memory array is kept as a synchronous
  * fallback for tests and sync query paths.
  */
 export class UnsGraph {
