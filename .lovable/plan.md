@@ -1,193 +1,173 @@
-## Plan: Offline-First Coherence — Unified Connectivity Context + Feature Awareness
 
-### Current State
 
-**Already works offline:**
-- Knowledge Graph (IndexedDB): full CRUD, traversal, search, reasoning, blueprint decomposition/materialization
-- Graph compute: semantic similarity, deductive/inductive/abductive queries, compression, coherence verification
-- Data Bank L1: localStorage read/write with pending-write queue
-- Content ingestion: entity extraction, column mapping, blueprint generation
-- All UOR hashing, canonicalization, and content-addressing
+# Sovereign API: Three-Part Modular Architecture
 
-**Requires online:**
-- Oracle (LLM streaming) — needs backend edge function
-- KG cloud sync (sync-bridge) — pushes/pulls triples
-- Data Bank L2 — encrypted cloud sync
-- Semantic Web Bridge (Firecrawl scraping) — URL ingestion
-- Voice input (Picovoice) — downloads model on first use
-- Authentication — Supabase auth
+## Evaluation of Current State
 
-**Current UI feedback:** Single Wifi icon with green/red dot in the menu bar. No per-feature awareness.
+**41 edge functions**, each with independent CORS/auth. **28 client files** construct function URLs in 3+ inconsistent patterns. A 10,954-line `uor-api` monolith. A namespace registry that describes modules but does not dispatch to them. The UOR engine, KG, and UI are tangled — components directly import graph stores, call edge functions, and wire pipelines inline.
 
-### What's Missing
+The system works, but it is not yet sovereign. A sovereign API means: one call surface, local-first resolution, uniform envelope, and zero coupling between the three layers.
 
-1. **A shared connectivity context** — multiple components independently check `navigator.onLine`; there's no single reactive source of truth that also tracks *what's degraded*
-2. **Per-feature offline hints** — users don't know which features need the network until they fail
-3. **Graceful degradation in the Oracle** — currently just errors with "Failed to connect"
+---
 
-### Changes
-
-**1. New: `src/modules/desktop/hooks/useConnectivity.tsx`**
-
-A React context + provider that centralizes connectivity state:
-
-```
-ConnectivityState {
-  online: boolean;
-  features: {
-    oracle: { available: boolean; offlineReason: "Requires internet for AI responses" }
-    kgSync: { available: boolean; offlineReason: "Graph syncs when back online" }
-    dataBank: { available: boolean; offlineReason: "Data saved locally, syncs when online" }
-    webBridge: { available: boolean; offlineReason: "URL ingestion requires internet" }
-    voice: { available: boolean; offlineReason: "Voice model may need initial download" }
-    auth: { available: boolean; offlineReason: "Sign-in requires internet" }
-  }
-}
-```
-
-- Listens to `online`/`offline` events
-- Computes feature availability from `online` + auth state
-- Exposes `useConnectivity()` hook for any component
-- Exposes `isFeatureAvailable(featureId)` helper
-
-**2. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
-
-- Replace inline `online` state with `useConnectivity()`
-- On click of the Wifi icon, show a small popover/tooltip listing feature status (not a full modal — keep it light)
-- Each feature shows a tiny dot (green/amber/red) + one-line status
-- The popover disappears on click-outside; acts as a quick status glance
-
-**3. Update: `src/modules/oracle/pages/OraclePage.tsx` and `OracleOverlay.tsx`**
-
-- Before streaming, check `useConnectivity().features.oracle.available`
-- When offline, show a gentle inline message in the chat area: "You're offline. The Oracle needs an internet connection to respond. Your knowledge graph, local search, and saved data are all still available."
-- Disable the send button with a subtle offline indicator (not error-red, just muted)
-- Keep the input visible so users can still type (queue for when online returns)
-
-**4. Update: `src/modules/oracle/lib/stream-oracle.ts`**
-
-- Add an early `navigator.onLine` check before `fetch()` — surface a friendlier error: "You're currently offline. The Oracle will be available when your connection returns."
-
-**5. Update: `src/modules/knowledge-graph/sync-bridge.ts`**
-
-- When sync is attempted offline, queue the intent and auto-trigger when `online` event fires (already partially done)
-- Add a `pendingSync` flag to state so UI can show "Will sync when online"
-
-**6. Update: `src/modules/desktop/DesktopShell.tsx`**
-
-- Wrap the inner shell with `ConnectivityProvider`
-- Pass connectivity down naturally via context (no prop drilling)
-
-**7. Update: `src/modules/desktop/DesktopWidgets.tsx`** (home screen)
-
-- When offline, show a subtle ambient banner at the bottom of the widget area: "Offline mode — your local knowledge graph and data are fully available"
-- Use a calm, reassuring tone — not an error banner
-
-**8. New: `src/modules/desktop/components/ConnectivityPopover.tsx`**
-
-Small popover triggered by clicking the Wifi icon in the menu bar:
-- Header: "System Status" with green/red dot
-- Feature list with per-feature status dots
-- When online: all green, shows "All systems operational"
-- When offline: shows which features are available (green) vs degraded (amber)
-- Includes KG stats (node count, edge count) as reassurance that local data is intact
-- Footer: "Last synced: 2 min ago" from sync-bridge state
-
-### Files Summary
-
-| File | Action |
-|------|--------|
-| `src/modules/desktop/hooks/useConnectivity.tsx` | New — centralized connectivity context |
-| `src/modules/desktop/components/ConnectivityPopover.tsx` | New — status popover for menu bar |
-| `src/modules/desktop/DesktopMenuBar.tsx` | Use connectivity context, wire popover |
-| `src/modules/desktop/DesktopShell.tsx` | Wrap with ConnectivityProvider |
-| `src/modules/desktop/DesktopWidgets.tsx` | Subtle offline banner on home |
-| `src/modules/oracle/lib/stream-oracle.ts` | Early offline check with friendly error |
-| `src/modules/oracle/pages/OraclePage.tsx` | Offline-aware chat UI |
-| `src/modules/oracle/components/OracleOverlay.tsx` | Offline-aware overlay |
-| `src/modules/knowledge-graph/sync-bridge.ts` | Expose pendingSync flag |
-
-### Design Principles
-
-- **Reassuring, not alarming**: offline mode shows what IS available, not what isn't
-- **Contextual, not global**: feature hints appear only where relevant (Oracle input shows Oracle status, not a global banner)
-- **One glance**: the menu bar Wifi icon click gives full system status in 2 seconds
-- **Zero friction**: no modals, no blocking dialogs, no red error screens
-- **Local-first confidence**: emphasize that the KG, data, and search all work perfectly offline
-
-## Plan: Data Engineering Engine with Canonical UOR Integration
-
-### Status: ✅ Implemented
-
-### Architecture — Precise UOR Boundary
+## Target Architecture: Three Clean Layers
 
 ```text
-Any Input (File, Paste, URL, API)
-    |
-    |  [no UOR here — standard data engineering]
-    |
-    v
-RawAuditStore ─── SHA-256(raw_bytes) audit key (plain hash, NOT UOR)
-    |
-FormatRouter ──── MIME/ext → processing mode (no UOR)
-    |
-AutoProfiler ──── accumulate stats, learn source structure (no UOR)
-    |
-DataEngineeringEngine
-  Stage 1: Parse (CSV/JSON/YAML/XML/Markdown)
-  Stage 2: Clean (whitespace, coercion, nulls, dedup)
-  Stage 3: Feature Engineering (passthrough, extensible)
-  Stage 4: Quality Score (completeness × uniqueness × validity, 35/30/35)
-    |
-====|============ UOR BOUNDARY ============================================
-    |
-    v
-  Stage 5: singleProofHash(cleaned_dataset_envelope)
-           JSON-LD → URDNA2015 → SHA-256 → IPv6 ULA (fd00:0075:6f72::/48)
-           Dataset gets its permanent content-addressed identity
-    |
-    v
-Knowledge Graph (IndexedDB)
-    |
-    ├── Dataset node:  IPv6 from Stage 5
-    |
-    ├── Entity nodes:  singleProofHash({ @type, value })  ◄─ UOR ENCODE
-    |                  each entity gets its own IPv6
-    |
-    ├── Column nodes:  singleProofHash({ @type, name, dtype })  ◄─ UOR ENCODE
-    |                  shared across datasets (same column = same IPv6)
-    |
-    ├── Edges:         subject|predicate|object triples
-    |
-    └── Verify:        verifySingleProof(stored_bytes, expected_ipv6)  ◄─ UOR DECODE
-                       on retrieval, re-derive and compare
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3: UX/UI (Renderable on demand, fully swappable)     │
+│  React components import ONLY from the Bus. Never from      │
+│  KG stores, edge functions, or UOR libs directly.           │
+└────────────────────────┬────────────────────────────────────┘
+                         │  bus.call("ns/op", payload)
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  Layer 2: Sovereign Bus (Single API surface)                │
+│                                                             │
+│  POST /bus  { ns, op, payload }  →  BusEnvelope             │
+│                                                             │
+│  Local modules: kernel, graph, cert, data-engine, blueprint │
+│  Remote gateway: oracle, store, scrape, audio, social       │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│  Layer 1: UOR Engine + Knowledge Graph (Pure data layer)    │
+│                                                             │
+│  UOR Engine: singleProofHash, verifySingleProof             │
+│  KG: IndexedDB triple store, graph-compute, sync-bridge     │
+│  Canonical link: uor-foundation Rust crate (WASM fallback)  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Where UOR Is Called (Exhaustive)
+---
 
-| Location | Function | What It Does |
-|----------|----------|-------------|
-| `data-engine/engine.ts` Stage 5 | `singleProofHash(dataset_envelope)` | Content-addresses the cleaned dataset → IPv6 |
-| `ingest-bridge.ts` entity nodes | `singleProofHash({ @type, value })` | Content-addresses each entity → IPv6 |
-| `ingest-bridge.ts` column nodes | `singleProofHash({ @type, name, dtype })` | Content-addresses each column → IPv6 |
-| Future: single API endpoint | `singleProofHash(any_object)` | Public API surface. One call in, IPv6 out. |
+## Recommended API Standard: **JSON-RPC 2.0 over HTTP**
 
-Everything else (Raw Audit, Format Router, AutoProfiler, Stages 1-4) is standard data engineering.
+Why JSON-RPC 2.0 over REST or GraphQL:
 
-### Single Address Type: IPv6 ULA
+| Criterion | JSON-RPC 2.0 | REST | GraphQL |
+|---|---|---|---|
+| Payload size | Minimal (no URL path routing, no query parsing) | Moderate | Heavy (schema introspection) |
+| Latency | Single POST, no content negotiation | Multiple verbs/paths | Single POST but parser overhead |
+| Batch calls | Native (`[{...}, {...}]` array) | N requests | Single query but complex resolver |
+| Spec size | 1 page | Hundreds of pages (OpenAPI) | Large spec + tooling |
+| Adoption | Ethereum, Bitcoin, LSP, MCP, IPFS, Solana | Ubiquitous | Meta ecosystem |
+| Offline-local parity | Identical envelope local and remote | Path-based, awkward locally | Overkill for local dispatch |
 
-All nodes use `fd00:0075:6f72::/48` IPv6 addresses as their canonical identity.
-Other forms (CID, Braille, hex) exist in `SingleProofResult` but are not surfaced as primary keys.
+JSON-RPC 2.0 is the lightest standard that supports batching, typed errors, and is already used by Ethereum, Bitcoin, IPFS, the Language Server Protocol, and MCP. One POST. One envelope. Works identically whether the bus resolves locally or remotely.
 
-### Files Implemented
+---
 
-| File | UOR? | Description |
-|------|------|-------------|
-| `src/modules/knowledge-graph/data-engine/engine.ts` | Yes (Stage 5) | 5-stage pipeline with UOR encode |
-| `src/modules/knowledge-graph/data-engine/profiler.ts` | No | AutoProfiler (statistical learning) |
-| `src/modules/knowledge-graph/data-engine/index.ts` | No | Barrel export |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | Yes | Fixed: sha256hex → singleProofHash, IPv6 keys |
-| `src/modules/knowledge-graph/raw-store.ts` | No | Removed size limit, added retrieval/dedup |
-| `src/modules/sovereign-vault/lib/structured-extractor.ts` | No | 35/30/35 quality scoring, 200-row samples |
-| `src/modules/sovereign-vault/lib/ingest-pipeline.ts` | No | Removed legacy naming |
-| `src/modules/knowledge-graph/index.ts` | No | Exports data-engine |
+## Implementation Plan (10 changes)
+
+### 1. Create `src/modules/bus/` — The Sovereign API surface
+
+**Files**: `types.ts`, `registry.ts`, `bus.ts`, `index.ts`
+
+The envelope follows JSON-RPC 2.0 exactly:
+
+```typescript
+// Request
+{ jsonrpc: "2.0", id: 1, method: "graph/query", params: { query: "..." } }
+
+// Response
+{ jsonrpc: "2.0", id: 1, result: { nodes: [...], uorAddress: "fd00:..." } }
+
+// Error
+{ jsonrpc: "2.0", id: 1, error: { code: -32601, message: "Method not found" } }
+```
+
+`bus.call(method, params)` resolves locally first. If the module is registered as `remote`, it forwards to the gateway edge function. Batch support via `bus.batch([...])`.
+
+The registry is a simple `Map<string, Handler>` populated by module registrations at import time.
+
+### 2. Create `src/modules/bus/modules/` — Module registrations
+
+One file per domain, each calling `register()`:
+
+| File | Methods exposed | Local/Remote |
+|---|---|---|
+| `kernel.ts` | `kernel/encode`, `kernel/decode`, `kernel/verify`, `kernel/derive` | Local |
+| `graph.ts` | `graph/put`, `graph/get`, `graph/query`, `graph/similar`, `graph/stats`, `graph/verify` | Local |
+| `cert.ts` | `cert/issue`, `cert/verify`, `cert/chain` | Local |
+| `data-engine.ts` | `data/ingest`, `data/profile`, `data/quality` | Local |
+| `blueprint.ts` | `blueprint/decompose`, `blueprint/materialize`, `blueprint/export` | Local |
+| `oracle.ts` | `oracle/ask`, `oracle/stream` | Remote |
+| `store.ts` | `store/write`, `store/read`, `store/pin` | Remote |
+| `scrape.ts` | `scrape/url`, `scrape/search` | Remote |
+
+Each registration is ~20 lines — just a thin wrapper calling existing module functions.
+
+### 3. Create unified gateway edge function
+
+**File**: `supabase/functions/gateway/index.ts`
+
+Single edge function. Accepts JSON-RPC 2.0 POST. Dispatches to remote-only handlers (oracle, store, scrape, audio, social, wolfram). Shared CORS, auth, rate limiting, input validation — implemented once.
+
+Replaces the need for 28+ separate edge functions over time. Existing functions remain operational during migration.
+
+### 4. Wire the namespace registry to the bus
+
+Update `namespace-registry.ts` to add an `operations` field to each `NamespaceDescriptor`. The bus reads this at startup. The registry becomes the single source of truth for both documentation and dispatch.
+
+### 5. Create `src/modules/bus/client.ts` — External sovereign API
+
+For external consumers (CLI, agents, other apps), expose the bus as a standard HTTP endpoint:
+
+```
+POST /api/rpc
+Content-Type: application/json
+
+{ "jsonrpc": "2.0", "id": 1, "method": "graph/query", "params": { ... } }
+```
+
+This is the "sovereign API" — your personal data, queryable via a standard protocol, combinable with any LLM.
+
+### 6. Refactor UI components to use bus only
+
+Update the 28 files that currently construct function URLs to instead call `bus.call()`. The UI layer never imports from `local-store`, `uor-canonical`, or constructs edge function URLs. It only knows the bus.
+
+This is the key to making the UI fully swappable — any frontend that can call `bus.call()` works.
+
+### 7. Create `src/modules/bus/introspect.ts` — Self-describing API
+
+`bus.call("rpc/discover")` returns all registered methods, their schemas, and whether they resolve locally or remotely. This enables auto-generated documentation, CLI completion, and agent discovery.
+
+### 8. Create `src/modules/bus/middleware.ts` — Cross-cutting concerns
+
+Pluggable middleware chain applied to every call: logging, timing, UOR address stamping, rate limiting. Middleware is registered like modules — `bus.use(logger)`, `bus.use(uorStamp)`.
+
+### 9. Update KG sync-bridge to use bus
+
+The sync bridge becomes another bus module (`sync/push`, `sync/pull`, `sync/status`) rather than a side-channel. Cloud persistence is just another bus call.
+
+### 10. Type generation from registry
+
+Add a build-time script that reads bus registrations and generates a typed client:
+
+```typescript
+// Auto-generated
+const result = await bus.call<GraphQueryResult>("graph/query", { sparql: "..." });
+//                           ^^^^^^^^^^^^^^^^^^ typed from registration schema
+```
+
+---
+
+## Migration Path
+
+**Phase 1** (this implementation): Create bus, register 8 core modules, create gateway, wire 5 highest-traffic UI components to bus.call().
+
+**Phase 2** (next iteration): Migrate remaining 23 UI call sites. Deprecate individual edge functions as gateway absorbs them.
+
+**Phase 3** (future): Expose bus as external HTTP endpoint. CLI and agent consumers call the same API. UOR engine upgrades (Rust WASM) slot in by updating the `kernel` module registration — zero changes to consumers.
+
+---
+
+## What This Achieves
+
+- **One API**: `bus.call("ns/op", params)` — JSON-RPC 2.0, works identically local and remote
+- **Sovereignty**: Most calls never leave the device. Your data, your API
+- **Performance**: Local dispatch is a synchronous Map lookup + async handler. Sub-millisecond overhead. No HTTP for local ops
+- **Modularity**: New capability = new `register()`. No monolith editing. UI is fully decoupled
+- **Standards**: JSON-RPC 2.0 is the lightest widely-adopted RPC standard on the open internet
+- **Auditability**: One gateway to audit. One middleware chain. One envelope format
+
