@@ -51,9 +51,9 @@ function removeFolder(id: string) {
   childIds.forEach(removeFolder);
   folderStore = folderStore.filter(f => f.id !== id);
   // Unmap docs from this folder
-  for (const [docId, fId] of docFolderMap.entries()) {
-    if (fId === id) docFolderMap.delete(docId);
-  }
+  const toRemove: string[] = [];
+  docFolderMap.forEach((fId, docId) => { if (fId === id) toRemove.push(docId); });
+  toRemove.forEach(docId => docFolderMap.delete(docId));
 }
 
 function moveDocToFolder(docId: string, folderId: string | null) {
