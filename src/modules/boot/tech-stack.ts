@@ -548,6 +548,88 @@ export const TECH_STACK: readonly StackEntry[] = [
       try { await import("@dnd-kit/core"); return "6.x"; } catch { return null; }
     },
   },
+  // ─── WASM OPTIMIZATION TIER ────────────────────────────────────────
+  {
+    name: "WebAssembly SIMD",
+    role: "128-bit vectorized batch ring operations — 10-15x speedup on bulk Z/256Z compute",
+    category: "compute",
+    criticality: "optional",
+    fallback: "Scalar WASM or TypeScript (identical results, lower throughput)",
+    criteria: {
+      license: "W3C",
+      standard: "W3C WebAssembly SIMD (Phase 4, shipped)",
+      portability: ["browser", "node", "deno", "edge-worker"],
+      adoptionSignal: "Shipped in Chrome 91+, Firefox 89+, Safari 16.4+, Edge 91+",
+    },
+    verify: async () => {
+      try {
+        const { detectSimdSupport } = await import("@/modules/engine/wasm-cache");
+        return await detectSimdSupport();
+      } catch {
+        return false;
+      }
+    },
+    detectVersion: async () => {
+      try {
+        const { detectSimdSupport } = await import("@/modules/engine/wasm-cache");
+        return (await detectSimdSupport()) ? "v128" : null;
+      } catch {
+        return null;
+      }
+    },
+  },
+  {
+    name: "WebAssembly Compile Cache",
+    role: "IndexedDB-cached compiled modules — eliminates recompilation on revisit (5-20ms vs 100-500ms)",
+    category: "compute",
+    criticality: "optional",
+    fallback: "Full recompile from network on each page load",
+    criteria: {
+      license: "W3C",
+      standard: "W3C WebAssembly JS API (Module serialization), W3C IndexedDB API",
+      portability: ["browser"],
+      adoptionSignal: "Supported in all browsers with structured clone of WebAssembly.Module",
+    },
+    verify: async () => typeof indexedDB !== "undefined" && typeof WebAssembly?.Module !== "undefined",
+    detectVersion: async () => typeof indexedDB !== "undefined" ? "native" : null,
+  },
+  {
+    name: "SharedArrayBuffer",
+    role: "Zero-copy worker↔main thread data transfer for off-main-thread ring compute",
+    category: "compute",
+    criticality: "optional",
+    fallback: "Transferable ArrayBuffer (structured clone, still fast)",
+    criteria: {
+      license: "W3C",
+      standard: "TC39 SharedArrayBuffer, WHATWG COOP/COEP",
+      portability: ["browser (with COOP/COEP)", "node", "deno"],
+      adoptionSignal: "Shipped in all major browsers, requires cross-origin isolation headers",
+    },
+    verify: async () => {
+      try {
+        const { detectSharedMemory } = await import("@/modules/engine/wasm-cache");
+        return detectSharedMemory();
+      } catch {
+        return false;
+      }
+    },
+    detectVersion: async () => typeof SharedArrayBuffer !== "undefined" ? "native" : null,
+  },
+  {
+    name: "Web Workers (WASM)",
+    role: "Off-main-thread bulk compute — keeps UI responsive during heavy ring operations",
+    category: "compute",
+    criticality: "optional",
+    fallback: "Main-thread compute (may block UI during bulk operations)",
+    criteria: {
+      license: "W3C",
+      standard: "WHATWG Web Workers",
+      portability: ["browser"],
+      adoptionSignal: "Universal browser API, foundation for all parallel web compute",
+    },
+    verify: async () => typeof Worker !== "undefined",
+    detectVersion: async () => typeof Worker !== "undefined" ? "native" : null,
+  },
 ] as const;
 
 // ── Validation ──────────────────────────────────────────────────────────
