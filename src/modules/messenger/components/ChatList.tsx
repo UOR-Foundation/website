@@ -40,7 +40,7 @@ export default function ChatList({ conversations, activeId, onSelect, filter }: 
           >
             {/* Avatar */}
             <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-500/25 to-indigo-500/25 border border-white/[0.08] flex items-center justify-center text-sm font-medium text-white/60 flex-shrink-0">
-              {convo.peer.uorGlyph ?? convo.peer.displayName?.charAt(0)?.toUpperCase() ?? "?"}
+              {convo.peer.displayName?.charAt(0)?.toUpperCase() ?? "?"}
             </div>
 
             {/* Content */}

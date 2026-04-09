@@ -408,7 +408,7 @@ function CommentNodeView({
           {/* Header */}
           <div className="flex items-center gap-2 mb-0.5">
             <div className="w-5 h-5 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center text-[9px] font-mono text-primary/60 shrink-0">
-              {node.author.uor_glyph?.slice(0, 2) || node.author.display_name?.charAt(0)?.toUpperCase() || "?"}
+              {node.author.display_name?.charAt(0)?.toUpperCase() || "?"}
             </div>
             <span className="text-xs font-medium text-foreground/60">
               {node.author.display_name || "Anonymous"}

@@ -302,12 +302,10 @@ const CartridgePage = () => {
                       Permanent Address
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Four different ways to refer to the same content. all derived from one fingerprint.
+                      Two canonical ways to refer to the same content — both derived from one fingerprint.
                     </p>
+                    <IdentityField label="Network Address (IPv6)" value={identity["u:ipv6"]} copied={copied} onCopy={copyToClipboard} copyKey="ipv6" />
                     <IdentityField label="Full Address (256-bit, lossless)" value={identity["u:canonicalId"]} copied={copied} onCopy={copyToClipboard} copyKey="canonical" />
-                    <IdentityField label="Network Address (IPv6 projection)" value={identity["u:ipv6"]} copied={copied} onCopy={copyToClipboard} copyKey="ipv6" warn />
-                    <IdentityField label="Content ID (IPFS-compatible)" value={identity["u:cid"]} copied={copied} onCopy={copyToClipboard} copyKey="cid" />
-                    <IdentityField label="Visual Symbol (Braille)" value={identity["u:glyph"]} copied={copied} onCopy={copyToClipboard} copyKey="glyph" />
                   </div>
                 )}
               </div>

@@ -110,12 +110,8 @@ const UorVerification = () => {
           </div>
           <div className="space-y-1">
             <p className="text-[11px] font-mono text-muted-foreground break-all leading-relaxed">
-              <span className="text-muted-foreground/50">CID:</span>{" "}
+              <span className="text-muted-foreground/50">IPv6:</span>{" "}
               {r.cid}
-            </p>
-            <p className="text-[11px] font-mono text-muted-foreground">
-              <span className="text-muted-foreground/50">UOR:</span>{" "}
-              {r.uorGlyph}
             </p>
             {r.canonicalPreview && (
               <p className="text-[10px] font-mono text-muted-foreground/40 break-all leading-relaxed mt-1">
