@@ -13,6 +13,7 @@
 
 import { project } from "./hologram";
 import type { ProjectionInput } from "./hologram";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export function parseSkillMd(raw: string): SkillDescriptor {
 
 async function sha256hex(text: string): Promise<{ hex: string; bytes: Uint8Array }> {
   const data = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", data);
+  const buf = sha256(new Uint8Array(data));
   const bytes = new Uint8Array(buf);
   const hex = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
   return { hex, bytes };

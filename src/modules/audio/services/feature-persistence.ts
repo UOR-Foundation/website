@@ -20,6 +20,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { HarmonicLensFrame } from "../lenses/harmonic-lens";
 import type { AudioFeatureData } from "../types";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -149,7 +150,7 @@ export class FeatureAggregator {
 /** Generate a deterministic CID from source URI (SHA-256 content-addressed). */
 export async function generateTrackCid(sourceUri: string): Promise<string> {
   const data = new TextEncoder().encode(sourceUri);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashBuffer = sha256(new Uint8Array(data));
   const hashArray = new Uint8Array(hashBuffer);
   const hex = Array.from(hashArray, (b) => b.toString(16).padStart(2, "0")).join("");
   return `audio:${hex.slice(0, 32)}`;

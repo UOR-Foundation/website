@@ -15,6 +15,7 @@
 
 import type { OnnxTensor, HologramTensorDescriptor } from "./types";
 import { DTYPE_NAME } from "./types";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ function idbDelete(db: IDBDatabase, store: string, key: string): Promise<void> {
  * This is the Content Identifier (CID) for the tensor.
  */
 async function sha256Hex(data: Uint8Array): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data as Uint8Array<ArrayBuffer>);
+  const hashBuffer = sha256(new Uint8Array(data as Uint8Array<ArrayBuffer>));
   const hashArray = new Uint8Array(hashBuffer);
   return Array.from(hashArray)
     .map((b) => b.toString(16).padStart(2, "0"))

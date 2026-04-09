@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 interface SearchResult {
   user_id: string;
@@ -48,8 +49,7 @@ export default function NewConversationDialog({ open, onClose, onCreated }: Prop
     try {
       // Generate session hash
       const encoder = new TextEncoder();
-      const hashBytes = new Uint8Array(
-        await crypto.subtle.digest("SHA-256", encoder.encode(`${user.id}:${peerId}:${Date.now()}`))
+      const hashBytes = sha256(new Uint8Array(encoder.encode(`${user.id}:${peerId}:${Date.now()}`))
       );
       const sessionHash = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("");
 

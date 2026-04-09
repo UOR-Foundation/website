@@ -9,6 +9,7 @@
  */
 
 import { sha256hex } from "@/lib/crypto";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ export const rawStore = {
     if (existing) return existing;
 
     // SHA-256 of raw bytes
-    const digest = await crypto.subtle.digest("SHA-256", params.buffer);
+    const digest = sha256(new Uint8Array(params.buffer));
     const rawHash = Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");

@@ -1,4 +1,5 @@
 /**
+import { sha256 } from "@noble/hashes/sha2.js";
  * UOR SDK. WebGPU Compute Layer
  *
  * Provides GPU-accelerated computation for the Hologram virtual
@@ -227,7 +228,7 @@ export function isGpuAvailable(): boolean {
 export async function gpuHash(data: Uint8Array): Promise<GpuHashResult> {
   const start = performance.now();
 
-  const hashBuffer = await crypto.subtle.digest("SHA-256", new Uint8Array(data) as any);
+  const hashBuffer = sha256(new Uint8Array(new Uint8Array(data)) as any);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 

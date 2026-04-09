@@ -28,6 +28,7 @@ import {
 import { extractText, extractFromUrl } from "./extract";
 import { rawStore } from "@/modules/knowledge-graph/raw-store";
 import { processTabular, autoProfiler, deriveSourceKey } from "@/modules/knowledge-graph/data-engine";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export interface PipelineResult {
 
 /** SHA-256 hex digest of an ArrayBuffer (streaming-compatible). */
 async function sha256ArrayBuffer(buffer: ArrayBuffer): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  const digest = sha256(new Uint8Array(buffer));
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

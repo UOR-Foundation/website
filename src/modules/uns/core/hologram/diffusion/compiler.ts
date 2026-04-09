@@ -34,6 +34,7 @@ import type {
   CompileProgress,
 } from "../whisper-compiler/types";
 import { DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ function extractAllTensors(model: OnnxModel): OnnxTensor[] {
 
 async function sha256Hex(data: string): Promise<string> {
   const encoded = new TextEncoder().encode(data);
-  const hash = await crypto.subtle.digest("SHA-256", encoded);
+  const hash = sha256(new Uint8Array(encoded));
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

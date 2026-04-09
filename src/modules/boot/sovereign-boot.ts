@@ -38,6 +38,7 @@ import { scheduleLutWarmup } from "@/modules/uns/core/hologram/gpu/lut-engine";
 import { startSealMonitor } from "./seal-monitor";
 import { validateStack, validateMinimality } from "./tech-stack";
 import type { StackComponentStatus } from "./types";
+import { sha256 } from "@noble/hashes/sha2.js";
 
 // ── Module-private seal storage (Finding 2: closure, not sessionStorage) ──
 
@@ -165,7 +166,7 @@ async function computeRingTableHash(): Promise<string> {
   }
   // Hash the result table
   const bytes = new TextEncoder().encode(Array.from(results).join(","));
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = sha256(new Uint8Array(bytes));
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
