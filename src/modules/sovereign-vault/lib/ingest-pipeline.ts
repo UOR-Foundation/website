@@ -27,6 +27,7 @@ import {
 } from "./structured-extractor";
 import { extractText, extractFromUrl } from "./extract";
 import { rawStore } from "@/modules/knowledge-graph/raw-store";
+import { processTabular, autoProfiler, deriveSourceKey } from "@/modules/knowledge-graph/data-engine";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
