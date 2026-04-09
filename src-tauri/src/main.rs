@@ -201,6 +201,286 @@ fn get_platform_info() -> PlatformInfo {
     }
 }
 
+// ── Local LLM Integration (Ollama / llama.cpp) ──────────────────────────
+
+/// Default Ollama endpoint
+const OLLAMA_URL: &str = "http://127.0.0.1:11434";
+
+#[derive(Serialize, Deserialize)]
+pub struct LocalModel {
+    pub name: String,
+    pub size: String,
+    pub quantization: String,
+    pub parameter_count: String,
+    pub family: String,
+    pub loaded: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LlmStatus {
+    pub backend: String,
+    pub available: bool,
+    pub models: Vec<LocalModel>,
+    pub active_model: Option<String>,
+    pub gpu_accelerated: bool,
+    pub vram_used_mb: f64,
+    pub server_version: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LlmCompletionResult {
+    pub text: String,
+    pub backend: String,
+    pub model: String,
+    pub tokens_generated: u64,
+    pub duration_ms: u64,
+    pub throughput: f64,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StreamToken {
+    pub token: String,
+    pub done: bool,
+}
+
+/// Check if Ollama is running and return its status.
+#[tauri::command]
+async fn llm_status() -> Result<LlmStatus, String> {
+    // Try Ollama API
+    let client = reqwest::Client::new();
+
+    // Check version
+    let version = match client.get(format!("{OLLAMA_URL}/api/version")).send().await {
+        Ok(resp) if resp.status().is_success() => {
+            resp.json::<serde_json::Value>().await
+                .ok()
+                .and_then(|v| v["version"].as_str().map(String::from))
+        }
+        _ => return Ok(LlmStatus {
+            backend: "cloud".into(),
+            available: false,
+            models: vec![],
+            active_model: None,
+            gpu_accelerated: false,
+            vram_used_mb: 0.0,
+            server_version: None,
+        }),
+    };
+
+    // List models
+    let models = match client.get(format!("{OLLAMA_URL}/api/tags")).send().await {
+        Ok(resp) if resp.status().is_success() => {
+            let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            body["models"].as_array().map(|arr| {
+                arr.iter().map(|m| LocalModel {
+                    name: m["name"].as_str().unwrap_or("").into(),
+                    size: format_bytes(m["size"].as_u64().unwrap_or(0)),
+                    quantization: m["details"]["quantization_level"].as_str().unwrap_or("unknown").into(),
+                    parameter_count: m["details"]["parameter_size"].as_str().unwrap_or("unknown").into(),
+                    family: m["details"]["family"].as_str().unwrap_or("unknown").into(),
+                    loaded: false,
+                }).collect()
+            }).unwrap_or_default()
+        }
+        _ => vec![],
+    };
+
+    // Check running models (loaded in memory)
+    let active_model = match client.get(format!("{OLLAMA_URL}/api/ps")).send().await {
+        Ok(resp) if resp.status().is_success() => {
+            let body: serde_json::Value = resp.json().await.unwrap_or_default();
+            body["models"].as_array()
+                .and_then(|arr| arr.first())
+                .and_then(|m| m["name"].as_str().map(String::from))
+        }
+        _ => None,
+    };
+
+    Ok(LlmStatus {
+        backend: "ollama".into(),
+        available: true,
+        models,
+        active_model,
+        gpu_accelerated: false, // TODO: detect via Ollama API
+        vram_used_mb: 0.0,
+        server_version: version,
+    })
+}
+
+/// List available models from Ollama.
+#[tauri::command]
+async fn llm_list_models() -> Result<Vec<LocalModel>, String> {
+    let status = llm_status().await?;
+    Ok(status.models)
+}
+
+/// Pull a model from the Ollama registry.
+#[tauri::command]
+async fn llm_pull_model(model: String) -> Result<serde_json::Value, String> {
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{OLLAMA_URL}/api/pull"))
+        .json(&serde_json::json!({ "name": model }))
+        .send()
+        .await
+        .map_err(|e| format!("Pull failed: {e}"))?;
+
+    if resp.status().is_success() {
+        Ok(serde_json::json!({ "success": true }))
+    } else {
+        Err(format!("Pull failed: HTTP {}", resp.status()))
+    }
+}
+
+/// Run a non-streaming completion via Ollama.
+#[tauri::command]
+async fn llm_complete(
+    prompt: String,
+    model: String,
+    system_prompt: String,
+    temperature: f64,
+    max_tokens: u64,
+) -> Result<LlmCompletionResult, String> {
+    let client = reqwest::Client::new();
+    let start = std::time::Instant::now();
+
+    let resp = client
+        .post(format!("{OLLAMA_URL}/api/generate"))
+        .json(&serde_json::json!({
+            "model": model,
+            "prompt": prompt,
+            "system": system_prompt,
+            "stream": false,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens,
+            }
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Ollama request failed: {e}"))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("Ollama error: HTTP {}", resp.status()));
+    }
+
+    let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let text = body["response"].as_str().unwrap_or("").to_string();
+    let duration_ms = start.elapsed().as_millis() as u64;
+    let tokens_generated = body["eval_count"].as_u64().unwrap_or(text.len() as u64 / 4);
+    let throughput = if duration_ms > 0 {
+        tokens_generated as f64 / (duration_ms as f64 / 1000.0)
+    } else {
+        0.0
+    };
+
+    Ok(LlmCompletionResult {
+        text,
+        backend: "ollama".into(),
+        model,
+        tokens_generated,
+        duration_ms,
+        throughput,
+    })
+}
+
+/// Start a streaming completion — returns a session ID for polling.
+/// (Simplified: runs full generation and caches result for polling.)
+#[tauri::command]
+async fn llm_stream_start(
+    prompt: String,
+    model: String,
+    system_prompt: String,
+    temperature: f64,
+    max_tokens: u64,
+    state: tauri::State<'_, StreamSessions>,
+) -> Result<String, String> {
+    let session_id = format!("llm-{}", std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis());
+
+    let sid = session_id.clone();
+    let sessions = state.inner().clone();
+
+    // Spawn async generation
+    tauri::async_runtime::spawn(async move {
+        let client = reqwest::Client::new();
+
+        let resp = client
+            .post(format!("{OLLAMA_URL}/api/generate"))
+            .json(&serde_json::json!({
+                "model": model,
+                "prompt": prompt,
+                "system": system_prompt,
+                "stream": true,
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                }
+            }))
+            .send()
+            .await;
+
+        match resp {
+            Ok(r) => {
+                let mut stream = r.bytes_stream();
+                use futures_util::StreamExt;
+                let mut buf = String::new();
+
+                while let Some(chunk) = stream.next().await {
+                    if let Ok(bytes) = chunk {
+                        buf.push_str(&String::from_utf8_lossy(&bytes));
+                        // Ollama streams NDJSON — one JSON object per line
+                        while let Some(nl) = buf.find('\n') {
+                            let line = buf[..nl].to_string();
+                            buf = buf[nl + 1..].to_string();
+                            if let Ok(obj) = serde_json::from_str::<serde_json::Value>(&line) {
+                                let token = obj["response"].as_str().unwrap_or("").to_string();
+                                let done = obj["done"].as_bool().unwrap_or(false);
+                                let mut guard = sessions.0.lock().unwrap();
+                                let tokens = guard.entry(sid.clone()).or_insert_with(Vec::new);
+                                tokens.push(StreamToken { token, done });
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                let mut guard = sessions.0.lock().unwrap();
+                let tokens = guard.entry(sid.clone()).or_insert_with(Vec::new);
+                tokens.push(StreamToken { token: format!("[error: {e}]"), done: true });
+            }
+        }
+    });
+
+    Ok(session_id)
+}
+
+/// Poll for tokens from a streaming session.
+#[tauri::command]
+fn llm_stream_poll(
+    session_id: String,
+    state: tauri::State<'_, StreamSessions>,
+) -> Vec<StreamToken> {
+    let mut guard = state.0.lock().unwrap();
+    guard.remove(&session_id).unwrap_or_default()
+}
+
+/// Shared state for streaming sessions.
+#[derive(Default, Clone)]
+struct StreamSessions(std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, Vec<StreamToken>>>>);
+
+fn format_bytes(bytes: u64) -> String {
+    if bytes >= 1_073_741_824 {
+        format!("{:.1} GB", bytes as f64 / 1_073_741_824.0)
+    } else if bytes >= 1_048_576 {
+        format!("{:.1} MB", bytes as f64 / 1_048_576.0)
+    } else {
+        format!("{} KB", bytes / 1024)
+    }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────
 
 fn main() {
@@ -210,13 +490,21 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
+        .manage(StreamSessions::default())
         .invoke_handler(tauri::generate_handler![
             uor_ring_op,
             uor_ring_batch,
             uor_stratum,
             uor_braille_encode,
             get_platform_info,
+            llm_status,
+            llm_list_models,
+            llm_pull_model,
+            llm_complete,
+            llm_stream_start,
+            llm_stream_poll,
         ])
         .run(tauri::generate_context!())
         .expect("error while running UOR OS");
 }
+
