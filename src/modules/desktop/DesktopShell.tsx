@@ -86,11 +86,13 @@ function DesktopShellInner() {
                 style={{ background: "hsl(220 15% 8%)", opacity: 0.92 }}
               />
             )}
-            <div className="fixed bottom-8 right-4 z-[6] flex flex-col gap-0.5 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300"
-              style={{ opacity: undefined }}
+            <div className="fixed bottom-8 right-4 z-[6] flex flex-col gap-0.5 transition-opacity duration-500"
+              style={{ opacity: 0, pointerEvents: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
             >
-              <span className="text-white/15 text-[10px] leading-tight">{getPhasePhotoDescription()}</span>
-              <span className="text-white/10 text-[9px]">Photo · Unsplash</span>
+              <span className="text-white/20 text-[10px] leading-tight">{getPhasePhotoDescription()}</span>
+              <span className="text-white/12 text-[9px]">Photo · Unsplash</span>
             </div>
           </>
         )}
