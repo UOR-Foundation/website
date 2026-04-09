@@ -1,43 +1,38 @@
 
 
-## Plan: Polish File Explorer — Sovereign Space Experience
+## Plan: Lens Manager — Browse, Create, Edit, and Delete Lenses
 
-### What Changes
+### Overview
+Add a "Lens Manager" panel accessible from the lens bar in the ReaderToolbar. It shows all lenses (preset + custom) in a clean list, lets users inspect/edit any lens, create new ones from scratch, rename them, and delete custom lenses. Preset lenses can be cloned but not deleted.
 
-**1. Increase all text sizes across the explorer**
+### Changes
 
-- **Sidebar** (`ExplorerSidebar.tsx`): Section labels from `10px` → `11px`, nav items from `13px` → `14px`, counts from `10px` → `11px`, storage text from `11px`/`10px` → `12px`/`11px`, sidebar width from `180px` → `200px`
-- **Toolbar** (`ExplorerToolbar.tsx`): Breadcrumb from `xs`/`sm` → `sm`/`base`, search input from `xs` → `sm` with `h-8`, button text from `xs` → `sm` with `h-8`, icon sizes from `3.5` → `4`
-- **FileCard** (`FileCard.tsx`): Grid filename from `xs` → `sm`, badge from `9px` → `10px`, grid icon from `w-14 h-14` → `w-16 h-16`; List filename from `sm` → `base`, badge from `10px` → `11px`
-- **Status bar** (`FileExplorerPage.tsx`): From `11px` → `12px`, list header from `10px` → `11px`
-- **Empty state**: Title from `sm` → `base`, subtitle from `xs` → `sm`
+**1. New component: `LensManager.tsx`**
+- File: `src/modules/oracle/components/LensManager.tsx`
+- A slide-over panel (similar style to LensInspector) triggered by a small "Manage" button in the lens bar
+- Layout:
+  - **Header**: "Lens Manager" title with a "New Lens" button
+  - **Lens list**: Each lens shows icon, name (editable for custom), description, tone/depth/audience summary, and action buttons:
+    - **Inspect/Edit** — opens `LensInspector` for that lens
+    - **Clone** — duplicates a preset as a new custom lens
+    - **Delete** — removes custom lenses (with confirmation); disabled for presets
+    - **Apply** — selects this lens for the current article
+  - **New Lens flow**: Creates a blank custom lens with default params, opens it in the inspector immediately
+- Data: reads `PRESET_BLUEPRINTS` + `loadCustomLenses()`, writes via `saveCustomLens()` / `deleteCustomLens()`
+- Supports renaming custom lenses inline (click-to-edit on the name)
 
-**2. Add sovereign space identity and trust signals**
+**2. Update `ReaderToolbar.tsx`**
+- Add a small gear/settings button at the end of the lens bar row labeled "Manage" (or just a `Settings2` icon)
+- Clicking it opens the `LensManager` panel
+- Also show custom lenses alongside presets in the lens bar (load from `loadCustomLenses()`)
+- Pass the `onLensChange` callback through so applying a lens from the manager switches the active lens
 
-- **Sidebar header**: Add a "My Space" or "Your Vault" header at the top of the sidebar with a shield/lock icon, reinforcing private sovereign ownership
-- **Storage section**: Replace generic "Session storage" / "Cloud vault" with more intentional labels: "Local · Session Only" vs "Sovereign Vault · Encrypted" with a shield icon for vault, and a subtle privacy reassurance line ("Your files. Your control.")
-- **Status bar**: Replace "Session · files cleared on refresh" with "Local session · not synced" and "Synced to vault" with "Sovereign Vault · encrypted & synced" using a small lock icon
-
-**3. Improve empty state to feel welcoming and purposeful**
-
-- Larger drop zone with a warmer message: "This is your private space" as the headline, "Drop files or click to upload — everything here stays yours" as subtitle
-- Add quick-action chips below the drop zone: "Upload Files", "Paste Text", "Import URL" as distinct entry points so users immediately see all their options
-- Larger icon (w-20 h-20) with a subtle animated pulse on hover
-
-**4. Enhance the "New Folder" prompt**
-
-- Replace `window.prompt()` with an inline editable field or a small dialog — more polished than a browser prompt. Use a simple inline text input that appears in the toolbar area when clicked.
-
-**5. Visual refinements for sovereignty feel**
-
-- Add a subtle top-border accent on the sidebar header using `border-primary/20`
-- Ensure the grid cards have slightly more padding and breathing room (minmax from `110px` → `130px`)
-- Drop overlay: increase icon size, add "Your files stay private" reassurance text
+**3. Update `LensInspector.tsx`**
+- Add an optional `onDelete` callback prop — when provided, shows a "Delete Lens" button in the footer (only for non-preset lenses)
+- Add an optional `onRename` prop — when provided, makes the header label editable (click-to-edit text field)
 
 ### Files Modified
-
-- `src/modules/explorer/components/ExplorerSidebar.tsx` — larger text, sovereign header, trust labels
-- `src/modules/explorer/components/ExplorerToolbar.tsx` — larger controls, inline folder name input
-- `src/modules/explorer/components/FileCard.tsx` — larger text and icons
-- `src/modules/explorer/pages/FileExplorerPage.tsx` — larger status bar, improved empty state with quick actions, inline new-folder state
+- `src/modules/oracle/components/LensManager.tsx` — new file
+- `src/modules/oracle/components/ReaderToolbar.tsx` — add Manage button + show custom lenses in bar
+- `src/modules/oracle/components/LensInspector.tsx` — add delete/rename support
 
