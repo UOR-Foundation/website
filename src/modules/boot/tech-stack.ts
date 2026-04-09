@@ -138,13 +138,34 @@ export const TECH_STACK: readonly StackEntry[] = [
     },
     verify: async () => {
       try {
-        const { GrafeoDB } = await import("@grafeo-db/web");
-        return typeof GrafeoDB?.create === "function";
+        const mod = await import("@grafeo-db/web");
+        // GrafeoDB may export as default or named
+        const GrafeoDB = (mod as any).GrafeoDB ?? (mod as any).default;
+        return typeof GrafeoDB?.create === "function" || typeof GrafeoDB === "function";
       } catch {
-        return false;
+        // WASM load may fail in non-browser or sandbox — check if the grafeo-store adapter works
+        try {
+          const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
+          return typeof grafeoStore?.sparqlQuery === "function";
+        } catch {
+          return false;
+        }
       }
     },
-    detectVersion: async () => "0.5.x",
+    detectVersion: async () => {
+      try {
+        await import("@grafeo-db/web");
+        return "0.5.x";
+      } catch {
+        // Check adapter availability
+        try {
+          const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
+          return typeof grafeoStore?.sparqlQuery === "function" ? "0.5.x (adapter)" : null;
+        } catch {
+          return null;
+        }
+      }
+    },
   },
   {
     name: "UOR Foundation",
@@ -263,8 +284,25 @@ export const TECH_STACK: readonly StackEntry[] = [
       portability: ["node", "deno", "bun"],
       adoptionSignal: "70k+ GitHub stars, Evan You, Vue/Nuxt/SvelteKit",
     },
-    verify: async () => typeof import.meta?.env !== "undefined",
-    detectVersion: async () => "5.x",
+    verify: async () => {
+      try {
+        // import.meta is always defined in ESM; check for Vite-specific env
+        return typeof import.meta !== "undefined" && (
+          typeof (import.meta as any).env !== "undefined" ||
+          typeof (import.meta as any).hot !== "undefined"
+        );
+      } catch {
+        return false;
+      }
+    },
+    detectVersion: async () => {
+      try {
+        // Vite injects MODE at build time
+        return typeof (import.meta as any).env?.MODE === "string" ? "5.x" : null;
+      } catch {
+        return null;
+      }
+    },
   },
 
   // ─── RECOMMENDED ──────────────────────────────────────────────────
@@ -473,10 +511,20 @@ export const TECH_STACK: readonly StackEntry[] = [
       adoptionSignal: "Audited by Cure53, Paul Miller, no native deps",
     },
     verify: async () => {
-      try { await import("@noble/post-quantum"); return true; } catch { return false; }
+      try {
+        const mod = await import("@noble/post-quantum/ml-kem.js");
+        return typeof mod.ml_kem768 !== "undefined";
+      } catch {
+        return false;
+      }
     },
     detectVersion: async () => {
-      try { await import("@noble/post-quantum"); return "0.5.x"; } catch { return null; }
+      try {
+        await import("@noble/post-quantum/ml-kem.js");
+        return "0.5.x";
+      } catch {
+        return null;
+      }
     },
   },
   {
