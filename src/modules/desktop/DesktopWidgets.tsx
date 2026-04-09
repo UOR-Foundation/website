@@ -219,7 +219,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   // Search bar styles — frosted glass
   const searchBg = isImmersive
-    ? "hsl(200 15% 16% / 0.55)"
+    ? "hsl(200 10% 12% / 0.82)"
     : isLight
       ? "rgba(0,0,0,0.04)"
       : "rgba(255,255,255,0.04)";
@@ -229,9 +229,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
       ? "1px solid rgba(0,0,0,0.06)"
       : "1px solid rgba(255,255,255,0.06)";
   const searchShadow = isImmersive
-    ? "none"
+    ? "0 8px 32px -8px hsl(0 0% 0% / 0.5)"
     : isLight ? "0 4px 24px -8px rgba(0,0,0,0.06)" : "0 4px 24px -8px rgba(0,0,0,0.2)";
-  const searchBlur = isImmersive ? "blur(40px) saturate(1.4)" : "blur(12px)";
   const inputColor = isImmersive
     ? "hsl(0 0% 100% / 0.95)"
     : isLight
@@ -313,14 +312,12 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               onFocus={() => { if (query.trim() && suggestions.length > 0) setShowSuggestions(true); }}
               onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
               placeholder="What is your main focus today?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-all duration-300"
+              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none"
               style={{
                 paddingLeft: "3.5rem",
                 background: searchBg,
                 border: searchBorder,
                 boxShadow: searchShadow,
-                backdropFilter: searchBlur,
-                WebkitBackdropFilter: searchBlur,
                 color: inputColor,
                 caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
                 fontFamily: isAddress
