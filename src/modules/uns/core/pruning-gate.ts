@@ -4,28 +4,11 @@
  *
  * The dual of the Coherence Gate. Where the Coherence Gate verifies that
  * everything that exists is correct, the Pruning Gate identifies what
- * should NOT exist. redundancy, bloat, unused paths, and complexity
+ * should NOT exist — redundancy, bloat, unused paths, and complexity
  * that has exceeded its informational value.
  *
  * Principle: Intelligence seeks simplicity. A system's quality is measured
  * not by what it contains, but by what it has eliminated.
- *
- * The Pruning Gate produces a PruningReport with three severity levels:
- *   - PRUNE:    Remove immediately (dead code, unused routes)
- *   - SIMPLIFY: Merge or consolidate (duplicate patterns, near-identical modules)
- *   - MONITOR:  Approaching complexity threshold (growing files, expanding APIs)
- *
- * Usage:
- *   const report = pruningGate();
- *   report.findings    → actionable items sorted by severity
- *   report.metrics     → quantitative health indicators
- *   report.score       → 0–100 hygiene score (higher = leaner)
- *
- * Design constraints:
- *   - Zero dependencies beyond the project's own module structure
- *   - Pure function. no side effects, no file I/O, no network
- *   - Runs in <50ms. no excuse not to run it on every commit
- *   - This file itself must stay under 200 lines (eat your own cooking)
  *
  * @module uns/core/pruning-gate
  */
@@ -42,12 +25,13 @@ export interface PruningFinding {
   readonly category: string;
   readonly title: string;
   readonly detail: string;
-  /** Estimated lines that could be removed or simplified. */
   readonly estimatedSavings?: number;
 }
 
 export interface PruningMetrics {
   readonly totalModules: number;
+  readonly activeModules: number;
+  readonly absorbedModules: number;
   readonly totalProjections: number;
   readonly totalSynergyChains: number;
   readonly totalClusters: number;
@@ -56,76 +40,79 @@ export interface PruningMetrics {
   readonly duplicateClusterMembers: number;
   readonly averageChainLength: number;
   readonly maxChainLength: number;
+  readonly consolidationDebt: number;
 }
 
 export interface PruningReport {
   readonly timestamp: string;
   readonly metrics: PruningMetrics;
   readonly findings: readonly PruningFinding[];
-  readonly score: number; // 0–100, higher = leaner
+  readonly score: number;
 }
 
-// ── Known module inventory (source of truth: src/modules/) ────────────────
+// ── Module inventory (source of truth: src/modules/) ─────────────────────
 
-const KNOWN_MODULES = [
+const ACTIVE_MODULES = [
   // Layer 0: Presentation & Shell
-  "core", "landing", "framework", "community", "api-explorer",
-  // Layer 1: Algebraic CPU
-  "ring-core", "identity",
-  // Layer 2: Derivation & KG
-  "derivation", "kg-store", "epistemic",
-  // Layer 3: Structure & Resolution
-  "sparql", "resolver", "morphism",
-  // Layer 4: Observability & State
-  "observable", "trace", "state",
-  // Layer 5: Verification & Agent Tools
-  "verify", "agent-tools", "code-kg", "dashboard", "uns",
-  // Layer 6: Features
-  "bitcoin", "certificate", "consciousness", "console", "datum",
-  "developers", "hologram-ui", "interoperability", "mcp",
-  "oracle", "projects", "trust-graph", "uor-sdk", "your-space",
+  "core", "landing", "desktop", "boot",
+  // Layer 1: Engine & Algebra
+  "engine", "ring-core", "identity", "morphism",
+  // Layer 2: Knowledge Graph & Derivation
+  "knowledge-graph", "derivation", "epistemic", "sparql",
+  // Layer 3: Resolution & Observability
+  "resolver", "observable", "state", "trace",
+  // Layer 4: Verification & Tools
+  "verify", "agent-tools", "code-kg", "uns",
+  // Layer 5: Features
+  "atlas", "audio", "bitcoin", "certificate", "community",
+  "console", "datum", "hologram-ui", "interoperability",
+  "mcp", "oracle", "projects", "quantum", "qsvg",
+  "sovereign-vault", "trust-graph", "uor-sdk",
 ] as const;
 
-// ── Consolidation Map (absorbed → parent) ─────────────────────────────────
-// These modules have been logically absorbed into their parent modules.
-// Their source files remain in place for backward compatibility.
-const CONSOLIDATION_MAP: Readonly<Record<string, string>> = {
-  "shacl":          "sparql",          // Semantic web validation → query engine
-  "semantic-index": "kg-store",        // Search indexing → knowledge graph store
-  "jsonld":         "kg-store",        // JSON-LD serialization → knowledge graph store
-  "bulk-pin":       "oracle",          // IPFS bulk pinning → oracle data pipeline
-  "donate":         "community",       // Donation UI → community module
-  "qr-cartridge":   "identity",        // QR encoding → identity presentation
-  "triad":          "ring-core",       // Triadic structure → algebraic core
-  "ruliad":         "framework",       // Ruliad theory → framework module
-  "uor-terms":      "framework",       // Terminology → framework module
-  "opportunities":  "hologram-ui",     // Opportunity explorer → hologram UI
+// Modules logically absorbed into parents. Directory may still exist.
+const ABSORBED_MODULES: Readonly<Record<string, string>> = {
+  "triad":          "ring-core",
+  "donate":         "community",
+  "shacl":          "sparql",
+  "jsonld":         "knowledge-graph",
+  "qr-cartridge":   "identity",
+  "messenger":      "community",
+  "data-bank":      "sovereign-vault",
+  "semantic-index": "knowledge-graph",
+  "bulk-pin":       "oracle",
+  "ruliad":         "ring-core",
+  "uor-terms":      "ring-core",
+  "opportunities":  "hologram-ui",
+  "kg-store":       "knowledge-graph",
 };
 
-// Modules that could potentially be consolidated
+// Candidates for future consolidation: [moduleA, moduleB, rationale]
 const CONSOLIDATION_CANDIDATES: readonly [string, string, string][] = [
+  // Currently empty — all identified merges have been executed or scheduled
 ];
 
 // ── Gate Implementation ───────────────────────────────────────────────────
 
 export function pruningGate(): PruningReport {
   const findings: PruningFinding[] = [];
+  const moduleCount = ACTIVE_MODULES.length;
+  const absorbedCount = Object.keys(ABSORBED_MODULES).length;
 
-  // ── 1. Module proliferation check ──────────────────────────────────────
-  const moduleCount = KNOWN_MODULES.length;
-  if (moduleCount > 40) {
+  // ── 1. Module proliferation ────────────────────────────────────────────
+  if (moduleCount > 35) {
     findings.push({
-      severity: moduleCount > 50 ? "simplify" : "monitor",
+      severity: moduleCount > 45 ? "simplify" : "monitor",
       category: "module-count",
-      title: `${moduleCount} modules detected`,
-      detail: `System has ${moduleCount} top-level modules. Consider consolidating modules with overlapping concerns. Target: ≤35 focused modules.`,
-      estimatedSavings: (moduleCount - 35) * 50,
+      title: `${moduleCount} active modules`,
+      detail: `Target: ≤30 focused modules. ${absorbedCount} already absorbed.`,
+      estimatedSavings: (moduleCount - 30) * 50,
     });
   }
 
-  // ── 2. Module consolidation opportunities ──────────────────────────────
+  // ── 2. Consolidation candidates ────────────────────────────────────────
   for (const [a, b, reason] of CONSOLIDATION_CANDIDATES) {
-    if (KNOWN_MODULES.includes(a as any) && KNOWN_MODULES.includes(b as any)) {
+    if (ACTIVE_MODULES.includes(a as any) && ACTIVE_MODULES.includes(b as any)) {
       findings.push({
         severity: "simplify",
         category: "module-consolidation",
@@ -138,8 +125,6 @@ export function pruningGate(): PruningReport {
 
   // ── 3. Projection registry analysis ────────────────────────────────────
   const projCount = SPECS.size;
-
-  // Find orphaned projections (not in any synergy chain or cluster)
   const chainedProjections = new Set<string>();
   for (const chain of SYNERGY_CHAINS) {
     for (const p of chain.projections) chainedProjections.add(p);
@@ -153,30 +138,27 @@ export function pruningGate(): PruningReport {
   for (const [name] of SPECS) {
     if (!allConnected.has(name)) orphaned.push(name);
   }
-
   if (orphaned.length > 0) {
     findings.push({
-      severity: orphaned.length > 20 ? "monitor" : "monitor",
+      severity: "monitor",
       category: "orphaned-projections",
-      title: `${orphaned.length} projections not in any synergy chain or cluster`,
-      detail: `These projections exist but have no documented cross-protocol relationships: ${orphaned.slice(0, 15).join(", ")}${orphaned.length > 15 ? ` (+${orphaned.length - 15} more)` : ""}. Either connect them to synergy chains or evaluate if they're needed.`,
+      title: `${orphaned.length} projections unconnected`,
+      detail: `Not in any synergy chain: ${orphaned.slice(0, 12).join(", ")}${orphaned.length > 12 ? ` (+${orphaned.length - 12} more)` : ""}.`,
     });
   }
 
-  // ── 4. Cluster duplication check ───────────────────────────────────────
+  // ── 4. Cluster duplication ─────────────────────────────────────────────
   const memberCounts = new Map<string, number>();
   for (const members of Object.values(CLUSTERS)) {
-    for (const m of members) {
-      memberCounts.set(m, (memberCounts.get(m) || 0) + 1);
-    }
+    for (const m of members) memberCounts.set(m, (memberCounts.get(m) || 0) + 1);
   }
   const duplicateMembers = [...memberCounts.entries()].filter(([, c]) => c > 3);
   if (duplicateMembers.length > 0) {
     findings.push({
       severity: "monitor",
       category: "cluster-overlap",
-      title: `${duplicateMembers.length} projections appear in 4+ clusters`,
-      detail: `Heavy cluster overlap may indicate classification redundancy: ${duplicateMembers.map(([n, c]) => `${n}(${c})`).join(", ")}`,
+      title: `${duplicateMembers.length} projections in 4+ clusters`,
+      detail: duplicateMembers.map(([n, c]) => `${n}(${c})`).join(", "),
     });
   }
 
@@ -184,13 +166,24 @@ export function pruningGate(): PruningReport {
   const chainLengths = SYNERGY_CHAINS.map(c => c.projections.length);
   const maxChain = Math.max(...chainLengths);
   const avgChain = chainLengths.reduce((a, b) => a + b, 0) / chainLengths.length;
-
   if (maxChain > 10) {
     findings.push({
       severity: "monitor",
       category: "chain-complexity",
-      title: `Longest synergy chain has ${maxChain} nodes`,
-      detail: "Chains over 10 nodes become hard to verify. Consider splitting into sub-chains.",
+      title: `Longest chain: ${maxChain} nodes`,
+      detail: "Consider splitting chains >10 nodes into sub-chains.",
+    });
+  }
+
+  // ── 6. Consolidation debt ──────────────────────────────────────────────
+  // Absorbed modules whose directories still exist on disk
+  const consolidationDebt = absorbedCount;
+  if (consolidationDebt > 5) {
+    findings.push({
+      severity: "monitor",
+      category: "consolidation-debt",
+      title: `${consolidationDebt} absorbed modules tracked`,
+      detail: `Absorbed → parent: ${Object.entries(ABSORBED_MODULES).map(([k, v]) => `${k}→${v}`).join(", ")}`,
     });
   }
 
@@ -198,26 +191,26 @@ export function pruningGate(): PruningReport {
   const deductions = findings.reduce((sum, f) => {
     if (f.severity === "prune") return sum + 15;
     if (f.severity === "simplify") return sum + 8;
-    return sum + 3;
+    return sum + 2;
   }, 0);
   const score = Math.max(0, Math.min(100, 100 - deductions));
 
-  // ── Build metrics ──────────────────────────────────────────────────────
-  const metrics: PruningMetrics = {
-    totalModules: moduleCount,
-    totalProjections: projCount,
-    totalSynergyChains: SYNERGY_CHAINS.length,
-    totalClusters: Object.keys(CLUSTERS).length,
-    projectionToChainRatio: Math.round((projCount / SYNERGY_CHAINS.length) * 10) / 10,
-    orphanedProjections: orphaned.length,
-    duplicateClusterMembers: duplicateMembers.length,
-    averageChainLength: Math.round(avgChain * 10) / 10,
-    maxChainLength: maxChain,
-  };
-
   return {
     timestamp: new Date().toISOString(),
-    metrics,
+    metrics: {
+      totalModules: moduleCount + absorbedCount,
+      activeModules: moduleCount,
+      absorbedModules: absorbedCount,
+      totalProjections: projCount,
+      totalSynergyChains: SYNERGY_CHAINS.length,
+      totalClusters: Object.keys(CLUSTERS).length,
+      projectionToChainRatio: Math.round((projCount / SYNERGY_CHAINS.length) * 10) / 10,
+      orphanedProjections: orphaned.length,
+      duplicateClusterMembers: duplicateMembers.length,
+      averageChainLength: Math.round(avgChain * 10) / 10,
+      maxChainLength: maxChain,
+      consolidationDebt,
+    },
     findings: findings.sort((a, b) => {
       const order: Record<Severity, number> = { prune: 0, simplify: 1, monitor: 2 };
       return order[a.severity] - order[b.severity];

@@ -5,7 +5,7 @@ import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards } from "@/data/about-cards";
 import { GITHUB_DOTGITHUB_URL } from "@/data/external-links";
-import DonatePopup from "@/modules/donate/components/DonatePopup";
+import DonatePopup from "@/modules/community/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
 
