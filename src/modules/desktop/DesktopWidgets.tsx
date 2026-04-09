@@ -13,6 +13,7 @@ import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { ArrowRight, Upload } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import { useAuth } from "@/hooks/use-auth";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
@@ -77,6 +78,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   const { theme, isLight } = useDesktopTheme();
   const { profile } = useAuth();
   const ctx = useContextManager();
+  const conn = useConnectivity();
   
   const hasMaximized = windows.some(w => w.maximized && !w.minimized);
   const hasAnyWindows = windows.some(w => !w.minimized);
@@ -394,6 +396,17 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
           </div>
         )}
       </div>
+
+      {/* Offline banner — calm, reassuring */}
+      {!conn.online && (
+        <div className={`pointer-events-auto mt-4 px-4 py-2.5 rounded-full text-[12px] font-medium ${
+          isImmersive ? "text-white/40 bg-white/[0.04] border border-white/[0.06]"
+            : isLight ? "text-black/30 bg-black/[0.03] border border-black/[0.04]"
+            : "text-white/35 bg-white/[0.03] border border-white/[0.05]"
+        }`}>
+          Offline mode — your knowledge graph and data are fully available
+        </div>
+      )}
 
       {/* Bottom spacer — golden ratio */}
       <div style={{ flex: "1.618" }} />

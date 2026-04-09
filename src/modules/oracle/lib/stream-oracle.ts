@@ -23,6 +23,12 @@ export async function streamOracle({
   const ttft = createTTFTMeasure();
   const latencyTier = getPreferredTier();
 
+  // Early offline check
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    onError("You're currently offline. The Oracle will be available when your connection returns.");
+    return;
+  }
+
   const resp = await fetch(ORACLE_URL, {
     method: "POST",
     headers: {

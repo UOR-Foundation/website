@@ -66,6 +66,11 @@ export const syncBridge = {
     return typeof navigator !== "undefined" ? navigator.onLine : true;
   },
 
+  /** True when there are local-only triples waiting for cloud push */
+  hasPendingSync(): boolean {
+    return !this.isOnline() && currentSyncState !== "synced";
+  },
+
   async sync(): Promise<{ pushed: number; pulled: number }> {
     return syncToCloud();
   },

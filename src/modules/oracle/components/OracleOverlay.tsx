@@ -6,9 +6,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, X, ArrowRight, Maximize2 } from "lucide-react";
+import { Sparkles, Send, X, ArrowRight, Maximize2, WifiOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { streamOracle, type Msg } from "@/modules/oracle/lib/stream-oracle";
+import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 
 interface Props {
   /** Context about the current rendered content for grounding */
@@ -38,6 +39,8 @@ export default function OracleOverlay({
   const [streaming, setStreaming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const conn = useConnectivity();
+  const oracleAvailable = conn.features.oracle.available;
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 200);
@@ -140,7 +143,15 @@ export default function OracleOverlay({
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-5 min-h-0" style={{ maxHeight: "calc(70dvh - 120px)" }}>
-              {messages.length === 0 && (
+              {!oracleAvailable && messages.length === 0 && (
+                <div className="text-center py-6 flex flex-col items-center gap-2">
+                  <WifiOff className="w-5 h-5 text-muted-foreground/25" />
+                  <p className="text-sm text-muted-foreground/40 leading-relaxed max-w-[260px]">
+                    You're offline. The Oracle needs an internet connection. Your knowledge graph and local data are still fully available.
+                  </p>
+                </div>
+              )}
+              {oracleAvailable && messages.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground/35">
                     Ask anything about {contextLabel ? `"${contextLabel}"` : "this content"}…
@@ -201,7 +212,7 @@ export default function OracleOverlay({
                 />
                 <button
                   onClick={send}
-                  disabled={!input.trim() || streaming}
+                  disabled={!input.trim() || streaming || !oracleAvailable}
                   className="p-2 rounded-lg text-foreground/60 hover:text-foreground/90 transition-all disabled:opacity-20"
                 >
                   <Send className="w-4 h-4" />
