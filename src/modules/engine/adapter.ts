@@ -21,7 +21,7 @@
 import type { UorEngineContract } from "./contract";
 import { WASM_TO_CONTRACT, WASM_INTERNAL_EXPORTS } from "./contract";
 import { CRATE_MANIFEST } from "./crate-manifest";
-import { getCachedModule, cacheModule, detectSimdSupport, detectSharedMemory } from "./wasm-cache";
+import { detectSimdSupport, detectSharedMemory } from "./wasm-cache";
 import * as tsRing from "@/lib/uor-ring";
 
 // ── Types ────────────────────────────────────────────────────────────────
