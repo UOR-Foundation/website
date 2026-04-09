@@ -412,6 +412,20 @@ export default function EngineStatusIndicator({
                   />
                 </Section>
 
+                {/* ── Section: Selection Policy ── */}
+                <Section title="Selection Policy" isLight={isLight}>
+                  <div className={`text-[8px] leading-snug space-y-0.5 ${isLight ? "text-black/40" : "text-white/40"}`}>
+                    {SELECTION_POLICY.map((c) => (
+                      <div key={c.name} className="flex gap-1">
+                        <span className={`font-semibold shrink-0 ${isLight ? "text-black/60" : "text-white/60"}`}>
+                          {c.name}:
+                        </span>
+                        <span>{c.definition}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+
                 {/* ── Section: Tech Stack ── */}
                 {receipt.stackHealth && (
                   <Section title="Tech Stack" isLight={isLight}>
