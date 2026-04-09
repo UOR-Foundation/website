@@ -17,8 +17,7 @@ const isInIframe = (() => {
 
 const isPreviewHost =
   typeof window !== "undefined" &&
-  (window.location.hostname.includes("id-preview--") ||
-    window.location.hostname.includes("lovableproject.com"));
+  window.location.hostname.includes("id-preview--");
 
 const shouldSkipSW = isInIframe || isPreviewHost;
 

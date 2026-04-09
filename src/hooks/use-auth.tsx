@@ -52,6 +52,7 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  walletAddress: string | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -61,6 +62,7 @@ const AuthContext = createContext<AuthState>({
   user: null,
   profile: null,
   loading: true,
+  walletAddress: null,
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -69,11 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid, claimed_at, privacy_rules")
+      .select("id, display_name, avatar_url, bio, handle, cover_image_url, three_word_name, ceremony_cid, trust_node_cid, disclosure_policy_cid, pqc_algorithm, collapse_intact, uor_canonical_id, uor_glyph, uor_ipv6, uor_cid, claimed_at, privacy_rules, wallet_address")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -98,8 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         claimedAt: data.claimed_at,
         privacyRules: data.privacy_rules as PrivacyRules | null,
       });
+      setWalletAddress(data.wallet_address ?? null);
     } else {
       setProfile(null);
+      setWalletAddress(null);
     }
   }, []);
 
@@ -146,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setWalletAddress(null);
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -161,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         profile,
         loading,
+        walletAddress,
         signOut,
         refreshProfile,
       }}
