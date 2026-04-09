@@ -1,163 +1,126 @@
 
 
-# Sovereign Portal — Full Tauri-Native Local-First OS Experience
+# Voice-to-Text Overhaul: Wispr Flow-Inspired Sovereign Dictation
 
-## Vision
+## Current State Assessment
 
-Every device becomes a **portal** into a single, persistent sovereign space. When you open UOR OS on your laptop, phone, or cloud instance, you see the exact same desktop — windows in the same position, documents mid-edit, tabs open, AI conversations mid-thread. No "setting up" a new device. You authenticate, and your entire environment materializes.
+After thorough evaluation, the existing voice system has **significant functionality gaps**:
 
-## What Tauri Gives Us (Unused Today)
+### What Exists
+1. **HologramSttEngine** — dual-strategy abstraction (Whisper ONNX local / native `SpeechRecognition` cloud)
+2. **VoiceInput** — small mic button embedded in search bars
+3. **VoiceOverlay** — full-screen dictation overlay with pulsing orb
+4. **AudioCaptureWorklet** — exists in `/public` but is **never imported or used** by any component
+5. **ElevenLabs connector** — API key is configured but only used for TTS, **not STT**
 
-We currently use 6 of ~20 available Tauri 2 plugins. The untapped capabilities map directly to the sovereign space vision:
+### Critical Problems
 
-| Plugin | Purpose for UOR OS |
-|--------|-------------------|
-| **`store`** | Persistent key-value store for session state, preferences, space snapshots — survives app restarts |
-| **`stronghold`** | Hardware-grade encrypted vault for space keys, identity keypairs, credentials — never touches disk unencrypted |
-| **`autostart`** | Launch UOR OS at boot — your sovereign space is always ready |
-| **`clipboard-manager`** | Cross-device clipboard via space sync — copy on laptop, paste on phone |
-| **`notification`** | Native OS notifications for sync events, collaboration invites, mesh peer arrivals |
-| **`deep-link`** | `uor://space/{cid}` protocol handler — click a link anywhere, opens directly in your space |
-| **`single-instance`** | Prevent duplicate instances; refocus existing window |
-| **`sql`** | Native SQLite for local-first knowledge graph persistence (replaces IndexedDB) |
-| **`window-state`** | Remember window position/size across restarts |
+| Issue | Severity |
+|-------|----------|
+| **VoiceInput always calls `startContinuousNative` even when Whisper is selected** — the `autoSelect()` runs but the actual transcription path ignores it. Whisper path is never used in practice. | Critical |
+| **VoiceOverlay simulates audio levels with `Math.random()`** (line 82-84) instead of using the real AudioCaptureWorklet | Embarrassing |
+| **Voice only works in Oracle search** — not available in notes, code editor, vault, or any other text input across the OS | Major gap |
+| **No AI text cleanup** — raw transcript dumps directly into input; no filler removal, no punctuation correction, no tone adaptation (the core Wispr Flow feature) | Major gap |
+| **No ElevenLabs Scribe integration** — we have the API key for ElevenLabs which offers `scribe_v2_realtime` (ultra-low-latency streaming STT) but it's completely unused for transcription | Missed opportunity |
+| **No global hotkey activation** — Ring+V opens the overlay, but only on ResolvePage. Not system-wide. | UX gap |
+| **No dictation-into-focused-input mode** — Wispr Flow's killer feature is dictating directly into whatever text field you're in, not just a search bar | Missing |
+
+## What Wispr Flow Gets Right (Our Design Targets)
+
+1. **Activate anywhere** — single hotkey, works in any text field on the OS
+2. **AI auto-edits** — raw speech is cleaned up by an LLM: filler words removed, punctuation added, tone matched to context
+3. **Streaming interim display** — see words appear as you speak, with a subtle waveform
+4. **Personal dictionary** — learns your names, jargon, acronyms
+5. **Context-aware tone** — adapts output style to where you're typing (email vs code comment vs chat)
+6. **Delightful UX** — minimal floating indicator, not a full-screen takeover for quick dictation
 
 ## Implementation Plan
 
-### 1. Session Continuity Engine (the core of "pick up where you left off")
+### 1. Add ElevenLabs Scribe Realtime STT as Primary Engine
 
-**What it does:** Captures complete desktop state — open windows, positions, active tabs, scroll positions, draft content, theme — and persists it locally via Tauri `store` + syncs to cloud as a content-addressed snapshot.
+Replace browser `SpeechRecognition` as the default cloud tier with ElevenLabs `scribe_v2_realtime`. This gives us:
+- Ultra-low latency streaming via WebSocket
+- 99+ languages with auto-detection
+- Far superior accuracy vs browser native STT
+- VAD (voice activity detection) built-in
 
 **New files:**
-- `src/modules/sovereign-spaces/continuity/session-state.ts` — Serializes/deserializes the full `WindowState[]`, active app states, scroll positions, and draft buffers into a content-addressed snapshot
-- `src/modules/sovereign-spaces/continuity/state-sync.ts` — Pushes session snapshots to the change-DAG so other devices can reconstruct the exact environment
-- `src/modules/sovereign-spaces/continuity/native-store.ts` — Tauri `store` adapter with IndexedDB fallback for browser
+- `src/modules/uns/core/hologram/elevenlabs-stt.ts` — WebSocket client for `scribe_v2_realtime` with token management
+- `supabase/functions/elevenlabs-scribe-token/index.ts` — Edge function to mint single-use tokens (keeps API key server-side)
 
 **Modify:**
-- `src/modules/desktop/hooks/useWindowManager.ts` — Replace `localStorage` with the continuity engine; auto-save every 5s + on blur/close
-- `src/modules/desktop/DesktopShell.tsx` — On mount, restore session snapshot from continuity engine
+- `src/modules/uns/core/hologram/stt-engine.ts` — Add `"elevenlabs"` as third strategy tier: ElevenLabs (best quality) > Whisper ONNX (local/private) > Native (fallback)
 
-**How it works:**
+### 2. AI Text Cleanup Pipeline (The Wispr Flow Core)
+
+After transcription, pass raw text through an AI model for cleanup: remove filler words, fix punctuation, adapt tone to context.
+
+**New file:**
+- `src/modules/oracle/lib/voice-cleanup.ts` — Calls Lovable AI (gemini-2.5-flash) with a prompt like: "Clean up this dictated text. Remove filler words (um, uh, like, you know). Fix punctuation and grammar. Preserve meaning. Context: {appContext}. Output ONLY the cleaned text."
+
+**How context-awareness works:** The cleanup prompt receives the active app ID (e.g., "notes", "code-editor", "chat") to adapt tone. Code context gets technical formatting; notes get natural prose; chat gets casual tone.
+
+### 3. Global Dictation Mode (Wispr Flow-style "Dictate Anywhere")
+
+Instead of only working in the Oracle search bar, voice dictation should work in **any focused text input** across the OS.
+
+**New files:**
+- `src/modules/oracle/components/FloatingDictationPill.tsx` — Small floating pill that appears near the cursor/focused input when dictation is active. Shows waveform + interim text. Not a full-screen overlay.
+- `src/modules/oracle/hooks/useGlobalDictation.ts` — Hook that: detects the currently focused input element, captures audio via the existing AudioCaptureWorklet, streams to ElevenLabs Scribe, runs AI cleanup on the final result, and injects the cleaned text into the focused input
+
+**Modify:**
+- `src/modules/desktop/DesktopShell.tsx` — Mount the global dictation provider at the shell level so it works everywhere
+- `src/modules/desktop/hooks/useDesktopShortcuts.ts` — Ring+V triggers global dictation (already wired, just needs to call the new global hook instead of the overlay-only one)
+- `src/modules/oracle/hooks/useVoiceShortcut.ts` — Extend to support both overlay mode (for search) and inline dictation mode (for any input)
+
+### 4. Real Audio Level Visualization
+
+Replace the `Math.random()` fake levels with real audio data from `AudioCaptureWorklet`.
+
+**Modify:**
+- `src/modules/oracle/components/VoiceOverlay.tsx` — Connect to real AudioWorklet for waveform data, fix the fake level simulation
+- `src/modules/oracle/components/FloatingDictationPill.tsx` — Use real audio levels for a mini waveform visualization
+
+### 5. Fix the Whisper ONNX Integration
+
+The VoiceInput component currently ignores the Whisper strategy even after selecting it. Fix the actual dispatch.
+
+**Modify:**
+- `src/modules/oracle/components/VoiceInput.tsx` — When strategy is `"whisper"`, capture audio via AudioWorklet, collect PCM samples, and call `stt.transcribeWhisper()` instead of always using `startContinuousNative()`
+
+### 6. STT Strategy Tier Update
+
+**Updated strategy priority:**
+
 ```text
-┌──────────────┐   save every 5s   ┌─────────────────┐   change-DAG   ┌──────────┐
-│ WindowManager │ ───────────────▶ │ Session Snapshot │ ─────────────▶ │  Cloud   │
-│ (React state) │                  │ (content-CID)    │                │  Relay   │
-└──────────────┘   ◀─────────────  └─────────────────┘   ◀───────────  └──────────┘
-                   restore on boot                        pull on login
+1. ElevenLabs Scribe (best quality, streaming, 99+ languages)
+2. Whisper ONNX (on-device, private, requires 40MB model download)
+3. Native SpeechRecognition (zero-setup fallback)
 ```
 
-### 2. Stronghold-Backed Key Vault
-
-**What it does:** Replaces browser `crypto.subtle` key storage with Tauri Stronghold — an encrypted, memory-hard vault that stores space encryption keys, identity keypairs, and session tokens in a tamper-proof binary vault file.
-
-**New files:**
-- `src/modules/sovereign-spaces/keys/stronghold-adapter.ts` — Wraps `@tauri-apps/plugin-stronghold` with fallback to `crypto.subtle` in browser
-- Modify `src/modules/sovereign-spaces/space-keys.ts` — Use stronghold adapter for key derivation and storage in Tauri, existing Web Crypto in browser
-
-**Rust side:**
-- Add `tauri-plugin-stronghold = "2"` to `Cargo.toml`
-- Register in `main.rs`
-
-### 3. Native SQLite Knowledge Graph
-
-**What it does:** In Tauri, stores the knowledge graph in a local SQLite database via `tauri-plugin-sql` instead of IndexedDB. SQLite is faster, supports complex queries, and persists reliably across app restarts.
-
-**New files:**
-- `src/modules/knowledge-graph/stores/sqlite-store.ts` — Implements the same store interface as the existing IndexedDB grafeo-store, but using native SQLite via Tauri SQL plugin
-- `src/modules/knowledge-graph/stores/store-factory.ts` — Returns SQLite store in Tauri, IndexedDB store in browser (uses `runtime.ts` detection)
-
-**Modify:**
-- `src/modules/knowledge-graph/grafeo-store.ts` — Delegate to store factory
-
-**Rust side:**
-- Add `tauri-plugin-sql = "2"` to `Cargo.toml`
-
-### 4. Cross-Device Clipboard Sync
-
-**What it does:** When you copy text/data on one device, it becomes available on all devices in your sovereign space. Uses the clipboard-manager plugin locally and syncs via the change-DAG.
-
-**New files:**
-- `src/modules/sovereign-spaces/clipboard/clipboard-sync.ts` — Watches clipboard changes in Tauri, wraps them as space change envelopes, and applies incoming clipboard changes from other devices
-- `src/modules/bus/modules/clipboard.ts` — Bus operations: `clipboard/read`, `clipboard/write`, `clipboard/history`
-
-**Rust side:**
-- Add `tauri-plugin-clipboard-manager = "2"` to `Cargo.toml`
-
-### 5. Deep Link Protocol Handler (`uor://`)
-
-**What it does:** Registers `uor://` as a system-wide protocol. Clicking `uor://space/{spaceCid}` or `uor://resolve/{canonicalId}` from anywhere (browser, email, chat) opens UOR OS directly to that content.
-
-**New files:**
-- `src/modules/sovereign-spaces/deep-link/handler.ts` — Parses incoming deep link URLs, routes to the correct space/content/app
-- Add deep-link configuration to `tauri.conf.json`
-
-**Rust side:**
-- Add `tauri-plugin-deep-link = "2"` to `Cargo.toml`
-- Configure URL scheme in `tauri.conf.json`
-
-### 6. System Tray + Autostart (Always-On Portal)
-
-**What it does:** UOR OS starts at system boot (optional) and lives in the system tray. Even when the main window is closed, sync continues in the background. The tray shows sync status and quick actions.
-
-**Modify:**
-- `src-tauri/src/main.rs` — Add tray menu with: "Open UOR OS", "Sync Status", "Quick Capture", separator, "Quit"
-- `tauri.conf.json` — Already has tray icon configured; enhance with menu
-
-**Rust side:**
-- Add `tauri-plugin-autostart = "2"` and `tauri-plugin-single-instance = "2"` to `Cargo.toml`
-
-### 7. Native Notifications for Sync Events
-
-**What it does:** OS-level notifications when a collaborator joins your space, when sync completes on a new device, when a conflict needs resolution, or when an AI inference finishes.
-
-**New files:**
-- `src/modules/sovereign-spaces/notify/native-notify.ts` — Wraps `@tauri-apps/plugin-notification` with web Notification API fallback
-- Integrate into `sync/peer-discovery.ts` — Notify on new peer arrival
-- Integrate into `sync/change-dag.ts` — Notify on merge conflicts
-
-**Rust side:**
-- Add `tauri-plugin-notification = "2"` to `Cargo.toml`
-
-### 8. Window State Persistence (Native)
-
-**What it does:** Tauri's `window-state` plugin remembers exact window position, size, and monitor placement across app restarts — without any custom code.
-
-**Rust side:**
-- Add `tauri-plugin-window-state = "2"` to `Cargo.toml`
-- Register plugin in `main.rs`
-
----
+User can override via a privacy preference: if they want fully sovereign/local, force Whisper. Otherwise ElevenLabs is default.
 
 ## Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/sovereign-spaces/continuity/session-state.ts` | Create — snapshot serialization |
-| `src/modules/sovereign-spaces/continuity/state-sync.ts` | Create — cross-device session sync |
-| `src/modules/sovereign-spaces/continuity/native-store.ts` | Create — Tauri store + IndexedDB adapter |
-| `src/modules/sovereign-spaces/keys/stronghold-adapter.ts` | Create — encrypted key vault |
-| `src/modules/sovereign-spaces/clipboard/clipboard-sync.ts` | Create — cross-device clipboard |
-| `src/modules/sovereign-spaces/deep-link/handler.ts` | Create — `uor://` protocol handler |
-| `src/modules/sovereign-spaces/notify/native-notify.ts` | Create — native notification bridge |
-| `src/modules/knowledge-graph/stores/sqlite-store.ts` | Create — native SQLite graph store |
-| `src/modules/knowledge-graph/stores/store-factory.ts` | Create — runtime-aware store selection |
-| `src/modules/bus/modules/clipboard.ts` | Create — clipboard bus operations |
-| `src-tauri/Cargo.toml` | Modify — add 7 new plugins |
-| `src-tauri/src/main.rs` | Modify — register plugins, tray menu, autostart |
-| `src-tauri/tauri.conf.json` | Modify — deep-link scheme, window-state config |
-| `src/modules/desktop/hooks/useWindowManager.ts` | Modify — use continuity engine |
-| `src/modules/desktop/DesktopShell.tsx` | Modify — restore session on mount |
-| `src/modules/sovereign-spaces/space-keys.ts` | Modify — stronghold adapter |
-| `src/modules/knowledge-graph/grafeo-store.ts` | Modify — store factory delegation |
-| `src/modules/bus/modules/index.ts` | Modify — register clipboard module |
+| `src/modules/uns/core/hologram/elevenlabs-stt.ts` | Create — ElevenLabs Scribe WebSocket client |
+| `supabase/functions/elevenlabs-scribe-token/index.ts` | Create — Token minting edge function |
+| `src/modules/oracle/lib/voice-cleanup.ts` | Create — AI text cleanup pipeline |
+| `src/modules/oracle/components/FloatingDictationPill.tsx` | Create — Wispr Flow-style floating dictation UI |
+| `src/modules/oracle/hooks/useGlobalDictation.ts` | Create — System-wide dictation hook |
+| `src/modules/uns/core/hologram/stt-engine.ts` | Modify — Add ElevenLabs as primary strategy |
+| `src/modules/oracle/components/VoiceOverlay.tsx` | Modify — Real audio levels, connect to new engine |
+| `src/modules/oracle/components/VoiceInput.tsx` | Modify — Fix Whisper path, connect ElevenLabs |
+| `src/modules/desktop/DesktopShell.tsx` | Modify — Mount global dictation provider |
+| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Modify — Wire Ring+V to global dictation |
+| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Modify — Support inline + overlay modes |
 
-## Architectural Principle
+## What This Achieves
 
-Every new capability follows the same dual-dispatch pattern established by `ring-engine.ts` and `local-llm-engine.ts`:
-
-```text
-isLocal() ? NativeTauriPlugin : WebBrowserFallback
-```
-
-The browser version always works. The Tauri version is faster, more capable, and more deeply integrated. The user never notices the difference — they just see their sovereign space, everywhere.
+- **Actually functional** STT that uses the best available engine (ElevenLabs Scribe) instead of broken browser native API
+- **Wispr Flow-quality UX** — dictate into any text field, see words stream in, get AI-cleaned output
+- **Three-tier privacy** — choose between cloud quality, on-device privacy, or zero-setup fallback
+- **Real audio visualization** instead of fake random noise
+- **System-wide availability** — voice input everywhere in the OS, not just Oracle search
 
