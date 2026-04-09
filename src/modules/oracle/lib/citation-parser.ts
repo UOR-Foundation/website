@@ -20,6 +20,22 @@ export interface SourceMeta {
   score?: number;
 }
 
+/** Epistemic signal grade derived from source quality score */
+export type SignalGrade = "A" | "B" | "C";
+
+export function getSignalGrade(score?: number): SignalGrade {
+  if (!score) return "C";
+  if (score >= 85) return "A";
+  if (score >= 65) return "B";
+  return "C";
+}
+
+export const GRADE_CONFIG: Record<SignalGrade, { label: string; color: string; description: string }> = {
+  A: { label: "A", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", description: "High-trust authoritative source" },
+  B: { label: "B", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", description: "Established credible source" },
+  C: { label: "C", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", description: "General web source" },
+};
+
 /** FNV-1a 32-bit hash — lightweight, deterministic content address */
 function fnv1a(str: string): string {
   let h = 0x811c9dc5;
