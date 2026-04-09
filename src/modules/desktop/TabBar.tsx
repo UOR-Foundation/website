@@ -26,7 +26,42 @@ import {
   ContextMenuSeparator,
 } from "@/modules/core/ui/context-menu";
 
-interface Props {
+/** Fullscreen toggle button — uses Fullscreen API on any device. */
+function FullscreenToggle({ isLight }: { isLight: boolean }) {
+  const [isFs, setIsFs] = useState(false);
+
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const Icon = isFs ? Minimize2 : Maximize;
+
+  return (
+    <button
+      onClick={toggle}
+      className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150
+        ${isLight
+          ? "hover:bg-black/[0.08] active:bg-black/[0.12]"
+          : "hover:bg-white/[0.08] active:bg-white/[0.12]"
+        }
+      `}
+      title={isFs ? "Exit full screen" : "Enter full screen"}
+    >
+      <Icon className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
+    </button>
+  );
+}
+
   activeWindowId: string | null;
   windows: WindowState[];
   onFocusWindow: (id: string) => void;
