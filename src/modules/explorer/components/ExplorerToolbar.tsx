@@ -4,9 +4,28 @@
 
 import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, List, Upload, FolderPlus, Search, X } from "lucide-react";
+import { DEFAULT_TAGS } from "../lib/tags";
 import type { SidebarFilter } from "./ExplorerSidebar";
 
 export type ViewMode = "grid" | "list";
+
+const FILTER_LABELS: Record<string, string> = {
+  all: "All Files",
+  recents: "Recents",
+  uploads: "Documents",
+  pastes: "Text Clips",
+  urls: "Web Pages",
+  workspaces: "Workspaces",
+  folders: "Folders",
+};
+
+function getFilterLabel(filter: SidebarFilter): string {
+  if (filter.startsWith("tag:")) {
+    const tag = DEFAULT_TAGS.find(t => t.id === filter.slice(4));
+    return tag ? `Tagged: ${tag.label}` : "Tagged";
+  }
+  return FILTER_LABELS[filter] || "All Files";
+}
 
 interface Props {
   filter: SidebarFilter;
@@ -17,16 +36,6 @@ interface Props {
   onUploadClick: () => void;
   onNewFolder: (name: string) => void;
 }
-
-const FILTER_LABELS: Record<SidebarFilter, string> = {
-  all: "All Files",
-  recents: "Recents",
-  uploads: "Documents",
-  pastes: "Text Clips",
-  urls: "Web Pages",
-  workspaces: "Workspaces",
-  folders: "Folders",
-};
 
 export default function ExplorerToolbar({
   filter, viewMode, onViewModeChange, searchQuery, onSearchChange,
@@ -54,7 +63,7 @@ export default function ExplorerToolbar({
       <div className="flex items-center gap-1.5 min-w-0">
         <span className="text-muted-foreground/60 text-sm">Files</span>
         <span className="text-muted-foreground/40">›</span>
-        <span className="font-medium text-foreground/90 text-base truncate">{FILTER_LABELS[filter]}</span>
+        <span className="font-medium text-foreground/90 text-base truncate">{getFilterLabel(filter)}</span>
       </div>
 
       <div className="flex-1" />

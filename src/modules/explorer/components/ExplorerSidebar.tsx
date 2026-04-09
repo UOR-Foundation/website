@@ -1,15 +1,17 @@
 /**
- * ExplorerSidebar — Finder-style left sidebar with sovereign space identity.
+ * ExplorerSidebar — Finder-style left sidebar with sovereign space identity and tag filters.
  */
 
 import {
   Files, Clock, Upload, FolderOpen, Layers, Globe,
-  ClipboardPaste, HardDrive, ShieldCheck, Lock,
+  ClipboardPaste, HardDrive, Lock, ShieldCheck,
 } from "lucide-react";
+import { DEFAULT_TAGS, tagStore } from "../lib/tags";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 
 export type SidebarFilter =
-  | "all" | "recents" | "uploads" | "pastes" | "urls" | "workspaces" | "folders";
+  | "all" | "recents" | "uploads" | "pastes" | "urls" | "workspaces" | "folders"
+  | `tag:${string}`;
 
 interface Props {
   filter: SidebarFilter;
@@ -43,10 +45,19 @@ function countFor(items: ContextItem[], filter: SidebarFilter): number {
     case "urls": return items.filter(i => i.source === "url").length;
     case "workspaces": return items.filter(i => i.source === "workspace").length;
     case "folders": return items.filter(i => i.source === "folder").length;
+    default: return 0;
   }
 }
 
 export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest }: Props) {
+  // Compute tag counts using items that exist
+  const itemIds = new Set(items.map(i => i.id));
+  const tagCounts = DEFAULT_TAGS.map(tag => ({
+    ...tag,
+    count: tagStore.getItemsWithTag(tag.id).filter(id => itemIds.has(id)).length,
+  }));
+  const hasAnyTags = tagCounts.some(t => t.count > 0);
+
   return (
     <div className="flex flex-col h-full py-3 select-none" style={{ width: 200 }}>
       {/* Sovereign header */}
@@ -95,6 +106,31 @@ export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest
           count={countFor(items, f.id)}
           onClick={() => onFilterChange(f.id)}
         />
+      ))}
+
+      {/* Tags */}
+      <SectionLabel className="mt-5">Tags</SectionLabel>
+      {DEFAULT_TAGS.map(tag => (
+        <button
+          key={tag.id}
+          onClick={() => onFilterChange(`tag:${tag.id}`)}
+          className={`flex items-center gap-2.5 w-full px-4 py-1.5 text-left text-[14px] rounded-md transition-colors ${
+            filter === `tag:${tag.id}`
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-foreground/70 hover:bg-muted/50 hover:text-foreground"
+          }`}
+        >
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ backgroundColor: tag.color }}
+          />
+          <span className="flex-1 truncate">{tag.label}</span>
+          {tagCounts.find(t => t.id === tag.id)!.count > 0 && (
+            <span className={`text-[11px] tabular-nums ${filter === `tag:${tag.id}` ? "text-primary/70" : "text-muted-foreground/50"}`}>
+              {tagCounts.find(t => t.id === tag.id)!.count}
+            </span>
+          )}
+        </button>
       ))}
 
       {/* Bottom: storage indicator */}
