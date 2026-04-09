@@ -161,31 +161,29 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
     };
   }, [open, generateToken]);
 
-  // Outside click handler — uses pointerdown for reliability
+  // Outside click handler
   useEffect(() => {
     if (!open) return;
     
-    const handler = (e: PointerEvent) => {
+    const handler = (e: MouseEvent) => {
       // Skip if we just opened
       if (justOpenedRef.current) return;
       
       const target = e.target as Node;
-      // Check if click is inside the panel
       if (panelRef.current && panelRef.current.contains(target)) return;
-      // Check if click is on the anchor button
       if (anchorRef?.current && anchorRef.current.contains(target)) return;
       
       onClose();
     };
     
-    // Use a longer delay to avoid catching the opening interaction
+    // Use a long delay to avoid catching the opening click
     const timer = setTimeout(() => {
-      document.addEventListener("pointerdown", handler, true);
-    }, 150);
+      window.addEventListener("mousedown", handler);
+    }, 300);
     
     return () => {
       clearTimeout(timer);
-      document.removeEventListener("pointerdown", handler, true);
+      window.removeEventListener("mousedown", handler);
     };
   }, [open, onClose, anchorRef]);
 
