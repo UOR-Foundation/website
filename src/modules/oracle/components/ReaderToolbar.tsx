@@ -309,7 +309,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </IconBtn>
         )}
-        <IconBtn onClick={onToggleDetails} title="Details"><Info className="w-3.5 h-3.5" /></IconBtn>
+        <IconBtn onClick={onToggleDetails} title="Data profile"><Lock className="w-3.5 h-3.5 text-emerald-400/80" /></IconBtn>
       </motion.div>
     );
   }
