@@ -75,8 +75,8 @@ const registry = new Map<string, RegistryEntry>();
  */
 export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, "nquads"> & { nquads: string } {
   const ringByte = proof.hashBytes[0];
-
   const triword = canonicalToTriword(proof.cid);
+  const e = getEngine();
 
   return {
     cid: proof.cid,
@@ -87,7 +87,6 @@ export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, 
     nquads: proof.nquads,
 
     // Ring signature — every call goes through engine contract → WASM if loaded
-    const e = getEngine();
     ringByte,
     ringPartition: e.classifyByte(ringByte),
     ringFactors: e.factorize(ringByte),

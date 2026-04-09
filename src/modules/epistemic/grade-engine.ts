@@ -19,7 +19,7 @@
 
 import type { EpistemicGrade } from "@/types/uor";
 import { singleProofHash } from "@/modules/uns/core/identity";
-import { constRingEvalQ0 } from "@/lib/wasm/uor-bridge";
+import { getEngine } from "@/modules/engine";
 
 // ── Grade Definitions (verbatim from .well-known/uor.json) ──────────────
 
