@@ -92,10 +92,13 @@ describe("KG Object Blueprint System", () => {
 
   it("4. verifyBlueprint returns true for untampered blueprint", async () => {
     const bp = makeBlueprint();
-    // Ground it properly via singleProofHash
-    const { singleProofHash } = await import("@/modules/uns/core/identity");
+    const { sha256, buildIdentity } = await import("@/modules/uns/core/address");
+    const { canonicalJsonLd } = await import("@/lib/uor-address");
     const forHashing = { ...bp, createdAt: undefined };
-    const identity = await singleProofHash(forHashing);
+    const canonical = canonicalJsonLd(forHashing);
+    const canonicalBytes = new TextEncoder().encode(canonical);
+    const hashBytes = await sha256(canonicalBytes);
+    const identity = buildIdentity(hashBytes, canonicalBytes);
 
     const ground: GroundObjectBlueprint = {
       blueprint: bp,
@@ -111,20 +114,29 @@ describe("KG Object Blueprint System", () => {
 
   it("5. verifyBlueprint returns false when attribute is tampered", async () => {
     const bp = makeBlueprint();
-    const { singleProofHash } = await import("@/modules/uns/core/identity");
+    const { sha256, buildIdentity } = await import("@/modules/uns/core/address");
+    const { canonicalJsonLd } = await import("@/lib/uor-address");
     const forHashing = { ...bp, createdAt: undefined };
-    const identity = await singleProofHash(forHashing);
+    const canonical = canonicalJsonLd(forHashing);
+    const canonicalBytes = new TextEncoder().encode(canonical);
+    const hashBytes = await sha256(canonicalBytes);
+    const identity = buildIdentity(hashBytes, canonicalBytes);
 
     const ground: GroundObjectBlueprint = {
-      blueprint: bp,
+      blueprint: { ...bp },
       uorCanonicalId: identity["u:canonicalId"],
       uorCid: identity["u:cid"],
       uorGlyph: identity["u:glyph"],
       uorIpv6: identity["u:ipv6"],
     };
 
-    // Tamper
-    ground.blueprint.attributes[0].value = "tampered.csv";
+    // Tamper with a deep copy of attributes
+    ground.blueprint = {
+      ...ground.blueprint,
+      attributes: ground.blueprint.attributes.map((a, i) =>
+        i === 0 ? { ...a, value: "tampered.csv" } : a
+      ),
+    };
 
     const result = await verifyBlueprint(ground);
     expect(result).toBe(false);
