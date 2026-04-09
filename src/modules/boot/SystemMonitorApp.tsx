@@ -978,8 +978,8 @@ export default function SystemMonitorApp() {
               {stackSummary.failing.length > 0 && (
                 <div className="space-y-1 pt-1.5">
                   {stackSummary.failing.map((c) => (
-                    <div key={c.name} className="flex items-center gap-2 text-xs">
-                      <IconAlertTriangle size={13} className="text-amber-500 shrink-0" />
+                    <div key={c.name} className="flex items-center gap-2 text-sm">
+                      <IconAlertTriangle size={14} className="text-amber-500 shrink-0" />
                       <span className="text-amber-500/90">{c.name} <span className="text-muted-foreground">({c.criticality})</span></span>
                     </div>
                   ))}
@@ -992,7 +992,7 @@ export default function SystemMonitorApp() {
         {/* Host Hardware */}
         <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />} onClick={() => setActiveView("hardware")}>
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${
               receipt.provenance.context === "local" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
             }`}
           >
@@ -1000,14 +1000,14 @@ export default function SystemMonitorApp() {
             {receipt.provenance.context === "local" ? "Local Instance" : `Remote · ${receipt.provenance.hostname}`}
           </div>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
             <GrafanaRow label="Display"><span className="font-mono">{hw.screenWidth}×{hw.screenHeight}</span></GrafanaRow>
-            <GrafanaRow label="GPU"><span className="font-mono text-xs">{hw.gpu ?? "Unknown"}</span></GrafanaRow>
+            <GrafanaRow label="GPU"><span className="font-mono text-xs truncate max-w-[200px]">{hw.gpu ?? "Unknown"}</span></GrafanaRow>
             <GrafanaRow label="Touch"><span className="font-mono">{hw.touchCapable ? "Yes" : "No"}</span></GrafanaRow>
             <GrafanaRow label="Workers"><span className="font-mono">{typeof Worker !== "undefined" ? "Available" : "No"}</span></GrafanaRow>
           </div>
 
-          <div className="text-xs text-muted-foreground/50 pt-2 border-t border-border/50 font-mono">
+          <div className="text-sm text-muted-foreground/50 pt-3 border-t border-border/50 font-mono">
             Provenance: {receipt.provenance.provenanceHash.slice(0, 24)}…
           </div>
         </GrafanaPanel>
