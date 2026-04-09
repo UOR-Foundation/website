@@ -1,11 +1,11 @@
 /**
  * SPARQL Executor
  *
- * @deprecated Use Oxigraph directly via `sparqlQuery()` from
- * `@/modules/knowledge-graph/oxigraph-store` for full SPARQL 1.1 support.
+ * @deprecated Use GrafeoDB directly via `sparqlQuery()` from
+ * `@/modules/knowledge-graph/grafeo-store` for full SPARQL 1.1 support.
  * This module translates parsed SPARQL AST into Supabase queries against
  * the uor_triples table and is retained only for cloud-persisted triple
- * queries. New code should use the Oxigraph path.
+ * queries. New code should use the GrafeoDB path.
  *
  * Every result row is enriched with an epistemic grade:
  *   - If the subject has a derivation → grade from derivation record
@@ -81,7 +81,7 @@ async function resolveGrades(
 // ── Executor ────────────────────────────────────────────────────────────────
 
 /**
- * @deprecated Prefer `sparqlQuery()` from `@/modules/knowledge-graph/oxigraph-store`.
+ * @deprecated Prefer `sparqlQuery()` from `@/modules/knowledge-graph/grafeo-store`.
  */
 export async function executeSparql(query: string): Promise<SparqlResult> {
   const start = performance.now();
