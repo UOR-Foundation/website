@@ -471,7 +471,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           Lenses
         </span>
 
-        {KNOWLEDGE_LENSES.map((lens) => {
+        {allLenses.map((lens) => {
           const isActive = lens.id === activeLens;
           const bp = getBlueprint(lens.id);
           return (
@@ -510,6 +510,19 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             </div>
           );
         })}
+
+        {/* Manage button */}
+        <button
+          onClick={() => setManagerOpen(true)}
+          title="Manage lenses"
+          className={`ml-1 p-1.5 rounded-full transition-all border ${
+            immersive
+              ? "text-white/25 hover:text-white/55 hover:bg-white/[0.05] border-transparent"
+              : "text-muted-foreground/25 hover:text-foreground/50 hover:bg-muted/10 border-transparent"
+          }`}
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+        </button>
       </div>
 
 
