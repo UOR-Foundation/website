@@ -2,7 +2,7 @@
  * Universal Ingestion Pipeline
  * ════════════════════════════
  *
- * The ADEE-equivalent orchestrator connecting file input to UOR identity.
+ * The orchestrator connecting file input to UOR identity.
  * Every file, paste, or URL flows through this pipeline:
  *
  *   Input → Raw Audit → Format Detection → UOR Content-Addressing →

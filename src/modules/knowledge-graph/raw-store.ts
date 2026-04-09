@@ -2,10 +2,10 @@
  * UOR Knowledge Graph — Immutable Raw-Bytes Audit Store.
  *
  * Every ingested item gets an immutable audit record BEFORE any processing.
- * This mirrors Anima's RawStore pattern: raw bytes → hash → audit → then process.
+ * Raw bytes → SHA-256 hash → audit record → then process.
  *
  * Keyed by UOR address. Once written, never modified.
- * Text content stored only for items < 1MB to avoid bloating IndexedDB.
+ * No UOR involvement here — plain SHA-256 for audit trail.
  */
 
 import { sha256hex } from "@/lib/crypto";
@@ -36,7 +36,7 @@ export interface RawAuditRecord {
 const DB_NAME = "uor-raw-audit";
 const DB_VERSION = 1;
 const STORE_NAME = "raw-bytes";
-const TEXT_STORAGE_LIMIT = 1024 * 1024; // 1MB
+
 
 // ── IndexedDB Lifecycle ─────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ export const rawStore = {
       mimeType: params.mimeType,
       filename: params.filename,
       source: params.source,
-      rawText: params.size <= TEXT_STORAGE_LIMIT ? params.rawText : undefined,
+      rawText: params.rawText,
       createdAt: Date.now(),
     };
 
@@ -177,5 +177,25 @@ export const rawStore = {
       count: all.length,
       totalBytes: all.reduce((sum, r) => sum + r.size, 0),
     };
+  },
+
+  /**
+   * Retrieve raw content by UOR address (for replay/verification).
+   */
+  async retrieveRaw(uorAddress: string): Promise<string | undefined> {
+    const record = await this.getRaw(uorAddress);
+    return record?.rawText;
+  },
+
+  /**
+   * Look up by raw hash (dedup detection before processing).
+   */
+  async getByHash(rawHash: string): Promise<RawAuditRecord | undefined> {
+    const db = await openDB();
+    const t = db.transaction(STORE_NAME, "readonly");
+    const store = t.objectStore(STORE_NAME);
+    const index = store.index("by_hash");
+    const results: RawAuditRecord[] = await req(index.getAll(rawHash));
+    return results[0];
   },
 };
