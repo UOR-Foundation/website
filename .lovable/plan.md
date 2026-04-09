@@ -1,107 +1,140 @@
 
 
-## Plan: Roam-Inspired Bi-Directional Knowledge Graph Enhancements
+## Plan: Local-First Deployment via Tauri + Multi-Device Sync
 
-### Analysis of Roam Research
+### Anytype's Genius — What We Steal
 
-Roam's genius distills to three architectural insights that map perfectly onto our UOR system:
+Anytype's architecture has three key insights relevant to us:
 
-1. **Bi-directional links (backlinks)**: Every `[[page reference]]` automatically creates a reverse edge. When you mention "meditation" on your daily page, the "meditation" page collects that reference. In graph terms: inserting edge `A→B` implicitly creates a queryable reverse index `B←A`.
+1. **Local-first, sync-second**: Data lives on-device in an embedded database. The network is a replication layer, not a dependency. You work offline; sync happens when peers are available.
+2. **CRDT-based conflict resolution**: Every change is a CRDT operation — no merge conflicts, no "last write wins." Devices converge automatically.
+3. **Peer-to-peer sync (no central server required)**: Devices find each other via a DHT and sync directly. A relay server helps with NAT traversal but never sees plaintext data.
 
-2. **Block-level granularity**: Every paragraph is an addressable node (not just pages). Roam uses entity IDs internally — we already have content-addressed UOR IPv6 addresses for every node, which is strictly more powerful.
+We already have pieces 1 and 2: IndexedDB via GrafeoDB gives us local-first storage, and our UOR content-addressing gives us automatic deduplication (same content = same address = no conflict). What we need is the **desktop shell** and the **multi-device sync protocol**.
 
-3. **Transclusion via block references**: `((block-id))` embeds a live reference to another block. Changes propagate everywhere. This is exactly what our `singleProofHash` identity system enables — same content = same address = single source of truth.
+### Why Tauri (Not Electron)
 
-### What We Already Have (and What's Missing)
+Tauri is the right choice for this project:
 
-**Already built:**
-- Content-addressed nodes via `singleProofHash` → IPv6 ULA (better than Roam's opaque entity IDs)
-- Entity extraction on ingestion (URLs, emails, dates, proper nouns)
-- Forward edges created during ingestion (`schema:mentions`, `schema:temporal`, etc.)
-- Sigma.js graph visualizer with node detail panel
-- GrafeoDB SPARQL engine for querying
+- **~5MB binary** vs Electron's ~150MB (ships no browser — uses the OS WebView)
+- **Rust backend** — aligns perfectly with our `uor-foundation` Rust crate; we can compile the crate directly into the Tauri sidecar
+- **Same frontend** — our entire React app runs unchanged in Tauri's WebView
+- **Security model** — Tauri's allowlist is capability-based, matching our sovereign security philosophy
+- **Mobile support** — Tauri 2.0 supports iOS and Android via the same codebase
 
-**Missing (Roam-inspired gaps):**
-- No **backlink index** — we create `A→B` edges but don't surface "what links to B?"
-- No **inline `[[wiki-link]]` syntax** in text content — no way to create links while writing
-- No **backlink panel** on the NodeDetailSheet — clicking a node doesn't show incoming references
-- No **block reference / transclusion** — can't embed one node's content inside another
-- No **daily page** concept — no temporal entry point for knowledge capture
+### Implementation (3 Phases)
 
-### Implementation Plan
+#### Phase 1: Tauri Desktop Shell (This Sprint)
 
-#### 1. Backlink Index + Query (core engine)
+Add Tauri configuration alongside the existing Vite project so the same codebase produces both a web app and a native desktop app.
 
-**File: `src/modules/knowledge-graph/backlinks.ts`** (new)
+**New files:**
+| File | Purpose |
+|------|---------|
+| `src-tauri/Cargo.toml` | Rust dependencies (tauri, uor-foundation) |
+| `src-tauri/tauri.conf.json` | Window config, allowlist, app metadata |
+| `src-tauri/src/main.rs` | Tauri entry point with IPC commands |
+| `src-tauri/build.rs` | Build script |
 
-A lightweight reverse-index layer on top of the existing graph store:
-- `getBacklinks(nodeAddress: string)` — queries all edges where `target === nodeAddress`, returns `{ source, predicate, label, nodeType }[]`
-- Uses existing `bus.call("graph/query", { object: nodeAddress })` which already queries by object
-- Caches results in a `Map<string, Backlink[]>` with TTL invalidation
-- Registers as `bus.call("graph/backlinks", { address })` operation
+**Modified files:**
+| File | Change |
+|------|--------|
+| `package.json` | Add `tauri:dev` and `tauri:build` scripts |
+| `vite.config.ts` | Add conditional `base: './'` for Tauri builds |
+| `src/lib/runtime.ts` (new) | Runtime detection: `isLocal()`, `isWeb()`, `isMobile()` |
 
-#### 2. Backlinks Panel in NodeDetailSheet
+**What the Tauri shell provides:**
+- Native window chrome with system tray icon
+- File system access for local knowledge graph persistence (SQLite via GrafeoDB)
+- IPC bridge: `invoke('uor_engine_op', { op: 'neg', args: [42] })` calls the Rust crate directly — no WASM overhead
+- Auto-updater for seamless version bumps
+- `base: './'` only when building for Tauri (env flag), web builds remain `base: '/'`
 
-**File: `src/modules/knowledge-graph/components/NodeDetailSheet.tsx`** (modified)
+#### Phase 2: Runtime Abstraction Layer
 
-Add a "Linked References" section (Roam's signature feature) below the existing edges list:
-- Shows all nodes that reference the selected node, grouped by type
-- Each backlink is clickable → navigates to that node in the graph
-- Shows the context snippet (the text around the reference)
-- Count badge in section header ("7 linked references")
+Create a thin abstraction so the app doesn't care whether it's running in browser or Tauri.
 
-#### 3. Wiki-Link Syntax Parser
+**New file: `src/lib/runtime.ts`**
 
-**File: `src/modules/knowledge-graph/lib/wiki-links.ts`** (new)
+```text
+Runtime Detection
+├── isLocal()     → true if window.__TAURI__ exists
+├── isWeb()       → true if running in browser
+├── isMobile()    → true if Capacitor/Tauri mobile
+├── getStorageBackend() → 'indexeddb' | 'sqlite' | 'hybrid'
+└── getPlatform() → { type, version, deviceId }
+```
 
-Parse `[[Page Name]]` syntax in ingested text content:
-- Regex: `/\[\[([^\]]+)\]\]/g`
-- For each match, create or find a node with that label via `singleProofHash`
-- Create a `schema:mentions` edge from the source document to the linked node
-- This runs as a post-processing step in `ingest-bridge.ts` after entity extraction
+**Modified: `src/modules/knowledge-graph/sync-bridge.ts`**
+- When local: sync to SQLite (via Tauri fs commands) as primary, cloud as secondary
+- When web: sync to IndexedDB as primary, cloud as secondary
+- Both: same `syncBridge.sync()` API, same UOR content-addressing for conflict-free merge
 
-#### 4. Enhanced Ingestion with Backlink-Aware Edges
+**Modified: Boot sequence (`BootSequence.tsx`)**
+- Show "Local" vs "Remote" provenance (already partially implemented per your screenshot)
+- When Tauri detected: provenance = "Local · [hostname]" with green indicator
 
-**File: `src/modules/knowledge-graph/ingest-bridge.ts`** (modified)
+#### Phase 3: Mesh Sync Foundation (Future — Design Now)
 
-After creating forward edges during ingestion, also:
-- Parse text for `[[wiki-links]]` and create bidirectional edges
-- Extract `#hashtags` as topic nodes (like Roam's tags)
-- For URL ingestion, create `schema:cites` / `schema:citedBy` reverse edges
+Leverage the existing `UnsNode` and DHT infrastructure (`src/modules/uns/core/dht.ts`) for device-to-device sync:
 
-#### 5. Bus Module Registration
+```text
+┌──────────────┐     UOR DHT      ┌──────────────┐
+│  Desktop     │◄────────────────►│  Mobile      │
+│  (Tauri)     │  content-addressed│  (PWA/Tauri) │
+│  SQLite+KG   │  triple sync     │  IndexedDB   │
+└──────┬───────┘                  └──────┬───────┘
+       │                                 │
+       └────────────┬────────────────────┘
+                    │ Cloud (optional)
+              ┌─────▼─────┐
+              │  Lovable   │
+              │  Cloud DB  │
+              └────────────┘
+```
 
-**File: `src/modules/bus/modules/graph.ts`** (modified)
+- Each device registers as a `UnsNode` with a keypair
+- Sync uses the existing `graph_iri` per-device namespacing
+- Content-addressed triples = automatic deduplication across devices
+- No central server required for device-to-device (WebRTC data channels for LAN sync)
 
-Add new operations:
-- `graph/backlinks` — get all incoming references to a node
-- `graph/wikilink` — resolve a `[[page name]]` to its UOR address (create-on-reference)
+### What Gets Built Now (Phase 1 Only)
 
-#### 6. Graph Explorer: Backlink Highlighting
+1. **Tauri scaffold** (`src-tauri/`) with Rust entry point and IPC commands for UOR engine operations
+2. **Runtime detection** (`src/lib/runtime.ts`) so the app knows where it's running
+3. **Package scripts** — `npm run tauri:dev` to launch locally, `npm run build` for web (unchanged)
+4. **Boot sequence update** — show "Local" provenance when running in Tauri
+5. **README section** — instructions for local deployment: `git clone → npm install → npm run tauri:dev`
 
-**File: `src/modules/knowledge-graph/components/SovereignGraphExplorer.tsx`** (modified)
+### What Does NOT Change
 
-When a node is selected, visually highlight all nodes that link TO it (not just FROM it):
-- Incoming edges get a distinct color (gold) vs outgoing (emerald)
-- Backlink nodes pulse briefly to draw attention
+- The web experience remains identical — no regressions
+- IndexedDB + GrafeoDB remains the browser storage layer
+- Cloud sync via Lovable Cloud remains the web sync path
+- All existing PWA functionality preserved
+
+### User Experience
+
+After implementation, deploying locally is:
+
+```bash
+git clone <repo>
+npm install
+npm run tauri:dev    # Opens native window with full OS
+```
+
+The boot sequence shows "Local · yourmachine.local" instead of "Remote · uor.foundation", and the knowledge graph persists to the local filesystem. When online, it syncs to cloud. When offline, it keeps working.
 
 ### Files Summary
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/modules/knowledge-graph/backlinks.ts` | New | Backlink index with caching, bus-queryable |
-| `src/modules/knowledge-graph/lib/wiki-links.ts` | New | `[[wiki-link]]` and `#hashtag` parser |
-| `src/modules/knowledge-graph/components/NodeDetailSheet.tsx` | Modified | Add "Linked References" backlinks panel |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | Modified | Wiki-link + hashtag extraction during ingestion |
-| `src/modules/knowledge-graph/components/SovereignGraphExplorer.tsx` | Modified | Highlight backlinks on node selection |
-| `src/modules/bus/modules/graph.ts` | Modified | Register `backlinks` and `wikilink` operations |
-| `src/modules/knowledge-graph/index.ts` | Modified | Export new backlink + wiki-link modules |
-
-### What This Does NOT Include (Future Phase)
-
-- Daily pages / temporal journal (needs a new UI surface, not just graph changes)
-- Full block-level transclusion UI (needs a rich text editor — significant scope)
-- Roam-style query language (`{{query}}` blocks) — our SPARQL is more powerful but less user-friendly
-
-These are deliberately deferred to keep this change focused on the core graph intelligence that makes backlinks work throughout the system.
+| File | Action |
+|------|--------|
+| `src-tauri/Cargo.toml` | Create — Rust manifest |
+| `src-tauri/tauri.conf.json` | Create — Tauri config |
+| `src-tauri/src/main.rs` | Create — IPC bridge to uor-foundation crate |
+| `src-tauri/build.rs` | Create — Build script |
+| `src/lib/runtime.ts` | Create — Runtime detection layer |
+| `package.json` | Modify — Add tauri scripts |
+| `vite.config.ts` | Modify — Conditional base path |
+| `src/modules/desktop/BootSequence.tsx` | Modify — Local provenance display |
 
