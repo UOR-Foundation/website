@@ -503,7 +503,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   // Two-column layout: infobox as sticky sidebar on wide immersive screens
   if (isWideImmersive && wikidata) {
     return (
-      <article style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      <article style={{ display: "flex", flexDirection: "column", gap: 0, overflow: "hidden", maxWidth: "100%" }}>
         {/* ── Title ── */}
         <BalancedHeading
           font="400 30px Georgia, 'Times New Roman', serif"
@@ -526,7 +526,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         <SourcesPills sources={sourceMetas} />
 
         {/* ── Two-column grid ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "calc(1rem * 1.618)", marginTop: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) clamp(200px, 25%, 320px)", gap: "calc(1rem * 1.618)", marginTop: 8 }}>
           {/* Main content column */}
           <div style={{ minWidth: 0 }}>
             <TableOfContents entries={toc} defaultCollapsed={false} />
@@ -570,7 +570,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
   }
 
   return (
-    <article style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+    <article style={{ display: "flex", flexDirection: "column", gap: 0, overflow: "hidden", maxWidth: "100%" }}>
       {/* ── Title ── */}
       <BalancedHeading
         font="400 30px Georgia, 'Times New Roman', serif"
@@ -597,7 +597,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
 
       {/* ── Two-column grid on wide screens with wikidata ── */}
       {!isNarrow && wikidata ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 26, marginTop: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) clamp(200px, 25%, 300px)", gap: 26, marginTop: 4 }}>
           <div style={{ minWidth: 0 }}>
             <TableOfContents entries={toc} defaultCollapsed={false} />
             {lead && (

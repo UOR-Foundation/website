@@ -2306,11 +2306,10 @@ const SearchPage = () => {
                     className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
                     style={{
                       minHeight: "100dvh",
-                      /* Break out of parent max-w container — use fixed positioning trick to avoid scrollbar gap */
-                      width: "100vw",
-                      maxWidth: "100vw",
-                      marginLeft: "calc(-50vw + 50%)",
-                      overflowX: "clip", // use clip instead of hidden to preserve sticky positioning
+                      width: inWindow ? "100%" : "100vw",
+                      maxWidth: inWindow ? "100%" : "100vw",
+                      marginLeft: inWindow ? 0 : "calc(-50vw + 50%)",
+                      overflowX: "clip",
                     }}
                     onScroll={mobileImmersive ? (e) => {
                       const el = e.currentTarget;
@@ -2346,7 +2345,7 @@ const SearchPage = () => {
                         onSearchHistoryJump={(keyword) => { setInput(keyword); clearResult(); setTimeout(() => handleSearch(keyword), 100); }}
                       />
                       <div
-                        className={`flex-1 w-full mx-auto`}
+                        className={`flex-1 w-full mx-auto overflow-x-hidden`}
                         style={mobileImmersive ? {
                           maxWidth: "100vw",
                           paddingTop: 12,
