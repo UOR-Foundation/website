@@ -173,7 +173,7 @@ export default function SovereignIdentityPanel({ open, onClose }: Props) {
               )}
 
               {/* Identity coordinates */}
-              {(profile?.uorCid || profile?.uorCanonicalId || profile?.uorIpv6 || profile?.uorGlyph) && (
+              {(profile?.uorIpv6 || profile?.threeWordName) && (
                 <div className="space-y-1">
                   <p
                     style={{
@@ -188,17 +188,11 @@ export default function SovereignIdentityPanel({ open, onClose }: Props) {
                     Coordinates
                   </p>
 
-                  {profile.uorGlyph && (
-                    <IdentityRow icon={<Fingerprint className="w-3.5 h-3.5" />} label="Glyph" value={profile.uorGlyph} copied={copied} onCopy={copyField} fieldKey="glyph" />
-                  )}
-                  {profile.uorCid && (
-                    <IdentityRow icon={<Globe className="w-3.5 h-3.5" />} label="CID" value={profile.uorCid} copied={copied} onCopy={copyField} fieldKey="cid" truncate />
+                  {profile.threeWordName && (
+                    <IdentityRow icon={<Fingerprint className="w-3.5 h-3.5" />} label="Address" value={profile.threeWordName} copied={copied} onCopy={copyField} fieldKey="triword" />
                   )}
                   {profile.uorIpv6 && (
                     <IdentityRow icon={<Globe className="w-3.5 h-3.5" />} label="IPv6" value={profile.uorIpv6} copied={copied} onCopy={copyField} fieldKey="ipv6" truncate />
-                  )}
-                  {profile.uorCanonicalId && (
-                    <IdentityRow icon={<ShieldCheck className="w-3.5 h-3.5" />} label="Canon" value={profile.uorCanonicalId} copied={copied} onCopy={copyField} fieldKey="canonical" truncate />
                   )}
                 </div>
               )}

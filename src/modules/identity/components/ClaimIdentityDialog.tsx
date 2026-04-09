@@ -586,8 +586,6 @@ const ClaimIdentityDialog = ({ open, onOpenChange }: ClaimIdentityDialogProps) =
               {/* Identity details */}
               <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-4">
                 <CopyableRow label="Canonical ID" value={agentIdentity.canonicalId} />
-                <IdentityRow label="Visual Symbol" value={agentIdentity.glyph} mono={false} />
-                <CopyableRow label="Content Address (CID)" value={agentIdentity.cid} />
                 <CopyableRow label="Network Address (IPv6)" value={agentIdentity.ipv6} />
               </div>
 
@@ -772,8 +770,6 @@ POST /agent/auth
               {/* Identity details */}
               <div className="bg-background border border-border rounded-2xl p-5 md:p-6 space-y-5">
                 <IdentityRow label="Your Unique ID" value={identity.canonicalId} />
-                <IdentityRow label="Visual Symbol" value={identity.glyph} mono={false} />
-                <IdentityRow label="Content Address" value={identity.cid} />
                 <IdentityRow label="Network Address" value={identity.ipv6} />
               </div>
 

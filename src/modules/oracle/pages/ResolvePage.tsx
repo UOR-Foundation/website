@@ -331,12 +331,6 @@ function ProofReceipt({
                       <span className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/30">Engine</span>
                       <span>{proof.engine}</span>
                     </div>
-                    {proof.glyph && (
-                      <>
-                        <span className="text-muted-foreground/15">·</span>
-                        <span className="font-mono">{proof.glyph.slice(0, 6)}</span>
-                      </>
-                    )}
                   </div>
 
                   {/* View full proof */}
