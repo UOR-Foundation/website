@@ -250,6 +250,7 @@ const KnowledgeGraphPage = () => {
               </div>
             </div>
           )}
+          </>)}
         </div>
       </section>
     </Layout>
