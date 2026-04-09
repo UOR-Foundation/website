@@ -4,7 +4,7 @@
  * anchored at the bottom-right of the bar.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,10 +19,12 @@ import {
   QrCode,
   PanelRightOpen,
   PanelRightClose,
+  Settings2,
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
-import { KNOWLEDGE_LENSES, getBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
+import LensManager from "./LensManager";
+import { KNOWLEDGE_LENSES, getBlueprint, loadCustomLenses, type LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getSearchHistory, type SearchHistoryEntry } from "@/modules/oracle/lib/search-history";
 
@@ -73,9 +75,17 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [portalOpen, setPortalOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [managerOpen, setManagerOpen] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const portalBtnRef = useRef<HTMLSpanElement>(null);
+
+  // Load custom lenses
+  const customLenses = useMemo(() => loadCustomLenses(), [managerOpen, activeLens]);
+  const allLenses = useMemo(() => [
+    ...KNOWLEDGE_LENSES,
+    ...customLenses.map(bp => ({ id: bp.id, label: bp.label, icon: bp.icon as any, description: bp.description })),
+  ], [customLenses]);
 
   const threeWords = triwordDisplay; // Already in "Cricket.Risen.Keep" format
 
@@ -462,7 +472,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           Lenses
         </span>
 
-        {KNOWLEDGE_LENSES.map((lens) => {
+        {allLenses.map((lens) => {
           const isActive = lens.id === activeLens;
           const bp = getBlueprint(lens.id);
           return (
@@ -501,6 +511,19 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             </div>
           );
         })}
+
+        {/* Manage button */}
+        <button
+          onClick={() => setManagerOpen(true)}
+          title="Manage lenses"
+          className={`ml-1 p-1.5 rounded-full transition-all border ${
+            immersive
+              ? "text-white/25 hover:text-white/55 hover:bg-white/[0.05] border-transparent"
+              : "text-muted-foreground/25 hover:text-foreground/50 hover:bg-muted/10 border-transparent"
+          }`}
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+        </button>
       </div>
 
 
@@ -527,6 +550,16 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           : <PanelRightOpen className="w-4 h-4" />
         }
       </button>
+
+      {/* Lens Manager panel */}
+      <LensManager
+        open={managerOpen}
+        onClose={() => setManagerOpen(false)}
+        activeLensId={activeLens}
+        onApplyLens={(bp) => onLensChange(bp.id)}
+        onInspectLens={() => {}}
+        immersive={immersive}
+      />
     </motion.div>
   );
 };
