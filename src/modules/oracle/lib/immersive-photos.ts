@@ -194,6 +194,16 @@ export function getPhasePhotoDescription(): string {
   return photoEntryForPhase(getCurrentPhase()).description;
 }
 
+/** Get the photographer name of the current phase photo */
+export function getPhasePhotoPhotographer(): string {
+  return photoEntryForPhase(getCurrentPhase()).photographer;
+}
+
+/** Get the Unsplash profile URL of the current phase photo's photographer */
+export function getPhasePhotoUnsplashUrl(): string {
+  return photoEntryForPhase(getCurrentPhase()).unsplashUrl;
+}
+
 /** Get hourly fallback photo for current hour */
 export function getHourlyFallback(): string {
   return HOURLY_FALLBACK[new Date().getHours()];
