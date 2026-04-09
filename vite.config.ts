@@ -77,7 +77,16 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: ["@grafeo-db/wasm"],
+      external: [
+        "@grafeo-db/wasm",
+        "@tauri-apps/plugin-clipboard-manager",
+        "@tauri-apps/plugin-notification",
+        "@tauri-apps/plugin-deep-link",
+        "@tauri-apps/plugin-store",
+        "@tauri-apps/plugin-sql",
+        "@tauri-apps/plugin-stronghold",
+        "@tauri-apps/api",
+      ],
     },
   },
   resolve: {
