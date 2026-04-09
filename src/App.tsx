@@ -5,8 +5,7 @@ import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// ── Sovereign Bus: register all modules at import time ────────────────
-import "@/modules/bus/modules";
+// ── Sovereign Bus: lazy-load module registrations ─────────────────────
 import { sovereignBoot } from "@/modules/boot";
 
 // Eager. homepage renders instantly
@@ -32,10 +31,10 @@ const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUo
 const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 const SearchPage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
 const DesktopSearch = lazy(() => import("@/modules/desktop/DesktopShell"));
-const ProjectUorPrivacy = lazy(() => import("@/modules/uor-terms/pages/ProjectUorTerms"));
+const ProjectUorPrivacy = lazy(() => import("@/modules/core/pages/ProjectUorTerms"));
 const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
-const StandardPage = lazy(() => import("@/modules/framework/pages/StandardPage"));
-const SemanticWebPage = lazy(() => import("@/modules/framework/pages/SemanticWebPage"));
+const StandardPage = lazy(() => import("@/modules/core/pages/StandardPage"));
+const SemanticWebPage = lazy(() => import("@/modules/core/pages/SemanticWebPage"));
 const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
@@ -54,8 +53,19 @@ const queryClient = new QueryClient({
 
 const App = () => {
   // Sovereign boot: initializes engine, bus, seal, and monitor
+  // Bus modules are lazy-loaded after first render to reduce initial bundle
   useEffect(() => {
     sovereignBoot().catch(() => {});
+    // Lazy-load bus module registrations on idle
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(() => {
+        import("@/modules/bus/modules");
+      });
+    } else {
+      setTimeout(() => {
+        import("@/modules/bus/modules");
+      }, 100);
+    }
   }, []);
 
   return (
