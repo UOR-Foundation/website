@@ -1,0 +1,81 @@
+/**
+ * Sovereign Bus — Barrel Export.
+ * ═════════════════════════════════════════════════════════════════
+ *
+ * The canonical entry point for the entire system.
+ *
+ *   import { bus } from "@/modules/bus";
+ *   const result = await bus.call("kernel/derive", payload);
+ *
+ * @version 1.0.0
+ */
+
+// Re-export types
+export type {
+  RpcRequest,
+  RpcResponse,
+  RpcSuccess,
+  RpcError,
+  SovereignResult,
+  BusHandler,
+  OperationDescriptor,
+  ModuleRegistration,
+  Middleware,
+  BusContext,
+} from "./types";
+export { RPC_ERRORS } from "./types";
+
+// Re-export registry
+export { register, resolve, has, listMethods, listModules, use } from "./registry";
+
+// Re-export bus core
+export { call, batch, canCall, isReachable } from "./bus";
+
+// Re-export introspection
+export { registerIntrospect } from "./introspect";
+export type { DiscoverResult, MethodInfo } from "./introspect";
+
+// Re-export external client
+export { createSovereignClient } from "./client";
+export type { SovereignClientConfig } from "./client";
+
+// Re-export middleware
+export { timingMiddleware, loggingMiddleware } from "./middleware";
+
+// ── Convenience namespace ─────────────────────────────────────────────────
+
+import { call, batch, canCall, isReachable } from "./bus";
+import { register, listMethods, listModules, use } from "./registry";
+import { registerIntrospect } from "./introspect";
+import { timingMiddleware, loggingMiddleware } from "./middleware";
+
+/**
+ * The Sovereign Bus — single namespace for the entire API surface.
+ *
+ * @example
+ * import { bus } from "@/modules/bus";
+ * bus.init();
+ * const result = await bus.call("kernel/derive", { content: "hello" });
+ */
+export const bus = {
+  call,
+  batch,
+  canCall,
+  isReachable,
+  register,
+  listMethods,
+  listModules,
+  use,
+
+  /**
+   * Initialize the bus with default middleware and introspection.
+   * Call once at app startup.
+   */
+  init() {
+    use(timingMiddleware);
+    use(loggingMiddleware);
+    registerIntrospect();
+    // Module registrations are loaded via side-effect imports
+    // in the modules that call register()
+  },
+} as const;
