@@ -112,6 +112,7 @@ function DesktopShellInner() {
           onHideAll={handleHideAll}
           onOpenApp={handleOpenApp}
           hideTime={!wm.windows.some(w => !w.minimized)}
+          onProfileOpen={() => handleOpenApp("identity")}
         />
 
         <SnapOverlay zone={snapPreview} />
