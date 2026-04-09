@@ -2305,12 +2305,9 @@ const SearchPage = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex flex-col relative ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
+                    className={`flex flex-col relative w-full ${immersiveMode ? "text-white" : ""} ${mobileImmersive ? "fixed inset-0 z-[55] overflow-y-auto" : ""}`}
                     style={{
                       minHeight: "100dvh",
-                      width: "100vw",
-                      maxWidth: "100vw",
-                      marginLeft: "calc(-50vw + 50%)",
                       overflowX: "clip",
                     }}
                     onScroll={mobileImmersive ? (e) => {
