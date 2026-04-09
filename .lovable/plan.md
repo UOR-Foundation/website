@@ -1,104 +1,94 @@
 
 
-## Plan: Perplexity-Style Contextual Sign-In Experience
+## Plan: Privy Embedded Wallet Integration — Unified Sign-In + Web3 Wallet
 
 ### What We're Building
 
-A reusable, modal-based sign-in prompt that appears contextually at moments of delight or friction during guest exploration. Instead of a generic "Sign in" message, the modal dynamically adapts its headline and benefit text based on what the guest was doing when prompted. The sign-in options mirror the Perplexity reference: Google OAuth, Apple OAuth, email/password, with a clean divider between social and credential flows.
+When a user signs in via Google, Apple, or email through the existing AuthPromptModal, a Privy embedded wallet is automatically created in the background — no extra steps, no separate sign-in. The user gets a sovereign web3 wallet (Ethereum + optionally Solana) as a side effect of their normal authentication flow. This bridges the existing Supabase auth with Privy's wallet infrastructure so every authenticated user has an on-chain identity.
+
+### How It Works
+
+```text
+User clicks "Continue with Google"
+  │
+  ├── 1. Lovable Cloud OAuth completes (existing flow)
+  │     └── Supabase session established
+  │
+  ├── 2. Post-auth hook triggers Privy login
+  │     └── privy.loginWithCustomAccessToken(supabase_jwt)
+  │           └── Privy creates embedded wallet automatically
+  │
+  └── 3. Wallet address stored in profiles table
+        └── UPDATE profiles SET wallet_address = '0x...' WHERE user_id = ...
+```
+
+The key insight: Privy supports **custom auth integration** — you pass your existing Supabase JWT to Privy, and it creates/retrieves an embedded wallet for that user. No second login flow. No modal. No friction.
 
 ### Architecture
 
-```text
-AuthPromptModal (new shared component)
-├── Dynamic headline + benefit text (from context prop)
-├── "Continue with Google" button (lovable.auth.signInWithOAuth)
-├── "Continue with Apple" button (lovable.auth.signInWithOAuth)
-├── ── or ── divider
-├── Email input + "Continue with email" (email/password form)
-├── Toggle: sign-in ↔ create account
-├── Privacy policy link
-└── Close button
+**PrivyProvider wraps the app** alongside the existing AuthProvider. Configuration:
+- `createOnLogin: 'all-users'` — every authenticated user gets a wallet
+- Custom access token provider using the Supabase JWT
+- Whitelabel mode (no Privy UI — our AuthPromptModal stays as-is)
 
-SignInContext (enum-like prop):
-  "react"      → "Sign in to react and engage"
-  "vote"       → "Sign in to vote on contributions"
-  "fork"       → "Sign in to fork and remix objects"
-  "vault"      → "Sign in to persist your vault"
-  "messenger"  → "Sign in for encrypted messaging"
-  "comment"    → "Sign in to join the conversation"
-  "save"       → "Sign in to save your progress"
-  "identity"   → "Sign in to claim your sovereign identity"
-  "transfer"   → "Sign in for encrypted session transfer"
-  "default"    → "Sign in to unlock your full experience"
-```
+**Post-auth wallet sync** in `useAuth`:
+- After Supabase session is established, call `privy.loginWithCustomAccessToken`
+- On wallet creation, store `wallet_address` in the `profiles` table
+- Expose `wallet` in the auth context for downstream components
 
-### Trigger Points (Delight-Based Prompting)
+### Required Setup
 
-Replace all existing `toast("Sign in to X", { icon: "🔒" })` calls with the modal. Additionally, add new prompts at delight moments:
+1. **Privy Account**: Create app at dashboard.privy.io, get App ID
+2. **Secret**: Store `PRIVY_APP_ID` as a VITE_ env var (it's a publishable key, safe for client)
+3. **Database**: Add `wallet_address` column to `profiles` table
+4. **Privy Custom Auth**: Configure Privy to accept Supabase JWTs (set JWKS URL in Privy dashboard to Supabase's JWKS endpoint)
 
-| Location | Trigger | Context | Current Behavior |
-|---|---|---|---|
-| AddressCommunity — react | Guest clicks reaction | `"react"` | Toast |
-| AddressCommunity — vote | Guest clicks vote | `"vote"` | Toast |
-| ResolvePage — fork | Guest clicks fork | `"fork"` | Toast |
-| VaultPanel — guest banner | Guest sees banner | `"vault"` | Static text |
-| VaultContextPicker | Guest opens vault picker | `"vault"` | Static text |
-| Messenger | Guest opens messenger | `"messenger"` | Static text |
-| QrPortalPanel | Guest uses transfer | `"transfer"` | Static text |
-| After 3rd search query | Guest has explored 3+ queries | `"save"` | **New** — delight moment |
-| After first comment | Guest posts a guest comment | `"comment"` | **New** — delight moment |
+### Disclosure
 
-### Sign-In Options (Fully Functional)
+The AuthPromptModal's terms line updates to: "By continuing, you agree to our Terms of Service and Privacy Policy. A Preview Wallet will be created for your account."
 
-1. **Continue with Google** — calls `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` (already working via Lovable Cloud managed credentials)
-2. **Continue with Apple** — calls `lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin })` (already supported)
-3. **Email + Password** — uses `supabase.auth.signInWithPassword` for sign-in, `supabase.auth.signUp` for account creation (existing logic from SovereignIdentityPanel)
+### Changes
 
-### Visual Design (Perplexity-Inspired)
+**1. Install `@privy-io/react-auth`**
 
-- Centered modal overlay with `backdrop-blur` dimming
-- Large serif-style headline (matching reference: "Sign in to save and collect threads")
-- Subtle privacy policy link below headline
-- Full-width rounded buttons: Google (dark fill), Apple (outlined)
-- Thin `── or ──` divider
-- Email input field + "Continue with email" button
-- "Create account" / "Sign in" toggle at bottom
-- Close button (X) top-right + "Close" text link at bottom
-- Smooth fade-in/scale animation
+**2. New file: `src/modules/auth/PrivyWalletProvider.tsx`**
+- Wraps `PrivyProvider` with config: embedded wallets on login, custom JWT from Supabase session
+- Exports `useWalletContext()` hook exposing wallet address, sign/send functions
 
-### Implementation
+**3. Modify `src/hooks/use-auth.tsx`**
+- After session is set, trigger Privy login with the Supabase access token
+- Add `walletAddress: string | null` to AuthState
+- Store wallet address in profiles on first creation
 
-**New file: `src/modules/auth/AuthPromptModal.tsx`**
-- Reusable modal component accepting `open`, `onClose`, `context` (string key for dynamic text)
-- Contains all three sign-in methods (Google, Apple, email/password)
-- Mode toggle between sign-in and sign-up
-- After successful auth, calls `onClose()` and the user continues where they were
+**4. Modify `src/modules/auth/AuthPromptModal.tsx`**
+- Update terms disclosure text
+- No UI changes — wallet creation is invisible/automatic
 
-**Modified file: `src/modules/oracle/components/SovereignIdentityPanel.tsx`**
-- Replace the unauthenticated form section with the new `AuthPromptModal` style (or import it)
-- Keep the authenticated profile view as-is
+**5. Modify `src/App.tsx`**
+- Wrap app with `PrivyWalletProvider` inside `AuthProvider`
 
-**Modified files (replace toast → modal):**
-- `src/modules/oracle/components/AddressCommunity.tsx` — replace `toast("Sign in to react/vote")` with `setAuthPrompt("react"/"vote")`
-- `src/modules/oracle/pages/ResolvePage.tsx` — replace fork toast with modal trigger
-- `src/modules/sovereign-vault/components/VaultPanel.tsx` — replace guest banner with clickable prompt
-- `src/modules/messenger/pages/MessengerPage.tsx` — replace static text with modal trigger
-- `src/modules/oracle/components/QrPortalPanel.tsx` — replace static text with modal trigger
+**6. Database migration**
+- `ALTER TABLE profiles ADD COLUMN wallet_address text;`
 
-**Delight-moment triggers (new logic):**
-- In ResolvePage or the search flow, track `guestQueryCount` in state. After the 3rd search, show modal with context `"save"` — "Sign in to save your search history"
-- In AddressCommunity, after a guest successfully posts a comment, show the modal with context `"comment"` — "Sign in to get notified when someone replies"
+**7. Bridge to existing ethereum-bridge.ts**
+- The embedded wallet can sign transactions for the existing EIP-4844 blob witness, Account Abstraction, and other Ethereum bridge pillars already built in the codebase
 
-### Post-Auth Flow
+### Regarding the SharedArrayBuffer Issue
 
-On successful sign-in, the auth state propagates via `useAuth()` context. All components re-render with `user` now defined, unlocking persistent vault, reactions, voting, forking, and messaging. The guest's session becomes a sovereign account.
+The health report shows SAB as "Missing" because the preview host (`lovableproject.com`) is classified as a preview environment, skipping the COI service worker. This is separate from Privy integration but will be addressed in the same pass:
+- Fix the host detection in `main.tsx` to allow COI registration on `lovableproject.com` production URLs (only skip for `id-preview--*` subdomains)
+- This restores SharedArrayBuffer availability and moves that health metric to active
 
 ### Files Modified
-- **New**: `src/modules/auth/AuthPromptModal.tsx`
-- `src/modules/oracle/components/SovereignIdentityPanel.tsx` — use shared auth UI
-- `src/modules/oracle/components/AddressCommunity.tsx` — modal instead of toast
-- `src/modules/oracle/pages/ResolvePage.tsx` — modal instead of toast + delight trigger
-- `src/modules/sovereign-vault/components/VaultPanel.tsx` — clickable prompt
-- `src/modules/messenger/pages/MessengerPage.tsx` — modal trigger
-- `src/modules/oracle/components/QrPortalPanel.tsx` — modal trigger
+- **New**: `src/modules/auth/PrivyWalletProvider.tsx`
+- `src/hooks/use-auth.tsx` — post-auth Privy login + wallet state
+- `src/modules/auth/AuthPromptModal.tsx` — disclosure text
+- `src/App.tsx` — add PrivyWalletProvider
+- `src/main.tsx` — fix COI host detection
+- Database migration: add `wallet_address` to profiles
+
+### Prerequisites (User Action Required)
+- Create a Privy app at dashboard.privy.io
+- Configure custom auth in Privy dashboard (set Supabase JWKS URL)
+- Provide the Privy App ID (publishable, stored in codebase)
 
