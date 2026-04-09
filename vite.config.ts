@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
     topLevelAwait(),
     react(),
     mode === "development" && componentTagger(),
+    VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
