@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
+import LensManager from "./LensManager";
 import { KNOWLEDGE_LENSES, getBlueprint, loadCustomLenses, type LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getSearchHistory, type SearchHistoryEntry } from "@/modules/oracle/lib/search-history";
@@ -549,6 +550,16 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           : <PanelRightOpen className="w-4 h-4" />
         }
       </button>
+
+      {/* Lens Manager panel */}
+      <LensManager
+        open={managerOpen}
+        onClose={() => setManagerOpen(false)}
+        activeLensId={activeLens}
+        onApplyLens={(bp) => onLensChange(bp.id)}
+        onInspectLens={() => {}}
+        immersive={immersive}
+      />
     </motion.div>
   );
 };
