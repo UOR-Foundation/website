@@ -1,9 +1,13 @@
 /**
  * UOR Knowledge Graph — Barrel Export.
+ *
+ * CANONICAL: All graph operations go through the single Oxigraph instance.
  */
 
-export { localGraphStore } from "./local-store";
-export type { KGNode, KGEdge, KGDerivation, KGStats } from "./local-store";
+export { oxigraphStore as localGraphStore, oxigraphStore } from "./oxigraph-store";
+export type { KGNode, KGEdge, KGDerivation, KGStats } from "./types";
+export type { SparqlBinding } from "./oxigraph-store";
+export { sparqlQuery, sparqlUpdate } from "./oxigraph-store";
 
 export { ingestBridge } from "./ingest-bridge";
 
@@ -50,9 +54,6 @@ export type { AttributeSchema, ValidationResult, ValidationIssue } from "./bluep
 
 export { useKnowledgeGraph } from "./hooks/useKnowledgeGraph";
 export type { KnowledgeGraphHandle } from "./hooks/useKnowledgeGraph";
-
-export { oxigraphStore, sparqlQuery, sparqlUpdate } from "./oxigraph-store";
-export type { SparqlBinding } from "./oxigraph-store";
 
 export { processTabular, autoProfiler, deriveSourceKey } from "./data-engine";
 export type {
