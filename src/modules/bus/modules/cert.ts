@@ -28,7 +28,7 @@ register({
         return {
           certificate: certPayload,
           derivationId: proof.derivationId,
-          ipv6: proof.ipv6,
+          ipv6: proof.ipv6Address["u:ipv6"],
           cid: proof.cid,
         };
       },
@@ -52,7 +52,6 @@ register({
     chain: {
       handler: async (params: any) => {
         const { localGraphStore } = await import("@/modules/knowledge-graph");
-        // Walk derivation chain from a certificate
         const chain = [];
         let current = params?.startAddress;
         const maxDepth = params?.maxDepth ?? 10;
@@ -61,8 +60,8 @@ register({
           const node = await localGraphStore.getNode(current);
           if (!node) break;
           chain.push(node);
-          const edges = await localGraphStore.getEdgesForSubject(current);
-          const derivedFrom = edges.find(e => e.predicate === "cert:derivedFrom");
+          const edges = await localGraphStore.queryBySubject(current);
+          const derivedFrom = edges.find((e: any) => e.predicate === "cert:derivedFrom");
           current = derivedFrom?.object;
           depth++;
         }

@@ -18,9 +18,8 @@ register({
       handler: async (params: any) => {
         const { processTabular } = await import("@/modules/knowledge-graph");
         return processTabular(
+          params?.columns ?? params?.headers,
           params?.rows,
-          params?.headers,
-          params?.sourceKey ?? "bus-ingest",
         );
       },
       description: "Run the 5-stage data engineering pipeline (parse → clean → feature → quality → UOR encode)",
@@ -28,10 +27,9 @@ register({
         type: "object",
         properties: {
           rows: { type: "array", description: "2D array of string values" },
-          headers: { type: "array", items: { type: "string" } },
-          sourceKey: { type: "string" },
+          columns: { type: "array", items: { type: "string" } },
         },
-        required: ["rows", "headers"],
+        required: ["rows", "columns"],
       },
     },
     profile: {
@@ -45,9 +43,8 @@ register({
       handler: async (params: any) => {
         const { processTabular } = await import("@/modules/knowledge-graph");
         const result = await processTabular(
+          params?.columns ?? params?.headers,
           params?.rows,
-          params?.headers,
-          params?.sourceKey ?? "quality-check",
         );
         return {
           overall: result.quality.overall,

@@ -28,7 +28,6 @@ register({
         return verifySingleProof(params?.content, params?.expectedId);
       },
       description: "Verify a content-addressed object against its expected derivation ID",
-      paramsSchema: { type: "object", properties: { content: {}, expectedId: { type: "string" } } },
     },
     verify: {
       handler: async (params: any) => {
@@ -43,13 +42,6 @@ register({
         return singleProofHash(params?.content ?? params);
       },
       description: "Derive canonical identity (derivation ID, CID, IPv6) from content",
-    },
-    address: {
-      handler: async (params: any) => {
-        const { contentAddress } = await import("@/modules/identity");
-        return contentAddress(params?.value ?? params);
-      },
-      description: "Compute UOR address components (glyph, IRI, codepoint) from a value",
     },
   },
 });

@@ -17,9 +17,15 @@ register({
     put: {
       handler: async (params: any) => {
         const { localGraphStore } = await import("@/modules/knowledge-graph");
-        if (params?.edge) {
-          await localGraphStore.putEdge(params.edge);
-          return { ok: true, type: "edge" };
+        if (params?.subject && params?.predicate && params?.object) {
+          const edge = await localGraphStore.putEdge(
+            params.subject,
+            params.predicate,
+            params.object,
+            params.graphIri,
+            params.metadata,
+          );
+          return { ok: true, type: "edge", id: edge.id };
         }
         await localGraphStore.putNode(params?.node ?? params);
         return { ok: true, type: "node" };
@@ -43,12 +49,14 @@ register({
       handler: async (params: any) => {
         const { localGraphStore } = await import("@/modules/knowledge-graph");
         if (params?.subject) {
-          return localGraphStore.getEdgesForSubject(params.subject);
+          return localGraphStore.queryBySubject(params.subject);
         }
-        if (params?.predicate && params?.object) {
-          return localGraphStore.findEdges(params.predicate, params.object);
+        if (params?.predicate) {
+          return localGraphStore.queryByPredicate(params.predicate);
         }
-        // Return all nodes as fallback
+        if (params?.object) {
+          return localGraphStore.queryByObject(params.object);
+        }
         return localGraphStore.getAllNodes();
       },
       description: "Query nodes/edges by subject, predicate, or object pattern",
