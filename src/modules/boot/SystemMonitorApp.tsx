@@ -904,12 +904,11 @@ function GrafanaPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-3 space-y-2.5 relative overflow-hidden">
-      {/* Top accent line */}
+    <div className="rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         {icon && <span className="text-muted-foreground/60">{icon}</span>}
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
       </div>
