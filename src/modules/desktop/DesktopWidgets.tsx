@@ -168,9 +168,9 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   // Pretext-measured adaptive greeting size
   const greetingFontInfo = useMemo(() => {
-    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 32);
-    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 32, fontSize: "24px" };
-    return { font: FONTS.osGreetingSm, lineHeight: 24, fontSize: "18px" };
+    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 40);
+    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 40, fontSize: "30px" };
+    return { font: FONTS.osGreetingSm, lineHeight: 30, fontSize: "22px" };
   }, [greetingText, containerWidth]);
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
