@@ -12,24 +12,37 @@
  * @layer bus/modules
  */
 
-import { bus } from "@/modules/bus";
-import {
-  readClipboard,
-  writeClipboard,
-  getClipboardHistory,
-} from "@/modules/sovereign-spaces/clipboard/clipboard-sync";
+import { register } from "../registry";
 
-bus.register("clipboard/read", async () => {
-  const content = await readClipboard();
-  return { content };
-});
-
-bus.register("clipboard/write", async (params: { content: string }) => {
-  await writeClipboard(params.content);
-  return { success: true };
-});
-
-bus.register("clipboard/history", async () => {
-  const history = getClipboardHistory();
-  return { entries: history, count: history.length };
+register({
+  ns: "clipboard",
+  label: "Cross-Device Clipboard",
+  layer: 2,
+  operations: {
+    read: {
+      handler: async () => {
+        const { readClipboard } = await import("@/modules/sovereign-spaces/clipboard/clipboard-sync");
+        const content = await readClipboard();
+        return { content };
+      },
+      description: "Read current clipboard contents",
+    },
+    write: {
+      handler: async (params: any) => {
+        const { writeClipboard } = await import("@/modules/sovereign-spaces/clipboard/clipboard-sync");
+        await writeClipboard(params?.content ?? "");
+        return { success: true };
+      },
+      description: "Write text to clipboard",
+      paramsSchema: { content: "string" },
+    },
+    history: {
+      handler: async () => {
+        const { getClipboardHistory } = await import("@/modules/sovereign-spaces/clipboard/clipboard-sync");
+        const entries = getClipboardHistory();
+        return { entries, count: entries.length };
+      },
+      description: "Get clipboard history for this session",
+    },
+  },
 });
