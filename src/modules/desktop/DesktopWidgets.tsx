@@ -150,7 +150,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); // kept for suggestion engine
   const fullName = profile?.displayName || "";
   const firstName = fullName.split(/\s+/)[0];
-  const displayName = firstName || "explore";
+  const displayName = firstName || "Explorer";
   // No trailing period — Apple-style
   const greetingText = `${getGreeting()}, ${displayName}.`;
 
