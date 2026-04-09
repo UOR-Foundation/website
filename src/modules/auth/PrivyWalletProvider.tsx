@@ -75,8 +75,10 @@ export function PrivyWalletProvider({ children }: { children: ReactNode }) {
             createOnLogin: "all-users",
           },
         },
-        // No login methods — we handle auth ourselves via custom access token
-        loginMethods: [],
+        // Custom auth: we handle sign-in via Supabase, then sync JWT to Privy
+        customAuth: {
+          enabled: true,
+        },
       }}
     >
       <WalletBridge>{children}</WalletBridge>
