@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { X, Plus, Search } from "lucide-react";
+import { X, Plus, Search, User } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
@@ -29,6 +29,7 @@ interface Props {
   onHideAll?: () => void;
   onOpenApp?: (appId: string) => void;
   hideTime?: boolean;
+  onProfileOpen?: () => void;
 }
 
 const TAB_BAR_H = 38;
@@ -38,7 +39,7 @@ const TAB_PADDING = 44;  // icon + close button + padding
 
 export default function TabBar({
   activeWindowId, windows, onFocusWindow, onCloseWindow, onMinimizeWindow,
-  onSpotlight, onHideAll, onOpenApp, hideTime,
+  onSpotlight, onHideAll, onOpenApp, hideTime, onProfileOpen,
 }: Props) {
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
