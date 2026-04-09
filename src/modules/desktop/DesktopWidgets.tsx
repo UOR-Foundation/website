@@ -19,6 +19,7 @@ import VoiceInput from "@/modules/oracle/components/VoiceInput";
 import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
 import BalancedBlock from "@/modules/oracle/components/BalancedBlock";
 import { measureLineCount, FONTS } from "@/modules/oracle/lib/pretext-layout";
+import DayRingClock from "@/modules/desktop/components/DayRingClock";
 import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/lib/search-suggestions";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
 import { loadProfile as loadAttentionProfile } from "@/modules/oracle/lib/attention-tracker";
@@ -261,44 +262,29 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
       <div style={{ flex: "1.2" }} />
 
       <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
-        {/* Clock — light weight, generous letter-spacing */}
+        {/* Day-progress ring clock */}
+        <DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />
+
+        {/* Greeting */}
         <div
-          className="text-center mb-4"
-          style={{
-            opacity: clockOpacity,
-            transition: "opacity 300ms ease-out",
-          }}
+          className="mt-2 text-center"
+          style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
         >
-          <h1
-            className={`${clockColor} font-extralight leading-none select-none`}
+          <BalancedBlock
+            font={greetingFontInfo.font}
+            lineHeight={greetingFontInfo.lineHeight}
+            as="p"
+            className={`${greetingColor} font-normal select-none`}
             style={{
-              ...clockStyle,
+              fontSize: greetingFontInfo.fontSize,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
-              textShadow: clockShadow,
-              letterSpacing: "0.08em",
-              transition: "font-size 0.3s ease-out",
+              textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
+              letterSpacing: "0",
             }}
+            center
           >
-            {clockStr}
-          </h1>
-          {/* Greeting — more breathing room, no period, tracking-normal */}
-          <div className="mt-5">
-            <BalancedBlock
-              font={greetingFontInfo.font}
-              lineHeight={greetingFontInfo.lineHeight}
-              as="p"
-              className={`${greetingColor} font-normal select-none`}
-              style={{
-                fontSize: greetingFontInfo.fontSize,
-                fontFamily: "'DM Sans', -apple-system, sans-serif",
-                textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
-                letterSpacing: "0",
-              }}
-              center
-            >
-              {greetingText}
-            </BalancedBlock>
-          </div>
+            {greetingText}
+          </BalancedBlock>
         </div>
 
         {/* Search bar — tighter gap, frosted glass */}
