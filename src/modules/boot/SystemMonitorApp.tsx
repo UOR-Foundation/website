@@ -919,7 +919,7 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
 
         {/* Kernel Primitives */}
-        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />}>
+        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />} onClick={() => setActiveView("kernel")}>
           {kernelData ? (
             <>
               <div className="grid grid-cols-2 gap-x-8 gap-y-2">
@@ -955,7 +955,7 @@ export default function SystemMonitorApp() {
       {/* ── Bottom Row: Stack Health + Host Hardware ── */}
       <div className="grid grid-cols-[320px_1fr] gap-3 px-4 pb-3">
         {/* Stack Health */}
-        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />}>
+        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />} onClick={() => setActiveView("stack")}>
           {stackSummary && (
             <>
               <div className="flex items-center justify-between text-sm">
@@ -990,7 +990,7 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
 
         {/* Host Hardware */}
-        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />}>
+        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />} onClick={() => setActiveView("hardware")}>
           <div
             className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${
               receipt.provenance.context === "local" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
