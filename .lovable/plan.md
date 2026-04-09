@@ -1,210 +1,274 @@
 
 
-# Unified Social Graph — Research Findings & Implementation Plan
+# Matrix Protocol Integration — Sovereign Unified Messaging
 
-## Research Summary: Battle-Tested Approaches
+## Overview
 
-### The Clear Winner: Matrix Protocol + mautrix Bridge Ecosystem
+Integrate Matrix as the **federation and bridge backbone** for the Sovereign Messenger, while preserving UOR-native encryption for local conversations. Matrix provides two critical capabilities our system currently lacks: (1) a battle-tested federation protocol with DAG-based event graphs that maps directly to UOR's content-addressed message DAG, and (2) the mautrix bridge ecosystem that gives instant interop with WhatsApp, Telegram, Signal, Discord, Slack, LinkedIn, and email.
 
-The **Matrix protocol** (matrix.org) with **mautrix bridges** (by Tulir/Beeper) is the most mature, battle-tested, open-source approach to unifying messaging across platforms. This is not theoretical — **Beeper** (acquired by Automattic in 2024, merged with Texts.com) runs this in production for millions of users.
-
-**What mautrix provides:**
-
-| Bridge | Platform | Status | Method |
-|--------|----------|--------|--------|
-| mautrix-whatsapp | WhatsApp | Stable | Multi-device Web API |
-| mautrix-telegram | Telegram | Stable | MTProto client |
-| mautrix-signal | Signal | Stable | libsignal |
-| mautrix-discord | Discord | Stable | User token / QR |
-| mautrix-slack | Slack | Stable | User token / OAuth |
-| mautrix-meta | Facebook/Instagram | Stable | Messenger API |
-| mautrix-twitter | X/Twitter | Stable | DM API |
-| beeper-linkedin | LinkedIn | Beta | Reverse-engineered |
-| mautrix-googlechat | Google Chat | Stable | Workspace API |
-| mautrix-gmessages | Google Messages | Stable | RCS/SMS pairing |
-
-All bridges are **open-source** (AGPL-3.0), support **E2EE**, and use the unified **bridgev2 framework** — a single connector interface for all platforms.
-
-### Other Notable Approaches
-
-| Project | Approach | Limitation for UOR |
-|---------|----------|-------------------|
-| **Matterbridge** (Go, AGPL) | Chat relay across IRC/Matrix/Discord/Telegram/Slack/etc. | Relay-only, no identity graph, no E2EE |
-| **Ferdium** (Electron) | Embeds web views of each service | No unified data layer, just UI aggregation |
-| **PingCRM** (Python, AGPL) | Syncs Gmail, Telegram, Twitter, LinkedIn into a personal CRM with entity resolution | Great for contact graph, not messaging |
-| **SERF** (Python, Apache) | Semantic entity resolution framework for deduplicating identities | Useful for identity merge layer |
-| **Bridgy Fed** (by snarfed) | Bridges AT Protocol ↔ ActivityPub ↔ Nostr | Covers social posts, not DMs |
-
-### Key Architectural Insight: Beeper's On-Device Connection Model
-
-Beeper solved the sovereignty problem by running bridges **on the user's device** rather than in the cloud. The user's credentials never leave their machine. This is directly compatible with UOR's sovereignty-first approach.
+The architecture is **not** "replace everything with Matrix." It is: use Matrix as a **transport and bridge layer** underneath the existing UMP protocol, while keeping UOR content-addressing, Kyber-1024 encryption, and KG anchoring as the sovereign layer on top.
 
 ```text
-┌─────────────────────────────────────────────┐
-│              USER'S DEVICE                  │
-│                                             │
-│  ┌─────────┐  ┌──────────┐  ┌───────────┐  │
-│  │WhatsApp │  │Telegram  │  │ Signal    │  │
-│  │Bridge   │  │Bridge    │  │ Bridge    │  │
-│  └────┬────┘  └────┬─────┘  └─────┬─────┘  │
-│       │            │              │         │
-│       └────────────┼──────────────┘         │
-│                    │                        │
-│           ┌────────▼────────┐               │
-│           │  UOR Sovereign  │               │
-│           │  Message Bus    │               │
-│           │  (normalize →   │               │
-│           │   encrypt →     │               │
-│           │   anchor to KG) │               │
-│           └────────┬────────┘               │
-│                    │                        │
-│           ┌────────▼────────┐               │
-│           │  Knowledge      │               │
-│           │  Graph (GrafeoDB)│               │
-│           │  Social Graph   │               │
-│           └─────────────────┘               │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                    Messenger UI                       │
+│  (ChatSidebar, ConversationView, MessageBubble, etc) │
+└──────────────────┬───────────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────────┐
+│              UOR Sovereign Layer                      │
+│  UMP encryption · KG anchoring · Content addressing   │
+│  Identity resolution · TrustGraph verification        │
+└──────────────────┬───────────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────────┐
+│           Matrix Transport Layer                      │
+│  matrix-js-sdk · Sync · Rooms · E2EE (Megolm)        │
+│  Sliding Sync for performance · DAG event graph       │
+└──────────────────┬───────────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────────┐
+│           Bridge Gateway (Edge Function)              │
+│  Routes to mautrix bridges for external platforms     │
+│  WhatsApp · Telegram · Signal · Discord · Slack       │
+│  LinkedIn · Email · SMS                               │
+└──────────────────────────────────────────────────────┘
 ```
 
-## What This Means for Our Implementation
+## Why Matrix is the Right Choice
 
-Rather than rewriting bridge logic from scratch (which would take years), we should:
+1. **DAG-based event graph** — Matrix rooms store history as a directed acyclic graph, which maps 1:1 to UOR's content-addressed message DAG. Every Matrix event has parent references, just like our `parent_hashes` field.
+2. **Federated by design** — Any user can run their own homeserver. Our Supabase backend can act as a lightweight homeserver proxy.
+3. **E2EE built-in** — Megolm/Olm encryption is production-grade. We layer UOR's Kyber-1024 on top for post-quantum security.
+4. **12+ platform bridges** — mautrix bridges are battle-tested (Beeper/Texts.com production). No need to reverse-engineer each platform.
+5. **3PID identity** — Matrix natively maps email, phone, social accounts to user IDs, which we extend with UOR canonical identities.
 
-1. **Adopt the mautrix bridge protocol as our interop layer** — these are production-grade, battle-tested Go bridges that handle every edge case (media, reactions, read receipts, typing, presence, group management) for 12+ platforms.
+## Implementation Phases
 
-2. **Build a "Bridge Gateway" edge function** that orchestrates bridge instances and normalizes all inbound/outbound messages into UMP envelopes before they touch our system.
+### Phase 1: Matrix Client Core
 
-3. **Extend the Social Graph in the Knowledge Graph** — every external contact becomes a UOR entity with cross-platform identity links (Alice's WhatsApp number, Telegram handle, email, and LinkedIn profile all resolve to one `urn:uor:contact:{hash}`).
+Install `matrix-js-sdk` and create a Matrix client adapter that wraps all Matrix operations behind a UOR-compatible interface.
 
-4. **Build the Unified Inbox UI** — a single view showing all conversations from all platforms, with platform badges, threaded into the same conversation when contacts are merged.
+**New files:**
+- `src/modules/messenger/lib/matrix/client.ts` — Singleton Matrix client manager
+  - `initMatrixClient(userId, accessToken, homeserverUrl)` — creates client with Rust crypto (E2EE)
+  - `startSync(initialSyncLimit)` — begins the `/sync` loop with Sliding Sync for performance
+  - `stopSync()` — clean shutdown
+  - Uses IndexedDB crypto store for persistent E2EE keys across sessions
+  - Auto-maps Matrix rooms to our `conduit_sessions` table
 
-## Implementation Plan
+- `src/modules/messenger/lib/matrix/room-adapter.ts` — Maps Matrix rooms ↔ UOR sessions
+  - `matrixRoomToConversation(room)` → `Conversation` type
+  - `createMatrixRoom(participants, options)` → creates room + conduit_session
+  - `syncRoomState(roomId)` — pulls room state into our local model
+  - Maps Matrix `m.room.message` events to our `DecryptedMessage` type
+  - Maps Matrix `m.room.member` events to our `GroupMember` type
 
-### Phase 1: Social Identity Graph (Database + KG)
+- `src/modules/messenger/lib/matrix/event-mapper.ts` — Bidirectional event translation
+  - Matrix `m.room.message` ↔ UMP `DecryptedMessage`
+  - Matrix `m.room.encrypted` → decrypt via Megolm → wrap in UOR envelope
+  - Matrix `m.reaction` ↔ our `Reaction` type
+  - Matrix `m.room.redaction` ↔ our soft-delete
+  - Anchors every mapped event to KG via `anchorMessage()`
+
+- `src/modules/messenger/lib/matrix/identity-mapper.ts` — UOR ↔ Matrix identity
+  - `resolveMatrixId(matrixUserId)` → `UorIdentityMapping`
+  - `resolve3PID(email | phone)` → Matrix user ID → UOR canonical ID
+  - Maps `@user:homeserver` to `urn:uor:matrix:{userId}`
+  - Cross-references with existing `social_identities` table
+
+### Phase 2: Bridge Gateway via Matrix Application Service
+
+Instead of building individual bridges, deploy a single **Matrix Application Service** (appservice) as an edge function that manages all mautrix bridges.
+
+**New edge function:**
+- `supabase/functions/matrix-bridge-gateway/index.ts`
+  - Registers as a Matrix Application Service
+  - Routes inbound bridge events (WhatsApp message → Matrix room → our UI)
+  - Routes outbound messages (our UI → Matrix room → WhatsApp via bridge)
+  - Manages bridge bot users (`@whatsappbot:our.server`, `@telegrambot:our.server`)
+  - Handles bridge login flows (QR code for WhatsApp, phone number for Signal, etc.)
 
 **Database migration:**
-- Create `social_identities` table: maps external platform identities to UOR canonical contacts
-  - `id`, `user_id` (owner), `contact_id` (FK to a new `contacts` table), `platform`, `platform_user_id`, `platform_handle`, `display_name`, `avatar_url`, `verified`, `last_synced_at`
-- Create `contacts` table: deduplicated contact entities
-  - `id`, `user_id` (owner), `canonical_hash` (UOR CID), `display_name`, `merged_from` (JSONB array of social_identity IDs)
-- RLS: user can only see their own contacts and identities
+- `bridge_connections` table: tracks which platforms a user has connected
+  - `id`, `user_id`, `platform` (BridgePlatform), `matrix_bridge_room_id`, `external_user_id`, `status` (connected/disconnected/error), `connected_at`, `last_synced_at`
+- `social_identities` table: maps external platform identities to UOR contacts
+  - `id`, `user_id`, `contact_id` (FK), `platform`, `platform_user_id`, `platform_handle`, `display_name`, `avatar_url`, `verified`, `last_synced_at`
+- `contacts` table: deduplicated contact entities
+  - `id`, `user_id`, `canonical_hash` (UOR CID), `display_name`, `merged_identities` (JSONB)
+- Add `source_platform` column to `encrypted_messages`
+- RLS: user can only see their own bridge connections, contacts, and identities
 
-**KG anchoring:**
-- Extend `kg-anchoring.ts` to emit contact-graph triples:
-  ```
-  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:whatsapp:{phone}> .
-  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:telegram:{username}> .
-  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:email:{addr}> .
-  ```
+### Phase 3: Unified Conversation Model
 
-### Phase 2: Expand Bridge Platform Types & Protocol
-
-**Modify `types.ts`:**
-- Expand `BridgePlatform` to include all target platforms:
-  ```typescript
-  type BridgePlatform = 
-    | "whatsapp" | "telegram" | "signal" | "email"
-    | "discord" | "slack" | "linkedin" | "twitter"
-    | "instagram" | "matrix" | "sms";
-  ```
-
-**Extend `BridgeMessage`:**
-- Add rich fields: `messageType`, `replyTo`, `reactions`, `fileManifest`, `threadId`, `isRead`, `platform metadata`
-
-**Extend `bridge-protocol.ts`:**
-- Add `syncContacts()` method to `MessageBridge` interface — pulls the user's contact list from each platform
-- Add `getConversations()` — lists all conversations from the platform
-- Add `markRead(externalId)` — bidirectional read status
-
-### Phase 3: Bridge Gateway Edge Function
-
-**New edge function: `supabase/functions/bridge-gateway/index.ts`**
-
-A central gateway that:
-1. Receives normalized bridge events (message received, typing, presence, read receipt)
-2. Wraps inbound messages in UMP envelopes (encrypted with session key)
-3. Stores in `encrypted_messages` with `source_platform` metadata
-4. Emits to Supabase Realtime for live delivery
-5. Anchors to KG via `anchorMessage()`
-
-For outbound:
-1. Receives UMP-sealed message from client
-2. Routes to correct bridge based on conversation's platform
-3. Translates UMP → platform-native format
-
-### Phase 4: Platform Bridge Implementations
-
-Create scaffold bridges for each platform (following the existing `WhatsAppBridge` and `EmailBridge` pattern):
-
-| File | Platform | Transport |
-|------|----------|-----------|
-| `telegram-bridge.ts` | Telegram | Bot API / MTProto via edge function |
-| `signal-bridge.ts` | Signal | Signal CLI / libsignal via edge function |
-| `discord-bridge.ts` | Discord | Discord Bot API |
-| `slack-bridge.ts` | Slack | Slack connector (already available) |
-| `linkedin-bridge.ts` | LinkedIn | LinkedIn API |
-| `twitter-bridge.ts` | X/Twitter | X API v2 |
-| `sms-bridge.ts` | SMS | Twilio connector (available) |
-| `matrix-bridge.ts` | Matrix | Native Matrix CS API |
-
-Each bridge implements `MessageBridge` with `connect()`, `sendMessage()`, `onMessage()`, `syncContacts()`, `mapIdentity()`.
-
-### Phase 5: Unified Inbox UI
-
-**New components:**
-- `src/modules/messenger/components/UnifiedInbox.tsx` — All-platform conversation list with platform badges (WhatsApp green, Telegram blue, etc.)
-- `src/modules/messenger/components/PlatformBadge.tsx` — Icon + color for each platform
-- `src/modules/messenger/components/ContactMergeDialog.tsx` — UI to merge duplicate contacts across platforms ("This WhatsApp contact looks like your Telegram contact — merge?")
-- `src/modules/messenger/components/BridgeStatusPanel.tsx` — Shows which bridges are connected, last sync time, errors
+Modify the existing conversation system to seamlessly blend native UMP conversations, Matrix rooms, and bridged platform conversations into one unified view.
 
 **Modify:**
-- `ChatSidebar.tsx` — Add platform filter tabs (All / WhatsApp / Telegram / Email / etc.)
-- `ConversationView.tsx` — Show platform badge on messages from bridged conversations
-- `MessageInput.tsx` — Platform-aware send (knows which bridge to route through)
-- `MessengerPage.tsx` — Add bridge connection flow to settings
+- `types.ts` — Expand `BridgePlatform` to full set, add `sourcePlatform` to `DecryptedMessage`, add `MatrixRoomState` interface
+- `use-conversations.ts` — Fetch from both `conduit_sessions` AND Matrix sync state, merge into unified conversation list, deduplicate by contact identity
+- `use-messages.ts` — Listen to both Supabase realtime AND Matrix room timeline events
+- `use-send-message.ts` — Route messages based on conversation source:
+  - Native UMP → existing Supabase path
+  - Matrix room → `client.sendEvent()`
+  - Bridged platform → Matrix room (bridge handles translation)
 
-### Phase 6: Contact Identity Resolution
+### Phase 4: Platform Bridge UI
 
-**New file: `src/modules/messenger/lib/identity-resolver.ts`**
+**New components:**
+- `src/modules/messenger/components/BridgeConnectionPanel.tsx` — Settings panel showing:
+  - Connected platforms with status indicators
+  - "Connect WhatsApp" → initiates QR code flow via bridge gateway
+  - "Connect Telegram" → phone number + code flow
+  - "Connect Signal" → Signal linking flow
+  - "Connect Discord/Slack" → OAuth flow
+  - "Connect Email" → IMAP/SMTP credentials
+  - Each connection shows sync status, last synced, message count
 
-Automatic and manual contact merging:
-1. **Auto-merge by phone number** — WhatsApp and Signal both use phone numbers, auto-link
-2. **Auto-merge by email** — Email bridge + LinkedIn often share email
-3. **Suggested merges** — Fuzzy match on display name + mutual connections
-4. **Manual merge UI** — User confirms or rejects suggested merges
-5. **Split** — Undo a merge if wrong
+- `src/modules/messenger/components/PlatformBadge.tsx` — Small icon+color badge showing message source
+  - WhatsApp (green), Telegram (blue), Signal (blue-dark), Discord (indigo), Slack (purple), Email (gray), Matrix (green-teal), Native (teal)
 
-Each merged contact gets a single `urn:uor:contact:{hash}` with all platform identities as `uor:hasIdentity` predicates in the KG.
+- `src/modules/messenger/components/UnifiedInbox.tsx` — Enhanced ChatSidebar with:
+  - Platform filter tabs (All / WhatsApp / Telegram / Signal / Email / etc.)
+  - Platform badge on each conversation
+  - Cross-platform search
+  - Contact merge suggestions
 
-## Files Summary
+- `src/modules/messenger/components/ContactMergeDialog.tsx` — Identity resolution UI:
+  - "Alice on WhatsApp appears to be the same person as alice@email.com — merge?"
+  - Shows all known identities for a contact
+  - Manual merge/split controls
 
-| File | Action |
-|------|--------|
-| `src/modules/messenger/lib/types.ts` | Modify — expand BridgePlatform, enrich BridgeMessage |
-| `src/modules/messenger/lib/bridges/bridge-protocol.ts` | Modify — add syncContacts, getConversations, markRead |
-| `src/modules/messenger/lib/bridges/telegram-bridge.ts` | Create — Telegram bridge scaffold |
-| `src/modules/messenger/lib/bridges/signal-bridge.ts` | Create — Signal bridge scaffold |
-| `src/modules/messenger/lib/bridges/discord-bridge.ts` | Create — Discord bridge scaffold |
-| `src/modules/messenger/lib/bridges/slack-bridge.ts` | Create — Slack bridge scaffold |
-| `src/modules/messenger/lib/bridges/linkedin-bridge.ts` | Create — LinkedIn bridge scaffold |
-| `src/modules/messenger/lib/bridges/twitter-bridge.ts` | Create — Twitter/X bridge scaffold |
-| `src/modules/messenger/lib/bridges/sms-bridge.ts` | Create — SMS/Twilio bridge scaffold |
-| `src/modules/messenger/lib/bridges/matrix-bridge.ts` | Create — Matrix native bridge |
-| `src/modules/messenger/lib/identity-resolver.ts` | Create — cross-platform contact merge engine |
-| `src/modules/messenger/lib/kg-anchoring.ts` | Modify — add social graph triples |
-| `src/modules/messenger/components/UnifiedInbox.tsx` | Create — all-platform conversation list |
-| `src/modules/messenger/components/PlatformBadge.tsx` | Create — platform icon badges |
-| `src/modules/messenger/components/ContactMergeDialog.tsx` | Create — contact dedup UI |
-| `src/modules/messenger/components/BridgeStatusPanel.tsx` | Create — bridge health dashboard |
-| `src/modules/messenger/components/ChatSidebar.tsx` | Modify — platform filter tabs |
-| `src/modules/messenger/components/ConversationView.tsx` | Modify — platform badges on messages |
-| `src/modules/messenger/components/MessageInput.tsx` | Modify — platform-aware routing |
-| `src/modules/messenger/pages/MessengerPage.tsx` | Modify — bridge settings panel |
-| `supabase/functions/bridge-gateway/index.ts` | Create — central bridge orchestrator |
+### Phase 5: Performance — Sliding Sync
 
-**Database migrations:**
-1. `contacts` table with UOR canonical hash
-2. `social_identities` table linking platforms to contacts
-3. `source_platform` column on `encrypted_messages`
-4. RLS policies scoped to user ownership
+Matrix's classic `/sync` endpoint loads all room state on initial connect, which is slow. We use **Sliding Sync** (MSC3575) for instant startup.
+
+**In `matrix/client.ts`:**
+- Configure Sliding Sync with windowed room lists
+- Only sync rooms currently visible in the sidebar
+- Lazy-load room members and history on demand
+- Cache sync state in IndexedDB for instant resumption
+- Background sync for new messages across all rooms
+
+### Phase 6: KG Anchoring for Bridged Messages
+
+Every message from every platform gets anchored into the knowledge graph:
+
+**Modify `kg-anchoring.ts`:**
+- Add `anchorBridgedMessage()` — creates triples for cross-platform messages:
+  ```
+  <urn:ump:msg:{hash}> <uor:sourcePlatform> "whatsapp" .
+  <urn:ump:msg:{hash}> <uor:bridgedFrom> <urn:matrix:event:{eventId}> .
+  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:whatsapp:{phone}> .
+  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:telegram:{handle}> .
+  ```
+- This enables Oracle queries like: "What did Alice send me across all platforms about the project?"
+
+### Phase 7: Identity Resolution Engine
+
+**New file:**
+- `src/modules/messenger/lib/identity-resolver.ts`
+  - Auto-merge by phone number (WhatsApp + Signal share phone)
+  - Auto-merge by email (Email + LinkedIn often share email)
+  - Fuzzy name matching for suggested merges
+  - Each merged contact gets a single `urn:uor:contact:{hash}` with all platform identities as KG predicates
+  - Manual merge/split via `ContactMergeDialog`
+
+## Database Migration
+
+```sql
+-- Bridge connections
+CREATE TABLE public.bridge_connections (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  platform text NOT NULL,
+  matrix_bridge_room_id text,
+  external_user_id text,
+  status text NOT NULL DEFAULT 'disconnected',
+  config jsonb DEFAULT '{}',
+  connected_at timestamptz,
+  last_synced_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, platform)
+);
+
+-- Contacts (deduplicated)
+CREATE TABLE public.contacts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  canonical_hash text NOT NULL,
+  display_name text NOT NULL,
+  merged_identities jsonb DEFAULT '[]',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Social identities (platform-specific)
+CREATE TABLE public.social_identities (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  contact_id uuid REFERENCES contacts(id) ON DELETE CASCADE,
+  platform text NOT NULL,
+  platform_user_id text NOT NULL,
+  platform_handle text,
+  display_name text,
+  avatar_url text,
+  verified boolean DEFAULT false,
+  last_synced_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, platform, platform_user_id)
+);
+
+-- Source platform on messages
+ALTER TABLE public.encrypted_messages
+  ADD COLUMN IF NOT EXISTS source_platform text DEFAULT 'native';
+
+-- RLS on all new tables (user owns their data)
+ALTER TABLE public.bridge_connections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.social_identities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own bridge connections"
+ON public.bridge_connections FOR ALL TO authenticated
+USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users manage own contacts"
+ON public.contacts FOR ALL TO authenticated
+USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users manage own identities"
+ON public.social_identities FOR ALL TO authenticated
+USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+```
+
+## New Files Summary
+
+| File | Purpose |
+|------|---------|
+| `lib/matrix/client.ts` | Matrix client singleton with Sliding Sync + E2EE |
+| `lib/matrix/room-adapter.ts` | Matrix rooms ↔ UOR conversations mapping |
+| `lib/matrix/event-mapper.ts` | Bidirectional event translation + KG anchoring |
+| `lib/matrix/identity-mapper.ts` | Matrix ↔ UOR identity resolution |
+| `lib/identity-resolver.ts` | Cross-platform contact merge engine |
+| `components/BridgeConnectionPanel.tsx` | Platform connection settings UI |
+| `components/PlatformBadge.tsx` | Platform icon badges |
+| `components/UnifiedInbox.tsx` | Multi-platform conversation list |
+| `components/ContactMergeDialog.tsx` | Identity dedup UI |
+| `edge: matrix-bridge-gateway/index.ts` | Matrix Application Service gateway |
+
+## Modified Files
+
+| File | Changes |
+|------|---------|
+| `types.ts` | Expanded BridgePlatform, source_platform on messages |
+| `bridge-protocol.ts` | Add syncContacts, getConversations, markRead |
+| `kg-anchoring.ts` | Social graph triples for bridged messages |
+| `use-conversations.ts` | Merge Matrix + native conversations |
+| `use-messages.ts` | Dual source (Supabase + Matrix timeline) |
+| `use-send-message.ts` | Route by conversation source |
+| `ChatSidebar.tsx` | Platform filter tabs |
+| `MessageBubble.tsx` | Platform badge on bridged messages |
+| `MessengerPage.tsx` | Bridge settings access |
+
+## npm Dependencies
+
+- `matrix-js-sdk` — Matrix Client-Server SDK (browser-compatible, Vite-ready, includes Rust crypto WASM for E2EE)
 
