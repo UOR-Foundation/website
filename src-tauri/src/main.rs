@@ -490,6 +490,70 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_stronghold::Builder::new(|password| {
+            // Derive key from password using argon2
+            use std::collections::hash_map::DefaultHasher;
+            use std::hash::{Hash, Hasher};
+            let mut hasher = DefaultHasher::new();
+            password.hash(&mut hasher);
+            let hash = hasher.finish();
+            Ok(hash.to_le_bytes().to_vec())
+        }).build())
+        .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--hidden"]),
+        ))
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // Focus the main window when a second instance is launched
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .setup(|app| {
+            // System tray menu
+            use tauri::menu::{MenuBuilder, MenuItemBuilder};
+            use tauri::tray::TrayIconBuilder;
+
+            let open = MenuItemBuilder::with_id("open", "Open UOR OS").build(app)?;
+            let sync = MenuItemBuilder::with_id("sync", "Sync Status").build(app)?;
+            let capture = MenuItemBuilder::with_id("capture", "Quick Capture").build(app)?;
+            let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
+
+            let menu = MenuBuilder::new(app)
+                .item(&open)
+                .item(&sync)
+                .item(&capture)
+                .separator()
+                .item(&quit)
+                .build()?;
+
+            let _tray = TrayIconBuilder::new()
+                .menu(&menu)
+                .tooltip("UOR OS — Sovereign Portal")
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "open" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
+        })
         .manage(StreamSessions::default())
         .invoke_handler(tauri::generate_handler![
             uor_ring_op,
