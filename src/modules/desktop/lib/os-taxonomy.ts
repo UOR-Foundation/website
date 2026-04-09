@@ -114,8 +114,8 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Structure",
     description: "Topological structure: homology, cohomology, operads",
     uorModules: ["homology", "cohomology", "operad", "region"],
-    appIds: [],
-    userFacing: false,
+    appIds: ["files"],
+    userFacing: true,
   },
   FAILURE: {
     id: "FAILURE",
