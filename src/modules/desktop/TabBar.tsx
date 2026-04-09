@@ -18,6 +18,7 @@ import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { smartTruncate, FONTS } from "@/modules/oracle/lib/pretext-layout";
 import { SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
 import SnapLayoutPicker from "@/modules/desktop/SnapLayoutPicker";
+import EngineStatusIndicator from "@/modules/boot/EngineStatusIndicator";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub,
