@@ -831,6 +831,7 @@ export default function SystemMonitorApp() {
           badgeColor={config.color}
           sparkData={uptimeSparkline}
           sparkColor={config.color}
+          onClick={() => setActiveView("vm")}
         />
         <GrafanaCard
           icon={<IconCpu size={18} />}
@@ -844,6 +845,7 @@ export default function SystemMonitorApp() {
             { max: 80, color: "hsl(40, 90%, 55%)" },
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
+          onClick={() => setActiveView("cpu")}
         />
         <GrafanaCard
           icon={<IconDeviceDesktop size={18} />}
@@ -857,6 +859,7 @@ export default function SystemMonitorApp() {
             { max: 85, color: "hsl(40, 90%, 55%)" },
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
+          onClick={() => setActiveView("memory")}
         />
         <GrafanaCard
           icon={<IconStack2 size={18} />}
@@ -865,6 +868,7 @@ export default function SystemMonitorApp() {
           accent="hsl(270, 60%, 60%)"
           sparkData={moduleSparkline}
           sparkColor="hsl(270, 60%, 60%)"
+          onClick={() => setActiveView("modules")}
         />
         <GrafanaCard
           icon={<IconActivity size={18} />}
@@ -877,6 +881,7 @@ export default function SystemMonitorApp() {
             </div>
           }
           accent="hsl(var(--primary))"
+          onClick={() => setActiveView("capabilities")}
         />
       </div>
 
