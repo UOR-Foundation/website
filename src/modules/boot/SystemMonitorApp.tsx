@@ -585,9 +585,43 @@ async function formatMarkdownReport(
     }
   } catch { /* pruning gate unavailable */ }
 
+  // ── AI Reflection Prompts (self-improving feedback loop) ──────────
+  L.push("## AI Reflection Prompts");
+  L.push("");
+  L.push("> **Context for the reviewing LLM:** You are reading a machine-generated System Health Report from the **UOR Virtual OS**, a sovereign, client-side operating system that runs entirely in the browser. Its kernel is structured as a **Fano-plane** (7 points P₀–P₆), where each point maps to exactly one primitive function (encode, decode, compose, store, resolve, observe, seal). All computation is verified through **GF(2⁸) ring algebra** executed in a native **WebAssembly** binary. Every state transition is **lattice-hash sealed** with 128-bit preimage resistance using `@noble/hashes`. The module architecture follows a **holographic principle**: each module is a self-contained projection that can be absorbed, forked, or pruned without breaking system invariants. The tech stack is selected via a 7-criterion policy emphasizing open source, interoperability, performance, portability, maturity, minimality, and future-proofing. The \"System Self-Assessment\" section tracks which operational metrics are actively measured vs. missing — the goal is 100% coverage. The system is hosted on Lovable Cloud with a Supabase backend for persistence and sync.");
+  L.push("");
+  L.push("### Prompt 1 — Report Presentation");
+  L.push("");
+  L.push("Given the data above, what changes to **structure, grouping, visualization, or wording** would make this report more actionable for both developers and non-technical stakeholders? Consider:");
+  L.push("- Are any sections redundant or better merged?");
+  L.push("- Would a traffic-light summary dashboard at the top improve scanability?");
+  L.push("- Are the table formats optimal, or would certain data be clearer as lists, charts, or hierarchical trees?");
+  L.push("- Is the report missing any standard SRE/SLA fields (e.g., error budgets, SLO targets, incident timeline)?");
+  L.push("");
+  L.push("### Prompt 2 — System Architecture Improvements");
+  L.push("");
+  L.push("Based on the **capability matrix** (especially any ✗ Missing items), the **self-assessment gaps** (⬜ missing metrics), the **namespace coverage** shortfalls, and the **module architecture** metrics (consolidation debt, orphaned projections), what are the **highest-leverage improvements** to make the system more robust, performant, and minimal? Prioritize by impact-to-effort ratio. For each suggestion, specify:");
+  L.push("- Which report metric it would improve");
+  L.push("- Estimated complexity (trivial / moderate / significant)");
+  L.push("- Whether it requires new dependencies or can be achieved with existing stack");
+  L.push("");
+  L.push("### Prompt 3 — Self-Healing & Autonomy");
+  L.push("");
+  L.push("What **automated remediation, predictive monitoring, or feedback loops** could the system implement so that future reports show measurable improvement without human intervention? Consider:");
+  L.push("- Auto-retry patterns for transient failures (e.g., seal verification, IndexedDB quota)");
+  L.push("- Predictive alerts when metrics trend toward degradation (memory pressure, throughput decline)");
+  L.push("- Self-tuning parameters (e.g., worker pool size based on CPU core count, cache eviction based on quota pressure)");
+  L.push("- Automated regression detection by diffing consecutive reports");
+  L.push("- Circuit-breaker patterns for graceful degradation of optional components");
+  L.push("");
+  L.push("### Meta-Prompt — Closing the Loop");
+  L.push("");
+  L.push("Based on your analysis, propose **3–5 new self-assessment metrics** that should be added to the coverage tracker in the next report version. For each, specify: metric name, measurement method (Web API / custom instrumentation), expected baseline value, and alerting threshold. The goal is to increase the Coverage Score from its current level toward 100%.");
+  L.push("");
+
   L.push("---");
   L.push(
-    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v3.0*"
+    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v3.1*"
   );
 
   return L.join("\n");
