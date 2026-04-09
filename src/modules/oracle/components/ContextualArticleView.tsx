@@ -19,8 +19,6 @@ import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
 import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import ComputeLensRenderer from "./lenses/ComputeLensRenderer";
-import ProvenanceBanner from "./ProvenanceBanner";
-import UorAnchoringCard from "./UorAnchoringCard";
 
 const LENS_RENDERERS: Record<string, React.FC<{
   title: string;
@@ -88,29 +86,6 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
 
   return (
     <div>
-      {/* ── Provenance Banner ── */}
-      {!synthesizing && contentMarkdown.trim().length > 50 && (
-        <ProvenanceBanner
-          sourceCount={sources.length}
-          model={provenance?.model}
-          personalized={provenance?.personalized}
-          personalizedTopics={provenance?.personalizedTopics}
-          queryDomain={provenance?.queryDomain}
-        />
-      )}
-
-      {/* ── UOR Anchoring Card ── */}
-      {!synthesizing && contentMarkdown.trim().length > 50 && (
-        <UorAnchoringCard
-          keyword={title}
-          queryDomain={provenance?.queryDomain || "general"}
-          domainSubcategory={provenance?.domainSubcategory}
-          noveltyScore={coherenceData?.noveltyScore}
-          noveltyLabel={coherenceData?.noveltyLabel}
-          domainDepth={coherenceData?.domainDepth}
-          sessionCoherence={coherenceData?.sessionCoherence}
-        />
-      )}
 
       {/* ── Context Banner (hidden in reader mode) ── */}
       {!isReaderMode && relevantContext.length > 0 && !synthesizing && contentMarkdown.trim().length > 100 && (
