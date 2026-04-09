@@ -1,9 +1,10 @@
 /**
  * DesktopShell — UOR OS shell.
  * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
+ * Shows a real boot sequence on every fresh page load.
  */
 
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect, lazy, Suspense } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
@@ -17,6 +18,7 @@ import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
 import MobileShell from "@/modules/desktop/MobileShell";
 import RingIndicator from "@/modules/desktop/components/RingIndicator";
 import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
+import BootSequence from "@/modules/desktop/BootSequence";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
