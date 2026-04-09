@@ -3,23 +3,46 @@ import App from "./App.tsx";
 import "./index.css";
 
 /**
+ * Iframe / preview-host guard.
+ * Service workers inside Lovable's preview iframe cause stale caching
+ * and navigation interference. Detect and bail early.
+ */
+const isInIframe = (() => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
+const isPreviewHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname.includes("id-preview--") ||
+    window.location.hostname.includes("lovableproject.com"));
+
+const shouldSkipSW = isInIframe || isPreviewHost;
+
+// Unregister stale service workers in preview contexts
+if (shouldSkipSW && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((r) => r.unregister());
+  });
+}
+
+/**
  * Cross-Origin Isolation bootstrap.
  *
  * SharedArrayBuffer requires `crossOriginIsolated === true`, which needs
  * COOP: same-origin + COEP: credentialless headers on the document response.
- * Many hosting platforms (including Lovable) don't serve these headers.
  *
  * Solution: register a lightweight service worker that intercepts navigation
  * responses and injects the headers. On first visit, the SW installs →
  * the page reloads once → subsequent loads have SAB available.
- *
- * This runs BEFORE React renders to ensure the reload happens immediately
- * rather than after the entire app has mounted.
  */
 async function ensureCrossOriginIsolation(): Promise<void> {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  if (shouldSkipSW) return;
 
-  // Already isolated — nothing to do
   if (window.crossOriginIsolated) {
     console.log("[COI] Cross-origin isolated ✓ — SharedArrayBuffer available");
     return;
@@ -29,8 +52,6 @@ async function ensureCrossOriginIsolation(): Promise<void> {
     const reg = await navigator.serviceWorker.register("/coi-serviceworker.js");
     console.log("[COI] Service worker registered, scope:", reg.scope);
 
-    // If the SW just installed and isn't controlling this page yet,
-    // wait for it to activate then reload so headers take effect.
     if (!navigator.serviceWorker.controller) {
       const sw = reg.installing || reg.waiting;
       if (sw) {
@@ -38,12 +59,10 @@ async function ensureCrossOriginIsolation(): Promise<void> {
           sw.addEventListener("statechange", () => {
             if (sw.state === "activated") resolve();
           });
-          // Safety timeout — don't block the app forever
           setTimeout(resolve, 3000);
         });
         console.log("[COI] Reloading to enable cross-origin isolation…");
         location.reload();
-        // The reload will navigate away; returning prevents double-render
         return;
       }
     }
@@ -52,9 +71,7 @@ async function ensureCrossOriginIsolation(): Promise<void> {
   }
 }
 
-// Run COI bootstrap, then render regardless
+// Single render path
 ensureCrossOriginIsolation().finally(() => {
   createRoot(document.getElementById("root")!).render(<App />);
 });
-
-createRoot(document.getElementById("root")!).render(<App />);
