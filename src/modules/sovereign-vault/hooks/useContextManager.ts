@@ -12,6 +12,8 @@ export interface ContextItem {
   text?: string;
   isGuest: boolean;
   source: "file" | "paste" | "url" | "vault" | "workspace" | "folder";
+  createdAt: number;
+  size: number;
 }
 
 export interface ContextManagerHandle {
@@ -95,6 +97,8 @@ export function useContextManager(): ContextManagerHandle {
       text: g.text,
       isGuest: true,
       source: g.source,
+      createdAt: g.createdAt,
+      size: g.size,
     })),
     ...vault.documents
       .filter((d) => selectedVaultIds.includes(d.id))
@@ -103,6 +107,8 @@ export function useContextManager(): ContextManagerHandle {
         filename: d.filename || "Untitled",
         isGuest: false,
         source: "vault",
+        createdAt: new Date(d.created_at || Date.now()).getTime(),
+        size: d.size_bytes || 0,
       })),
   ];
 
