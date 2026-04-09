@@ -308,7 +308,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
           setTimeout(replayNext, delay);
         }
 
-        setTimeout(replayNext, 400);
+        setTimeout(replayNext, 200);
       })
       .catch((err) => {
         if (cancelled) return;
