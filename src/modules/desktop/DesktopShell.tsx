@@ -14,6 +14,8 @@ import DesktopContextMenu from "@/modules/desktop/DesktopContextMenu";
 import SnapOverlay from "@/modules/desktop/SnapOverlay";
 import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
 import MobileShell from "@/modules/desktop/MobileShell";
+import RingIndicator from "@/modules/desktop/components/RingIndicator";
+import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
@@ -28,6 +30,7 @@ function DesktopShellInner() {
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
+  const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -53,14 +56,24 @@ function DesktopShellInner() {
     if (wm.activeWindowId) wm.minimizeWindow(wm.activeWindowId);
   }, [wm]);
 
+  const handleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      document.documentElement.requestFullscreen?.();
+    }
+  }, []);
+
   const shortcutHandlers = useMemo(() => ({
     onSpotlight: () => setSpotlightOpen(o => !o),
     onCloseWindow: handleCloseWindow,
     onMinimizeWindow: handleMinimizeWindow,
     onHideAll: handleHideAll,
-  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll]);
+    onShowShortcuts: () => setCheatSheetOpen(o => !o),
+    onFullscreen: handleFullscreen,
+  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen]);
 
-  useDesktopShortcuts(shortcutHandlers);
+  const { ringActive } = useDesktopShortcuts(shortcutHandlers);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -153,6 +166,9 @@ function DesktopShellInner() {
           onOpenApp={handleOpenApp}
           onSearch={handleHomeSearch}
         />
+
+        <RingIndicator active={ringActive} />
+        <ShortcutCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
       </div>
     </DesktopContextMenu>
   );
