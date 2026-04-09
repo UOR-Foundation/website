@@ -261,7 +261,47 @@ const LensInspector: React.FC<LensInspectorProps> = ({
               <Sparkles size={12} className="text-primary/60 shrink-0" />
             )}
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-foreground/80 truncate">{bp.label}</div>
+              {onRename && !bp.isPreset && editingLabel ? (
+                <input
+                  ref={labelInputRef}
+                  value={labelValue}
+                  onChange={(e) => setLabelValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const trimmed = labelValue.trim();
+                      if (trimmed) {
+                        onRename(bp.id, trimmed);
+                        setBp(prev => ({ ...prev, label: trimmed }));
+                      }
+                      setEditingLabel(false);
+                    }
+                    if (e.key === "Escape") setEditingLabel(false);
+                  }}
+                  onBlur={() => {
+                    const trimmed = labelValue.trim();
+                    if (trimmed && onRename) {
+                      onRename(bp.id, trimmed);
+                      setBp(prev => ({ ...prev, label: trimmed }));
+                    }
+                    setEditingLabel(false);
+                  }}
+                  className="text-sm font-semibold text-foreground/80 bg-transparent outline-none border-b border-primary/20 w-full"
+                />
+              ) : (
+                <div
+                  className={`text-sm font-semibold text-foreground/80 truncate ${onRename && !bp.isPreset ? "cursor-text" : ""}`}
+                  onDoubleClick={() => {
+                    if (onRename && !bp.isPreset) {
+                      setEditingLabel(true);
+                      setLabelValue(bp.label);
+                      setTimeout(() => labelInputRef.current?.focus(), 0);
+                    }
+                  }}
+                  title={onRename && !bp.isPreset ? "Double-click to rename" : undefined}
+                >
+                  {bp.label}
+                </div>
+              )}
               <div className="text-[10px] text-muted-foreground/40">{bp.description}</div>
             </div>
             <button
@@ -451,6 +491,17 @@ const LensInspector: React.FC<LensInspectorProps> = ({
                   <RotateCcw size={12} />
                 </button>
               </div>
+            )}
+
+            {/* Delete button for custom lenses */}
+            {onDelete && !bp.isPreset && (
+              <button
+                onClick={() => { onDelete(bp.id); onClose(); }}
+                className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs text-destructive/50 hover:text-destructive/80 hover:bg-destructive/5 border border-destructive/10 hover:border-destructive/20 transition-all"
+              >
+                <X size={11} />
+                Delete Lens
+              </button>
             )}
           </div>
         </motion.div>
