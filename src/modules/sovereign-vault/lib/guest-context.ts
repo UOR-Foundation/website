@@ -96,6 +96,10 @@ export const guestContext = {
     };
     items = [...items, item];
     emit();
+
+    // Populate Knowledge Graph (fire-and-forget)
+    addToKnowledgeGraph(item);
+
     return item;
   },
 
@@ -118,12 +122,11 @@ export const guestContext = {
     ingestPaste(content, label).then((result) => {
       const idx = items.findIndex((i) => i.id === item.id);
       if (idx >= 0) {
-        items = items.map((i) =>
-          i.id === item.id
-            ? { ...i, uorAddress: result.uorAddress, uorCid: result.uorCid, format: result.format, qualityScore: result.qualityScore, structuredData: result.structuredData, lineage: result.lineage, text: result.text }
-            : i
-        );
+        const enriched = { ...items[idx], uorAddress: result.uorAddress, uorCid: result.uorCid, format: result.format, qualityScore: result.qualityScore, structuredData: result.structuredData, lineage: result.lineage, text: result.text };
+        items = items.map((i) => i.id === item.id ? enriched : i);
         emit();
+        // Populate KG with enriched item
+        addToKnowledgeGraph(enriched);
       }
     }).catch(() => {});
 
@@ -157,6 +160,10 @@ export const guestContext = {
     };
     items = [...items, item];
     emit();
+
+    // Populate Knowledge Graph
+    addToKnowledgeGraph(item);
+
     return item;
   },
 
