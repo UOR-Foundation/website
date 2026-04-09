@@ -1,9 +1,13 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/modules/core/ui/toaster";
 import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// ── Sovereign Bus: register all modules at import time ────────────────
+import "@/modules/bus/modules";
+import { bus } from "@/modules/bus";
 
 // Eager. homepage renders instantly
 import { IndexPage } from "@/modules/landing";
@@ -49,6 +53,17 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  // Initialize the Sovereign Bus once at app startup
+  useEffect(() => {
+    bus.init();
+    // Load WASM engine asynchronously (non-blocking)
+    import("@/lib/wasm/uor-bridge").then(({ loadWasm }) => loadWasm()).catch(() => {});
+    // Expose bus for debugging in dev mode
+    if (import.meta.env.DEV) {
+      (window as any).__sovereignBus = bus;
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

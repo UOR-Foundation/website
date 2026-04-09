@@ -7,7 +7,7 @@
  *   import { bus } from "@/modules/bus";
  *   const result = await bus.call("kernel/derive", payload);
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 // Re-export types
@@ -41,6 +41,14 @@ export type { SovereignClientConfig } from "./client";
 
 // Re-export middleware
 export { timingMiddleware, loggingMiddleware } from "./middleware";
+
+// Re-export manifest
+export { BUS_MANIFEST, getRemoteMethods, getLocalMethods, isInManifest } from "./manifest";
+export type { ManifestEntry, ManifestModule } from "./manifest";
+
+// Re-export hooks
+export { useBusCall, useBusLazy, useBusReachable } from "./hooks";
+export type { BusCallState } from "./hooks";
 
 // ── Convenience namespace ─────────────────────────────────────────────────
 
@@ -79,3 +87,13 @@ export const bus = {
     // in the modules that call register()
   },
 } as const;
+
+/**
+ * Initialize the full sovereign engine: load WASM + init bus.
+ * Call once at app startup for complete sovereign bootstrap.
+ */
+export async function loadEngine(): Promise<void> {
+  const { loadWasm } = await import("@/lib/wasm/uor-bridge");
+  await loadWasm();
+  bus.init();
+}
