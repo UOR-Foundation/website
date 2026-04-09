@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileUp, Type, Link2, Shield, Loader2, Fingerprint, Sparkles, ArrowRight, LayoutGrid, FolderOpen } from "lucide-react";
+import { FileUp, Type, Link2, Shield, Loader2, Fingerprint, Sparkles, ArrowRight, FolderOpen } from "lucide-react";
 import type { ContextManagerHandle } from "../hooks/useContextManager";
 import VaultContextPicker from "./VaultContextPicker";
 
