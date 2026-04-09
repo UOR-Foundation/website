@@ -20,6 +20,7 @@ import { useBootStatus } from "./useBootStatus";
 import type { SealStatus, BootReceipt } from "./types";
 import { motion, AnimatePresence } from "framer-motion";
 import { getEngine } from "@/modules/engine";
+import { SELECTION_POLICY } from "./tech-stack";
 
 // ── Status configuration ────────────────────────────────────────────────
 
