@@ -7,8 +7,8 @@
 
 import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { InteroperabilityMap } from "../components/InteroperabilityMap";
-import { KnowledgeGraph } from "../components/KnowledgeGraph";
+import { InteroperabilityMap } from "@/modules/interoperability/components/InteroperabilityMap";
+import { KnowledgeGraph } from "@/modules/interoperability/components/KnowledgeGraph";
 
 type ViewMode = "graph" | "list";
 
