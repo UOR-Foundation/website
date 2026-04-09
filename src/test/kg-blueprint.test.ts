@@ -92,13 +92,18 @@ describe("KG Object Blueprint System", () => {
 
   it("4. verifyBlueprint returns true for untampered blueprint", async () => {
     const bp = makeBlueprint();
+    // Use materializeFromBlueprint which internally grounds the blueprint
+    // Then reconstruct a GroundObjectBlueprint from the result
+    const { node } = await materializeFromBlueprint(bp);
+
+    // Re-ground using the same path verifyBlueprint uses internally
     const { sha256, buildIdentity } = await import("@/modules/uns/core/address");
     const { canonicalJsonLd } = await import("@/lib/uor-address");
     const forHashing = JSON.parse(JSON.stringify({ ...bp, createdAt: undefined }));
     const canonical = canonicalJsonLd(forHashing);
     const canonicalBytes = new TextEncoder().encode(canonical);
     const hashBytes = await sha256(canonicalBytes);
-    const identity = buildIdentity(hashBytes, canonicalBytes);
+    const identity = await buildIdentity(hashBytes, canonicalBytes);
 
     const ground: GroundObjectBlueprint = {
       blueprint: bp,
@@ -107,6 +112,9 @@ describe("KG Object Blueprint System", () => {
       uorGlyph: identity["u:glyph"],
       uorIpv6: identity["u:ipv6"],
     };
+
+    // Verify the node address matches
+    expect(node.uorAddress).toBe(ground.uorCanonicalId);
 
     const result = await verifyBlueprint(ground);
     expect(result).toBe(true);
