@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
-  Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info,
+  Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
 } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
