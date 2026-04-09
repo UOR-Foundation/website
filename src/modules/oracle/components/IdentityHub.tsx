@@ -23,11 +23,9 @@ interface Category {
   keys: string[];
 }
 
-/** The 12 curated formats — the most valuable and interesting ones */
+/** The 10 curated formats — the most valuable and interesting ones */
 const CURATED_KEYS = [
-  "cid",          // IPFS Content ID — the gold standard
   "did",          // Decentralized ID — W3C standard
-  "glyph",        // Braille — visual, playful
   "emoji",        // Emoji — fun, shareable
   "ipv6",         // IPv6 — routing, practical
   "jsonld",       // JSON-LD — semantic web
@@ -44,13 +42,13 @@ const CATEGORIES: Category[] = [
     label: "Core Identifiers",
     description: "The foundational addresses used across the web",
     icon: "🏛",
-    keys: ["cid", "jsonld", "did", "vc"],
+    keys: ["jsonld", "did", "vc"],
   },
   {
     label: "Visual & Playful",
     description: "Visual and compact ways to represent this address",
     icon: "🔮",
-    keys: ["ipv6", "glyph", "emoji"],
+    keys: ["ipv6", "emoji"],
   },
   {
     label: "Social & Sharing",
