@@ -70,7 +70,9 @@ export function PrivyWalletProvider({ children }: { children: ReactNode }) {
           showWalletLoginFirst: false,
         },
         embeddedWallets: {
-          createOnLogin: "all-users",
+          ethereum: {
+            createOnLogin: "all-users",
+          },
         },
         // No login methods — we handle auth ourselves via custom access token
         loginMethods: [],
