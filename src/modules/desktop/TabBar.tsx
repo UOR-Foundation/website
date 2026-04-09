@@ -198,6 +198,8 @@ export default function TabBar({
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
   const { ringKey } = usePlatform();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   // Drag state
   const [dragId, setDragId] = useState<string | null>(null);
@@ -305,7 +307,7 @@ export default function TabBar({
   return (
     <div
       data-tabbar
-      className="fixed top-0 inset-x-0 z-[200] flex items-center select-none"
+      className={`fixed top-0 inset-x-0 z-[200] flex items-center select-none ${isAuthenticated ? "tabbar-sovereign-border" : ""}`}
       style={{
         height: TAB_BAR_H,
         background: stripBg,
