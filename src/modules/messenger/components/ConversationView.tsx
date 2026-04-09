@@ -1,34 +1,118 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import ContactHeader from "./ContactHeader";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
-import SessionBadge from "./SessionBadge";
+import DateSeparator from "./DateSeparator";
+import SearchMessages from "./SearchMessages";
 import { useMessages } from "../lib/use-messages";
 import { useSendMessage } from "../lib/use-send-message";
-import type { Conversation } from "../lib/types";
-import { ShieldCheck } from "lucide-react";
+import { usePresence } from "../lib/use-presence";
+import { useReadReceipts } from "../lib/use-read-receipts";
+import { useMessageSearch } from "../lib/use-message-search";
+import { filterExpiredMessages } from "../lib/ephemeral";
+import { uploadEncryptedFile } from "../lib/file-transfer";
+import { getCachedSession } from "../lib/messaging-protocol";
+import type { Conversation, DecryptedMessage } from "../lib/types";
+import { ShieldCheck, ChevronDown } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 interface Props {
   conversation: Conversation;
   onBack?: () => void;
+  onInfo?: () => void;
 }
 
-export default function ConversationView({ conversation, onBack }: Props) {
+export default function ConversationView({ conversation, onBack, onInfo }: Props) {
+  const { user } = useAuth();
   const { messages, loading } = useMessages(conversation.id, conversation.sessionHash);
   const { send, sending } = useSendMessage(conversation.id, conversation.sessionHash);
+  const { peerPresence, setTyping } = usePresence(conversation.id);
+  const { observeMessage } = useReadReceipts(messages, conversation.id);
+  const search = useMessageSearch(messages);
+  const [replyTo, setReplyTo] = useState<DecryptedMessage | null>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Filter expired messages
+  const visibleMessages = filterExpiredMessages(messages, conversation.expiresAfterSeconds);
+
+  // Group messages by date for separators
+  const messagesByDate = visibleMessages.reduce<Map<string, DecryptedMessage[]>>((acc, msg) => {
+    const dateKey = new Date(msg.createdAt).toDateString();
+    if (!acc.has(dateKey)) acc.set(dateKey, []);
+    acc.get(dateKey)!.push(msg);
+    return acc;
+  }, new Map());
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 200);
+  };
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleFileSelected = async (file: File) => {
+    if (!user) return;
+    try {
+      const session = getCachedSession(conversation.sessionHash);
+      const sessionKey = session?.symmetricKey ?? new Uint8Array(32); // fallback for demo
+
+      toast.info(`Encrypting ${file.name}…`);
+      const manifest = await uploadEncryptedFile(file, user.id, sessionKey, (p) => {
+        // Could show progress here
+      });
+
+      const messageType = file.type.startsWith("image/") ? "image" as const :
+                          file.type.startsWith("audio/") ? "voice" as const : "file" as const;
+
+      await send(`📎 ${file.name}`, { messageType, fileManifest: manifest, replyToHash: replyTo?.messageHash });
+      setReplyTo(null);
+      toast.success("File sent");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message}`);
+    }
+  };
+
+  // Find reply-to message by hash
+  const findReplyMessage = useCallback((hash: string | null | undefined) => {
+    if (!hash) return undefined;
+    return messages.find((m) => m.messageHash === hash);
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full">
-      <ContactHeader conversation={conversation} onBack={onBack} />
+      <ContactHeader
+        conversation={conversation}
+        onBack={onBack}
+        presence={peerPresence}
+        onSearch={() => search.setActive(!search.active)}
+        onInfo={onInfo}
+      />
+
+      {/* Search bar */}
+      {search.active && (
+        <SearchMessages
+          query={search.query}
+          onQueryChange={search.setQuery}
+          resultCount={search.resultCount}
+          onClose={() => { search.setActive(false); search.setQuery(""); }}
+        />
+      )}
 
       {/* Messages area */}
       <div
-        className="flex-1 overflow-y-auto py-3"
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto py-3 relative"
         style={{
           background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 60%), linear-gradient(180deg, hsl(222 47% 7%) 0%, hsl(222 47% 5%) 100%)",
         }}
@@ -47,7 +131,7 @@ export default function ConversationView({ conversation, onBack }: Props) {
           </div>
         )}
 
-        {!loading && messages.length === 0 && (
+        {!loading && visibleMessages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-white/20 text-sm">
             <ShieldCheck size={32} className="mb-3 text-teal-400/30" />
             <p>No messages yet</p>
@@ -55,13 +139,45 @@ export default function ConversationView({ conversation, onBack }: Props) {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+        {Array.from(messagesByDate.entries()).map(([dateKey, msgs]) => (
+          <div key={dateKey}>
+            <DateSeparator date={msgs[0].createdAt} />
+            {msgs.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                replyToMessage={findReplyMessage(msg.replyToHash)}
+                onReply={(m) => setReplyTo(m)}
+                observeRef={(el) => observeMessage(el, msg)}
+              />
+            ))}
+          </div>
         ))}
+
         <div ref={bottomRef} />
       </div>
 
-      <MessageInput onSend={send} disabled={sending} />
+      {/* Scroll to bottom FAB */}
+      {showScrollBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-[80px] right-6 w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.12] transition-all shadow-lg z-10"
+        >
+          <ChevronDown size={20} />
+        </button>
+      )}
+
+      <MessageInput
+        onSend={(text, opts) => {
+          send(text, { ...opts, replyToHash: replyTo?.messageHash });
+          setReplyTo(null);
+        }}
+        onTyping={() => setTyping(true)}
+        disabled={sending}
+        replyTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
+        onFileSelected={handleFileSelected}
+      />
     </div>
   );
 }

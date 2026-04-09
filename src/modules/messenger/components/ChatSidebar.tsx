@@ -16,7 +16,7 @@ export default function ChatSidebar({ conversations, activeId, onSelect, onNewCh
   const [searchFilter, setSearchFilter] = useState("");
 
   return (
-    <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-xl">
+    <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-sm">
       {/* Header */}
       <div className="h-[60px] flex items-center justify-between px-4 flex-shrink-0 border-b border-white/[0.04]">
         <h1 className="text-lg text-white/90 font-semibold tracking-tight">Messages</h1>
