@@ -40,6 +40,10 @@ export interface NamespaceDescriptor {
   readonly icon: string;
   /** docs.rs module path within the crate (e.g., "kernel/u/") */
   readonly crateModule: string;
+  /** Sovereign Bus namespace (if wired to bus dispatch) */
+  readonly busNs?: string;
+  /** Bus operations available for this namespace */
+  readonly busOperations?: readonly string[];
 }
 
 /** Build full docs.rs URL for a namespace */
