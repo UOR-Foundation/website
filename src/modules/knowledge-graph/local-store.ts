@@ -13,7 +13,7 @@
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export interface KGNode {
-  /** UOR address (content-addressed primary key) */
+  /** UOR address — IPv6 ULA (fd00:0075:6f72::/48), content-addressed primary key */
   uorAddress: string;
   /** UOR CID (IPFS-compatible) */
   uorCid?: string;
@@ -76,7 +76,7 @@ export interface KGStats {
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const DB_NAME = "uor-knowledge-graph";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORES = {
   nodes: "nodes",
   edges: "edges",
@@ -84,6 +84,7 @@ const STORES = {
   meta: "meta",
   rawBytes: "raw-bytes",
   blueprints: "blueprints",
+  profiles: "profiles",
 } as const;
 
 // ── IndexedDB Lifecycle ─────────────────────────────────────────────────────
@@ -141,6 +142,11 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORES.blueprints)) {
         const bpStore = db.createObjectStore(STORES.blueprints, { keyPath: "address" });
         bpStore.createIndex("by_rdfType", "rdfType", { unique: false });
+      }
+
+      // AutoProfiler persistence (v4+)
+      if (!db.objectStoreNames.contains(STORES.profiles)) {
+        db.createObjectStore(STORES.profiles, { keyPath: "sourceKey" });
       }
     };
 

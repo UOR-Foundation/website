@@ -25,7 +25,7 @@ export interface RawAuditRecord {
   filename?: string;
   /** Source: file, paste, url */
   source: string;
-  /** Raw text content (only stored for items < 1MB) */
+  /** Raw text content (stored for text-based items) */
   rawText?: string;
   /** Immutable creation timestamp */
   createdAt: number;

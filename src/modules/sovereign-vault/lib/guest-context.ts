@@ -11,6 +11,15 @@ import type { ArtifactFormat } from "@/modules/uns/core/hologram/universal-inges
 import type { StructuredData } from "./structured-extractor";
 import { ingestBridge } from "@/modules/knowledge-graph";
 
+export interface QualityMetrics {
+  completeness?: number;
+  uniqueness?: number;
+  validity?: number;
+  overall?: number;
+  profileSourceKey?: string;
+  processingMode?: string;
+}
+
 export interface GuestContextItem {
   id: string;
   filename: string;
@@ -20,7 +29,7 @@ export interface GuestContextItem {
   createdAt: number;
   size: number;
   source: "file" | "paste" | "url" | "workspace" | "folder";
-  /** UOR content address (hex) — same content = same address */
+  /** UOR content address (IPv6 ULA) — same content = same address */
   uorAddress?: string;
   /** UOR CID */
   uorCid?: string;
@@ -32,6 +41,8 @@ export interface GuestContextItem {
   structuredData?: StructuredData;
   /** Processing lineage */
   lineage?: LineageEntry[];
+  /** Quality dimensions and profile data */
+  qualityMetrics?: QualityMetrics;
 }
 /** Fire-and-forget KG population */
 function addToKnowledgeGraph(item: GuestContextItem): void {
