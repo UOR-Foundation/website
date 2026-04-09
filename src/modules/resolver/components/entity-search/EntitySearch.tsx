@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { buildIndex, findSimilar } from "@/modules/resolver/index-builder";
 import { resolveEntity } from "@/modules/resolver/entity-linker";
 import type { SemanticIndex, SimilarEntry } from "@/modules/resolver/index-builder";
-import type { EntityResolution as SemEntityResolution } from "@/modules/resolver/entity-linker";
+import type { SemEntityResolution as SemSemEntityResolution } from "@/modules/resolver/entity-linker";
 import { getDatum } from "@/modules/knowledge-graph/store";
 import { EpistemicBadge } from "@/modules/epistemic";
 
@@ -10,7 +10,7 @@ export function EntitySearch() {
   const [index, setIndex] = useState<SemanticIndex | null>(null);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
-  const [resolution, setResolution] = useState<EntityResolution | null>(null);
+  const [resolution, setResolution] = useState<SemEntityResolution | null>(null);
   const [datumDetail, setDatumDetail] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
