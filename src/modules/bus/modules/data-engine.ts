@@ -20,6 +20,8 @@ register({
         return processTabular(
           params?.columns ?? params?.headers,
           params?.rows,
+          params?.dtypes ?? {},
+          params?.label,
         );
       },
       description: "Run the 5-stage data engineering pipeline (parse → clean → feature → quality → UOR encode)",
@@ -28,14 +30,19 @@ register({
         properties: {
           rows: { type: "array", description: "2D array of string values" },
           columns: { type: "array", items: { type: "string" } },
+          dtypes: { type: "object", description: "Column name → data type mapping" },
+          label: { type: "string" },
         },
-        required: ["rows", "columns"],
+        required: ["rows", "columns", "dtypes"],
       },
     },
     profile: {
       handler: async (params: any) => {
         const { autoProfiler } = await import("@/modules/knowledge-graph");
-        return autoProfiler.getProfile(params?.sourceKey ?? "unknown");
+        return autoProfiler.getProfile(
+          params?.filename ?? "unknown",
+          params?.mimeType ?? "text/csv",
+        );
       },
       description: "Retrieve the auto-profiler statistics for a data source",
     },
@@ -45,6 +52,8 @@ register({
         const result = await processTabular(
           params?.columns ?? params?.headers,
           params?.rows,
+          params?.dtypes ?? {},
+          params?.label,
         );
         return {
           overall: result.quality.overall,
