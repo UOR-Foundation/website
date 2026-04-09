@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import ChatSidebar from "../components/ChatSidebar";
+import UnifiedInbox from "../components/UnifiedInbox";
 import ConversationView from "../components/ConversationView";
 import ConversationInfo from "../components/ConversationInfo";
 import GroupInfoPanel from "../components/GroupInfoPanel";
 import NewConversationDialog from "../components/NewConversationDialog";
 import NewGroupDialog from "../components/NewGroupDialog";
 import SharedFiles from "../components/SharedFiles";
+import BridgeConnectionPanel from "../components/BridgeConnectionPanel";
+import ContactMergeDialog from "../components/ContactMergeDialog";
 import { useConversations } from "../lib/use-conversations";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
@@ -23,6 +26,8 @@ export default function MessengerPage() {
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showSharedFiles, setShowSharedFiles] = useState(false);
+  const [showBridges, setShowBridges] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
   const isMobile = useIsMobile();
 
   // Start offline sync + request notification permission on mount
@@ -77,12 +82,13 @@ export default function MessengerPage() {
       {/* Chat sidebar */}
       {showList && (
         <div className={`${isMobile ? "w-full" : "w-[320px] min-w-[280px] max-w-[380px]"} h-full flex-shrink-0 border-r border-white/[0.04]`}>
-          <ChatSidebar
+          <UnifiedInbox
             conversations={conversations}
             activeId={activeConvoId}
-            onSelect={(id) => { setActiveConvoId(id); setShowInfo(false); setShowSharedFiles(false); }}
+            onSelect={(id) => { setActiveConvoId(id); setShowInfo(false); setShowSharedFiles(false); setShowBridges(false); }}
             onNewChat={() => setNewChatOpen(true)}
             onNewGroup={() => setNewGroupOpen(true)}
+            onOpenBridges={() => setShowBridges(!showBridges)}
             loading={convosLoading}
           />
         </div>
@@ -147,6 +153,13 @@ export default function MessengerPage() {
         </div>
       )}
 
+      {/* Bridge connections panel */}
+      {showBridges && !isMobile && (
+        <div className="w-[320px] min-w-[280px] h-full flex-shrink-0">
+          <BridgeConnectionPanel onClose={() => setShowBridges(false)} />
+        </div>
+      )}
+
       {/* New conversation dialog */}
       <NewConversationDialog
         open={newChatOpen}
@@ -165,6 +178,12 @@ export default function MessengerPage() {
           setActiveConvoId(id);
           refetch();
         }}
+      />
+
+      {/* Contact merge dialog */}
+      <ContactMergeDialog
+        open={showMergeDialog}
+        onClose={() => setShowMergeDialog(false)}
       />
     </div>
   );
