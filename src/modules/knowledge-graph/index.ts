@@ -7,6 +7,9 @@ export type { KGNode, KGEdge, KGDerivation, KGStats } from "./local-store";
 
 export { ingestBridge } from "./ingest-bridge";
 
+export { rawStore } from "./raw-store";
+export type { RawAuditRecord } from "./raw-store";
+
 export {
   findSimilarNodes,
   compressGraph,
