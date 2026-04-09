@@ -621,6 +621,7 @@ const SearchPage = () => {
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
   const immersiveMode = true; // Immersive is now the permanent default
+  const showImmersiveBackdrop = immersiveMode && !inWindow;
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const [readerMode, setReaderMode] = useState(true);
   const [oracleOverlayOpen, setOracleOverlayOpen] = useState(false);
@@ -1722,7 +1723,7 @@ const SearchPage = () => {
   return (
     <div className={inWindow ? `relative flex flex-col w-full h-full ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}` : `fixed inset-0 z-50 flex flex-col ${immersiveMode && (result || aiMode || encodeMode) ? "" : "bg-background"}`} style={inWindow ? undefined : { height: "100dvh" }}>
       {!result && !aiMode && !immersiveMode && !inWindow && <SearchConstellationBg />}
-      {immersiveMode && (result || aiMode || encodeMode) && <ImmersiveBackground />}
+      {showImmersiveBackdrop && (result || aiMode || encodeMode) && <ImmersiveBackground />}
       {/* Floating vinyl disc in immersive reader mode */}
       {immersiveMode && result && (
         <div className="fixed bottom-5 right-6 z-[60]">
@@ -2261,7 +2262,7 @@ const SearchPage = () => {
                       el.style.setProperty("--scroll-progress", String(progress));
                     } : undefined}
                   >
-                    {immersiveMode && <ImmersiveBackground scrollProgress={0} />}
+                    {showImmersiveBackdrop && <ImmersiveBackground scrollProgress={0} />}
                     <div className="relative z-10 flex flex-col flex-1">
                       <ReaderToolbar
                         triwordDisplay={triwordDisplay}
@@ -2381,7 +2382,7 @@ const SearchPage = () => {
 
               return (
               <>
-              {immersiveMode && <ImmersiveBackground />}
+              {showImmersiveBackdrop && <ImmersiveBackground />}
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}

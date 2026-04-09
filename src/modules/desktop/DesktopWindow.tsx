@@ -34,7 +34,7 @@ export default function DesktopWindow({
   win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview,
 }: Props) {
   const app = getApp(win.appId);
-  const { isLight } = useDesktopTheme();
+  const { theme } = useDesktopTheme();
   const dragRef = useRef<{ startX: number; startY: number; winX: number; winY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; winW: number; winH: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -93,13 +93,42 @@ export default function DesktopWindow({
     ? { top: MENU_BAR_H, left: 0, width: "100vw", height: `calc(100vh - ${MENU_BAR_H}px)` }
     : { top: win.position.y, left: win.position.x, width: win.size.w, height: win.size.h };
 
-  // Solid semi-opaque bg, reduced blur (20px)
-  const glassBg = isLight ? "rgba(245,245,245,0.95)" : "rgba(24,24,24,0.92)";
-  const borderColor = isActive
-    ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)")
-    : (isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)");
-  const contentBg = isLight ? "#f5f5f5" : "#191919";
-  const spinnerBorder = isLight ? "border-black/10 border-t-black/40" : "border-white/15 border-t-white/50";
+  const surfacePalette = theme === "light"
+    ? {
+        shellBg: "hsl(0 0% 100%)",
+        shellSheen: "linear-gradient(180deg, hsl(225 20% 97% / 0.96), hsl(0 0% 100% / 0))",
+        contentBg: "hsl(0 0% 100%)",
+        contentTexture: "linear-gradient(180deg, hsl(225 14% 97%), hsl(0 0% 100%))",
+        borderActive: "hsl(225 12% 20% / 0.14)",
+        borderIdle: "hsl(225 12% 20% / 0.08)",
+        spinnerBorder: "border-black/10 border-t-black/40",
+      }
+    : theme === "immersive"
+      ? {
+          shellBg: "hsl(225 20% 8%)",
+          shellSheen: "linear-gradient(180deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0))",
+          contentBg: "hsl(225 18% 8%)",
+          contentTexture: [
+            "radial-gradient(circle at 18% 12%, hsl(38 48% 58% / 0.08), transparent 0 24%)",
+            "radial-gradient(circle at 82% 0%, hsl(210 28% 28% / 0.22), transparent 0 32%)",
+            "linear-gradient(135deg, hsl(225 18% 10%), hsl(220 16% 7%))",
+          ].join(", "),
+          borderActive: "hsl(38 35% 62% / 0.18)",
+          borderIdle: "hsl(0 0% 100% / 0.08)",
+          spinnerBorder: "border-white/15 border-t-white/50",
+        }
+      : {
+          shellBg: "hsl(0 0% 0%)",
+          shellSheen: "linear-gradient(180deg, hsl(0 0% 100% / 0.05), hsl(0 0% 100% / 0))",
+          contentBg: "hsl(0 0% 0%)",
+          contentTexture: "linear-gradient(180deg, hsl(0 0% 5% / 0.36), hsl(0 0% 0% / 0))",
+          borderActive: "hsl(0 0% 100% / 0.12)",
+          borderIdle: "hsl(0 0% 100% / 0.06)",
+          spinnerBorder: "border-white/15 border-t-white/50",
+        };
+
+  const borderColor = isActive ? surfacePalette.borderActive : surfacePalette.borderIdle;
+  const spinnerBorder = surfacePalette.spinnerBorder;
 
   return (
     <div
@@ -109,9 +138,12 @@ export default function DesktopWindow({
     >
       <div className="absolute inset-0" style={{
         borderRadius: `${RADIUS.md}px`,
-        background: glassBg,
-        backdropFilter: "blur(20px) saturate(1.2)",
-        WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+        background: surfacePalette.shellBg,
+      }} />
+
+      <div className="absolute inset-0 pointer-events-none" style={{
+        borderRadius: `${RADIUS.md}px`,
+        background: surfacePalette.shellSheen,
       }} />
 
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -129,20 +161,39 @@ export default function DesktopWindow({
         onDoubleClick={() => onMaximize(win.id)}
       />
 
-      <div className="relative overflow-auto" style={{
+      <div className="relative" style={{
         height: `calc(100% - ${DRAG_STRIP_H}px)`,
-        background: contentBg,
         borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
       }}>
-        <WindowContextProvider initialQuery={win.title}>
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-full">
-              <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
-            </div>
-          }>
-            {AppComponent && <AppComponent />}
-          </Suspense>
-        </WindowContextProvider>
+        <div
+          className="absolute inset-0"
+          style={{
+            borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
+            background: surfacePalette.contentBg,
+          }}
+        />
+
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
+            background: surfacePalette.contentTexture,
+          }}
+        />
+
+        <div className="relative z-[1] h-full overflow-auto" style={{
+          borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
+        }}>
+          <WindowContextProvider initialQuery={win.title}>
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
+              </div>
+            }>
+              {AppComponent && <AppComponent />}
+            </Suspense>
+          </WindowContextProvider>
+        </div>
       </div>
 
       {!win.maximized && (
