@@ -670,10 +670,14 @@ function useSparkline(getValue: () => number, deps: unknown[] = []) {
 
 export default function SystemMonitorApp() {
   const { receipt, status, lastVerified } = useBootStatus();
+  const compositeHealth = useCompositeHealth();
   const [copied, setCopied] = useState(false);
   const [activeView, setActiveView] = useState<DetailViewId | null>(null);
 
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.booting;
+  // Override config color with composite health color for unified display
+  const unifiedColor = compositeHealth.color;
+  const unifiedLabel = `${compositeHealth.label} (${compositeHealth.score}%)`;
   const degradationLog = useMemo(
     () => buildDegradationLog(receipt, status),
     [receipt, status]
