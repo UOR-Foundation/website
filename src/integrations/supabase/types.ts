@@ -810,6 +810,41 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_settings: {
+        Row: {
+          archived: boolean | null
+          id: string
+          muted_until: string | null
+          pinned: boolean | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean | null
+          id?: string
+          muted_until?: string | null
+          pinned?: boolean | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean | null
+          id?: string
+          muted_until?: string | null
+          pinned?: boolean | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_settings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discord_events: {
         Row: {
           calendar_date: string | null
@@ -853,7 +888,10 @@ export type Database = {
         Row: {
           ciphertext: string
           created_at: string
+          deleted_at: string | null
           delivered_at: string | null
+          edit_history: Json | null
+          edited_at: string | null
           envelope_cid: string
           file_manifest: Json | null
           id: string
@@ -862,13 +900,17 @@ export type Database = {
           parent_hashes: string[]
           read_at: string | null
           reply_to_hash: string | null
+          self_destruct_seconds: number | null
           sender_id: string
           session_id: string
         }
         Insert: {
           ciphertext: string
           created_at?: string
+          deleted_at?: string | null
           delivered_at?: string | null
+          edit_history?: Json | null
+          edited_at?: string | null
           envelope_cid: string
           file_manifest?: Json | null
           id?: string
@@ -877,13 +919,17 @@ export type Database = {
           parent_hashes?: string[]
           read_at?: string | null
           reply_to_hash?: string | null
+          self_destruct_seconds?: number | null
           sender_id: string
           session_id: string
         }
         Update: {
           ciphertext?: string
           created_at?: string
+          deleted_at?: string | null
           delivered_at?: string | null
+          edit_history?: Json | null
+          edited_at?: string | null
           envelope_cid?: string
           file_manifest?: Json | null
           id?: string
@@ -892,6 +938,7 @@ export type Database = {
           parent_hashes?: string[]
           read_at?: string | null
           reply_to_hash?: string | null
+          self_destruct_seconds?: number | null
           sender_id?: string
           session_id?: string
         }
@@ -900,6 +947,126 @@ export type Database = {
             foreignKeyName: "encrypted_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folder_entries: {
+        Row: {
+          created_at: string | null
+          encrypted_manifest: Json | null
+          file_cid: string
+          filename: string
+          folder_id: string
+          id: string
+          size_bytes: number | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_manifest?: Json | null
+          file_cid: string
+          filename: string
+          folder_id: string
+          id?: string
+          size_bytes?: number | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_manifest?: Json | null
+          file_cid?: string
+          filename?: string
+          folder_id?: string
+          id?: string
+          size_bytes?: number | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_entries_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "shared_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          id: string
+          invited_by: string | null
+          joined_at: string | null
+          muted_until: string | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          muted_until?: string | null
+          role?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          muted_until?: string | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_metadata: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          session_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          session_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_metadata_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
             referencedRelation: "conduit_sessions"
             referencedColumns: ["id"]
           },
@@ -1264,6 +1431,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "encrypted_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messenger_context_graph: {
         Row: {
@@ -1885,6 +2084,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      shared_folders: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          name: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          name?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          name?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_folders_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sovereign_documents: {
         Row: {
