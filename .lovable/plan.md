@@ -1,46 +1,104 @@
 
 
-## Plan: Harden Mobile PWA Delivery and Responsiveness
+## Plan: Perplexity-Style Contextual Sign-In Experience
 
-### Issues Found
+### What We're Building
 
-1. **Double render in `main.tsx`** — `createRoot().render()` is called both inside `.finally()` (line 57) and unconditionally on line 60, causing the app to mount twice on every load.
+A reusable, modal-based sign-in prompt that appears contextually at moments of delight or friction during guest exploration. Instead of a generic "Sign in" message, the modal dynamically adapts its headline and benefit text based on what the guest was doing when prompted. The sign-in options mirror the Perplexity reference: Google OAuth, Apple OAuth, email/password, with a clean divider between social and credential flows.
 
-2. **No iframe/preview guard** — The COI service worker registers even inside Lovable's preview iframe, causing stale caching and interference. VitePWA also lacks `devOptions: { enabled: false }`.
+### Architecture
 
-3. **MobileShell missing safe-area insets** — Bottom controls don't use `env(safe-area-inset-bottom)`, so on notched iPhones the home indicator pill and bottom icons get clipped behind the system gesture area.
+```text
+AuthPromptModal (new shared component)
+├── Dynamic headline + benefit text (from context prop)
+├── "Continue with Google" button (lovable.auth.signInWithOAuth)
+├── "Continue with Apple" button (lovable.auth.signInWithOAuth)
+├── ── or ── divider
+├── Email input + "Continue with email" (email/password form)
+├── Toggle: sign-in ↔ create account
+├── Privacy policy link
+└── Close button
 
-4. **No GPU layer promotion on mobile shell** — The clock, background, and drawer content aren't promoted to compositor layers, causing potential paint jank during drawer transitions.
+SignInContext (enum-like prop):
+  "react"      → "Sign in to react and engage"
+  "vote"       → "Sign in to vote on contributions"
+  "fork"       → "Sign in to fork and remix objects"
+  "vault"      → "Sign in to persist your vault"
+  "messenger"  → "Sign in for encrypted messaging"
+  "comment"    → "Sign in to join the conversation"
+  "save"       → "Sign in to save your progress"
+  "identity"   → "Sign in to claim your sovereign identity"
+  "transfer"   → "Sign in for encrypted session transfer"
+  "default"    → "Sign in to unlock your full experience"
+```
 
-5. **Missing mobile-specific touch optimizations** — No `will-change` hints on animated elements, no `content-visibility: auto` on off-screen drawer content.
+### Trigger Points (Delight-Based Prompting)
 
-### Changes
+Replace all existing `toast("Sign in to X", { icon: "🔒" })` calls with the modal. Additionally, add new prompts at delight moments:
 
-**1. Fix `src/main.tsx`**
-- Remove the duplicate `createRoot().render()` on line 60
-- Add iframe/preview-host guard: if running inside an iframe or on a `*.lovableproject.com` / `id-preview--*` domain, unregister all existing service workers and skip COI registration
-- Keep the `.finally()` render path as the single mount point
+| Location | Trigger | Context | Current Behavior |
+|---|---|---|---|
+| AddressCommunity — react | Guest clicks reaction | `"react"` | Toast |
+| AddressCommunity — vote | Guest clicks vote | `"vote"` | Toast |
+| ResolvePage — fork | Guest clicks fork | `"fork"` | Toast |
+| VaultPanel — guest banner | Guest sees banner | `"vault"` | Static text |
+| VaultContextPicker | Guest opens vault picker | `"vault"` | Static text |
+| Messenger | Guest opens messenger | `"messenger"` | Static text |
+| QrPortalPanel | Guest uses transfer | `"transfer"` | Static text |
+| After 3rd search query | Guest has explored 3+ queries | `"save"` | **New** — delight moment |
+| After first comment | Guest posts a guest comment | `"comment"` | **New** — delight moment |
 
-**2. Harden `vite.config.ts` PWA config**
-- Add `devOptions: { enabled: false }` so VitePWA's service worker never activates during development
+### Sign-In Options (Fully Functional)
 
-**3. Upgrade `src/modules/desktop/MobileShell.tsx`**
-- Bottom controls: change `pb-2` to `pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))]` so content respects the device safe area on notched phones
-- Add `will-change: transform` to the DayRingClock container and bottom controls for GPU compositing
-- Add `content-visibility: auto` on drawer content containers so off-screen drawer DOM doesn't trigger layout
+1. **Continue with Google** — calls `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` (already working via Lovable Cloud managed credentials)
+2. **Continue with Apple** — calls `lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin })` (already supported)
+3. **Email + Password** — uses `supabase.auth.signInWithPassword` for sign-in, `supabase.auth.signUp` for account creation (existing logic from SovereignIdentityPanel)
 
-**4. Add mobile PWA meta hardening to `index.html`**
-- Already has `viewport-fit=cover`, `apple-mobile-web-app-capable`, and `apple-mobile-web-app-status-bar-style` — these are correct
-- Add `<meta name="mobile-web-app-capable" content="yes" />` for Android Chrome's Add to Home Screen
-- Add `<link rel="apple-touch-startup-image" href="/pwa-icon-512.png" />` for iOS splash screen
+### Visual Design (Perplexity-Inspired)
 
-### Technical Details
+- Centered modal overlay with `backdrop-blur` dimming
+- Large serif-style headline (matching reference: "Sign in to save and collect threads")
+- Subtle privacy policy link below headline
+- Full-width rounded buttons: Google (dark fill), Apple (outlined)
+- Thin `── or ──` divider
+- Email input field + "Continue with email" button
+- "Create account" / "Sign in" toggle at bottom
+- Close button (X) top-right + "Close" text link at bottom
+- Smooth fade-in/scale animation
 
-The safe-area fix uses CSS `env()` with fallback values so non-notched devices still get correct spacing. The `will-change: transform` hints tell the browser to promote those layers to the GPU compositor, eliminating paint operations during Vaul drawer slide animations. The iframe guard prevents service worker interference in the Lovable editor preview while keeping full PWA functionality in production.
+### Implementation
+
+**New file: `src/modules/auth/AuthPromptModal.tsx`**
+- Reusable modal component accepting `open`, `onClose`, `context` (string key for dynamic text)
+- Contains all three sign-in methods (Google, Apple, email/password)
+- Mode toggle between sign-in and sign-up
+- After successful auth, calls `onClose()` and the user continues where they were
+
+**Modified file: `src/modules/oracle/components/SovereignIdentityPanel.tsx`**
+- Replace the unauthenticated form section with the new `AuthPromptModal` style (or import it)
+- Keep the authenticated profile view as-is
+
+**Modified files (replace toast → modal):**
+- `src/modules/oracle/components/AddressCommunity.tsx` — replace `toast("Sign in to react/vote")` with `setAuthPrompt("react"/"vote")`
+- `src/modules/oracle/pages/ResolvePage.tsx` — replace fork toast with modal trigger
+- `src/modules/sovereign-vault/components/VaultPanel.tsx` — replace guest banner with clickable prompt
+- `src/modules/messenger/pages/MessengerPage.tsx` — replace static text with modal trigger
+- `src/modules/oracle/components/QrPortalPanel.tsx` — replace static text with modal trigger
+
+**Delight-moment triggers (new logic):**
+- In ResolvePage or the search flow, track `guestQueryCount` in state. After the 3rd search, show modal with context `"save"` — "Sign in to save your search history"
+- In AddressCommunity, after a guest successfully posts a comment, show the modal with context `"comment"` — "Sign in to get notified when someone replies"
+
+### Post-Auth Flow
+
+On successful sign-in, the auth state propagates via `useAuth()` context. All components re-render with `user` now defined, unlocking persistent vault, reactions, voting, forking, and messaging. The guest's session becomes a sovereign account.
 
 ### Files Modified
-- `src/main.tsx` — Remove double render, add iframe guard
-- `vite.config.ts` — Add `devOptions: { enabled: false }`
-- `src/modules/desktop/MobileShell.tsx` — Safe-area insets, GPU promotion
-- `index.html` — Android PWA meta tag, iOS splash image link
+- **New**: `src/modules/auth/AuthPromptModal.tsx`
+- `src/modules/oracle/components/SovereignIdentityPanel.tsx` — use shared auth UI
+- `src/modules/oracle/components/AddressCommunity.tsx` — modal instead of toast
+- `src/modules/oracle/pages/ResolvePage.tsx` — modal instead of toast + delight trigger
+- `src/modules/sovereign-vault/components/VaultPanel.tsx` — clickable prompt
+- `src/modules/messenger/pages/MessengerPage.tsx` — modal trigger
+- `src/modules/oracle/components/QrPortalPanel.tsx` — modal trigger
 
