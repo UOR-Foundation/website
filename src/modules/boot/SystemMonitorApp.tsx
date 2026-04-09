@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useBootStatus } from "./useBootStatus";
+import { useCompositeHealth } from "./useCompositeHealth";
 import type { SealStatus, BootReceipt } from "./types";
 import { getEngine, getWasmDiagnostics } from "@/modules/engine";
 import { TECH_STACK, SELECTION_POLICY } from "./tech-stack";
@@ -669,10 +670,14 @@ function useSparkline(getValue: () => number, deps: unknown[] = []) {
 
 export default function SystemMonitorApp() {
   const { receipt, status, lastVerified } = useBootStatus();
+  const compositeHealth = useCompositeHealth();
   const [copied, setCopied] = useState(false);
   const [activeView, setActiveView] = useState<DetailViewId | null>(null);
 
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.booting;
+  // Override config color with composite health color for unified display
+  const unifiedColor = compositeHealth.color;
+  const unifiedLabel = `${compositeHealth.label} (${compositeHealth.score}%)`;
   const degradationLog = useMemo(
     () => buildDegradationLog(receipt, status),
     [receipt, status]
@@ -826,11 +831,11 @@ export default function SystemMonitorApp() {
           icon={<IconServer size={18} />}
           title="Virtual Machine"
           value="1 Running"
-          accent={config.color}
-          badge={config.label}
-          badgeColor={config.color}
+          accent={unifiedColor}
+          badge={unifiedLabel}
+          badgeColor={unifiedColor}
           sparkData={uptimeSparkline}
-          sparkColor={config.color}
+          sparkColor={unifiedColor}
           onClick={() => setActiveView("vm")}
         />
         <GrafanaCard
@@ -890,26 +895,26 @@ export default function SystemMonitorApp() {
         {/* System Availability */}
         <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
-            {/* Availability ring */}
+            {/* Availability ring — uses composite health score */}
             <div className="relative w-20 h-20 shrink-0">
               <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
                 <circle cx="40" cy="40" r="34" fill="none" strokeWidth="5" className="stroke-muted/20" />
                 <circle
                   cx="40" cy="40" r="34"
                   fill="none" strokeWidth="5"
-                  stroke={config.color}
+                  stroke={unifiedColor}
                   strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * 0.001}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - compositeHealth.score / 100)}`}
                   strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 6px ${config.color}50)` }}
+                  style={{ filter: `drop-shadow(0 0 6px ${unifiedColor}50)` }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-base font-bold font-mono" style={{ color: config.color }}>100%</span>
+                <span className="text-base font-bold font-mono" style={{ color: unifiedColor }}>{compositeHealth.score}%</span>
               </div>
             </div>
             <div className="space-y-2.5 flex-1 pt-1">
-              <GrafanaRow label="Status" color={config.color}>{config.label}</GrafanaRow>
+              <GrafanaRow label="Health" color={unifiedColor}>{compositeHealth.label}</GrafanaRow>
               <GrafanaRow label="Uptime"><span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span></GrafanaRow>
               <GrafanaRow label="Boot"><span className="font-mono">{receipt.bootTimeMs}ms</span></GrafanaRow>
               <GrafanaRow label="Engine"><span className="font-mono">{receipt.engineType === "wasm" ? "WASM" : "TS"} {getEngine().version}</span></GrafanaRow>
@@ -1013,6 +1018,45 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
       </div>
 
+      {/* ── Audit & Verification ── */}
+      <div className="px-4 pb-3">
+        <GrafanaPanel title="Audit & Verification" icon={<IconClipboardCheck size={15} />}>
+          {compositeHealth.audit.loading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse" />
+              Loading audit data…
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { label: "Receipts", value: compositeHealth.audit.receipts, sub: `${compositeHealth.audit.receiptPassRate}% self-verified`, color: compositeHealth.audit.receiptPassRate >= 80 ? "#22c55e" : compositeHealth.audit.receiptPassRate > 0 ? "#f59e0b" : undefined },
+                  { label: "Derivations", value: compositeHealth.audit.derivations, sub: `${compositeHealth.audit.gradeARate}% Grade A`, color: compositeHealth.audit.gradeARate >= 80 ? "#22c55e" : compositeHealth.audit.gradeARate > 0 ? "#3b82f6" : undefined },
+                  { label: "Certificates", value: compositeHealth.audit.certificates, sub: `${compositeHealth.audit.certValidRate}% valid`, color: compositeHealth.audit.certValidRate >= 80 ? "#22c55e" : compositeHealth.audit.certValidRate > 0 ? "#f59e0b" : undefined },
+                  { label: "Traces", value: compositeHealth.audit.traces, sub: "computation logs", color: undefined },
+                ].map((c) => (
+                  <div key={c.label} className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{c.label}</span>
+                    <div className="text-xl font-bold font-mono text-foreground">{c.value}</div>
+                    <span className="text-xs" style={c.color ? { color: c.color } : undefined}>
+                      {c.sub}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-6 pt-3 border-t border-border/50 text-xs text-muted-foreground font-mono">
+                <span>Seal: <span className="text-foreground">{compositeHealth.signals.sealWeight}%</span></span>
+                <span>Error Budget: <span className="text-foreground">{compositeHealth.signals.errorBudget}%</span></span>
+                <span>Audit: <span className="text-foreground">{compositeHealth.signals.auditHealth}%</span></span>
+                <span className="ml-auto font-semibold" style={{ color: unifiedColor }}>
+                  Composite: {compositeHealth.score}%
+                </span>
+              </div>
+            </>
+          )}
+        </GrafanaPanel>
+      </div>
+
       {/* ── Active Alerts ── */}
       {isDegraded && degradationLog.length > 0 && (
         <div className="px-4 pb-3">
@@ -1035,7 +1079,7 @@ export default function SystemMonitorApp() {
       <div className="mt-auto border-t border-border/50 px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <PulseDot color={config.color} size={5} />
+            <PulseDot color={unifiedColor} size={5} />
             <span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span>
           </div>
           <span className="opacity-30">·</span>
