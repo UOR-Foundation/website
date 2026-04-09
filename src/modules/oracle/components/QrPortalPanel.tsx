@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Lock, RotateCcw, X, Smartphone } from "lucide-react";
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 
 interface QrPortalPanelProps {
   open: boolean;
@@ -217,9 +218,13 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
                 </span>
                 <div className="flex items-center gap-1.5">
                   <Lock className={`w-3 h-3 ${isGuest ? "text-amber-400/40" : "text-emerald-400/40"}`} />
-                  <span className={`text-[10px] ${immersive ? "text-white/20" : "text-muted-foreground/20"}`}>
-                    {isGuest ? "Direct link — sign in for encrypted transfer" : "Encrypted one-time session transfer"}
-                  </span>
+                  {isGuest ? (
+                    <QrGuestSignInHint />
+                  ) : (
+                    <span className={`text-[10px] ${immersive ? "text-white/20" : "text-muted-foreground/20"}`}>
+                      Encrypted one-time session transfer
+                    </span>
+                  )}
                 </div>
               </>
             )}
