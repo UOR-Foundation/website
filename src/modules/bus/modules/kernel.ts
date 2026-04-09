@@ -59,15 +59,15 @@ register({
         // Step 2: Project into the knowledge graph
         const graphResult = await call("graph/put", {
           node: {
-            uorAddress: proof.cidV1,
-            derivationId: proof.derivation_id,
-            ipv6: proof.ipv6,
-            label: params?.label ?? proof.derivation_id?.slice(0, 16),
+            uorAddress: proof.cid,
+            derivationId: proof.derivationId,
+            ipv6: proof.ipv6Address["u:ipv6"],
+            label: params?.label ?? proof.derivationId?.slice(0, 16),
             content: params?.content ?? params,
             type: params?.type ?? "uor:ContentAddressed",
             metadata: {
               encodedAt: new Date().toISOString(),
-              braille: proof.braille,
+              braille: proof.uorAddress["u:glyph"],
               ...(params?.metadata ?? {}),
             },
           },
@@ -99,24 +99,32 @@ register({
         const bridge = await import("@/lib/wasm/uor-bridge");
         const op = params?.op ?? "add";
         const a = params?.a ?? 0;
-        const b = params?.b;
+        const b = params?.b ?? 0;
 
         switch (op) {
-          case "add": return bridge.constRingAdd?.(a, b) ?? a + b;
-          case "mul": return bridge.constRingMul?.(a, b) ?? a * b;
-          case "neg": return bridge.constRingNeg?.(a) ?? -a;
-          case "eval": return bridge.constRingEvalQ0?.(a) ?? a;
-          case "factorize": return bridge.constRingFactorize?.(a) ?? [a];
-          case "classify": return bridge.constRingClassify?.(a) ?? "unknown";
+          case "add": return bridge.add(a, b);
+          case "sub": return bridge.sub(a, b);
+          case "mul": return bridge.mul(a, b);
+          case "neg": return bridge.neg(a);
+          case "bnot": return bridge.bnot(a);
+          case "succ": return bridge.succ(a);
+          case "pred": return bridge.pred(a);
+          case "xor": return bridge.xor(a, b);
+          case "and": return bridge.and(a, b);
+          case "or": return bridge.or(a, b);
+          case "eval": return bridge.constRingEvalQ0(a, b);
+          case "factorize": return bridge.factorize(a);
+          case "classify": return bridge.classifyByte(a);
+          case "verify": return bridge.verifyCriticalIdentity(a);
           default:
-            throw new Error(`Unknown ring operation: ${op}. Available: add, mul, neg, eval, factorize, classify`);
+            throw new Error(`Unknown ring operation: ${op}. Available: add, sub, mul, neg, bnot, succ, pred, xor, and, or, eval, factorize, classify, verify`);
         }
       },
       description: "WASM-accelerated ring arithmetic in Z/(2^n)Z with TypeScript fallback",
       paramsSchema: {
         type: "object",
         properties: {
-          op: { type: "string", enum: ["add", "mul", "neg", "eval", "factorize", "classify"] },
+          op: { type: "string", enum: ["add", "sub", "mul", "neg", "bnot", "succ", "pred", "xor", "and", "or", "eval", "factorize", "classify", "verify"] },
           a: { type: "number" },
           b: { type: "number" },
         },

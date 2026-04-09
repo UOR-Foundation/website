@@ -29,10 +29,10 @@ register({
         const { singleProofHash } = await import("@/modules/engine");
         const proof = await singleProofHash(params?.content ?? params);
         return {
-          derivationId: proof.derivation_id,
-          cidV1: proof.cidV1,
-          braille: proof.braille,
-          ipv6: proof.ipv6,
+          derivationId: proof.derivationId,
+          cid: proof.cid,
+          braille: proof.uorAddress["u:glyph"],
+          ipv6: proof.ipv6Address["u:ipv6"],
           canonical: true,
         };
       },

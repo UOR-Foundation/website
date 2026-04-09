@@ -13,7 +13,6 @@ register({
     resolve: {
       handler: async (params: any) => {
         const { call } = await import("../bus");
-        // Resolve through the knowledge graph
         const node = await call("graph/get", { uorAddress: params?.address ?? params });
         return node;
       },
@@ -24,9 +23,9 @@ register({
         const { singleProofHash } = await import("@/modules/engine");
         const proof = await singleProofHash(params?.content ?? params);
         return {
-          address: proof.cidV1,
-          derivationId: proof.derivation_id,
-          ipv6: proof.ipv6,
+          address: proof.cid,
+          derivationId: proof.derivationId,
+          ipv6: proof.ipv6Address["u:ipv6"],
         };
       },
       description: "Reverse-resolve content to its UOR address",

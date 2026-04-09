@@ -19,15 +19,16 @@ register({
     },
     publish: {
       handler: async (params: any) => {
-        const { publishName } = await import("@/modules/uns");
-        return publishName(params?.name, params?.content);
+        const { publishRecord, createRecord } = await import("@/modules/uns");
+        const record = await createRecord(params);
+        return publishRecord(record);
       },
       description: "Publish a name binding to the name service",
     },
     computeId: {
       handler: async (params: any) => {
-        const { computeUnsId } = await import("@/modules/uns");
-        return computeUnsId(params?.name ?? params);
+        const { singleProofHash } = await import("@/modules/engine");
+        return singleProofHash(params?.name ?? params);
       },
       description: "Compute the UOR identity for a name without publishing",
     },

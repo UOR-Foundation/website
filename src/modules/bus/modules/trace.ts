@@ -5,7 +5,6 @@
  */
 import { register } from "../registry";
 
-// In-memory trace log (per-session)
 const _traces: Array<{ method: string; params: unknown; result: unknown; timestamp: number; cid?: string }> = [];
 
 register({
@@ -30,13 +29,12 @@ register({
     verify: {
       handler: async (params: any) => {
         const { singleProofHash } = await import("@/modules/engine");
-        // Verify the trace chain by re-deriving CIDs
         const entries = params?.entries ?? _traces;
         const results = await Promise.all(
           entries.map(async (e: any, i: number) => {
             if (!e.cid) return { index: i, valid: true, reason: "no-cid" };
             const proof = await singleProofHash({ method: e.method, params: e.params, result: e.result });
-            return { index: i, valid: proof.cidV1 === e.cid, expected: e.cid, actual: proof.cidV1 };
+            return { index: i, valid: proof.cid === e.cid, expected: e.cid, actual: proof.cid };
           }),
         );
         return { valid: results.every((r: any) => r.valid), entries: results };

@@ -16,9 +16,9 @@ register({
         const proof = await singleProofHash(params?.content ?? params);
         return {
           type: "UOR-Proof-v1",
-          derivationId: proof.derivation_id,
-          cidV1: proof.cidV1,
-          ipv6: proof.ipv6,
+          derivationId: proof.derivationId,
+          cid: proof.cid,
+          ipv6: proof.ipv6Address["u:ipv6"],
           timestamp: new Date().toISOString(),
           algorithm: "URDNA2015 → SHA-256",
         };
@@ -43,10 +43,10 @@ register({
         const proof = await singleProofHash(params?.content ?? params);
         return {
           "@type": "VerificationReceipt",
-          derivationId: proof.derivation_id,
-          cidV1: proof.cidV1,
-          braille: proof.braille,
-          ipv6: proof.ipv6,
+          derivationId: proof.derivationId,
+          cid: proof.cid,
+          braille: proof.uorAddress["u:glyph"],
+          ipv6: proof.ipv6Address["u:ipv6"],
           issuedAt: new Date().toISOString(),
           algorithm: "URDNA2015 → SHA-256 → UOR",
           canonical: true,
