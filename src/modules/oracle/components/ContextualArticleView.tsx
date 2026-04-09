@@ -19,8 +19,6 @@ import SimpleLensRenderer from "./lenses/SimpleLensRenderer";
 import DeepDiveLensRenderer from "./lenses/DeepDiveLensRenderer";
 import StoryLensRenderer from "./lenses/StoryLensRenderer";
 import ComputeLensRenderer from "./lenses/ComputeLensRenderer";
-import ProvenanceBanner from "./ProvenanceBanner";
-import UorAnchoringCard from "./UorAnchoringCard";
 
 const LENS_RENDERERS: Record<string, React.FC<{
   title: string;
