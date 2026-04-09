@@ -1,247 +1,210 @@
 
 
-# Sovereign Messenger — Keybase Feature Parity & Beyond
+# Unified Social Graph — Research Findings & Implementation Plan
 
-## Gap Analysis: Keybase Features vs Current State
+## Research Summary: Battle-Tested Approaches
 
-| Keybase Feature | Current State | Priority |
-|----------------|---------------|----------|
-| **Group/Team conversations** | Schema supports `session_type: "group"` but UI is 100% direct-only. No group creation, no member management, no group avatars. | Critical |
-| **Channels within teams** | No concept exists | High |
-| **Disappearing messages UI** | `ephemeral.ts` + `ConversationInfo.tsx` show the TTL label but there is NO UI to change it. The `expires_after_seconds` column exists but is never written to. | Critical |
-| **Exploding messages (per-message timer)** | Only session-level TTL exists. No per-message ephemeral timers. | High |
-| **Encrypted filesystem (KBFS)** | `file-transfer.ts` exists for message attachments but there is no standalone file vault / shared folder concept. | High |
-| **Cryptographic identity proofs** | `TrustGraph` + `ceremony_cid` exist in `trusted_connections` but are not surfaced in the messenger. No social proof linking (Twitter, GitHub, domain). | Medium |
-| **Message pinning** | `Conversation.pinned` exists in types but pinning individual messages within a conversation does not. | Medium |
-| **Message editing & deletion** | No support. Once sent, messages are immutable with no edit or delete-for-everyone. | High |
-| **Reactions persisted** | `ReactionPicker` exists but `onReact` just `console.log`s. No database storage, no realtime sync. | High |
-| **Conversation muting** | `Conversation.muted` type exists but no UI or storage. | Medium |
-| **@mentions in groups** | No implementation. | Medium |
-| **Message forwarding** | Not implemented. | Low |
-| **Device key management** | No multi-device key sync. Session keys are in-memory only. | High |
-| **Notifications** | No push notifications, no desktop notifications. | High |
+### The Clear Winner: Matrix Protocol + mautrix Bridge Ecosystem
+
+The **Matrix protocol** (matrix.org) with **mautrix bridges** (by Tulir/Beeper) is the most mature, battle-tested, open-source approach to unifying messaging across platforms. This is not theoretical — **Beeper** (acquired by Automattic in 2024, merged with Texts.com) runs this in production for millions of users.
+
+**What mautrix provides:**
+
+| Bridge | Platform | Status | Method |
+|--------|----------|--------|--------|
+| mautrix-whatsapp | WhatsApp | Stable | Multi-device Web API |
+| mautrix-telegram | Telegram | Stable | MTProto client |
+| mautrix-signal | Signal | Stable | libsignal |
+| mautrix-discord | Discord | Stable | User token / QR |
+| mautrix-slack | Slack | Stable | User token / OAuth |
+| mautrix-meta | Facebook/Instagram | Stable | Messenger API |
+| mautrix-twitter | X/Twitter | Stable | DM API |
+| beeper-linkedin | LinkedIn | Beta | Reverse-engineered |
+| mautrix-googlechat | Google Chat | Stable | Workspace API |
+| mautrix-gmessages | Google Messages | Stable | RCS/SMS pairing |
+
+All bridges are **open-source** (AGPL-3.0), support **E2EE**, and use the unified **bridgev2 framework** — a single connector interface for all platforms.
+
+### Other Notable Approaches
+
+| Project | Approach | Limitation for UOR |
+|---------|----------|-------------------|
+| **Matterbridge** (Go, AGPL) | Chat relay across IRC/Matrix/Discord/Telegram/Slack/etc. | Relay-only, no identity graph, no E2EE |
+| **Ferdium** (Electron) | Embeds web views of each service | No unified data layer, just UI aggregation |
+| **PingCRM** (Python, AGPL) | Syncs Gmail, Telegram, Twitter, LinkedIn into a personal CRM with entity resolution | Great for contact graph, not messaging |
+| **SERF** (Python, Apache) | Semantic entity resolution framework for deduplicating identities | Useful for identity merge layer |
+| **Bridgy Fed** (by snarfed) | Bridges AT Protocol ↔ ActivityPub ↔ Nostr | Covers social posts, not DMs |
+
+### Key Architectural Insight: Beeper's On-Device Connection Model
+
+Beeper solved the sovereignty problem by running bridges **on the user's device** rather than in the cloud. The user's credentials never leave their machine. This is directly compatible with UOR's sovereignty-first approach.
+
+```text
+┌─────────────────────────────────────────────┐
+│              USER'S DEVICE                  │
+│                                             │
+│  ┌─────────┐  ┌──────────┐  ┌───────────┐  │
+│  │WhatsApp │  │Telegram  │  │ Signal    │  │
+│  │Bridge   │  │Bridge    │  │ Bridge    │  │
+│  └────┬────┘  └────┬─────┘  └─────┬─────┘  │
+│       │            │              │         │
+│       └────────────┼──────────────┘         │
+│                    │                        │
+│           ┌────────▼────────┐               │
+│           │  UOR Sovereign  │               │
+│           │  Message Bus    │               │
+│           │  (normalize →   │               │
+│           │   encrypt →     │               │
+│           │   anchor to KG) │               │
+│           └────────┬────────┘               │
+│                    │                        │
+│           ┌────────▼────────┐               │
+│           │  Knowledge      │               │
+│           │  Graph (GrafeoDB)│               │
+│           │  Social Graph   │               │
+│           └─────────────────┘               │
+└─────────────────────────────────────────────┘
+```
+
+## What This Means for Our Implementation
+
+Rather than rewriting bridge logic from scratch (which would take years), we should:
+
+1. **Adopt the mautrix bridge protocol as our interop layer** — these are production-grade, battle-tested Go bridges that handle every edge case (media, reactions, read receipts, typing, presence, group management) for 12+ platforms.
+
+2. **Build a "Bridge Gateway" edge function** that orchestrates bridge instances and normalizes all inbound/outbound messages into UMP envelopes before they touch our system.
+
+3. **Extend the Social Graph in the Knowledge Graph** — every external contact becomes a UOR entity with cross-platform identity links (Alice's WhatsApp number, Telegram handle, email, and LinkedIn profile all resolve to one `urn:uor:contact:{hash}`).
+
+4. **Build the Unified Inbox UI** — a single view showing all conversations from all platforms, with platform badges, threaded into the same conversation when contacts are merged.
 
 ## Implementation Plan
 
-### Phase 1: Group Conversations (The Core Keybase Feature)
+### Phase 1: Social Identity Graph (Database + KG)
 
 **Database migration:**
-- Create `group_metadata` table: `session_id` (FK), `name`, `description`, `avatar_url`, `created_by`, `is_public`
-- Create `group_members` table: `session_id`, `user_id`, `role` (admin/member), `joined_at`, `invited_by`, `muted_until`
-- Add RLS: members can read their groups; admins can update metadata and manage members
+- Create `social_identities` table: maps external platform identities to UOR canonical contacts
+  - `id`, `user_id` (owner), `contact_id` (FK to a new `contacts` table), `platform`, `platform_user_id`, `platform_handle`, `display_name`, `avatar_url`, `verified`, `last_synced_at`
+- Create `contacts` table: deduplicated contact entities
+  - `id`, `user_id` (owner), `canonical_hash` (UOR CID), `display_name`, `merged_from` (JSONB array of social_identity IDs)
+- RLS: user can only see their own contacts and identities
 
-**New files:**
-- `src/modules/messenger/components/NewGroupDialog.tsx` — Multi-select peer picker, group name/avatar, creates a `session_type: "group"` session + `group_metadata` + `group_members` rows
-- `src/modules/messenger/components/GroupInfoPanel.tsx` — Right panel for groups: member list, add/remove members, admin controls, shared media, group settings
-- `src/modules/messenger/components/GroupAvatar.tsx` — Stacked avatar composite or custom group icon
+**KG anchoring:**
+- Extend `kg-anchoring.ts` to emit contact-graph triples:
+  ```
+  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:whatsapp:{phone}> .
+  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:telegram:{username}> .
+  <urn:uor:contact:{hash}> <uor:hasIdentity> <urn:uor:email:{addr}> .
+  ```
 
-**Modify:**
-- `ChatList.tsx` — Render group conversations with group name/avatar instead of single peer
-- `ConversationView.tsx` — Show sender name above each bubble in group chats
-- `ContactHeader.tsx` — Show group name, member count, group typing indicators ("Alice is typing…")
-- `use-conversations.ts` — Fetch `group_metadata` for group sessions, resolve all member profiles
-- `use-presence.ts` — Track multiple peers in group channels
-- `MessageBubble.tsx` — Show sender name + mini avatar in group context
-- `types.ts` — Add `groupMeta` to `Conversation` type, add `GroupMember` interface
+### Phase 2: Expand Bridge Platform Types & Protocol
 
-### Phase 2: Disappearing Messages (Fully Functional)
+**Modify `types.ts`:**
+- Expand `BridgePlatform` to include all target platforms:
+  ```typescript
+  type BridgePlatform = 
+    | "whatsapp" | "telegram" | "signal" | "email"
+    | "discord" | "slack" | "linkedin" | "twitter"
+    | "instagram" | "matrix" | "sms";
+  ```
 
-**Modify:**
-- `ConversationInfo.tsx` — Add interactive TTL selector using `EPHEMERAL_PRESETS`. On selection, UPDATE `conduit_sessions.expires_after_seconds` via Supabase
-- `ConversationView.tsx` — Show ephemeral timer badge on each message when TTL is active, using `getTimeRemaining()`
-- `MessageBubble.tsx` — Show countdown indicator for messages nearing expiry
+**Extend `BridgeMessage`:**
+- Add rich fields: `messageType`, `replyTo`, `reactions`, `fileManifest`, `threadId`, `isRead`, `platform metadata`
 
-**New: Per-message ephemeral (Keybase "exploding messages")**
-- Add `self_destruct_seconds` column to `encrypted_messages` (nullable)
-- `MessageInput.tsx` — Add bomb/timer icon that lets sender set per-message TTL before sending
-- `ephemeral.ts` — Extend `filterExpiredMessages` to check both session TTL and per-message TTL
+**Extend `bridge-protocol.ts`:**
+- Add `syncContacts()` method to `MessageBridge` interface — pulls the user's contact list from each platform
+- Add `getConversations()` — lists all conversations from the platform
+- Add `markRead(externalId)` — bidirectional read status
 
-**Edge function:**
-- `supabase/functions/purge-expired-messages/index.ts` — Cron job (runs every 60s) that DELETEs rows where `created_at + self_destruct_seconds < now()` OR session-level TTL expired. Ensures server-side cleanup even if client doesn't.
+### Phase 3: Bridge Gateway Edge Function
 
-### Phase 3: Reactions (Persisted + Realtime)
+**New edge function: `supabase/functions/bridge-gateway/index.ts`**
 
-**Database migration:**
-- Create `message_reactions` table: `message_id` (FK), `user_id`, `emoji`, `created_at`, UNIQUE(`message_id`, `user_id`, `emoji`)
-- RLS: session participants can CRUD reactions on messages in their sessions
-- Add to realtime publication
+A central gateway that:
+1. Receives normalized bridge events (message received, typing, presence, read receipt)
+2. Wraps inbound messages in UMP envelopes (encrypted with session key)
+3. Stores in `encrypted_messages` with `source_platform` metadata
+4. Emits to Supabase Realtime for live delivery
+5. Anchors to KG via `anchorMessage()`
 
-**Modify:**
-- `ReactionPicker.tsx` — On react, INSERT/DELETE into `message_reactions`
-- `use-messages.ts` — Join reactions when fetching messages, subscribe to reaction changes
-- `MessageBubble.tsx` — Show real reaction counts with user attribution
+For outbound:
+1. Receives UMP-sealed message from client
+2. Routes to correct bridge based on conversation's platform
+3. Translates UMP → platform-native format
 
-### Phase 4: Message Edit & Delete
+### Phase 4: Platform Bridge Implementations
 
-**Database migration:**
-- Add `edited_at` timestamp column to `encrypted_messages`
-- Add `deleted_at` timestamp column (soft delete — shows "This message was deleted")
-- Add `edit_history` JSONB column (array of previous ciphertexts for auditability)
+Create scaffold bridges for each platform (following the existing `WhatsAppBridge` and `EmailBridge` pattern):
 
-**New component:**
-- `src/modules/messenger/components/MessageContextMenu.tsx` — Long-press / right-click menu with: Reply, React, Copy, Edit (own messages only, within 15min), Delete for me, Delete for everyone (own messages, within 15min), Forward, Pin
+| File | Platform | Transport |
+|------|----------|-----------|
+| `telegram-bridge.ts` | Telegram | Bot API / MTProto via edge function |
+| `signal-bridge.ts` | Signal | Signal CLI / libsignal via edge function |
+| `discord-bridge.ts` | Discord | Discord Bot API |
+| `slack-bridge.ts` | Slack | Slack connector (already available) |
+| `linkedin-bridge.ts` | LinkedIn | LinkedIn API |
+| `twitter-bridge.ts` | X/Twitter | X API v2 |
+| `sms-bridge.ts` | SMS | Twilio connector (available) |
+| `matrix-bridge.ts` | Matrix | Native Matrix CS API |
 
-**Modify:**
-- `MessageBubble.tsx` — Show "(edited)" label when `edited_at` is set, show "This message was deleted" tombstone when `deleted_at` is set
-- `use-send-message.ts` — Add `editMessage()` and `deleteMessage()` functions
-- `use-messages.ts` — Filter soft-deleted messages, handle UPDATE realtime events
+Each bridge implements `MessageBridge` with `connect()`, `sendMessage()`, `onMessage()`, `syncContacts()`, `mapIdentity()`.
 
-### Phase 5: Encrypted Shared Folders (KBFS-inspired)
+### Phase 5: Unified Inbox UI
 
-**Database migration:**
-- Create `shared_folders` table: `id`, `session_id` (FK), `name`, `created_by`, `encrypted_key` (per-folder AES key, encrypted with session key)
-- Create `folder_entries` table: `id`, `folder_id` (FK), `filename`, `file_cid`, `encrypted_manifest` (JSONB), `uploaded_by`, `created_at`, `size_bytes`
-- RLS: session participants only
-
-**New files:**
-- `src/modules/messenger/components/SharedFiles.tsx` — File browser panel showing all files shared in a conversation, organized by folder. Upload, download, preview.
-- `src/modules/messenger/components/FolderView.tsx` — Keybase-style folder tree with drag-and-drop upload
-
-**Modify:**
-- `ConversationInfo.tsx` — Add "Shared Files" section linking to the folder view
-- `file-transfer.ts` — Add `uploadToFolder()` variant that associates chunks with a folder entry
-
-### Phase 6: Desktop Notifications
-
-**New file:**
-- `src/modules/messenger/lib/notifications.ts` — Request `Notification` permission, show desktop notifications for new messages when the conversation isn't active. Respects `muted_until` from group_members.
+**New components:**
+- `src/modules/messenger/components/UnifiedInbox.tsx` — All-platform conversation list with platform badges (WhatsApp green, Telegram blue, etc.)
+- `src/modules/messenger/components/PlatformBadge.tsx` — Icon + color for each platform
+- `src/modules/messenger/components/ContactMergeDialog.tsx` — UI to merge duplicate contacts across platforms ("This WhatsApp contact looks like your Telegram contact — merge?")
+- `src/modules/messenger/components/BridgeStatusPanel.tsx` — Shows which bridges are connected, last sync time, errors
 
 **Modify:**
-- `use-messages.ts` — Trigger notification on new message from peer
-- `MessengerPage.tsx` — Request notification permission on mount
+- `ChatSidebar.tsx` — Add platform filter tabs (All / WhatsApp / Telegram / Email / etc.)
+- `ConversationView.tsx` — Show platform badge on messages from bridged conversations
+- `MessageInput.tsx` — Platform-aware send (knows which bridge to route through)
+- `MessengerPage.tsx` — Add bridge connection flow to settings
 
-### Phase 7: Conversation Management (Pin, Mute, Archive)
+### Phase 6: Contact Identity Resolution
 
-**Database migration:**
-- Create `conversation_settings` table: `user_id`, `session_id`, `pinned`, `muted_until`, `archived`, UNIQUE(`user_id`, `session_id`)
+**New file: `src/modules/messenger/lib/identity-resolver.ts`**
 
-**Modify:**
-- `ChatList.tsx` — Add swipe actions: pin (moves to top), mute (shows bell-off icon), archive (hides from main list)
-- `use-conversations.ts` — Join `conversation_settings`, sort pinned first, filter archived
-- `ChatSidebar.tsx` — Add filter tabs: All / Unread / Archived
+Automatic and manual contact merging:
+1. **Auto-merge by phone number** — WhatsApp and Signal both use phone numbers, auto-link
+2. **Auto-merge by email** — Email bridge + LinkedIn often share email
+3. **Suggested merges** — Fuzzy match on display name + mutual connections
+4. **Manual merge UI** — User confirms or rejects suggested merges
+5. **Split** — Undo a merge if wrong
 
-### Phase 8: @Mentions in Groups
+Each merged contact gets a single `urn:uor:contact:{hash}` with all platform identities as `uor:hasIdentity` predicates in the KG.
 
-**New file:**
-- `src/modules/messenger/components/MentionAutocomplete.tsx` — Triggered by `@` in MessageInput, shows member list, inserts `@handle` with user ID reference
+## Files Summary
 
-**Modify:**
-- `MessageInput.tsx` — Detect `@` trigger, show autocomplete popover
-- `MessageBubble.tsx` — Render `@mentions` as highlighted, tappable links
-- `notifications.ts` — Always notify on @mention even if conversation is muted
+| File | Action |
+|------|--------|
+| `src/modules/messenger/lib/types.ts` | Modify — expand BridgePlatform, enrich BridgeMessage |
+| `src/modules/messenger/lib/bridges/bridge-protocol.ts` | Modify — add syncContacts, getConversations, markRead |
+| `src/modules/messenger/lib/bridges/telegram-bridge.ts` | Create — Telegram bridge scaffold |
+| `src/modules/messenger/lib/bridges/signal-bridge.ts` | Create — Signal bridge scaffold |
+| `src/modules/messenger/lib/bridges/discord-bridge.ts` | Create — Discord bridge scaffold |
+| `src/modules/messenger/lib/bridges/slack-bridge.ts` | Create — Slack bridge scaffold |
+| `src/modules/messenger/lib/bridges/linkedin-bridge.ts` | Create — LinkedIn bridge scaffold |
+| `src/modules/messenger/lib/bridges/twitter-bridge.ts` | Create — Twitter/X bridge scaffold |
+| `src/modules/messenger/lib/bridges/sms-bridge.ts` | Create — SMS/Twilio bridge scaffold |
+| `src/modules/messenger/lib/bridges/matrix-bridge.ts` | Create — Matrix native bridge |
+| `src/modules/messenger/lib/identity-resolver.ts` | Create — cross-platform contact merge engine |
+| `src/modules/messenger/lib/kg-anchoring.ts` | Modify — add social graph triples |
+| `src/modules/messenger/components/UnifiedInbox.tsx` | Create — all-platform conversation list |
+| `src/modules/messenger/components/PlatformBadge.tsx` | Create — platform icon badges |
+| `src/modules/messenger/components/ContactMergeDialog.tsx` | Create — contact dedup UI |
+| `src/modules/messenger/components/BridgeStatusPanel.tsx` | Create — bridge health dashboard |
+| `src/modules/messenger/components/ChatSidebar.tsx` | Modify — platform filter tabs |
+| `src/modules/messenger/components/ConversationView.tsx` | Modify — platform badges on messages |
+| `src/modules/messenger/components/MessageInput.tsx` | Modify — platform-aware routing |
+| `src/modules/messenger/pages/MessengerPage.tsx` | Modify — bridge settings panel |
+| `supabase/functions/bridge-gateway/index.ts` | Create — central bridge orchestrator |
 
-## Database Migration Summary
-
-```sql
--- 1. Group metadata
-CREATE TABLE public.group_metadata (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL UNIQUE,
-  name text NOT NULL,
-  description text,
-  avatar_url text,
-  created_by uuid NOT NULL,
-  is_public boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
-);
-
--- 2. Group members
-CREATE TABLE public.group_members (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
-  user_id uuid NOT NULL,
-  role text NOT NULL DEFAULT 'member',
-  joined_at timestamptz DEFAULT now(),
-  invited_by uuid,
-  muted_until timestamptz,
-  UNIQUE(session_id, user_id)
-);
-
--- 3. Message reactions
-CREATE TABLE public.message_reactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  message_id uuid REFERENCES encrypted_messages(id) ON DELETE CASCADE NOT NULL,
-  user_id uuid NOT NULL,
-  emoji text NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(message_id, user_id, emoji)
-);
-
--- 4. Conversation settings
-CREATE TABLE public.conversation_settings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
-  pinned boolean DEFAULT false,
-  muted_until timestamptz,
-  archived boolean DEFAULT false,
-  UNIQUE(user_id, session_id)
-);
-
--- 5. Shared folders
-CREATE TABLE public.shared_folders (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
-  name text NOT NULL DEFAULT 'Shared Files',
-  created_by uuid NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
-
-CREATE TABLE public.folder_entries (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  folder_id uuid REFERENCES shared_folders(id) ON DELETE CASCADE NOT NULL,
-  filename text NOT NULL,
-  file_cid text NOT NULL,
-  encrypted_manifest jsonb,
-  uploaded_by uuid NOT NULL,
-  size_bytes bigint DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-
--- 6. Columns on existing tables
-ALTER TABLE public.encrypted_messages
-  ADD COLUMN IF NOT EXISTS self_destruct_seconds integer,
-  ADD COLUMN IF NOT EXISTS edited_at timestamptz,
-  ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
-  ADD COLUMN IF NOT EXISTS edit_history jsonb;
-
--- 7. RLS on all new tables
--- (group_members, message_reactions, conversation_settings, shared_folders, folder_entries)
--- All scoped to session participants via is_session_participant()
-
--- 8. Realtime for reactions
-ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
-```
-
-## New Files Summary
-
-| File | Purpose |
-|------|---------|
-| `NewGroupDialog.tsx` | Group creation with multi-select |
-| `GroupInfoPanel.tsx` | Group settings, members, shared media |
-| `GroupAvatar.tsx` | Composite avatar for groups |
-| `MessageContextMenu.tsx` | Edit, delete, forward, pin context menu |
-| `SharedFiles.tsx` | KBFS-style file browser |
-| `FolderView.tsx` | Folder tree with upload |
-| `MentionAutocomplete.tsx` | @mention picker in groups |
-| `notifications.ts` | Desktop notification system |
-| `purge-expired-messages/index.ts` | Cron for server-side message expiry |
-
-## Modified Files Summary
-
-| File | Changes |
-|------|---------|
-| `types.ts` | GroupMember, GroupMeta, expanded Conversation |
-| `ChatList.tsx` | Group rendering, swipe actions |
-| `ChatSidebar.tsx` | Filter tabs, archive view |
-| `ConversationView.tsx` | Group sender names, ephemeral badges |
-| `ConversationInfo.tsx` | Interactive TTL picker, shared files |
-| `ContactHeader.tsx` | Group name/count, group typing |
-| `MessageBubble.tsx` | Sender in groups, edit/delete states, real reactions |
-| `MessageInput.tsx` | Per-message timer, @mention trigger |
-| `ReactionPicker.tsx` | Persist to database |
-| `use-conversations.ts` | Group metadata, conversation settings |
-| `use-messages.ts` | Reactions join, soft-delete filter, notifications |
-| `use-send-message.ts` | Edit/delete functions |
-| `MessengerPage.tsx` | Notification permission request |
+**Database migrations:**
+1. `contacts` table with UOR canonical hash
+2. `social_identities` table linking platforms to contacts
+3. `source_platform` column on `encrypted_messages`
+4. RLS policies scoped to user ownership
 
