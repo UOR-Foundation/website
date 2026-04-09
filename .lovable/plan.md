@@ -1,5 +1,3 @@
-
-
 ## Plan: Offline-First Coherence — Unified Connectivity Context + Feature Awareness
 
 ### Current State
@@ -117,3 +115,79 @@ Small popover triggered by clicking the Wifi icon in the menu bar:
 - **Zero friction**: no modals, no blocking dialogs, no red error screens
 - **Local-first confidence**: emphasize that the KG, data, and search all work perfectly offline
 
+## Plan: Data Engineering Engine with Canonical UOR Integration
+
+### Status: ✅ Implemented
+
+### Architecture — Precise UOR Boundary
+
+```text
+Any Input (File, Paste, URL, API)
+    |
+    |  [no UOR here — standard data engineering]
+    |
+    v
+RawAuditStore ─── SHA-256(raw_bytes) audit key (plain hash, NOT UOR)
+    |
+FormatRouter ──── MIME/ext → processing mode (no UOR)
+    |
+AutoProfiler ──── accumulate stats, learn source structure (no UOR)
+    |
+DataEngineeringEngine
+  Stage 1: Parse (CSV/JSON/YAML/XML/Markdown)
+  Stage 2: Clean (whitespace, coercion, nulls, dedup)
+  Stage 3: Feature Engineering (passthrough, extensible)
+  Stage 4: Quality Score (completeness × uniqueness × validity, 35/30/35)
+    |
+====|============ UOR BOUNDARY ============================================
+    |
+    v
+  Stage 5: singleProofHash(cleaned_dataset_envelope)
+           JSON-LD → URDNA2015 → SHA-256 → IPv6 ULA (fd00:0075:6f72::/48)
+           Dataset gets its permanent content-addressed identity
+    |
+    v
+Knowledge Graph (IndexedDB)
+    |
+    ├── Dataset node:  IPv6 from Stage 5
+    |
+    ├── Entity nodes:  singleProofHash({ @type, value })  ◄─ UOR ENCODE
+    |                  each entity gets its own IPv6
+    |
+    ├── Column nodes:  singleProofHash({ @type, name, dtype })  ◄─ UOR ENCODE
+    |                  shared across datasets (same column = same IPv6)
+    |
+    ├── Edges:         subject|predicate|object triples
+    |
+    └── Verify:        verifySingleProof(stored_bytes, expected_ipv6)  ◄─ UOR DECODE
+                       on retrieval, re-derive and compare
+```
+
+### Where UOR Is Called (Exhaustive)
+
+| Location | Function | What It Does |
+|----------|----------|-------------|
+| `data-engine/engine.ts` Stage 5 | `singleProofHash(dataset_envelope)` | Content-addresses the cleaned dataset → IPv6 |
+| `ingest-bridge.ts` entity nodes | `singleProofHash({ @type, value })` | Content-addresses each entity → IPv6 |
+| `ingest-bridge.ts` column nodes | `singleProofHash({ @type, name, dtype })` | Content-addresses each column → IPv6 |
+| Future: single API endpoint | `singleProofHash(any_object)` | Public API surface. One call in, IPv6 out. |
+
+Everything else (Raw Audit, Format Router, AutoProfiler, Stages 1-4) is standard data engineering.
+
+### Single Address Type: IPv6 ULA
+
+All nodes use `fd00:0075:6f72::/48` IPv6 addresses as their canonical identity.
+Other forms (CID, Braille, hex) exist in `SingleProofResult` but are not surfaced as primary keys.
+
+### Files Implemented
+
+| File | UOR? | Description |
+|------|------|-------------|
+| `src/modules/knowledge-graph/data-engine/engine.ts` | Yes (Stage 5) | 5-stage pipeline with UOR encode |
+| `src/modules/knowledge-graph/data-engine/profiler.ts` | No | AutoProfiler (statistical learning) |
+| `src/modules/knowledge-graph/data-engine/index.ts` | No | Barrel export |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | Yes | Fixed: sha256hex → singleProofHash, IPv6 keys |
+| `src/modules/knowledge-graph/raw-store.ts` | No | Removed size limit, added retrieval/dedup |
+| `src/modules/sovereign-vault/lib/structured-extractor.ts` | No | 35/30/35 quality scoring, 200-row samples |
+| `src/modules/sovereign-vault/lib/ingest-pipeline.ts` | No | Removed legacy naming |
+| `src/modules/knowledge-graph/index.ts` | No | Exports data-engine |

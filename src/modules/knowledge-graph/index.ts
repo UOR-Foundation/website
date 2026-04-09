@@ -50,3 +50,12 @@ export type { AttributeSchema, ValidationResult, ValidationIssue } from "./bluep
 
 export { useKnowledgeGraph } from "./hooks/useKnowledgeGraph";
 export type { KnowledgeGraphHandle } from "./hooks/useKnowledgeGraph";
+
+export { processTabular, autoProfiler, deriveSourceKey } from "./data-engine";
+export type {
+  ProcessedDataPacket,
+  ColumnStats,
+  QualityDimensions,
+  CleaningAction,
+  ProcessingProfile,
+} from "./data-engine";

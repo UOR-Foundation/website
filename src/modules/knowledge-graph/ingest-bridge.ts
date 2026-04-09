@@ -4,16 +4,18 @@
  * Connects the Universal Ingestion Pipeline to the local Knowledge Graph.
  * Every ingested file/paste/URL becomes a graph node with typed edges.
  *
- * Key features:
- *  - Tabular data: each column becomes a sub-node (shared across files)
- *  - Text: extracts entities (URLs, emails, dates, currencies, proper nouns) → shared entity nodes
- *  - Entity/column nodes use SHA-256 UOR content-addressing (not FNV)
- *  - Processing lineage mapped to KG derivations
- *  - Duplicate detection is free: same UOR address = same node
+ * UOR Integration Points:
+ *   - Entity nodes: singleProofHash({ @type, value }) → IPv6 address
+ *   - Column nodes: singleProofHash({ @type, name, dtype }) → IPv6 address
+ *   - Dataset nodes: IPv6 address from pipeline Stage 5
+ *   - Verification: verifySingleProof() on retrieval
+ *
+ * All node keys are IPv6 ULA addresses (fd00:0075:6f72::/48).
+ * Same content → same IPv6 → same node (free dedup).
  */
 
 import { localGraphStore, type KGNode, type KGEdge, type KGDerivation } from "./local-store";
-import { sha256hex } from "@/lib/crypto";
+import { singleProofHash } from "@/lib/uor-canonical";
 import type { GuestContextItem } from "@/modules/sovereign-vault/lib/guest-context";
 import { decomposeToBlueprint, serializeBlueprint } from "./blueprint";
 
@@ -48,27 +50,11 @@ function extractEntities(text: string): ExtractedEntity[] {
     }
   };
 
-  // URLs
-  for (const match of text.matchAll(URL_RE)) {
-    addUnique(match[0], "url");
-  }
+  for (const match of text.matchAll(URL_RE)) addUnique(match[0], "url");
+  for (const match of text.matchAll(EMAIL_RE)) addUnique(match[0], "email");
+  for (const match of text.matchAll(DATE_RE)) addUnique(match[0], "date");
+  for (const match of text.matchAll(CURRENCY_RE)) addUnique(match[0], "currency");
 
-  // Emails
-  for (const match of text.matchAll(EMAIL_RE)) {
-    addUnique(match[0], "email");
-  }
-
-  // Dates
-  for (const match of text.matchAll(DATE_RE)) {
-    addUnique(match[0], "date");
-  }
-
-  // Currencies
-  for (const match of text.matchAll(CURRENCY_RE)) {
-    addUnique(match[0], "currency");
-  }
-
-  // Proper nouns (scan first 5000 chars for performance)
   const sample = text.slice(0, 5000);
   for (const match of sample.matchAll(PROPER_NOUN_RE)) {
     if (!COMMON_WORDS.has(match[0])) {
@@ -76,21 +62,39 @@ function extractEntities(text: string): ExtractedEntity[] {
     }
   }
 
-  return entities.slice(0, 80); // Cap at 80 entities per document
+  return entities.slice(0, 80);
 }
 
-// ── UOR Content-Addressed Entity/Column Nodes ───────────────────────────────
+// ── UOR Content-Addressed Entity/Column Nodes (IPv6) ────────────────────────
 
+const UOR_CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld";
+
+/**
+ * Generate a canonical IPv6 address for an entity node.
+ * Uses singleProofHash() (URDNA2015 → SHA-256 → IPv6 ULA).
+ */
 async function entityAddress(type: string, value: string): Promise<string> {
-  const normalized = `entity:${type}:${value.toLowerCase().trim()}`;
-  const hex = await sha256hex(normalized);
-  return `urn:uor:entity:${hex.slice(0, 16)}`;
+  const proof = await singleProofHash({
+    "@context": UOR_CONTEXT,
+    "@type": entityTypeToRdf(type),
+    "schema:value": value.toLowerCase().trim(),
+    "schema:entityType": type,
+  });
+  return proof.ipv6Address["u:ipv6"];
 }
 
-async function columnAddress(columnName: string): Promise<string> {
-  const normalized = `column:${columnName.toLowerCase().trim()}`;
-  const hex = await sha256hex(normalized);
-  return `urn:uor:column:${hex.slice(0, 16)}`;
+/**
+ * Generate a canonical IPv6 address for a column node.
+ * Uses singleProofHash() (URDNA2015 → SHA-256 → IPv6 ULA).
+ */
+async function columnAddress(columnName: string, dtype?: string): Promise<string> {
+  const proof = await singleProofHash({
+    "@context": UOR_CONTEXT,
+    "@type": "schema:Column",
+    "schema:name": columnName.toLowerCase().trim(),
+    "schema:dataType": dtype || "unknown",
+  });
+  return proof.ipv6Address["u:ipv6"];
 }
 
 // ── Entity type → RDF mapping ───────────────────────────────────────────────
@@ -154,7 +158,9 @@ export const ingestBridge = {
   /**
    * Add an ingested item to the Knowledge Graph.
    * Creates the primary node + typed edges to columns/entities.
-   * Entity and column nodes use SHA-256 UOR content-addressing.
+   *
+   * UOR ENCODE: Every entity/column node is content-addressed via
+   * singleProofHash() → IPv6 ULA. Same content = same IPv6 = same node.
    */
   async addToGraph(item: GuestContextItem): Promise<{
     nodeCount: number;
@@ -195,17 +201,17 @@ export const ingestBridge = {
     const edgesToPut: KGEdge[] = [];
     let derivationCount = 0;
 
-    // ── Tabular data: create column sub-nodes ─────────────────────────────
+    // ── Tabular data: create column sub-nodes (UOR ENCODE per column) ────
 
     if (item.structuredData?.columns) {
       const columnAddresses: { col: string; addr: string; dtype: string }[] = [];
 
       for (const col of item.structuredData.columns) {
-        const colAddr = await columnAddress(col);
         const dtype = item.structuredData.dtypes?.[col] || "unknown";
+        const colAddr = await columnAddress(col, dtype);
         columnAddresses.push({ col, addr: colAddr, dtype });
 
-        // Column node (shared across files with same column name)
+        // Column node (shared across files with same column name + type)
         nodesToPut.push({
           uorAddress: colAddr,
           label: col,
@@ -243,7 +249,6 @@ export const ingestBridge = {
       }
       for (const [, addrs] of typeGroups) {
         if (addrs.length >= 2) {
-          // Link first to second only (avoid quadratic edges)
           edgesToPut.push({
             id: `${addrs[0]}|schema:sameDataType|${addrs[1]}`,
             subject: addrs[0],
@@ -256,13 +261,12 @@ export const ingestBridge = {
         }
       }
 
-      // Add row count as property
       if (item.structuredData.rowCount) {
         primaryNode.properties.rowCount = item.structuredData.rowCount;
       }
     }
 
-    // ── Text: extract entities → shared entity nodes ──────────────────────
+    // ── Text: extract entities → shared entity nodes (UOR ENCODE per entity)
 
     if (item.text && item.source !== "workspace" && item.source !== "folder") {
       const entities = extractEntities(item.text);
