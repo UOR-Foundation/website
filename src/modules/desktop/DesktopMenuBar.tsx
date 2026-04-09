@@ -166,19 +166,14 @@ export default function DesktopMenuBar({
         <div className="relative flex items-center">
           <button
             onClick={toggleStatus}
-            className={`relative p-0.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
-            title={online ? "Online — click for status" : "Offline — click for status"}
+            className={`relative p-1.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
+            title={online ? "Online — click for details" : "Offline — click for details"}
           >
-            {online ? (
-              <Wifi className={`w-3.5 h-3.5 ${iconMuted}`} />
-            ) : (
-              <WifiOff className={`w-3.5 h-3.5 ${isLight ? "text-red-500/70" : "text-red-400/70"}`} />
-            )}
             <span
-              className={`absolute -top-0.5 -right-0.5 w-[5px] h-[5px] rounded-full ${
+              className={`block w-[7px] h-[7px] rounded-full transition-colors ${
                 online
-                  ? "bg-emerald-500 shadow-[0_0_4px_1px_rgba(16,185,129,0.4)]"
-                  : "bg-red-500 shadow-[0_0_4px_1px_rgba(239,68,68,0.4)]"
+                  ? "bg-emerald-500 shadow-[0_0_6px_1px_rgba(16,185,129,0.5)]"
+                  : "bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.5)]"
               }`}
             />
           </button>
