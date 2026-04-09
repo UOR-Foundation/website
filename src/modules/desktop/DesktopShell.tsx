@@ -118,7 +118,7 @@ function DesktopShellInner() {
               href={getPhasePhotoUnsplashUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="fixed bottom-10 left-4 z-[6] flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-500 group cursor-pointer"
+              className="fixed bottom-5 left-4 z-[6] flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-500 group cursor-pointer"
               style={{
                 opacity: 0.5,
                 background: "linear-gradient(135deg, hsl(0 0% 0% / 0.25), hsl(0 0% 0% / 0.15))",
