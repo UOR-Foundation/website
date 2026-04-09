@@ -247,16 +247,22 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
   // Run boot + replay
   useEffect(() => {
-    cancelledRef.current = false;
+    // Use a local cancelled flag (not ref) to avoid strict mode double-mount issues
+    let cancelled = false;
 
-    // Show ASCII logo immediately
+    // Reset state on mount
     setDisplayedLines([...ASCII_LOGO]);
+    setBootPhase("booting");
+    setReplayProgress(0);
+    setReceipt(null);
+    setError(null);
+    setShowDesktop(false);
 
     sovereignBoot((p: BootProgress) => {
       // We don't use live progress — we replay afterward
     })
       .then((r) => {
-        if (cancelledRef.current) return;
+        if (cancelled) return;
         setReceipt(r);
         setBootPhase("replaying");
 
@@ -264,16 +270,15 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
         let idx = 0;
 
         function replayNext() {
-          if (cancelledRef.current) return;
+          if (cancelled) return;
           if (idx >= script.length) {
-            // Done replaying
             setReplayProgress(1);
             setBootPhase("done");
             setTimeout(() => {
-              if (!cancelledRef.current) setShowDesktop(true);
+              if (!cancelled) setShowDesktop(true);
             }, 1600);
             setTimeout(() => {
-              if (!cancelledRef.current) onComplete();
+              if (!cancelled) onComplete();
             }, 2400);
             return;
           }
@@ -283,18 +288,16 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
           setReplayProgress(idx / script.length);
           idx++;
 
-          // Pacing: headers/dividers are faster, data lines are slower
           let delay: number;
           if (line.level === "header") delay = 200;
           else if (line.level === "divider") delay = 60;
           else if (line.level === "ascii") delay = 30;
           else if (line.text === "") delay = 80;
-          else delay = 75 + Math.random() * 45; // 75-120ms for content lines
+          else delay = 75 + Math.random() * 45;
 
           setTimeout(replayNext, delay);
         }
 
-        // Brief pause after logo, then start replaying
         setTimeout(replayNext, 400);
       })
       .catch((err) => {
