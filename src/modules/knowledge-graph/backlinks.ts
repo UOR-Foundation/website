@@ -88,3 +88,65 @@ export async function getBacklinkCount(address: string): Promise<number> {
   const edges = await localGraphStore.queryByObject(address);
   return edges.length;
 }
+
+// ── Unlinked References ─────────────────────────────────────────────────────
+
+export interface UnlinkedReference {
+  nodeAddress: string;
+  nodeLabel: string;
+  nodeType: string;
+  contextSnippet: string;
+}
+
+/**
+ * Find nodes whose text content mentions `topic` but lack an explicit edge.
+ * Scans all nodes for fuzzy matches, filters out already-linked ones.
+ */
+export async function findUnlinkedReferences(
+  topic: string,
+  targetAddress: string,
+  limit = 10,
+): Promise<UnlinkedReference[]> {
+  if (!topic || topic.length < 2) return [];
+
+  const allNodes = await localGraphStore.getAllNodes();
+  const linkedEdges = await localGraphStore.queryByObject(targetAddress);
+  const linkedSources = new Set(linkedEdges.map(e => e.subject));
+
+  const needle = topic.toLowerCase();
+  const results: UnlinkedReference[] = [];
+
+  for (const node of allNodes) {
+    if (node.uorAddress === targetAddress) continue;
+    if (linkedSources.has(node.uorAddress)) continue;
+    if (node.nodeType === "entity" || node.nodeType === "column") continue;
+
+    // Check label and text properties for mentions
+    const text = [
+      node.label,
+      typeof node.properties?.text === "string" ? node.properties.text : "",
+      Array.isArray(node.properties?.blocks)
+        ? (node.properties.blocks as Array<{ content: string }>).map(b => b.content).join(" ")
+        : "",
+    ].join(" ").toLowerCase();
+
+    if (text.includes(needle)) {
+      // Extract context snippet around the mention
+      const idx = text.indexOf(needle);
+      const start = Math.max(0, idx - 40);
+      const end = Math.min(text.length, idx + needle.length + 40);
+      const snippet = (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
+
+      results.push({
+        nodeAddress: node.uorAddress,
+        nodeLabel: node.label,
+        nodeType: node.nodeType,
+        contextSnippet: snippet,
+      });
+
+      if (results.length >= limit) break;
+    }
+  }
+
+  return results;
+}

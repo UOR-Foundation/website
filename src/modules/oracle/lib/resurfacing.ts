@@ -10,7 +10,7 @@
 
 import { localGraphStore } from "@/modules/knowledge-graph/local-store";
 import { getBacklinkCount } from "@/modules/knowledge-graph/backlinks";
-import { getAttentionProfile } from "./attention-tracker";
+import { loadProfile } from "./attention-tracker";
 import type { KGNode } from "@/modules/knowledge-graph/types";
 
 export interface ResurfacingSuggestion {
@@ -62,9 +62,9 @@ function generateReason(backlinkCount: number, daysSinceVisit: number): string {
  */
 export async function getResurfacingSuggestions(limit = 3): Promise<ResurfacingSuggestion[]> {
   // Check attention aperture — suppress when deeply focused
-  const profile = getAttentionProfile();
-  const recentDwells = Object.values(profile.sessionDwells);
-  const totalRecentDwell = recentDwells.reduce((a, b) => a + b, 0);
+  const profile = loadProfile();
+  const recentDwells = Object.values(profile.sessionDwells) as number[];
+  const totalRecentDwell = recentDwells.reduce((a: number, b: number) => a + b, 0);
   
   // If user is deeply focused (>5 min on current topic), suppress suggestions
   if (totalRecentDwell > 300) {
