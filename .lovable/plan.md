@@ -1,104 +1,177 @@
 
 
-## Plan: Roam-Inspired Sovereign Intelligence — Effortless Knowledge Amplification
+# Anytype-Inspired Sovereign Sync — Local-First Spaces with UOR-Anchored Collaboration
 
-### Philosophy
+## Anytype's Key Architectural Insights
 
-Roam's deepest insight isn't wiki-links (we already have those). It's the **elimination of organizational burden**. The user never decides where something goes — they just write, and the graph organizes itself. Every piece of context surfaces exactly when relevant, without being summoned.
+After deep analysis of the `any-sync` protocol, five patterns stand out as directly compatible with our UOR framework:
 
-Our system already has the content-addressing, backlinks, wiki-links, hashtags, attention tracking, and coherence engine. What's missing are the **effortless capture and automatic surfacing** patterns that make Roam feel like thinking out loud.
+### 1. Spaces as ACL-Scoped Graph Partitions
+Anytype's **Space** is a collection of objects with a shared Access Control List. Each space is encrypted with its own symmetric key, and only members who hold the key can read/write. Spaces sync independently — your private journal doesn't touch the same sync channel as your team workspace.
 
-### What We Build (5 Features)
+**Our equivalent:** Named graph IRIs. We already partition by `graph_iri` (per-device). The leap is: treat `graph_iri` as a **Space** — a permission-scoped, independently-syncable partition of the knowledge graph. Each Space gets its own encryption key derived from UOR content-addressing.
 
-#### 1. Daily Notes — Temporal Entry Point
+### 2. Change-DAG with Content-Addressed History
+Every object in Anytype is a DAG of changes, each node content-addressed. Merging is deterministic: topological sort by hash. No central server decides order.
 
-Roam's killer feature: every day has a page. You open Roam and you're writing. No folder, no filename, no decision.
+**Our advantage:** We already content-address everything via `singleProofHash`. Our triples are naturally idempotent (same content = same CID = automatic dedup). We extend this by wrapping mutations in a **Change** envelope that chains to its parent via CID.
 
-**Implementation:**
-- New component `src/modules/oracle/components/DailyNotes.tsx` — a minimalist block editor that auto-creates a dated page node in the knowledge graph
-- Each day's node: `singleProofHash({ @type: "vault:DailyNote", date: "2026-04-09" })` — deterministic, content-addressed
-- Auto-linked to yesterday's note via `schema:previousEntry` edge
-- Accessible from the desktop shell via a keyboard shortcut (e.g., `Ctrl+D` / `⌘D`) or a dedicated icon
-- Blocks within the daily note are individually addressable (each block gets its own UOR address)
-- Wiki-links (`[[topic]]`) and hashtags (`#tag`) in daily notes automatically create graph edges during typing
+### 3. Hybrid Peer Retrieval (mDNS + Cloud)
+Anytype uses mDNS for LAN discovery and cloud relay for WAN. Devices on the same WiFi sync directly; remote devices sync via relay nodes.
 
-**Why it's magical:** You open the OS and start capturing thoughts immediately. The graph builds itself around your daily rhythm.
+**Our implementation path:** In Tauri (local), we can use mDNS natively. In browser, we use BroadcastChannel for same-origin tab sync and the existing cloud sync bridge for cross-device. The `runtime.ts` layer determines which transport to activate.
 
-#### 2. Linked References Sidebar — Automatic Context Surfacing
+### 4. Creator-Controlled Keys (No Email Registry)
+Users generate their own keypair. The system never asks for email. Identity = keypair. This aligns perfectly with our existing `identity/derive` bus operation and Dilithium-3 signatures.
 
-When viewing any knowledge node or search result, automatically show all pages/blocks that reference it — without the user asking.
+### 5. Snapshots for Fast State Reconstruction
+Rather than replaying the full change DAG, Anytype periodically creates snapshots. This is the equivalent of our existing GrafeoDB persistence — the current state is always available locally.
 
-**Implementation:**
-- New component `src/modules/oracle/components/LinkedReferencesSidebar.tsx`
-- Uses the existing `getBacklinks()` from `backlinks.ts` to pull all incoming references
-- Groups by source type (daily notes, ingested documents, manual entries)
-- Shows the **surrounding context** (the paragraph around the link, not just the link itself)
-- Appears as a collapsible panel below search results in the Oracle view
-- Updates reactively when new content references the current topic
+---
 
-**Why it's magical:** You search for "meditation" and immediately see every time you've ever thought about it, in context. No retrieval effort.
+## What We Build
 
-#### 3. Quick Capture — Zero-Friction Inbox
+### Feature 1: Sovereign Spaces
 
-A global hotkey (`Ctrl+Space` / `⌘Space`) summons a floating input anywhere in the OS. Type a thought, hit Enter — it's captured to today's daily note and indexed in the graph. No navigation required.
+A **Space** is a named, permission-scoped partition of the knowledge graph. Every user starts with a **Personal Space** (private, single-owner). They can create **Shared Spaces** to collaborate.
 
-**Implementation:**
-- New component `src/modules/oracle/components/QuickCapture.tsx` — a floating frosted-glass pill (similar to existing `UnifiedFloatingInput`)
-- Registered as a global keyboard shortcut in the desktop shell
-- Content is appended to the current day's daily note
-- Wiki-links and hashtags are parsed and graph edges created in real-time
-- Supports voice input (reuses existing `VoiceInput` component)
-- Auto-dismisses after capture with a subtle confirmation animation
+**New files:**
+| File | Purpose |
+|------|---------|
+| `src/modules/sovereign-spaces/types.ts` | Space, SpaceMember, SpaceACL types |
+| `src/modules/sovereign-spaces/space-manager.ts` | Create, join, leave, list spaces; ACL enforcement |
+| `src/modules/sovereign-spaces/space-keys.ts` | Per-space symmetric key derivation (from UOR hash of space metadata + owner pubkey) |
+| `src/modules/sovereign-spaces/components/SpaceSwitcher.tsx` | UI: dropdown in the tab bar to switch active space context |
+| `src/modules/sovereign-spaces/components/SpaceSettings.tsx` | UI: manage members, permissions, space metadata |
 
-**Why it's magical:** A thought occurs while you're exploring the graph? `⌘Space`, type, Enter. Gone. Indexed. Linked. Back to what you were doing.
+**How it works:**
+- Each Space maps to a `graph_iri` prefix: `urn:uor:space:{spaceCid}`
+- All knowledge graph operations (ingest, query, daily notes) are scoped to the active space
+- Space membership is an ACL stored as a content-addressed DAG (like Anytype)
+- ACL changes require cloud consensus validation (prevents split-brain permission conflicts)
+- Personal Space = `urn:uor:space:personal:{userId}` — always exists, never shared
 
-#### 4. Automatic Backlink Suggestions — Unlinked References
+**Database migration:**
+```sql
+CREATE TABLE sovereign_spaces (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cid TEXT NOT NULL,
+  name TEXT NOT NULL,
+  owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  space_type TEXT NOT NULL DEFAULT 'personal', -- personal | shared | public
+  graph_iri TEXT NOT NULL UNIQUE,
+  encrypted_key TEXT, -- encrypted symmetric key for E2E
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-Roam's "Unlinked References" feature: scan all your content for mentions of the current topic that *aren't* explicitly linked yet, and offer to create the link with one click.
+CREATE TABLE space_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID REFERENCES sovereign_spaces(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role TEXT NOT NULL DEFAULT 'reader', -- owner | writer | reader
+  invited_by UUID REFERENCES auth.users(id),
+  joined_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(space_id, user_id)
+);
+```
 
-**Implementation:**
-- New function `findUnlinkedReferences(topic: string)` in `src/modules/knowledge-graph/backlinks.ts`
-- Scans all ingested text chunks for exact/fuzzy matches of the topic label
-- Filters out already-linked nodes
-- Surfaces as ghost chips below the Linked References panel: "3 unlinked mentions — Link all?"
-- One-click creates `schema:mentions` edges for all matches
+### Feature 2: Change-DAG Sync Engine
 
-**Why it's magical:** The system finds connections you didn't know existed and proposes them. The graph becomes smarter than your memory.
+Replace the current "push all pending / pull all missing" sync with a **change-DAG** model where each mutation is a content-addressed change that references its parent(s).
 
-#### 5. Spaced Repetition Surfacing — The Knowledge Stays Alive
+**Modified files:**
+| File | Change |
+|------|--------|
+| `src/modules/knowledge-graph/sync-bridge.ts` | Rewrite: change-DAG push/pull with head comparison |
+| `src/modules/knowledge-graph/types.ts` | Add `ChangeEnvelope` type |
 
-The most underappreciated Roam plugin pattern: resurface important nodes based on time decay. If you haven't revisited a heavily-linked node in a while, the system gently reminds you.
+**New files:**
+| File | Purpose |
+|------|---------|
+| `src/modules/sovereign-spaces/sync/change-dag.ts` | Change envelope creation, DAG traversal, head merge |
+| `src/modules/sovereign-spaces/sync/transport.ts` | Transport abstraction: cloud, BroadcastChannel, Tauri IPC |
 
-**Implementation:**
-- New module `src/modules/oracle/lib/resurfacing.ts`
-- Scores nodes by: `(backlink_count × recency_decay) + attention_dwell_time`
-- Uses the existing `attention-tracker.ts` dwell data and `backlinks.ts` link count
-- Surfaces 1–3 "rediscovery" suggestions in the daily note sidebar: "You haven't visited [[Quantum Coherence]] in 12 days — it has 7 linked references"
-- Click navigates directly to the node in the graph explorer
-- Respects the attention aperture: when focus is high (aperture > 0.7), suggestions are suppressed (Protective Stillness)
+**How sync works (Anytype-style):**
+1. Each mutation (triple insert/delete) is wrapped in a `ChangeEnvelope`: `{ parentCids: [...], payload, authorDeviceId, signature }`
+2. The envelope is content-addressed: `singleProofHash(envelope) → changeCid`
+3. Sync = compare heads. Device A says "my head is X", Device B says "mine is Y". If X ≠ Y, exchange the missing changes and merge heads.
+4. Merge = topological sort by CID (deterministic, same on every device)
+5. Content-addressing guarantees: same change on two devices = same CID = automatic dedup
 
-**Why it's magical:** Knowledge you've captured doesn't decay into oblivion. The system attends to your knowledge so you don't have to.
+### Feature 3: Multi-Transport Peer Discovery
 
-### Files Summary
+**New file: `src/modules/sovereign-spaces/sync/peer-discovery.ts`**
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/modules/oracle/components/DailyNotes.tsx` | Create | Temporal entry point with block-level editing |
-| `src/modules/oracle/components/LinkedReferencesSidebar.tsx` | Create | Auto-surfacing backlink context panel |
-| `src/modules/oracle/components/QuickCapture.tsx` | Create | Global floating capture input |
-| `src/modules/oracle/lib/resurfacing.ts` | Create | Spaced repetition scoring and suggestion engine |
-| `src/modules/knowledge-graph/backlinks.ts` | Modify | Add `findUnlinkedReferences()` |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | Modify | Daily note node type support |
-| `src/modules/desktop/TabBar.tsx` or shell | Modify | Register global hotkeys (`⌘D`, `⌘Space`) |
-| `src/modules/bus/modules/graph.ts` | Modify | Register `graph/daily-note` and `graph/quick-capture` bus ops |
+Three transports, selected by `runtime.ts`:
 
-### What This Does NOT Include
+| Transport | Environment | Discovery | Sync Channel |
+|-----------|------------|-----------|--------------|
+| `BroadcastChannel` | Browser (same origin) | Automatic | Shared memory |
+| `Cloud Relay` | Any (authenticated) | Cloud DB | Lovable Cloud (existing) |
+| `Tauri mDNS` | Local (Tauri) | mDNS | TCP direct |
 
-- Full Roam-style outliner/block editor (significant scope — future phase)
-- Multi-user real-time collaboration on daily notes (needs mesh sync from Phase 3)
-- Roam's `{{query}}` syntax (our SPARQL is more powerful; a friendly wrapper is a separate effort)
+All transports implement the same interface:
+```typescript
+interface SyncTransport {
+  announce(spaceId: string, head: string): void;
+  onHeadUpdate(cb: (peerId: string, spaceId: string, head: string) => void): void;
+  requestChanges(peerId: string, since: string[]): Promise<ChangeEnvelope[]>;
+}
+```
 
-### Design Principle
+### Feature 4: Space-Scoped UI Integration
 
-Every feature above follows a single rule: **the human does less, the system does more.** Capture is one keystroke. Organization is automatic. Surfacing is proactive. The user's scarce attention is protected — the OS attends to their knowledge graph so they can attend to thinking.
+**Modified files:**
+| File | Change |
+|------|--------|
+| `src/modules/desktop/TabBar.tsx` | Add SpaceSwitcher to the left of the wordmark |
+| `src/modules/oracle/components/DailyNotes.tsx` | Scope daily notes to active space |
+| `src/modules/knowledge-graph/grafeo-store.ts` | Add `withSpace(graphIri)` query scoping |
+| `src/modules/bus/modules/graph.ts` | Add `graph/space-create`, `graph/space-switch` ops |
+
+### Feature 5: Sync Status Indicator
+
+A small pill in the tab bar showing real-time sync state per-space:
+
+```
+● Synced (3 devices)  |  ○ 2 pending  |  ◌ Offline (local)
+```
+
+**New file: `src/modules/sovereign-spaces/components/SyncIndicator.tsx`**
+
+Uses the existing `syncBridge.subscribeSyncState()` pattern, extended with device count and per-space granularity.
+
+---
+
+## Files Summary
+
+| File | Action |
+|------|--------|
+| `src/modules/sovereign-spaces/types.ts` | Create |
+| `src/modules/sovereign-spaces/space-manager.ts` | Create |
+| `src/modules/sovereign-spaces/space-keys.ts` | Create |
+| `src/modules/sovereign-spaces/sync/change-dag.ts` | Create |
+| `src/modules/sovereign-spaces/sync/transport.ts` | Create |
+| `src/modules/sovereign-spaces/sync/peer-discovery.ts` | Create |
+| `src/modules/sovereign-spaces/components/SpaceSwitcher.tsx` | Create |
+| `src/modules/sovereign-spaces/components/SpaceSettings.tsx` | Create |
+| `src/modules/sovereign-spaces/components/SyncIndicator.tsx` | Create |
+| `src/modules/knowledge-graph/sync-bridge.ts` | Modify — change-DAG model |
+| `src/modules/knowledge-graph/types.ts` | Modify — add ChangeEnvelope |
+| `src/modules/knowledge-graph/grafeo-store.ts` | Modify — space-scoped queries |
+| `src/modules/desktop/TabBar.tsx` | Modify — SpaceSwitcher + SyncIndicator |
+| `src/modules/bus/modules/graph.ts` | Modify — space operations |
+| Database migration | Create `sovereign_spaces` and `space_members` tables with RLS |
+
+## What This Does NOT Include (Future Phases)
+
+- Full Tauri mDNS transport (requires native Rust; scaffolded as interface only)
+- WebRTC direct peer connections for global P2P (requires signaling server)
+- Multi-user real-time co-editing within a space (needs operational transform on top of change-DAG)
+- Space-scoped file storage (Vault documents partitioned by space)
+
+## Design Principle
+
+Anytype's genius is that **the network is optional but sync is automatic**. Our implementation follows the same rule: every operation works locally first. Sync is background, invisible, and deterministic. Spaces give users sovereign control over who sees what — enforced cryptographically by UOR-derived keys, not by server-side access checks alone.
 
