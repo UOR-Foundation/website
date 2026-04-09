@@ -21,6 +21,8 @@ export interface ShortcutHandlers {
   onShowShortcuts?: () => void;
   onFullscreen?: () => void;
   onVoice?: () => void;
+  onQuickCapture?: () => void;
+  onDailyNote?: () => void;
 }
 
 export function useDesktopShortcuts(handlers: ShortcutHandlers) {
@@ -98,6 +100,12 @@ export function useDesktopShortcuts(handlers: ShortcutHandlers) {
           break;
         case "f":
           handlersRef.current.onFullscreen?.();
+          break;
+        case " ":
+          handlersRef.current.onQuickCapture?.();
+          break;
+        case "d":
+          handlersRef.current.onDailyNote?.();
           break;
         case "?":
         case "/":
