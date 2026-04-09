@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { SigmaContainer, useRegisterEvents, useSigma } from "@react-sigma/core";
-import "@react-sigma/core/lib/style.css";
+import "@react-sigma/core/lib/react-sigma.min.css";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 import { useGraphData, colorForType } from "../hooks/useGraphData";
 import { GraphFilterBar } from "./GraphFilterBar";
