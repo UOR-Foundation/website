@@ -1,65 +1,43 @@
 
 
-## Plan: File Explorer — A Standalone Desktop App
+## Plan: Polish File Explorer — Sovereign Space Experience
 
-### Overview
-Create a macOS Finder-inspired File Explorer app that opens as a full desktop window (like Oracle, Library, Messenger). It replaces the cramped context dropdown with a familiar, spatial file management experience. Users can drag-and-drop files, create folders/workspaces, and browse their context library — all within the OS metaphor.
+### What Changes
 
-### Design Reference
-Inspired by macOS Finder: left sidebar with categories (Recents, Favorites, Tags), main content area with icon/list view, toolbar with view toggles and actions. Clean, spacious, native-feeling.
+**1. Increase all text sizes across the explorer**
 
-### Changes
+- **Sidebar** (`ExplorerSidebar.tsx`): Section labels from `10px` → `11px`, nav items from `13px` → `14px`, counts from `10px` → `11px`, storage text from `11px`/`10px` → `12px`/`11px`, sidebar width from `180px` → `200px`
+- **Toolbar** (`ExplorerToolbar.tsx`): Breadcrumb from `xs`/`sm` → `sm`/`base`, search input from `xs` → `sm` with `h-8`, button text from `xs` → `sm` with `h-8`, icon sizes from `3.5` → `4`
+- **FileCard** (`FileCard.tsx`): Grid filename from `xs` → `sm`, badge from `9px` → `10px`, grid icon from `w-14 h-14` → `w-16 h-16`; List filename from `sm` → `base`, badge from `10px` → `11px`
+- **Status bar** (`FileExplorerPage.tsx`): From `11px` → `12px`, list header from `10px` → `11px`
+- **Empty state**: Title from `sm` → `base`, subtitle from `xs` → `sm`
 
-**1. Register "Files" as a desktop app**
-- File: `src/modules/desktop/lib/desktop-apps.ts`
-- Add a new app entry with `id: "files"`, `label: "Files"`, icon: `FolderOpen` from lucide, category: `"STRUCTURE"`, lazy-loading a new `FileExplorerPage` component.
-- Update `os-taxonomy.ts` to add `"files"` to the `STRUCTURE` category's `appIds` and set `userFacing: true`.
+**2. Add sovereign space identity and trust signals**
 
-**2. Create the File Explorer page**
-- File: `src/modules/explorer/pages/FileExplorerPage.tsx`
-- Full-window layout with three regions:
-  - **Sidebar** (~180px): Sections for "Favorites" (All Files, Recents, Uploads), "Organize" (Workspaces, Folders), and a guest/vault status indicator at the bottom.
-  - **Toolbar**: Current location breadcrumb, view toggle (grid/list icons), "Upload" button, "New Folder" button, search filter input.
-  - **Content area**: Displays context items as a grid of file cards (icon + filename + type badge + date) or a list view. Supports drag-and-drop onto the content area. Empty state shows a large drop zone with instructions.
-- Wired to `useContextManager` for all data operations.
-- Theme-aware using semantic tokens (`bg-background`, `text-foreground`, `border-border`).
+- **Sidebar header**: Add a "My Space" or "Your Vault" header at the top of the sidebar with a shield/lock icon, reinforcing private sovereign ownership
+- **Storage section**: Replace generic "Session storage" / "Cloud vault" with more intentional labels: "Local · Session Only" vs "Sovereign Vault · Encrypted" with a shield icon for vault, and a subtle privacy reassurance line ("Your files. Your control.")
+- **Status bar**: Replace "Session · files cleared on refresh" with "Local session · not synced" and "Synced to vault" with "Sovereign Vault · encrypted & synced" using a small lock icon
 
-**3. File item cards**
-- File: `src/modules/explorer/components/FileCard.tsx`
-- Grid mode: icon thumbnail (file type icon), filename below, subtle type/source badge. Hover shows delete action.
-- List mode: single row with icon, name, source type, date added, size indicator, delete button.
-- Right-click context menu with "Get Info", "Remove", "Rename" options.
+**3. Improve empty state to feel welcoming and purposeful**
 
-**4. Update the search view trigger**
-- File: `src/modules/oracle/components/ImmersiveSearchView.tsx`
-- Change the `+` button behavior: instead of opening the inline `ContextMenu` dropdown, it opens the Files app as a desktop window via `wm.openApp("files", ...)`.
-- Keep drag-and-drop on the search view as a quick-add shortcut.
-- Keep ContextPills below the search bar to show what's selected.
+- Larger drop zone with a warmer message: "This is your private space" as the headline, "Drop files or click to upload — everything here stays yours" as subtitle
+- Add quick-action chips below the drop zone: "Upload Files", "Paste Text", "Import URL" as distinct entry points so users immediately see all their options
+- Larger icon (w-20 h-20) with a subtle animated pulse on hover
 
-**5. File type icons and utilities**
-- File: `src/modules/explorer/lib/file-icons.ts`
-- Map MIME types / extensions to appropriate lucide icons and colors (e.g., PDF → red FileText, JSON → amber Braces, Folder → blue FolderOpen, URL → green Globe).
+**4. Enhance the "New Folder" prompt**
 
-### Technical Details
+- Replace `window.prompt()` with an inline editable field or a small dialog — more polished than a browser prompt. Use a simple inline text input that appears in the toolbar area when clicked.
 
-- The File Explorer reuses `useContextManager` and `guestContext` — no new data layer needed.
-- Sidebar navigation uses local state to filter the view (all / files only / pastes only / URLs / workspaces / folders).
-- View mode (grid/list) persisted in localStorage.
-- File upload reuses the same `ctx.addFile()` flow with a hidden `<input type="file">`.
-- Drag-and-drop: the content area acts as a drop zone, calling `ctx.addFile()` for each dropped file.
-- Sidebar "Workspaces" and "Folders" entries are derived from `ctx.contextItems.filter(i => i.source === "workspace" | "folder")`.
-- The old `ContextMenu.tsx` component remains in the codebase but is no longer triggered from the search view.
+**5. Visual refinements for sovereignty feel**
 
-### File Structure
-```text
-src/modules/explorer/
-  pages/
-    FileExplorerPage.tsx      ← Main app (sidebar + toolbar + content)
-  components/
-    FileCard.tsx               ← Grid/list item rendering
-    ExplorerSidebar.tsx        ← Left sidebar with categories
-    ExplorerToolbar.tsx        ← Top bar with view toggles + actions
-  lib/
-    file-icons.ts              ← MIME → icon mapping
-```
+- Add a subtle top-border accent on the sidebar header using `border-primary/20`
+- Ensure the grid cards have slightly more padding and breathing room (minmax from `110px` → `130px`)
+- Drop overlay: increase icon size, add "Your files stay private" reassurance text
+
+### Files Modified
+
+- `src/modules/explorer/components/ExplorerSidebar.tsx` — larger text, sovereign header, trust labels
+- `src/modules/explorer/components/ExplorerToolbar.tsx` — larger controls, inline folder name input
+- `src/modules/explorer/components/FileCard.tsx` — larger text and icons
+- `src/modules/explorer/pages/FileExplorerPage.tsx` — larger status bar, improved empty state with quick actions, inline new-folder state
 
