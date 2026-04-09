@@ -120,7 +120,7 @@ export function useWindowManager() {
         return next;
       }
       const offsetIndex = prev.length % 8;
-      const shouldMaximize = options?.maximized ?? false;
+      const shouldMaximize = options?.maximized !== false;
       const newWin: WindowState = {
         id: `${appId}-${Date.now()}`,
         appId,

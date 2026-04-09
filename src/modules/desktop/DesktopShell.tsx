@@ -38,7 +38,7 @@ function DesktopShellInner() {
 
   const handleOpenApp = useCallback((appId: string) => {
     const app = getApp(appId);
-    if (app) wm.openApp(appId, app.label, app.defaultSize);
+    if (app) wm.openApp(appId, app.label, app.defaultSize, { maximized: true });
   }, [wm]);
 
   const handleHideAll = useCallback(() => {
