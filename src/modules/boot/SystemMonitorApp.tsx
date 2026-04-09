@@ -1079,7 +1079,7 @@ export default function SystemMonitorApp() {
       <div className="mt-auto border-t border-border/50 px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <PulseDot color={config.color} size={5} />
+            <PulseDot color={unifiedColor} size={5} />
             <span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span>
           </div>
           <span className="opacity-30">·</span>
