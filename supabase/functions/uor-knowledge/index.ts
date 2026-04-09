@@ -217,7 +217,56 @@ const DOMAIN_KEYWORDS: Record<Exclude<QueryDomain, "general">, RegExp> = {
   economics: /\b(gdp|inflation|monetary|fiscal|trade|macroeconomic|microeconomic|supply.chain|demand|equilibrium|elasticity|marginal|opportunity.cost|comparative.advantage|absolute.advantage|market.failure|externality|public.good|monopol|oligopol|perfect.competition|game.theory|nash.equilibrium|keynesian|monetarist|austrian.economics|behavioral.economics|development.economics|labor.economics|international.trade|exchange.rate|interest.rate|central.bank|federal.reserve|quantitative.easing|tariff|subsidy|deficit|surplus|debt|bond|equity|stock|derivative|hedge|arbitrage|portfolio|capital.market)\b/i,
 };
 
-function classifyQueryDomain(keyword: string): QueryDomain {
+/** Subcategory patterns — more specific labels within each domain */
+const DOMAIN_SUBCATEGORIES: Partial<Record<QueryDomain, Array<{ pattern: RegExp; label: string }>>> = {
+  physics: [
+    { pattern: /quantum/i, label: "Quantum Mechanics" },
+    { pattern: /relativity/i, label: "Relativity" },
+    { pattern: /particle|quark|lepton|boson|hadron/i, label: "Particle Physics" },
+    { pattern: /thermodynamic|entropy/i, label: "Thermodynamics" },
+    { pattern: /cosmolog|astrophys|black.hole|dark.matter/i, label: "Cosmology" },
+    { pattern: /electro|magnet/i, label: "Electromagnetism" },
+    { pattern: /nuclear|fission|fusion/i, label: "Nuclear Physics" },
+    { pattern: /optic|refract|diffract|laser/i, label: "Optics" },
+  ],
+  biomedical: [
+    { pattern: /cancer|oncolog|tumor/i, label: "Oncology" },
+    { pattern: /gene|genom|mutation|allele/i, label: "Genetics" },
+    { pattern: /neuron|brain|neurosci/i, label: "Neuroscience" },
+    { pattern: /cardiac|heart/i, label: "Cardiology" },
+    { pattern: /immun|antibod|antigen/i, label: "Immunology" },
+    { pattern: /virus|virol/i, label: "Virology" },
+    { pattern: /vaccine/i, label: "Vaccinology" },
+    { pattern: /pharma|drug/i, label: "Pharmacology" },
+  ],
+  mathematics: [
+    { pattern: /algebra/i, label: "Algebra" },
+    { pattern: /topology/i, label: "Topology" },
+    { pattern: /calculus|integral|differential/i, label: "Calculus" },
+    { pattern: /geometry|euclidean/i, label: "Geometry" },
+    { pattern: /probability|stochastic/i, label: "Probability Theory" },
+    { pattern: /statistic|bayesian|regression/i, label: "Statistics" },
+    { pattern: /number.theory|prime|modular/i, label: "Number Theory" },
+    { pattern: /category.theory|functor|morphism/i, label: "Category Theory" },
+  ],
+  technology: [
+    { pattern: /machine.learning|deep.learning/i, label: "Machine Learning" },
+    { pattern: /neural.network/i, label: "Neural Networks" },
+    { pattern: /blockchain|cryptocurrency/i, label: "Blockchain" },
+    { pattern: /cybersecurity|encryption/i, label: "Cybersecurity" },
+    { pattern: /cloud.computing|kubernetes|docker/i, label: "Cloud Computing" },
+    { pattern: /database|sql|nosql/i, label: "Database Systems" },
+  ],
+  economics: [
+    { pattern: /monetary|central.bank|federal.reserve/i, label: "Monetary Policy" },
+    { pattern: /fiscal|tax|deficit/i, label: "Fiscal Policy" },
+    { pattern: /trade|tariff|comparative.advantage/i, label: "International Trade" },
+    { pattern: /stock|equity|derivative|portfolio/i, label: "Financial Markets" },
+    { pattern: /behavioral.economics/i, label: "Behavioral Economics" },
+  ],
+};
+
+function classifyQueryDomain(keyword: string): { domain: QueryDomain; subcategory: string | null } {
   const text = keyword.toLowerCase();
   let bestDomain: QueryDomain = "general";
   let bestCount = 0;
@@ -229,7 +278,17 @@ function classifyQueryDomain(keyword: string): QueryDomain {
       bestDomain = domain;
     }
   }
-  return bestDomain;
+
+  // Detect subcategory
+  let subcategory: string | null = null;
+  const subPatterns = DOMAIN_SUBCATEGORIES[bestDomain];
+  if (subPatterns) {
+    for (const { pattern, label } of subPatterns) {
+      if (pattern.test(text)) { subcategory = label; break; }
+    }
+  }
+
+  return { domain: bestDomain, subcategory };
 }
 
 const DOMAIN_SOURCE_BOOSTS: Record<string, Record<string, number>> = {
@@ -1340,7 +1399,7 @@ serve(async (req) => {
     const userContext = Array.isArray(context) ? context.filter((c: unknown) => typeof c === "string").slice(0, 20) : [];
     const activeLens = typeof lens === "string" ? lens : "encyclopedia";
     const blueprintParams = lensParams && typeof lensParams === "object" ? lensParams : null;
-    const queryDomain = classifyQueryDomain(term);
+    const { domain: queryDomain, subcategory: domainSubcategory } = classifyQueryDomain(term);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -1498,6 +1557,7 @@ serve(async (req) => {
             personalized: isPersonalized,
             personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
             queryDomain: queryDomain !== "general" ? queryDomain : undefined,
+            domainSubcategory: domainSubcategory || undefined,
           })}\n\n`)
         );
 
@@ -1516,6 +1576,7 @@ serve(async (req) => {
                     personalized: isPersonalized,
                     personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
                     queryDomain: queryDomain !== "general" ? queryDomain : undefined,
+                    domainSubcategory: domainSubcategory || undefined,
                   })}\n\n`)
                 );
               } catch { /* stream may be closed */ }

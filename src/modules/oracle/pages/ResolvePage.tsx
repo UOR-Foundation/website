@@ -2327,6 +2327,12 @@ const SearchPage = () => {
                             isReaderMode
                             novelty={coherenceState?.novelty || null}
                             immersive={immersiveMode}
+                            coherenceData={coherenceState ? {
+                              noveltyScore: coherenceState.novelty?.score,
+                              noveltyLabel: coherenceState.novelty?.label,
+                              domainDepth: coherenceState.domainDepth,
+                              sessionCoherence: coherenceState.sessionCoherence,
+                            } : undefined}
                           />
                         </div>
                       </div>
