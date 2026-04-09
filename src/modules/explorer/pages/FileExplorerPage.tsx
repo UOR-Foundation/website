@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Upload, ClipboardPaste, Globe, Lock, ShieldCheck, X, Tag as TagIcon } from "lucide-react";
+import { Upload, ClipboardPaste, Globe, Lock, ShieldCheck, X, Tag as TagIcon, GitBranch } from "lucide-react";
 import { useContextManager, type ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ExplorerSidebar, { type SidebarFilter } from "../components/ExplorerSidebar";
 import ExplorerToolbar, { type ViewMode, type SortField, type SortDir } from "../components/ExplorerToolbar";
@@ -15,6 +15,8 @@ import PasteModal from "../components/PasteModal";
 import ImportUrlModal from "../components/ImportUrlModal";
 import { tagStore, DEFAULT_TAGS } from "../lib/tags";
 import { toast } from "sonner";
+import TagMenu from "../components/TagMenu";
+import { useKnowledgeGraph } from "@/modules/knowledge-graph";
 import TagMenu from "../components/TagMenu";
 
 const VIEW_KEY = "uor:explorer-view";
