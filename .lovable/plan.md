@@ -1,48 +1,90 @@
 
 
-# Standalone System Status Window
+# System Monitor as a Desktop App Window
 
-## Problem
-The system status currently opens as a dropdown panel anchored to the status dot in the top-right corner. The user wants it to feel like a **standalone OS window** — similar to Windows Task Manager or a hypervisor console — that opens as a centered, draggable modal on screen.
+## Concept
 
-## Design
+Transform the system monitor from a modal overlay into a **registered desktop app** that opens as a proper OS window — just like Oracle, Library, or Vault. The window will display a Hyper-V/Proxmox-inspired monitoring dashboard with metric cards, availability indicators, and live data, all wired to real system telemetry from the boot receipt.
 
-The panel becomes a **centered modal window** with an OS-style title bar (window controls, title, drag handle). The two-column VM/Host layout stays identical — only the container and opening behavior change.
+## Design (inspired by the Motadata reference)
 
 ```text
-┌─── UOR Virtual OS · System Status ──────────── ─ □ ✕ ─┐
-│  ● DEGRADED    UOR/0.2.0              [Copy Report]    │
-│  ⡧⠧⣇⢩⢜⡾⢮⡺⣬⡢⢙⠣⡅⠆⡗⣘⡌⡪⠩⠇⡸⠺⠸⠐⢄⣥⣣⢭⣟⠧⣌⢫        │
-├───────────────────────────┬────────────────────────────┤
-│  VIRTUAL MACHINE          │  HOST DEVICE               │
-│  (identical content)      │  (identical content)       │
-├───────────────────────────┴────────────────────────────┤
-│  ⚠ Issues strip                                       │
-├────────────────────────────────────────────────────────┤
-│  Lattice-hash sealed · 128-bit preimage               │
-└────────────────────────────────────────────────────────┘
+┌─── System Monitor ──────────────────────────────────────────────────┐
+│                                                                     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│  │ Virtual   │ │ CPU      │ │ Memory   │ │ Modules  │ │ Network  │ │
+│  │ Machine   │ │ 23 cores │ │ — GB     │ │ Loaded   │ │ Caps     │ │
+│  │  1   ●    │ │ ████ 90% │ │ Avail/Fr │ │  23      │ │ WASM ✓   │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
+│                                                                     │
+│  ┌─────────────────────┐ ┌──────────────────────────────────────┐  │
+│  │ System Availability  │ │ Kernel Primitives                    │  │
+│  │                      │ │                                      │  │
+│  │   ● Up 99.9%         │ │ P₀ encode  ●   P₁ decode  ●        │  │
+│  │   Uptime 00:12:34    │ │ P₂ compose ●   P₃ store   ●        │  │
+│  │   Boot   35ms        │ │ P₄ resolve ●   P₅ observe ●        │  │
+│  │   Seal   Verified    │ │ P₆ seal    ●   7/7 verified         │  │
+│  └─────────────────────┘ └──────────────────────────────────────┘  │
+│                                                                     │
+│  ┌─────────────────────┐ ┌──────────────────────────────────────┐  │
+│  │ Stack Health         │ │ Host Hardware                        │  │
+│  │ 22/23 operational    │ │ Projected from *.lovable.app         │  │
+│  │ ████████████████░ 96%│ │ Display 1920×1080 · Touch: No       │  │
+│  │ ⚠ SIMD (optional)   │ │ GPU: Unknown · WASM ✓ SIMD ✓ SAB ✗ │  │
+│  └─────────────────────┘ └──────────────────────────────────────┘  │
+│                                                                     │
+│  Lattice-hash sealed · 128-bit preimage · Session a7c2f…          │
+│                                                          [Copy Report] │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Changes
-- **Centered modal with backdrop** instead of absolute-positioned dropdown
-- **OS-style title bar**: "UOR Virtual OS · System Status" with minimize (—), maximize (□), and close (✕) buttons — close dismisses, others are decorative for familiarity
-- **Draggable**: Title bar acts as drag handle using pointer events + transform state (no library needed)
-- **Fixed position centered**: `fixed inset-0 flex items-center justify-center` with a subtle dark backdrop
-- **Same status dot trigger**: Clicking the dot opens the window; clicking ✕ or backdrop closes it
-
-## Files Changed
+## Changes
 
 | File | Change |
 |------|--------|
-| `src/modules/boot/EngineStatusIndicator.tsx` | Change panel from `absolute right-0 top-8` dropdown to `fixed` centered modal with title bar, window chrome, and drag support. All inner content (two-column layout, footer, issues strip) stays unchanged. |
+| `src/modules/boot/SystemMonitorApp.tsx` | **New file.** Full-page system monitor component with metric cards, availability ring, kernel primitives grid, stack health bar, host hardware section — all reading from `useBootStatus()`. Includes Copy Report button reusing the existing `formatMarkdownReport`. |
+| `src/modules/desktop/lib/desktop-apps.ts` | Register `"system-monitor"` app with `Activity` icon, `category: "OBSERVE"`, `defaultSize: { w: 820, h: 560 }`. |
+| `src/modules/desktop/lib/os-taxonomy.ts` | Add `"system-monitor"` to the `OBSERVE` category's `appIds` array. |
+| `src/modules/boot/EngineStatusIndicator.tsx` | Keep the status dot trigger, but instead of opening a modal, dispatch `window.dispatchEvent(new CustomEvent("uor:open-app", { detail: "system-monitor" }))` to open the desktop window. Remove the modal/backdrop/drag code entirely. |
 
 ## Implementation Details
 
-- Add `dragOffset` state (`{ x, y }`) and `onPointerDown/Move/Up` handlers on the title bar div
-- Outer container: `fixed inset-0 z-[9000] flex items-center justify-center`
-- Backdrop: semi-transparent overlay behind the window
-- Title bar: flex row with title text left-aligned, window control buttons right-aligned
-- Window buttons styled as small circles (macOS style) or squares (Windows style) — decorative except close which calls `setOpen(false)`
-- Remove the old `absolute right-0 top-8` positioning
-- `formatMarkdownReport` untouched
+### Metric Cards Row (top)
+Six cards in a responsive grid, each with an icon, title, subtitle, and primary value:
+- **Virtual Machine**: Status dot + "1 Running" + seal status label
+- **CPU**: Core count + idle estimation bar (decorative — browser can't measure real CPU idle)
+- **Memory**: Available/Free from `performance.memory` if available, else "Restricted"
+- **Modules**: Count of loaded bus modules
+- **Stack**: X/Y operational with a mini progress bar
+- **Capabilities**: WASM/SIMD/SAB/Workers as compact check marks
+
+### Availability Section (middle-left)
+- Large circular availability indicator showing uptime percentage (computed from `uptimeMs / (uptimeMs + 0)` = 100% since boot — realistic for a single-session VM)
+- Live uptime counter ticking every second
+- Boot time in ms
+- Seal status with color
+
+### Kernel Primitives (middle-right)
+- 2-column grid of P₀–P₆ with dot indicators, compact and scannable
+
+### Stack Health (bottom-left)
+- Progress bar showing operational/total ratio
+- List of failing components (if any) with severity icons
+
+### Host Hardware (bottom-right)
+- Projection badge (Local vs Remote)
+- Display, GPU, Touch, and capabilities matrix as compact rows
+
+### Footer
+- Seal hash info + Copy Report button
+
+### Status Dot Behavior
+- The dot in the tab bar stays — clicking it now opens the System Monitor as a window via the existing `uor:open-app` event system
+- All modal/backdrop/drag code removed from `EngineStatusIndicator.tsx`, making it a thin trigger component
+
+### Styling
+- Dark theme by default (matching the OS dark mode), with theme-awareness via `useDesktopTheme`
+- Metric cards use subtle colored icons (green for healthy, amber for degraded)
+- Monospace for values, proportional for labels
+- No scrolling needed at 820×560
 
