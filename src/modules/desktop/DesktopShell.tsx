@@ -7,7 +7,7 @@
 import { useCallback, useState, useMemo, useEffect, lazy, Suspense } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
-import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
+import { getPhasePhotoDescription, getPhasePhotoPhotographer, getPhasePhotoUnsplashUrl } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
 import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
