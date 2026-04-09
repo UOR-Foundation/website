@@ -1,140 +1,104 @@
 
 
-## Plan: Local-First Deployment via Tauri + Multi-Device Sync
+## Plan: Roam-Inspired Sovereign Intelligence — Effortless Knowledge Amplification
 
-### Anytype's Genius — What We Steal
+### Philosophy
 
-Anytype's architecture has three key insights relevant to us:
+Roam's deepest insight isn't wiki-links (we already have those). It's the **elimination of organizational burden**. The user never decides where something goes — they just write, and the graph organizes itself. Every piece of context surfaces exactly when relevant, without being summoned.
 
-1. **Local-first, sync-second**: Data lives on-device in an embedded database. The network is a replication layer, not a dependency. You work offline; sync happens when peers are available.
-2. **CRDT-based conflict resolution**: Every change is a CRDT operation — no merge conflicts, no "last write wins." Devices converge automatically.
-3. **Peer-to-peer sync (no central server required)**: Devices find each other via a DHT and sync directly. A relay server helps with NAT traversal but never sees plaintext data.
+Our system already has the content-addressing, backlinks, wiki-links, hashtags, attention tracking, and coherence engine. What's missing are the **effortless capture and automatic surfacing** patterns that make Roam feel like thinking out loud.
 
-We already have pieces 1 and 2: IndexedDB via GrafeoDB gives us local-first storage, and our UOR content-addressing gives us automatic deduplication (same content = same address = no conflict). What we need is the **desktop shell** and the **multi-device sync protocol**.
+### What We Build (5 Features)
 
-### Why Tauri (Not Electron)
+#### 1. Daily Notes — Temporal Entry Point
 
-Tauri is the right choice for this project:
+Roam's killer feature: every day has a page. You open Roam and you're writing. No folder, no filename, no decision.
 
-- **~5MB binary** vs Electron's ~150MB (ships no browser — uses the OS WebView)
-- **Rust backend** — aligns perfectly with our `uor-foundation` Rust crate; we can compile the crate directly into the Tauri sidecar
-- **Same frontend** — our entire React app runs unchanged in Tauri's WebView
-- **Security model** — Tauri's allowlist is capability-based, matching our sovereign security philosophy
-- **Mobile support** — Tauri 2.0 supports iOS and Android via the same codebase
+**Implementation:**
+- New component `src/modules/oracle/components/DailyNotes.tsx` — a minimalist block editor that auto-creates a dated page node in the knowledge graph
+- Each day's node: `singleProofHash({ @type: "vault:DailyNote", date: "2026-04-09" })` — deterministic, content-addressed
+- Auto-linked to yesterday's note via `schema:previousEntry` edge
+- Accessible from the desktop shell via a keyboard shortcut (e.g., `Ctrl+D` / `⌘D`) or a dedicated icon
+- Blocks within the daily note are individually addressable (each block gets its own UOR address)
+- Wiki-links (`[[topic]]`) and hashtags (`#tag`) in daily notes automatically create graph edges during typing
 
-### Implementation (3 Phases)
+**Why it's magical:** You open the OS and start capturing thoughts immediately. The graph builds itself around your daily rhythm.
 
-#### Phase 1: Tauri Desktop Shell (This Sprint)
+#### 2. Linked References Sidebar — Automatic Context Surfacing
 
-Add Tauri configuration alongside the existing Vite project so the same codebase produces both a web app and a native desktop app.
+When viewing any knowledge node or search result, automatically show all pages/blocks that reference it — without the user asking.
 
-**New files:**
-| File | Purpose |
-|------|---------|
-| `src-tauri/Cargo.toml` | Rust dependencies (tauri, uor-foundation) |
-| `src-tauri/tauri.conf.json` | Window config, allowlist, app metadata |
-| `src-tauri/src/main.rs` | Tauri entry point with IPC commands |
-| `src-tauri/build.rs` | Build script |
+**Implementation:**
+- New component `src/modules/oracle/components/LinkedReferencesSidebar.tsx`
+- Uses the existing `getBacklinks()` from `backlinks.ts` to pull all incoming references
+- Groups by source type (daily notes, ingested documents, manual entries)
+- Shows the **surrounding context** (the paragraph around the link, not just the link itself)
+- Appears as a collapsible panel below search results in the Oracle view
+- Updates reactively when new content references the current topic
 
-**Modified files:**
-| File | Change |
-|------|--------|
-| `package.json` | Add `tauri:dev` and `tauri:build` scripts |
-| `vite.config.ts` | Add conditional `base: './'` for Tauri builds |
-| `src/lib/runtime.ts` (new) | Runtime detection: `isLocal()`, `isWeb()`, `isMobile()` |
+**Why it's magical:** You search for "meditation" and immediately see every time you've ever thought about it, in context. No retrieval effort.
 
-**What the Tauri shell provides:**
-- Native window chrome with system tray icon
-- File system access for local knowledge graph persistence (SQLite via GrafeoDB)
-- IPC bridge: `invoke('uor_engine_op', { op: 'neg', args: [42] })` calls the Rust crate directly — no WASM overhead
-- Auto-updater for seamless version bumps
-- `base: './'` only when building for Tauri (env flag), web builds remain `base: '/'`
+#### 3. Quick Capture — Zero-Friction Inbox
 
-#### Phase 2: Runtime Abstraction Layer
+A global hotkey (`Ctrl+Space` / `⌘Space`) summons a floating input anywhere in the OS. Type a thought, hit Enter — it's captured to today's daily note and indexed in the graph. No navigation required.
 
-Create a thin abstraction so the app doesn't care whether it's running in browser or Tauri.
+**Implementation:**
+- New component `src/modules/oracle/components/QuickCapture.tsx` — a floating frosted-glass pill (similar to existing `UnifiedFloatingInput`)
+- Registered as a global keyboard shortcut in the desktop shell
+- Content is appended to the current day's daily note
+- Wiki-links and hashtags are parsed and graph edges created in real-time
+- Supports voice input (reuses existing `VoiceInput` component)
+- Auto-dismisses after capture with a subtle confirmation animation
 
-**New file: `src/lib/runtime.ts`**
+**Why it's magical:** A thought occurs while you're exploring the graph? `⌘Space`, type, Enter. Gone. Indexed. Linked. Back to what you were doing.
 
-```text
-Runtime Detection
-├── isLocal()     → true if window.__TAURI__ exists
-├── isWeb()       → true if running in browser
-├── isMobile()    → true if Capacitor/Tauri mobile
-├── getStorageBackend() → 'indexeddb' | 'sqlite' | 'hybrid'
-└── getPlatform() → { type, version, deviceId }
-```
+#### 4. Automatic Backlink Suggestions — Unlinked References
 
-**Modified: `src/modules/knowledge-graph/sync-bridge.ts`**
-- When local: sync to SQLite (via Tauri fs commands) as primary, cloud as secondary
-- When web: sync to IndexedDB as primary, cloud as secondary
-- Both: same `syncBridge.sync()` API, same UOR content-addressing for conflict-free merge
+Roam's "Unlinked References" feature: scan all your content for mentions of the current topic that *aren't* explicitly linked yet, and offer to create the link with one click.
 
-**Modified: Boot sequence (`BootSequence.tsx`)**
-- Show "Local" vs "Remote" provenance (already partially implemented per your screenshot)
-- When Tauri detected: provenance = "Local · [hostname]" with green indicator
+**Implementation:**
+- New function `findUnlinkedReferences(topic: string)` in `src/modules/knowledge-graph/backlinks.ts`
+- Scans all ingested text chunks for exact/fuzzy matches of the topic label
+- Filters out already-linked nodes
+- Surfaces as ghost chips below the Linked References panel: "3 unlinked mentions — Link all?"
+- One-click creates `schema:mentions` edges for all matches
 
-#### Phase 3: Mesh Sync Foundation (Future — Design Now)
+**Why it's magical:** The system finds connections you didn't know existed and proposes them. The graph becomes smarter than your memory.
 
-Leverage the existing `UnsNode` and DHT infrastructure (`src/modules/uns/core/dht.ts`) for device-to-device sync:
+#### 5. Spaced Repetition Surfacing — The Knowledge Stays Alive
 
-```text
-┌──────────────┐     UOR DHT      ┌──────────────┐
-│  Desktop     │◄────────────────►│  Mobile      │
-│  (Tauri)     │  content-addressed│  (PWA/Tauri) │
-│  SQLite+KG   │  triple sync     │  IndexedDB   │
-└──────┬───────┘                  └──────┬───────┘
-       │                                 │
-       └────────────┬────────────────────┘
-                    │ Cloud (optional)
-              ┌─────▼─────┐
-              │  Lovable   │
-              │  Cloud DB  │
-              └────────────┘
-```
+The most underappreciated Roam plugin pattern: resurface important nodes based on time decay. If you haven't revisited a heavily-linked node in a while, the system gently reminds you.
 
-- Each device registers as a `UnsNode` with a keypair
-- Sync uses the existing `graph_iri` per-device namespacing
-- Content-addressed triples = automatic deduplication across devices
-- No central server required for device-to-device (WebRTC data channels for LAN sync)
+**Implementation:**
+- New module `src/modules/oracle/lib/resurfacing.ts`
+- Scores nodes by: `(backlink_count × recency_decay) + attention_dwell_time`
+- Uses the existing `attention-tracker.ts` dwell data and `backlinks.ts` link count
+- Surfaces 1–3 "rediscovery" suggestions in the daily note sidebar: "You haven't visited [[Quantum Coherence]] in 12 days — it has 7 linked references"
+- Click navigates directly to the node in the graph explorer
+- Respects the attention aperture: when focus is high (aperture > 0.7), suggestions are suppressed (Protective Stillness)
 
-### What Gets Built Now (Phase 1 Only)
-
-1. **Tauri scaffold** (`src-tauri/`) with Rust entry point and IPC commands for UOR engine operations
-2. **Runtime detection** (`src/lib/runtime.ts`) so the app knows where it's running
-3. **Package scripts** — `npm run tauri:dev` to launch locally, `npm run build` for web (unchanged)
-4. **Boot sequence update** — show "Local" provenance when running in Tauri
-5. **README section** — instructions for local deployment: `git clone → npm install → npm run tauri:dev`
-
-### What Does NOT Change
-
-- The web experience remains identical — no regressions
-- IndexedDB + GrafeoDB remains the browser storage layer
-- Cloud sync via Lovable Cloud remains the web sync path
-- All existing PWA functionality preserved
-
-### User Experience
-
-After implementation, deploying locally is:
-
-```bash
-git clone <repo>
-npm install
-npm run tauri:dev    # Opens native window with full OS
-```
-
-The boot sequence shows "Local · yourmachine.local" instead of "Remote · uor.foundation", and the knowledge graph persists to the local filesystem. When online, it syncs to cloud. When offline, it keeps working.
+**Why it's magical:** Knowledge you've captured doesn't decay into oblivion. The system attends to your knowledge so you don't have to.
 
 ### Files Summary
 
-| File | Action |
-|------|--------|
-| `src-tauri/Cargo.toml` | Create — Rust manifest |
-| `src-tauri/tauri.conf.json` | Create — Tauri config |
-| `src-tauri/src/main.rs` | Create — IPC bridge to uor-foundation crate |
-| `src-tauri/build.rs` | Create — Build script |
-| `src/lib/runtime.ts` | Create — Runtime detection layer |
-| `package.json` | Modify — Add tauri scripts |
-| `vite.config.ts` | Modify — Conditional base path |
-| `src/modules/desktop/BootSequence.tsx` | Modify — Local provenance display |
+| File | Action | Description |
+|------|--------|-------------|
+| `src/modules/oracle/components/DailyNotes.tsx` | Create | Temporal entry point with block-level editing |
+| `src/modules/oracle/components/LinkedReferencesSidebar.tsx` | Create | Auto-surfacing backlink context panel |
+| `src/modules/oracle/components/QuickCapture.tsx` | Create | Global floating capture input |
+| `src/modules/oracle/lib/resurfacing.ts` | Create | Spaced repetition scoring and suggestion engine |
+| `src/modules/knowledge-graph/backlinks.ts` | Modify | Add `findUnlinkedReferences()` |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | Modify | Daily note node type support |
+| `src/modules/desktop/TabBar.tsx` or shell | Modify | Register global hotkeys (`⌘D`, `⌘Space`) |
+| `src/modules/bus/modules/graph.ts` | Modify | Register `graph/daily-note` and `graph/quick-capture` bus ops |
+
+### What This Does NOT Include
+
+- Full Roam-style outliner/block editor (significant scope — future phase)
+- Multi-user real-time collaboration on daily notes (needs mesh sync from Phase 3)
+- Roam's `{{query}}` syntax (our SPARQL is more powerful; a friendly wrapper is a separate effort)
+
+### Design Principle
+
+Every feature above follows a single rule: **the human does less, the system does more.** Capture is one keystroke. Organization is automatic. Surfacing is proactive. The user's scarce attention is protected — the OS attends to their knowledge graph so they can attend to thinking.
 
