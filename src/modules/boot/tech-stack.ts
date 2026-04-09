@@ -97,6 +97,8 @@ export interface StackEntry {
   readonly category: StackCategory;
   readonly criticality: StackCriticality;
   readonly fallback: string;
+  /** Which kernel function this serves (null = presentation or optimization tier) */
+  readonly kernelFunction: string | null;
   /** Why this framework was selected — must satisfy all 7 SELECTION_POLICY criteria. */
   readonly criteria: SelectionCriteria;
   readonly verify: () => Promise<boolean>;
@@ -127,6 +129,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "graph",
     criticality: "critical",
     fallback: "Array-based in-memory fallback (no SPARQL 1.1 support)",
+    kernelFunction: "store",
     criteria: {
       license: "Apache-2.0",
       standard: "W3C SPARQL 1.1, W3C RDF 1.1",
@@ -149,6 +152,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compute",
     criticality: "critical",
     fallback: "TypeScript pure-math fallback (identical results, no binary integrity hash)",
+    kernelFunction: "decode",
     criteria: {
       license: "MIT",
       portability: ["browser", "node", "edge-worker"],
@@ -177,6 +181,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "crypto",
     criticality: "critical",
     fallback: "None — system cannot produce seals without crypto.subtle",
+    kernelFunction: "encode",
     criteria: {
       license: "W3C",
       standard: "W3C Web Cryptography API",
@@ -192,6 +197,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "canonical",
     criticality: "critical",
     fallback: "JSON.stringify sort-keys fallback (not W3C compliant)",
+    kernelFunction: "encode",
     criteria: {
       license: "BSD-3-Clause",
       standard: "W3C JSON-LD 1.1, W3C RDF Dataset Canonicalization",
@@ -216,6 +222,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "ui",
     criticality: "critical",
     fallback: "None — application cannot render",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "JSX (TC39 stage), W3C DOM",
@@ -240,6 +247,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "bundler",
     criticality: "critical",
     fallback: "None — application cannot build",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "ES Modules (ECMA-262)",
@@ -257,6 +265,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "state",
     criticality: "recommended",
     fallback: "Manual fetch + useState (no cache, no deduplication)",
+    kernelFunction: "resolve",
     criteria: {
       license: "MIT",
       portability: ["browser", "node (SSR)"],
@@ -280,6 +289,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "styling",
     criticality: "recommended",
     fallback: "Inline styles (no design system consistency)",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "CSS 3 / CSS Custom Properties",
@@ -301,6 +311,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "cloud",
     criticality: "recommended",
     fallback: "Local-only mode (IndexedDB only, no sync)",
+    kernelFunction: "store",
     criteria: {
       license: "Apache-2.0",
       standard: "PostgreSQL, HTTP REST, WebSocket (Realtime)",
@@ -323,6 +334,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "local-persistence",
     criticality: "recommended",
     fallback: "In-memory only (data lost on page close)",
+    kernelFunction: "store",
     criteria: {
       license: "W3C",
       standard: "W3C Indexed Database API 3.0",
@@ -338,6 +350,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "animation",
     criticality: "recommended",
     fallback: "CSS transitions only (no AnimatePresence, no layout animations)",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       portability: ["browser"],
@@ -361,6 +374,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "a11y-primitives",
     criticality: "recommended",
     fallback: "Custom components (no WAI-ARIA compliance guarantees)",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "WAI-ARIA 1.2",
@@ -385,6 +399,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "routing",
     criticality: "recommended",
     fallback: "Manual history.pushState (no nested routes, no loaders)",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "URL/History API (WHATWG)",
@@ -411,6 +426,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "3d",
     criticality: "optional",
     fallback: "2D graph views only",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "WebGL 2.0 (Khronos), WebGPU (W3C draft)",
@@ -440,6 +456,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "post-quantum",
     criticality: "optional",
     fallback: "Classical SHA-256 only (no post-quantum key encapsulation)",
+    kernelFunction: "seal",
     criteria: {
       license: "MIT",
       standard: "NIST FIPS 203/204 (ML-KEM, ML-DSA)",
@@ -459,6 +476,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "graph-layout",
     criticality: "optional",
     fallback: "Grid layout (no physics simulation)",
+    kernelFunction: null,
     criteria: {
       license: "ISC",
       portability: ["browser", "node"],
@@ -482,6 +500,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compression",
     criticality: "optional",
     fallback: "No compression (larger payloads)",
+    kernelFunction: "encode",
     criteria: {
       license: "MIT",
       standard: "IETF RFC 1951 (DEFLATE), RFC 1952 (gzip)",
@@ -506,6 +525,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "media",
     criticality: "optional",
     fallback: "Native <video> only (no adaptive bitrate)",
+    kernelFunction: "observe",
     criteria: {
       license: "Apache-2.0",
       standard: "Apple HLS (RFC 8216)",
@@ -530,6 +550,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "interaction",
     criticality: "optional",
     fallback: "No drag-and-drop (static lists only)",
+    kernelFunction: null,
     criteria: {
       license: "MIT",
       standard: "WAI-ARIA drag-and-drop pattern",
@@ -555,6 +576,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compute",
     criticality: "optional",
     fallback: "Scalar WASM or TypeScript (identical results, lower throughput)",
+    kernelFunction: "decode",
     criteria: {
       license: "W3C",
       standard: "W3C WebAssembly SIMD (Phase 4, shipped)",
@@ -584,6 +606,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compute",
     criticality: "optional",
     fallback: "Full recompile from network on each page load",
+    kernelFunction: "decode",
     criteria: {
       license: "W3C",
       standard: "W3C WebAssembly JS API (Module serialization), W3C IndexedDB API",
@@ -599,6 +622,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compute",
     criticality: "optional",
     fallback: "Transferable ArrayBuffer (structured clone, still fast)",
+    kernelFunction: "compose",
     criteria: {
       license: "W3C",
       standard: "TC39 SharedArrayBuffer, WHATWG COOP/COEP",
@@ -621,6 +645,7 @@ export const TECH_STACK: readonly StackEntry[] = [
     category: "compute",
     criticality: "optional",
     fallback: "Main-thread compute (may block UI during bulk operations)",
+    kernelFunction: "compose",
     criteria: {
       license: "W3C",
       standard: "WHATWG Web Workers",
@@ -670,5 +695,57 @@ export async function validateStack(): Promise<StackHealth> {
     allCriticalPresent,
     stackHash,
     validatedAt: now,
+  };
+}
+
+// ── Minimality Validation ───────────────────────────────────────────────
+
+export interface MinimalityResult {
+  /** Whether every kernel function has exactly one critical framework */
+  readonly isMinimal: boolean;
+  /** Kernel functions with >1 critical framework (overlap) */
+  readonly overlaps: { kernelFunction: string; frameworks: string[] }[];
+  /** Entries that don't trace to any kernel function and aren't tagged null */
+  readonly orphans: string[];
+  /** Per-kernel-function mapping */
+  readonly mapping: { kernelFunction: string; frameworks: string[] }[];
+}
+
+/**
+ * Validate minimality: one framework per kernel function, no orphans.
+ * Entries with kernelFunction=null are presentation/optimization (exempt).
+ */
+export function validateMinimality(): MinimalityResult {
+  const kernelMap = new Map<string, string[]>();
+
+  for (const entry of TECH_STACK) {
+    if (entry.kernelFunction && entry.criticality === "critical") {
+      const existing = kernelMap.get(entry.kernelFunction) ?? [];
+      existing.push(entry.name);
+      kernelMap.set(entry.kernelFunction, existing);
+    }
+  }
+
+  const overlaps: { kernelFunction: string; frameworks: string[] }[] = [];
+  const mapping: { kernelFunction: string; frameworks: string[] }[] = [];
+
+  for (const [kf, fws] of kernelMap.entries()) {
+    mapping.push({ kernelFunction: kf, frameworks: fws });
+    if (fws.length > 1) {
+      overlaps.push({ kernelFunction: kf, frameworks: fws });
+    }
+  }
+
+  // Orphans: entries with a kernelFunction that doesn't match any of the 7
+  const VALID_KERNEL_FUNCTIONS = new Set(["encode", "decode", "compose", "store", "resolve", "observe", "seal"]);
+  const orphans = TECH_STACK
+    .filter((e) => e.kernelFunction && !VALID_KERNEL_FUNCTIONS.has(e.kernelFunction))
+    .map((e) => e.name);
+
+  return {
+    isMinimal: overlaps.length === 0 && orphans.length === 0,
+    overlaps,
+    orphans,
+    mapping,
   };
 }

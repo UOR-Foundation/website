@@ -30,6 +30,7 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { canonicalJsonLd } from "@/lib/uor-address";
 import { sha256hex } from "@/lib/crypto";
 import { initEngine, getEngine } from "@/modules/engine";
+import { verifyKernel } from "@/modules/engine/kernel-declaration";
 import { bus } from "@/modules/bus";
 import { BUS_MANIFEST } from "@/modules/bus/manifest";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
@@ -283,8 +284,17 @@ export async function sovereignBoot(
     }));
 
     // Phase 1: Engine init
-    onProgress?.({ phase: "engine-init", progress: 0.25, detail: "Loading engine" });
+    onProgress?.({ phase: "engine-init", progress: 0.2, detail: "Loading engine" });
     await initEngine();
+
+    // Phase 1.25: Kernel declaration verification
+    onProgress?.({ phase: "engine-init", progress: 0.3, detail: "Verifying kernel declaration" });
+    const kernelResult = verifyKernel();
+    if (!kernelResult.allPassed) {
+      const failed = kernelResult.results.filter((r) => !r.ok).map((r) => r.name);
+      console.warn(`[Sovereign Boot] Kernel functions failed: ${failed.join(", ")}`);
+    }
+
     const ringTableHash = await computeRingTableHash();
     const wasmBinaryHash = await computeWasmBinaryHash();
 

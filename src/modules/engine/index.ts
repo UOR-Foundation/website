@@ -30,6 +30,17 @@ export type { UorEngineContract } from "./contract";
 export { CRATE_MANIFEST } from "./crate-manifest";
 export type { CrateExportName } from "./crate-manifest";
 
+// ── Kernel Declaration (self-declared OS primitives) ─────────────────────
+
+export {
+  getKernelDeclaration,
+  verifyKernel,
+  namespaceToKernel,
+  auditNamespaceCoverage,
+  FANO_LINES,
+} from "./kernel-declaration";
+export type { KernelFunction, KernelFunctionName, KernelTier } from "./kernel-declaration";
+
 // ── WASM Optimization Modules ────────────────────────────────────────────
 
 export {

@@ -21,6 +21,7 @@ import type { SealStatus, BootReceipt } from "./types";
 import { motion, AnimatePresence } from "framer-motion";
 import { getEngine } from "@/modules/engine";
 import { SELECTION_POLICY } from "./tech-stack";
+import { getKernelDeclaration, verifyKernel } from "@/modules/engine/kernel-declaration";
 
 // ── Status configuration ────────────────────────────────────────────────
 
@@ -427,6 +428,9 @@ export default function EngineStatusIndicator({
                   </div>
                 </Section>
 
+                {/* ── Section: Kernel Functions (Fano P₀–P₆) ── */}
+                <KernelFunctionsSection isLight={isLight} />
+
                 {/* ── Section: Tech Stack ── */}
                 {receipt.stackHealth && (
                   <Section title="Tech Stack" isLight={isLight}>
@@ -578,6 +582,57 @@ export default function EngineStatusIndicator({
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────
+
+function KernelFunctionsSection({ isLight }: { isLight: boolean }) {
+  const kernelData = useMemo(() => {
+    try {
+      const table = getKernelDeclaration();
+      const verification = verifyKernel();
+      return { table, verification };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  if (!kernelData) return null;
+
+  const FANO_SUBSCRIPTS = ["₀", "₁", "₂", "₃", "₄", "₅", "₆"];
+
+  return (
+    <Section title="Kernel Functions (Fano Plane)" isLight={isLight}>
+      <div className="space-y-0.5">
+        {kernelData.table.map((fn, i) => {
+          const result = kernelData.verification.results.find((r) => r.name === fn.name);
+          const ok = result?.ok ?? false;
+          return (
+            <div key={fn.name} className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <span className={`text-[8px] font-mono ${isLight ? "text-black/30" : "text-white/30"}`}>
+                  P{FANO_SUBSCRIPTS[i]}
+                </span>
+                <span className={`uppercase text-[9px] font-semibold ${isLight ? "text-black/70" : "text-white/70"}`}>
+                  {fn.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[7px] truncate max-w-[90px] ${isLight ? "text-black/30" : "text-white/30"}`}>
+                  {fn.framework}
+                </span>
+                <span
+                  className="w-1.5 h-1.5 rounded-full inline-block shrink-0"
+                  style={{ backgroundColor: ok ? "#22c55e" : "#ef4444" }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className={`mt-1 text-[8px] ${isLight ? "text-black/30" : "text-white/30"}`}>
+        {kernelData.verification.allPassed ? "All 7 primitives verified ✓" : "Kernel verification incomplete ✗"}
+      </div>
+    </Section>
+  );
+}
 
 function Section({
   title,

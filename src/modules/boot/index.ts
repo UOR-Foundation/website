@@ -20,5 +20,5 @@ export { sovereignBoot, getBootReceipt, stopSealMonitor } from "./sovereign-boot
 export { startSealMonitor } from "./seal-monitor";
 export { useBootStatus } from "./useBootStatus";
 export { default as EngineStatusIndicator } from "./EngineStatusIndicator";
-export { TECH_STACK, SELECTION_POLICY, validateStack } from "./tech-stack";
-export type { StackEntry, StackHealth, StackValidationResult, SelectionCriteria, SelectionCriterion } from "./tech-stack";
+export { TECH_STACK, SELECTION_POLICY, validateStack, validateMinimality } from "./tech-stack";
+export type { StackEntry, StackHealth, StackValidationResult, SelectionCriteria, SelectionCriterion, MinimalityResult } from "./tech-stack";

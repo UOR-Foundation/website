@@ -25,6 +25,8 @@ export interface ManifestModule {
   label: string;
   layer: 0 | 1 | 2 | 3;
   remote: boolean;
+  /** Kernel function this module traces to (null = presentation/meta) */
+  kernelFunction: string | null;
   operations: ManifestEntry[];
 }
 
@@ -45,6 +47,7 @@ export const BUS_MANIFEST: {
       label: "UOR Engine",
       layer: 0,
       remote: false,
+      kernelFunction: "encode",
       operations: [
         { method: "kernel/encode", layer: 0, remote: false, description: "Content-address any object via URDNA2015 → SHA-256 → IPv6 ULA" },
         { method: "kernel/decode", layer: 0, remote: false, description: "Verify a content-addressed object against its expected derivation ID" },
@@ -60,6 +63,7 @@ export const BUS_MANIFEST: {
       label: "UOR Identity",
       layer: 0,
       remote: false,
+      kernelFunction: "encode",
       operations: [
         { method: "identity/derive", layer: 0, remote: false, description: "Derive a full UOR identity from content" },
         { method: "identity/verify", layer: 0, remote: false, description: "Verify an identity against content" },
@@ -71,6 +75,7 @@ export const BUS_MANIFEST: {
       label: "Morphisms",
       layer: 0,
       remote: false,
+      kernelFunction: "compose",
       operations: [
         { method: "morphism/apply", layer: 0, remote: false, description: "Apply a morphism transformation to content" },
         { method: "morphism/compose", layer: 0, remote: false, description: "Compose two morphisms into a single transformation" },
@@ -82,6 +87,7 @@ export const BUS_MANIFEST: {
       label: "Verification",
       layer: 0,
       remote: false,
+      kernelFunction: "decode",
       operations: [
         { method: "verify/proof", layer: 0, remote: false, description: "Generate a verification proof for content" },
         { method: "verify/check", layer: 0, remote: false, description: "Check a verification proof" },
@@ -95,6 +101,7 @@ export const BUS_MANIFEST: {
       label: "Knowledge Graph",
       layer: 1,
       remote: false,
+      kernelFunction: "store",
       operations: [
         { method: "graph/put", layer: 1, remote: false, description: "Insert or update a node or edge" },
         { method: "graph/get", layer: 1, remote: false, description: "Retrieve a node by UOR address or edge by ID" },
@@ -111,6 +118,7 @@ export const BUS_MANIFEST: {
       label: "Name Service",
       layer: 1,
       remote: false,
+      kernelFunction: "resolve",
       operations: [
         { method: "uns/resolve", layer: 1, remote: false, description: "Resolve a UNS name to its canonical identity" },
         { method: "uns/publish", layer: 1, remote: false, description: "Publish a name binding to the name service" },
@@ -122,6 +130,7 @@ export const BUS_MANIFEST: {
       label: "Resolver",
       layer: 1,
       remote: false,
+      kernelFunction: "resolve",
       operations: [
         { method: "resolver/resolve", layer: 1, remote: false, description: "Resolve a UOR address to its content" },
         { method: "resolver/reverse", layer: 1, remote: false, description: "Reverse-resolve content to its UOR address" },
@@ -132,6 +141,7 @@ export const BUS_MANIFEST: {
       label: "Observable",
       layer: 1,
       remote: false,
+      kernelFunction: "observe",
       operations: [
         { method: "observable/emit", layer: 1, remote: false, description: "Emit an event on the observable bus" },
         { method: "observable/subscribe", layer: 1, remote: false, description: "Subscribe to events on the observable bus" },
@@ -143,6 +153,7 @@ export const BUS_MANIFEST: {
       label: "Trace",
       layer: 1,
       remote: false,
+      kernelFunction: "seal",
       operations: [
         { method: "trace/record", layer: 1, remote: false, description: "Record a trace entry" },
         { method: "trace/verify", layer: 1, remote: false, description: "Verify a trace chain" },
@@ -154,6 +165,7 @@ export const BUS_MANIFEST: {
       label: "Sovereign Vault",
       layer: 1,
       remote: false,
+      kernelFunction: "encode",
       operations: [
         { method: "vault/encrypt", layer: 1, remote: false, description: "Encrypt content with sovereign key" },
         { method: "vault/decrypt", layer: 1, remote: false, description: "Decrypt content with sovereign key" },
@@ -165,6 +177,7 @@ export const BUS_MANIFEST: {
       label: "Continuity",
       layer: 1,
       remote: true,
+      kernelFunction: "seal",
       operations: [
         { method: "continuity/save", layer: 1, remote: true, description: "Save session state for continuity" },
         { method: "continuity/restore", layer: 1, remote: true, description: "Restore session state" },
@@ -176,6 +189,7 @@ export const BUS_MANIFEST: {
       label: "Certificates",
       layer: 1,
       remote: false,
+      kernelFunction: "seal",
       operations: [
         { method: "cert/issue", layer: 1, remote: false, description: "Issue a UOR certificate" },
         { method: "cert/verify", layer: 1, remote: false, description: "Verify a UOR certificate" },
@@ -190,6 +204,7 @@ export const BUS_MANIFEST: {
       label: "Oracle",
       layer: 2,
       remote: true,
+      kernelFunction: "resolve",
       operations: [
         { method: "oracle/ask", layer: 2, remote: true, description: "Ask the oracle a question" },
       ],
@@ -199,6 +214,7 @@ export const BUS_MANIFEST: {
       label: "Content Store",
       layer: 2,
       remote: true,
+      kernelFunction: "store",
       operations: [
         { method: "store/write", layer: 2, remote: true, description: "Write content to decentralized storage" },
         { method: "store/read", layer: 2, remote: true, description: "Read content from decentralized storage" },
@@ -209,6 +225,7 @@ export const BUS_MANIFEST: {
       label: "Web Scraper",
       layer: 2,
       remote: true,
+      kernelFunction: "resolve",
       operations: [
         { method: "scrape/url", layer: 2, remote: true, description: "Scrape a URL for content" },
         { method: "scrape/search", layer: 2, remote: true, description: "Search the web" },
@@ -219,6 +236,7 @@ export const BUS_MANIFEST: {
       label: "Wolfram Alpha",
       layer: 2,
       remote: true,
+      kernelFunction: "compose",
       operations: [
         { method: "wolfram/compute", layer: 2, remote: true, description: "Compute via Wolfram Alpha" },
       ],
@@ -228,6 +246,7 @@ export const BUS_MANIFEST: {
       label: "Audio",
       layer: 2,
       remote: true,
+      kernelFunction: "encode",
       operations: [
         { method: "audio/tts", layer: 2, remote: true, description: "Text-to-speech synthesis" },
         { method: "audio/transcribe", layer: 2, remote: true, description: "Transcribe audio to text" },
@@ -239,6 +258,7 @@ export const BUS_MANIFEST: {
       label: "Social",
       layer: 2,
       remote: true,
+      kernelFunction: "observe",
       operations: [
         { method: "social/send", layer: 2, remote: true, description: "Send a social message" },
         { method: "social/webhook", layer: 2, remote: true, description: "Handle incoming social webhook" },
@@ -249,6 +269,7 @@ export const BUS_MANIFEST: {
       label: "SPARQL",
       layer: 1,
       remote: true,
+      kernelFunction: "store",
       operations: [
         { method: "sparql/query", layer: 1, remote: true, description: "Execute a SPARQL query" },
         { method: "sparql/update", layer: 1, remote: true, description: "Execute a SPARQL update" },
@@ -259,6 +280,7 @@ export const BUS_MANIFEST: {
       label: "MCP Gateway",
       layer: 2,
       remote: true,
+      kernelFunction: "compose",
       operations: [
         { method: "mcp/connect", layer: 2, remote: true, description: "Connect to an MCP server" },
         { method: "mcp/call", layer: 2, remote: true, description: "Call an MCP tool" },
@@ -272,6 +294,7 @@ export const BUS_MANIFEST: {
       label: "Data Engine",
       layer: 2,
       remote: false,
+      kernelFunction: "compose",
       operations: [
         { method: "data/ingest", layer: 2, remote: false, description: "Ingest data into the data engine" },
         { method: "data/transform", layer: 2, remote: false, description: "Transform data" },
@@ -283,6 +306,7 @@ export const BUS_MANIFEST: {
       label: "Blueprint",
       layer: 2,
       remote: false,
+      kernelFunction: "compose",
       operations: [
         { method: "blueprint/create", layer: 2, remote: false, description: "Create a lens blueprint" },
         { method: "blueprint/apply", layer: 2, remote: false, description: "Apply a lens blueprint" },
@@ -296,6 +320,7 @@ export const BUS_MANIFEST: {
       label: "Introspection",
       layer: 2,
       remote: false,
+      kernelFunction: null,
       operations: [
         { method: "rpc/discover", layer: 2, remote: false, description: "Discover all registered methods" },
         { method: "rpc/manifest", layer: 2, remote: false, description: "Return the full typed bus manifest" },
