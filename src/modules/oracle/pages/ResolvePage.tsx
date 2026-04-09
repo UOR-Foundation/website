@@ -33,7 +33,7 @@ import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
-import { loadWasm } from "@/lib/wasm/uor-bridge";
+import { initEngine } from "@/modules/engine";
 import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib/receipt-registry";
