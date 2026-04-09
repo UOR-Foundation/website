@@ -247,7 +247,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
                     handleSubmit();
                   }
                 }}
-                placeholder="What is your main focus today?"
+                placeholder="What's on your mind?"
                 className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none transition-colors duration-300"
                 style={{
                   paddingLeft: isAddress ? "7.5rem" : "3.5rem",
