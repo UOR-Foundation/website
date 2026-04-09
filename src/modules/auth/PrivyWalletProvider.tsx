@@ -92,6 +92,9 @@ export function PrivyWalletProvider({ children }: { children: ReactNode }) {
           // Whitelabel: no Privy login modal — we use our own AuthPromptModal
           showWalletLoginFirst: false,
         },
+        // Need at least one login method to satisfy SDK validation;
+        // we use our own AuthPromptModal so Privy's email UI is never shown
+        loginMethods: ['email'],
         embeddedWallets: {
           ethereum: {
             createOnLogin: "all-users",
