@@ -40,6 +40,10 @@ export interface NamespaceDescriptor {
   readonly icon: string;
   /** docs.rs module path within the crate (e.g., "kernel/u/") */
   readonly crateModule: string;
+  /** Sovereign Bus namespace (if wired to bus dispatch) */
+  readonly busNs?: string;
+  /** Bus operations available for this namespace */
+  readonly busOperations?: readonly string[];
 }
 
 /** Build full docs.rs URL for a namespace */
@@ -60,6 +64,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 1,
     icon: "∞",
     crateModule: "kernel/u/",
+    busNs: "kernel",
+    busOperations: ["encode", "decode", "verify", "derive"],
   },
   {
     prefix: "schema:",
@@ -132,6 +138,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 3,
     icon: "🛡️",
     crateModule: "bridge/proof/",
+    busNs: "cert",
+    busOperations: ["issue", "verify", "chain"],
   },
   {
     prefix: "derivation:",
@@ -174,6 +182,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 2,
     icon: "🧠",
     crateModule: "user/type_/",
+    busNs: "graph",
+    busOperations: ["put", "get", "query", "similar", "stats", "verify", "compress", "summary"],
   },
   {
     prefix: "morphism:",
@@ -241,7 +251,7 @@ export const ONTOLOGICAL_MODULES = new Set(
   CANONICAL_NAMESPACES.flatMap((ns) => ns.modules)
 );
 
-/** Count: 16 canonical namespaces (14 original + audio + tee) */
+/** Count: canonical namespaces (14 original + audio + tee) */
 export const NAMESPACE_COUNT = CANONICAL_NAMESPACES.length;
 
 /**
