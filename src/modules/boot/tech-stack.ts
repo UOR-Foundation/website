@@ -697,3 +697,55 @@ export async function validateStack(): Promise<StackHealth> {
     validatedAt: now,
   };
 }
+
+// ── Minimality Validation ───────────────────────────────────────────────
+
+export interface MinimalityResult {
+  /** Whether every kernel function has exactly one critical framework */
+  readonly isMinimal: boolean;
+  /** Kernel functions with >1 critical framework (overlap) */
+  readonly overlaps: { kernelFunction: string; frameworks: string[] }[];
+  /** Entries that don't trace to any kernel function and aren't tagged null */
+  readonly orphans: string[];
+  /** Per-kernel-function mapping */
+  readonly mapping: { kernelFunction: string; frameworks: string[] }[];
+}
+
+/**
+ * Validate minimality: one framework per kernel function, no orphans.
+ * Entries with kernelFunction=null are presentation/optimization (exempt).
+ */
+export function validateMinimality(): MinimalityResult {
+  const kernelMap = new Map<string, string[]>();
+
+  for (const entry of TECH_STACK) {
+    if (entry.kernelFunction && entry.criticality === "critical") {
+      const existing = kernelMap.get(entry.kernelFunction) ?? [];
+      existing.push(entry.name);
+      kernelMap.set(entry.kernelFunction, existing);
+    }
+  }
+
+  const overlaps: { kernelFunction: string; frameworks: string[] }[] = [];
+  const mapping: { kernelFunction: string; frameworks: string[] }[] = [];
+
+  for (const [kf, fws] of kernelMap.entries()) {
+    mapping.push({ kernelFunction: kf, frameworks: fws });
+    if (fws.length > 1) {
+      overlaps.push({ kernelFunction: kf, frameworks: fws });
+    }
+  }
+
+  // Orphans: entries with a kernelFunction that doesn't match any of the 7
+  const VALID_KERNEL_FUNCTIONS = new Set(["encode", "decode", "compose", "store", "resolve", "observe", "seal"]);
+  const orphans = TECH_STACK
+    .filter((e) => e.kernelFunction && !VALID_KERNEL_FUNCTIONS.has(e.kernelFunction))
+    .map((e) => e.name);
+
+  return {
+    isMinimal: overlaps.length === 0 && orphans.length === 0,
+    overlaps,
+    orphans,
+    mapping,
+  };
+}
