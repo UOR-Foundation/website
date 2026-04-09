@@ -25,21 +25,27 @@ export function succ(x: number): number;
 export function verify_all_critical_identity(): boolean;
 export function verify_critical_identity(x: number): boolean;
 
+// SIMD-accelerated bulk operations
+export function bulk_ring_add(data: Uint8Array, operand: number): Uint8Array;
+export function bulk_ring_xor(data: Uint8Array, operand: number): Uint8Array;
+export function bulk_ring_neg(data: Uint8Array): Uint8Array;
+export function bulk_verify_all(data: Uint8Array): Uint8Array;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 export type SyncInitInput = BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly bnot: (a: number) => number;
-    readonly byte_basis: (a: number) => [number, number];
+    readonly byte_basis: (a: number, b: number) => void;
     readonly byte_popcount: (a: number) => number;
-    readonly classify_byte: (a: number) => [number, number];
-    readonly crate_version: () => [number, number];
+    readonly classify_byte: (a: number, b: number) => void;
+    readonly crate_version: (a: number) => void;
     readonly evaluate_expr: (a: number, b: number) => number;
-    readonly factorize: (a: number) => [number, number];
-    readonly list_namespaces: () => [number, number];
-    readonly list_enums: () => [number, number];
-    readonly list_enforcement_structs: () => [number, number];
+    readonly factorize: (a: number, b: number) => void;
+    readonly list_namespaces: (a: number) => void;
+    readonly list_enums: (a: number) => void;
+    readonly list_enforcement_structs: (a: number) => void;
     readonly const_ring_eval_q0: (a: number, b: number, c: number) => number;
     readonly const_ring_eval_unary_q0: (a: number, b: number) => number;
     readonly neg: (a: number) => number;
@@ -53,11 +59,14 @@ export interface InitOutput {
     readonly succ: (a: number) => number;
     readonly verify_all_critical_identity: () => number;
     readonly verify_critical_identity: (a: number) => number;
-    readonly __wbindgen_externrefs: WebAssembly.Table;
-    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
-    readonly __wbindgen_malloc: (a: number, b: number) => number;
-    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-    readonly __wbindgen_start: () => void;
+    readonly bulk_ring_add: (a: number, b: number, c: number, d: number) => void;
+    readonly bulk_ring_xor: (a: number, b: number, c: number, d: number) => void;
+    readonly bulk_ring_neg: (a: number, b: number, c: number) => void;
+    readonly bulk_verify_all: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
+    readonly __wbindgen_export: (a: number, b: number) => number;
+    readonly __wbindgen_export2: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_export3: (a: number, b: number, c: number, d: number) => number;
 }
 
 export function initSync(module: { module: SyncInitInput } | SyncInitInput): InitOutput;
