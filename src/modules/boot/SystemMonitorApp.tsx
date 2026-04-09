@@ -803,6 +803,21 @@ export default function SystemMonitorApp() {
     ? Math.round((stackSummary.available / stackSummary.total) * 100)
     : 0;
 
+  if (activeView) {
+    return (
+      <DetailViewRouter
+        viewId={activeView}
+        receipt={receipt}
+        status={status}
+        statusColor={config.color}
+        statusLabel={config.label}
+        uptimeMs={uptimeMs}
+        lastVerified={lastVerified}
+        onBack={() => setActiveView(null)}
+      />
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-background text-foreground select-none overflow-y-auto overflow-x-hidden">
       {/* ── Top Metric Cards ── */}
