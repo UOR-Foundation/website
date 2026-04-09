@@ -13,10 +13,11 @@ import { register } from "../registry";
 register({
   ns: "kernel",
   label: "UOR Engine",
+  layer: 0,
   operations: {
     encode: {
       handler: async (params: any) => {
-        const { singleProofHash } = await import("@/lib/uor-canonical");
+        const { singleProofHash } = await import("@/modules/engine");
         return singleProofHash(params?.content ?? params);
       },
       description: "Content-address any object via URDNA2015 → SHA-256 → IPv6 ULA",
@@ -24,21 +25,21 @@ register({
     },
     decode: {
       handler: async (params: any) => {
-        const { verifySingleProof } = await import("@/lib/uor-canonical");
+        const { verifySingleProof } = await import("@/modules/engine");
         return verifySingleProof(params?.content, params?.expectedId);
       },
       description: "Verify a content-addressed object against its expected derivation ID",
     },
     verify: {
       handler: async (params: any) => {
-        const { verifySingleProof } = await import("@/lib/uor-canonical");
+        const { verifySingleProof } = await import("@/modules/engine");
         return verifySingleProof(params?.content, params?.expectedId);
       },
       description: "Alias for decode — verify integrity of content-addressed data",
     },
     derive: {
       handler: async (params: any) => {
-        const { singleProofHash } = await import("@/lib/uor-canonical");
+        const { singleProofHash } = await import("@/modules/engine");
         return singleProofHash(params?.content ?? params);
       },
       description: "Derive canonical identity (derivation ID, CID, IPv6) from content",

@@ -86,6 +86,14 @@ export interface ModuleRegistration {
   ns: string;
   /** Human-readable label */
   label: string;
+  /**
+   * Architecture layer (0–3):
+   *   0 = Engine (pure computation, zero deps)
+   *   1 = Knowledge Graph (pluggable storage)
+   *   2 = Bus / API surface
+   *   3 = UX / UI
+   */
+  layer?: 0 | 1 | 2 | 3;
   /** Local or remote module */
   defaultRemote?: boolean;
   /** Operations map: opName → descriptor */
