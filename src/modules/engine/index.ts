@@ -25,10 +25,27 @@
 
 // ── Contract + Adapter (the new way) ─────────────────────────────────────
 
-export { getEngine, initEngine, engineType, crateVersion } from "./adapter";
+export { getEngine, initEngine, engineType, crateVersion, getCapabilities } from "./adapter";
 export type { UorEngineContract } from "./contract";
 export { CRATE_MANIFEST } from "./crate-manifest";
 export type { CrateExportName } from "./crate-manifest";
+
+// ── WASM Optimization Modules ────────────────────────────────────────────
+
+export {
+  getCachedModule,
+  cacheModule,
+  clearCache,
+  loadWithCache,
+  detectSimdSupport,
+  detectSharedMemory,
+} from "./wasm-cache";
+
+export {
+  WasmWorkerManager,
+  getWorkerManager,
+} from "./wasm-worker";
+export type { WorkerCommand, WorkerResult } from "./wasm-worker";
 
 // ── Core: Single Proof Hash (the heart of UOR) ────────────────────────────
 
