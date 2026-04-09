@@ -62,10 +62,11 @@ interface Props {
   onExit: () => void;
   onEncode?: () => void;
   onAiMode?: () => void;
+  onOpenApp?: (appId: string) => void;
   isFullscreen?: boolean;
 }
 
-export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
+export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, onOpenApp, isFullscreen = false }: Props) {
   const { profile } = useAuth();
   const ctx = useContextManager();
   const [clock, setClock] = useState(() => formatClock(new Date()));
