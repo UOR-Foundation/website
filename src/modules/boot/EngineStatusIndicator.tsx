@@ -5,6 +5,7 @@
  * Click opens a diagnostic panel with:
  *   - Single seal hash (system proof)
  *   - Kernel health (ring integrity)
+ *   - Tech stack validation
  *   - Engine & module status
  *   - Device context
  *   - Detailed degradation log (copyable as markdown)
@@ -106,6 +107,19 @@ function buildDegradationLog(
     });
   }
 
+  // Missing critical stack components
+  if (receipt.stackHealth) {
+    for (const comp of receipt.stackHealth.components) {
+      if (!comp.available && comp.criticality === "critical") {
+        entries.push({
+          component: comp.name,
+          issue: `Critical component unavailable`,
+          impact: `Fallback: ${comp.fallback}`,
+        });
+      }
+    }
+  }
+
   // Seal broken
   if (status === "broken") {
     entries.push({
@@ -166,6 +180,23 @@ function formatMarkdownReport(
       `- **Ring Integrity:** ${status === "unsealed" || status === "broken" ? "FAILED ✗" : "Verified ✓"}`,
     );
     lines.push("");
+
+    if (receipt.stackHealth) {
+      lines.push("## Tech Stack");
+      lines.push("");
+      lines.push(`- **Stack Hash:** \`${receipt.stackHealth.stackHash.slice(0, 16)}…\``);
+      lines.push(`- **All Critical Present:** ${receipt.stackHealth.allCriticalPresent ? "Yes ✓" : "No ✗"}`);
+      lines.push("");
+      lines.push("| Component | Role | Status | Version |");
+      lines.push("|---|---|---|---|");
+      for (const c of receipt.stackHealth.components) {
+        lines.push(
+          `| ${c.name} | ${c.role.split("—")[0].trim()} | ${c.available ? "✓" : "✗"} | ${c.version ?? "—"} |`,
+        );
+      }
+      lines.push("");
+    }
+
     lines.push("## Device Context");
     lines.push("");
     lines.push(
@@ -237,12 +268,11 @@ export default function EngineStatusIndicator({
     if (!receipt) return false;
     try {
       const e = getEngine();
-      // Spot-check canaries
       return e.neg(e.bnot(0)) === e.succ(0) && e.neg(e.bnot(255)) === e.succ(255);
     } catch {
       return false;
     }
-  }, [receipt, lastVerified]); // re-check on heartbeat
+  }, [receipt, lastVerified]);
 
   const handleCopyReport = useCallback(() => {
     const md = formatMarkdownReport(receipt, status, lastVerified, degradationLog);
@@ -307,7 +337,7 @@ export default function EngineStatusIndicator({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className={`absolute right-0 top-8 z-[9000] w-80 rounded-lg border p-3 text-[10px] leading-relaxed font-mono ${bgPanel}`}
+            className={`absolute right-0 top-8 z-[9000] w-80 max-h-[70vh] overflow-y-auto rounded-lg border p-3 text-[10px] leading-relaxed font-mono ${bgPanel}`}
             style={{ backdropFilter: "blur(24px)" }}
           >
             {/* ── Header ── */}
@@ -381,6 +411,49 @@ export default function EngineStatusIndicator({
                     isLight={isLight}
                   />
                 </Section>
+
+                {/* ── Section: Tech Stack ── */}
+                {receipt.stackHealth && (
+                  <Section title="Tech Stack" isLight={isLight}>
+                    <div className="space-y-0.5">
+                      {receipt.stackHealth.components.map((comp) => (
+                        <div
+                          key={comp.name}
+                          className="flex items-center justify-between"
+                        >
+                          <span className={`truncate pr-2 ${isLight ? "text-black/50" : "text-white/50"}`}>
+                            {comp.name}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {comp.version && (
+                              <span className={`text-[8px] ${isLight ? "text-black/30" : "text-white/30"}`}>
+                                {comp.version}
+                              </span>
+                            )}
+                            <span
+                              className="w-1.5 h-1.5 rounded-full inline-block"
+                              style={{
+                                backgroundColor: comp.available
+                                  ? "#22c55e"
+                                  : comp.criticality === "critical"
+                                    ? "#ef4444"
+                                    : "#f59e0b",
+                              }}
+                              title={
+                                comp.available
+                                  ? `${comp.role}`
+                                  : `Missing — ${comp.fallback}`
+                              }
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={`mt-1 text-[8px] ${isLight ? "text-black/30" : "text-white/30"}`}>
+                      Stack hash: {receipt.stackHealth.stackHash.slice(0, 12)}…
+                    </div>
+                  </Section>
+                )}
 
                 {/* ── Section: Monitoring ── */}
                 <Section title="Monitoring" isLight={isLight}>
