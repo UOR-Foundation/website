@@ -372,6 +372,7 @@ function CommentNodeView({
   onSubmitReply: (parentId: string, content: string, guestName?: string) => Promise<void>;
   user: any;
 }) {
+  const { prompt: authPrompt } = useAuthPrompt();
   const isCollapsed = collapsed.has(node.id);
 
   if (isCollapsed) {
