@@ -27,6 +27,7 @@ import {
 } from "./structured-extractor";
 import { extractText, extractFromUrl } from "./extract";
 import { rawStore } from "@/modules/knowledge-graph/raw-store";
+import { processTabular, autoProfiler, deriveSourceKey } from "@/modules/knowledge-graph/data-engine";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -144,9 +145,42 @@ export async function ingestFile(
   if (isTabular(file.type, ext)) {
     structuredData = ext === "tsv" ? parseTSV(rawText) : parseCSV(rawText);
     searchableText = toSearchableText(structuredData);
-    qualityScore = structuredData.qualityScore;
     format = "csv";
     addLineage(lineage, "structured-parse", `${structuredData.columns.length} columns, ${structuredData.rowCount} rows`);
+
+    // Route through data-engine for cleaning, quality scoring, and UOR encoding
+    try {
+      const packet = await processTabular(
+        structuredData.columns,
+        structuredData.rows,
+        structuredData.dtypes as Record<string, string>,
+        file.name,
+      );
+      qualityScore = packet.quality.overall;
+      structuredData = {
+        ...structuredData,
+        rows: packet.rows.slice(0, 100),
+        rowCount: packet.rowCountAfter,
+        qualityScore: packet.quality.overall,
+      };
+      if (packet.cleaningLog.length > 0) {
+        addLineage(lineage, "data-engine-clean", `${packet.cleaningLog.length} actions, ${packet.rowCountBefore - packet.rowCountAfter} rows removed`);
+      }
+      addLineage(lineage, "quality-score", `completeness=${packet.quality.completeness} uniqueness=${packet.quality.uniqueness} validity=${packet.quality.validity}`);
+
+      // Record profile for future ingestions
+      await autoProfiler.recordSample(
+        file.name,
+        file.type || "text/csv",
+        packet.columns,
+        packet.dtypes,
+        packet.quality.overall,
+        packet.columnStats,
+      );
+    } catch {
+      qualityScore = structuredData.qualityScore;
+      addLineage(lineage, "data-engine-skip", "engine unavailable, using raw quality");
+    }
   } else if (isJSON(file.type, ext)) {
     const parsed = parseStructuredJSON(rawText);
     if (parsed) {
