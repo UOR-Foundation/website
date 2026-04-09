@@ -71,8 +71,8 @@ export default function MobileShell() {
       {/* ── Background ── */}
       {theme === "immersive" && <DesktopImmersiveWallpaper />}
 
-      {/* ── DayRingClock — centered upper area ── */}
-      <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center z-10 pointer-events-none">
+      {/* ── DayRingClock — centered upper area, GPU-promoted ── */}
+      <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center z-10 pointer-events-none" style={{ willChange: "transform" }}>
         {/* Spacer: push clock to ~18% from top */}
         <div className="flex-[0_0_18%]" />
         <div className="pointer-events-auto">
@@ -80,8 +80,8 @@ export default function MobileShell() {
         </div>
       </div>
 
-      {/* ── Bottom Controls ── */}
-      <div className="absolute inset-x-0 bottom-0 z-20 pb-2">
+      {/* ── Bottom Controls — safe-area aware, GPU-promoted ── */}
+      <div className="absolute inset-x-0 bottom-0 z-20" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0.5rem))", willChange: "transform" }}>
         {/* Corner icons + theme dots */}
         <div className="flex items-end justify-between px-6 pb-3">
           {/* Menu icon */}
@@ -217,7 +217,7 @@ export default function MobileShell() {
               {app?.label || "App"}
             </DrawerTitle>
           </DrawerHeader>
-          <div className="flex-1 overflow-auto px-1 pb-4" style={{ minHeight: "60vh" }}>
+          <div className="flex-1 overflow-auto px-1 pb-4" style={{ minHeight: "60vh", contentVisibility: "auto" as any }}>
             <Suspense fallback={
               <div className="flex items-center justify-center h-40">
                 <div className={`w-5 h-5 border-2 rounded-full animate-spin ${isLight ? "border-black/10 border-t-black/40" : "border-white/15 border-t-white/50"}`} />
