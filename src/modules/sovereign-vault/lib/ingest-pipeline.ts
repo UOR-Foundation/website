@@ -5,21 +5,28 @@
  * The ADEE-equivalent orchestrator connecting file input to UOR identity.
  * Every file, paste, or URL flows through this pipeline:
  *
- *   Input → Format Detection → UOR Content-Addressing → Structured Extraction → Quality Scoring
+ *   Input → Raw Audit → Format Detection → UOR Content-Addressing →
+ *   Structured Extraction → Quality Scoring → Knowledge Graph
  *
- * Inspired by ANIMA's Adaptive Data Engineering Engine:
- *   - Format-aware parsing (CSV preserves columns, JSON preserves structure)
- *   - Quality scoring (completeness metric)
- *   - Processing lineage (audit trail of stages)
- *   - Content-addressing via universal-ingest → UOR CID
+ * Key improvements over baseline:
+ *   - Full-content SHA-256 hashing (no truncation for large files)
+ *   - Immutable raw-bytes audit via rawStore (before any processing)
+ *   - Expanded format support: CSV, TSV, JSON, YAML, XML, Markdown tables
+ *   - Binary file ingestion (metadata-only KG nodes)
+ *   - Processing lineage preserved for KG derivations
  *
- * The key insight: every piece of data, structured or unstructured,
- * gets the same UOR identity. Same content, same address, everywhere.
+ * Same content, same address, everywhere.
  */
 
 import { ingest, type IngestResult as UorIngestResult, type ArtifactFormat } from "@/modules/uns/core/hologram/universal-ingest";
-import { parseCSV, parseStructuredJSON, computeTextQuality, toSearchableText, type StructuredData } from "./structured-extractor";
+import {
+  parseCSV, parseTSV, parseStructuredJSON, parseYAML, parseXML,
+  parseMarkdownTable, parseAnyStructured,
+  computeTextQuality, toSearchableText,
+  type StructuredData,
+} from "./structured-extractor";
 import { extractText, extractFromUrl } from "./extract";
+import { rawStore } from "@/modules/knowledge-graph/raw-store";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -48,51 +55,71 @@ export interface PipelineResult {
   metadata: Record<string, string>;
 }
 
-// ── Large file threshold ───────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────
 
-const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
+/** SHA-256 hex digest of an ArrayBuffer (streaming-compatible). */
+async function sha256ArrayBuffer(buffer: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** SHA-256 hex digest of a string. */
+async function sha256String(text: string): Promise<string> {
+  const bytes = new TextEncoder().encode(text);
+  return sha256ArrayBuffer(bytes.buffer as ArrayBuffer);
+}
+
+function addLineage(lineage: LineageEntry[], stage: string, detail?: string) {
+  lineage.push({ stage, timestamp: new Date().toISOString(), detail });
+}
 
 // ── Pipeline Orchestrator ──────────────────────────────────────────────
 
 /**
  * Ingest a File through the full pipeline.
- *
- * 1. Extract text/structure based on format
- * 2. Route through universal-ingest for UOR CID
- * 3. Parse structured data if applicable
- * 4. Compute quality score
- * 5. Return unified PipelineResult
+ * No truncation — full content is hashed regardless of file size.
  */
 export async function ingestFile(
   file: File,
   onProgress?: (stage: string, pct: number) => void,
 ): Promise<PipelineResult> {
   const lineage: LineageEntry[] = [];
-  const addLineage = (stage: string, detail?: string) => {
-    lineage.push({ stage, timestamp: new Date().toISOString(), detail });
-  };
-
-  addLineage("receive", `${file.name} (${file.size} bytes)`);
+  addLineage(lineage, "receive", `${file.name} (${file.size} bytes)`);
   onProgress?.("Detecting format…", 0.1);
 
-  // 1. Extract text content via existing pipeline
+  // 1. Read full ArrayBuffer for content-addressing (no truncation)
+  const arrayBuffer = await file.arrayBuffer();
+  const fullHash = await sha256ArrayBuffer(arrayBuffer);
+  addLineage(lineage, "hash", `SHA-256 of ${file.size} bytes`);
+
+  // 2. Extract text content
   const { text: rawText, metadata } = await extractText(file);
-  addLineage("extract", `${rawText.length} chars extracted`);
+  addLineage(lineage, "extract", `${rawText.length} chars extracted`);
   onProgress?.("Extracting content…", 0.3);
 
-  // 2. Route through universal-ingest for UOR identity
-  let uorResult: UorIngestResult | null = null;
-  let uorAddress = "";
-  let uorCid = "";
+  // 3. Record immutable audit BEFORE any processing
+  try {
+    await rawStore.putRawBinary({
+      uorAddress: fullHash,
+      buffer: arrayBuffer,
+      mimeType: file.type || "application/octet-stream",
+      filename: file.name,
+      source: "file",
+    });
+    addLineage(lineage, "audit", "raw bytes recorded");
+  } catch {
+    addLineage(lineage, "audit-skip", "audit store unavailable");
+  }
+
+  // 4. Route through universal-ingest for UOR identity
+  let uorAddress = fullHash;
+  let uorCid = fullHash.slice(0, 32);
   let format: ArtifactFormat = "text";
 
   try {
-    // For large files, use a truncated sample for content-addressing
-    const contentForUor = file.size > LARGE_FILE_THRESHOLD
-      ? rawText.slice(0, LARGE_FILE_THRESHOLD)
-      : rawText;
-
-    uorResult = await ingest(contentForUor, {
+    const uorResult = await ingest(rawText, {
       label: file.name,
       tags: [file.type || "unknown"],
     }) as UorIngestResult;
@@ -100,56 +127,86 @@ export async function ingestFile(
     uorAddress = uorResult.proof.hashHex;
     uorCid = uorResult.proof.cid;
     format = uorResult.envelope.format;
-    addLineage("uor-identity", `CID: ${uorCid.slice(0, 16)}…`);
+    addLineage(lineage, "uor-identity", `CID: ${uorCid.slice(0, 16)}…`);
   } catch {
-    // Fallback: compute simple SHA-256
-    const bytes = new TextEncoder().encode(rawText);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
-    uorAddress = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    uorCid = uorAddress.slice(0, 32);
     format = detectFormatFromMime(file.type, file.name);
-    addLineage("uor-identity-fallback", `SHA-256 hex`);
+    addLineage(lineage, "uor-identity-fallback", `SHA-256 full-content hash`);
   }
 
   onProgress?.("Analyzing structure…", 0.6);
 
-  // 3. Structured extraction for tabular/JSON formats
+  // 5. Structured extraction — try all supported formats
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
   let structuredData: StructuredData | undefined;
   let searchableText = rawText;
   let qualityScore = 0;
 
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-
   if (isTabular(file.type, ext)) {
-    // CSV/TSV
-    const delimiter = ext === "tsv" ? "\t" : undefined;
-    structuredData = parseCSV(rawText, delimiter);
+    structuredData = ext === "tsv" ? parseTSV(rawText) : parseCSV(rawText);
     searchableText = toSearchableText(structuredData);
     qualityScore = structuredData.qualityScore;
     format = "csv";
-    addLineage("structured-parse", `${structuredData.columns.length} columns, ${structuredData.rowCount} rows`);
+    addLineage(lineage, "structured-parse", `${structuredData.columns.length} columns, ${structuredData.rowCount} rows`);
   } else if (isJSON(file.type, ext)) {
-    // JSON → try structured extraction
     const parsed = parseStructuredJSON(rawText);
     if (parsed) {
       structuredData = parsed;
       searchableText = toSearchableText(parsed) + "\n\n" + rawText.slice(0, 2000);
       qualityScore = parsed.qualityScore;
       format = "json";
-      addLineage("structured-parse", `JSON: ${parsed.columns.length} fields, ${parsed.rowCount} entries`);
+      addLineage(lineage, "structured-parse", `JSON: ${parsed.columns.length} fields, ${parsed.rowCount} entries`);
     } else {
       qualityScore = computeTextQuality(rawText);
-      addLineage("text-quality", `score: ${qualityScore}`);
+      addLineage(lineage, "text-quality", `score: ${qualityScore}`);
     }
+  } else if (isYAML(file.type, ext)) {
+    const parsed = parseYAML(rawText);
+    if (parsed) {
+      structuredData = parsed;
+      searchableText = toSearchableText(parsed) + "\n\n" + rawText.slice(0, 2000);
+      qualityScore = parsed.qualityScore;
+      addLineage(lineage, "structured-parse", `YAML: ${parsed.rowCount} entries`);
+    } else {
+      qualityScore = computeTextQuality(rawText);
+    }
+  } else if (isXML(file.type, ext)) {
+    const parsed = parseXML(rawText);
+    if (parsed) {
+      structuredData = parsed;
+      searchableText = toSearchableText(parsed) + "\n\n" + rawText.slice(0, 2000);
+      qualityScore = parsed.qualityScore;
+      addLineage(lineage, "structured-parse", `XML: ${parsed.columns.length} fields, ${parsed.rowCount} rows`);
+    } else {
+      qualityScore = computeTextQuality(rawText);
+    }
+  } else if (isMarkdown(file.type, ext)) {
+    // Try to extract tables from Markdown
+    const parsed = parseMarkdownTable(rawText);
+    if (parsed) {
+      structuredData = parsed;
+      searchableText = rawText + "\n\n" + toSearchableText(parsed);
+      qualityScore = Math.max(parsed.qualityScore, computeTextQuality(rawText));
+      addLineage(lineage, "structured-parse", `Markdown table: ${parsed.columns.length} columns`);
+    } else {
+      qualityScore = computeTextQuality(rawText);
+    }
+    format = "markdown";
   } else {
-    qualityScore = computeTextQuality(rawText);
-    addLineage("text-quality", `score: ${qualityScore}`);
+    // Attempt auto-detection for unknown formats
+    const autoParsed = parseAnyStructured(rawText);
+    if (autoParsed) {
+      structuredData = autoParsed;
+      searchableText = toSearchableText(autoParsed) + "\n\n" + rawText.slice(0, 2000);
+      qualityScore = autoParsed.qualityScore;
+      addLineage(lineage, "structured-parse", `Auto-detected: ${autoParsed.meta?.format || "unknown"}`);
+    } else {
+      qualityScore = computeTextQuality(rawText);
+      addLineage(lineage, "text-quality", `score: ${qualityScore}`);
+    }
   }
 
   onProgress?.("Complete", 1.0);
-  addLineage("complete");
+  addLineage(lineage, "complete");
 
   return {
     text: searchableText,
@@ -164,47 +221,107 @@ export async function ingestFile(
 }
 
 /**
+ * Ingest a binary file that cannot be text-extracted.
+ * Creates a metadata-only KG node with full UOR identity.
+ */
+export async function ingestBinary(
+  file: File,
+  onProgress?: (stage: string, pct: number) => void,
+): Promise<PipelineResult> {
+  const lineage: LineageEntry[] = [];
+  addLineage(lineage, "receive", `binary: ${file.name} (${file.size} bytes)`);
+  onProgress?.("Hashing binary content…", 0.3);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const fullHash = await sha256ArrayBuffer(arrayBuffer);
+
+  // Record audit
+  try {
+    await rawStore.putRawBinary({
+      uorAddress: fullHash,
+      buffer: arrayBuffer,
+      mimeType: file.type || "application/octet-stream",
+      filename: file.name,
+      source: "file",
+    });
+    addLineage(lineage, "audit", "raw bytes recorded");
+  } catch {
+    addLineage(lineage, "audit-skip", "audit store unavailable");
+  }
+
+  let uorAddress = fullHash;
+  let uorCid = fullHash.slice(0, 32);
+
+  try {
+    const uorResult = await ingest(`[binary:${file.name}:${file.size}:${fullHash}]`, {
+      label: file.name,
+      tags: [file.type || "binary"],
+    }) as UorIngestResult;
+    uorAddress = uorResult.proof.hashHex;
+    uorCid = uorResult.proof.cid;
+    addLineage(lineage, "uor-identity", `CID: ${uorCid.slice(0, 16)}…`);
+  } catch {
+    addLineage(lineage, "uor-identity-fallback", "SHA-256 full binary hash");
+  }
+
+  onProgress?.("Complete", 1.0);
+  addLineage(lineage, "complete");
+
+  const metaText = `Binary file: ${file.name}\nType: ${file.type}\nSize: ${file.size} bytes\nSHA-256: ${fullHash}`;
+
+  return {
+    text: metaText,
+    uorAddress,
+    uorCid,
+    format: detectFormatFromMime(file.type, file.name),
+    qualityScore: 0.5, // Binary files get a baseline score
+    lineage,
+    metadata: {
+      filename: file.name,
+      mimeType: file.type,
+      size: String(file.size),
+      sha256: fullHash,
+    },
+  };
+}
+
+/**
  * Ingest pasted text through the pipeline.
  */
 export async function ingestPaste(content: string, label?: string): Promise<PipelineResult> {
   const lineage: LineageEntry[] = [];
-  lineage.push({ stage: "receive", timestamp: new Date().toISOString(), detail: `paste (${content.length} chars)` });
+  addLineage(lineage, "receive", `paste (${content.length} chars)`);
 
-  // Try structured JSON
+  // Audit record
+  try {
+    await rawStore.putRaw({
+      uorAddress: await sha256String(content),
+      rawText: content,
+      size: new TextEncoder().encode(content).byteLength,
+      mimeType: "text/plain",
+      source: "paste",
+    });
+    addLineage(lineage, "audit", "raw text recorded");
+  } catch {
+    addLineage(lineage, "audit-skip", "audit store unavailable");
+  }
+
+  // Try all structured formats via auto-detection
   let structuredData: StructuredData | undefined;
   let searchableText = content;
   let format: ArtifactFormat = "text";
   let qualityScore: number;
 
-  const trimmed = content.trim();
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    const parsed = parseStructuredJSON(content);
-    if (parsed) {
-      structuredData = parsed;
-      searchableText = toSearchableText(parsed) + "\n\n" + content.slice(0, 2000);
-      format = "json";
-      qualityScore = parsed.qualityScore;
-      lineage.push({ stage: "structured-parse", timestamp: new Date().toISOString() });
-    } else {
-      qualityScore = computeTextQuality(content);
-    }
+  const autoParsed = parseAnyStructured(content);
+  if (autoParsed) {
+    structuredData = autoParsed;
+    searchableText = toSearchableText(autoParsed) + "\n\n" + content.slice(0, 2000);
+    format = (autoParsed.meta?.format as ArtifactFormat) || "text";
+    qualityScore = autoParsed.qualityScore;
+    addLineage(lineage, "structured-parse", `Auto: ${autoParsed.meta?.format || "detected"}`);
   } else {
-    // Check if it looks like CSV
-    const lines = content.split("\n").filter((l) => l.trim());
-    if (lines.length >= 2) {
-      const cols = lines[0].split(",").length;
-      if (cols >= 2 && lines[1].split(",").length === cols) {
-        structuredData = parseCSV(content);
-        searchableText = toSearchableText(structuredData);
-        format = "csv";
-        qualityScore = structuredData.qualityScore;
-        lineage.push({ stage: "structured-parse", timestamp: new Date().toISOString() });
-      } else {
-        qualityScore = computeTextQuality(content);
-      }
-    } else {
-      qualityScore = computeTextQuality(content);
-    }
+    qualityScore = computeTextQuality(content);
+    addLineage(lineage, "text-quality", `score: ${qualityScore}`);
   }
 
   // UOR identity
@@ -214,16 +331,14 @@ export async function ingestPaste(content: string, label?: string): Promise<Pipe
     const result = await ingest(content, { label, format }) as UorIngestResult;
     uorAddress = result.proof.hashHex;
     uorCid = result.proof.cid;
+    addLineage(lineage, "uor-identity", `CID: ${uorCid.slice(0, 16)}…`);
   } catch {
-    const bytes = new TextEncoder().encode(content);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
-    uorAddress = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    uorAddress = await sha256String(content);
     uorCid = uorAddress.slice(0, 32);
+    addLineage(lineage, "uor-identity-fallback", "SHA-256 hex");
   }
 
-  lineage.push({ stage: "complete", timestamp: new Date().toISOString() });
+  addLineage(lineage, "complete");
 
   return {
     text: searchableText,
@@ -242,10 +357,34 @@ export async function ingestPaste(content: string, label?: string): Promise<Pipe
  */
 export async function ingestUrl(url: string): Promise<PipelineResult> {
   const lineage: LineageEntry[] = [];
-  lineage.push({ stage: "receive", timestamp: new Date().toISOString(), detail: url });
+  addLineage(lineage, "receive", url);
 
   const { text, metadata } = await extractFromUrl(url);
-  lineage.push({ stage: "extract", timestamp: new Date().toISOString(), detail: `${text.length} chars` });
+  addLineage(lineage, "extract", `${text.length} chars`);
+
+  // Audit record
+  try {
+    await rawStore.putRaw({
+      uorAddress: await sha256String(text),
+      rawText: text,
+      size: new TextEncoder().encode(text).byteLength,
+      mimeType: "text/html",
+      source: "url",
+    });
+    addLineage(lineage, "audit", "raw text recorded");
+  } catch {
+    addLineage(lineage, "audit-skip", "audit store unavailable");
+  }
+
+  // Try structured extraction on URL content
+  let structuredData: StructuredData | undefined;
+  let searchableText = text;
+  const autoParsed = parseAnyStructured(text);
+  if (autoParsed) {
+    structuredData = autoParsed;
+    searchableText = text + "\n\n" + toSearchableText(autoParsed);
+    addLineage(lineage, "structured-parse", `URL content: ${autoParsed.meta?.format || "detected"}`);
+  }
 
   const qualityScore = computeTextQuality(text);
 
@@ -255,53 +394,54 @@ export async function ingestUrl(url: string): Promise<PipelineResult> {
     const result = await ingest(text, { label: metadata.title || url, tags: ["url"], format: "markdown" }) as UorIngestResult;
     uorAddress = result.proof.hashHex;
     uorCid = result.proof.cid;
+    addLineage(lineage, "uor-identity", `CID: ${uorCid.slice(0, 16)}…`);
   } catch {
-    const bytes = new TextEncoder().encode(text);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
-    uorAddress = Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    uorAddress = await sha256String(text);
     uorCid = uorAddress.slice(0, 32);
+    addLineage(lineage, "uor-identity-fallback", "SHA-256 hex");
   }
 
-  lineage.push({ stage: "complete", timestamp: new Date().toISOString() });
+  addLineage(lineage, "complete");
 
   return {
-    text,
+    text: searchableText,
     uorAddress,
     uorCid,
     format: "markdown",
     qualityScore,
+    structuredData,
     lineage,
     metadata,
   };
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────
+// ── Format Detection Helpers ──────────────────────────────────────────
 
 function isTabular(mimeType: string, ext: string): boolean {
-  return (
-    mimeType === "text/csv" ||
-    mimeType === "text/tab-separated-values" ||
-    ext === "csv" ||
-    ext === "tsv"
-  );
+  return mimeType === "text/csv" || mimeType === "text/tab-separated-values" || ext === "csv" || ext === "tsv";
 }
 
 function isJSON(mimeType: string, ext: string): boolean {
-  return (
-    mimeType === "application/json" ||
-    mimeType === "application/ld+json" ||
-    ext === "json" ||
-    ext === "jsonld"
-  );
+  return mimeType === "application/json" || mimeType === "application/ld+json" || ext === "json" || ext === "jsonld";
+}
+
+function isYAML(mimeType: string, ext: string): boolean {
+  return mimeType === "text/yaml" || mimeType === "application/x-yaml" || ext === "yaml" || ext === "yml";
+}
+
+function isXML(mimeType: string, ext: string): boolean {
+  return mimeType === "text/xml" || mimeType === "application/xml" || ext === "xml";
+}
+
+function isMarkdown(mimeType: string, ext: string): boolean {
+  return mimeType === "text/markdown" || ext === "md" || ext === "mdx";
 }
 
 function detectFormatFromMime(mimeType: string, filename: string): ArtifactFormat {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
   if (isTabular(mimeType, ext)) return "csv";
   if (isJSON(mimeType, ext)) return "json";
-  if (ext === "md" || ext === "mdx") return "markdown";
+  if (isMarkdown(mimeType, ext)) return "markdown";
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType === "application/wasm") return "wasm";
   return "text";
