@@ -2345,7 +2345,7 @@ const SearchPage = () => {
                         onSearchHistoryJump={(keyword) => { setInput(keyword); clearResult(); setTimeout(() => handleSearch(keyword), 100); }}
                       />
                       <div
-                        className={`flex-1 w-full mx-auto`}
+                        className={`flex-1 w-full mx-auto overflow-x-hidden`}
                         style={mobileImmersive ? {
                           maxWidth: "100vw",
                           paddingTop: 12,
