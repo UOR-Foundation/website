@@ -6,6 +6,7 @@
 
 import { useCallback, useState, useMemo, useEffect, lazy, Suspense } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
+import QuickCapture from "@/modules/oracle/components/QuickCapture";
 import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
 import { getPhasePhotoDescription, getPhasePhotoPhotographer, getPhasePhotoUnsplashUrl } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
@@ -36,6 +37,7 @@ function DesktopShellInner() {
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -76,7 +78,9 @@ function DesktopShellInner() {
     onHideAll: handleHideAll,
     onShowShortcuts: () => setCheatSheetOpen(o => !o),
     onFullscreen: handleFullscreen,
-  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen]);
+    onQuickCapture: () => setQuickCaptureOpen(o => !o),
+    onDailyNote: () => handleOpenApp("daily-notes"),
+  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen, handleOpenApp]);
 
   const { ringActive } = useDesktopShortcuts(shortcutHandlers);
 
@@ -203,6 +207,7 @@ function DesktopShellInner() {
 
         <RingIndicator active={ringActive} />
         <ShortcutCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
+        <QuickCapture open={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
       </div>
     </DesktopContextMenu>
   );
