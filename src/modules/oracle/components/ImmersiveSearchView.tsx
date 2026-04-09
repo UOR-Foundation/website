@@ -5,14 +5,14 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Maximize2, Minimize2, Sparkles, Plus, Lock } from "lucide-react";
+import { ArrowRight, Maximize2, Minimize2, Sparkles, Upload, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getPhasePhoto, getPhasePhotoDescription, getCurrentPhase, preloadNextPhasePhoto, initLocation, getHourlyFallback } from "@/modules/oracle/lib/immersive-photos";
 import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
-import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
+
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import { toast } from "sonner";
@@ -62,10 +62,11 @@ interface Props {
   onExit: () => void;
   onEncode?: () => void;
   onAiMode?: () => void;
+  onOpenApp?: (appId: string) => void;
   isFullscreen?: boolean;
 }
 
-export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, isFullscreen = false }: Props) {
+export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMode, onOpenApp, isFullscreen = false }: Props) {
   const { profile } = useAuth();
   const ctx = useContextManager();
   const [clock, setClock] = useState(() => formatClock(new Date()));
@@ -77,7 +78,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
   const [dragOver, setDragOver] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  
 
   // Solar-phase photo update
   useEffect(() => {
@@ -271,28 +272,20 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
               <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setPickerOpen((p) => !p)}
+                  onClick={() => onOpenApp?.("files")}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
                   style={{
-                    background: pickerOpen || ctx.contextItems.length > 0
+                    background: ctx.contextItems.length > 0
                       ? "hsl(var(--primary) / 0.2)"
                       : "hsl(0 0% 100% / 0.08)",
-                    border: `1px solid ${pickerOpen || ctx.contextItems.length > 0 ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.1)"}`,
-                    color: pickerOpen || ctx.contextItems.length > 0 ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.5)",
+                    border: `1px solid ${ctx.contextItems.length > 0 ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.1)"}`,
+                    color: ctx.contextItems.length > 0 ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.5)",
                     boxShadow: "0 2px 8px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.06)",
                   }}
-                  title="Add context — files, text, or URLs"
+                  title="Open File Explorer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Upload className="w-4 h-4" />
                 </motion.button>
-
-                <ContextMenu
-                  open={pickerOpen}
-                  onOpenChange={setPickerOpen}
-                  ctx={ctx}
-                  anchor="below"
-                  className="top-12 left-0"
-                />
               </div>
 
               {/* Right-side actions */}

@@ -2048,6 +2048,7 @@ const SearchPage = () => {
               }}
               onEncode={() => setEncodeMode(true)}
               onAiMode={() => setAiMode(true)}
+              onOpenApp={(appId) => window.dispatchEvent(new CustomEvent("uor:open-app", { detail: appId }))}
               isFullscreen={isFullscreen}
             />
           )}
