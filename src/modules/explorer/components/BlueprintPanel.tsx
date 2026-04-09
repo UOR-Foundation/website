@@ -101,7 +101,7 @@ function ImportDropZone({ onImported }: { onImported: () => void }) {
       // Persist to KG
       await localGraphStore.putNode(node);
       for (const edge of edges) {
-        await localGraphStore.putEdge(edge);
+        await localGraphStore.putEdge(edge.subject, edge.predicate, edge.object, edge.graphIri, edge.metadata);
       }
 
       setResult({ label: node.label, address: truncateAddr(node.uorAddress) });
