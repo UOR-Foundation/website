@@ -74,9 +74,17 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const [portalOpen, setPortalOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [managerOpen, setManagerOpen] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const portalBtnRef = useRef<HTMLSpanElement>(null);
+
+  // Load custom lenses
+  const customLenses = useMemo(() => loadCustomLenses(), [managerOpen, activeLens]);
+  const allLenses = useMemo(() => [
+    ...KNOWLEDGE_LENSES,
+    ...customLenses.map(bp => ({ id: bp.id, label: bp.label, icon: bp.icon as any, description: bp.description })),
+  ], [customLenses]);
 
   const threeWords = triwordDisplay; // Already in "Cricket.Risen.Keep" format
 
