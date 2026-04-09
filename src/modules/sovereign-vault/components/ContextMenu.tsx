@@ -401,7 +401,7 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                 className="flex flex-col max-h-[50vh]"
               >
                 <div className="px-4 pt-3.5 pb-1">
-                  <SubViewHeader title="Sovereign Vault" onBack={() => setSubView(null)} count={ctx.vault.count} />
+                  <SubViewHeader title="Saved Files" onBack={() => setSubView(null)} count={ctx.vault.count} />
                 </div>
                 <VaultContextPicker
                   open={true}
