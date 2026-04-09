@@ -7,3 +7,8 @@ export { default as ResearchPaperAtlasEmbeddings } from "./pages/ResearchPaperAt
 
 // Types
 export type * from "./types";
+
+// ── Absorbed: Donate module ─────────────────────────────────────────────────
+export { default as DonatePage } from "./pages/DonatePage";
+export { default as DonatePopup } from "./components/DonatePopup";
+export type * from "./donate-types";

@@ -165,3 +165,6 @@ export type {
   RewardTrend,
 } from "./reward-circuit";
 // Note: EpistemicGrade is re-exported from neuro-symbolic above
+
+// ── Absorbed: Triad (from former triad module) ──────────────────────────────
+export { computeTriad, popcount, basisElements, stratumLevel, stratumDensity } from "./triad";

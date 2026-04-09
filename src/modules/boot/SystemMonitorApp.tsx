@@ -153,9 +153,55 @@ interface SelfAssessmentItem {
   metric: string;
   status: "measured" | "partial" | "missing";
   suggestion: string;
+  liveValue?: string;
 }
 
-function buildSelfAssessment(receipt: BootReceipt | null): SelfAssessmentItem[] {
+async function collectRuntimeMetrics(): Promise<{
+  heapUsedMB: number | null;
+  heapLimitMB: number | null;
+  heapPct: number | null;
+  storageUsedMB: number | null;
+  storageQuotaMB: number | null;
+  storagePct: number | null;
+  ringOpsPerSec: number | null;
+}> {
+  // JS Heap
+  const perf = performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
+  const heapUsedMB = perf.memory ? Math.round(perf.memory.usedJSHeapSize / 1048576) : null;
+  const heapLimitMB = perf.memory ? Math.round(perf.memory.jsHeapSizeLimit / 1048576) : null;
+  const heapPct = heapUsedMB && heapLimitMB ? Math.round((heapUsedMB / heapLimitMB) * 100) : null;
+
+  // IndexedDB Quota
+  let storageUsedMB: number | null = null;
+  let storageQuotaMB: number | null = null;
+  let storagePct: number | null = null;
+  try {
+    if (navigator.storage?.estimate) {
+      const est = await navigator.storage.estimate();
+      storageUsedMB = est.usage ? Math.round(est.usage / 1048576) : null;
+      storageQuotaMB = est.quota ? Math.round(est.quota / 1048576) : null;
+      storagePct = storageUsedMB && storageQuotaMB ? Math.round((storageUsedMB / storageQuotaMB) * 100) : null;
+    }
+  } catch { /* restricted context */ }
+
+  // Ring throughput benchmark (1000 add ops)
+  let ringOpsPerSec: number | null = null;
+  try {
+    const { getEngine } = await import("@/modules/engine");
+    const eng = getEngine();
+    const t0 = performance.now();
+    for (let i = 0; i < 1000; i++) eng.add(i & 255, (i + 1) & 255);
+    const elapsed = performance.now() - t0;
+    ringOpsPerSec = elapsed > 0 ? Math.round(1000 / (elapsed / 1000)) : null;
+  } catch { /* engine unavailable */ }
+
+  return { heapUsedMB, heapLimitMB, heapPct, storageUsedMB, storageQuotaMB, storagePct, ringOpsPerSec };
+}
+
+function buildSelfAssessment(
+  receipt: BootReceipt | null,
+  runtimeMetrics?: Awaited<ReturnType<typeof collectRuntimeMetrics>>
+): SelfAssessmentItem[] {
   const items: SelfAssessmentItem[] = [];
   items.push({
     metric: "Boot Timing",
@@ -163,16 +209,41 @@ function buildSelfAssessment(receipt: BootReceipt | null): SelfAssessmentItem[] 
     suggestion: receipt
       ? "Add phase-level timing breakdown (per-stage ms)."
       : "Boot incomplete — no timing data available.",
+    liveValue: receipt ? `${receipt.bootTimeMs}ms` : undefined,
+  });
+  items.push({
+    metric: "Memory Pressure",
+    status: runtimeMetrics?.heapPct !== null ? "measured" : "missing",
+    suggestion: runtimeMetrics?.heapPct !== null
+      ? `JS heap at ${runtimeMetrics!.heapPct}% (${runtimeMetrics!.heapUsedMB}/${runtimeMetrics!.heapLimitMB} MB).`
+      : "Monitor JS heap usage via performance.memory (Chrome) or estimation heuristics.",
+    liveValue: runtimeMetrics?.heapPct !== null ? `${runtimeMetrics!.heapPct}%` : undefined,
+  });
+  items.push({
+    metric: "IndexedDB Quota",
+    status: runtimeMetrics?.storagePct !== null ? "measured" : "missing",
+    suggestion: runtimeMetrics?.storagePct !== null
+      ? `Storage at ${runtimeMetrics!.storagePct}% (${runtimeMetrics!.storageUsedMB}/${runtimeMetrics!.storageQuotaMB} MB).`
+      : "Track navigator.storage.estimate() for storage pressure.",
+    liveValue: runtimeMetrics?.storagePct !== null ? `${runtimeMetrics!.storagePct}%` : undefined,
+  });
+  items.push({
+    metric: "Ring Operation Throughput",
+    status: runtimeMetrics?.ringOpsPerSec !== null ? "measured" : "missing",
+    suggestion: runtimeMetrics?.ringOpsPerSec !== null
+      ? `${runtimeMetrics!.ringOpsPerSec.toLocaleString()} ring_add ops/sec.`
+      : "Benchmark ops/sec for core ring primitives (add, mul, xor).",
+    liveValue: runtimeMetrics?.ringOpsPerSec !== null ? `${runtimeMetrics!.ringOpsPerSec.toLocaleString()} ops/s` : undefined,
+  });
+  items.push({
+    metric: "Kernel Function Depth",
+    status: receipt?.kernelHealth ? "partial" : "missing",
+    suggestion: "Add per-primitive latency and invocation count tracking.",
   });
   items.push({
     metric: "Seal Verification Latency",
     status: "missing",
     suggestion: "Track p50/p95/p99 seal re-verification latency over time.",
-  });
-  items.push({
-    metric: "Memory Pressure",
-    status: "missing",
-    suggestion: "Monitor JS heap usage via performance.memory (Chrome) or estimation heuristics.",
   });
   items.push({
     metric: "GC Pause Duration",
@@ -185,24 +256,9 @@ function buildSelfAssessment(receipt: BootReceipt | null): SelfAssessmentItem[] 
     suggestion: "Measure RTT to backend endpoints for connectivity health.",
   });
   items.push({
-    metric: "IndexedDB Quota",
-    status: "missing",
-    suggestion: "Track navigator.storage.estimate() for storage pressure.",
-  });
-  items.push({
     metric: "Service Worker State",
     status: "missing",
     suggestion: "Report SW registration state and cache hit ratio.",
-  });
-  items.push({
-    metric: "Ring Operation Throughput",
-    status: "missing",
-    suggestion: "Benchmark ops/sec for core ring primitives (add, mul, xor).",
-  });
-  items.push({
-    metric: "Kernel Function Depth",
-    status: receipt?.kernelHealth ? "partial" : "missing",
-    suggestion: "Add per-primitive latency and invocation count tracking.",
   });
   items.push({
     metric: "Error Budget",
@@ -217,7 +273,7 @@ function buildSelfAssessment(receipt: BootReceipt | null): SelfAssessmentItem[] 
   items.push({
     metric: "Realtime Channel Health",
     status: "missing",
-    suggestion: "Monitor Supabase realtime subscription state and reconnect count.",
+    suggestion: "Monitor realtime subscription state and reconnect count.",
   });
   return items;
 }
@@ -234,13 +290,14 @@ function formatUptime(ms: number): string {
 
 // ── Full markdown report ───────────────────────────────────────
 
-function formatMarkdownReport(
+async function formatMarkdownReport(
   receipt: BootReceipt | null,
   status: SealStatus | "booting" | "failed",
   lastVerified: string | null,
   entries: DegradationEntry[],
-  uptimeMs: number
-): string {
+  uptimeMs: number,
+  runtimeMetrics?: Awaited<ReturnType<typeof collectRuntimeMetrics>>
+): Promise<string> {
   const L: string[] = [];
   const now = new Date().toISOString();
 
@@ -471,15 +528,15 @@ function formatMarkdownReport(
     L.push("");
   }
 
-  const assessment = buildSelfAssessment(receipt);
+  const assessment = buildSelfAssessment(receipt, runtimeMetrics);
   L.push("## System Self-Assessment");
   L.push("");
-  L.push("| Metric | Coverage | Suggested Enhancement |");
-  L.push("|--------|----------|-----------------------|");
+  L.push("| Metric | Coverage | Live Value | Suggested Enhancement |");
+  L.push("|--------|----------|------------|-----------------------|");
   for (const item of assessment) {
     const icon =
       item.status === "measured" ? "✅" : item.status === "partial" ? "🟡" : "⬜";
-    L.push(`| ${item.metric} | ${icon} ${item.status} | ${item.suggestion} |`);
+    L.push(`| ${item.metric} | ${icon} ${item.status} | ${item.liveValue ?? "—"} | ${item.suggestion} |`);
   }
   L.push("");
   const measured = assessment.filter((i) => i.status === "measured").length;
@@ -490,9 +547,40 @@ function formatMarkdownReport(
   );
   L.push("");
 
+  // ── Module Architecture Summary ──────────────────────────────────
+  try {
+    const { pruningGate } = await import("@/modules/uns/core/pruning-gate");
+    const pruning = pruningGate();
+    L.push("## Module Architecture");
+    L.push("");
+    L.push("| Metric | Value |");
+    L.push("|--------|-------|");
+    L.push(`| Active Modules | ${pruning.metrics.activeModules} |`);
+    L.push(`| Absorbed Modules | ${pruning.metrics.absorbedModules} |`);
+    L.push(`| Total (active + absorbed) | ${pruning.metrics.totalModules} |`);
+    L.push(`| Consolidation Debt | ${pruning.metrics.consolidationDebt} |`);
+    L.push(`| Hygiene Score | ${pruning.score}/100 |`);
+    L.push(`| Projections | ${pruning.metrics.totalProjections} |`);
+    L.push(`| Synergy Chains | ${pruning.metrics.totalSynergyChains} |`);
+    L.push(`| Orphaned Projections | ${pruning.metrics.orphanedProjections} |`);
+    L.push("");
+
+    if (pruning.findings.length > 0) {
+      L.push("### Pruning Findings");
+      L.push("");
+      L.push("| Severity | Category | Detail |");
+      L.push("|----------|----------|--------|");
+      for (const f of pruning.findings) {
+        const icon = f.severity === "prune" ? "🔴" : f.severity === "simplify" ? "🟡" : "🔵";
+        L.push(`| ${icon} ${f.severity} | ${f.category} | ${f.title} |`);
+      }
+      L.push("");
+    }
+  } catch { /* pruning gate unavailable */ }
+
   L.push("---");
   L.push(
-    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v2.0*"
+    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v3.0*"
   );
 
   return L.join("\n");
@@ -617,13 +705,15 @@ export default function SystemMonitorApp() {
     []
   );
 
-  const handleCopyReport = useCallback(() => {
-    const md = formatMarkdownReport(
+  const handleCopyReport = useCallback(async () => {
+    const metrics = await collectRuntimeMetrics();
+    const md = await formatMarkdownReport(
       receipt,
       status,
       lastVerified,
       degradationLog,
-      uptimeMs
+      uptimeMs,
+      metrics
     );
     navigator.clipboard.writeText(md).then(() => {
       setCopied(true);
