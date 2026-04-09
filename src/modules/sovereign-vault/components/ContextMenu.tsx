@@ -173,23 +173,18 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                   />
                 </div>
 
-                {/* Workspace & Folder */}
+                {/* Open Files app */}
                 <div className="px-2 py-1">
                   <MenuItem
-                    icon={<LayoutGrid className="w-4 h-4" />}
-                    label="New Workspace"
-                    hint="Group context into a named project"
-                    onClick={() => setSubView("workspace")}
-                    gradient="from-violet-500/10 to-purple-500/5"
-                    iconColor="text-violet-400/80"
-                  />
-                  <MenuItem
                     icon={<FolderOpen className="w-4 h-4" />}
-                    label="New Folder"
-                    hint="Organize items hierarchically"
-                    onClick={() => setSubView("folder")}
-                    gradient="from-rose-500/10 to-pink-500/5"
-                    iconColor="text-rose-400/80"
+                    label="Open File Explorer"
+                    hint="Manage folders and files"
+                    onClick={() => {
+                      onOpenChange(false);
+                      window.dispatchEvent(new CustomEvent("uor:open-app", { detail: { appId: "files" } }));
+                    }}
+                    gradient="from-amber-500/10 to-orange-500/5"
+                    iconColor="text-amber-400/80"
                   />
                 </div>
 
