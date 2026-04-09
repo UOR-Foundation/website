@@ -1,10 +1,13 @@
 /**
  * BootSequence — cinematic OS boot animation.
  * Plays once per session, then calls onComplete.
+ * Now connected to real sovereign boot progress.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import type { BootProgress } from "@/modules/boot/types";
+import { sovereignBoot, getBootReceipt } from "@/modules/boot/sovereign-boot";
 
 interface BootSequenceProps {
   onComplete: () => void;
@@ -13,37 +16,51 @@ interface BootSequenceProps {
 export default function BootSequence({ onComplete }: BootSequenceProps) {
   const [phase, setPhase] = useState(0); // 0=black, 1=logo, 2=text, 3=progress, 4=fadeout
   const [progress, setProgress] = useState(0);
+  const [bootDetail, setBootDetail] = useState("Initializing");
+  const [glyph, setGlyph] = useState("");
+  const [provenanceLabel, setProvenanceLabel] = useState("");
 
   useEffect(() => {
+    const handleProgress = (p: BootProgress) => {
+      setBootDetail(p.detail || "");
+      setProgress(p.progress);
+    };
+
+    // Phase timing for cinematic effect
     const timers = [
       setTimeout(() => setPhase(1), 400),
       setTimeout(() => setPhase(2), 1000),
       setTimeout(() => setPhase(3), 1400),
-      setTimeout(() => setPhase(4), 3400),
-      setTimeout(() => {
-        sessionStorage.setItem("uor:booted", "true");
-        onComplete();
-      }, 4200),
     ];
+
+    // Start real boot in parallel with animation
+    sovereignBoot(handleProgress)
+      .then((receipt) => {
+        setGlyph(receipt.seal.glyph);
+        const ctx = receipt.provenance.context;
+        setProvenanceLabel(
+          ctx === "local"
+            ? "Booting on local device"
+            : `Projecting from ${receipt.provenance.hostname}`,
+        );
+        // Hold for a moment to show glyph, then fade
+        setTimeout(() => setPhase(4), 600);
+        setTimeout(() => {
+          sessionStorage.setItem("uor:booted", "true");
+          onComplete();
+        }, 1400);
+      })
+      .catch(() => {
+        // Boot failed — still complete the animation
+        setTimeout(() => setPhase(4), 800);
+        setTimeout(() => {
+          sessionStorage.setItem("uor:booted", "true");
+          onComplete();
+        }, 1600);
+      });
+
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
-
-  // Animate progress bar
-  useEffect(() => {
-    if (phase < 3) return;
-    let raf: number;
-    const start = performance.now();
-    const duration = 1800;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      setProgress(eased);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [phase]);
 
   return (
     <AnimatePresence>
@@ -104,19 +121,26 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             </svg>
           </motion.div>
 
-          {/* Title */}
-          <motion.p
+          {/* Title + provenance */}
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{
               opacity: phase >= 2 ? 0.6 : 0,
               y: phase >= 2 ? 0 : 12,
             }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 text-white/60 text-sm tracking-[0.3em] font-light"
+            className="mt-6 text-center"
             style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
           >
-            UOR OS
-          </motion.p>
+            <p className="text-white/60 text-sm tracking-[0.3em] font-light">
+              UOR OS
+            </p>
+            {provenanceLabel && (
+              <p className="text-white/30 text-[10px] tracking-[0.15em] mt-1.5">
+                {provenanceLabel}
+              </p>
+            )}
+          </motion.div>
 
           {/* Progress bar */}
           <motion.div
@@ -126,13 +150,12 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
             className="mt-8 w-48 h-[1px] bg-white/10 rounded-full overflow-hidden relative"
           >
             <div
-              className="absolute inset-y-0 left-0 rounded-full"
+              className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
               style={{
                 width: `${progress * 100}%`,
                 background: "linear-gradient(90deg, #D4A853, #E8C97A)",
               }}
             />
-            {/* Shimmer */}
             <motion.div
               className="absolute inset-y-0 w-12"
               style={{
@@ -141,6 +164,23 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
               animate={{ x: ["-48px", "192px"] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
             />
+          </motion.div>
+
+          {/* Boot detail + glyph */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: phase >= 3 ? 0.3 : 0 }}
+            transition={{ duration: 0.4 }}
+            className="mt-3 text-center"
+          >
+            <p className="text-white/30 text-[9px] tracking-[0.1em]">
+              {bootDetail}
+            </p>
+            {glyph && (
+              <p className="text-white/50 text-lg mt-2 tracking-widest">
+                {glyph}
+              </p>
+            )}
           </motion.div>
         </motion.div>
       )}

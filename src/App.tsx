@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // ── Sovereign Bus: register all modules at import time ────────────────
 import "@/modules/bus/modules";
-import { bus } from "@/modules/bus";
+import { sovereignBoot } from "@/modules/boot";
 
 // Eager. homepage renders instantly
 import { IndexPage } from "@/modules/landing";
@@ -53,15 +53,9 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Initialize the Sovereign Bus once at app startup
+  // Sovereign boot: initializes engine, bus, seal, and monitor
   useEffect(() => {
-    bus.init();
-    // Load WASM engine asynchronously (non-blocking)
-    import("@/lib/wasm/uor-bridge").then(({ loadWasm }) => loadWasm()).catch(() => {});
-    // Expose bus for debugging in dev mode
-    if (import.meta.env.DEV) {
-      (window as any).__sovereignBus = bus;
-    }
+    sovereignBoot().catch(() => {});
   }, []);
 
   return (
