@@ -22,12 +22,12 @@ export async function deriveSpaceKey(
   spaceCid: string,
   ownerSecret: Uint8Array,
 ): Promise<CryptoKey> {
-  const salt = sha256bytes(spaceCid);
-  const info = new TextEncoder().encode("uor:space:encrypt");
+  const salt = new Uint8Array(sha256bytes(spaceCid).buffer.slice(0)) as unknown as BufferSource;
+  const info = new TextEncoder().encode("uor:space:encrypt") as unknown as BufferSource;
 
   // Import raw secret as HKDF base key
   const baseKey = await crypto.subtle.importKey(
-    "raw", ownerSecret, "HKDF", false, ["deriveKey"],
+    "raw", ownerSecret.buffer.slice(0) as ArrayBuffer, "HKDF", false, ["deriveKey"],
   );
 
   return crypto.subtle.deriveKey(
@@ -73,9 +73,9 @@ export async function decryptPayload(
   const ivBytes = base64ToArray(iv);
 
   const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: ivBytes },
+    { name: "AES-GCM", iv: ivBytes.buffer.slice(0) as ArrayBuffer },
     key,
-    decoded,
+    decoded.buffer.slice(0) as ArrayBuffer,
   );
 
   return new TextDecoder().decode(decrypted);
