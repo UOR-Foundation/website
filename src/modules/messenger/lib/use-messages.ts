@@ -23,7 +23,7 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
 
     const { data, error } = await supabase
       .from("encrypted_messages")
-      .select("id, sender_id, ciphertext, created_at, message_hash, envelope_cid, parent_hashes, session_id, message_type, file_manifest, reply_to_hash, delivered_at, read_at, self_destruct_seconds, edited_at, deleted_at")
+      .select("id, sender_id, ciphertext, created_at, message_hash, envelope_cid, parent_hashes, session_id, message_type, file_manifest, reply_to_hash, delivered_at, read_at, self_destruct_seconds, edited_at, deleted_at, source_platform")
       .eq("session_id", sessionId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
@@ -94,6 +94,7 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
         selfDestructSeconds: row.self_destruct_seconds,
         editedAt: row.edited_at,
         deletedAt: row.deleted_at,
+        sourcePlatform: row.source_platform ?? "native",
       };
     });
 

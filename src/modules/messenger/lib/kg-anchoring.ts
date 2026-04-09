@@ -106,6 +106,66 @@ export async function anchorMessage(
 }
 
 /**
+ * Anchor a bridged message (from external platform) into the KG.
+ * Adds source platform and bridge provenance triples.
+ */
+export async function anchorBridgedMessage(
+  message: DecryptedMessage,
+  userId: string,
+  sessionHash: string,
+  sourcePlatform: string,
+): Promise<void> {
+  // First anchor as a regular message
+  await anchorMessage(message, userId, sessionHash);
+
+  const msgIri = `urn:ump:msg:${message.messageHash}`;
+
+  const bridgeTriples = [
+    {
+      user_id: userId,
+      triple_subject: msgIri,
+      triple_predicate: "uor:sourcePlatform",
+      triple_object: sourcePlatform,
+      source_id: message.id,
+      source_type: "bridged_message",
+      confidence: 1.0,
+    },
+    {
+      user_id: userId,
+      triple_subject: msgIri,
+      triple_predicate: "uor:bridgedFrom",
+      triple_object: `urn:matrix:event:${message.id}`,
+      source_id: message.id,
+      source_type: "bridged_message",
+      confidence: 1.0,
+    },
+  ];
+
+  await supabase.from("messenger_context_graph").insert(bridgeTriples);
+}
+
+/**
+ * Anchor a contact's cross-platform identity into the KG.
+ */
+export async function anchorContactIdentity(
+  userId: string,
+  contactCanonicalHash: string,
+  platform: string,
+  platformUserId: string,
+): Promise<void> {
+  const contactIri = `urn:uor:contact:${contactCanonicalHash}`;
+
+  await supabase.from("messenger_context_graph").insert({
+    user_id: userId,
+    triple_subject: contactIri,
+    triple_predicate: "uor:hasIdentity",
+    triple_object: `urn:uor:${platform}:${platformUserId}`,
+    source_type: "identity",
+    confidence: 0.9,
+  });
+}
+
+/**
  * Search the knowledge graph for messages matching a query.
  */
 export async function searchKG(

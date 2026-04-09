@@ -17,6 +17,8 @@ interface SendOptions {
   fileManifest?: FileManifest;
   replyToHash?: string;
   selfDestructSeconds?: number | null;
+  /** Source platform for bridged messages */
+  sourcePlatform?: string;
 }
 
 export function useSendMessage(sessionId: string | null, sessionHash?: string) {
@@ -27,7 +29,7 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
     if (!sessionId || !user || !plaintext.trim()) return;
     setSending(true);
 
-    const { messageType = "text", fileManifest, replyToHash, selfDestructSeconds } = options;
+    const { messageType = "text", fileManifest, replyToHash, selfDestructSeconds, sourcePlatform = "native" } = options;
 
     try {
       const session = sessionHash ? getCachedSession(sessionHash) : undefined;
@@ -69,6 +71,7 @@ export function useSendMessage(sessionId: string | null, sessionHash?: string) {
         file_manifest: fileManifest ?? null,
         reply_to_hash: replyToHash ?? null,
         self_destruct_seconds: selfDestructSeconds ?? null,
+        source_platform: sourcePlatform,
       };
 
       if (!navigator.onLine) {
