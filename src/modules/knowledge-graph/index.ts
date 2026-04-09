@@ -23,5 +23,30 @@ export {
 export { syncBridge } from "./sync-bridge";
 export type { SyncState } from "./sync-bridge";
 
+export {
+  decomposeToBlueprint,
+  materializeFromBlueprint,
+  decomposeRecursive,
+  serializeBlueprint,
+  deserializeBlueprint,
+  verifyBlueprint,
+} from "./blueprint";
+export type {
+  ObjectBlueprint,
+  GroundObjectBlueprint,
+  BlueprintAttribute,
+  SpaceDefinition,
+  CompositionRule,
+  DerivationRule,
+} from "./blueprint";
+
+export {
+  registerNodeType,
+  validateBlueprint,
+  getNodeTypeSchema,
+  getAllRegisteredTypes,
+} from "./blueprint-registry";
+export type { AttributeSchema, ValidationResult, ValidationIssue } from "./blueprint-registry";
+
 export { useKnowledgeGraph } from "./hooks/useKnowledgeGraph";
 export type { KnowledgeGraphHandle } from "./hooks/useKnowledgeGraph";
