@@ -18,6 +18,11 @@
  * @see https://crates.io/crates/uor-foundation
  */
 
+// ── Type Projection Version Tag ───────────────────────────────────────────
+// Compared against CRATE_MANIFEST.version at boot for drift detection.
+// Updated by scripts/sync-crate.ts when types are re-projected.
+export const TYPE_PROJECTION_VERSION = "0.2.0";
+
 // ── Primitives ─────────────────────────────────────────────────────────────
 export type { Primitives, P } from "./primitives";
 
