@@ -38,14 +38,16 @@ function isImagePlaceholder(text: string): boolean {
 }
 
 function UorIdentitySection({ item }: { item: ContextItem }) {
-  const [address, setAddress] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(item.uorAddress || null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (item.text) {
+    if (item.uorAddress) {
+      setAddress(item.uorAddress);
+    } else if (item.text) {
       computeFileUorAddress(item.text).then(setAddress).catch(() => {});
     }
-  }, [item.text]);
+  }, [item.text, item.uorAddress]);
 
   if (!address) return null;
 
