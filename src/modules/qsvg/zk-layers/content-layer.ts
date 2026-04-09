@@ -1,5 +1,5 @@
-/**
 import { sha256 } from "@noble/hashes/sha2.js";
+/**
  * Layer 3: Content. Encrypted User Data
  * ═══════════════════════════════════════
  *
