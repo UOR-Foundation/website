@@ -1,85 +1,85 @@
 
 
-# Encyclopedia: High-Value Sources and Dynamic Rebalancing
+# UOR Topic Anchoring Card — Automatic Classification and Framework Grounding
 
-## Current State
+## What This Builds
 
-The `uor-knowledge` edge function already has:
-- **Tier 1-3 domain reputation scoring** (lines 74-131)
-- **5 auxiliary source fetchers**: DuckDuckGo Instant, Britannica, Stanford Encyclopedia of Philosophy, Library of Congress, PubMed (lines 311-457)
-- **Firecrawl web search** for additional sources (lines 233-285)
-- A flat scoring formula: `domainRep * 0.6 + titleRel * 0.4` (line 216)
+A new **UOR Anchoring Card** component that appears above every article, immediately after the ProvenanceBanner. When a user searches any term, the system automatically:
 
-## Part 1: New High-Value Source Fetchers
+1. **Classifies the topic** into a precise domain and sub-category using the existing `classifyQueryDomain()` on the backend and `detectDomain()` on the frontend
+2. **Maps it to UOR framework coordinates** — showing the OS taxonomy category (RESOLVE, IDENTITY, COMPUTE, etc.), the knowledge domain, and the coherence engine's novelty/depth signals
+3. **Displays this as a compact, beautifully designed anchoring card** that serves as a "guide before exploration"
 
-Add these definitive, no-API-key-required sources to `fetchAuxiliarySources()`:
+The card answers: *"What kind of knowledge is this, how does UOR anchor it, and what should you know before diving in?"*
 
-| Source | Domain | Why Definitive | Query Method |
-|--------|--------|----------------|--------------|
-| **OpenAlex** | openalex.org | 250M+ scholarly works, open metadata | `api.openalex.org/works?search=...` |
-| **Internet Archive** | archive.org | Historical verification, primary documents | `archive.org/advancedsearch.php?q=...&output=json` |
-| **arXiv** | arxiv.org | Preprint canon for physics/math/CS | `export.arxiv.org/api/query?search_query=...` |
-| **Wolfram MathWorld** | mathworld.wolfram.com | Definitive math reference | HEAD check on `/topic/` slug |
-| **WHO** | who.int | Global health authority | `search.who.int` with JSON output |
-
-Each fetcher follows the existing pattern: individual 2s timeout via `AbortSignal.timeout()`, graceful `null` return on failure, returns a `RankedSource` object.
-
-## Part 2: Dynamic Rebalancing Module
-
-### 2a. Query Domain Classifier
-
-Add a `classifyQueryDomain()` function that uses keyword pattern matching (no LLM call needed) to return a domain category:
+## Visual Design
 
 ```text
-biomedical  -> "cancer", "gene", "protein", "clinical", "disease", "pathogen"...
-physics     -> "quantum", "relativity", "particle", "photon", "thermodynamics"...
-mathematics -> "theorem", "algebra", "topology", "calculus", "conjecture"...
-philosophy  -> "ethics", "epistemology", "ontology", "metaphysics", "Kant"...
-history     -> "war", "empire", "dynasty", "revolution", "colonial"...
-law         -> "statute", "constitutional", "tort", "jurisdiction"...
-technology  -> "software", "algorithm", "machine learning", "neural network"...
-environment -> "climate", "ecosystem", "biodiversity", "carbon"...
-economics   -> "GDP", "inflation", "monetary", "fiscal", "trade"...
-general     -> (fallback)
+┌─────────────────────────────────────────────────────────┐
+│  ⚛️ Physics · Quantum Mechanics                        │
+│                                                         │
+│  UOR Domain    Physics                                  │
+│  Category      RESOLVE → Query resolution               │
+│  Anchoring     Content-addressed via R₈ ring arithmetic │
+│  Depth         ██████░░░░ 3 prior explorations          │
+│  Novelty       72% — Familiar territory                 │
+│                                                         │
+│  ▸ How UOR anchors this topic                           │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### 2b. Domain-Specific Source Boost Map
+Expandable section shows: *"This topic is content-addressed through UOR's canonical identity system. The search term is decomposed into its prime factorization within R₈, producing a unique cryptographic address. Sources are dynamically rebalanced toward physics-authoritative repositories (arXiv, Nature, NASA)."*
 
-A `DOMAIN_SOURCE_BOOSTS` map that adds priority points to domain-specific authoritative sources when a matching query domain is detected:
+## Technical Approach
 
-```text
-biomedical:  pubmed +15, nih.gov +12, who.int +10, mayoclinic.org +8
-physics:     arxiv.org +15, nature.com +10, nasa.gov +8
-mathematics: mathworld.wolfram.com +15, arxiv.org +10
-philosophy:  plato.stanford.edu +15, britannica.com +8
-history:     loc.gov +15, archive.org +12, britannica.com +8
-law:         .gov domains +12, britannica.com +6
-technology:  arxiv.org +10, ieee.org +10, acm.org +10
-environment: ipcc.ch +15, epa.gov +12, who.int +8, nature.com +8
-economics:   worldbank.org +12, oecd.org +12, imf.org +10
-```
+### 1. New Component: `UorAnchoringCard.tsx`
 
-### 2c. Modified `rankSources()` 
+A new component in `src/modules/oracle/components/` that receives:
+- `queryDomain` — from the edge function's classifier (already emitted in SSE)
+- `keyword` — the search term
+- `noveltyScore` / `noveltyLabel` — from the coherence engine (already computed client-side)
+- `domainDepth` — from the coherence engine
+- `sessionCoherence` — from the coherence engine
 
-The existing flat formula (`domainRep * 0.6 + titleRel * 0.4`) gets an additional term:
+Renders a compact card with:
+- Domain icon + label (reusing `DOMAIN_LABELS` from ProvenanceBanner, extended with sub-categories)
+- OS taxonomy mapping (from `os-taxonomy.ts` — maps to the RESOLVE category for search/oracle)
+- A mini progress bar for domain depth
+- Novelty percentage badge
+- Expandable "How UOR anchors this topic" section with a 2-3 sentence human-readable explanation of how content-addressing works for this specific domain
 
-```
-score = round(domainRep * 0.55 + titleRel * 0.35 + domainBoost * 0.10)
-```
+### 2. Extend `ProvenanceMeta` in `stream-knowledge.ts`
 
-Where `domainBoost` is 0 for unmatched domains and the boost value (scaled to 0-100) for matched ones. This slightly reduces the weight of generic reputation in favor of domain-specific authority.
+Add an optional `domainSubcategory` field. The edge function will emit a more precise sub-label (e.g., "Quantum Mechanics" within "Physics") derived from the keyword pattern match. This gives finer granularity than just the top-level domain.
 
-### 2d. Emit Domain Classification in SSE
+### 3. Emit Sub-Category from Edge Function
 
-The `wiki` SSE event will include `queryDomain` so the frontend can optionally display "Research domain: Biomedical" or similar in the ProvenanceBanner.
+In `uor-knowledge/index.ts`, extend `classifyQueryDomain()` to also return a `subcategory` string. This uses the same regex infrastructure but picks a more specific label based on which keyword pattern matched (e.g., if "quantum" matched within physics, subcategory = "Quantum Mechanics").
+
+### 4. Wire into `ContextualArticleView.tsx`
+
+Add the `UorAnchoringCard` between the ProvenanceBanner and the Context Banner. Pass through the provenance data (queryDomain, subcategory) and coherence data (novelty, depth).
+
+### 5. Wire Coherence Data into `HumanContentView.tsx`
+
+The coherence engine already runs client-side. Pass `noveltyScore`, `domainDepth`, and `sessionCoherence` from `ResolvePage.tsx` through `HumanContentView` into `ContextualArticleView` and then into `UorAnchoringCard`.
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `supabase/functions/uor-knowledge/index.ts` | Add 5 new fetchers, `classifyQueryDomain()`, `DOMAIN_SOURCE_BOOSTS`, modify `rankSources()` signature, emit `queryDomain` in SSE |
-| `src/modules/oracle/lib/stream-knowledge.ts` | Extend `ProvenanceMeta` with optional `queryDomain` field |
-| `src/modules/oracle/components/ProvenanceBanner.tsx` | Display detected research domain when present |
+| `src/modules/oracle/components/UorAnchoringCard.tsx` | **New** — The anchoring card component |
+| `src/modules/oracle/components/ContextualArticleView.tsx` | Add UorAnchoringCard between ProvenanceBanner and Context Banner, accept new props |
+| `src/modules/oracle/components/HumanContentView.tsx` | Pass coherence/novelty data through to ContextualArticleView |
+| `src/modules/oracle/lib/stream-knowledge.ts` | Extend `ProvenanceMeta` with `domainSubcategory` |
+| `supabase/functions/uor-knowledge/index.ts` | Extend classifier to emit `domainSubcategory` in SSE |
+| `src/modules/oracle/pages/ResolvePage.tsx` | Pass coherence state (novelty, depth) to HumanContentView |
 
-No new dependencies or secrets required. All new source APIs are free and keyless.
+## Design Details
+
+- Glass-effect card with subtle border, matching the existing ProvenanceBanner aesthetic
+- Domain emoji + bold label as the card header
+- 5 compact key-value rows using muted foreground text
+- Expandable section with a smooth `framer-motion` animation
+- Dark theme compatible, no new dependencies
 
