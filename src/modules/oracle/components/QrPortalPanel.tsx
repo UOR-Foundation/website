@@ -108,6 +108,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
         }
       }, 1000);
     } catch (e: unknown) {
+      console.warn("[QrPortal] generateToken error:", e);
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
