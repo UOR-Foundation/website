@@ -1,16 +1,8 @@
 /**
  * EngineStatusIndicator — System Health Monitor Widget
  *
- * Shows a single status dot indicating system integrity.
- * Click opens a diagnostic panel with:
- *   - Single seal hash (system proof)
- *   - Kernel health (ring integrity)
- *   - Tech stack validation
- *   - Engine & module status
- *   - Device context
- *   - Detailed degradation log (copyable as markdown)
- *
- * All fields are canonically wired to live system state.
+ * Concise visual panel with progressive disclosure.
+ * Full technical report copied to clipboard on "Copy Report".
  *
  * @module boot/EngineStatusIndicator
  */
@@ -45,41 +37,42 @@ const STATUS_CONFIG: Record<
   degraded: {
     color: "#f59e0b",
     label: "Degraded",
-    description: "Running with reduced capability — see details below",
+    description: "Running with reduced capability",
     pulse: true,
   },
   unsealed: {
     color: "#ef4444",
     label: "Integrity Failure",
-    description: "System verification failed — seal is broken",
+    description: "System verification failed",
     pulse: true,
   },
   broken: {
     color: "#ef4444",
     label: "Compromised",
-    description: "Continuous monitoring detected tampering",
+    description: "Tampering detected",
     pulse: true,
   },
   booting: {
     color: "#6b7280",
     label: "Starting",
-    description: "System is initializing…",
+    description: "Initializing…",
     pulse: true,
   },
   failed: {
     color: "#ef4444",
     label: "Boot Failed",
-    description: "System could not start — check console",
+    description: "Check console",
     pulse: true,
   },
 };
 
-// ── Degradation reason builder ──────────────────────────────────────────
+// ── Degradation types ───────────────────────────────────────────────────
 
 interface DegradationEntry {
   component: string;
   issue: string;
   impact: string;
+  recommendation?: string;
 }
 
 function buildDegradationLog(
@@ -94,56 +87,56 @@ function buildDegradationLog(
         component: "Boot Sequence",
         issue: "Boot did not complete",
         impact: "System is non-functional. No seal was produced.",
+        recommendation: "Check browser console for errors. Reload the page.",
       });
     }
     return entries;
   }
 
-  // Engine fallback
   if (receipt.engineType === "typescript") {
     entries.push({
       component: "Compute Engine",
       issue: "WASM binary did not load — using TypeScript fallback",
-      impact:
-        "All math is identical but the binary integrity hash is absent. Performance may be slightly lower for heavy computations.",
+      impact: "All math is identical but binary integrity hash is absent.",
+      recommendation: "Ensure the WASM binary is accessible. Check network/CORS configuration.",
     });
   }
 
-  // Missing critical stack components
   if (receipt.stackHealth) {
     for (const comp of receipt.stackHealth.components) {
       if (!comp.available && comp.criticality === "critical") {
         entries.push({
           component: comp.name,
-          issue: `Critical component unavailable`,
+          issue: "Critical component unavailable",
           impact: `Fallback: ${comp.fallback}`,
+          recommendation: `Verify ${comp.name} is installed and importable.`,
         });
       }
     }
   }
 
-  // Seal broken
   if (status === "broken") {
     entries.push({
       component: "Seal Monitor",
       issue: "Re-verification detected a hash mismatch",
-      impact:
-        "The system's canonical bytes no longer produce the original seal. This could indicate memory corruption or code injection.",
+      impact: "Canonical bytes no longer produce the original seal.",
+      recommendation: "Possible memory corruption or code injection. Hard reload recommended.",
     });
   }
 
-  // Unsealed
   if (status === "unsealed") {
     entries.push({
       component: "Ring Algebra",
-      issue: "Ring identity verification failed for one or more elements",
-      impact:
-        "The algebraic framework is unsound. Derivation IDs produced in this session cannot be trusted.",
+      issue: "Ring identity verification failed",
+      impact: "Derivation IDs produced in this session cannot be trusted.",
+      recommendation: "Engine integrity compromised. Reload required.",
     });
   }
 
   return entries;
 }
+
+// ── Enhanced markdown report (clipboard) ────────────────────────────────
 
 function formatMarkdownReport(
   receipt: BootReceipt | null,
@@ -160,68 +153,140 @@ function formatMarkdownReport(
   lines.push(`**Status:** ${STATUS_CONFIG[status]?.label ?? status}`);
   lines.push("");
 
-  if (receipt) {
-    lines.push("## System Seal");
-    lines.push("");
-    lines.push(`- **Seal Hash:** \`${receipt.seal.derivationId}\``);
-    lines.push(`- **Visual Glyph:** ${receipt.seal.glyph}`);
-    lines.push(`- **Boot Time:** ${receipt.bootTimeMs}ms`);
-    lines.push(`- **Sealed At:** ${receipt.seal.bootedAt}`);
-    lines.push(
-      `- **Last Verified:** ${lastVerified ? new Date(lastVerified).toISOString() : "pending"}`,
-    );
-    lines.push("");
-    lines.push("## Kernel");
-    lines.push("");
-    lines.push(
-      `- **Engine:** ${receipt.engineType === "wasm" ? "WASM (native)" : "TypeScript (fallback)"}`,
-    );
-    lines.push(`- **Crate Version:** ${getEngine().version}`);
-    lines.push(`- **Modules Loaded:** ${receipt.moduleCount}`);
-    lines.push(
-      `- **Ring Integrity:** ${status === "unsealed" || status === "broken" ? "FAILED ✗" : "Verified ✓"}`,
-    );
-    lines.push("");
-
-    if (receipt.stackHealth) {
-      lines.push("## Tech Stack");
+  if (!receipt) {
+    lines.push("_No boot receipt available._");
+    if (entries.length > 0) {
       lines.push("");
-      lines.push(`- **Stack Hash:** \`${receipt.stackHealth.stackHash.slice(0, 16)}…\``);
-      lines.push(`- **All Critical Present:** ${receipt.stackHealth.allCriticalPresent ? "Yes ✓" : "No ✗"}`);
-      lines.push("");
-      lines.push("| Component | Role | Status | Version |");
-      lines.push("|---|---|---|---|");
-      for (const c of receipt.stackHealth.components) {
-        lines.push(
-          `| ${c.name} | ${c.role.split("—")[0].trim()} | ${c.available ? "✓" : "✗"} | ${c.version ?? "—"} |`,
-        );
+      lines.push("## Issues");
+      for (const e of entries) {
+        lines.push(`- **${e.component}:** ${e.issue}`);
       }
-      lines.push("");
     }
-
-    lines.push("## Device Context");
-    lines.push("");
-    lines.push(
-      `- **Execution:** ${receipt.provenance.context === "local" ? "Local device" : `Remote (${receipt.provenance.hostname})`}`,
-    );
-    lines.push(`- **CPU Cores:** ${receipt.provenance.hardware.cores}`);
-    lines.push(
-      `- **WASM Support:** ${receipt.provenance.hardware.wasmSupported ? "Yes" : "No"}`,
-    );
-    lines.push(
-      `- **SIMD Support:** ${receipt.provenance.hardware.simdSupported ? "Yes" : "No"}`,
-    );
+    return lines.join("\n");
   }
 
-  if (entries.length > 0) {
+  // ── System Seal ──
+  lines.push("## System Seal");
+  lines.push("");
+  lines.push(`- **Seal Hash:** \`${receipt.seal.derivationId}\``);
+  lines.push(`- **Visual Glyph:** ${receipt.seal.glyph}`);
+  lines.push(`- **Boot Time:** ${receipt.bootTimeMs}ms`);
+  lines.push(`- **Sealed At:** ${receipt.seal.bootedAt}`);
+  lines.push(`- **Last Verified:** ${lastVerified ? new Date(lastVerified).toISOString() : "pending"}`);
+  lines.push(`- **Session Nonce:** \`${receipt.seal.sessionNonce}\``);
+  lines.push("");
+
+  // ── Kernel ──
+  lines.push("## Kernel");
+  lines.push("");
+  lines.push(`- **Engine:** ${receipt.engineType === "wasm" ? "WASM (native)" : "TypeScript (fallback)"}`);
+  lines.push(`- **Crate Version:** ${getEngine().version}`);
+  lines.push(`- **Modules Loaded:** ${receipt.moduleCount}`);
+  lines.push(`- **Ring Integrity:** ${status === "unsealed" || status === "broken" ? "FAILED ✗" : "Verified ✓"}`);
+  lines.push(`- **Kernel Hash:** \`${receipt.kernelHealth?.kernelHash ?? "n/a"}\``);
+  lines.push("");
+
+  // ── Kernel Functions Table ──
+  try {
+    const table = getKernelDeclaration();
+    const verification = verifyKernel();
+    const FANO = ["₀", "₁", "₂", "₃", "₄", "₅", "₆"];
+
+    lines.push("## Kernel Functions (Fano P₀–P₆)");
     lines.push("");
-    lines.push("## Degradation Details");
+    lines.push("| Point | Function | Framework | Ring Basis | Status |");
+    lines.push("|-------|----------|-----------|------------|--------|");
+    for (let i = 0; i < table.length; i++) {
+      const fn = table[i];
+      const ok = verification.results.find((r) => r.name === fn.name)?.ok ?? false;
+      lines.push(`| P${FANO[i]} | ${fn.name} | ${fn.framework} | ${fn.ringBasis.join(", ")} | ${ok ? "✓" : "✗"} |`);
+    }
+    lines.push("");
+    lines.push(`**Kernel Verification Hash:** \`${verification.hash}\``);
+    lines.push("");
+  } catch { /* skip if kernel unavailable */ }
+
+  // ── Selection Policy ──
+  lines.push("## Selection Policy");
+  lines.push("");
+  for (const c of SELECTION_POLICY) {
+    lines.push(`- **${c.name}:** ${c.definition}`);
+  }
+  lines.push("");
+
+  // ── Tech Stack (categorized) ──
+  if (receipt.stackHealth) {
+    const components = receipt.stackHealth.components;
+    const critical = components.filter((c) => c.criticality === "critical");
+    const recommended = components.filter((c) => c.criticality === "recommended");
+    const optional = components.filter((c) => c.criticality === "optional");
+
+    lines.push("## Tech Stack");
+    lines.push("");
+    lines.push(`- **Stack Hash:** \`${receipt.stackHealth.stackHash}\``);
+    lines.push(`- **All Critical Present:** ${receipt.stackHealth.allCriticalPresent ? "Yes ✓" : "No ✗"}`);
+    lines.push("");
+
+    const renderGroup = (label: string, items: typeof components) => {
+      if (items.length === 0) return;
+      lines.push(`### ${label}`);
+      lines.push("");
+      lines.push("| Component | Role | Status | Version |");
+      lines.push("|-----------|------|--------|---------|");
+      for (const c of items) {
+        lines.push(`| ${c.name} | ${c.role.split("—")[0].trim()} | ${c.available ? "✓" : "✗"} | ${c.version ?? "—"} |`);
+      }
+      lines.push("");
+    };
+
+    renderGroup("Critical", critical);
+    renderGroup("Recommended", recommended);
+    renderGroup("Optional", optional);
+  }
+
+  // ── Environment ──
+  lines.push("## Environment");
+  lines.push("");
+  lines.push(`- **Execution:** ${receipt.provenance.context === "local" ? "Local device" : `Remote (${receipt.provenance.hostname})`}`);
+  lines.push(`- **CPU Cores:** ${receipt.provenance.hardware.cores}`);
+  lines.push(`- **Memory:** ${receipt.provenance.hardware.memoryGb ? `${receipt.provenance.hardware.memoryGb} GB` : "Unknown"}`);
+  lines.push(`- **WASM Support:** ${receipt.provenance.hardware.wasmSupported ? "Yes" : "No"}`);
+  lines.push(`- **SIMD Support:** ${receipt.provenance.hardware.simdSupported ? "Yes" : "No"}`);
+  lines.push(`- **Touch Capable:** ${receipt.provenance.hardware.touchCapable ? "Yes" : "No"}`);
+  lines.push(`- **Screen:** ${receipt.provenance.hardware.screenWidth}×${receipt.provenance.hardware.screenHeight}`);
+  lines.push(`- **GPU:** ${receipt.provenance.hardware.gpu ?? "Unknown"}`);
+  lines.push(`- **Provenance Hash:** \`${receipt.provenance.provenanceHash}\``);
+  lines.push("");
+
+  // ── Namespace Coverage ──
+  if (receipt.kernelHealth) {
+    const ns = receipt.kernelHealth.namespaceCoverage;
+    lines.push("## Namespace Coverage");
+    lines.push("");
+    lines.push(`- **Covered:** ${ns.covered}/${ns.total}`);
+    lines.push(`- **Uncovered:** ${ns.uncovered}`);
+    lines.push(`- **Minimal:** ${receipt.kernelHealth.isMinimal ? "Yes ✓" : "No ✗"}`);
+    if (receipt.kernelHealth.overlaps.length > 0) {
+      lines.push(`- **Overlaps:** ${receipt.kernelHealth.overlaps.map((o) => `${o.kernelFunction} (${o.frameworks.join(", ")})`).join("; ")}`);
+    }
+    if (receipt.kernelHealth.manifestOrphans.length > 0) {
+      lines.push(`- **Orphaned Modules:** ${receipt.kernelHealth.manifestOrphans.join(", ")}`);
+    }
+    lines.push("");
+  }
+
+  // ── Degradation & Recommendations ──
+  if (entries.length > 0) {
+    lines.push("## Degradation Details & Recommendations");
     lines.push("");
     for (const e of entries) {
       lines.push(`### ${e.component}`);
       lines.push("");
       lines.push(`- **Issue:** ${e.issue}`);
       lines.push(`- **Impact:** ${e.impact}`);
+      if (e.recommendation) {
+        lines.push(`- **Recommended Action:** ${e.recommendation}`);
+      }
       lines.push("");
     }
   }
@@ -244,6 +309,7 @@ export default function EngineStatusIndicator({
   const { receipt, status, lastVerified } = useBootStatus();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.booting;
@@ -259,12 +325,6 @@ export default function EngineStatusIndicator({
     status === "unsealed" ||
     status === "failed";
 
-  // Truncated seal for display
-  const sealDisplay = useMemo(() => {
-    if (!receipt?.seal.derivationId) return "—";
-    return receipt.seal.derivationId;
-  }, [receipt]);
-
   // Ring integrity check (live)
   const ringOk = useMemo(() => {
     if (!receipt) return false;
@@ -275,6 +335,15 @@ export default function EngineStatusIndicator({
       return false;
     }
   }, [receipt, lastVerified]);
+
+  // Stack summary
+  const stackSummary = useMemo(() => {
+    if (!receipt?.stackHealth) return null;
+    const comps = receipt.stackHealth.components;
+    const available = comps.filter((c) => c.available).length;
+    const failing = comps.filter((c) => !c.available);
+    return { available, total: comps.length, failing };
+  }, [receipt]);
 
   const handleCopyReport = useCallback(() => {
     const md = formatMarkdownReport(receipt, status, lastVerified, degradationLog);
@@ -296,9 +365,10 @@ export default function EngineStatusIndicator({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const textMuted = isLight ? "text-black/50" : "text-white/50";
   const textMain = isLight ? "text-black/80" : "text-white/80";
   const textSub = isLight ? "text-black/60" : "text-white/60";
+  const textMuted = isLight ? "text-black/50" : "text-white/50";
+  const textFaint = isLight ? "text-black/30" : "text-white/30";
   const borderSub = isLight ? "border-black/5" : "border-white/5";
   const bgPanel = isLight
     ? "bg-white/95 border-black/10 shadow-lg"
@@ -342,8 +412,8 @@ export default function EngineStatusIndicator({
             className={`absolute right-0 top-8 z-[9000] w-80 max-h-[70vh] overflow-y-auto rounded-lg border p-3 text-[10px] leading-relaxed font-mono ${bgPanel}`}
             style={{ backdropFilter: "blur(24px)" }}
           >
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between mb-2">
+            {/* ── Hero Header ── */}
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
                 <div
                   className="w-2 h-2 rounded-full shrink-0"
@@ -360,201 +430,90 @@ export default function EngineStatusIndicator({
                     ? "bg-black/5 hover:bg-black/10 text-black/60"
                     : "bg-white/5 hover:bg-white/10 text-white/60"
                 } transition-colors`}
-                title="Copy full report as Markdown"
+                title="Copy full technical report as Markdown"
               >
                 {copied ? "Copied ✓" : "Copy Report"}
               </button>
             </div>
 
-            {/* Status description */}
-            <p className={`text-[9px] mb-3 ${textSub}`}>
-              {config.description}
-            </p>
-
             {receipt ? (
-              <div className="space-y-3">
-                {/* ── Section: System Seal ── */}
-                <Section title="System Seal" isLight={isLight}>
-                  <div className="space-y-1">
-                    <div className={`text-[9px] break-all ${textSub}`}>
-                      {sealDisplay}
-                    </div>
-                    <div className={`text-sm tracking-wider ${textMain}`}>
-                      {receipt.seal.glyph}
-                    </div>
+              <div className="space-y-2.5">
+                {/* ── Hero Summary (4 lines) ── */}
+                <div className={`space-y-0.5 text-[9px] ${textSub}`}>
+                  <div className={`text-sm tracking-wider ${textMain}`}>
+                    {receipt.seal.glyph}
                   </div>
-                </Section>
+                  <div className="flex justify-between">
+                    <span className={textMuted}>Boot</span>
+                    <span>{receipt.bootTimeMs}ms</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={textMuted}>Verified</span>
+                    <span>{lastVerified ? new Date(lastVerified).toLocaleTimeString() : "pending"}</span>
+                  </div>
+                </div>
 
-                {/* ── Section: Kernel ── */}
+                {/* ── Kernel (compact) ── */}
                 <Section title="Kernel" isLight={isLight}>
-                  <Row
-                    label="Engine"
-                    value={
-                      receipt.engineType === "wasm"
-                        ? "WASM (native)"
-                        : "TypeScript (fallback)"
-                    }
-                    isLight={isLight}
-                  />
-                  <Row
-                    label="Ring Integrity"
-                    value={ringOk ? "Verified ✓" : "FAILED ✗"}
-                    valueColor={ringOk ? "#22c55e" : "#ef4444"}
-                    isLight={isLight}
-                  />
-                  <Row
-                    label="Modules"
-                    value={String(receipt.moduleCount)}
-                    isLight={isLight}
-                  />
-                  <Row
-                    label="Crate"
-                    value={`v${getEngine().version}`}
-                    isLight={isLight}
-                  />
+                  <Row label="Engine" value={receipt.engineType === "wasm" ? "WASM" : "TS fallback"} isLight={isLight} />
+                  <Row label="Ring" value={ringOk ? "Verified ✓" : "FAILED ✗"} valueColor={ringOk ? "#22c55e" : "#ef4444"} isLight={isLight} />
+                  <Row label="Modules" value={String(receipt.moduleCount)} isLight={isLight} />
                 </Section>
 
-                {/* ── Section: Selection Policy ── */}
-                <Section title="Selection Policy" isLight={isLight}>
-                  <div className={`text-[8px] leading-snug space-y-0.5 ${isLight ? "text-black/40" : "text-white/40"}`}>
-                    {SELECTION_POLICY.map((c) => (
-                      <div key={c.name} className="flex gap-1">
-                        <span className={`font-semibold shrink-0 ${isLight ? "text-black/60" : "text-white/60"}`}>
-                          {c.name}:
-                        </span>
-                        <span>{c.definition}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-
-                {/* ── Section: Kernel Functions (Fano P₀–P₆) ── */}
+                {/* ── Kernel Functions (Fano P₀–P₆) ── */}
                 <KernelFunctionsSection isLight={isLight} />
 
-                {/* ── Section: Tech Stack ── */}
-                {receipt.stackHealth && (
-                  <Section title="Tech Stack" isLight={isLight}>
-                    <div className="space-y-0.5">
-                      {receipt.stackHealth.components.map((comp) => (
-                        <div
-                          key={comp.name}
-                          className="flex items-center justify-between"
-                        >
-                          <span className={`truncate pr-2 ${isLight ? "text-black/50" : "text-white/50"}`}>
-                            {comp.name}
-                          </span>
-                          <div className="flex items-center gap-1 shrink-0">
-                            {comp.version && (
-                              <span className={`text-[8px] ${isLight ? "text-black/30" : "text-white/30"}`}>
-                                {comp.version}
-                              </span>
-                            )}
-                            <span
-                              className="w-1.5 h-1.5 rounded-full inline-block"
-                              style={{
-                                backgroundColor: comp.available
-                                  ? "#22c55e"
-                                  : comp.criticality === "critical"
-                                    ? "#ef4444"
-                                    : "#f59e0b",
-                              }}
-                              title={
-                                comp.available
-                                  ? `${comp.role}`
-                                  : `Missing — ${comp.fallback}`
-                              }
-                            />
-                          </div>
+                {/* ── Tech Stack: issues only or summary ── */}
+                {stackSummary && (
+                  <Section title="Stack" isLight={isLight}>
+                    {stackSummary.failing.length === 0 ? (
+                      <div className={`text-[9px] ${textSub}`}>
+                        All {stackSummary.total} components operational ✓
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5">
+                        <div className={`text-[9px] mb-1 ${textMuted}`}>
+                          {stackSummary.available}/{stackSummary.total} operational
                         </div>
-                      ))}
-                    </div>
-                    <div className={`mt-1 text-[8px] ${isLight ? "text-black/30" : "text-white/30"}`}>
-                      Stack hash: {receipt.stackHealth.stackHash.slice(0, 12)}…
-                    </div>
+                        {stackSummary.failing.map((comp) => (
+                          <div key={comp.name} className="flex items-center justify-between">
+                            <span className={`truncate pr-2 ${textMuted}`}>{comp.name}</span>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className={`text-[8px] ${textFaint}`}>
+                                {comp.criticality}
+                              </span>
+                              <span
+                                className="w-1.5 h-1.5 rounded-full inline-block"
+                                style={{
+                                  backgroundColor: comp.criticality === "critical" ? "#ef4444" : "#f59e0b",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Section>
                 )}
 
-                {/* ── Section: Monitoring ── */}
-                <Section title="Monitoring" isLight={isLight}>
-                  <Row
-                    label="Boot Time"
-                    value={`${receipt.bootTimeMs}ms`}
-                    isLight={isLight}
-                  />
-                  <Row
-                    label="Sealed At"
-                    value={new Date(receipt.seal.bootedAt).toLocaleTimeString()}
-                    isLight={isLight}
-                  />
-                  {lastVerified && (
-                    <Row
-                      label="Last Verified"
-                      value={new Date(lastVerified).toLocaleTimeString()}
-                      isLight={isLight}
-                    />
-                  )}
-                </Section>
-
-                {/* ── Section: Device ── */}
-                <Section title="Device Context" isLight={isLight}>
-                  <div
-                    className={`px-1.5 py-1 rounded text-[9px] ${
-                      receipt.provenance.context === "local"
-                        ? isLight
-                          ? "bg-green-50 text-green-700"
-                          : "bg-green-900/30 text-green-400"
-                        : isLight
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-amber-900/30 text-amber-400"
-                    }`}
-                  >
-                    {receipt.provenance.context === "local"
-                      ? "Running locally on this device"
-                      : `Projected from: ${receipt.provenance.hostname}`}
-                    <div className="opacity-60 mt-0.5">
-                      Self-reported device context
-                    </div>
-                  </div>
-                  <Row
-                    label="CPU Cores"
-                    value={String(receipt.provenance.hardware.cores)}
-                    isLight={isLight}
-                  />
-                </Section>
-
-                {/* ── Section: Degradation Log ── */}
+                {/* ── Degradation Log ── */}
                 {isDegraded && degradationLog.length > 0 && (
-                  <Section title="⚠ Degradation Details" isLight={isLight}>
-                    <div className="space-y-2">
+                  <Section title="⚠ Issues" isLight={isLight}>
+                    <div className="space-y-1.5">
                       {degradationLog.map((entry, i) => (
                         <div
                           key={i}
-                          className={`px-1.5 py-1.5 rounded text-[9px] ${
+                          className={`px-1.5 py-1 rounded text-[9px] ${
                             isLight
                               ? "bg-amber-50 border border-amber-200"
                               : "bg-amber-900/20 border border-amber-800/30"
                           }`}
                         >
-                          <div
-                            className={`font-semibold mb-0.5 ${
-                              isLight ? "text-amber-800" : "text-amber-300"
-                            }`}
-                          >
+                          <div className={`font-semibold ${isLight ? "text-amber-800" : "text-amber-300"}`}>
                             {entry.component}
                           </div>
-                          <div
-                            className={
-                              isLight ? "text-amber-700" : "text-amber-400"
-                            }
-                          >
+                          <div className={isLight ? "text-amber-700" : "text-amber-400"}>
                             {entry.issue}
-                          </div>
-                          <div
-                            className={`mt-0.5 opacity-70 ${
-                              isLight ? "text-amber-600" : "text-amber-500"
-                            }`}
-                          >
-                            {entry.impact}
                           </div>
                         </div>
                       ))}
@@ -562,10 +521,86 @@ export default function EngineStatusIndicator({
                   </Section>
                 )}
 
-                {/* ── Footer ── */}
-                <div
-                  className={`pt-1.5 border-t text-[8px] opacity-40 ${borderSub}`}
+                {/* ── Collapsible Details ── */}
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className={`text-[9px] w-full text-left py-1 ${textMuted} hover:${textSub} transition-colors`}
                 >
+                  {showDetails ? "▾ Hide details" : "▸ Show details"}
+                </button>
+
+                <AnimatePresence>
+                  {showDetails && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="space-y-2.5 overflow-hidden"
+                    >
+                      {/* Selection Policy */}
+                      <Section title="Selection Policy" isLight={isLight}>
+                        <div className={`text-[8px] leading-snug space-y-0.5 ${isLight ? "text-black/40" : "text-white/40"}`}>
+                          {SELECTION_POLICY.map((c) => (
+                            <div key={c.name} className="flex gap-1">
+                              <span className={`font-semibold shrink-0 ${isLight ? "text-black/60" : "text-white/60"}`}>
+                                {c.name}:
+                              </span>
+                              <span>{c.definition}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Section>
+
+                      {/* Device Context */}
+                      <Section title="Device" isLight={isLight}>
+                        <div
+                          className={`px-1.5 py-1 rounded text-[9px] ${
+                            receipt.provenance.context === "local"
+                              ? isLight ? "bg-green-50 text-green-700" : "bg-green-900/30 text-green-400"
+                              : isLight ? "bg-amber-50 text-amber-700" : "bg-amber-900/30 text-amber-400"
+                          }`}
+                        >
+                          {receipt.provenance.context === "local"
+                            ? "Running locally"
+                            : `Remote: ${receipt.provenance.hostname}`}
+                        </div>
+                        <Row label="Cores" value={String(receipt.provenance.hardware.cores)} isLight={isLight} />
+                        <Row label="WASM" value={receipt.provenance.hardware.wasmSupported ? "Yes" : "No"} isLight={isLight} />
+                        <Row label="SIMD" value={receipt.provenance.hardware.simdSupported ? "Yes" : "No"} isLight={isLight} />
+                      </Section>
+
+                      {/* Full Tech Stack */}
+                      {receipt.stackHealth && (
+                        <Section title="Full Stack" isLight={isLight}>
+                          <div className="space-y-0.5">
+                            {receipt.stackHealth.components.map((comp) => (
+                              <div key={comp.name} className="flex items-center justify-between">
+                                <span className={`truncate pr-2 ${textMuted}`}>{comp.name}</span>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {comp.version && (
+                                    <span className={`text-[8px] ${textFaint}`}>{comp.version}</span>
+                                  )}
+                                  <span
+                                    className="w-1.5 h-1.5 rounded-full inline-block"
+                                    style={{
+                                      backgroundColor: comp.available
+                                        ? "#22c55e"
+                                        : comp.criticality === "critical" ? "#ef4444" : "#f59e0b",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Section>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Footer */}
+                <div className={`pt-1 border-t text-[8px] opacity-40 ${borderSub}`}>
                   Lattice-hash sealed · 128-bit preimage resistance
                 </div>
               </div>
@@ -599,7 +634,7 @@ function KernelFunctionsSection({ isLight }: { isLight: boolean }) {
   const FANO_SUBSCRIPTS = ["₀", "₁", "₂", "₃", "₄", "₅", "₆"];
 
   return (
-    <Section title="Kernel Functions (Fano Plane)" isLight={isLight}>
+    <Section title="Kernel Functions" isLight={isLight}>
       <div className="space-y-0.5">
         {kernelData.table.map((fn, i) => {
           const result = kernelData.verification.results.find((r) => r.name === fn.name);
