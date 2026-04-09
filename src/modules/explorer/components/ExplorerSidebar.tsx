@@ -4,7 +4,7 @@
 
 import {
   Files, Clock, Upload, FolderOpen, Layers, Globe,
-  ClipboardPaste, HardDrive, Lock, ShieldCheck,
+  ClipboardPaste, ShieldCheck,
 } from "lucide-react";
 import { DEFAULT_TAGS, tagStore } from "../lib/tags";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
@@ -133,31 +133,8 @@ export default function ExplorerSidebar({ filter, onFilterChange, items, isGuest
         </button>
       ))}
 
-      {/* Bottom: storage indicator */}
-      <div className="mt-auto px-4 pt-4 border-t border-border/40">
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          {isGuest ? (
-            <>
-              <HardDrive className="w-4 h-4" />
-              <span>Stored on this device</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-4 h-4 text-primary/70" />
-              <span>Encrypted · always yours</span>
-            </>
-          )}
-        </div>
-        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary/60 transition-all"
-            style={{ width: `${Math.min(100, items.length * 8)}%` }}
-          />
-        </div>
-        <p className="text-[11px] text-muted-foreground/70 mt-1.5">
-          {items.length} item{items.length !== 1 ? "s" : ""} · always private
-        </p>
-      </div>
+      {/* Spacer */}
+      <div className="flex-1" />
     </div>
   );
 }

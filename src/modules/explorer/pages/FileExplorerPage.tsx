@@ -423,25 +423,20 @@ function EmptyState({
 
   return (
     <div className="flex-1 flex items-center justify-center h-full p-8">
-      <div className="flex flex-col items-center gap-6 max-w-md w-full">
-        <button
-          onClick={onUpload}
-          className="flex flex-col items-center gap-5 p-12 rounded-2xl border-2 border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-colors cursor-pointer group w-full"
-        >
-          <div className="w-20 h-20 rounded-2xl bg-muted/40 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-            <ShieldCheck className="w-10 h-10 text-muted-foreground/30 group-hover:text-primary/60 transition-colors" />
-          </div>
-           <div className="text-center">
-             <p className="text-base font-medium text-foreground/80 group-hover:text-foreground/90">
-               Nothing here yet
-             </p>
-             <p className="text-sm text-muted-foreground/50 mt-1.5">
-               Drop anything here. It stays with you.
-             </p>
-           </div>
-        </button>
+      <div className="flex flex-col items-center gap-6 max-w-sm w-full">
+        <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center">
+          <ShieldCheck className="w-8 h-8 text-muted-foreground/25" />
+        </div>
+        <div className="text-center">
+          <p className="text-base font-medium text-foreground/70">
+            Nothing here yet
+          </p>
+          <p className="text-sm text-muted-foreground/40 mt-1">
+            Drop anything here. It stays with you.
+          </p>
+        </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap justify-center">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={onUpload}
             className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border/30 text-foreground/70 hover:bg-muted/50 hover:text-foreground transition-colors"
