@@ -90,6 +90,14 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  optimizeDeps: {
+    exclude: ["@grafeo-db/web", "@grafeo-db/wasm"],
+  },
+  build: {
+    rollupOptions: {
+      external: ["@grafeo-db/wasm"],
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
