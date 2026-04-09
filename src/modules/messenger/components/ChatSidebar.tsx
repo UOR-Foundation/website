@@ -39,7 +39,7 @@ export default function ChatSidebar({ conversations, activeId, onSelect, onNewCh
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="Search conversations…"
+            placeholder="Search…"
             className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/80 text-[13px] pl-8 pr-3 outline-none placeholder:text-white/20 focus:border-teal-500/30 transition-colors"
           />
         </div>

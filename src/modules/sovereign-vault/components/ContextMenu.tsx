@@ -206,8 +206,8 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                   <div className="px-2 pb-2">
                     <MenuItem
                       icon={<Shield className="w-4 h-4" />}
-                      label="Sovereign Vault"
-                      hint="Persistent encrypted documents"
+                      label="Saved Files"
+                      hint="Encrypted · always available"
                       onClick={() => setSubView("vault")}
                       gradient="from-primary/15 to-primary/5"
                       iconColor="text-primary"

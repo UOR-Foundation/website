@@ -966,9 +966,9 @@ const OraclePage = () => {
               <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-3rem)] px-4 md:px-6">
                 {/* φ-spaced content block */}
                 <div className="flex flex-col items-center w-full max-w-2xl" style={{ marginTop: "-6.18%" }}>
-                  <h1 className="text-foreground font-display font-bold text-3xl md:text-4xl mb-3 tracking-tight">Ask anything</h1>
+                  <h1 className="text-foreground font-display font-bold text-3xl md:text-4xl mb-3 tracking-tight">What would you like to know?</h1>
                   <p className="text-muted-foreground/60 text-lg md:text-xl mb-10 max-w-md leading-relaxed text-center">
-                    Every claim verified. Every answer graded.
+                    Verified answers, graded for trust.
                   </p>
 
                   {/* Input first */}
@@ -1014,7 +1014,7 @@ const OraclePage = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-                    placeholder={isStreaming ? (queuedMessage ? "Queued — will send next…" : "Type while I respond…") : "Ask anything…"}
+                    placeholder={isStreaming ? (queuedMessage ? "Queued — will send next…" : "Keep typing…") : "Ask anything…"}
                     rows={1}
                     className="oracle-flow-input flex-1 bg-muted/10 border border-border/30 rounded-xl px-5 py-3.5 text-base text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-primary/10 transition-all"
                   />
