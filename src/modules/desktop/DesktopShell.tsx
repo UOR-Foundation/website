@@ -79,6 +79,13 @@ function DesktopShellInner() {
         {theme === "immersive" && (
           <>
             <DesktopImmersiveWallpaper />
+            {/* Dark overlay when windows are open — hides wallpaper for readability */}
+            {wm.windows.some(w => !w.minimized) && (
+              <div
+                className="fixed inset-0 z-[1] pointer-events-none transition-opacity duration-500"
+                style={{ background: "hsl(220 15% 8%)", opacity: 0.92 }}
+              />
+            )}
             <div className="fixed bottom-8 left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
               <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
               <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
