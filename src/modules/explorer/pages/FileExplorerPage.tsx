@@ -17,7 +17,6 @@ import { tagStore, DEFAULT_TAGS } from "../lib/tags";
 import { toast } from "sonner";
 import TagMenu from "../components/TagMenu";
 import { useKnowledgeGraph } from "@/modules/knowledge-graph";
-import TagMenu from "../components/TagMenu";
 
 const VIEW_KEY = "uor:explorer-view";
 const SORT_KEY = "uor:explorer-sort";
