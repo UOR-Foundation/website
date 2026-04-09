@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import {
-  Search, Sparkles, BookOpen, MessageCircle, Shield,
+  Search, Sparkles, BookOpen, MessageCircle, Shield, Activity,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -63,6 +63,15 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 720, h: 520 },
     color: "hsl(200 70% 55%)",
     category: "IDENTITY",
+  },
+  {
+    id: "system-monitor",
+    label: "System Monitor",
+    icon: Activity,
+    component: lazy(() => import("@/modules/boot/SystemMonitorApp")),
+    defaultSize: { w: 820, h: 560 },
+    color: "hsl(142 60% 50%)",
+    category: "OBSERVE",
   },
 ];
 
