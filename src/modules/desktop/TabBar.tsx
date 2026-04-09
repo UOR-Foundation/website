@@ -103,9 +103,7 @@ export default function TabBar({
             className="flex items-center justify-center shrink-0 h-full transition-opacity duration-150 hover:opacity-70"
             style={{ width: 46 }}
           >
-            <span className={`text-[18px] leading-none ${isLight ? "text-black/60" : "text-white/60"}`}>
-              ⬡
-            </span>
+            <Home className={`w-[16px] h-[16px] ${isLight ? "text-black/60" : "text-white/60"}`} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className={`rounded-xl min-w-[180px] ${menuContentClass}`} align="start" sideOffset={4}>
@@ -132,6 +130,15 @@ export default function TabBar({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Search button — between home menu and tabs */}
+      <button
+        onClick={onSpotlight}
+        className={`flex items-center justify-center w-[28px] h-[28px] rounded-md shrink-0 transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
+        title="Search (⌘K)"
+      >
+        <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/40" : "text-white/40"}`} />
+      </button>
 
       {/* Tabs */}
       <div className="flex items-end flex-1 min-w-0 overflow-x-auto gap-0 pr-1" style={{ height: TAB_BAR_H }}>
@@ -204,13 +211,6 @@ export default function TabBar({
 
       {/* Right: search + time + sovereign profile */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
-        <button
-          onClick={onSpotlight}
-          className={`flex items-center justify-center w-[28px] h-[28px] rounded-md transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
-          title="Search (⌘K)"
-        >
-          <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/40" : "text-white/40"}`} />
-        </button>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
           style={{ opacity: hideTime ? 0 : 1 }}
