@@ -10,6 +10,7 @@ import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
 
 export default function MessengerPage() {
   const { user, loading: authLoading } = useAuth();
+  const { prompt: authPrompt } = useAuthPrompt();
   const { conversations, loading: convosLoading, refetch } = useConversations();
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
@@ -30,7 +31,6 @@ export default function MessengerPage() {
   }
 
   if (!user) {
-    const { prompt: authPrompt } = useAuthPrompt();
     return (
       <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center text-center px-8">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center mb-6">
