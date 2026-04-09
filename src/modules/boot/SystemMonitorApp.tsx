@@ -908,7 +908,7 @@ export default function SystemMonitorApp() {
                 <span className="text-base font-bold font-mono" style={{ color: config.color }}>100%</span>
               </div>
             </div>
-            <div className="space-y-2 flex-1 pt-1">
+            <div className="space-y-2.5 flex-1 pt-1">
               <GrafanaRow label="Status" color={config.color}>{config.label}</GrafanaRow>
               <GrafanaRow label="Uptime"><span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span></GrafanaRow>
               <GrafanaRow label="Boot"><span className="font-mono">{receipt.bootTimeMs}ms</span></GrafanaRow>
@@ -1272,8 +1272,8 @@ function CapChip({ label, ok }: { label: string; ok: boolean }) {
 
 function GrafanaRow({ label, children, color }: { label: string; children: React.ReactNode; color?: string }) {
   return (
-    <div className="flex justify-between items-center gap-3">
-      <span className="text-muted-foreground/70 text-xs">{label}</span>
+    <div className="flex justify-between items-center gap-4">
+      <span className="text-muted-foreground/80 text-sm">{label}</span>
       <span className="text-right font-semibold text-sm" style={color ? { color } : undefined}>{children}</span>
     </div>
   );
