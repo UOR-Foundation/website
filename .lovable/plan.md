@@ -1,123 +1,117 @@
 
 
-## Plan: Native Device Adaptation — The OS Feels Like Yours
+## Plan: Hardened Data Ingestion — Anima-Grade Pipeline into UOR Knowledge Graph
 
-### The Insight
+### Audit Summary
 
-Every hardcoded `⌘` symbol, every macOS-assumed border-radius, every Apple-centric animation timing — these are invisible friction points for Windows, Linux, and Android users. The fix: a single detection hook (`usePlatform`) that identifies the user's device once, then threads platform-aware values through every touchpoint — shortcuts, typography, chrome styling, interaction patterns, and mobile gestures.
+After thoroughly comparing our implementation against Anima's ADEE (Adaptive Data Engineering Engine), the KG infrastructure is **structurally sound** but has six concrete gaps that prevent it from being truly robust for arbitrary data of any size or type. The architecture (IndexedDB triple store, ingest bridge, graph compute, sync bridge, React hook) is complete and elegant. What follows are targeted hardening changes — no architectural rewrites.
 
-### Detection Strategy
+### What's Already Strong
 
-Use `navigator.userAgentData` (modern) with `navigator.platform` + `navigator.userAgent` fallback to classify into five platforms:
+- **IndexedDB local-store.ts**: Full triple store with BFS traversal, pattern queries, JSON-LD import/export — solid
+- **Ingest bridge**: Entity extraction (URLs, emails, proper nouns), column sub-nodes for tabular data, dedup via UOR address — correct
+- **Graph compute**: Canonicalization compression, D/I/A reasoning, similarity search, coherence verification — all functional
+- **Sync bridge**: Device-namespaced cloud sync, conflict resolution via CID comparison — working
+- **Pipeline (ingest-pipeline.ts)**: CSV/JSON structured extraction, quality scoring, UOR content-addressing — good foundation
+
+### Gaps Found (Compared to Anima's ADEE)
 
 ```text
-"macos" | "windows" | "linux" | "ios" | "android"
-```
+Anima's ADEE Pipeline:
+  Raw bytes → RawStore (immutable audit) → ADEE Engine → Knowledge Graph
+                                             ↓
+                              AutoProfiler (learns structure)
+                              ProcessingProfile (adaptive cleaning)
+                              QualityScore (0.0-1.0)
+                              LazyDataFrameRegistry (LRU, Parquet)
+                              ProcessedDataPacket (lineage chain)
 
-Detection runs once at mount. Result is cached in a React context and exposed via `usePlatform()`. Every component that currently hardcodes `⌘` or assumes macOS behavior will consume this context instead.
+Our pipeline:
+  File → extractText → ingest (UOR CID) → structured-extractor → guest-context → KG
+                                                                        ↑
+                                                              Only CSV & JSON parsed
+                                                              No Markdown/YAML/XML
+                                                              5MB truncation
+                                                              Entity nodes use FNV hash (not UOR)
+```
 
 ### Changes
 
-**1. New: `src/modules/desktop/hooks/usePlatform.ts`**
-Platform detection + context provider. Exports:
-- `platform`: `"macos" | "windows" | "linux" | "ios" | "android"`
-- `isMac`: boolean (macOS or iOS)
-- `isWindows`: boolean
-- `isAndroid`: boolean
-- `isTouchDevice`: boolean (iOS or Android)
-- `modKey`: `"⌘"` on Mac, `"Ctrl"` on Windows/Linux
-- `modKeyCode`: `"metaKey"` on Mac, `"ctrlKey"` on Windows/Linux
-- `altKey`: `"⌥"` on Mac, `"Alt"` on Windows/Linux
-- `fontStack`: Platform-native system font string:
-  - macOS/iOS: `"-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui"`
-  - Windows: `"'Segoe UI Variable', 'Segoe UI', system-ui"`
-  - Linux: `"system-ui, 'Ubuntu', 'Cantarell'"`
-- `windowControls`: `"left"` on Mac, `"right"` on Windows/Linux — where close/minimize/maximize buttons go
-- `scrollbarStyle`: `"overlay"` on Mac (thin, auto-hiding), `"always"` on Windows/Linux
-- `cornerRadius`: Slightly different radii per platform feel (macOS: 10px rounded, Windows: 8px with sharper corners)
+**1. Expand format support in structured-extractor.ts**
+File: `src/modules/sovereign-vault/lib/structured-extractor.ts`
+- Add `parseMarkdownTable()`: Extract tables from Markdown (`| col | col |` syntax) into `StructuredData`
+- Add `parseYAML()`: Parse YAML key-value and list structures into structured data (using simple regex-based parser — no dependency)
+- Add `parseXML()`: Use browser-native `DOMParser` to extract XML into tabular form (tag → column mapping)
+- Add `parseTSV()`: Explicit TSV support (currently only handled via delimiter detection — make it first-class)
+- Update `toSearchableText()` to include data type summaries for richer KG entity extraction
 
-**2. New: `src/modules/desktop/hooks/usePlatformShortcuts.ts`**
-Replaces `useDesktopShortcuts.ts` with platform-aware key binding:
-- On macOS: `⌘K` for Spotlight, `⌘W` close, `⌘M` minimize, `⌘H` hide all
-- On Windows/Linux: `Ctrl+K` for Spotlight, `Ctrl+W` close, `Ctrl+M` minimize (or `Win+D` for hide all on Windows)
-- All key bindings use `modKeyCode` from the platform context instead of `e.metaKey || e.ctrlKey` (which currently fires on both but displays wrong glyphs)
+**2. Fix entity/column addresses to use UOR content-addressing**
+File: `src/modules/knowledge-graph/ingest-bridge.ts`
+- Replace `entityAddress()` FNV-1a hash with proper SHA-256 via `crypto.subtle.digest` → `urn:uor:entity:{hex}`
+- Replace `columnAddress()` similarly — ensures entity nodes are truly content-addressed and deduplicate correctly across sessions and devices
+- Both functions become async (minor signature change)
 
-**3. Update: `src/modules/desktop/DesktopShell.tsx`**
-- Wrap with `PlatformProvider` alongside the existing `DesktopThemeProvider`
-- Pass platform context down
+**3. Add immutable raw-bytes audit store**
+File: `src/modules/knowledge-graph/raw-store.ts` (new)
+- IndexedDB object store `raw-bytes` keyed by UOR address
+- Stores: `{ uorAddress, rawHash (SHA-256 of original bytes), size, mimeType, createdAt }`
+- Text content stored only for files <1MB; for larger files, stores only the hash + metadata
+- Purpose: every ingested item has an immutable audit record before any processing happens — mirrors Anima's RawStore
+- `putRaw()`, `getRaw()`, `hasRaw()` API
 
-**4. Update: `src/modules/desktop/TabBar.tsx`**
-All hardcoded `⌘` glyphs → `platform.modKey`:
-- Line 279: `⌘H` → `{modKey}H`
-- Line 287: `⌘K` → `{modKey}K`
-- Line 301: title `"Search (⌘K)"` → `"Search ({modKey}K)"`
-- Line 433: title `"New tab (⌘K)"` → `"New tab ({modKey}K)"`
-- System font applied to tab labels based on platform
+**4. Streaming chunked ingestion for large files**
+File: `src/modules/sovereign-vault/lib/ingest-pipeline.ts`
+- Remove the 5MB truncation for UOR identity — instead, compute SHA-256 using streaming `crypto.subtle.digest` on the full `ArrayBuffer` (works natively in browsers for any file size)
+- For text extraction of very large text files (>10MB), process in 1MB chunks for search indexing but still hash the full content
+- Add `ingestBinary()` for binary files that can't be text-extracted — they still get UOR identity + KG node (metadata-only node)
 
-**5. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
-All `MenubarShortcut` text → platform-aware:
-- `⌘H` → `{modKey}H`
-- `⌘M` → `{modKey}M`
-- `⌘W` → `{modKey}W`
-- `⌘K` → `{modKey}K`
-- Title `"Spotlight (⌘K)"` → `"Spotlight ({modKey}K)"`
+**5. Richer entity extraction in ingest-bridge**
+File: `src/modules/knowledge-graph/ingest-bridge.ts`
+- Add date extraction: `YYYY-MM-DD` and common date formats → `schema:Date` entity nodes
+- Add number/currency extraction: `$1,234.56`, `€500` → `schema:MonetaryAmount` entity nodes (useful for financial data cross-referencing)
+- Increase proper noun scan window from 2000 to 5000 chars
+- For structured data: create edges between column nodes that share the same data type (`schema:sameDataType`)
+- Add `schema:derivedFrom` edge when a paste/URL produces structured data that overlaps with existing file columns
 
-**6. Update: `src/modules/desktop/DesktopContextMenu.tsx`**
-- `⌘K` → `{modKey}K`
-- `⌘H` → `{modKey}H`
+**6. Processing lineage as KG derivations**
+File: `src/modules/knowledge-graph/ingest-bridge.ts`
+- When ingesting an item with `lineage` entries, create a `KGDerivation` for each stage
+- This connects the pipeline audit trail to the graph's derivation store, making the processing history queryable via the KG
+- Each derivation gets an epistemic grade based on the pipeline stage (e.g., "extract" = "A", "fallback" = "C")
 
-**7. Update: `src/modules/desktop/SpotlightSearch.tsx`**
-- Any `⌘K` references in placeholder or hints → platform-aware
+**7. Wire raw-store into the pipeline**
+File: `src/modules/sovereign-vault/lib/ingest-pipeline.ts`
+- After UOR identity computation but before structured extraction, write to `raw-store`
+- This ensures the immutable audit record exists even if downstream processing fails
 
-**8. Update: `src/modules/oracle/components/VoiceInput.tsx` + `VoiceOverlay.tsx`**
-- `navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"` → `usePlatform().modKey`
-
-**9. Update: `src/modules/desktop/hooks/useDesktopShortcuts.ts`**
-- Replace `e.metaKey || e.ctrlKey` with platform-specific check: on macOS use `e.metaKey`, on Windows/Linux use `e.ctrlKey` — prevents Ctrl firing on Mac and Meta firing on Windows
-
-**10. Update: `src/modules/desktop/desktop.css`**
-- Add platform-specific CSS custom properties applied via `data-platform` attribute on the root:
-  - `[data-platform="windows"]` — sharper corners (8px → 6px), visible scrollbars, Segoe UI font
-  - `[data-platform="macos"]` — current styling (already macOS-native)
-  - `[data-platform="linux"]` — slightly flatter chrome, system-ui font
-
-**11. Update: `src/modules/desktop/MobileShell.tsx`**
-- On iOS: bottom dock with rounded squircle icons (current — already Apple-like)
-- On Android: Material-style bottom navigation bar with slightly different styling:
-  - Less blur, more solid background
-  - Rounded rect icons instead of squircles
-  - Drawer pulls from bottom with Material motion curves (decelerationCurve: `cubic-bezier(0, 0, 0.2, 1)`)
-  - Status bar padding uses Android safe-area conventions
-  - Ripple-style touch feedback instead of opacity changes
-
-**12. Update: `src/modules/oracle/hooks/useVoiceShortcut.ts`**
-- Platform-aware modifier key detection (same fix as shortcuts)
-
-**13. Update: `src/index.css`**
-- Add `[data-platform]` CSS rules for platform-specific scrollbar styling:
-  - Windows: visible scrollbar with Fluent-style thin track
-  - macOS: overlay scrollbar (current)
-  - Linux: minimal scrollbar
+**8. Update local-store DB version for raw-bytes store**
+File: `src/modules/knowledge-graph/local-store.ts`
+- Bump `DB_VERSION` to 2
+- Add `raw-bytes` object store in `onupgradeneeded`
+- Add migration logic (version 1 → 2 is additive only, no data loss)
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/desktop/hooks/usePlatform.ts` | New — Detection + context + platform values |
-| `src/modules/desktop/DesktopShell.tsx` | Add PlatformProvider, set `data-platform` on root |
-| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Platform-aware modifier key binding |
-| `src/modules/desktop/TabBar.tsx` | Dynamic shortcut glyphs, platform font |
-| `src/modules/desktop/DesktopMenuBar.tsx` | Dynamic shortcut glyphs |
-| `src/modules/desktop/DesktopContextMenu.tsx` | Dynamic shortcut glyphs |
-| `src/modules/desktop/SpotlightSearch.tsx` | Platform-aware hints |
-| `src/modules/desktop/MobileShell.tsx` | Android vs iOS differentiation |
-| `src/modules/desktop/desktop.css` | Platform-specific CSS custom properties |
-| `src/modules/oracle/components/VoiceInput.tsx` | Use `usePlatform()` |
-| `src/modules/oracle/components/VoiceOverlay.tsx` | Use `usePlatform()` |
-| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Platform-aware modifier |
-| `src/index.css` | Platform scrollbar styles |
+| `src/modules/sovereign-vault/lib/structured-extractor.ts` | Add Markdown table, YAML, XML parsers |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | UOR content-addressed entities, richer extraction, lineage→derivations |
+| `src/modules/knowledge-graph/raw-store.ts` | New — Immutable raw-bytes audit store |
+| `src/modules/sovereign-vault/lib/ingest-pipeline.ts` | Streaming hash for large files, wire raw-store |
+| `src/modules/knowledge-graph/local-store.ts` | DB v2 with raw-bytes store |
+| `src/modules/knowledge-graph/index.ts` | Export raw-store |
 
-### The Result
+### What This Achieves
 
-A Windows user sees `Ctrl+K` in every tooltip, gets visible scrollbars, slightly sharper window corners, and a font stack that starts with Segoe UI. A Mac user sees `⌘K`, overlay scrollbars, and the familiar rounded chrome. An Android user gets Material-style bottom nav with ripple feedback. An iOS user gets the current squircle dock. Nobody notices the adaptation — it just feels right. That is the magic.
+After this pass, any file — a 500MB CSV, a 2KB YAML config, a pasted JSON array, a scraped web page, a PDF document, an image — follows the same deterministic path:
+
+1. Raw bytes recorded immutably (audit trail)
+2. Full-content SHA-256 computed regardless of size (no truncation)
+3. Format-aware structured extraction (CSV, JSON, YAML, XML, Markdown tables, or plain text)
+4. Content-addressed entity nodes (URLs, emails, dates, currencies, proper nouns)
+5. Typed edges linking documents to shared entities and columns
+6. Processing lineage stored as queryable graph derivations
+7. All operations work offline in IndexedDB, sync to cloud when available
+
+Same content, same address, everywhere. Every piece of data, one unified knowledge graph.
 
