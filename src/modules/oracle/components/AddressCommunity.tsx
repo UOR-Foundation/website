@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import AuthPromptModal, { type AuthContext as AuthCtx } from "@/modules/auth/AuthPromptModal";
+import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 
 /* ── Types ── */
 
@@ -96,6 +97,7 @@ function buildTree(comments: Comment[]): CommentNode[] {
 /* ── Shared data hook ── */
 export function useSocialData(cid: string, sort: SortMode = "best") {
   const { user } = useAuth();
+  const { prompt: authPrompt } = useAuthPrompt();
   const [data, setData] = useState<SocialData | null>(null);
   const [myReaction, setMyReaction] = useState<string | null>(null);
   const [reacting, setReacting] = useState(false);

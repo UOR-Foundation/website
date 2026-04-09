@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/modules/core/ui/sonner";
 import { TooltipProvider } from "@/modules/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/use-auth";
+import { AuthPromptProvider } from "@/modules/auth/useAuthPrompt";
 
 // ── Sovereign Bus: lazy-load module registrations ─────────────────────
 import { sovereignBoot } from "@/modules/boot";
@@ -70,9 +72,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+      <AuthProvider>
+        <AuthPromptProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
         <BrowserRouter>
           <Suspense fallback={null}>
             <Routes>
@@ -121,6 +125,8 @@ const App = () => {
           </Suspense>
         </BrowserRouter>
       </TooltipProvider>
+    </AuthPromptProvider>
+  </AuthProvider>
     </QueryClientProvider>
   );
 };
