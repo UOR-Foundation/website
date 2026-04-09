@@ -119,7 +119,17 @@ export default function FileCard({ item, viewMode, onRemove, onSelect, tags = []
         <div className="flex-1 min-w-0 flex items-center gap-2">
           <p className="text-base text-foreground/90 truncate leading-tight">{item.filename}</p>
           <TagDots tagIds={tags} />
+          {qualityColor && (
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: qualityColor }} title={`Quality: ${Math.round((item.qualityScore || 0) * 100)}%`} />
+          )}
         </div>
+
+        {/* Structured info */}
+        {structuredInfo && (
+          <span className="text-[10px] text-muted-foreground/50 tabular-nums flex-shrink-0">
+            {structuredInfo}
+          </span>
+        )}
 
         {/* UOR address on hover */}
         {uorAddr && (
@@ -204,11 +214,21 @@ export default function FileCard({ item, viewMode, onRemove, onSelect, tags = []
         {item.filename}
       </p>
 
-      {/* Source badge + timestamp */}
+      {/* Source badge + timestamp + quality */}
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground/50 font-medium uppercase tracking-wider">
-          {label}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground/50 font-medium uppercase tracking-wider">
+            {label}
+          </span>
+          {qualityColor && (
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: qualityColor }} title={`Quality: ${Math.round((item.qualityScore || 0) * 100)}%`} />
+          )}
+        </div>
+        {structuredInfo && (
+          <span className="text-[9px] text-muted-foreground/40 tabular-nums">
+            {structuredInfo}
+          </span>
+        )}
         {item.createdAt > 0 && (
           <span className="text-[9px] text-muted-foreground/35 tabular-nums">
             {formatRelativeTime(item.createdAt)}
