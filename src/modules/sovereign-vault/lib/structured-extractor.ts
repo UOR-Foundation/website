@@ -443,7 +443,7 @@ export function parseXML(text: string): StructuredData | null {
 
 function inferColumnTypes(columns: string[], rows: string[][]): Record<string, DataType> {
   const dtypes: Record<string, DataType> = {};
-  const sampleSize = Math.min(rows.length, 50);
+  const sampleSize = Math.min(rows.length, 200);
 
   for (let col = 0; col < columns.length; col++) {
     const types = new Set<DataType>();
@@ -467,22 +467,70 @@ function inferColumnTypes(columns: string[], rows: string[][]): Record<string, D
 
 // ── Quality Scoring ────────────────────────────────────────────────────
 
+/**
+ * Compute tabular quality using 35/30/35 weighted formula:
+ * 35% completeness × 30% uniqueness × 35% validity.
+ */
 function computeTabularQuality(columns: string[], rows: string[][]): number {
   if (columns.length === 0 || rows.length === 0) return 0;
 
-  let totalCells = 0;
-  let filledCells = 0;
   const sampleSize = Math.min(rows.length, 200);
 
+  // Completeness: non-null cell ratio
+  let filled = 0;
+  let total = 0;
   for (let i = 0; i < sampleSize; i++) {
     for (let j = 0; j < columns.length; j++) {
-      totalCells++;
-      const val = rows[i]?.[j]?.trim() ?? "";
-      if (val !== "") filledCells++;
+      total++;
+      if (rows[i]?.[j]?.trim()) filled++;
     }
   }
+  const completeness = total > 0 ? filled / total : 0;
 
-  return totalCells > 0 ? Math.round((filledCells / totalCells) * 100) / 100 : 0;
+  // Uniqueness: average per-column distinct ratio
+  let uniquenessSum = 0;
+  for (let j = 0; j < columns.length; j++) {
+    const vals = new Set<string>();
+    let nonNull = 0;
+    for (let i = 0; i < sampleSize; i++) {
+      const v = rows[i]?.[j]?.trim() || "";
+      if (v) { vals.add(v); nonNull++; }
+    }
+    uniquenessSum += nonNull > 0 ? vals.size / nonNull : 1;
+  }
+  const uniqueness = uniquenessSum / columns.length;
+
+  // Validity: type consistency ratio
+  let validCells = 0;
+  let checkedCells = 0;
+  for (let j = 0; j < columns.length; j++) {
+    const types: Record<string, number> = {};
+    for (let i = 0; i < Math.min(sampleSize, 50); i++) {
+      const v = rows[i]?.[j]?.trim() || "";
+      if (!v) continue;
+      const t = quickCellType(v);
+      types[t] = (types[t] || 0) + 1;
+    }
+    const dominant = Object.entries(types).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!dominant) continue;
+    for (let i = 0; i < sampleSize; i++) {
+      const v = rows[i]?.[j]?.trim() || "";
+      if (!v) continue;
+      checkedCells++;
+      if (quickCellType(v) === dominant) validCells++;
+    }
+  }
+  const validity = checkedCells > 0 ? validCells / checkedCells : 1;
+
+  // Weighted: 35% completeness + 30% uniqueness + 35% validity
+  return Math.round((completeness * 0.35 + uniqueness * 0.30 + validity * 0.35) * 100) / 100;
+}
+
+function quickCellType(v: string): string {
+  if (v === "true" || v === "false") return "boolean";
+  if (!isNaN(Number(v)) && v !== "") return "number";
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return "date";
+  return "string";
 }
 
 /**
