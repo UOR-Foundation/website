@@ -13,6 +13,7 @@
 export type BootPhase =
   | "idle"
   | "device-fingerprint"
+  | "stack-validation"
   | "engine-init"
   | "bus-init"
   | "seal"
@@ -78,6 +79,15 @@ export interface UorSeal {
 
 // ── Boot receipt ────────────────────────────────────────────────────────
 
+export interface StackComponentStatus {
+  readonly name: string;
+  readonly role: string;
+  readonly available: boolean;
+  readonly version: string | null;
+  readonly criticality: "critical" | "recommended" | "optional";
+  readonly fallback: string;
+}
+
 export interface BootReceipt {
   /** The UOR seal. */
   readonly seal: UorSeal;
@@ -89,6 +99,12 @@ export interface BootReceipt {
   readonly bootTimeMs: number;
   /** Number of bus modules loaded. */
   readonly moduleCount: number;
+  /** Tech stack health snapshot. */
+  readonly stackHealth: {
+    readonly components: StackComponentStatus[];
+    readonly allCriticalPresent: boolean;
+    readonly stackHash: string;
+  };
   /** Timestamp of last successful verification. */
   lastVerified: string;
 }
