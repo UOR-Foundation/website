@@ -775,6 +775,7 @@ export type Database = {
         Row: {
           created_at: string
           creator_id: string
+          expires_after_seconds: number | null
           expires_at: string | null
           id: string
           metadata_cid: string | null
@@ -786,6 +787,7 @@ export type Database = {
         Insert: {
           created_at?: string
           creator_id: string
+          expires_after_seconds?: number | null
           expires_at?: string | null
           id?: string
           metadata_cid?: string | null
@@ -797,6 +799,7 @@ export type Database = {
         Update: {
           created_at?: string
           creator_id?: string
+          expires_after_seconds?: number | null
           expires_at?: string | null
           id?: string
           metadata_cid?: string | null
@@ -850,30 +853,45 @@ export type Database = {
         Row: {
           ciphertext: string
           created_at: string
+          delivered_at: string | null
           envelope_cid: string
+          file_manifest: Json | null
           id: string
           message_hash: string
+          message_type: string
           parent_hashes: string[]
+          read_at: string | null
+          reply_to_hash: string | null
           sender_id: string
           session_id: string
         }
         Insert: {
           ciphertext: string
           created_at?: string
+          delivered_at?: string | null
           envelope_cid: string
+          file_manifest?: Json | null
           id?: string
           message_hash: string
+          message_type?: string
           parent_hashes?: string[]
+          read_at?: string | null
+          reply_to_hash?: string | null
           sender_id: string
           session_id: string
         }
         Update: {
           ciphertext?: string
           created_at?: string
+          delivered_at?: string | null
           envelope_cid?: string
+          file_manifest?: Json | null
           id?: string
           message_hash?: string
+          message_type?: string
           parent_hashes?: string[]
+          read_at?: string | null
+          reply_to_hash?: string | null
           sender_id?: string
           session_id?: string
         }
@@ -2971,6 +2989,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_peer_profiles: {
+        Args: { peer_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          uor_glyph: string
+          user_id: string
+        }[]
+      }
       get_referral_leaderboard: {
         Args: { result_limit?: number }
         Returns: {
