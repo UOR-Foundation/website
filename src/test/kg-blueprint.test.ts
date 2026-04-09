@@ -20,7 +20,7 @@ import {
   registerNodeType,
 } from "@/modules/knowledge-graph/blueprint-registry";
 
-const CONTEXT = "https://uor.foundation/contexts/object-blueprint-v1.jsonld";
+const CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld";
 
 function makeBlueprint(overrides?: Partial<ObjectBlueprint>): ObjectBlueprint {
   return {

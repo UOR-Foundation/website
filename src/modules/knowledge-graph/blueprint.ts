@@ -91,7 +91,7 @@ export interface GroundObjectBlueprint {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const BLUEPRINT_CONTEXT = "https://uor.foundation/contexts/object-blueprint-v1.jsonld";
+const BLUEPRINT_CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld";
 
 // ── Decompose: KGNode → ObjectBlueprint ─────────────────────────────────────
 
