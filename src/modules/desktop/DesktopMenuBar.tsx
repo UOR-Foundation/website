@@ -2,8 +2,10 @@
  * DesktopMenuBar — Slim top status bar with dropdown menus. Theme-aware.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Volume2, Wifi, WifiOff } from "lucide-react";
+import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
+import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
   Menubar, MenubarMenu, MenubarTrigger, MenubarContent,
   MenubarItem, MenubarSeparator, MenubarShortcut,
@@ -30,20 +32,12 @@ export default function DesktopMenuBar({
   activeWindowId, windows, onSpotlight, onCloseWindow, onMinimizeWindow, onHideAll, onOpenApp, onShowShortcuts,
 }: Props) {
   const [time, setTime] = useState(new Date());
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const conn = useConnectivity();
+  const online = conn.online;
   const { isLight, theme, setTheme } = useDesktopTheme();
   const { ringKey } = usePlatform();
-
-  useEffect(() => {
-    const goOnline = () => setOnline(true);
-    const goOffline = () => setOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
-    return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
-    };
-  }, []);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const toggleStatus = useCallback(() => setStatusOpen(o => !o), []);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 30_000);
@@ -169,19 +163,26 @@ export default function DesktopMenuBar({
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>
         <Volume2 className={`w-3.5 h-3.5 ${iconMuted}`} />
-        <div className="relative flex items-center" title={online ? "Online" : "Offline"}>
-          {online ? (
-            <Wifi className={`w-3.5 h-3.5 ${iconMuted}`} />
-          ) : (
-            <WifiOff className={`w-3.5 h-3.5 ${isLight ? "text-red-500/70" : "text-red-400/70"}`} />
-          )}
-          <span
-            className={`absolute -top-0.5 -right-0.5 w-[5px] h-[5px] rounded-full ${
-              online
-                ? "bg-emerald-500 shadow-[0_0_4px_1px_rgba(16,185,129,0.4)]"
-                : "bg-red-500 shadow-[0_0_4px_1px_rgba(239,68,68,0.4)]"
-            }`}
-          />
+        <div className="relative flex items-center">
+          <button
+            onClick={toggleStatus}
+            className={`relative p-0.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
+            title={online ? "Online — click for status" : "Offline — click for status"}
+          >
+            {online ? (
+              <Wifi className={`w-3.5 h-3.5 ${iconMuted}`} />
+            ) : (
+              <WifiOff className={`w-3.5 h-3.5 ${isLight ? "text-red-500/70" : "text-red-400/70"}`} />
+            )}
+            <span
+              className={`absolute -top-0.5 -right-0.5 w-[5px] h-[5px] rounded-full ${
+                online
+                  ? "bg-emerald-500 shadow-[0_0_4px_1px_rgba(16,185,129,0.4)]"
+                  : "bg-red-500 shadow-[0_0_4px_1px_rgba(239,68,68,0.4)]"
+              }`}
+            />
+          </button>
+          <ConnectivityPopover open={statusOpen} onClose={() => setStatusOpen(false)} isLight={isLight} />
         </div>
         <span className={`text-[12px] ${clockColor} font-medium tabular-nums`}>
           {formatted}&ensp;{clock}

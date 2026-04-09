@@ -18,6 +18,7 @@ import RingIndicator from "@/modules/desktop/components/RingIndicator";
 import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
+import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -177,9 +178,11 @@ function DesktopShellInner() {
 export default function DesktopShell() {
   return (
     <PlatformProvider>
-      <DesktopThemeProvider>
-        <DesktopShellInner />
-      </DesktopThemeProvider>
+      <ConnectivityProvider>
+        <DesktopThemeProvider>
+          <DesktopShellInner />
+        </DesktopThemeProvider>
+      </ConnectivityProvider>
     </PlatformProvider>
   );
 }
