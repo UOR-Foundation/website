@@ -831,11 +831,11 @@ export default function SystemMonitorApp() {
           icon={<IconServer size={18} />}
           title="Virtual Machine"
           value="1 Running"
-          accent={config.color}
-          badge={config.label}
-          badgeColor={config.color}
+          accent={unifiedColor}
+          badge={unifiedLabel}
+          badgeColor={unifiedColor}
           sparkData={uptimeSparkline}
-          sparkColor={config.color}
+          sparkColor={unifiedColor}
           onClick={() => setActiveView("vm")}
         />
         <GrafanaCard
