@@ -80,7 +80,7 @@ export const DESKTOP_APPS: DesktopApp[] = [
     component: lazy(() => import("@/modules/sovereign-vault/components/VaultPanel")),
     defaultSize: { w: 800, h: 560 },
     color: "hsl(45 80% 55%)",
-    category: "STORE",
+    category: "STRUCTURE",
   },
 ];
 
