@@ -257,7 +257,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
             font={greetingFontInfo.font}
             lineHeight={greetingFontInfo.lineHeight}
             as="p"
-            className={`${greetingColor} font-normal select-none`}
+            className={`${greetingColor} font-normal select-none whitespace-nowrap`}
             style={{
               fontSize: greetingFontInfo.fontSize,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
