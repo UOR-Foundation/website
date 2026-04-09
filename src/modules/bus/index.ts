@@ -50,6 +50,9 @@ export type { ManifestEntry, ManifestModule } from "./manifest";
 export { useBusCall, useBusLazy, useBusReachable } from "./hooks";
 export type { BusCallState } from "./hooks";
 
+// Re-export boot module
+export { useBootStatus, EngineStatusIndicator } from "@/modules/boot";
+
 // ── Convenience namespace ─────────────────────────────────────────────────
 
 import { call, batch, canCall, isReachable } from "./bus";
