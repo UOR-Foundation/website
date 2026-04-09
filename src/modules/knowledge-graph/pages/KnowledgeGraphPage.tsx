@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Q0 } from "@/modules/ring-core/ring";
 import { emitGraph } from "@/modules/jsonld/emitter";
@@ -15,7 +15,12 @@ import { PartitionVisualizer } from "@/modules/resolver/components/PartitionVisu
 import { CorrelationTool } from "@/modules/resolver/components/CorrelationTool";
 import { EntitySearch } from "@/modules/resolver/components/entity-search/EntitySearch";
 
+const SovereignGraphExplorer = lazy(() => import("../components/SovereignGraphExplorer"));
+
+type ViewMode = "data" | "explorer";
+
 const KnowledgeGraphPage = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>("data");
   const [stats, setStats] = useState<GraphStats | null>(null);
   const [graphs, setGraphs] = useState<string[]>([]);
   const [ingesting, setIngesting] = useState(false);
@@ -116,7 +121,46 @@ const KnowledgeGraphPage = () => {
               Persistent dual-addressed storage. every datum has a UOR IRI for identity
               and a database record for querying. JSON-LD remains the canonical format.
             </p>
+            {/* View mode toggle */}
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setViewMode("data")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                  viewMode === "data"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted/60"
+                }`}
+              >
+                Data View
+              </button>
+              <button
+                onClick={() => setViewMode("explorer")}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                  viewMode === "explorer"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted/60"
+                }`}
+              >
+                Visual Explorer
+              </button>
+            </div>
           </div>
+
+          {/* Visual Explorer mode */}
+          {viewMode === "explorer" && (
+            <div className="rounded-xl border border-border bg-card overflow-hidden mb-8" style={{ height: "70vh" }}>
+              <Suspense fallback={
+                <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                  Loading graph explorer…
+                </div>
+              }>
+                <SovereignGraphExplorer />
+              </Suspense>
+            </div>
+          )}
+
+          {viewMode === "data" && (<>
+
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
@@ -206,6 +250,7 @@ const KnowledgeGraphPage = () => {
               </div>
             </div>
           )}
+          </>)}
         </div>
       </section>
     </Layout>

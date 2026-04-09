@@ -1,6 +1,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
+  Network,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -81,6 +82,15 @@ export const DESKTOP_APPS: DesktopApp[] = [
     defaultSize: { w: 800, h: 560 },
     color: "hsl(45 80% 55%)",
     category: "STRUCTURE",
+  },
+  {
+    id: "graph-explorer",
+    label: "Graph Explorer",
+    icon: Network,
+    component: lazy(() => import("@/modules/knowledge-graph/components/SovereignGraphExplorer")),
+    defaultSize: { w: 1100, h: 720 },
+    color: "hsl(160 70% 45%)",
+    category: "OBSERVE",
   },
 ];
 
