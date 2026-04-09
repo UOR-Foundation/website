@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import { AuthPromptProvider } from "@/modules/auth/useAuthPrompt";
+import { PrivyWalletProvider } from "@/modules/auth/PrivyWalletProvider";
 
 // ── Sovereign Bus: lazy-load module registrations ─────────────────────
 import { sovereignBoot } from "@/modules/boot";
@@ -73,6 +74,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PrivyWalletProvider>
         <AuthPromptProvider>
           <TooltipProvider>
             <Toaster />
@@ -126,7 +128,8 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </AuthPromptProvider>
-  </AuthProvider>
+    </PrivyWalletProvider>
+   </AuthProvider>
     </QueryClientProvider>
   );
 };

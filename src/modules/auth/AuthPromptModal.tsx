@@ -333,9 +333,10 @@ export default function AuthPromptModal({ open, onClose, context = "default" }: 
                   )}
                 </p>
 
-                {/* Privacy note */}
+                {/* Privacy note + wallet disclosure */}
                 <p style={{ fontSize: 11, color: "rgba(255,255,255,0.15)", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
                   By continuing, you agree to our Terms of Service and Privacy Policy.
+                  {" "}A Preview Wallet will be created for your account.
                 </p>
               </div>
             </div>
