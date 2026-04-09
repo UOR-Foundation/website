@@ -132,11 +132,15 @@ function buildBootScript(receipt: BootReceipt): LogLine[] {
   const simd = hasSIMD();
   lines.push({ tag: "BIOS", text: dotPad(`SIMD v128 extensions`) + ` ${simd ? "present" : "absent"}`, level: simd ? "ok" : "warn", badge: simd ? "  OK  " : " WARN " });
   const sab = hasSharedArrayBuffer();
-  lines.push({ tag: "BIOS", text: dotPad(`SharedArrayBuffer`) + ` ${sab ? "active" : "unavailable"}`, level: sab ? "ok" : "warn", badge: sab ? "  OK  " : " WARN " });
+  const isPreview = window.location.hostname.includes("id-preview--");
+  const isIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+  const coiExempt = isPreview || isIframe; // COI structurally unavailable in preview/iframe
+  lines.push({ tag: "BIOS", text: dotPad(`SharedArrayBuffer`) + ` ${sab ? "active" : coiExempt ? "deferred (preview)" : "unavailable"}`, level: sab ? "ok" : coiExempt ? "info" : "warn", badge: sab ? "  OK  " : coiExempt ? " INFO " : " WARN " });
   const ww = hasWebWorkers();
   lines.push({ tag: "BIOS", text: dotPad(`Web Workers`) + ` ${ww ? "ready" : "unavailable"}`, level: ww ? "ok" : "warn", badge: ww ? "  OK  " : " WARN " });
   lines.push({ tag: "BIOS", text: dotPad(`Service Worker`) + ` ${("serviceWorker" in navigator) ? "registered" : "unavailable"}`, level: ("serviceWorker" in navigator) ? "ok" : "warn", badge: ("serviceWorker" in navigator) ? "  OK  " : " WARN " });
-  lines.push({ tag: "BIOS", text: dotPad(`Cross-Origin Isolation`) + ` ${(window as any).crossOriginIsolated ? "enforced" : "off"}`, level: (window as any).crossOriginIsolated ? "ok" : "warn", badge: (window as any).crossOriginIsolated ? "  OK  " : " WARN " });
+  const coi = !!(window as any).crossOriginIsolated;
+  lines.push({ tag: "BIOS", text: dotPad(`Cross-Origin Isolation`) + ` ${coi ? "enforced" : coiExempt ? "deferred (preview)" : "off"}`, level: coi ? "ok" : coiExempt ? "info" : "warn", badge: coi ? "  OK  " : coiExempt ? " INFO " : " WARN " });
   lines.push({ tag: "", text: "", level: "info" });
 
   // --- KERNEL: Engine + Fano Primitives ---
