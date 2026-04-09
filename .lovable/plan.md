@@ -1,109 +1,119 @@
 
 
-## Plan: UOR Ring Shortcut System + Keyboard Cheat Sheet
+## Plan: Offline-First Coherence — Unified Connectivity Context + Feature Awareness
 
-### The Problem
+### Current State
 
-Current shortcuts (`⌘K`, `⌘W`, `⌘M`, `⌘H`) directly conflict with browser-native shortcuts:
-- `Ctrl+W` closes the browser tab (catastrophic on Windows/Linux)
-- `Ctrl+H` opens browser history
-- `Ctrl+M` is used by some browsers
-- `Ctrl+K` conflicts with address bar focus in some browsers
+**Already works offline:**
+- Knowledge Graph (IndexedDB): full CRUD, traversal, search, reasoning, blueprint decomposition/materialization
+- Graph compute: semantic similarity, deductive/inductive/abductive queries, compression, coherence verification
+- Data Bank L1: localStorage read/write with pending-write queue
+- Content ingestion: entity extraction, column mapping, blueprint generation
+- All UOR hashing, canonicalization, and content-addressing
 
-Since this runs inside a browser, we cannot `preventDefault()` reliably on many of these — the browser intercepts them before JavaScript.
+**Requires online:**
+- Oracle (LLM streaming) — needs backend edge function
+- KG cloud sync (sync-bridge) — pushes/pulls triples
+- Data Bank L2 — encrypted cloud sync
+- Semantic Web Bridge (Firecrawl scraping) — URL ingestion
+- Voice input (Picovoice) — downloads model on first use
+- Authentication — Supabase auth
 
-### The Solution: Ring Prefix Key (`.`)
+**Current UI feedback:** Single Wifi icon with green/red dot in the menu bar. No per-feature awareness.
 
-Introduce a **two-step chord system** using the **period key (`.`)** as the "ring activator". This is inspired by Vim's leader key and tmux's prefix key, but themed around the UOR ring.
+### What's Missing
 
-**How it works:**
-1. Press `Ctrl+.` (Mac: `⌘.`) — this activates "ring mode" for 1.5 seconds. A subtle ring indicator appears on screen.
-2. Within that window, press the action key: `K` for Spotlight, `W` for close, `M` for minimize, etc. No modifier needed on the second press.
-3. If nothing is pressed within 1.5s, ring mode silently deactivates.
-
-**Why period?** `Ctrl+.` / `⌘.` has almost no browser-native binding (Chrome uses it for nothing, Firefox/Safari have no conflict). It's also thematically perfect — the period is a "point" on the ring.
-
-**Display format:** Shortcuts display as `⌘. K` on Mac, `Ctrl+. K` on Windows — visually distinct, immediately recognizable as a two-step chord.
-
-### Shortcut Registry
-
-| Chord | Action |
-|-------|--------|
-| `Ring` then `K` | Spotlight search |
-| `Ring` then `W` | Close window |
-| `Ring` then `M` | Minimize window |
-| `Ring` then `H` | Hide all windows |
-| `Ring` then `[` | Previous theme |
-| `Ring` then `]` | Next theme |
-| `Ring` then `V` | Voice input |
-| `Ring` then `F` | Toggle fullscreen |
-| `Ring` then `?` | Open shortcut cheat sheet |
+1. **A shared connectivity context** — multiple components independently check `navigator.onLine`; there's no single reactive source of truth that also tracks *what's degraded*
+2. **Per-feature offline hints** — users don't know which features need the network until they fail
+3. **Graceful degradation in the Oracle** — currently just errors with "Failed to connect"
 
 ### Changes
 
-**1. Refactor: `src/modules/desktop/hooks/useDesktopShortcuts.ts`**
-- Implement ring prefix state: `ringActive` boolean + 1.5s timeout
-- `Ctrl+.` / `⌘.` sets `ringActive = true`, starts timeout, shows indicator
-- Second keypress (no modifier required) dispatches the action if `ringActive`
-- Clear ring on action dispatch or timeout
-- Add `onShowShortcuts` to Handlers interface
-- Add `onFullscreen` to Handlers interface
-- Remove direct `⌘K`, `⌘W` etc. bindings (they conflict with browser)
+**1. New: `src/modules/desktop/hooks/useConnectivity.tsx`**
 
-**2. New: `src/modules/desktop/components/RingIndicator.tsx`**
-- Tiny animated ring glyph (⬡) that appears center-top when ring mode is active
-- Fades in, pulses subtly, fades out on deactivate
-- Theme-aware (light/dark)
-- Shows "Ring active — press a key..." text
+A React context + provider that centralizes connectivity state:
 
-**3. New: `src/modules/desktop/components/ShortcutCheatSheet.tsx`**
-- Modal/dialog listing all shortcuts in a clean grid
-- Grouped by category: Navigation, Windows, Appearance, Tools
-- Shows platform-aware glyphs (`⌘. K` vs `Ctrl+. K`)
-- Opened via menu item or `Ring` then `?`
-- Theme-aware styling matching existing menu aesthetic
+```
+ConnectivityState {
+  online: boolean;
+  features: {
+    oracle: { available: boolean; offlineReason: "Requires internet for AI responses" }
+    kgSync: { available: boolean; offlineReason: "Graph syncs when back online" }
+    dataBank: { available: boolean; offlineReason: "Data saved locally, syncs when online" }
+    webBridge: { available: boolean; offlineReason: "URL ingestion requires internet" }
+    voice: { available: boolean; offlineReason: "Voice model may need initial download" }
+    auth: { available: boolean; offlineReason: "Sign-in requires internet" }
+  }
+}
+```
 
-**4. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
-- Add "Help" menu with "Keyboard Shortcuts" item showing `{modKey}. ?`
-- Update all `MenubarShortcut` displays to use ring format: `{modKey}. W` instead of `{modKey}W`
+- Listens to `online`/`offline` events
+- Computes feature availability from `online` + auth state
+- Exposes `useConnectivity()` hook for any component
+- Exposes `isFeatureAvailable(featureId)` helper
 
-**5. Update: `src/modules/desktop/DesktopContextMenu.tsx`**
-- Update shortcut displays to ring format
+**2. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
 
-**6. Update: `src/modules/desktop/TabBar.tsx`**
-- Update tooltip shortcut hints to ring format
+- Replace inline `online` state with `useConnectivity()`
+- On click of the Wifi icon, show a small popover/tooltip listing feature status (not a full modal — keep it light)
+- Each feature shows a tiny dot (green/amber/red) + one-line status
+- The popover disappears on click-outside; acts as a quick status glance
 
-**7. Update: `src/modules/desktop/SpotlightSearch.tsx`**
-- Update any shortcut hint text
+**3. Update: `src/modules/oracle/pages/OraclePage.tsx` and `OracleOverlay.tsx`**
 
-**8. Update: `src/modules/oracle/hooks/useVoiceShortcut.ts`**
-- Remove direct `Ctrl+Shift+V` binding
-- Voice toggle now handled via ring system (`Ring` then `V`)
+- Before streaming, check `useConnectivity().features.oracle.available`
+- When offline, show a gentle inline message in the chat area: "You're offline. The Oracle needs an internet connection to respond. Your knowledge graph, local search, and saved data are all still available."
+- Disable the send button with a subtle offline indicator (not error-red, just muted)
+- Keep the input visible so users can still type (queue for when online returns)
 
-**9. Update: `src/modules/desktop/DesktopShell.tsx`**
-- Add `RingIndicator` component
-- Add `ShortcutCheatSheet` state + rendering
-- Wire `onShowShortcuts` and `onFullscreen` handlers
+**4. Update: `src/modules/oracle/lib/stream-oracle.ts`**
 
-**10. Update: `src/modules/desktop/hooks/usePlatform.tsx`**
-- Add `ringKey` display string to PlatformInfo: `"⌘."` on Mac, `"Ctrl+."` on Windows/Linux
+- Add an early `navigator.onLine` check before `fetch()` — surface a friendlier error: "You're currently offline. The Oracle will be available when your connection returns."
+
+**5. Update: `src/modules/knowledge-graph/sync-bridge.ts`**
+
+- When sync is attempted offline, queue the intent and auto-trigger when `online` event fires (already partially done)
+- Add a `pendingSync` flag to state so UI can show "Will sync when online"
+
+**6. Update: `src/modules/desktop/DesktopShell.tsx`**
+
+- Wrap the inner shell with `ConnectivityProvider`
+- Pass connectivity down naturally via context (no prop drilling)
+
+**7. Update: `src/modules/desktop/DesktopWidgets.tsx`** (home screen)
+
+- When offline, show a subtle ambient banner at the bottom of the widget area: "Offline mode — your local knowledge graph and data are fully available"
+- Use a calm, reassuring tone — not an error banner
+
+**8. New: `src/modules/desktop/components/ConnectivityPopover.tsx`**
+
+Small popover triggered by clicking the Wifi icon in the menu bar:
+- Header: "System Status" with green/red dot
+- Feature list with per-feature status dots
+- When online: all green, shows "All systems operational"
+- When offline: shows which features are available (green) vs degraded (amber)
+- Includes KG stats (node count, edge count) as reassurance that local data is intact
+- Footer: "Last synced: 2 min ago" from sync-bridge state
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Ring prefix chord system |
-| `src/modules/desktop/components/RingIndicator.tsx` | New — visual ring mode indicator |
-| `src/modules/desktop/components/ShortcutCheatSheet.tsx` | New — shortcut reference modal |
-| `src/modules/desktop/DesktopMenuBar.tsx` | Help menu + updated shortcut displays |
-| `src/modules/desktop/DesktopContextMenu.tsx` | Updated shortcut displays |
-| `src/modules/desktop/TabBar.tsx` | Updated tooltip hints |
-| `src/modules/desktop/SpotlightSearch.tsx` | Updated hint text |
-| `src/modules/desktop/DesktopShell.tsx` | Wire indicator + cheat sheet |
-| `src/modules/desktop/hooks/usePlatform.tsx` | Add ringKey display string |
-| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Remove direct binding, defer to ring |
+| `src/modules/desktop/hooks/useConnectivity.tsx` | New — centralized connectivity context |
+| `src/modules/desktop/components/ConnectivityPopover.tsx` | New — status popover for menu bar |
+| `src/modules/desktop/DesktopMenuBar.tsx` | Use connectivity context, wire popover |
+| `src/modules/desktop/DesktopShell.tsx` | Wrap with ConnectivityProvider |
+| `src/modules/desktop/DesktopWidgets.tsx` | Subtle offline banner on home |
+| `src/modules/oracle/lib/stream-oracle.ts` | Early offline check with friendly error |
+| `src/modules/oracle/pages/OraclePage.tsx` | Offline-aware chat UI |
+| `src/modules/oracle/components/OracleOverlay.tsx` | Offline-aware overlay |
+| `src/modules/knowledge-graph/sync-bridge.ts` | Expose pendingSync flag |
 
-### The Result
+### Design Principles
 
-Zero browser conflicts. `Ctrl+W` does what the user expects (closes the tab). UOR OS shortcuts live in their own namespace — the ring. The two-step chord is fast (muscle memory develops quickly), visually distinctive, and thematically coherent with the UOR ring paradigm. The cheat sheet is always one chord away (`Ring` then `?`).
+- **Reassuring, not alarming**: offline mode shows what IS available, not what isn't
+- **Contextual, not global**: feature hints appear only where relevant (Oracle input shows Oracle status, not a global banner)
+- **One glance**: the menu bar Wifi icon click gives full system status in 2 seconds
+- **Zero friction**: no modals, no blocking dialogs, no red error screens
+- **Local-first confidence**: emphasize that the KG, data, and search all work perfectly offline
 
