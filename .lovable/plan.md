@@ -1,60 +1,39 @@
 
-# Data Page — Simplified Profile Redesign
 
-## Name
-**"Data Page"** — each UOR address gets its own *Data Page*. Clean, universal, intuitive. It's the personal web page for every piece of data.
+## Plan: Redesign Context Upload as a Full Window Experience
 
-## Changes
+### Problem
+The current "Add Context" button opens a small inline overlay dropdown (ContextMenu). It feels cramped and doesn't give users a clear overview of their uploaded files. The user wants a proper, standalone upload interface that opens as a window/dialog.
 
-### 1. Content Section — Human/Machine Toggle + Copy
-The `contentViewMode` state already exists (line 612) but isn't wired into the UI. We'll:
-- Replace the "CONTENT" label with a clean **segmented toggle**: `Human` | `Machine`
-- **Human view**: Shows the existing `HumanContentView` / `ContentPreview` — full content, no truncation (remove the 260px max-height clamp so all content displays)
-- **Machine view**: Shows the JSON-LD source with syntax highlighting (currently buried in a collapsed "View Source" section)
-- Add a **Copy** button next to the toggle that copies the active view's content
-- Remove the separate collapsed "View Source (JSON-LD)" section since it's now accessible via the toggle
+### Changes
 
-### 2. Remove Unnecessary Labels
-- Remove the "CONTENT" section header — the toggle itself communicates what this is
-- Remove the "PROVENANCE" uppercase header label — replace with a subtle, clean collapsible
-- Keep the Identity Hub "Share this address" section as-is (it's already clean)
+**1. Change trigger icon to Upload (`Plus` → `Upload` or keep `Plus`)**
+- Files: `ImmersiveSearchView.tsx`, `MobileSearchBar.tsx`
+- The trigger buttons already use `Plus` — we'll keep `Plus` as it's intuitive for "add content". Alternatively switch to `Upload` if preferred. Based on the user's request ("plus or even an upload icon"), we'll use `Plus` with an upload-style tooltip.
 
-### 3. Simplify Profile Header
-- Keep: cover image, glyph/thumbnail avatar, triword name, copy button, Reader button, overflow menu
-- Keep: type badge + discovered/confirmed status
-- Remove: redundant spacing and extra wrapper labels
+**2. Replace inline ContextMenu with a full Dialog/Window**
+- **New component**: `VaultUploadWindow.tsx` — a full-screen dialog (using the existing `Dialog` from `@/modules/core/ui/dialog`) that serves as the standalone upload interface.
+- Layout inside the dialog:
+  - **Header**: "Context Library" title with file count
+  - **Upload area**: Large drag-and-drop zone for files (PDF, TXT, MD, CSV, JSON, etc.)
+  - **Action row**: Buttons for "Paste Text", "Import URL", "New Workspace", "New Folder"
+  - **File list**: Bird's-eye grid/list of all current context items showing filename, source type (file/paste/url), and a remove button
+  - **Vault section** (if authenticated): Access to Sovereign Vault documents
+  - **Guest notice** (if not authenticated): Session-only warning
 
-### 4. Discussion Section — Always Visible
-- Make the discussion section open by default (it's already auto-opening when comments exist)
-- Simplify the header: just show comment count, no "Start a Discussion" CTA text
+**3. Update trigger points**
+- `ImmersiveSearchView.tsx`: Replace `ContextMenu` with the new `VaultUploadWindow` dialog
+- `MobileSearchBar.tsx`: Same replacement
+- The `ContextMenu.tsx` component stays in the codebase but is no longer used by these two entry points
 
-### 5. Provenance — Clean Collapsed Section
-- Keep as collapsed, but simplify the header styling
+**4. Theme awareness**
+- Use semantic Tailwind tokens (`bg-background`, `text-foreground`, `border-border`) throughout so the dialog works in both light and dark modes with full contrast.
 
-## Files Modified
+### Technical Details
 
-| File | Change |
-|------|--------|
-| `src/modules/oracle/pages/ResolvePage.tsx` | Wire `contentViewMode` toggle into content section, remove truncation, merge JSON source into Machine view, simplify labels |
+- The new dialog will reuse the existing `useContextManager` hook (same `ctx` prop) for all operations: `addFile`, `addPaste`, `addUrl`, `addWorkspace`, `addFolder`, `remove`
+- Drag-and-drop handling reuses the same pattern from `ContextMenu.tsx`
+- Sub-views (paste text, URL input, workspace/folder name) will be inline sections within the dialog rather than separate navigation states — keeping everything visible at a glance
+- The file list will show `ctx.contextItems` with type badges and delete buttons
+- Dialog size: `sm:max-w-2xl` for comfortable browsing on desktop, full-width on mobile
 
-## Visual Structure (after)
-
-```
-┌─ Cover Image ─────────────────────────────────┐
-│  [Thumbnail]  TROUT.BUBBLY.CASTLE  📋  [Reader] [···] │
-│  KNOWLEDGECARD · ✨ Discovered                │
-│  👁 1 visitor · 💬 0 comments · ⑂ 0 forks      │
-├───────────────────────────────────────────────┤
-│  Share this address  12 formats            ›  │
-├───────────────────────────────────────────────┤
-│  [Human ▪ Machine]                     📋     │
-│                                               │
-│  (full content — human or JSON-LD)            │
-│                                               │
-├───────────────────────────────────────────────┤
-│  ▸ Provenance                                 │
-├───────────────────────────────────────────────┤
-│  💬 Discussion · 0 comments                    │
-│  (comment input)                              │
-└───────────────────────────────────────────────┘
-```
