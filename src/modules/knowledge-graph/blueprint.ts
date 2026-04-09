@@ -323,7 +323,8 @@ function domainFromType(rdfType: string): string {
 
 async function groundBlueprint(blueprint: ObjectBlueprint): Promise<GroundObjectBlueprint> {
   // Strip createdAt for identity computation (it changes every call)
-  const forHashing = { ...blueprint, createdAt: undefined };
+  // Use JSON parse/stringify to remove undefined values cleanly
+  const forHashing = JSON.parse(JSON.stringify({ ...blueprint, createdAt: undefined }));
   // Use canonical JSON serialization → SHA-256 → UOR identity
   // (URDNA2015 cannot process blueprint-specific keys; canonical JSON is deterministic)
   const canonical = canonicalJsonLd(forHashing);
