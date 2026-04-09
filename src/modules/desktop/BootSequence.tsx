@@ -526,6 +526,14 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
               {/* Right side: actions */}
               <div className="flex items-center gap-2">
+                {(bootPhase === "booting" || bootPhase === "replaying") && (
+                  <button
+                    onClick={() => { setShowDesktop(true); onComplete(); }}
+                    className="px-3 py-1 text-[10px] tracking-[0.1em] text-white/40 border border-white/8 rounded hover:bg-white/5 hover:text-white/60 transition-colors font-mono"
+                  >
+                    SKIP ▸
+                  </button>
+                )}
                 {bootPhase === "error" && (
                   <>
                     <button
