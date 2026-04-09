@@ -295,6 +295,12 @@ function formatMarkdownReport(
   status: SealStatus | "booting" | "failed",
   lastVerified: string | null,
   entries: DegradationEntry[],
+  uptimeMs: number,
+  runtimeMetrics?: Awaited<ReturnType<typeof collectRuntimeMetrics>>
+): string {
+  status: SealStatus | "booting" | "failed",
+  lastVerified: string | null,
+  entries: DegradationEntry[],
   uptimeMs: number
 ): string {
   const L: string[] = [];
