@@ -1,13 +1,32 @@
 /**
  * Sovereign Bus — Observable Module.
  * Layer 1 — local. Event emission and subscription within the bus.
- * @version 1.0.0
+ *
+ * Powered by @okikio/observables — TC39-aligned Observable with
+ * deterministic teardown and typed operators.
+ *
+ * @version 2.0.0
  */
 import { register } from "../registry";
+import { Observable } from "@okikio/observables";
 
-// In-memory event store (per-session)
-const _listeners = new Map<string, Array<(data: unknown) => void>>();
-const _snapshots = new Map<string, unknown>();
+// ── Per-channel state ──────────────────────────────────────────────────────
+
+interface ChannelState {
+  listeners: Set<(data: unknown) => void>;
+  snapshot: unknown;
+}
+
+const _channels = new Map<string, ChannelState>();
+
+function getChannel(name: string): ChannelState {
+  if (!_channels.has(name)) {
+    _channels.set(name, { listeners: new Set(), snapshot: undefined });
+  }
+  return _channels.get(name)!;
+}
+
+// ── Bus registration ────────────────────────────────────────────────────────
 
 register({
   ns: "observable",
@@ -18,46 +37,84 @@ register({
       handler: async (params: any) => {
         const channel = params?.channel ?? "default";
         const data = params?.data ?? params;
-        _snapshots.set(channel, data);
-        const listeners = _listeners.get(channel) ?? [];
-        listeners.forEach((fn) => { try { fn(data); } catch {} });
-        return { channel, listenerCount: listeners.length, emitted: true };
+        const ch = getChannel(channel);
+        ch.snapshot = data;
+        for (const fn of ch.listeners) {
+          try { fn(data); } catch { /* never crash emitter */ }
+        }
+        return { channel, listenerCount: ch.listeners.size, emitted: true };
       },
       description: "Emit an event on a named channel",
     },
     subscribe: {
       handler: async (params: any) => {
         const channel = params?.channel ?? "default";
-        // Note: actual subscriptions are managed in-process.
-        // This handler registers intent; real callbacks use the JS API directly.
-        if (!_listeners.has(channel)) _listeners.set(channel, []);
-        return { channel, subscribed: true, currentSnapshot: _snapshots.get(channel) ?? null };
+        getChannel(channel); // ensure channel exists
+        return { channel, subscribed: true, currentSnapshot: getChannel(channel).snapshot ?? null };
       },
       description: "Subscribe to events on a named channel",
     },
     snapshot: {
       handler: async (params: any) => {
         const channel = params?.channel;
-        if (channel) return { channel, data: _snapshots.get(channel) ?? null };
-        // Return all snapshots
+        if (channel) {
+          return { channel, data: getChannel(channel).snapshot ?? null };
+        }
         const all: Record<string, unknown> = {};
-        _snapshots.forEach((v, k) => { all[k] = v; });
-        return { channels: Object.keys(all), snapshots: all };
+        _channels.forEach((ch, k) => { all[k] = ch.snapshot; });
+        return { channels: [..._channels.keys()], snapshots: all };
       },
       description: "Get a snapshot of current observable state",
     },
   },
 });
 
-/** Direct JS API for subscribing (not through bus.call) */
-export function subscribeChannel(channel: string, fn: (data: unknown) => void): () => void {
-  if (!_listeners.has(channel)) _listeners.set(channel, []);
-  _listeners.get(channel)!.push(fn);
-  return () => {
-    const arr = _listeners.get(channel);
-    if (arr) {
-      const idx = arr.indexOf(fn);
-      if (idx >= 0) arr.splice(idx, 1);
+// ── TC39-aligned Observable API ─────────────────────────────────────────────
+
+/**
+ * Create a TC39 Observable for a named channel.
+ * Hot observable — emits current snapshot on subscribe, then all future values.
+ * Supports backpressure via AbortSignal (from the subscriber).
+ */
+export function observeChannel<T = unknown>(channel: string): Observable<T> {
+  return new Observable<T>((subscriber) => {
+    const ch = getChannel(channel);
+
+    // Emit current snapshot if available
+    if (ch.snapshot !== undefined) {
+      subscriber.next(ch.snapshot as T);
     }
+
+    // Subscribe to future emissions
+    const handler = (data: unknown) => subscriber.next(data as T);
+    ch.listeners.add(handler);
+
+    // Deterministic teardown
+    return () => {
+      ch.listeners.delete(handler);
+    };
+  });
+}
+
+/**
+ * Direct JS API for subscribing (backward compatible).
+ * Returns an unsubscribe function.
+ */
+export function subscribeChannel(channel: string, fn: (data: unknown) => void): () => void {
+  const ch = getChannel(channel);
+  ch.listeners.add(fn);
+  return () => {
+    ch.listeners.delete(fn);
   };
+}
+
+/**
+ * Emit a value to a channel programmatically (outside bus.call).
+ */
+export function emitChannel(channel: string, data: unknown): void {
+  const ch = getChannel(channel);
+  ch.snapshot = data;
+  for (const fn of ch.listeners) {
+    try { fn(data); } catch { /* never crash emitter */ }
+  }
 }

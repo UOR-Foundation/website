@@ -1,13 +1,13 @@
 /**
  * UOR Knowledge Graph — Barrel Export.
  *
- * CANONICAL: All graph operations go through the single Oxigraph instance.
+ * CANONICAL: All graph operations go through the single GrafeoDB instance.
  */
 
-export { oxigraphStore as localGraphStore, oxigraphStore } from "./oxigraph-store";
+export { grafeoStore as localGraphStore, grafeoStore, oxigraphStore } from "./grafeo-store";
 export type { KGNode, KGEdge, KGDerivation, KGStats } from "./types";
-export type { SparqlBinding } from "./oxigraph-store";
-export { sparqlQuery, sparqlUpdate } from "./oxigraph-store";
+export type { SparqlBinding } from "./grafeo-store";
+export { sparqlQuery, sparqlUpdate } from "./grafeo-store";
 
 export { ingestBridge } from "./ingest-bridge";
 

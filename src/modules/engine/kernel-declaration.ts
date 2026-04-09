@@ -18,6 +18,8 @@
  */
 
 import { getEngine } from "./adapter";
+import { sha256 } from "@noble/hashes/sha2";
+import { bytesToHex } from "@noble/hashes/utils";
 
 // ── Kernel Function Types ────────────────────────────────────────────────
 
@@ -34,36 +36,16 @@ export type KernelFunctionName =
 export type KernelTier = "kernel" | "presentation" | "optimization";
 
 export interface KernelFunction {
-  /** Primitive name */
   readonly name: KernelFunctionName;
-  /** Fano point index P₀–P₆ */
   readonly fanoPoint: number;
-  /** Ring operations this primitive derives from */
   readonly ringBasis: readonly string[];
-  /** The ONE framework that implements this (no overlap) */
   readonly framework: string;
-  /** What this primitive does */
   readonly description: string;
-  /** Engine namespaces this primitive governs */
   readonly governsNamespaces: readonly string[];
-  /** Verification: prove this primitive works */
   readonly verify: () => boolean;
 }
 
 // ── The 7 Fano-Mapped Kernel Functions ───────────────────────────────────
-//
-// Fano plane PG(2,2): 7 points, 7 lines, 3 points per line.
-// Lines encode which triples of primitives compose into higher functions.
-//
-//        P₀ (encode)
-//       / \
-//      /   \
-//    P₃     P₅
-//    /|\ _ /|\
-//   / | X  | \
-//  P₁ P₆  P₂ P₄
-//  (decode)(compose)(resolve)
-//    (seal)  (observe)  (store)
 
 function buildKernelTable(): readonly KernelFunction[] {
   const engine = getEngine();
@@ -73,11 +55,10 @@ function buildKernelTable(): readonly KernelFunction[] {
       name: "encode" as const,
       fanoPoint: 0,
       ringBasis: ["neg", "bnot"],
-      framework: "Web Crypto API",
+      framework: "@noble/hashes (SHA-256/BLAKE3)",
       description: "Content → canonical identity (URDNA2015 → SHA-256 → UOR address)",
       governsNamespaces: ["u/", "schema/", "type/"],
       verify: () => {
-        // neg(bnot(x)) must be well-defined for encoding to work
         const x = 42;
         return typeof engine.neg(engine.bnot(x)) === "number";
       },
@@ -101,7 +82,6 @@ function buildKernelTable(): readonly KernelFunction[] {
       description: "Morphism composition (f ∘ g — no external dependency)",
       governsNamespaces: ["morphism/", "op/", "monoidal/", "operad/", "linear/"],
       verify: () => {
-        // mul and add form a ring — composition is well-defined
         return engine.mul(engine.add(1, 2), 3) === engine.add(engine.mul(1, 3), engine.mul(2, 3));
       },
     },
@@ -109,11 +89,10 @@ function buildKernelTable(): readonly KernelFunction[] {
       name: "store" as const,
       fanoPoint: 3,
       ringBasis: ["ring_xor", "ring_and"],
-      framework: "Oxigraph",
-      description: "Quad graph persistence (subject-predicate-object-graph)",
+      framework: "GrafeoDB (@grafeo-db/web)",
+      description: "Multi-model graph persistence (SPARQL + Cypher + GQL + SQL)",
       governsNamespaces: ["query/", "partition/", "region/", "boundary/"],
       verify: () => {
-        // xor is its own inverse (store/retrieve symmetry)
         const x = 137;
         return engine.xor(engine.xor(x, 42), 42) === x;
       },
@@ -122,11 +101,10 @@ function buildKernelTable(): readonly KernelFunction[] {
       name: "resolve" as const,
       fanoPoint: 4,
       ringBasis: ["succ", "pred"],
-      framework: "UNS (built-in)",
-      description: "Name → content traversal (successor/predecessor navigation)",
+      framework: "UNS + multiformats",
+      description: "Name → content traversal with CID interop (IPFS/AT Protocol)",
       governsNamespaces: ["resolver/", "recursion/", "reduction/", "convergence/"],
       verify: () => {
-        // succ and pred are inverses — navigation is reversible
         const x = 100;
         return engine.pred(engine.succ(x)) === x && engine.succ(engine.pred(x)) === x;
       },
@@ -135,11 +113,10 @@ function buildKernelTable(): readonly KernelFunction[] {
       name: "observe" as const,
       fanoPoint: 5,
       ringBasis: ["ring_or"],
-      framework: "EventTarget (native)",
-      description: "Event subscription (union of observable streams)",
+      framework: "@okikio/observables (TC39 Observable)",
+      description: "TC39-aligned event subscription with backpressure and deterministic teardown",
       governsNamespaces: ["observable/", "stream/", "effect/", "parallel/", "interaction/"],
       verify: () => {
-        // or is the join in the event lattice
         return engine.or(0, 0) === 0 && engine.or(0xFF, 0) === 0xFF;
       },
     },
@@ -147,15 +124,14 @@ function buildKernelTable(): readonly KernelFunction[] {
       name: "seal" as const,
       fanoPoint: 6,
       ringBasis: ["all"],
-      framework: "singleProofHash (built-in)",
-      description: "Integrity proof (all ring ops → single derivation hash)",
+      framework: "singleProofHash + @noble/hashes",
+      description: "Integrity proof (all ring ops → @noble/hashes SHA-256 → cryptographic seal)",
       governsNamespaces: [
         "cert/", "trace/", "derivation/", "cohomology/", "homology/",
         "carry/", "cascade/", "division/", "failure/", "state/",
         "enforcement/",
       ],
       verify: () => {
-        // The seal requires ALL operations to be sound
         return engine.verifyAllCriticalIdentity();
       },
     },
@@ -166,10 +142,6 @@ function buildKernelTable(): readonly KernelFunction[] {
 
 let _kernelTable: readonly KernelFunction[] | null = null;
 
-/**
- * Get the self-declared kernel function table.
- * Derived entirely from the UOR engine's own operations.
- */
 export function getKernelDeclaration(): readonly KernelFunction[] {
   if (!_kernelTable) {
     _kernelTable = buildKernelTable();
@@ -199,44 +171,34 @@ export function verifyKernel(): {
 
   const allPassed = results.every((r) => r.ok);
 
-  // Deterministic kernel state string — fed into SHA-256 by the boot seal
+  // Deterministic kernel state string
   const stateString = results.map((r) => `${r.name}:${r.fanoPoint}:${r.ok ? 1 : 0}`).join("|");
 
-  // Compute SHA-256 using the engine's own ring ops as a fast sync hash.
-  // This produces a deterministic 256-bit digest from the kernel state:
-  // for each byte of the state string, accumulate through ring mul+xor.
-  const engine = getEngine();
+  // SHA-256 via @noble/hashes (synchronous, cryptographic)
   const stateBytes = new TextEncoder().encode(stateString);
-  const digest = new Uint8Array(32);
-  for (let i = 0; i < stateBytes.length; i++) {
-    const idx = i % 32;
-    digest[idx] = engine.xor(digest[idx], engine.mul(stateBytes[i], engine.succ(i & 0xFF)));
-  }
-  const hash = Array.from(digest).map(b => b.toString(16).padStart(2, "0")).join("");
+  const digest = sha256(stateBytes);
+  const hash = bytesToHex(digest);
 
   return { results, allPassed, hash };
 }
 
 /**
- * Compute a cryptographic SHA-256 kernel hash (async).
- * Uses Web Crypto for a proper 256-bit digest of the kernel verification state.
- * This is what gets baked into the boot seal.
+ * Compute a cryptographic SHA-256 kernel hash.
+ * Uses @noble/hashes for a proper 256-bit digest.
+ * Now synchronous internally — async signature preserved for backward compat.
  */
 export async function computeKernelHashSha256(): Promise<string> {
   const { results } = verifyKernel();
   const stateString = results.map(r => `${r.name}:${r.fanoPoint}:${r.ok ? 1 : 0}`).join("|");
-  const bytes = new TextEncoder().encode(stateString);
-  const digestBuf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digestBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const stateBytes = new TextEncoder().encode(stateString);
+  return bytesToHex(sha256(stateBytes));
 }
 
 /**
  * Map a bus namespace to its governing kernel function.
- * Returns null if the namespace is not governed (orphan).
  */
 export function namespaceToKernel(ns: string): KernelFunctionName | null {
   const table = getKernelDeclaration();
-  // Normalize: ensure trailing slash
   const normalized = ns.endsWith("/") ? ns : `${ns}/`;
   for (const fn of table) {
     if (fn.governsNamespaces.includes(normalized)) {
@@ -248,7 +210,6 @@ export function namespaceToKernel(ns: string): KernelFunctionName | null {
 
 /**
  * Validate that the kernel declaration covers all engine-declared namespaces.
- * Returns uncovered namespaces (should be empty for a canonical system).
  */
 export function auditNamespaceCoverage(): {
   covered: string[];
@@ -280,9 +241,6 @@ export function auditNamespaceCoverage(): {
 }
 
 // ── Fano Lines (composition rules) ───────────────────────────────────────
-//
-// Each line defines 3 kernel functions that compose into a higher operation.
-// There are exactly 7 lines in PG(2,2).
 
 export const FANO_LINES: readonly (readonly [KernelFunctionName, KernelFunctionName, KernelFunctionName])[] = [
   ["encode", "decode", "seal"],       // L₀: identity lifecycle

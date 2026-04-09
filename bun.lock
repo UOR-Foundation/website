@@ -12,10 +12,13 @@
         "@dnd-kit/utilities": "^3.2.2",
         "@fontsource/dm-sans": "^5.2.8",
         "@fontsource/playfair-display": "^5.2.8",
+        "@grafeo-db/web": "^0.5.32",
         "@huggingface/transformers": "^3.8.1",
         "@lovable.dev/cloud-auth-js": "^1.0.0",
         "@monaco-editor/react": "^4.7.0",
+        "@noble/hashes": "^2.0.1",
         "@noble/post-quantum": "^0.5.4",
+        "@okikio/observables": "^1.4.0",
         "@picovoice/porcupine-web": "^4.0.0",
         "@picovoice/web-voice-processor": "^4.0.9",
         "@radix-ui/react-avatar": "1.1.3",
@@ -48,6 +51,7 @@
         "hls.js": "^1.6.15",
         "jsonld": "^9.0.0",
         "lucide-react": "^0.462.0",
+        "multiformats": "^13.4.2",
         "next-themes": "^0.3.0",
         "oxigraph": "^0.5.6",
         "qrcode": "^1.5.4",
@@ -376,6 +380,12 @@
 
     "@fontsource/playfair-display": ["@fontsource/playfair-display@5.2.8", "", {}, "sha512-fUEhib70SszNhQVsGbUMSsWJhr7Je0rdeuZdtGpDNu0GKF1xJM8QhpI/y0pckU25GcChXm9TLOmeZupkvvZo2g=="],
 
+    "@grafeo-db/wasm": ["@grafeo-db/wasm@0.5.34", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@grafeo-db/wasm/-/wasm-0.5.34.tgz", {}, "sha512-zJknEZb9YM5AcrHZBkfBaqxP0wWQ0+UpRfck5tyYzshqZYKlRJTxZq9uLC6oaFgoOTKXf+C1OTzFX318BaWdJg=="],
+
+    "@grafeo-db/wasm-lite": ["@grafeo-db/wasm-lite@0.5.34", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@grafeo-db/wasm-lite/-/wasm-lite-0.5.34.tgz", {}, "sha512-wTCnZX7zNfDlpjbFbO1PQa8cnuzsx7T9E8AWgkLP/inAf0YpGh5q2MsmFiwlgkGg6zuxzqH3lVSJpZO7jMxMbg=="],
+
+    "@grafeo-db/web": ["@grafeo-db/web@0.5.34", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@grafeo-db/web/-/web-0.5.34.tgz", { "dependencies": { "@grafeo-db/wasm": "^0.5.34", "@grafeo-db/wasm-lite": "^0.5.34" }, "peerDependencies": { "react": ">=19", "svelte": ">=5", "vue": ">=3" }, "optionalPeers": ["react", "svelte", "vue"] }, "sha512-v/4cKuZH/6omuIkwF8Ou6x3si0g1YKDb8hz3T7m1ol7YL406jWJ4R6h15ls78L0ooOeBvRhPcILxoz1f1W3h0A=="],
+
     "@huggingface/jinja": ["@huggingface/jinja@0.5.5", "", {}, "sha512-xRlzazC+QZwr6z4ixEqYHo9fgwhTZ3xNSdljlKfUFGZSdlvt166DljRELFUfFytlYOYvo3vTisA/AFOuOAzFQQ=="],
 
     "@huggingface/transformers": ["@huggingface/transformers@3.8.1", "", { "dependencies": { "@huggingface/jinja": "^0.5.3", "onnxruntime-node": "1.21.0", "onnxruntime-web": "1.22.0-dev.20250409-89f8206ba4", "sharp": "^0.34.1" } }, "sha512-tsTk4zVjImqdqjS8/AOZg2yNLd1z9S5v+7oUPpXaasDRwEDhB+xnglK1k5cad26lL5/ZIaeREgWWy0bs9y9pPA=="],
@@ -475,6 +485,8 @@
     "@nodelib/fs.stat": ["@nodelib/fs.stat@2.0.5", "", {}, "sha512-RkhPPp2zrqDAQA/2jNhnztcPAlv64XdhIp7a7454A5ovI7Bukxgt7MX7udwAu3zg1DcpPU0rz3VV1SeaqvY4+A=="],
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
+
+    "@okikio/observables": ["@okikio/observables@1.4.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@okikio/observables/-/observables-1.4.0.tgz", {}, "sha512-qyS+QLK0dHCzns6mSKcPCm1mBYWYCuLFT3HZmYzgH6OLNo4rVZOLeRuAa55tOMP9VBM2CpDg7VYAVXe7iKOeEQ=="],
 
     "@picovoice/porcupine-web": ["@picovoice/porcupine-web@4.0.0", "", { "dependencies": { "@picovoice/web-utils": "=1.4.3" } }, "sha512-YqXBp6R9od6NTgcm80UyyB71c4eBArxD3BtX1SKQC4/xAvThM2VgwtPj4J7gvjl9yqqlcr+0Mg3T4lbKIOziTw=="],
 
@@ -1479,6 +1491,8 @@
     "motion-utils": ["motion-utils@12.29.2", "", {}, "sha512-G3kc34H2cX2gI63RqU+cZq+zWRRPSsNIOjpdl9TN4AQwC4sgwYPl/Q/Obf/d53nOm569T0fYK+tcoSV50BWx8A=="],
 
     "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+
+    "multiformats": ["multiformats@13.4.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/multiformats/-/multiformats-13.4.2.tgz", {}, "sha512-eh6eHCrRi1+POZ3dA+Dq1C6jhP1GNtr9CRINMb67OKzqW9I5DUuZM/3jLPlzhgpGeiNUlEGEbkCYChXMCc/8DQ=="],
 
     "mz": ["mz@2.7.0", "", { "dependencies": { "any-promise": "^1.0.0", "object-assign": "^4.0.1", "thenify-all": "^1.0.0" } }, "sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q=="],
 

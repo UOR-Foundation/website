@@ -7,8 +7,8 @@
  * StreamProjection engine subscribes to these events, turning real
  * system computations into a live byte stream for coherence monitoring.
  *
- * The system watches itself through the same observation framework
- * it uses for everything else.
+ * Powered by @okikio/observables — TC39-aligned Observable with
+ * deterministic teardown and typed operators.
  *
  * Architecture:
  *   UORRing.neg(x)          → emit("ring", inputBytes, outputBytes)
@@ -20,20 +20,17 @@
  * @module observable/system-event-bus
  */
 
+import { Observable } from "@okikio/observables";
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export type SystemEventSource = "ring" | "identity" | "hologram" | "certificate" | "sovereignty";
 
 export interface SystemEvent {
-  /** Which subsystem produced this event. */
   readonly source: SystemEventSource;
-  /** Human-readable operation label (e.g. "neg", "singleProofHash", "project:did"). */
   readonly operation: string;
-  /** Raw input bytes of the operation. */
   readonly inputBytes: Uint8Array;
-  /** Raw output bytes of the operation. */
   readonly outputBytes: Uint8Array;
-  /** Timestamp. */
   readonly timestamp: number;
 }
 
@@ -50,6 +47,23 @@ class SystemEventBusImpl {
   subscribe(listener: SystemEventListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * TC39-aligned Observable for system events.
+   * Cold: each subscriber gets events from the moment of subscription.
+   * Deterministic teardown via the returned Observable's unsubscribe.
+   */
+  observe(filter?: SystemEventSource): Observable<SystemEvent> {
+    return new Observable<SystemEvent>((subscriber) => {
+      const listener: SystemEventListener = (event) => {
+        if (!filter || event.source === filter) {
+          subscriber.next(event);
+        }
+      };
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    });
   }
 
   /** Emit a system event to all listeners. */
