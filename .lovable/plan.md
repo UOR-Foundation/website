@@ -1,45 +1,94 @@
 
 
-# UOR Engine Enforcement — Cryptographic Self-Verification
+# Frontier Performance Enforcement — UOR Engine Evaluation
 
-## Problem
+## Evaluation Summary
 
-The kernel declaration, minimality check, and namespace coverage audit exist as functions but are never enforced. The seal does not include the kernel hash, so the cryptographic proof doesn't actually prove the kernel is sound. The system declares but does not enforce.
+The SIMD128 crate is compiled and deployed, but **the performance gains are largely unrealized** because the pipeline has 5 disconnection points where the SIMD bulk ops never actually reach the hot paths. Here's what's built vs what's actually wired:
 
-## 4 Surgical Changes
+| Layer | Status | Issue |
+|-------|--------|-------|
+| WASM SIMD binary | Built | 56 SIMD instructions confirmed |
+| Bulk exports (`bulk_ring_add`, etc.) | Declared in manifest + .d.ts | **Never wired into the adapter** — they land in `extensions` silently |
+| Web Worker | Running | **Uses pure JS**, not the WASM module — gets zero SIMD benefit |
+| WASM compile cache (`loadWithCache`) | Implemented | **Never called** — adapter uses raw `import()` instead |
+| LUT engine GPU path | Implemented | **Disconnected from WASM bulk ops** — CPU fallback does scalar loops |
+| Kernel hash | Computed | **String concat, not SHA-256** — not a real cryptographic proof |
 
-### 1. Bake kernel hash into the seal (`types.ts` + `sovereign-boot.ts`)
+## 5 Surgical Fixes (All UOR-Engine-Derived)
 
-Add `kernelHash: string` to `UorSeal`. Pass the kernel verification hash into `computeSeal()` so it becomes part of the `singleProofHash` input document as `"uor:kernelHash"`. If `!kernelResult.allPassed`, fail the boot (not just warn).
+### 1. Wire SIMD bulk ops into the engine contract
 
-### 2. Enforce minimality at boot (`sovereign-boot.ts` + `tech-stack.ts`)
+The adapter's `buildFromWasm()` maps scalar ops but ignores the 4 bulk SIMD exports. They exist in `extensions` but nobody calls them. Wire them directly onto `bulkApply` and `bulkVerify` on the contract, with TS fallback loops.
 
-Call `validateMinimality()` during boot after stack validation. Log overlaps as warnings. The current `encode` overlap (Web Crypto + jsonld both `critical`) must be resolved: change Web Crypto's criticality to `"recommended"` since jsonld is the canonical encode pipeline and Web Crypto is its underlying primitive — not a competing framework.
+**File:** `src/modules/engine/adapter.ts`
+- In `buildFromWasm()`, add explicit mappings for `bulk_ring_add`, `bulk_ring_xor`, `bulk_ring_neg`, `bulk_verify_all`
+- Implement `bulkApply` that dispatches to the correct SIMD export based on `op` name
+- Implement `bulkVerify` using `bulk_verify_all`
+- Add TS fallback implementations in `TS_FALLBACKS`
 
-### 3. Enforce namespace coverage at boot (`sovereign-boot.ts`)
+**File:** `src/modules/engine/contract.ts`
+- Make `bulkApply` and `bulkVerify` required (not optional `?`) since both WASM and TS paths exist
 
-Call `auditNamespaceCoverage()` after kernel verification. Log uncovered namespaces. Include coverage ratio in a new `kernelHealth` field on `BootReceipt`.
+### 2. Use IndexedDB compile cache for WASM loading
 
-### 4. Add manifest traceability validation (`manifest.ts` + `sovereign-boot.ts`)
+`loadWithCache()` exists but `initEngine()` uses raw `import()` + `mod.default()`. Switch to cached compilation so repeat page loads skip the ~100-500ms compile step entirely.
 
-Create `validateManifestTraceability()` that checks every bus module's `kernelFunction` against the 7 valid kernel functions. Call it during bus-init phase. Orphan modules (with invalid `kernelFunction`) are logged as violations.
+**File:** `src/modules/engine/adapter.ts`
+- In `initEngine()`, try `loadWithCache(wasmUrl, CRATE_MANIFEST.version, imports)` first
+- Fall back to the current `import()` path if cache fails
+- After successful `import()`, call `cacheModule()` to persist for next load
+
+### 3. Make the worker WASM-aware
+
+The inline worker reimplements ring ops in plain JS. When WASM is available on the main thread, serialize the WASM URL to the worker so it can instantiate its own WASM module with SIMD bulk ops.
+
+**File:** `src/modules/engine/wasm-worker.ts`
+- Modify `createWorkerScript()` to accept an optional WASM URL
+- If WASM URL is provided, the worker loads the WASM module and uses `bulk_ring_add` etc. for `bulkApply`
+- Fall back to the current JS ring ops if WASM load fails in worker context
+- In `init()`, pass the WASM URL if main thread detected WASM successfully
+
+### 4. Cryptographic kernel hash
+
+`verifyKernel()` produces a string concat (`"encode:1|decode:1|..."`) not a SHA-256. For the seal to be a real cryptographic proof, the kernel hash must be a proper digest.
+
+**File:** `src/modules/engine/kernel-declaration.ts`
+- Change `verifyKernel()` to return a `Promise` (or compute synchronously using the engine's own ring ops)
+- Hash the kernel state string through `sha256hex()` to produce a real 256-bit digest
+- Update callers in `sovereign-boot.ts` to `await` the hash
+
+### 5. Idle-time LUT pre-warming
+
+The LUT engine builds 14 tables on first access. Use `requestIdleCallback` to pre-compute during browser idle time so the first bulk operation is instant.
+
+**File:** `src/modules/uns/core/hologram/gpu/lut-engine.ts`
+- Add a `warmup()` method that pre-computes all CIDs (the expensive part) during idle
+- Export a `scheduleLutWarmup()` that calls `requestIdleCallback(() => getLutEngine().warmup())`
+
+**File:** `src/modules/boot/sovereign-boot.ts`
+- After seal computation, call `scheduleLutWarmup()` to prime the engine during idle
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/modules/boot/types.ts` | Add `kernelHash` to `UorSeal`, add `kernelHealth` to `BootReceipt` |
-| `src/modules/boot/sovereign-boot.ts` | Wire kernel hash into seal, call minimality + coverage + manifest checks, fail on kernel failure |
-| `src/modules/boot/tech-stack.ts` | Change Web Crypto criticality to `"recommended"` to resolve encode overlap |
-| `src/modules/bus/manifest.ts` | Add `validateManifestTraceability()` function |
+| `src/modules/engine/adapter.ts` | Wire SIMD bulk ops + use compile cache |
+| `src/modules/engine/contract.ts` | Make bulk ops required |
+| `src/modules/engine/wasm-worker.ts` | WASM-aware worker with SIMD delegation |
+| `src/modules/engine/kernel-declaration.ts` | SHA-256 kernel hash |
+| `src/modules/uns/core/hologram/gpu/lut-engine.ts` | Idle-time warmup |
+| `src/modules/boot/sovereign-boot.ts` | Await kernel hash + schedule LUT warmup |
 
-## Result
+## Performance Impact
 
-After these changes, the boot sequence becomes cryptographically self-enforcing:
-- Kernel hash is in the seal — tampering with kernel functions invalidates the seal
-- Minimality is checked — overlapping frameworks are detected and reported
-- Namespace coverage is checked — the engine's own declarations are verified
-- Manifest traceability is checked — no bus module can exist outside the 7 primitives
+| Optimization | Before | After |
+|-------------|--------|-------|
+| Bulk ring ops | Scalar JS (1 byte/cycle) | WASM SIMD (16 bytes/cycle) |
+| Repeat WASM load | ~100-500ms compile | ~5-20ms from IndexedDB |
+| Worker bulk ops | JS scalar loops | WASM SIMD in worker thread |
+| Kernel hash integrity | String concat (forgeable) | SHA-256 (cryptographic) |
+| First LUT operation | Cold (CID compute ~5ms) | Pre-warmed during idle |
 
-Nothing can exist in the system that the UOR engine does not declare. The seal proves it.
+Every optimization derives from the engine's own declared operations. No new dependencies. No new frameworks. The Fano-mapped kernel functions remain the root authority.
 
