@@ -1913,6 +1913,156 @@ export type Database = {
         }
         Relationships: []
       }
+      sovereign_spaces: {
+        Row: {
+          cid: string
+          created_at: string
+          encrypted_key: string | null
+          graph_iri: string
+          id: string
+          name: string
+          owner_id: string
+          space_type: string
+          updated_at: string
+        }
+        Insert: {
+          cid: string
+          created_at?: string
+          encrypted_key?: string | null
+          graph_iri: string
+          id?: string
+          name: string
+          owner_id: string
+          space_type?: string
+          updated_at?: string
+        }
+        Update: {
+          cid?: string
+          created_at?: string
+          encrypted_key?: string | null
+          graph_iri?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          space_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      space_change_log: {
+        Row: {
+          author_device_id: string
+          author_user_id: string
+          change_cid: string
+          created_at: string
+          id: string
+          parent_cids: string[]
+          payload: Json
+          signature: string | null
+          space_id: string
+        }
+        Insert: {
+          author_device_id: string
+          author_user_id: string
+          change_cid: string
+          created_at?: string
+          id?: string
+          parent_cids?: string[]
+          payload: Json
+          signature?: string | null
+          space_id: string
+        }
+        Update: {
+          author_device_id?: string
+          author_user_id?: string
+          change_cid?: string
+          created_at?: string
+          id?: string
+          parent_cids?: string[]
+          payload?: Json
+          signature?: string | null
+          space_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_change_log_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "sovereign_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      space_heads: {
+        Row: {
+          device_id: string
+          head_cid: string
+          id: string
+          space_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          head_cid: string
+          id?: string
+          space_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          head_cid?: string
+          id?: string
+          space_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_heads_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "sovereign_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      space_members: {
+        Row: {
+          id: string
+          invited_by: string | null
+          joined_at: string
+          role: string
+          space_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: string
+          space_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: string
+          space_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_members_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "sovereign_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trust_connections: {
         Row: {
           ceremony_cid: string | null
@@ -2831,8 +2981,16 @@ export type Database = {
           signup_count: number
         }[]
       }
+      has_space_role: {
+        Args: { _role: string; _space_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_space_member: {
+        Args: { _space_id: string; _user_id: string }
         Returns: boolean
       }
       lookup_invite_code: {
