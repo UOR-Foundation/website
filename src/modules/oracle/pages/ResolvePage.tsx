@@ -799,7 +799,7 @@ const SearchPage = () => {
     handleSearch(triword);
   };
 
-  useEffect(() => { loadWasm().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
+  useEffect(() => { initEngine().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
   useEffect(() => { if (!result && !aiMode && window.innerWidth >= 768) inputRef.current?.focus(); }, [result, aiMode]);
 
   // Inject JSON-LD into <head> for AI agents and crawlers
