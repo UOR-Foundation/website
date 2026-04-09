@@ -66,7 +66,7 @@ export function matrixRoomToConversation(
     : undefined;
 
   // Unread count from notification counts
-  const unread = room.getUnreadNotificationCount("total") ?? 0;
+  const unread = (room as any).getUnreadNotificationCount?.("total") ?? 0;
 
   // Determine source platform from room or peer
   const sourcePlatform = bridgeInfo?.platform ?? "matrix";

@@ -97,7 +97,7 @@ export function matrixEventToDecryptedMessage(
       ? new Date(event.timestamp).toISOString()
       : null,
     deletedAt: null,
-    sourcePlatform,
+    sourcePlatform: sourcePlatform as DecryptedMessage["sourcePlatform"],
   };
 }
 

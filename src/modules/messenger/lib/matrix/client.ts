@@ -2,8 +2,8 @@
  * Matrix Client Core — Singleton manager for the Matrix transport layer.
  * ═══════════════════════════════════════════════════════════════════════
  *
- * Wraps matrix-js-sdk behind a UOR-compatible interface. Uses Sliding Sync
- * (MSC3575) for performance and IndexedDB for persistent E2EE key storage.
+ * Wraps matrix-js-sdk behind a UOR-compatible interface. Uses IndexedDB
+ * for persistent state and lazy-loads room data for performance.
  *
  * Architecture: Matrix is used as a TRANSPORT layer — all messages are
  * additionally wrapped in UOR envelopes with Kyber-1024 encryption.
@@ -47,38 +47,24 @@ const _eventListeners = new Set<MatrixEventCallback>();
 
 /**
  * Initialize or retrieve the singleton Matrix client.
- * Uses IndexedDB crypto store for persistent E2EE keys.
  */
 export async function initMatrixClient(config: MatrixClientConfig): Promise<sdk.MatrixClient> {
-  if (_client) {
-    // Already initialized — return existing
-    return _client;
-  }
+  if (_client) return _client;
 
   const client = sdk.createClient({
     baseUrl: config.homeserverUrl,
     accessToken: config.accessToken,
     userId: config.userId,
     deviceId: config.deviceId,
-    // Sliding Sync for performance (MSC3575)
-    slidingSyncProxyUrl: config.homeserverUrl,
     useAuthorizationHeader: true,
   });
-
-  // Initialize E2EE crypto
-  try {
-    await client.initCrypto();
-  } catch {
-    console.warn("[Matrix] Crypto init skipped — E2EE handled by UOR layer");
-  }
 
   _client = client;
   return client;
 }
 
 /**
- * Start the /sync loop with sliding sync windowed room lists.
- * Only syncs rooms visible in the sidebar for instant startup.
+ * Start the /sync loop with lazy-loaded members for performance.
  */
 export async function startSync(opts?: { initialSyncLimit?: number }): Promise<void> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
@@ -122,24 +108,18 @@ export async function startSync(opts?: { initialSyncLimit?: number }): Promise<v
   });
 }
 
-/**
- * Stop the sync loop gracefully.
- */
+/** Stop the sync loop gracefully. */
 export function stopSync(): void {
   _client?.stopClient();
   _syncState = { state: "STOPPED", roomCount: 0 };
 }
 
-/**
- * Get current sync state.
- */
+/** Get current sync state. */
 export function getSyncState(): MatrixSyncState {
   return { ..._syncState };
 }
 
-/**
- * Get the underlying Matrix client (if initialized).
- */
+/** Get the underlying Matrix client (if initialized). */
 export function getMatrixClient(): sdk.MatrixClient | null {
   return _client;
 }
@@ -153,9 +133,7 @@ export function onTimelineEvent(callback: MatrixEventCallback): () => void {
   return () => _eventListeners.delete(callback);
 }
 
-/**
- * Send a message to a Matrix room.
- */
+/** Send a message to a Matrix room. */
 export async function sendMatrixMessage(
   roomId: string,
   body: string,
@@ -164,20 +142,18 @@ export async function sendMatrixMessage(
   if (!_client) throw new Error("[Matrix] Client not initialized");
 
   const response = await _client.sendMessage(roomId, {
-    msgtype,
+    msgtype: msgtype as sdk.MsgType,
     body,
   });
 
   return response.event_id ?? "";
 }
 
-/**
- * Send a reaction to a Matrix event.
- */
+/** Send a reaction to a Matrix event. */
 export async function sendReaction(roomId: string, eventId: string, emoji: string): Promise<void> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
 
-  await _client.sendEvent(roomId, "m.reaction", {
+  await _client.sendEvent(roomId, "m.reaction" as any, {
     "m.relates_to": {
       rel_type: "m.annotation",
       event_id: eventId,
@@ -186,17 +162,13 @@ export async function sendReaction(roomId: string, eventId: string, emoji: strin
   });
 }
 
-/**
- * Redact (delete) a Matrix event.
- */
+/** Redact (delete) a Matrix event. */
 export async function redactEvent(roomId: string, eventId: string, reason?: string): Promise<void> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
   await _client.redactEvent(roomId, eventId, undefined, { reason });
 }
 
-/**
- * Create a new Matrix room.
- */
+/** Create a new Matrix room. */
 export async function createRoom(opts: {
   name?: string;
   topic?: string;
@@ -227,24 +199,18 @@ export async function createRoom(opts: {
   return response.room_id;
 }
 
-/**
- * Get all joined rooms.
- */
+/** Get all joined rooms. */
 export function getJoinedRooms(): sdk.Room[] {
   return _client?.getRooms()?.filter((r) => r.getMyMembership() === "join") ?? [];
 }
 
-/**
- * Join a room by ID or alias.
- */
+/** Join a room by ID or alias. */
 export async function joinRoom(roomIdOrAlias: string): Promise<void> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
   await _client.joinRoom(roomIdOrAlias);
 }
 
-/**
- * Leave a room.
- */
+/** Leave a room. */
 export async function leaveRoom(roomId: string): Promise<void> {
   if (!_client) throw new Error("[Matrix] Client not initialized");
   await _client.leave(roomId);
@@ -258,12 +224,6 @@ export function parseBridgeUserId(matrixUserId: string): {
   platform: BridgePlatform | "matrix";
   externalId: string;
 } | null {
-  // mautrix bridge user patterns:
-  // @whatsapp_1234567890:homeserver → WhatsApp
-  // @telegram_123456:homeserver → Telegram
-  // @signal_uuid:homeserver → Signal
-  // @discord_123456:homeserver → Discord
-  // @slack_TEAM_USER:homeserver → Slack
   const match = matrixUserId.match(/^@(whatsapp|telegram|signal|discord|slack|email|linkedin|twitter|instagram|sms)_([^:]+):/);
   if (match) {
     return {
@@ -271,13 +231,10 @@ export function parseBridgeUserId(matrixUserId: string): {
       externalId: match[2],
     };
   }
-
   return null;
 }
 
-/**
- * Clean shutdown — stop sync, clear listeners, null out client.
- */
+/** Clean shutdown — stop sync, clear listeners, null out client. */
 export function destroyClient(): void {
   stopSync();
   _eventListeners.clear();
