@@ -1,76 +1,46 @@
 
 
-## Plan: Clickable Drill-Down Detail Views for System Monitor Cards
+## Plan: Harden Mobile PWA Delivery and Responsiveness
 
-### What We're Building
+### Issues Found
 
-Each card and panel in the System Monitor becomes clickable. Clicking opens a detailed sub-view within the same System Monitor window (not a new OS window/tab). The sub-view replaces the dashboard with a rich, full-height detail page for that specific metric — with a back button to return to the overview. This is the same pattern used by hypervisor consoles like Proxmox, vSphere, and Grafana when you click into a panel.
+1. **Double render in `main.tsx`** — `createRoot().render()` is called both inside `.finally()` (line 57) and unconditionally on line 60, causing the app to mount twice on every load.
 
-### Architecture
+2. **No iframe/preview guard** — The COI service worker registers even inside Lovable's preview iframe, causing stale caching and interference. VitePWA also lacks `devOptions: { enabled: false }`.
 
-```text
-SystemMonitorApp
-├── activeView === null → Dashboard (current layout)
-├── activeView === "vm" → VM Detail
-├── activeView === "cpu" → Processor Detail
-├── activeView === "memory" → Memory Detail
-├── activeView === "modules" → Modules Detail
-├── activeView === "capabilities" → Capabilities Detail
-├── activeView === "availability" → System Availability Detail
-├── activeView === "kernel" → Kernel Primitives Detail
-├── activeView === "stack" → Stack Health Detail
-└── activeView === "hardware" → Host Hardware Detail
-```
+3. **MobileShell missing safe-area insets** — Bottom controls don't use `env(safe-area-inset-bottom)`, so on notched iPhones the home indicator pill and bottom icons get clipped behind the system gesture area.
 
-### Detail Views — Content Design
+4. **No GPU layer promotion on mobile shell** — The clock, background, and drawer content aren't promoted to compositor layers, causing potential paint jank during drawer transitions.
 
-Each view shows a header breadcrumb (`System Monitor / Processors`), a back arrow, and then rich content:
+5. **Missing mobile-specific touch optimizations** — No `will-change` hints on animated elements, no `content-visibility: auto` on off-screen drawer content.
 
-1. **Virtual Machine** — Seal status timeline, derivation ID (full, copyable), glyph fingerprint, session nonce, boot time histogram, last 10 verification timestamps, error budget gauge, degradation log with recommendations.
+### Changes
 
-2. **Processors** — vCPU count, per-core utilization sparklines (simulated from jitter), estimated thread pool status, ring operations throughput benchmark (live: runs 10K ops and reports ops/sec), comparison bar showing WASM vs TS engine speed.
+**1. Fix `src/main.tsx`**
+- Remove the duplicate `createRoot().render()` on line 60
+- Add iframe/preview-host guard: if running inside an iframe or on a `*.lovableproject.com` / `id-preview--*` domain, unregister all existing service workers and skip COI registration
+- Keep the `.finally()` render path as the single mount point
 
-3. **Memory** — JS heap used/limit with gauge, heap growth sparkline (live from `performance.memory`), IndexedDB quota used/total with gauge, storage estimate breakdown, GC pause estimation (if `PerformanceObserver` available).
+**2. Harden `vite.config.ts` PWA config**
+- Add `devOptions: { enabled: false }` so VitePWA's service worker never activates during development
 
-4. **Modules** — Full list of all bus modules (from receipt.moduleCount + pruning gate data), active/absorbed/orphaned breakdown, module dependency graph as a sortable table, consolidation debt tracker, hygiene score gauge.
+**3. Upgrade `src/modules/desktop/MobileShell.tsx`**
+- Bottom controls: change `pb-2` to `pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))]` so content respects the device safe area on notched phones
+- Add `will-change: transform` to the DayRingClock container and bottom controls for GPU compositing
+- Add `content-visibility: auto` on drawer content containers so off-screen drawer DOM doesn't trigger layout
 
-5. **Capabilities** — Full capability matrix: WASM, SIMD, SAB, Web Workers, Service Worker, Cross-Origin Isolation, WebGPU, Crypto.subtle, IndexedDB, Performance API — each with status, detection method, and fallback description.
+**4. Add mobile PWA meta hardening to `index.html`**
+- Already has `viewport-fit=cover`, `apple-mobile-web-app-capable`, and `apple-mobile-web-app-status-bar-style` — these are correct
+- Add `<meta name="mobile-web-app-capable" content="yes" />` for Android Chrome's Add to Home Screen
+- Add `<link rel="apple-touch-startup-image" href="/pwa-icon-512.png" />` for iOS splash screen
 
-6. **System Availability** — Uptime gauge (large), seal verification history (timestamps of last N verifications), error budget burn rate, SLO target (99.9%), current availability percentage, incident timeline if any degradation events occurred.
+### Technical Details
 
-7. **Kernel Primitives** — Each of the 7 Fano primitives in its own row with: name, framework, ring basis operations, governed namespaces (full list), verification status, and a "test now" button that re-runs the primitive's verification live.
-
-8. **Stack Health** — Full component table (all 23 components) with name, role, version, criticality badge, status, fallback description. Grouped by criticality tier. Selection Policy (7 criteria) displayed below.
-
-9. **Host Hardware** — Full hardware profile: CPU cores, memory, GPU (full string), display resolution + pixel ratio + color depth, touch capability, user agent (full), network info (`navigator.connection` if available), platform, language, timezone, provenance hash (full, copyable).
-
-### Implementation
-
-**File: `src/modules/boot/SystemMonitorApp.tsx`**
-
-- Add `const [activeView, setActiveView] = useState<string | null>(null)` state
-- Make each `GrafanaCard` and `GrafanaPanel` clickable with `onClick={() => setActiveView("id")}` and `cursor-pointer` styling with a subtle hover glow
-- Add a `DetailView` component that renders based on `activeView`, with a back button header
-- Each detail view is a self-contained section within the same file (they share the same `receipt`, `status`, hooks)
-- Animate the transition with a simple opacity + translateY fade-in
-- All data comes from existing sources: `receipt`, `kernelData`, `stackSummary`, `collectRuntimeMetrics()`, `getEngine()`, `pruningGate()`, `navigator.*` APIs
-- Live data (heap, throughput) uses the existing `useSparkline` hook pattern with `setInterval`
-
-**File: `src/modules/boot/SystemMonitorApp.tsx` sub-components (same file)**
-
-- `DetailHeader` — breadcrumb + back button
-- `VmDetail`, `CpuDetail`, `MemoryDetail`, `ModulesDetail`, `CapabilitiesDetail`, `AvailabilityDetail`, `KernelDetail`, `StackDetail`, `HardwareDetail` — one function per view
-
-### Visual Treatment
-
-- Cards get a subtle `cursor-pointer` and a brighter border + slight scale on hover
-- Detail views use the same `GrafanaPanel` aesthetic but with more vertical space
-- Tables use alternating row opacity for readability
-- Gauges reuse the existing `ThresholdBar` and ring SVG patterns
-- Live values pulse with a subtle glow animation
-- Back button is a clean `← System Monitor` breadcrumb at top-left
+The safe-area fix uses CSS `env()` with fallback values so non-notched devices still get correct spacing. The `will-change: transform` hints tell the browser to promote those layers to the GPU compositor, eliminating paint operations during Vaul drawer slide animations. The iframe guard prevents service worker interference in the Lovable editor preview while keeping full PWA functionality in production.
 
 ### Files Modified
-
-- `src/modules/boot/SystemMonitorApp.tsx` — Add drill-down state, clickable cards, and 9 detail view components
+- `src/main.tsx` — Remove double render, add iframe guard
+- `vite.config.ts` — Add `devOptions: { enabled: false }`
+- `src/modules/desktop/MobileShell.tsx` — Safe-area insets, GPU promotion
+- `index.html` — Android PWA meta tag, iOS splash image link
 
