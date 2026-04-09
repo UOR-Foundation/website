@@ -529,6 +529,7 @@ export default function TabBar({
           <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
         </button>
         <TabBarConnectivity isLight={isLight} />
+        <EngineStatusIndicator isLight={isLight} />
         <FullscreenToggle isLight={isLight} />
       </div>
     </div>
