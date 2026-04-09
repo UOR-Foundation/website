@@ -8,9 +8,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
-  X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
+  X, Plus, Search, User, Pin, Layers, SplitSquareHorizontal,
   Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
 } from "lucide-react";
+import uorWordmark from "@/assets/uor-wordmark.png";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
@@ -322,7 +323,7 @@ export default function TabBar({
             className="flex items-center justify-center shrink-0 h-full transition-opacity duration-150 hover:opacity-70"
             style={{ width: 46 }}
           >
-            <Home className={`w-[16px] h-[16px] ${isLight ? "text-black/60" : "text-white/60"}`} />
+            <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/50" : "text-white/50"}`} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -438,13 +439,16 @@ export default function TabBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <button
-        onClick={onSpotlight}
-        className={`flex items-center justify-center w-[28px] h-[28px] rounded-md shrink-0 transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
-        title={`Search (${ringKey} K)`}
-      >
-        <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/40" : "text-white/40"}`} />
-      </button>
+      {/* Center wordmark */}
+      <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center pointer-events-none z-[1]">
+        <img
+          src={uorWordmark}
+          alt="Universal Object Reference"
+          className="h-[16px] w-auto object-contain select-none"
+          style={{ opacity: isLight ? 0.7 : 0.55, imageRendering: "auto" }}
+          draggable={false}
+        />
+      </div>
 
       {/* Tabs with drag support */}
       <div
