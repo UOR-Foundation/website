@@ -1,188 +1,129 @@
 
 
-# Crate Version Sync Strategy — Seamless UOR Engine Updates
+# Security Audit: Sovereign Boot Sequence with UOR Seal
 
-## Problem
+## Executive Summary
 
-When `uor-foundation` on crates.io bumps from v0.2.0 → v0.3.0+, the current system has three tightly coupled layers that all need manual updates:
-1. **WASM binary + shim** (`src/lib/wasm/uor-foundation/`) — the compiled crate
-2. **Bridge adapter** (`src/lib/wasm/uor-bridge.ts`) — 30+ hand-wired function wrappers
-3. **TypeScript type projection** (`src/types/uor-foundation/`) — 441 traits → TS interfaces
+The design is architecturally sound for its stated goals — client-side integrity monitoring and device transparency. However, there are **7 concrete security findings** and **4 hardening recommendations** that should be addressed before implementation. The most critical issue is the timestamp in the seal input, which undermines the continuous monitoring claim.
 
-Today, adding a single new export to the crate requires touching all three layers plus every consumer. The goal: **swap the WASM binary, run one command, done**.
+## Finding 1: Timestamp Breaks Continuous Seal Verification (CRITICAL)
 
-## Architecture
+The seal input includes `timestamp: new Date().toISOString()`. This means the seal derivation ID is unique to the boot moment. When the monitor re-verifies every 30s, it **cannot recompute the same seal** — the current time differs from the boot time.
+
+**Fix**: The monitor must store the original `sealInput` object (or its canonical N-Quads bytes) and re-hash that exact input. It should NOT rebuild the input document with a new timestamp. The timestamp is part of the sealed payload, not a moving target.
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  Upstream consumers (bus, oracle, KG, UI)                │
-│  import ONLY from: @/modules/engine                      │
-│  ↓ stable contract — never changes shape                │
-├─────────────────────────────────────────────────────────┤
-│  ENGINE CONTRACT  (src/modules/engine/contract.ts)       │
-│  One interface: UorEngineContract                        │
-│  Versioned: { version, ring, address, meta }             │
-│  All methods typed, all with TS fallback guarantee       │
-├─────────────────────────────────────────────────────────┤
-│  ENGINE ADAPTER   (src/modules/engine/adapter.ts)        │
-│  Implements contract by delegating to WASM or TS         │
-│  AUTO-GENERATED from .d.ts via sync script               │
-├─────────────────────────────────────────────────────────┤
-│  WASM BINARY      (src/lib/wasm/uor-foundation/)         │
-│  Drop-in replacement — swap files, run sync              │
-├─────────────────────────────────────────────────────────┤
-│  VERSION MANIFEST (src/modules/engine/crate-manifest.ts) │
-│  Expected version, export list hash, namespace count     │
-│  Boot-time validation: actual exports vs manifest        │
-└─────────────────────────────────────────────────────────┘
+Monitor approach:
+  WRONG:  rebuild sealInput with now() → hash → compare  (always different)
+  RIGHT:  store original canonicalBytes → re-hash → compare derivationId
+          + independently re-verify ring (256 elements)
+          + independently re-verify manifestHash
 ```
 
-## Implementation
+## Finding 2: sessionStorage Is Not Tamper-Proof (HIGH)
 
-### 1. Create `src/modules/engine/contract.ts` — The Stable API
+The plan stores the seal in `sessionStorage("uor:seal")`. Any browser extension, devtools console, or XSS payload can overwrite this value. If the monitor reads a tampered seal from sessionStorage and compares against a tampered seal, it passes silently.
 
-A single TypeScript interface that **never breaks**:
+**Fix**: Keep the seal in a **JavaScript closure** (module-scoped `let`), not in sessionStorage. sessionStorage can be used for display/caching only — never as the source of truth for verification. The closure is inaccessible to external scripts without a direct module import.
 
-```typescript
-export interface UorEngineContract {
-  // Identity
-  readonly version: string;           // crate version
-  readonly engine: "wasm" | "typescript";
+```text
+// Module-private. not in window, not in storage, not in DOM
+let _sealedBytes: Uint8Array | null = null;
+let _sealedId: string | null = null;
+```
 
-  // Ring R_8
-  neg(x: number): number;
-  bnot(x: number): number;
-  succ(x: number): number;
-  pred(x: number): number;
-  add(a: number, b: number): number;
-  sub(a: number, b: number): number;
-  mul(a: number, b: number): number;
-  xor(a: number, b: number): number;
-  and(a: number, b: number): number;
-  or(a: number, b: number): number;
+## Finding 3: Device Provenance Is Trivially Spoofable (MEDIUM)
 
-  // Verification
-  verifyCriticalIdentity(x: number): boolean;
-  verifyAllCriticalIdentity(): boolean;
+`window.location.hostname` can be overridden by a determined attacker (proxy, DNS hijack, or simply `Object.defineProperty(location, 'hostname', ...)`). The plan claims "tamper-proof" provenance — this is overstated for a client-side system.
 
-  // Analysis
-  bytePopcount(x: number): number;
-  byteBasis(x: number): number[];
-  classifyByte(x: number): string;
-  factorize(x: number): number[];
-  evaluateExpr(expr: string): number;
+**Recommendation**: Be honest in the UI language. Instead of "tamper-proof", use "self-reported device context." The provenance is a **best-effort signal** baked into the seal for auditability, not a hard security boundary. Document this limitation explicitly.
 
-  // Meta (version-extensible)
-  listNamespaces(): string[];
-  listEnums(): string[];
+The provenance should also include `navigator.userAgent`, `screen.width × height`, and `performance.now()` jitter as additional signals — these increase the cost of spoofing without claiming invulnerability.
 
-  // Extension point: new crate exports land here
-  // without breaking existing consumers
-  extensions: Record<string, (...args: any[]) => any>;
+## Finding 4: "128-bit Post-Quantum Security" Claim Needs Precision (MEDIUM)
+
+The claim is that SHA-256 provides 128-bit security against Grover's algorithm. This is correct for **preimage resistance** but the system's threat model is actually **collision resistance** (can an attacker produce a different input with the same seal?). SHA-256 collision resistance under Grover is ~2^85 (birthday bound halved), not 2^128.
+
+**However**: This is still computationally infeasible. The fix is purely in documentation — state "128-bit preimage resistance, ~85-bit collision resistance under quantum" to be precise. For true 128-bit post-quantum collision resistance, the system would need SHA-384 or SHA-512/256.
+
+**Recommendation**: Consider SHA-512/256 as a future option. It's a drop-in replacement (same output size) with better quantum collision margins, and is faster on 64-bit hardware.
+
+## Finding 5: Ring Verification Is Redundant After First Pass (LOW)
+
+Verifying `neg(bnot(x)) ≡ succ(x)` for all 256 elements every 30 seconds checks **compiled code** that cannot change at runtime (JavaScript/WASM functions are immutable once loaded). If the functions pass at boot, they will pass forever in that session.
+
+**Recommendation**: Run the full 256-element verification at boot only. The 30s monitor should verify a **random sample** (e.g., 8 random elements) plus a **canary value** (e.g., x=0 and x=255). This reduces monitor CPU cost from 256 to 10 operations while maintaining detection capability against hypothetical memory corruption.
+
+## Finding 6: No Protection Against WASM Binary Replacement (MEDIUM)
+
+The adapter loads WASM from `src/lib/wasm/uor-foundation/uor_wasm_shim`. If an attacker can serve a modified WASM binary (e.g., via CDN compromise or service worker injection), the ring operations could return correct results for the 256-element verification while behaving incorrectly for other inputs or leaking data.
+
+**Recommendation**: Compute a SHA-256 hash of the WASM binary bytes at load time and include it in the seal input as `wasmBinaryHash`. This creates a binding between the specific binary loaded and the seal — a different binary produces a different seal, detectable by any external verifier who knows the expected hash.
+
+```text
+sealInput = {
+  ...existing fields,
+  "uor:wasmBinaryHash": sha256(wasmBytes),  // NEW
 }
 ```
 
-All upstream code imports `getEngine()` which returns this contract. When the crate adds new exports, they appear in `extensions` first — zero breakage. Once stabilized, they get promoted to the contract interface in a minor version bump.
+## Finding 7: Custom Event Dispatch Is Observable by Attackers (LOW)
 
-### 2. Create `src/modules/engine/crate-manifest.ts` — Version Anchor
+The plan dispatches `"uor:seal-broken"` and `"uor:seal-heartbeat"` via `window.dispatchEvent()`. Any script on the page can listen to these events and suppress or forge them (e.g., catching `seal-broken` and preventing propagation).
 
-```typescript
-export const CRATE_MANIFEST = {
-  version: "0.2.0",
-  expectedExports: [
-    "neg", "bnot", "succ", "pred", "ring_add", ...
-  ],
-  exportHash: "sha256:<hash-of-sorted-export-names>",
-  namespaceCount: 33,
-  classCount: 441,
-  propertyCount: 892,
-} as const;
-```
+**Recommendation**: Use only the `SystemEventBus` (module-internal singleton) for security-critical events. CustomEvents on `window` are fine for UI updates but should not be the primary trust channel.
 
-At boot, the engine adapter compares `Object.keys(wasmModule)` against this manifest. Mismatches are logged as "crate version drift" — new exports are auto-discovered and wired into `extensions`, removed exports trigger a degraded status.
+## Hardening Recommendations
 
-### 3. Create `src/modules/engine/adapter.ts` — Auto-Wiring Layer
+### H1: Lean the Seal Input
 
-Replaces the current hand-coded `uor-bridge.ts`. Instead of 30+ individual wrapper functions, it:
+Remove `engineType` from the seal — it leaks implementation details and an attacker who forces a TS fallback could use this to predict seal values. Instead, include only the ring verification results (which implicitly reveal engine correctness).
 
-- Reads all exports from the loaded WASM module dynamically
-- Maps known exports to the contract interface
-- Routes unknown new exports to `extensions`
-- Falls back to the TS ring engine (`@/lib/uor-ring`) for any missing export
-- Logs which functions are WASM-accelerated vs TS-fallback
-
-### 4. Create `scripts/sync-crate.ts` — The Update Script
-
-A single command that automates the entire update process:
-
-```bash
-npx ts-node scripts/sync-crate.ts --wasm-dir src/lib/wasm/uor-foundation
-```
-
-What it does:
-1. Reads the new `uor_wasm_shim.d.ts` to extract all exported function signatures
-2. Reads the current `crate-manifest.ts` to detect what changed (added/removed/modified)
-3. Generates a diff report: "3 new exports, 0 removed, 1 signature changed"
-4. Auto-updates `crate-manifest.ts` with the new export list + hash
-5. Auto-generates `adapter.ts` wiring for any new exports (with TS fallback stubs)
-6. Flags any **removed** exports that existing code depends on (searches `src/` for usages)
-7. Updates the version string in the manifest
-
-The script is **non-destructive** — it writes to a staging file first and shows a diff before overwriting.
-
-### 5. Update `src/modules/engine/index.ts` — Single Entry Point
-
-The barrel export becomes the **only** import path:
-
-```typescript
-export { getEngine, initEngine } from "./adapter";
-export type { UorEngineContract } from "./contract";
-export { CRATE_MANIFEST } from "./crate-manifest";
-
-// Re-export convenience functions (delegate to getEngine())
-export const neg = (x: number) => getEngine().neg(x);
-// ... etc — backward compatible
-```
-
-Existing code that does `import { neg } from "@/modules/engine"` keeps working unchanged. New code can use `getEngine()` for the full contract.
-
-### 6. Type Projection Sync Strategy
-
-For `src/types/uor-foundation/`, create a **type version tag** at the top of `index.ts`:
-
-```typescript
-export const TYPE_PROJECTION_VERSION = "0.2.0";
-export const TYPE_PROJECTION_HASH = "sha256:<hash-of-all-type-files>";
-```
-
-The boot sequence compares this against `CRATE_MANIFEST.version`. If they diverge, the system logs a warning but **does not break** — types are structural in TypeScript, so additive changes (new interfaces) are non-breaking. Only removals or signature changes need attention.
-
-The sync script also generates a `type-drift-report.md` showing which Rust traits have no TypeScript counterpart and vice versa.
-
-## Update Workflow (When Crate Bumps)
-
+Minimal seal input:
 ```text
-1. Download new WASM artifacts (3 files) into src/lib/wasm/uor-foundation/
-2. Run: npx ts-node scripts/sync-crate.ts
-3. Script outputs:
-   ✓ crate-manifest.ts updated (v0.2.0 → v0.3.0)
-   ✓ 5 new exports auto-wired to extensions
-   ✓ 0 breaking changes detected
-   ✓ adapter.ts regenerated
-   ⚠ Type projection drift: 12 new traits not yet projected
-4. Boot the app — seal recomputes automatically (new version → new seal)
-5. Done. Zero upstream refactoring.
+{
+  "@type": "uor:SystemSeal",
+  "uor:ringTableHash": <sha256 of 256 boolean results>,
+  "uor:manifestHash": <sha256 of canonical bus manifest>,
+  "uor:deviceContext": <sha256 of provenance object>,
+  "uor:sessionNonce": <crypto.getRandomValues(16 bytes)>,
+  "uor:bootedAt": <ISO timestamp>
+}
 ```
 
-## Files Summary
+The `sessionNonce` prevents cross-session replay — even identical hardware + identical code produces a unique seal per session.
 
-| Action | File | Purpose |
-|---|---|---|
-| Create | `src/modules/engine/contract.ts` | Stable interface all consumers depend on |
-| Create | `src/modules/engine/crate-manifest.ts` | Version + export inventory for drift detection |
-| Create | `src/modules/engine/adapter.ts` | Dynamic WASM→Contract wiring with TS fallback |
-| Create | `scripts/sync-crate.ts` | One-command update automation |
-| Modify | `src/modules/engine/index.ts` | Re-export via contract + backward compat shims |
-| Modify | `src/lib/wasm/uor-bridge.ts` | Thin wrapper delegating to adapter (deprecate gradually) |
-| Modify | `src/types/uor-foundation/index.ts` | Add version tag + drift hash |
+### H2: Make the Monitor Interval Jittered
+
+A fixed 30s interval creates a predictable window. Use `25s + random(0-10s)` to prevent timing-based attacks that modify state between checks.
+
+### H3: Freeze Critical Objects
+
+After boot, `Object.freeze()` the seal object and the engine contract to prevent runtime property mutation:
+
+```typescript
+Object.freeze(seal);
+Object.freeze(engine);
+```
+
+### H4: Add Subresource Integrity for WASM
+
+If the WASM binary is loaded via fetch, add SRI hash verification. If loaded via static import, ensure the build pipeline includes integrity checks.
+
+## Revised Files Summary
+
+The file list in the plan is correct. No files should be added or removed. The changes above affect the **implementation** within those files, not the file structure.
+
+| File | Security Change |
+|---|---|
+| `sovereign-boot.ts` | Store seal in closure, not sessionStorage; add sessionNonce; add wasmBinaryHash |
+| `seal-monitor.ts` | Re-hash stored bytes (not rebuild); jitter interval; use SystemEventBus only |
+| `types.ts` | Add `sessionNonce` to UorSeal; rename provenance to "self-reported" |
+| `EngineStatusIndicator.tsx` | Use "self-reported context" language; freeze displayed seal |
+
+## Verdict
+
+The architecture is **sound**. The `singleProofHash()` pipeline (URDNA2015 → SHA-256 → derivation ID) is the correct primitive and is well-implemented in `uor-canonical.ts`. The ring verification is mathematically complete. The device transparency concept is valuable.
+
+The 7 findings above are implementation-level fixes — none require architectural changes. The most important are: (1) fix the timestamp/re-verification logic, (2) keep the seal in a closure, and (3) add a session nonce to prevent replay. With these applied, the system achieves its stated security properties within the constraints of a client-side runtime.
 
