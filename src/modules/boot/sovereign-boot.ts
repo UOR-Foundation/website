@@ -389,6 +389,9 @@ export async function sovereignBoot(
     onProgress?.({ phase: "monitor-start", progress: 0.9, detail: "Starting monitor" });
     _monitorCleanup = startSealMonitor(seal, receipt);
 
+    // Phase 4.5: Schedule idle-time LUT pre-warming
+    scheduleLutWarmup();
+
     // Expose for dev debugging only
     if (import.meta.env.DEV) {
       (window as any).__uorSeal = seal;
