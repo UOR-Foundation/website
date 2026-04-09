@@ -16,6 +16,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BootProgress, BootReceipt } from "@/modules/boot/types";
 import { sovereignBoot } from "@/modules/boot/sovereign-boot";
+import { isLocal } from "@/lib/runtime";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -120,8 +121,13 @@ function buildBootScript(receipt: BootReceipt): LogLine[] {
   lines.push({ tag: "POST", text: dotPad(`Detecting GPU`) + ` ${gpu}`, level: "ok", badge: "  OK  " });
   lines.push({ tag: "POST", text: dotPad(`Display resolution`) + ` ${hw.screenWidth}×${hw.screenHeight} @${window.devicePixelRatio}x`, level: "ok", badge: "  OK  " });
   lines.push({ tag: "POST", text: dotPad(`Input method`) + ` ${hw.touchCapable ? "Touch + Pointer" : "Pointer"}`, level: "ok", badge: "  OK  " });
-  lines.push({ tag: "POST", text: dotPad(`Execution context`) + ` ${receipt.provenance.context}`, level: "ok", badge: "  OK  " });
-  lines.push({ tag: "POST", text: dotPad(`Origin`) + ` ${receipt.provenance.hostname}`, level: "ok", badge: "  OK  " });
+  const tauriLocal = isLocal();
+  const contextLabel = tauriLocal ? "Local (Tauri)" : receipt.provenance.context;
+  const originLabel = tauriLocal ? `Local · ${receipt.provenance.hostname}` : receipt.provenance.hostname;
+  lines.push({ tag: "POST", text: dotPad(`Execution context`) + ` ${contextLabel}`, level: "ok", badge: "  OK  " });
+  lines.push({ tag: "POST", text: dotPad(`Origin`) + ` ${originLabel}`, level: "ok", badge: "  OK  " });
+  lines.push({ tag: "POST", text: dotPad(`Storage backend`) + ` ${tauriLocal ? "SQLite (native)" : "IndexedDB (browser)"}`, level: "ok", badge: "  OK  " });
+  lines.push({ tag: "POST", text: dotPad(`Runtime`) + ` ${tauriLocal ? "Tauri 2.0 · Native" : "Browser · PWA"}`, level: "ok", badge: "  OK  " });
   lines.push({ tag: "", text: "", level: "info" });
 
   // --- BIOS: Capability Checks ---

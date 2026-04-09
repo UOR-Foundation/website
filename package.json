@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "build:tauri": "vite build --mode tauri"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.3",
