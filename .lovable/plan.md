@@ -1,80 +1,80 @@
 
 
-## Plan: Interactive Knowledge Graph Visualizer
+## Plan: Fix Build Error + Make SharedArrayBuffer Reliable Everywhere
 
-### Evaluation of SpellWeb and Alternatives
+### Two Issues to Fix
 
-**SpellWeb** uses a Canvas/SVG force-directed layout with domain filtering and node-type legends. It's visually rich but appears to be a closed-source product — not something we can embed or fork. The UX patterns (layers, node types, domain colors, edge labels) are excellent reference points though.
+**Issue 1 — Build Error**: `@react-sigma/core` v4 doesn't export `./lib/style.css`. The correct exported CSS path is `./lib/react-sigma.min.css`.
 
-**Recommendation: Sigma.js + Graphology**
+**Issue 2 — SharedArrayBuffer never activates on production**: The COI service worker (`coi-serviceworker.js`) registers at scope `/`, but then VitePWA's auto-registered SW (`sw.js`) also registers at scope `/` and **replaces** the COI worker. Only one service worker can control a given scope. Once the PWA SW takes over, navigation responses no longer get COOP/COEP headers injected, so `crossOriginIsolated` stays `false` and `SharedArrayBuffer` is unavailable.
 
-After evaluating the major open-source options:
+The `_headers` file uses Netlify format, but Lovable hosting doesn't process it — so the static header approach doesn't work either.
 
-| Library | Rendering | Nodes at 60fps | React | Open Source | Mobile | Edge/Local |
-|---------|-----------|----------------|-------|-------------|--------|------------|
-| **Sigma.js + Graphology** | WebGL | 50,000+ | `@react-sigma/core` | MIT, 12k stars | Yes | Yes |
-| Cytoscape.js | Canvas/SVG | ~5,000 | Wrapper needed | MIT | Partial | Yes |
-| react-force-graph | WebGL/3D | ~10,000 | Native | MIT | Poor (3D) | Yes |
-| Cosmograph | WebGPU | 1M+ | React lib | Freemium | Yes | Partial |
-| D3-force (current) | SVG | ~500 | Manual | BSD | Poor | Yes |
+### Solution: Unified Service Worker via `injectManifest`
 
-**Sigma.js wins** because:
-- **WebGL rendering** — handles thousands of nodes at 60fps on mobile
-- **Graphology** data model — isomorphic to our KG triple store (nodes + edges with attributes)
-- **`@react-sigma/core`** — idiomatic React hooks, TypeScript-native
-- **MIT license** — fully open source, 12 years mature
-- **Zero server dependency** — runs entirely client-side, edge/local/cloud portable
-- **Touch support** — pinch-zoom, pan, tap built in
-- **Compatible with our bus** — we query `bus.call("graph/query")` and feed results directly into a Graphology instance
-
-### What Gets Built
-
-A new `SovereignGraphExplorer` component accessible from the desktop shell, providing an immersive, full-screen interactive visualization of the user's knowledge graph.
-
-**Features:**
-1. **WebGL force-directed layout** via Sigma.js — nodes are KG entities (datums, derivations, ceremonies, connections), edges are predicates
-2. **Node type filtering** — toggle visibility by type (Datum, Derivation, Certificate, Person, Ceremony) with color-coded legend
-3. **Search** — find nodes by label, type, or UOR address with instant camera focus
-4. **Node detail panel** — click a node to see its full attributes, connected edges, and UOR address
-5. **Edge labels on hover** — show predicate names (defines, proves, derives, connects)
-6. **Sovereign atmosphere** — dark theme matching the OS shell, emerald/gold accents for ceremony nodes, moon phase glyphs on the founding blade node
-7. **Mobile-optimized** — responsive layout, touch gestures, bottom sheet for node details on small screens
-8. **Live data** — pulls from `bus.call("graph/query")` and `bus.call("graph/stats")`, optionally subscribes to realtime changes
-
-### Architecture
+Merge COI header injection and PWA caching into **one** service worker. Switch VitePWA from `generateSW` to `injectManifest` mode with a custom SW source.
 
 ```text
-┌─────────────────────────────────────────┐
-│         SovereignGraphExplorer          │
-│  ┌───────────┐  ┌────────────────────┐  │
-│  │ FilterBar │  │   SigmaContainer   │  │
-│  │ (types,   │  │   (WebGL canvas)   │  │
-│  │  search,  │  │                    │  │
-│  │  layers)  │  │  Graphology ←──────│──│── bus.call("graph/query")
-│  └───────────┘  └────────────────────┘  │
-│  ┌──────────────────────────────────┐   │
-│  │  NodeDetailPanel (slide-over)    │   │
-│  └──────────────────────────────────┘   │
-└─────────────────────────────────────────┘
+Before:  coi-serviceworker.js (COI) + sw.js (PWA) → conflict, PWA wins, COI lost
+After:   sw.ts (unified) = Workbox precaching + COI header injection → both work
 ```
 
 ### Files
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `package.json` | Add `sigma@^3.0.2`, `graphology@^0.25`, `graphology-layout-forceatlas2@^0.10`, `@react-sigma/core@^4` |
-| `src/modules/knowledge-graph/components/SovereignGraphExplorer.tsx` | New — main full-screen graph explorer component with Sigma canvas, filter sidebar, search, node detail panel |
-| `src/modules/knowledge-graph/components/GraphFilterBar.tsx` | New — node type toggles, layer switches, search input |
-| `src/modules/knowledge-graph/components/NodeDetailSheet.tsx` | New — slide-over panel showing node attributes, edges, UOR address; bottom sheet on mobile |
-| `src/modules/knowledge-graph/hooks/useGraphData.ts` | New — hook that fetches graph data via bus, transforms to Graphology instance, handles refresh |
-| `src/modules/knowledge-graph/pages/KnowledgeGraphPage.tsx` | Modified — add a "Visual Explorer" button/tab that mounts SovereignGraphExplorer |
-| `src/modules/desktop/TabBar.tsx` | Modified — add graph explorer as a launchable app from the desktop |
+| `src/modules/knowledge-graph/components/SovereignGraphExplorer.tsx` | Fix CSS import: `@react-sigma/core/lib/react-sigma.min.css` |
+| `src/custom-sw.ts` | **New** — custom service worker source that: (1) imports Workbox precaching via `self.__WB_MANIFEST`, (2) intercepts navigation fetch events and injects COOP/COEP headers on every response, (3) handles both network and cache-served navigations |
+| `vite.config.ts` | Switch VitePWA to `injectManifest` mode pointing to `src/custom-sw.ts`; move runtime caching config into the custom SW |
+| `src/main.tsx` | **Remove** the entire `ensureCrossOriginIsolation()` function and COI service worker registration logic. The unified SW handles everything. Keep the iframe detection for logging only. Simplify to just render the app immediately. |
+| `public/coi-serviceworker.js` | **Delete** — no longer needed |
 
-### Key Design Decisions
+### Custom Service Worker Logic (`src/custom-sw.ts`)
 
-- **Graphology as the data layer** — it's a proper graph data structure library that Sigma reads from. We populate it from `bus.call("graph/query")` results, mapping KG nodes to Graphology nodes and KG edges to Graphology edges with full attribute preservation.
-- **ForceAtlas2 layout** — runs as a Web Worker via `graphology-layout-forceatlas2/worker`, keeping the main thread free for 60fps rendering. Falls back to synchronous on environments without Worker support.
-- **Node sizing by degree** — nodes with more connections appear larger, making hubs visually prominent.
-- **Ceremony nodes get special treatment** — the founding blade node gets the sovereign ring glow (emerald/gold conic gradient) and displays the moon phase glyph.
-- **Mobile: bottom sheet instead of sidebar** — on screens < 768px, the filter bar collapses to a floating action button, and node details appear in a draggable bottom sheet.
+```typescript
+// 1. Workbox precaching (VitePWA injects manifest here)
+import { precacheAndRoute } from 'workbox-precaching';
+precacheAndRoute(self.__WB_MANIFEST);
+
+// 2. COI header injection for ALL navigation responses
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode !== 'navigate') return;
+  event.respondWith(
+    fetch(event.request).then(response => {
+      if (response.headers.get('Cross-Origin-Opener-Policy')) return response;
+      const headers = new Headers(response.headers);
+      headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+      headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    }).catch(() => {
+      // Offline: serve precached index.html with COI headers
+      const cached = caches.match('/index.html');
+      // ...add headers to cached response too
+    })
+  );
+});
+```
+
+This ensures COOP/COEP headers are present on **every** navigation response — whether from network or cache — making SharedArrayBuffer work reliably on every device, every browser, every hosting platform.
+
+### Why This Always Works
+
+- **No SW scope conflict** — single SW at `/` handles both concerns
+- **Works offline** — precached index.html also gets COI headers injected
+- **Platform-agnostic** — doesn't depend on hosting platform supporting `_headers` files
+- **First-load**: On very first page load (before SW installs), SAB won't be available. After SW installs + page reload, it's permanently active. The existing `main.tsx` reload logic ensures this happens automatically on first visit.
+- **Mobile/desktop/Apple/PC** — all modern browsers support both `credentialless` COEP and service workers
+
+### main.tsx Simplification
+
+The boot sequence becomes:
+1. Register the unified SW (VitePWA handles this automatically via `registerType: "autoUpdate"`)
+2. If `!crossOriginIsolated` and SW just installed → reload once (same logic, but triggered by the unified SW)
+3. Render the app
+
+Most of the 70-line `ensureCrossOriginIsolation()` function gets replaced by ~10 lines checking if a reload is needed after the SW activates.
 
