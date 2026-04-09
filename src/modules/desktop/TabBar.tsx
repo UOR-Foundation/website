@@ -3,7 +3,8 @@
  * Uses pointer events for drag reorder; right-click context menu for pin/merge.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
@@ -509,7 +510,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile + connectivity + fullscreen */}
+      {/* Right: time → connectivity → engine → fullscreen → profile */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -517,21 +518,10 @@ export default function TabBar({
         >
           {formatted}&ensp;{clock}
         </span>
-        <button
-          onClick={onProfileOpen}
-          className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150 overflow-hidden
-            ${isLight
-              ? "bg-black/[0.08] hover:bg-black/[0.12] border border-black/[0.08]"
-              : "bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08]"
-            }
-          `}
-          title="Profile"
-        >
-          <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
-        </button>
         <TabBarConnectivity isLight={isLight} />
         <EngineStatusIndicator isLight={isLight} />
         <FullscreenToggle isLight={isLight} />
+        <SovereignProfileButton isLight={isLight} onClick={onProfileOpen} />
       </div>
     </div>
   );

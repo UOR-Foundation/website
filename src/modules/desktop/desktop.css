@@ -135,6 +135,61 @@
 
 /* macOS: thin overlay scrollbars (browser default) — no override needed */
 
+/* ── Sovereign Ring Glow (profile icon when authenticated) ── */
+@keyframes sovereign-ring-spin {
+  from { --sovereign-angle: 0deg; }
+  to   { --sovereign-angle: 360deg; }
+}
+
+@property --sovereign-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.sovereign-ring {
+  position: relative;
+  border-radius: 9999px;
+}
+
+.sovereign-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--sovereign-angle),
+    hsl(142, 76%, 36%),
+    hsl(45, 93%, 47%),
+    hsl(142, 76%, 36%)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: sovereign-ring-spin 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Subtle tab-bar border accent when authenticated */
+.tabbar-sovereign-border {
+  position: relative;
+}
+.tabbar-sovereign-border::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    hsl(142, 76%, 36%, 0.4) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
 /* ── Material ripple for Android mobile nav ── */
 .mobile-ripple {
   position: absolute;
