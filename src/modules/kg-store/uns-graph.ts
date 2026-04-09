@@ -69,13 +69,13 @@ export class UnsGraph {
   async initOxigraph(): Promise<boolean> {
     if (this.oxReady) return true;
     try {
-      await oxigraphStore.init();
+      await grafeoStore.init();
       this.oxReady = true;
 
       // Replay any quads already loaded into array store
       if (this.quads.length > 0) {
         for (const q of this.quads) {
-          await oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph);
+          await grafeoStore.addQuad(q.subject, q.predicate, q.object, q.graph);
         }
       }
 
@@ -90,7 +90,7 @@ export class UnsGraph {
     this.quads.push(q);
     if (this.oxReady) {
       // Fire-and-forget async add to shared store
-      oxigraphStore.addQuad(q.subject, q.predicate, q.object, q.graph).catch(() => {});
+      grafeoStore.addQuad(q.subject, q.predicate, q.object, q.graph).catch(() => {});
     }
   }
 
