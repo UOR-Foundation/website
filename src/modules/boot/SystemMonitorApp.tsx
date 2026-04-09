@@ -895,26 +895,26 @@ export default function SystemMonitorApp() {
         {/* System Availability */}
         <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
-            {/* Availability ring */}
+            {/* Availability ring — uses composite health score */}
             <div className="relative w-20 h-20 shrink-0">
               <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
                 <circle cx="40" cy="40" r="34" fill="none" strokeWidth="5" className="stroke-muted/20" />
                 <circle
                   cx="40" cy="40" r="34"
                   fill="none" strokeWidth="5"
-                  stroke={config.color}
+                  stroke={unifiedColor}
                   strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * 0.001}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - compositeHealth.score / 100)}`}
                   strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 6px ${config.color}50)` }}
+                  style={{ filter: `drop-shadow(0 0 6px ${unifiedColor}50)` }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-base font-bold font-mono" style={{ color: config.color }}>100%</span>
+                <span className="text-base font-bold font-mono" style={{ color: unifiedColor }}>{compositeHealth.score}%</span>
               </div>
             </div>
             <div className="space-y-2.5 flex-1 pt-1">
-              <GrafanaRow label="Status" color={config.color}>{config.label}</GrafanaRow>
+              <GrafanaRow label="Health" color={unifiedColor}>{compositeHealth.label}</GrafanaRow>
               <GrafanaRow label="Uptime"><span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span></GrafanaRow>
               <GrafanaRow label="Boot"><span className="font-mono">{receipt.bootTimeMs}ms</span></GrafanaRow>
               <GrafanaRow label="Engine"><span className="font-mono">{receipt.engineType === "wasm" ? "WASM" : "TS"} {getEngine().version}</span></GrafanaRow>
