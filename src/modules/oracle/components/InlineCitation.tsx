@@ -6,6 +6,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import type { SourceMeta } from "../lib/citation-parser";
+import { getSignalGrade, GRADE_CONFIG } from "../lib/citation-parser";
 
 const SUPERSCRIPT = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
 
@@ -51,6 +52,8 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
 
   const cfg = TYPE_CONFIG[source.type] || TYPE_CONFIG.web;
   const displayTitle = source.title || source.domain;
+  const grade = getSignalGrade(source.score);
+  const gradeCfg = GRADE_CONFIG[grade];
 
   return (
     <span
@@ -99,7 +102,7 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
             pointerEvents: "auto",
           }}
         >
-          {/* Type badge */}
+          {/* Type badge + Grade */}
           <span className="flex items-center gap-2 mb-1.5">
             <span
               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${cfg.color}`}
@@ -107,6 +110,13 @@ const InlineCitation: React.FC<InlineCitationProps> = ({ index, source }) => {
             >
               <span style={{ fontSize: 11 }}>{cfg.icon}</span>
               {cfg.label}
+            </span>
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded-full border ${gradeCfg.color}`}
+              style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em" }}
+              title={gradeCfg.description}
+            >
+              {gradeCfg.label}
             </span>
           </span>
 
