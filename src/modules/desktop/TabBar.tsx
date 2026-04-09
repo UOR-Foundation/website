@@ -475,7 +475,7 @@ export default function TabBar({
 
       {/* Tabs with drag support */}
       <div
-        className="flex items-end flex-1 min-w-0 overflow-x-auto gap-0 pr-1"
+        className="flex items-end flex-1 min-w-0 overflow-x-auto gap-0 pr-1 scrollbar-hide"
         style={{ height: TAB_BAR_H }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
