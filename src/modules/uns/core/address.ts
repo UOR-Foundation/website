@@ -16,8 +16,8 @@
  * @see RFC 8200. Internet Protocol, Version 6 (IPv6) Specification
  */
 
-import { sha256 as nobleSha256 } from "@noble/hashes/sha2";
-import { bytesToHex as nobleHex } from "@noble/hashes/utils";
+import { sha256 as nobleSha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex as nobleHex } from "@noble/hashes/utils.js";
 
 // ── UOR IPv6 Prefix ─────────────────────────────────────────────────────────
 

@@ -14,8 +14,8 @@
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
 import { sha256 } from "multiformats/hashes/sha2";
-import { sha256 as nobleSha256 } from "@noble/hashes/sha2";
-import { bytesToHex } from "@noble/hashes/utils";
+import { sha256 as nobleSha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 
 // ── dag-json codec code ─────────────────────────────────────────────────────
 const DAG_JSON_CODE = 0x0129;
