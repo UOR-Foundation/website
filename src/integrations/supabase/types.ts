@@ -708,6 +708,45 @@ export type Database = {
         }
         Relationships: []
       }
+      bridge_connections: {
+        Row: {
+          config: Json | null
+          connected_at: string | null
+          created_at: string | null
+          external_user_id: string | null
+          id: string
+          last_synced_at: string | null
+          matrix_bridge_room_id: string | null
+          platform: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string | null
+          external_user_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          matrix_bridge_room_id?: string | null
+          platform: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string | null
+          external_user_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          matrix_bridge_room_id?: string | null
+          platform?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           all_day: boolean
@@ -810,6 +849,36 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          canonical_hash: string
+          created_at: string | null
+          display_name: string
+          id: string
+          merged_identities: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          canonical_hash: string
+          created_at?: string | null
+          display_name: string
+          id?: string
+          merged_identities?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          canonical_hash?: string
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          merged_identities?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_settings: {
         Row: {
           archived: boolean | null
@@ -903,6 +972,7 @@ export type Database = {
           self_destruct_seconds: number | null
           sender_id: string
           session_id: string
+          source_platform: string | null
         }
         Insert: {
           ciphertext: string
@@ -922,6 +992,7 @@ export type Database = {
           self_destruct_seconds?: number | null
           sender_id: string
           session_id: string
+          source_platform?: string | null
         }
         Update: {
           ciphertext?: string
@@ -941,6 +1012,7 @@ export type Database = {
           self_destruct_seconds?: number | null
           sender_id?: string
           session_id?: string
+          source_platform?: string | null
         }
         Relationships: [
           {
@@ -2113,6 +2185,56 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "conduit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_identities: {
+        Row: {
+          avatar_url: string | null
+          contact_id: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          last_synced_at: string | null
+          platform: string
+          platform_handle: string | null
+          platform_user_id: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          last_synced_at?: string | null
+          platform: string
+          platform_handle?: string | null
+          platform_user_id: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          avatar_url?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          last_synced_at?: string | null
+          platform?: string
+          platform_handle?: string | null
+          platform_user_id?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_identities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
