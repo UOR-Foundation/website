@@ -91,6 +91,11 @@ function DesktopShellInner() {
 
   if (isMobile) return <MobileShell />;
 
+  // Boot sequence — runs from scratch every time the page is opened
+  if (!booted) {
+    return <BootSequence onComplete={() => setBooted(true)} />;
+  }
+
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
 
   return (
