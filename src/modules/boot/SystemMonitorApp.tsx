@@ -33,7 +33,9 @@ import {
   IconClipboardCheck,
   IconHeartbeat,
   IconClock,
+  IconChevronRight,
 } from "@tabler/icons-react";
+import { DetailViewRouter, type DetailViewId } from "./SystemMonitorDetailViews";
 
 // ── Status config ──────────────────────────────────────────────
 
