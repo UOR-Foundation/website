@@ -1,11 +1,11 @@
 /**
  * DesktopShell — UOR OS shell.
  * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
- * Shows a real boot sequence on every fresh page load.
+ * Non-blocking boot: desktop renders immediately with boot overlay that fades away.
  * Includes global dictation (Wispr Flow-style voice input anywhere).
  */
 
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect, useRef } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
 import QuickCapture from "@/modules/oracle/components/QuickCapture";
 import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
@@ -102,11 +102,6 @@ function DesktopShellInner() {
 
   if (isMobile) return <MobileShell />;
 
-  // Boot sequence — runs from scratch every time the page is opened
-  if (!booted) {
-    return <BootSequence onComplete={() => setBooted(true)} />;
-  }
-
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
 
   return (
@@ -195,6 +190,7 @@ function DesktopShellInner() {
               onResize={wm.resizeWindow}
               onSnap={wm.snapWindow}
               onSnapPreview={setSnapPreview}
+              onCommit={wm.commitWindowPosition}
             />
           ))}
 
@@ -222,6 +218,9 @@ function DesktopShellInner() {
           onStop={dictationActions.stop}
           onCancel={dictationActions.cancel}
         />
+
+        {/* Boot overlay — renders on top, fades away when done. Desktop is interactive underneath. */}
+        {!booted && <BootSequence onComplete={() => setBooted(true)} />}
       </div>
     </DesktopContextMenu>
   );

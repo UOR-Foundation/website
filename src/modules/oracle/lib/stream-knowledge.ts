@@ -2,6 +2,7 @@
  * stream-knowledge — SSE client for the streaming uor-knowledge edge function.
  *
  * Emits wiki metadata instantly, then AI tokens as they arrive.
+ * Uses efficient line parsing to avoid O(n²) string concatenation.
  */
 
 import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
@@ -43,13 +44,53 @@ export interface WikiMeta {
   pageUrl: string | null;
 }
 
-/** Provenance metadata emitted alongside wiki data */
 export interface ProvenanceMeta {
   model?: string;
   personalized?: boolean;
   personalizedTopics?: string[];
   queryDomain?: string;
   domainSubcategory?: string;
+}
+
+// Shared SSE line parser
+function* parseSSELines(chunk: string, carry: string): Generator<string, string> {
+  let buf = carry + chunk;
+  let start = 0;
+  let idx: number;
+  while ((idx = buf.indexOf("\n", start)) !== -1) {
+    let line = buf.slice(start, idx);
+    if (line.endsWith("\r")) line = line.slice(0, -1);
+    start = idx + 1;
+    yield line;
+  }
+  return buf.slice(start);
+}
+
+function handleParsedEvent(
+  parsed: any,
+  ttft: ReturnType<typeof createTTFTMeasure>,
+  onWiki: (wiki: WikiMeta | null, sources: Array<string | { url: string; title?: string; type?: string }>, provenance?: ProvenanceMeta) => void,
+  onMedia: ((media: MediaData) => void) | undefined,
+  onDelta: (text: string) => void,
+) {
+  if (parsed.type === "wiki") {
+    onWiki(
+      parsed.wiki as WikiMeta | null,
+      parsed.sources || [],
+      {
+        model: parsed.model,
+        personalized: parsed.personalized,
+        personalizedTopics: parsed.personalizedTopics,
+        queryDomain: parsed.queryDomain,
+        domainSubcategory: parsed.domainSubcategory,
+      }
+    );
+  } else if (parsed.type === "media" && parsed.media) {
+    onMedia?.(parsed.media as MediaData);
+  } else if (parsed.type === "delta" && parsed.content) {
+    ttft.markFirstToken();
+    onDelta(parsed.content);
+  }
 }
 
 export async function streamKnowledge({
@@ -64,21 +105,17 @@ export async function streamKnowledge({
   signal,
 }: {
   keyword: string;
-  /** Recent search keywords for contextual personalization */
   context?: string[];
-  /** Rendering lens ID (e.g. "encyclopedia", "magazine", "expert") */
   lens?: string;
   onWiki: (
     wiki: WikiMeta | null,
     sources: Array<string | { url: string; title?: string; type?: string }>,
     provenance?: ProvenanceMeta
   ) => void;
-  /** Called when multimedia data arrives (images, videos, audio from Wikimedia Commons) */
   onMedia?: (media: MediaData) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
-  /** Optional AbortSignal for cancelling the stream (live mode / cancel-on-resume) */
   signal?: AbortSignal;
 }) {
   const ttft = createTTFTMeasure();
@@ -97,14 +134,13 @@ export async function streamKnowledge({
       latencyTier,
     }),
     signal,
+    keepalive: true,
   });
 
   if (!resp.ok || !resp.body) {
-    // Non-streaming error responses (JSON)
     if (resp.status === 429) { onError("Rate limited. Please try again shortly."); return; }
     if (resp.status === 402) { onError("Credits exhausted. Please add funds."); return; }
 
-    // Could be a non-streaming JSON fallback (wiki-only, AI failed)
     const contentType = resp.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
       try {
@@ -135,84 +171,48 @@ export async function streamKnowledge({
     } catch { onError("Invalid response."); return; }
   }
 
-  // SSE streaming
+  // SSE streaming with efficient line parser
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  let carry = "";
   let streamDone = false;
 
   while (!streamDone) {
     const { done, value } = await reader.read();
     if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+    const chunk = decoder.decode(value, { stream: true });
 
-    let nlIdx: number;
-    while ((nlIdx = buffer.indexOf("\n")) !== -1) {
-      let line = buffer.slice(0, nlIdx);
-      buffer = buffer.slice(nlIdx + 1);
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (line.startsWith(":") || line.trim() === "") continue;
-      if (!line.startsWith("data: ")) continue;
-
+    const gen = parseSSELines(chunk, carry);
+    let result = gen.next();
+    while (!result.done) {
+      const line = result.value as string;
+      if (line.startsWith(":") || line.trim() === "" || !line.startsWith("data: ")) {
+        result = gen.next();
+        continue;
+      }
       const jsonStr = line.slice(6).trim();
       if (jsonStr === "[DONE]") { streamDone = true; break; }
 
       try {
         const parsed = JSON.parse(jsonStr);
-        if (parsed.type === "wiki") {
-          onWiki(
-            parsed.wiki as WikiMeta | null,
-            parsed.sources || [],
-            {
-              model: parsed.model,
-              personalized: parsed.personalized,
-              personalizedTopics: parsed.personalizedTopics,
-              queryDomain: parsed.queryDomain,
-              domainSubcategory: parsed.domainSubcategory,
-            }
-          );
-        } else if (parsed.type === "media" && parsed.media) {
-          onMedia?.(parsed.media as MediaData);
-        } else if (parsed.type === "delta" && parsed.content) {
-          ttft.markFirstToken();
-          onDelta(parsed.content);
-        }
+        handleParsedEvent(parsed, ttft, onWiki, onMedia, onDelta);
       } catch {
-        // Incomplete JSON — put back
-        buffer = line + "\n" + buffer;
-        break;
+        // Incomplete JSON — will resolve in next chunk
       }
+      result = gen.next();
     }
+    if (result.done) carry = result.value as string;
   }
 
   // Flush remaining
-  if (buffer.trim()) {
-    for (let raw of buffer.split("\n")) {
-      if (!raw) continue;
-      if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-      if (!raw.startsWith("data: ")) continue;
-      const jsonStr = raw.slice(6).trim();
+  if (carry.trim()) {
+    for (const raw of carry.split("\n")) {
+      if (!raw || !raw.startsWith("data: ")) continue;
+      const jsonStr = raw.replace(/\r$/, "").slice(6).trim();
       if (jsonStr === "[DONE]") continue;
       try {
         const parsed = JSON.parse(jsonStr);
-        if (parsed.type === "wiki") {
-          onWiki(
-            parsed.wiki as WikiMeta | null,
-            parsed.sources || [],
-            {
-              model: parsed.model,
-              personalized: parsed.personalized,
-              personalizedTopics: parsed.personalizedTopics,
-              queryDomain: parsed.queryDomain,
-              domainSubcategory: parsed.domainSubcategory,
-            }
-          );
-        } else if (parsed.type === "media" && parsed.media) {
-          onMedia?.(parsed.media as MediaData);
-        } else if (parsed.type === "delta" && parsed.content) {
-          ttft.markFirstToken();
-          onDelta(parsed.content);
-        }
+        handleParsedEvent(parsed, ttft, onWiki, onMedia, onDelta);
       } catch { /* ignore */ }
     }
   }
