@@ -1,9 +1,10 @@
 /**
- * QuickLookModal — macOS-style Quick Look preview for context items.
+ * QuickLookModal — macOS-style Quick Look preview with arrow key navigation
+ * and UOR identity section.
  */
 
-import { useEffect, useCallback } from "react";
-import { X, ExternalLink } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { ExternalLink, ChevronLeft, ChevronRight, Fingerprint, ShieldCheck, Copy, Check } from "lucide-react";
 import { getFileIcon } from "../lib/file-icons";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import {
@@ -13,10 +14,13 @@ import {
   DialogTitle,
 } from "@/modules/core/ui/dialog";
 import ReactMarkdown from "react-markdown";
+import { computeFileUorAddress, truncateAddress } from "../lib/file-identity";
 
 interface Props {
-  item: ContextItem;
+  items: ContextItem[];
+  currentIndex: number;
   onClose: () => void;
+  onNavigate: (index: number) => void;
 }
 
 function getLanguageHint(filename: string): string {
@@ -31,6 +35,51 @@ function getLanguageHint(filename: string): string {
 
 function isImagePlaceholder(text: string): boolean {
   return text.startsWith("[Image:") || text.startsWith("[image:");
+}
+
+function UorIdentitySection({ item }: { item: ContextItem }) {
+  const [address, setAddress] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (item.text) {
+      computeFileUorAddress(item.text).then(setAddress).catch(() => {});
+    }
+  }, [item.text]);
+
+  if (!address) return null;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="border-t border-border/20 mt-4 pt-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Fingerprint className="w-3.5 h-3.5 text-primary/60" />
+        <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">Content Identity</span>
+        <ShieldCheck className="w-3 h-3 text-green-500/60" />
+        <span className="text-[10px] text-green-500/60">Verified</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <code className="text-[11px] font-mono text-muted-foreground/50 bg-muted/30 px-2 py-1 rounded break-all flex-1">
+          {truncateAddress(address, 16)}…{address.slice(-8)}
+        </code>
+        <button
+          onClick={handleCopy}
+          className="p-1 rounded hover:bg-muted/50 text-muted-foreground/40 hover:text-foreground transition-colors flex-shrink-0"
+          title="Copy full address"
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+      <p className="text-[10px] text-muted-foreground/30 mt-1.5 italic">
+        This address is derived from the content itself — same content produces the same address, everywhere.
+      </p>
+    </div>
+  );
 }
 
 function PreviewContent({ item }: { item: ContextItem }) {
@@ -106,8 +155,30 @@ function PreviewContent({ item }: { item: ContextItem }) {
   );
 }
 
-export default function QuickLookModal({ item, onClose }: Props) {
+export default function QuickLookModal({ items, currentIndex, onClose, onNavigate }: Props) {
+  const item = items[currentIndex];
   const { icon: Icon, color, label } = getFileIcon(item.filename, item.source);
+  const total = items.length;
+  const pos = currentIndex + 1;
+
+  const goPrev = useCallback(() => {
+    if (currentIndex > 0) onNavigate(currentIndex - 1);
+  }, [currentIndex, onNavigate]);
+
+  const goNext = useCallback(() => {
+    if (currentIndex < total - 1) onNavigate(currentIndex + 1);
+  }, [currentIndex, total, onNavigate]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); goPrev(); }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); goNext(); }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [goPrev, goNext]);
+
+  if (!item) return null;
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -123,6 +194,30 @@ export default function QuickLookModal({ item, onClose }: Props) {
           <div className="flex-1 min-w-0">
             <DialogTitle className="text-sm font-medium truncate">{item.filename}</DialogTitle>
           </div>
+
+          {/* Position indicator */}
+          {total > 1 && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={goPrev}
+                disabled={currentIndex === 0}
+                className="p-1 rounded hover:bg-muted/50 text-muted-foreground/50 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-[11px] text-muted-foreground/50 tabular-nums min-w-[3rem] text-center">
+                {pos} of {total}
+              </span>
+              <button
+                onClick={goNext}
+                disabled={currentIndex === total - 1}
+                className="p-1 rounded hover:bg-muted/50 text-muted-foreground/50 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground/50 font-medium uppercase tracking-wider flex-shrink-0">
             {label}
           </span>
@@ -131,6 +226,7 @@ export default function QuickLookModal({ item, onClose }: Props) {
         {/* Content */}
         <div className="flex-1 overflow-auto p-5 min-h-0">
           <PreviewContent item={item} />
+          <UorIdentitySection item={item} />
         </div>
       </DialogContent>
     </Dialog>

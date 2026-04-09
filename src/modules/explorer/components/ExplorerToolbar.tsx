@@ -1,13 +1,15 @@
 /**
- * ExplorerToolbar — Top toolbar with breadcrumb, view toggle, search, and actions.
+ * ExplorerToolbar — Top toolbar with breadcrumb, view toggle, sort, search, and actions.
  */
 
 import { useState, useRef, useEffect } from "react";
-import { LayoutGrid, List, Upload, FolderPlus, Search, X } from "lucide-react";
+import { LayoutGrid, List, Upload, FolderPlus, Search, X, ArrowUpDown } from "lucide-react";
 import { DEFAULT_TAGS } from "../lib/tags";
 import type { SidebarFilter } from "./ExplorerSidebar";
 
 export type ViewMode = "grid" | "list";
+export type SortField = "name" | "date" | "size" | "type";
+export type SortDir = "asc" | "desc";
 
 const FILTER_LABELS: Record<string, string> = {
   all: "All Files",
@@ -17,6 +19,13 @@ const FILTER_LABELS: Record<string, string> = {
   urls: "Web Pages",
   workspaces: "Workspaces",
   folders: "Folders",
+};
+
+const SORT_LABELS: Record<SortField, string> = {
+  date: "Date Added",
+  name: "Name",
+  size: "Size",
+  type: "Type",
 };
 
 function getFilterLabel(filter: SidebarFilter): string {
@@ -35,19 +44,35 @@ interface Props {
   onSearchChange: (q: string) => void;
   onUploadClick: () => void;
   onNewFolder: (name: string) => void;
+  sortField: SortField;
+  sortDir: SortDir;
+  onSortChange: (field: SortField) => void;
 }
 
 export default function ExplorerToolbar({
   filter, viewMode, onViewModeChange, searchQuery, onSearchChange,
-  onUploadClick, onNewFolder,
+  onUploadClick, onNewFolder, sortField, sortDir, onSortChange,
 }: Props) {
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [sortOpen, setSortOpen] = useState(false);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (creatingFolder) folderInputRef.current?.focus();
   }, [creatingFolder]);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [sortOpen]);
 
   const submitFolder = () => {
     if (folderName.trim()) {
@@ -97,6 +122,36 @@ export default function ExplorerToolbar({
           </button>
         </div>
       )}
+
+      {/* Sort dropdown */}
+      <div className="relative" ref={sortRef}>
+        <button
+          onClick={() => setSortOpen(!sortOpen)}
+          className="h-8 px-2.5 text-sm rounded-md border border-border/30 text-foreground/70 hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+          title="Sort by"
+        >
+          <ArrowUpDown className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline text-[12px]">{SORT_LABELS[sortField]}</span>
+          <span className="text-[10px] text-muted-foreground/50">{sortDir === "asc" ? "↑" : "↓"}</span>
+        </button>
+        {sortOpen && (
+          <div className="absolute right-0 top-full mt-1 z-30 w-36 rounded-lg border border-border/40 bg-background/95 backdrop-blur-xl shadow-lg py-1">
+            {(Object.keys(SORT_LABELS) as SortField[]).map(f => (
+              <button
+                key={f}
+                onClick={() => { onSortChange(f); setSortOpen(false); }}
+                className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
+                  sortField === f
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-foreground/70 hover:bg-muted/50"
+                }`}
+              >
+                {SORT_LABELS[f]}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Search */}
       <div className="relative">
