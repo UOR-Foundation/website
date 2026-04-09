@@ -143,7 +143,24 @@ const TS_FALLBACKS: Record<string, (...args: any[]) => any> = {
       default: return 0;
     }
   },
-  listNamespaces: () => [],
+  listNamespaces: () => [
+    // encode (P₀)
+    "u/", "schema/", "type/",
+    // decode (P₁)
+    "proof/", "conformance/", "predicate/",
+    // compose (P₂)
+    "morphism/", "op/", "monoidal/", "operad/", "linear/",
+    // store (P₃)
+    "query/", "partition/", "region/", "boundary/",
+    // resolve (P₄)
+    "resolver/", "recursion/", "reduction/", "convergence/",
+    // observe (P₅)
+    "observable/", "stream/", "effect/", "parallel/", "interaction/",
+    // seal (P₆)
+    "cert/", "trace/", "derivation/", "cohomology/", "homology/",
+    "carry/", "cascade/", "division/", "failure/", "state/",
+    "enforcement/",
+  ],
   listEnums: () => [
     "Space", "PrimitiveOp", "MetricAxis", "FiberState", "GeometricCharacter",
   ],
