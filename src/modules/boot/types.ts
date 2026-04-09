@@ -69,6 +69,8 @@ export interface UorSeal {
   readonly sessionNonce: string;
   /** Device provenance hash baked into the seal. */
   readonly deviceContextHash: string;
+  /** Kernel verification hash — proves all 7 Fano primitives are sound. */
+  readonly kernelHash: string;
   /** ISO timestamp of seal creation. */
   readonly bootedAt: string;
   /** Status of the seal. */
@@ -104,6 +106,21 @@ export interface BootReceipt {
     readonly components: StackComponentStatus[];
     readonly allCriticalPresent: boolean;
     readonly stackHash: string;
+  };
+  /** Kernel enforcement health — engine-declared, engine-verified. */
+  readonly kernelHealth: {
+    /** Did all 7 Fano primitives pass? */
+    readonly allPassed: boolean;
+    /** Kernel verification hash baked into the seal. */
+    readonly kernelHash: string;
+    /** Namespace coverage: how many engine-declared namespaces are governed. */
+    readonly namespaceCoverage: { covered: number; uncovered: number; total: number };
+    /** Is the tech stack minimal (no overlapping critical frameworks)? */
+    readonly isMinimal: boolean;
+    /** Overlapping critical frameworks, if any. */
+    readonly overlaps: { kernelFunction: string; frameworks: string[] }[];
+    /** Bus modules with invalid kernel function references. */
+    readonly manifestOrphans: string[];
   };
   /** Timestamp of last successful verification. */
   lastVerified: string;

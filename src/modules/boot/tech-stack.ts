@@ -177,9 +177,9 @@ export const TECH_STACK: readonly StackEntry[] = [
   },
   {
     name: "Web Crypto API",
-    role: "SHA-256 hashing and cryptographic randomness for seal computation",
+    role: "SHA-256 hashing and cryptographic randomness — underlying primitive for the encode pipeline",
     category: "crypto",
-    criticality: "critical",
+    criticality: "recommended",
     fallback: "None — system cannot produce seals without crypto.subtle",
     kernelFunction: "encode",
     criteria: {

@@ -353,3 +353,52 @@ export function getLocalMethods(): ManifestEntry[] {
 export function isInManifest(method: string): boolean {
   return BUS_MANIFEST.modules.some((m) => m.operations.some((o) => o.method === method));
 }
+
+// ── Manifest Traceability Validation ────────────────────────────────────
+
+export interface ManifestTraceabilityResult {
+  /** All modules trace to valid kernel functions or are explicitly null (meta). */
+  readonly isTraceable: boolean;
+  /** Modules whose kernelFunction is not one of the 7 Fano primitives and not null. */
+  readonly orphans: { ns: string; label: string; invalidKernelFunction: string }[];
+  /** Per-kernel-function module count. */
+  readonly coverage: { kernelFunction: string; moduleCount: number }[];
+  /** Modules explicitly tagged as meta (kernelFunction=null). */
+  readonly metaModules: string[];
+}
+
+/**
+ * Validate that every bus module traces to one of the 7 kernel primitives.
+ * Modules with kernelFunction=null are meta/introspection (exempt).
+ * Any module with a non-null kernelFunction that isn't one of the 7 is an orphan.
+ */
+export function validateManifestTraceability(): ManifestTraceabilityResult {
+  const VALID = new Set(["encode", "decode", "compose", "store", "resolve", "observe", "seal"]);
+  const coverageMap = new Map<string, number>();
+  const orphans: ManifestTraceabilityResult["orphans"] = [];
+  const metaModules: string[] = [];
+
+  for (const mod of BUS_MANIFEST.modules) {
+    if (mod.kernelFunction === null) {
+      metaModules.push(mod.ns);
+      continue;
+    }
+    if (!VALID.has(mod.kernelFunction)) {
+      orphans.push({ ns: mod.ns, label: mod.label, invalidKernelFunction: mod.kernelFunction });
+      continue;
+    }
+    coverageMap.set(mod.kernelFunction, (coverageMap.get(mod.kernelFunction) ?? 0) + 1);
+  }
+
+  const coverage = Array.from(coverageMap.entries()).map(([kernelFunction, moduleCount]) => ({
+    kernelFunction,
+    moduleCount,
+  }));
+
+  return {
+    isTraceable: orphans.length === 0,
+    orphans,
+    coverage,
+    metaModules,
+  };
+}
