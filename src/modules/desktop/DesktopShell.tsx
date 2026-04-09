@@ -29,6 +29,7 @@ import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
+  const [booted, setBooted] = useState(false);
   const wm = useWindowManager();
   const { theme } = useDesktopTheme();
   const isMobile = useIsMobile();
