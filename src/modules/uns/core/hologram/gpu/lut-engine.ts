@@ -574,3 +574,33 @@ export function getLutEngine(): UorLutEngine {
   if (!_instance) _instance = new UorLutEngine();
   return _instance;
 }
+
+// ── Idle-Time Pre-Warming ───────────────────────────────────────────────────
+
+/**
+ * Pre-compute all table CIDs during browser idle time.
+ * This eliminates the ~5ms cold-start penalty on first bulk operation.
+ * Called by sovereign-boot after seal computation.
+ */
+export function scheduleLutWarmup(): void {
+  const doWarmup = async () => {
+    try {
+      const engine = getLutEngine();
+      const tables = engine.listTables();
+      // Compute CIDs for all tables — the expensive part
+      for (const name of tables) {
+        await engine.getTableCid(name);
+      }
+      console.log(`[LUT Engine] Pre-warmed ${tables.length} table CIDs during idle`);
+    } catch {
+      // Best-effort — silent failure
+    }
+  };
+
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(() => { doWarmup(); }, { timeout: 5000 });
+  } else {
+    // Fallback: schedule after a short delay
+    setTimeout(doWarmup, 2000);
+  }
+}

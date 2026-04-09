@@ -30,10 +30,11 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { canonicalJsonLd } from "@/lib/uor-address";
 import { sha256hex } from "@/lib/crypto";
 import { initEngine, getEngine } from "@/modules/engine";
-import { verifyKernel, auditNamespaceCoverage } from "@/modules/engine/kernel-declaration";
+import { verifyKernel, auditNamespaceCoverage, computeKernelHashSha256 } from "@/modules/engine/kernel-declaration";
 import { bus } from "@/modules/bus";
 import { BUS_MANIFEST, validateManifestTraceability } from "@/modules/bus/manifest";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
+import { scheduleLutWarmup } from "@/modules/uns/core/hologram/gpu/lut-engine";
 import { startSealMonitor } from "./seal-monitor";
 import { validateStack, validateMinimality } from "./tech-stack";
 import type { StackComponentStatus } from "./types";
@@ -327,10 +328,12 @@ export async function sovereignBoot(
       }
     }
 
-    // Phase 3: Seal (kernel hash is now part of the cryptographic proof)
+    // Phase 3: Seal (kernel hash is SHA-256 — real cryptographic proof)
     onProgress?.({ phase: "seal", progress: 0.7, detail: "Computing seal" });
     const sessionNonce = generateSessionNonce();
     const bootedAt = new Date().toISOString();
+    // Use SHA-256 kernel hash for the seal (cryptographically binding)
+    const kernelHashSha256 = await computeKernelHashSha256();
     const seal = await computeSeal(
       ringTableHash,
       manifestHash,
@@ -338,7 +341,7 @@ export async function sovereignBoot(
       provenance.provenanceHash,
       sessionNonce,
       bootedAt,
-      kernelResult.hash,
+      kernelHashSha256,
     );
 
     const bootTimeMs = Math.round(performance.now() - t0);
@@ -357,7 +360,7 @@ export async function sovereignBoot(
       },
       kernelHealth: {
         allPassed: kernelResult.allPassed,
-        kernelHash: kernelResult.hash,
+        kernelHash: kernelHashSha256,
         namespaceCoverage: {
           covered: coverageAudit.covered.length,
           uncovered: coverageAudit.uncovered.length,
@@ -385,6 +388,9 @@ export async function sovereignBoot(
     // Phase 4: Start monitor
     onProgress?.({ phase: "monitor-start", progress: 0.9, detail: "Starting monitor" });
     _monitorCleanup = startSealMonitor(seal, receipt);
+
+    // Phase 4.5: Schedule idle-time LUT pre-warming
+    scheduleLutWarmup();
 
     // Expose for dev debugging only
     if (import.meta.env.DEV) {
