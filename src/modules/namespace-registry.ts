@@ -138,6 +138,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 3,
     icon: "🛡️",
     crateModule: "bridge/proof/",
+    busNs: "cert",
+    busOperations: ["issue", "verify", "chain"],
   },
   {
     prefix: "derivation:",
@@ -180,6 +182,8 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     depth: 2,
     icon: "🧠",
     crateModule: "user/type_/",
+    busNs: "graph",
+    busOperations: ["put", "get", "query", "similar", "stats", "verify", "compress", "summary"],
   },
   {
     prefix: "morphism:",
