@@ -4,21 +4,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, List, Upload, FolderPlus, Search, X } from "lucide-react";
+import { DEFAULT_TAGS } from "../lib/tags";
 import type { SidebarFilter } from "./ExplorerSidebar";
 
 export type ViewMode = "grid" | "list";
 
-interface Props {
-  filter: SidebarFilter;
-  viewMode: ViewMode;
-  onViewModeChange: (v: ViewMode) => void;
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  onUploadClick: () => void;
-  onNewFolder: (name: string) => void;
-}
-
-const FILTER_LABELS: Record<SidebarFilter, string> = {
+const FILTER_LABELS: Record<string, string> = {
   all: "All Files",
   recents: "Recents",
   uploads: "Documents",
@@ -27,6 +18,14 @@ const FILTER_LABELS: Record<SidebarFilter, string> = {
   workspaces: "Workspaces",
   folders: "Folders",
 };
+
+function getFilterLabel(filter: SidebarFilter): string {
+  if (filter.startsWith("tag:")) {
+    const tag = DEFAULT_TAGS.find(t => t.id === filter.slice(4));
+    return tag ? `Tagged: ${tag.label}` : "Tagged";
+  }
+  return FILTER_LABELS[filter] || "All Files";
+}
 
 export default function ExplorerToolbar({
   filter, viewMode, onViewModeChange, searchQuery, onSearchChange,
