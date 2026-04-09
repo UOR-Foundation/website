@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { ExternalLink, ChevronLeft, ChevronRight, Fingerprint, ShieldCheck, Copy, Check } from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight, Fingerprint, ShieldCheck, Copy, Check, Table, BarChart3 } from "lucide-react";
 import { getFileIcon } from "../lib/file-icons";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import {
