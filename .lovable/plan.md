@@ -1,98 +1,64 @@
 
 
-## Plan: Self-Reflecting Health Report with LLM Feedback Loop
+## Plan: Mobile PWA Lock Screen Redesign
 
-### The Idea
+### What We Are Building
 
-Add a **"Reflect" button** next to the existing "Export Report" button. When clicked, the system sends the full markdown report to the Oracle (via the existing `uor-oracle` edge function) with a carefully constructed **meta-prompt** that asks the LLM to critique the report itself, the prompts, and suggest concrete improvements. The LLM's response is appended to the report as a new `## AI Reflection (Live)` section and displayed in a streaming panel within the System Monitor.
-
-Each reflection is **content-addressed** — the response is hashed and stored in IndexedDB alongside the report hash, creating a chain of improving observations. On subsequent runs, the system includes the *previous reflection's summary* in the prompt context, so the LLM can track its own improvement trajectory and avoid repeating suggestions.
+A clean, minimal mobile home screen matching the reference image: just the DayRingClock centered in the upper third, a solid/immersive background, and two small corner icons at the bottom (menu left, search right). No dock, no app grid, no greeting text, no search bar on the home screen. Apps and search open via bottom-sheet drawers triggered by these two icons. Three theme modes (immersive wallpaper, dark, light) carry over from desktop.
 
 ### Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│                  System Monitor UI                       │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ Export    │  │ ⚡ Reflect   │  │ Reflection Panel  │  │
-│  │ Report   │  │  (new btn)   │  │ (streaming MD)    │  │
-│  └──────────┘  └──────┬───────┘  └───────────────────┘  │
-│                       │                                  │
-│  report.md ──────────►├──► uor-oracle (new "reflect"    │
-│  + prev reflection    │    mode, structured output)      │
-│  + report hash        │                                  │
-│                       ▼                                  │
-│              LLM streams back:                           │
-│              1. Report structure critique                │
-│              2. Prompt quality improvements              │
-│              3. Architecture optimization tasks          │
-│              4. Proposed new self-assessment metrics      │
-│              5. Revised versions of the 3 prompts        │
-│                                                          │
-│  Response hash ──► IndexedDB reflection chain            │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────┐
+│                          │
+│       DayRingClock       │  ← centered upper area
+│       19:41 / Apr 9      │
+│                          │
+│                          │
+│                          │
+│                          │
+│                          │
+│                          │
+│  ☰ (menu)    🔍 (search) │  ← two subtle icons, bottom corners
+│         ···              │  ← theme dots (centered, just above safe area)
+└──────────────────────────┘
 ```
 
-### What Changes
+### Changes
 
-**1. Add `reflect` mode to `uor-oracle` edge function** — `supabase/functions/uor-oracle/index.ts`
+**1. Rewrite `src/modules/desktop/MobileShell.tsx`**
 
-A new `mode: "reflect"` branch alongside the existing `"quote"` and standard chat modes. Uses a specialized system prompt:
+- Remove the full dock with all app icons
+- Render the immersive wallpaper (`DesktopImmersiveWallpaper`) when theme is `"immersive"`, solid black for dark, solid white for light
+- Render `DayRingClock` centered in the upper third (matching the reference — roughly 15-20% from top)
+- Bottom-left icon: a minimal menu icon (lucide `Menu` or custom hamburger). Tapping opens a bottom-sheet drawer listing all apps in a clean grid
+- Bottom-right icon: a search icon (lucide `Search`). Tapping opens a bottom-sheet drawer with the search input, voice input, and suggestions (reusing logic from `DesktopWidgets`)
+- Keep `DesktopThemeDots` centered at the bottom, between the two icons
+- Keep the existing `Drawer` pattern for opening apps
+- Add a second drawer state for the menu, showing apps in a 3-column grid with icons and labels
+- Style both corner icons as very subtle, low-opacity (matching the reference — thin white strokes on dark, thin black on light)
+- Home indicator bar hint at very bottom (thin rounded bar, like iOS)
 
-```
-You are the UOR Virtual OS self-improvement oracle. You receive a System Health
-Report and the previous reflection (if any). Your job is to:
+**2. No changes to `DesktopWidgets.tsx`**
 
-1. REPORT QUALITY: Identify redundancies, missing SRE fields, and structural
-   improvements. Be specific — cite exact section names.
-2. PROMPT SHARPENING: Rewrite each of the 3 AI Reflection Prompts to be more
-   precise, measurable, and actionable. Show the improved prompt text.
-3. ARCHITECTURE TASKS: Based on the data, list 3-5 concrete optimization tasks
-   ranked by impact/effort. Each must reference a specific metric.
-4. NEW METRICS: Propose 2-3 self-assessment metrics to add, with measurement
-   method and threshold.
-5. DELTA FROM LAST: If previous reflection provided, note what improved and
-   what regressed.
+The search logic (suggestions, voice, context) will be extracted into the search drawer within MobileShell directly, keeping DesktopWidgets as the desktop-only home screen.
 
-Output as structured markdown. Be ruthlessly specific. No platitudes.
-```
+**3. Keep existing components unchanged**
 
-Uses the `balanced` tier (gemini-2.5-flash) — non-streaming for structured output. Includes `temperature: 0.3` for analytical precision.
-
-**2. Add reflection chain storage** — `src/modules/boot/reflection-chain.ts` (~60 lines)
-
-A small IndexedDB-backed store that:
-- Saves each reflection with its report hash and timestamp
-- Retrieves the most recent reflection for inclusion in the next prompt
-- Computes a content hash of each reflection for chain integrity
-
-**3. Add Reflect button + streaming panel to SystemMonitorApp** — `src/modules/boot/SystemMonitorApp.tsx`
-
-- New "Reflect" button in the footer bar next to "Export Report"
-- When clicked: generates the report markdown, fetches previous reflection from IndexedDB, calls oracle in `reflect` mode
-- Displays the LLM response in a collapsible panel at the bottom of the monitor with markdown rendering
-- Stores the response in the reflection chain on completion
-
-**4. Evolving prompts** — the reflection section of the report
-
-Replace the static "AI Reflection Prompts" section with a dynamic version. On first run, the hardcoded prompts are used. After the first reflection, the LLM's *improved prompts* are stored and used in the next report generation, creating a genuine self-improving loop.
+- `DayRingClock` — reused as-is
+- `DesktopImmersiveWallpaper` — reused for immersive mode
+- `DesktopThemeDots` — reused, already handles mobile positioning
+- `DesktopShell` — no changes (already delegates to MobileShell on mobile)
 
 ### Technical Details
 
-- **No new dependencies** — uses existing `uor-oracle`, existing `react-markdown` (already in project for Oracle chat), existing IndexedDB patterns from the vault module
-- **Non-streaming reflect mode** — unlike chat, reflection uses a single non-streaming call (like quote mode) since we want the complete structured analysis before displaying
-- **Reflection chain** is capped at 20 entries to prevent unbounded growth; older entries are pruned
-- **The meta-prompt includes the full report** (~4-6KB of markdown), well within token limits
-- **Previous reflection summary** is truncated to 2KB max to keep the context focused
+- The menu drawer shows non-hidden `DESKTOP_APPS` in a clean grid (3 columns, icon + label)
+- The search drawer contains an auto-focused input, voice button, submit button, and suggestion dropdown — all styled with the same frosted-glass treatment from desktop but adapted for mobile
+- Immersive mode renders `DesktopImmersiveWallpaper` behind the clock with the existing overlay gradients
+- Touch targets for corner icons are at least 44x44px for accessibility
+- No PWA service worker changes needed (COI shim already handles that); this is purely a UI redesign
+- The home indicator bar is a 134px wide, 5px tall rounded pill at the very bottom, matching the reference
 
 ### Files Modified
-- `supabase/functions/uor-oracle/index.ts` — add `reflect` mode
-- `src/modules/boot/reflection-chain.ts` — new, IndexedDB reflection history
-- `src/modules/boot/SystemMonitorApp.tsx` — add Reflect button + panel
-
-### Impact
-- The system becomes genuinely self-improving: each reflection makes the next report sharper
-- The prompts evolve to ask better questions over time
-- Architecture suggestions are grounded in actual metrics, not static text
-- The reflection chain provides an audit trail of system evolution
+- `src/modules/desktop/MobileShell.tsx` — complete rewrite
 
