@@ -201,7 +201,62 @@ function classifyDomain(domain: string): RankedSource["type"] {
   return "web";
 }
 
-function rankSources(keyword: string, results: Array<{ url: string; title: string; description: string; markdown?: string }>): RankedSource[] {
+/* ── Dynamic Query-Domain Classifier & Source Rebalancing ─────────────── */
+
+type QueryDomain = "biomedical" | "physics" | "mathematics" | "philosophy" | "history" | "law" | "technology" | "environment" | "economics" | "general";
+
+const DOMAIN_KEYWORDS: Record<Exclude<QueryDomain, "general">, RegExp> = {
+  biomedical: /\b(cancer|tumor|gene|protein|clinical|disease|pathogen|virus|bacteria|vaccine|pharma|drug|therapy|symptom|diagnosis|epidemiol|anatomy|organ|cell|neuron|brain|cardiac|insulin|antibod|antigen|immun|surgic|chronic|acute|syndrome|disorder|infect|oncolog|radiol|biomedic|genomic|proteomic|enzyme|metaboli|endocrin|hepat|renal|pulmonar|hematol|dermatol|ophthalm|pediatr|obstetric|gynecol|psychiatr|patholog|histolog|cytolog|microbiol|virol|toxicol|pharmacol|epiderm|collagen|mitochond|ribosom|nucleotid|amino.acid|lipid|carbohydrat|hormone|receptor|ligand|mutation|allele|phenotype|genotype|plasmid|pcr|mrna|dna|rna)\b/i,
+  physics: /\b(quantum|relativity|particle|photon|thermodynamic|entropy|boson|fermion|quark|lepton|hadron|meson|baryon|gluon|graviton|higgs|planck|schrodinger|heisenberg|dirac|maxwell|newton|einstein|lagrangian|hamiltonian|wavefunction|superposition|entanglement|decoherence|superconducti|superfluidi|plasma|magnetism|electrostatic|electromagnetic|optic|refract|diffract|interferen|polariz|spectroscop|cosmolog|astrophys|black.hole|neutron.star|dark.matter|dark.energy|string.theory|general.relativity|special.relativity|nuclear|fission|fusion|radioactiv|isotope|semiconductor|transistor|laser|fiber.optic)\b/i,
+  mathematics: /\b(theorem|algebra|topology|calculus|conjecture|proof|lemma|corollary|axiom|polynomial|differential|integral|matrix|matrices|vector|tensor|manifold|group.theory|ring.theory|field.theory|galois|hilbert|riemann|euler|gauss|fibonacci|prime|modular|combinatori|graph.theory|number.theory|set.theory|category.theory|functor|morphism|homomorphism|isomorphism|eigenvalue|eigenvector|determinant|fourier|laplace|stochastic|probability|statistic|bayesian|markov|regression|variance|standard.deviation|distribution|logarithm|exponential|trigonometr|geometry|euclidean|non-euclidean|fractal|chaos.theory|dynamical.system|ode|pde)\b/i,
+  philosophy: /\b(ethics|epistemolog|ontolog|metaphysic|phenomenolog|existential|hermeneutic|dialectic|deontolog|utilitarian|virtue.ethics|consequential|moral|normative|descriptive|analytic.philosophy|continental|pragmatis|empiricis|rationalis|idealis|realis|nominalis|dualis|monism|pluralism|determinism|free.will|consciousness|qualia|intentionality|philosophy.of.mind|philosophy.of.language|philosophy.of.science|logic|modal.logic|predicate|propositional|syllogism|fallacy|socrat|plato|aristotle|kant|hegel|nietzsche|wittgenstein|heidegger|sartre|descartes|hume|locke|leibniz|spinoza|kierkegaard|schopenhauer|husserl|derrida|foucault|deleuze|rawls|nozick)\b/i,
+  history: /\b(war|empire|dynasty|revolution|colonial|medieval|renaissance|ancient|civilization|archaeolog|prehistor|bronze.age|iron.age|stone.age|neolithic|paleolithic|mesopotamia|egypt|roman|greek|byzantine|ottoman|mongol|viking|crusade|reformation|enlightenment|industrial.revolution|french.revolution|american.revolution|civil.war|world.war|cold.war|decoloniz|imperialism|feudal|monarchy|republic|democrac|abolition|suffrage|civil.rights|genocide|holocaust|apartheid|manifest.destiny|reconstruction|prohibition|great.depression|new.deal)\b/i,
+  law: /\b(statute|constitutional|tort|jurisdiction|litigation|jurisprudence|plaintiff|defendant|appellant|respondent|habeas.corpus|due.process|equal.protection|first.amendment|fourth.amendment|precedent|stare.decisis|common.law|civil.law|criminal.law|contract.law|property.law|administrative.law|international.law|maritime.law|patent|copyright|trademark|intellectual.property|antitrust|securities|bankruptcy|immigration.law|environmental.law|labor.law|family.law|tax.law|regulatory|compliance|arbitration|mediation|adjudication)\b/i,
+  technology: /\b(software|algorithm|machine.learning|neural.network|deep.learning|artificial.intelligence|natural.language|computer.vision|robotics|automation|blockchain|cryptocurrency|cybersecurity|encryption|cloud.computing|distributed.system|microservice|api|database|sql|nosql|javascript|python|rust|golang|typescript|react|kubernetes|docker|devops|ci.cd|agile|scrum|version.control|git|compiler|interpreter|operating.system|kernel|tcp|ip|http|dns|ssl|tls|websocket|graphql|rest|oauth|jwt)\b/i,
+  environment: /\b(climate|ecosystem|biodiversity|carbon|greenhouse|global.warming|sea.level|deforestation|desertification|ozone|pollution|emission|fossil.fuel|renewable|solar.energy|wind.energy|hydroelectric|geothermal|biomass|sustainability|conservation|endangered|extinction|coral.reef|ocean.acidif|permafrost|glacier|ice.sheet|drought|flood|wildfire|hurricane|typhoon|cyclone|el.nino|la.nina|biodegradabl|recycl|compost|circular.economy|ecological|environmental)\b/i,
+  economics: /\b(gdp|inflation|monetary|fiscal|trade|macroeconomic|microeconomic|supply.chain|demand|equilibrium|elasticity|marginal|opportunity.cost|comparative.advantage|absolute.advantage|market.failure|externality|public.good|monopol|oligopol|perfect.competition|game.theory|nash.equilibrium|keynesian|monetarist|austrian.economics|behavioral.economics|development.economics|labor.economics|international.trade|exchange.rate|interest.rate|central.bank|federal.reserve|quantitative.easing|tariff|subsidy|deficit|surplus|debt|bond|equity|stock|derivative|hedge|arbitrage|portfolio|capital.market)\b/i,
+};
+
+function classifyQueryDomain(keyword: string): QueryDomain {
+  const text = keyword.toLowerCase();
+  let bestDomain: QueryDomain = "general";
+  let bestCount = 0;
+  for (const [domain, regex] of Object.entries(DOMAIN_KEYWORDS) as [Exclude<QueryDomain, "general">, RegExp][]) {
+    const matches = text.match(regex);
+    const count = matches ? matches.length : 0;
+    if (count > bestCount) {
+      bestCount = count;
+      bestDomain = domain;
+    }
+  }
+  return bestDomain;
+}
+
+const DOMAIN_SOURCE_BOOSTS: Record<string, Record<string, number>> = {
+  biomedical: { "pubmed.ncbi.nlm.nih.gov": 100, "ncbi.nlm.nih.gov": 95, "nih.gov": 80, "who.int": 70, "mayoclinic.org": 55, "cdc.gov": 65 },
+  physics: { "arxiv.org": 100, "nature.com": 70, "nasa.gov": 55, "science.org": 60 },
+  mathematics: { "mathworld.wolfram.com": 100, "arxiv.org": 70 },
+  philosophy: { "plato.stanford.edu": 100, "britannica.com": 55 },
+  history: { "loc.gov": 100, "archive.org": 80, "britannica.com": 55 },
+  law: { "britannica.com": 40 },
+  technology: { "arxiv.org": 70, "ieee.org": 70, "acm.org": 70 },
+  environment: { "ipcc.ch": 100, "epa.gov": 80, "who.int": 55, "nature.com": 55 },
+  economics: { "worldbank.org": 80, "oecd.org": 80, "imf.org": 70 },
+};
+
+function getDomainBoost(domain: string, queryDomain: string): number {
+  const boosts = DOMAIN_SOURCE_BOOSTS[queryDomain];
+  if (!boosts) return 0;
+  const d = domain.replace(/^www\./, "").toLowerCase();
+  for (const [key, boost] of Object.entries(boosts)) {
+    if (d === key || d.endsWith("." + key)) return boost;
+  }
+  // Pattern boosts for law: all .gov domains
+  if (queryDomain === "law" && /\.gov($|\.\w+$)/.test(d)) return 80;
+  return 0;
+}
+
+function rankSources(keyword: string, results: Array<{ url: string; title: string; description: string; markdown?: string }>, queryDomain?: string): RankedSource[] {
   return results
     .map(r => {
       let domain: string;
@@ -213,7 +268,8 @@ function rankSources(keyword: string, results: Array<{ url: string; title: strin
 
       const domainRep = getDomainReputation(domain);
       const titleRel = computeTitleRelevance(keyword, r.title || "", r.description || "");
-      const score = Math.round(domainRep * 0.6 + titleRel * 0.4);
+      const domainBoost = queryDomain ? getDomainBoost(domain, queryDomain) : 0;
+      const score = Math.round(domainRep * 0.55 + titleRel * 0.35 + domainBoost * 0.10);
 
       return {
         url: r.url,
@@ -440,6 +496,125 @@ async function fetchPubMed(term: string): Promise<RankedSource | null> {
   } catch { return null; }
 }
 
+/** OpenAlex — 250M+ scholarly works, open metadata */
+async function fetchOpenAlex(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://api.openalex.org/works?search=${encodeURIComponent(term)}&per_page=1&mailto=uor@example.org`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const work = data.results?.[0];
+    if (!work || !work.title) return null;
+    const count = data.meta?.count || 0;
+    if (count < 3) return null;
+    const url = work.doi ? `https://doi.org/${work.doi.replace("https://doi.org/", "")}` : work.id || `https://openalex.org/works?search=${encodeURIComponent(term)}`;
+    return {
+      url,
+      title: `${work.title.slice(0, 80)} — OpenAlex (${count.toLocaleString()} works)`,
+      description: `Top result from ${count.toLocaleString()} scholarly works matching "${term}"`,
+      domain: "openalex.org",
+      type: "academic",
+      score: 93,
+    };
+  } catch { return null; }
+}
+
+/** Internet Archive — historical verification, primary documents */
+async function fetchInternetArchive(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://archive.org/advancedsearch.php?q=${encodeURIComponent(term)}&output=json&rows=1&fl[]=identifier,title,description`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const doc = data.response?.docs?.[0];
+    if (!doc || !doc.identifier) return null;
+    const total = data.response?.numFound || 0;
+    if (total < 2) return null;
+    return {
+      url: `https://archive.org/details/${doc.identifier}`,
+      title: `${(doc.title || term).slice(0, 80)} — Internet Archive`,
+      description: (doc.description || `Historical archive resource on ${term}`).slice(0, 300),
+      domain: "archive.org",
+      type: "institutional",
+      score: 90,
+    };
+  } catch { return null; }
+}
+
+/** arXiv — preprint canon for physics/math/CS */
+async function fetchArXiv(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(term)}&start=0&max_results=1`,
+      { signal: AbortSignal.timeout(2500) }
+    );
+    if (!r.ok) return null;
+    const text = await r.text();
+    // Parse Atom XML minimally
+    const totalMatch = text.match(/<opensearch:totalResults[^>]*>(\d+)<\/opensearch:totalResults>/);
+    const total = totalMatch ? parseInt(totalMatch[1], 10) : 0;
+    if (total < 3) return null;
+    const titleMatch = text.match(/<entry>[\s\S]*?<title>([\s\S]*?)<\/title>/);
+    const idMatch = text.match(/<entry>[\s\S]*?<id>([\s\S]*?)<\/id>/);
+    const title = titleMatch?.[1]?.replace(/\s+/g, " ").trim() || term;
+    const url = idMatch?.[1]?.trim() || `https://arxiv.org/search/?query=${encodeURIComponent(term)}`;
+    return {
+      url,
+      title: `${title.slice(0, 80)} — arXiv (${total.toLocaleString()} papers)`,
+      description: `Top result from ${total.toLocaleString()} arXiv preprints on "${term}"`,
+      domain: "arxiv.org",
+      type: "academic",
+      score: 96,
+    };
+  } catch { return null; }
+}
+
+/** Wolfram MathWorld — definitive math reference */
+async function fetchMathWorld(term: string): Promise<RankedSource | null> {
+  try {
+    const slug = term.replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "");
+    const url = `https://mathworld.wolfram.com/${slug}.html`;
+    const head = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(1500) });
+    if (!head.ok) return null;
+    return {
+      url,
+      title: `${term} — Wolfram MathWorld`,
+      description: `Definitive mathematical reference for ${term}`,
+      domain: "mathworld.wolfram.com",
+      type: "academic",
+      score: 95,
+    };
+  } catch { return null; }
+}
+
+/** WHO — Global health authority fact sheets */
+async function fetchWHO(term: string): Promise<RankedSource | null> {
+  try {
+    const r = await fetch(
+      `https://search.who.int/search?q=${encodeURIComponent(term)}&p=0&ps=1&f=json`,
+      { signal: AbortSignal.timeout(2000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const hit = data.response?.docs?.[0] || data.results?.[0];
+    if (!hit) return null;
+    const url = hit.url || hit.link || `https://www.who.int/search#q=${encodeURIComponent(term)}`;
+    const title = hit.title || `${term} — WHO`;
+    return {
+      url: url.startsWith("http") ? url : `https://www.who.int${url}`,
+      title: `${(typeof title === "string" ? title : term).slice(0, 80)} — WHO`,
+      description: (hit.summary || hit.description || `World Health Organization resource on ${term}`).slice(0, 300),
+      domain: "who.int",
+      type: "institutional",
+      score: 92,
+    };
+  } catch { return null; }
+}
+
 /** Fetch all high-trust auxiliary sources in parallel with timeout */
 async function fetchAuxiliarySources(term: string): Promise<RankedSource[]> {
   const results = await Promise.allSettled([
@@ -448,6 +623,11 @@ async function fetchAuxiliarySources(term: string): Promise<RankedSource[]> {
     fetchSEP(term),
     fetchLOC(term),
     fetchPubMed(term),
+    fetchOpenAlex(term),
+    fetchInternetArchive(term),
+    fetchArXiv(term),
+    fetchMathWorld(term),
+    fetchWHO(term),
   ]);
   const sources: RankedSource[] = [];
   for (const r of results) {
