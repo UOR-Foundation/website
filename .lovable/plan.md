@@ -1,129 +1,109 @@
 
 
-## Plan: Edge-Defined Nodes — UOR Object Blueprints with Dehydration/Rehydration
+## Plan: UOR Ring Shortcut System + Keyboard Cheat Sheet
 
-### The Insight
+### The Problem
 
-The existing infrastructure is 80% there. The holographic lens system already has `dehydrate()` (object → canonical UOR form) and `rehydrate()` (canonical form → object). The KG already stores edges as first-class triples. What's missing is the **bridge**: a formal `ObjectBlueprint` schema that defines a node purely by its attribute edges, and the runtime functions to decompose any KG node into that blueprint and reconstruct it back.
+Current shortcuts (`⌘K`, `⌘W`, `⌘M`, `⌘H`) directly conflict with browser-native shortcuts:
+- `Ctrl+W` closes the browser tab (catastrophic on Windows/Linux)
+- `Ctrl+H` opens browser history
+- `Ctrl+M` is used by some browsers
+- `Ctrl+K` conflicts with address bar focus in some browsers
 
-The key shift: instead of a KGNode being a flat bag of properties with edges attached, the **edges become the definition** — the node is nothing more than what its edges declare. The `properties` field on KGNode becomes derived from edges, not the other way around.
+Since this runs inside a browser, we cannot `preventDefault()` reliably on many of these — the browser intercepts them before JavaScript.
 
-### Architecture
+### The Solution: Ring Prefix Key (`.`)
 
-```text
-Any Object
-    ↓ decomposeToBlueprint()
-ObjectBlueprint (JSON-LD, serializable, shareable)
-  ├── spaceDefinition: { kind, domain, rdfType }
-  ├── attributes: [ { predicate, valueType, value?, targetAddress? } ]
-  ├── compositionRules: [ { parentPredicate, childBlueprint? } ]
-  └── derivationRules: [ { operation, inputs[] } ]
-    ↓ content-address via singleProofHash()
-GroundBlueprint (blueprint + UOR identity)
-    ↓ materializeFromBlueprint()
-Fully reconstructed KGNode + all edges
-```
+Introduce a **two-step chord system** using the **period key (`.`)** as the "ring activator". This is inspired by Vim's leader key and tmux's prefix key, but themed around the UOR ring.
+
+**How it works:**
+1. Press `Ctrl+.` (Mac: `⌘.`) — this activates "ring mode" for 1.5 seconds. A subtle ring indicator appears on screen.
+2. Within that window, press the action key: `K` for Spotlight, `W` for close, `M` for minimize, etc. No modifier needed on the second press.
+3. If nothing is pressed within 1.5s, ring mode silently deactivates.
+
+**Why period?** `Ctrl+.` / `⌘.` has almost no browser-native binding (Chrome uses it for nothing, Firefox/Safari have no conflict). It's also thematically perfect — the period is a "point" on the ring.
+
+**Display format:** Shortcuts display as `⌘. K` on Mac, `Ctrl+. K` on Windows — visually distinct, immediately recognizable as a two-step chord.
+
+### Shortcut Registry
+
+| Chord | Action |
+|-------|--------|
+| `Ring` then `K` | Spotlight search |
+| `Ring` then `W` | Close window |
+| `Ring` then `M` | Minimize window |
+| `Ring` then `H` | Hide all windows |
+| `Ring` then `[` | Previous theme |
+| `Ring` then `]` | Next theme |
+| `Ring` then `V` | Voice input |
+| `Ring` then `F` | Toggle fullscreen |
+| `Ring` then `?` | Open shortcut cheat sheet |
 
 ### Changes
 
-**1. New: `src/modules/knowledge-graph/blueprint.ts`**
+**1. Refactor: `src/modules/desktop/hooks/useDesktopShortcuts.ts`**
+- Implement ring prefix state: `ringActive` boolean + 1.5s timeout
+- `Ctrl+.` / `⌘.` sets `ringActive = true`, starts timeout, shows indicator
+- Second keypress (no modifier required) dispatches the action if `ringActive`
+- Clear ring on action dispatch or timeout
+- Add `onShowShortcuts` to Handlers interface
+- Add `onFullscreen` to Handlers interface
+- Remove direct `⌘K`, `⌘W` etc. bindings (they conflict with browser)
 
-The core module. Contains:
+**2. New: `src/modules/desktop/components/RingIndicator.tsx`**
+- Tiny animated ring glyph (⬡) that appears center-top when ring mode is active
+- Fades in, pulses subtly, fades out on deactivate
+- Theme-aware (light/dark)
+- Shows "Ring active — press a key..." text
 
-- `ObjectBlueprint` interface — the JSON-LD schema that defines a node by its attributes/edges:
-  ```
-  {
-    "@context": "https://uor.foundation/contexts/object-blueprint-v1.jsonld",
-    "@type": "uor:ObjectBlueprint",
-    spaceDefinition: { kind, localDomain, rdfType },
-    attributes: [
-      { predicate: "schema:hasColumn", valueType: "reference", targetAddress: "urn:uor:column:..." },
-      { predicate: "schema:name", valueType: "literal", value: "revenue.csv" },
-      { predicate: "schema:dateCreated", valueType: "literal", value: "2026-04-09" }
-    ],
-    compositionRules: [
-      { parentPredicate: "schema:hasPart", decomposition: "recursive" }
-    ],
-    derivationRules: [
-      { operation: "sha256", inputs: ["content-bytes"], plan: "UOR-v2" }
-    ]
-  }
-  ```
+**3. New: `src/modules/desktop/components/ShortcutCheatSheet.tsx`**
+- Modal/dialog listing all shortcuts in a clean grid
+- Grouped by category: Navigation, Windows, Appearance, Tools
+- Shows platform-aware glyphs (`⌘. K` vs `Ctrl+. K`)
+- Opened via menu item or `Ring` then `?`
+- Theme-aware styling matching existing menu aesthetic
 
-- `GroundObjectBlueprint` — blueprint + UOR identity (via `singleProofHash`)
+**4. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
+- Add "Help" menu with "Keyboard Shortcuts" item showing `{modKey}. ?`
+- Update all `MenubarShortcut` displays to use ring format: `{modKey}. W` instead of `{modKey}W`
 
-- `decomposeToBlueprint(nodeAddress: string): Promise<GroundObjectBlueprint>` — reads a KGNode + all its outgoing edges from the store, converts the node's properties into attribute entries with `valueType: "literal"`, converts edges into attribute entries with `valueType: "reference"`, and content-addresses the whole blueprint. This is **dehydration at the KG level**.
+**5. Update: `src/modules/desktop/DesktopContextMenu.tsx`**
+- Update shortcut displays to ring format
 
-- `materializeFromBlueprint(blueprint: ObjectBlueprint): Promise<{ node: KGNode, edges: KGEdge[] }>` — takes a blueprint and produces the KGNode + edges, computing the UOR address from the blueprint's content hash. This is **rehydration at the KG level**. Does not write to the store — caller decides.
+**6. Update: `src/modules/desktop/TabBar.tsx`**
+- Update tooltip shortcut hints to ring format
 
-- `decomposeRecursive(nodeAddress: string, maxDepth?: number): Promise<GroundObjectBlueprint>` — follows reference attributes recursively, embedding child blueprints inline up to `maxDepth`. Produces a single self-contained blueprint for an entire subgraph.
+**7. Update: `src/modules/desktop/SpotlightSearch.tsx`**
+- Update any shortcut hint text
 
-- `serializeBlueprint(bp: GroundObjectBlueprint): string` — deterministic JSON serialization (sorted keys)
+**8. Update: `src/modules/oracle/hooks/useVoiceShortcut.ts`**
+- Remove direct `Ctrl+Shift+V` binding
+- Voice toggle now handled via ring system (`Ring` then `V`)
 
-- `deserializeBlueprint(json: string): GroundObjectBlueprint` — parse + validate
+**9. Update: `src/modules/desktop/DesktopShell.tsx`**
+- Add `RingIndicator` component
+- Add `ShortcutCheatSheet` state + rendering
+- Wire `onShowShortcuts` and `onFullscreen` handlers
 
-- `verifyBlueprint(bp: GroundObjectBlueprint): Promise<boolean>` — recompute the UOR address from the blueprint content and check it matches the stored identity. Integrity verification.
-
-**2. New: `src/modules/knowledge-graph/blueprint-registry.ts`**
-
-A type registry mapping `rdfType` → attribute schema expectations. This ensures blueprints conform to known types:
-
-- `registerNodeType(rdfType: string, schema: AttributeSchema)` — registers what attributes a node of this type must/may have
-- `validateBlueprint(bp: ObjectBlueprint): ValidationResult` — checks a blueprint against the registered schema for its `rdfType`
-- Pre-registers the existing types: `schema:Dataset`, `schema:MediaObject`, `schema:WebPage`, `schema:Column`, `schema:URL`, `schema:ContactPoint`, `schema:Date`, `schema:MonetaryAmount`, `schema:Thing`
-
-This is the UOR framework's type system applied to graph nodes — "the definitions of the attributes and how they're transformed."
-
-**3. Update: `src/modules/knowledge-graph/ingest-bridge.ts`**
-
-After creating a node + edges in `addToGraph()`, also produce and store the `GroundObjectBlueprint`:
-- Call `decomposeToBlueprint()` on the newly created node
-- Store the serialized blueprint as a derivation record (the blueprint IS a derivation — it's the canonical decomposition)
-- This ensures every ingested item has a shareable, self-contained blueprint from the moment it enters the graph
-
-**4. Update: `src/modules/knowledge-graph/local-store.ts`**
-
-Add a `blueprints` object store (DB_VERSION → 3) keyed by UOR address:
-- `putBlueprint(address: string, blueprint: string): Promise<void>`
-- `getBlueprint(address: string): Promise<string | undefined>`
-- `getAllBlueprints(): Promise<Array<{ address: string; blueprint: string }>>`
-
-**5. Update: `src/modules/knowledge-graph/index.ts`**
-
-Export the new blueprint module:
-- `decomposeToBlueprint`, `materializeFromBlueprint`, `decomposeRecursive`
-- `serializeBlueprint`, `deserializeBlueprint`, `verifyBlueprint`
-- `registerNodeType`, `validateBlueprint`
-- Types: `ObjectBlueprint`, `GroundObjectBlueprint`, `AttributeSchema`
-
-**6. New: `src/test/kg-blueprint.test.ts`**
-
-Test suite covering:
-- Decompose a KGNode with edges into a blueprint → verify all edges appear as attributes
-- Materialize a blueprint back → verify it produces identical node + edges
-- Round-trip: decompose → serialize → deserialize → materialize → compare
-- Recursive decomposition: node with child nodes → single nested blueprint
-- Blueprint verification: tamper with an attribute → `verifyBlueprint` returns false
-- Type validation: blueprint missing required attributes → validation fails
-
-### How This Connects to the Existing Holographic Lens
-
-The `ObjectBlueprint` is the KG-level equivalent of `LensBlueprint`. Just as a `LensBlueprint` defines a lens circuit by its element specifications (not live functions), an `ObjectBlueprint` defines a graph node by its attribute edges (not stored property values). Both use `singleProofHash()` for content-addressing. Both are serializable JSON-LD. Both can be shared and instantiated anywhere.
-
-The existing `dehydrate()` in `lens.ts` operates on arbitrary JS objects. The new `decomposeToBlueprint()` operates specifically on KG nodes, producing a schema-aware decomposition that the LLM can later use for demand-driven materialization.
+**10. Update: `src/modules/desktop/hooks/usePlatform.tsx`**
+- Add `ringKey` display string to PlatformInfo: `"⌘."` on Mac, `"Ctrl+."` on Windows/Linux
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/knowledge-graph/blueprint.ts` | New — Core decompose/materialize/verify |
-| `src/modules/knowledge-graph/blueprint-registry.ts` | New — Type registry + validation |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | Store blueprint on ingestion |
-| `src/modules/knowledge-graph/local-store.ts` | Add blueprints store (DB v3) |
-| `src/modules/knowledge-graph/index.ts` | Export blueprint API |
-| `src/test/kg-blueprint.test.ts` | New — Full test suite |
+| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Ring prefix chord system |
+| `src/modules/desktop/components/RingIndicator.tsx` | New — visual ring mode indicator |
+| `src/modules/desktop/components/ShortcutCheatSheet.tsx` | New — shortcut reference modal |
+| `src/modules/desktop/DesktopMenuBar.tsx` | Help menu + updated shortcut displays |
+| `src/modules/desktop/DesktopContextMenu.tsx` | Updated shortcut displays |
+| `src/modules/desktop/TabBar.tsx` | Updated tooltip hints |
+| `src/modules/desktop/SpotlightSearch.tsx` | Updated hint text |
+| `src/modules/desktop/DesktopShell.tsx` | Wire indicator + cheat sheet |
+| `src/modules/desktop/hooks/usePlatform.tsx` | Add ringKey display string |
+| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Remove direct binding, defer to ring |
 
 ### The Result
 
-After this, any KG node can be decomposed into a portable JSON blueprint where edges define the node. Share the blueprint → anyone can reconstruct the exact node. Change an attribute → the UOR address changes (content-addressing enforces integrity). The LLM can consume blueprints as structured prompts, constrained by the type registry. Dehydration at any hierarchy level — a single node, a subtree, or the entire graph — produces a single deterministic JSON file that is its own identity.
+Zero browser conflicts. `Ctrl+W` does what the user expects (closes the tab). UOR OS shortcuts live in their own namespace — the ring. The two-step chord is fast (muscle memory develops quickly), visually distinctive, and thematically coherent with the UOR ring paradigm. The cheat sheet is always one chord away (`Ring` then `?`).
 
