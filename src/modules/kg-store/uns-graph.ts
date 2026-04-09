@@ -1,19 +1,19 @@
 /**
- * UNS Knowledge Graph — Oxigraph-backed Quad Store with Named Graphs.
+ * UNS Knowledge Graph — GrafeoDB-backed Quad Store with Named Graphs.
  *
  * Provides a SPARQL 1.1-compatible knowledge graph over the UOR ring substrate.
  * Two canonical named graphs:
  *   - Ontology graph: https://uor.foundation/graph/ontology
  *   - Q0 instance graph: https://uor.foundation/graph/q0
  *
- * UNIFIED: Uses the singleton Oxigraph store from knowledge-graph/oxigraph-store.ts.
+ * UNIFIED: Uses the singleton GrafeoDB store from knowledge-graph/grafeo-store.ts.
  * No duplicate WASM instances.
  *
- * @version 3.0.0 — Unified Oxigraph singleton
+ * @version 4.0.0 — Unified GrafeoDB singleton
  */
 
 import { neg, bnot, succ, pred, bytePopcount } from "@/lib/uor-ring";
-import { grafeoStore as oxigraphStore, sparqlQuery } from "@/modules/knowledge-graph/grafeo-store";
+import { grafeoStore, sparqlQuery } from "@/modules/knowledge-graph/grafeo-store";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
