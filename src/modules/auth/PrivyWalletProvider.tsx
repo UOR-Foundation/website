@@ -4,12 +4,13 @@
  * Configured in whitelabel mode: no Privy UI surfaces. Our AuthPromptModal
  * handles all sign-in UX. Privy only provides the embedded wallet backend.
  *
- * After Supabase auth completes, `useAuth` triggers Privy login via custom
- * access token, which silently creates/retrieves an embedded wallet.
+ * After Supabase auth completes, the customAuth integration automatically
+ * syncs the Supabase JWT to Privy, which creates/retrieves an embedded wallet.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useCallback, useState, useEffect, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Publishable App ID — safe for client-side code
 const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || "cmnryb25k00fk0cl1ry8fosrb";
@@ -50,7 +51,28 @@ function WalletBridge({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Inner component that provides the Supabase JWT to Privy's customAuth.
+ * Must be a child of PrivyProvider to use hooks, but manages auth state separately.
+ */
+function PrivyAuthBridge({ children }: { children: ReactNode }) {
+  return <WalletBridge>{children}</WalletBridge>;
+}
+
 export function PrivyWalletProvider({ children }: { children: ReactNode }) {
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Track Supabase session for Privy custom auth
+  const getCustomAccessToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? "";
+  }, []);
+
+  useEffect(() => {
+    // Once we've set up the callback, mark as not loading
+    supabase.auth.getSession().then(() => setAuthLoading(false));
+  }, []);
+
   // If no Privy App ID configured, render children without Privy
   if (!PRIVY_APP_ID) {
     return (
@@ -78,10 +100,12 @@ export function PrivyWalletProvider({ children }: { children: ReactNode }) {
         // Custom auth: we handle sign-in via Supabase, then sync JWT to Privy
         customAuth: {
           enabled: true,
+          getCustomAccessToken,
+          isLoading: authLoading,
         },
       }}
     >
-      <WalletBridge>{children}</WalletBridge>
+      <PrivyAuthBridge>{children}</PrivyAuthBridge>
     </PrivyProvider>
   );
 }
