@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileUp, Type, Link2, Shield, Loader2, Fingerprint, Sparkles, ArrowRight, LayoutGrid, FolderOpen } from "lucide-react";
+import { FileUp, Type, Link2, Shield, Loader2, Fingerprint, Sparkles, ArrowRight, FolderOpen } from "lucide-react";
 import type { ContextManagerHandle } from "../hooks/useContextManager";
 import VaultContextPicker from "./VaultContextPicker";
 
@@ -20,10 +20,9 @@ interface Props {
 export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below", className = "" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [subView, setSubView] = useState<null | "paste" | "url" | "vault" | "workspace" | "folder">(null);
+  const [subView, setSubView] = useState<null | "paste" | "url" | "vault">(null);
   const [pasteText, setPasteText] = useState("");
   const [urlText, setUrlText] = useState("");
-  const [nameText, setNameText] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -173,23 +172,18 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                   />
                 </div>
 
-                {/* Workspace & Folder */}
+                {/* Open Files app */}
                 <div className="px-2 py-1">
                   <MenuItem
-                    icon={<LayoutGrid className="w-4 h-4" />}
-                    label="New Workspace"
-                    hint="Group context into a named project"
-                    onClick={() => setSubView("workspace")}
-                    gradient="from-violet-500/10 to-purple-500/5"
-                    iconColor="text-violet-400/80"
-                  />
-                  <MenuItem
                     icon={<FolderOpen className="w-4 h-4" />}
-                    label="New Folder"
-                    hint="Organize items hierarchically"
-                    onClick={() => setSubView("folder")}
-                    gradient="from-rose-500/10 to-pink-500/5"
-                    iconColor="text-rose-400/80"
+                    label="Open File Explorer"
+                    hint="Manage folders and files"
+                    onClick={() => {
+                      onOpenChange(false);
+                      window.dispatchEvent(new CustomEvent("uor:open-app", { detail: { appId: "files" } }));
+                    }}
+                    gradient="from-amber-500/10 to-orange-500/5"
+                    iconColor="text-amber-400/80"
                   />
                 </div>
 
@@ -331,66 +325,7 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
               </motion.div>
             )}
 
-            {/* Sub-view: Workspace / Folder name input */}
-            {(subView === "workspace" || subView === "folder") && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                className="p-4 flex flex-col gap-3"
-              >
-                <SubViewHeader
-                  title={subView === "workspace" ? "New Workspace" : "New Folder"}
-                  onBack={() => { setSubView(null); setNameText(""); }}
-                />
-                <input
-                  autoFocus
-                  type="text"
-                  value={nameText}
-                  onChange={(e) => setNameText(e.target.value)}
-                  placeholder={subView === "workspace" ? "e.g. Research Project" : "e.g. References"}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && nameText.trim()) {
-                      if (subView === "workspace") ctx.addWorkspace(nameText.trim());
-                      else ctx.addFolder(nameText.trim());
-                      setNameText("");
-                      setSubView(null);
-                      onOpenChange(false);
-                    }
-                  }}
-                  className="w-full text-[13px] rounded-xl px-3.5 py-3 text-foreground placeholder:text-muted-foreground/25 focus:outline-none"
-                  style={{
-                    background: "hsl(0 0% 100% / 0.03)",
-                    border: "1px solid hsl(0 0% 100% / 0.06)",
-                    boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.2)",
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = "hsl(var(--primary) / 0.3)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 100% / 0.06)"; }}
-                />
-                <button
-                  onClick={() => {
-                    if (!nameText.trim()) return;
-                    if (subView === "workspace") ctx.addWorkspace(nameText.trim());
-                    else ctx.addFolder(nameText.trim());
-                    setNameText("");
-                    setSubView(null);
-                    onOpenChange(false);
-                  }}
-                  disabled={!nameText.trim()}
-                  className="self-end flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-20"
-                  style={{
-                    background: nameText.trim()
-                      ? "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.15))"
-                      : "hsl(0 0% 100% / 0.03)",
-                    border: `1px solid ${nameText.trim() ? "hsl(var(--primary) / 0.3)" : "hsl(0 0% 100% / 0.06)"}`,
-                    color: nameText.trim() ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.3)",
-                  }}
-                >
-                  Create
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </motion.div>
-            )}
+            {/* Workspace/Folder creation is now handled by the Files app */}
 
             {/* Sub-view: Vault picker */}
             {subView === "vault" && ctx.vault.ready && (
