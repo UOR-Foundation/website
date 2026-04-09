@@ -9,6 +9,7 @@
 import { ingestFile, ingestPaste, ingestUrl, type PipelineResult, type LineageEntry } from "./ingest-pipeline";
 import type { ArtifactFormat } from "@/modules/uns/core/hologram/universal-ingest";
 import type { StructuredData } from "./structured-extractor";
+import { ingestBridge } from "@/modules/knowledge-graph";
 
 export interface GuestContextItem {
   id: string;
@@ -31,6 +32,10 @@ export interface GuestContextItem {
   structuredData?: StructuredData;
   /** Processing lineage */
   lineage?: LineageEntry[];
+}
+/** Fire-and-forget KG population */
+function addToKnowledgeGraph(item: GuestContextItem): void {
+  ingestBridge.addToGraph(item).catch(() => {});
 }
 
 let items: GuestContextItem[] = [];
@@ -96,6 +101,10 @@ export const guestContext = {
     };
     items = [...items, item];
     emit();
+
+    // Populate Knowledge Graph (fire-and-forget)
+    addToKnowledgeGraph(item);
+
     return item;
   },
 
@@ -118,12 +127,11 @@ export const guestContext = {
     ingestPaste(content, label).then((result) => {
       const idx = items.findIndex((i) => i.id === item.id);
       if (idx >= 0) {
-        items = items.map((i) =>
-          i.id === item.id
-            ? { ...i, uorAddress: result.uorAddress, uorCid: result.uorCid, format: result.format, qualityScore: result.qualityScore, structuredData: result.structuredData, lineage: result.lineage, text: result.text }
-            : i
-        );
+        const enriched = { ...items[idx], uorAddress: result.uorAddress, uorCid: result.uorCid, format: result.format, qualityScore: result.qualityScore, structuredData: result.structuredData, lineage: result.lineage, text: result.text };
+        items = items.map((i) => i.id === item.id ? enriched : i);
         emit();
+        // Populate KG with enriched item
+        addToKnowledgeGraph(enriched);
       }
     }).catch(() => {});
 
@@ -157,6 +165,10 @@ export const guestContext = {
     };
     items = [...items, item];
     emit();
+
+    // Populate Knowledge Graph
+    addToKnowledgeGraph(item);
+
     return item;
   },
 

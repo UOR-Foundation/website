@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Upload, ClipboardPaste, Globe, Lock, ShieldCheck, X, Tag as TagIcon } from "lucide-react";
+import { Upload, ClipboardPaste, Globe, Lock, ShieldCheck, X, Tag as TagIcon, GitBranch } from "lucide-react";
 import { useContextManager, type ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ExplorerSidebar, { type SidebarFilter } from "../components/ExplorerSidebar";
 import ExplorerToolbar, { type ViewMode, type SortField, type SortDir } from "../components/ExplorerToolbar";
@@ -16,6 +16,7 @@ import ImportUrlModal from "../components/ImportUrlModal";
 import { tagStore, DEFAULT_TAGS } from "../lib/tags";
 import { toast } from "sonner";
 import TagMenu from "../components/TagMenu";
+import { useKnowledgeGraph } from "@/modules/knowledge-graph";
 
 const VIEW_KEY = "uor:explorer-view";
 const SORT_KEY = "uor:explorer-sort";
@@ -59,6 +60,7 @@ function sortItems(items: ContextItem[], field: SortField, dir: SortDir): Contex
 
 export default function FileExplorerPage() {
   const ctx = useContextManager();
+  const kg = useKnowledgeGraph();
   const [filter, setFilter] = useState<SidebarFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>(loadViewMode);
   const [searchQuery, setSearchQuery] = useState("");
@@ -330,10 +332,18 @@ export default function FileExplorerPage() {
 
         {/* Status bar */}
         <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 text-[12px] text-muted-foreground/60">
-          <span>{filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}</span>
+          <div className="flex items-center gap-3">
+            <span>{filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}</span>
+            {kg.stats.nodeCount > 0 && (
+              <span className="flex items-center gap-1 text-primary/50">
+                <GitBranch className="w-3 h-3" />
+                {kg.stats.nodeCount} nodes · {kg.stats.edgeCount} connections
+              </span>
+            )}
+          </div>
           <span className="flex items-center gap-1.5">
             {ctx.isGuest ? (
-              <>Local session · not synced</>
+              <>Local session · KG persisted offline</>
             ) : (
               <>
                 <Lock className="w-3 h-3" />
