@@ -235,22 +235,19 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
 
   return (
     <div
-      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
+      className="fixed inset-0 z-[5] flex flex-col items-center justify-center pointer-events-none"
       style={{
         opacity: widgetOpacity,
         transition: "opacity 300ms ease-out",
       }}
     >
-      {/* Golden-ratio vertical centering: top flex-[1.2], bottom flex-[1.618] */}
-      <div style={{ flex: "1.2" }} />
-
       <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
         {/* Day-progress ring clock */}
         <DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />
 
         {/* Greeting */}
         <div
-          className="mt-2 text-center"
+          className="mt-5 text-center"
           style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
         >
           <BalancedBlock
@@ -271,7 +268,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
         </div>
 
         {/* Search bar — tighter gap, frosted glass */}
-        <form onSubmit={handleSubmit} className="w-full mt-6">
+        <form onSubmit={handleSubmit} className="w-full mt-8">
           <div className="relative w-full group">
             <input
               ref={inputRef}
@@ -377,8 +374,6 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
         </div>
       )}
 
-      {/* Bottom spacer — golden ratio */}
-      <div style={{ flex: "1.618" }} />
 
       {/* Placeholder style for placeholders */}
       <style>{`
