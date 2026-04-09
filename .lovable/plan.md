@@ -1,44 +1,71 @@
 
 
-# Replace Home Screen Clock with Circular Day-Progress Ring
+# Formalize Layer 0: UOR Engine as Independent Foundation
 
-## What Changes
+## Architecture Change
 
-Replace the current text-only clock (lines 264–302 in `DesktopWidgets.tsx`) with an SVG-based circular ring clock matching the uploaded design:
+```text
+┌──────────────────────────────────────────────────────────┐
+│  Layer 3: UX/UI                                          │
+│  Imports ONLY from the Bus                               │
+└───────────────────────┬──────────────────────────────────┘
+                        │  bus.call("ns/op", payload)
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 2: Sovereign Bus (Single API surface)             │
+│  POST /bus → JSON-RPC 2.0 envelope                       │
+│  Local: kernel, graph, cert, data-engine, blueprint      │
+│  Remote: oracle, store, scrape, audio, social            │
+└───────────────────────┬──────────────────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 1: Knowledge Graph (Pluggable storage)            │
+│  IndexedDB triple store, Supabase tables, sync-bridge    │
+│  CONSUMES Layer 0 for addressing — never owns it         │
+└───────────────────────┬──────────────────────────────────┘
+                        │  kernel.derive() / kernel.verify()
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 0: UOR Engine (Pure computation, zero deps)       │
+│  singleProofHash, verifySingleProof, computeCid          │
+│  URDNA2015 → SHA-256 → derivation ID / CID / IPv6       │
+│  uor-foundation Rust crate (WASM) as canonical impl     │
+└──────────────────────────────────────────────────────────┘
+```
 
-- **Time** centered in large font (HH:MM, 24h)
-- **Date** below in smaller text (e.g. "Apr 9")
-- **Circular arc** around the clock showing percentage of day elapsed (7:00 AM = 0%, 7:00 PM = 100%)
-- Arc animates smoothly as time progresses
-- Theme-aware (light/dark/immersive)
+## Why This Is Right
 
-## Implementation
+- **Layer 0 is pure math** — deterministic functions with zero storage dependency
+- **KG becomes pluggable** — any storage backend that can call `kernel/derive` works
+- **Single API endpoint unchanged** — `bus.call("kernel/derive", payload)` remains the one canonical entry point
+- **Already decoupled in code** — `kg-store/store.ts` does not import from `uor-canonical.ts`; this formalizes what already exists
 
-### 1. Create `src/modules/desktop/components/DayRingClock.tsx`
+## Concrete Changes (4 steps)
 
-A self-contained component:
+### 1. Create `src/modules/engine/` — Layer 0 home
 
-- SVG circle (stroke-dasharray/dashoffset technique) for the progress arc
-- Computes day progress: `clamp((now - 7:00) / (19:00 - 7:00), 0, 1)`
-  - Before 7 AM → 0%, after 7 PM → 100%
-- Ring rendered as a ~280° arc (matching the screenshot's gap at bottom-left)
-- Thin white/black stroke depending on theme
-- Time and date rendered as centered text inside the SVG
-- Updates every second via the `time` prop passed from parent
-- Accepts `opacity` and theme props for consistency
+Move `src/lib/uor-canonical.ts`, `src/lib/uor-address.ts`, and `src/lib/crypto.ts` into `src/modules/engine/`. Add a barrel `index.ts` that exports the public API: `singleProofHash`, `verifySingleProof`, `computeCid`, `computeUorAddress`, `sha256hex`. Keep backward-compatible re-exports at the old paths so nothing breaks.
 
-### 2. Update `src/modules/desktop/DesktopWidgets.tsx`
+### 2. Update `kernel.ts` bus registration to import from `@/modules/engine`
 
-- Import `DayRingClock`
-- Replace lines 264–302 (the `<h1>` clock and greeting `<div>`) with `<DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />`
-- Keep the greeting text below the ring (repositioned with appropriate spacing)
-- Remove unused `CLOCK_SIZES`, `clockStyle`, `clockShadow` variables and the `measureLineCount`/`FONTS` imports if no longer needed elsewhere
+Change the four dynamic imports from `@/lib/uor-canonical` to `@/modules/engine`. No API change — `kernel/encode`, `kernel/decode`, `kernel/verify`, `kernel/derive` remain identical.
 
-### Visual Spec (matching screenshot)
+### 3. Make KG graph module explicitly consume kernel via bus
 
-- Ring size: ~200px diameter
-- Stroke width: ~2px, color white/70 (dark) or black/50 (light)
-- Gap in ring: starts at ~210° (bottom-left), arc sweeps clockwise
-- Time: ~40px font, extralight, centered
-- Date: ~16px font, muted opacity, below time
+Where `graph/*` operations need to derive a UOR address, they call `bus.call("kernel/derive", ...)` internally rather than importing engine code directly. This enforces the layering: Layer 1 accesses Layer 0 only through the bus, keeping the dependency direction clean and auditable.
+
+### 4. Update documentation and namespace registry
+
+- Update the architecture diagram in plan.md to show 4 layers (0-3)
+- Update `namespace-registry.ts` to annotate `kernel` as Layer 0 and `graph` as Layer 1
+- Add a `layer` field to `NamespaceDescriptor` type: `layer: 0 | 1 | 2 | 3`
+
+## What Does NOT Change
+
+- **Bus API surface** — zero breaking changes, `kernel/*` and `graph/*` methods stay identical
+- **Gateway edge function** — untouched, still dispatches remote calls
+- **UI components** — still call `bus.call()`, unaware of layer numbers
+- **WASM bridge** — stays where it is, consumed by the engine module
+
+## Result
+
+The UOR Engine becomes a self-contained, zero-dependency computational kernel at Layer 0. Any future KG implementation (Neo4j, DGraph, a custom RDF store) plugs in at Layer 1 by consuming `kernel/derive` and `kernel/verify` — the engine doesn't know or care what stores its output.
 
