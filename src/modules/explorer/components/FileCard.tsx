@@ -11,14 +11,15 @@ interface Props {
   item: ContextItem;
   viewMode: ViewMode;
   onRemove: (id: string) => void;
+  onSelect?: (id: string) => void;
 }
 
-export default function FileCard({ item, viewMode, onRemove }: Props) {
+export default function FileCard({ item, viewMode, onRemove, onSelect }: Props) {
   const { icon: Icon, color, label } = getFileIcon(item.filename, item.source);
 
   if (viewMode === "list") {
     return (
-      <div className="group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors rounded-md">
+      <div className="group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors rounded-md cursor-pointer" onClick={() => onSelect?.(item.id)}>
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ background: `${color}15` }}
@@ -44,7 +45,7 @@ export default function FileCard({ item, viewMode, onRemove }: Props) {
 
   // Grid card
   return (
-    <div className="group relative flex flex-col items-center gap-2.5 p-5 rounded-xl hover:bg-muted/30 transition-colors cursor-default">
+    <div className="group relative flex flex-col items-center gap-2.5 p-5 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onSelect?.(item.id)}>
       {/* Icon */}
       <div
         className="w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
