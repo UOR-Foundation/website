@@ -4,7 +4,7 @@
  * anchored at the bottom-right of the bar.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,10 +19,11 @@ import {
   QrCode,
   PanelRightOpen,
   PanelRightClose,
+  Settings2,
 } from "lucide-react";
 import QrPortalPanel from "@/modules/oracle/components/QrPortalPanel";
 import { motion, AnimatePresence } from "framer-motion";
-import { KNOWLEDGE_LENSES, getBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
+import { KNOWLEDGE_LENSES, getBlueprint, loadCustomLenses, type LensBlueprint } from "@/modules/oracle/lib/knowledge-lenses";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getSearchHistory, type SearchHistoryEntry } from "@/modules/oracle/lib/search-history";
 
