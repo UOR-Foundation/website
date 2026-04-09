@@ -108,15 +108,15 @@ register({
     },
     sparql: {
       handler: async (params: any) => {
-        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
+        const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
         if (!params?.query) throw new Error("Provide a SPARQL query string");
         if (params.update) {
-          await oxigraphStore.sparqlUpdate(params.query);
+          await grafeoStore.sparqlUpdate(params.query);
           return { ok: true, type: "update" };
         }
-        return oxigraphStore.sparqlQuery(params.query);
+        return grafeoStore.sparqlQuery(params.query);
       },
-      description: "Execute a full SPARQL 1.1 query via Oxigraph native engine",
+      description: "Execute a full SPARQL 1.1 query via GrafeoDB native engine",
       paramsSchema: {
         type: "object",
         properties: {
@@ -128,19 +128,19 @@ register({
     },
     init: {
       handler: async () => {
-        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
-        const result = await oxigraphStore.init();
+        const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
+        const result = await grafeoStore.init();
         return { ok: true, ...result };
       },
-      description: "Initialize Oxigraph WASM engine and restore persisted quads",
+      description: "Initialize GrafeoDB WASM engine and restore persisted quads",
     },
     flush: {
       handler: async () => {
-        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
-        const count = await oxigraphStore.flush();
+        const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
+        const count = await grafeoStore.flush();
         return { ok: true, quadsFlushed: count };
       },
-      description: "Persist current graph state to IndexedDB as N-Quads",
+      description: "Persist current graph state to IndexedDB",
     },
   },
 });
