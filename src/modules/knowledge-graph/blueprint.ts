@@ -329,7 +329,7 @@ async function groundBlueprint(blueprint: ObjectBlueprint): Promise<GroundObject
   const canonical = canonicalJsonLd(forHashing);
   const canonicalBytes = new TextEncoder().encode(canonical);
   const hashBytes = await sha256(canonicalBytes);
-  const identity = buildIdentity(hashBytes, canonicalBytes);
+  const identity = await buildIdentity(hashBytes, canonicalBytes);
 
   return {
     blueprint,
