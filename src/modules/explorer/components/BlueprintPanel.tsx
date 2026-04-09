@@ -1,16 +1,54 @@
 /**
  * BlueprintPanel — Displays the decomposed UOR blueprint for a KG node.
  * Shows attributes, edges, UOR identity, and space definition.
+ * Supports export to .json and import (drag-and-drop) to materialize nodes.
  */
 
-import { useEffect, useState } from "react";
-import { Boxes, ArrowRight, Tag, Globe, Hash, Loader2, AlertCircle } from "lucide-react";
-import { decomposeToBlueprint } from "@/modules/knowledge-graph/blueprint";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Boxes, ArrowRight, Tag, Globe, Hash, Loader2, AlertCircle,
+  Download, Upload, CheckCircle2,
+} from "lucide-react";
+import {
+  decomposeToBlueprint,
+  serializeBlueprint,
+  deserializeBlueprint,
+  materializeFromBlueprint,
+} from "@/modules/knowledge-graph/blueprint";
+import { localGraphStore } from "@/modules/knowledge-graph/local-store";
 import type { GroundObjectBlueprint, BlueprintAttribute } from "@/modules/knowledge-graph/blueprint";
+import { toast } from "sonner";
 
 interface Props {
   uorAddress: string;
 }
+
+/* ── Helpers ──────────────────────────────────────────────────────────────── */
+
+function truncateAddr(addr: string): string {
+  if (addr.length <= 24) return addr;
+  return `${addr.slice(0, 12)}…${addr.slice(-8)}`;
+}
+
+function formatValue(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (typeof v === "object") return JSON.stringify(v).slice(0, 100);
+  return String(v).slice(0, 200);
+}
+
+function downloadJson(data: string, filename: string) {
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Sub-components ───────────────────────────────────────────────────────── */
 
 function AttributeRow({ attr }: { attr: BlueprintAttribute }) {
   const isRef = attr.valueType === "reference";
@@ -41,21 +79,116 @@ function AttributeRow({ attr }: { attr: BlueprintAttribute }) {
   );
 }
 
-function truncateAddr(addr: string): string {
-  if (addr.length <= 24) return addr;
-  return `${addr.slice(0, 12)}…${addr.slice(-8)}`;
+/* ── Import drop-zone ─────────────────────────────────────────────────────── */
+
+function ImportDropZone({ onImported }: { onImported: () => void }) {
+  const [dragging, setDragging] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{ label: string; address: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(async (file: File) => {
+    if (!file.name.endsWith(".json")) {
+      toast.error("Only .json blueprint files are supported");
+      return;
+    }
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const ground = deserializeBlueprint(text);
+      const { node, edges } = await materializeFromBlueprint(ground.blueprint);
+
+      // Persist to KG
+      await localGraphStore.putNode(node);
+      for (const edge of edges) {
+        await localGraphStore.putEdge(edge);
+      }
+
+      setResult({ label: node.label, address: truncateAddr(node.uorAddress) });
+      toast.success(`Materialized node "${node.label}"`);
+      onImported();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Import failed";
+      toast.error(msg);
+    } finally {
+      setImporting(false);
+    }
+  }, [onImported]);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  return (
+    <div className="mt-4 space-y-2">
+      <span className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider">
+        Import Blueprint
+      </span>
+
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        onClick={() => fileRef.current?.click()}
+        className={`
+          relative flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed
+          py-6 px-4 cursor-pointer transition-colors
+          ${dragging
+            ? "border-primary/60 bg-primary/5"
+            : "border-border/30 bg-muted/10 hover:border-primary/30 hover:bg-muted/20"}
+        `}
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+            e.target.value = "";
+          }}
+        />
+
+        {importing ? (
+          <Loader2 className="w-5 h-5 animate-spin text-primary/60" />
+        ) : result ? (
+          <>
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <span className="text-[11px] text-foreground/70">{result.label}</span>
+            <code className="text-[9px] font-mono text-muted-foreground/50">{result.address}</code>
+          </>
+        ) : (
+          <>
+            <Upload className="w-5 h-5 text-muted-foreground/40" />
+            <span className="text-[11px] text-muted-foreground/50">
+              Drop a <code className="font-mono">.json</code> blueprint or click to browse
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
-function formatValue(v: unknown): string {
-  if (v === null || v === undefined) return "—";
-  if (typeof v === "object") return JSON.stringify(v).slice(0, 100);
-  return String(v).slice(0, 200);
-}
+/* ── Main panel ───────────────────────────────────────────────────────────── */
 
 export default function BlueprintPanel({ uorAddress }: Props) {
   const [blueprint, setBlueprint] = useState<GroundObjectBlueprint | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    decomposeToBlueprint(uorAddress)
+      .then(setBlueprint)
+      .catch((err) => setError(err?.message || "Blueprint unavailable"))
+      .finally(() => setLoading(false));
+  }, [uorAddress]);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +203,15 @@ export default function BlueprintPanel({ uorAddress }: Props) {
     return () => { cancelled = true; };
   }, [uorAddress]);
 
+  /* Export handler */
+  const handleExport = useCallback(() => {
+    if (!blueprint) return;
+    const json = serializeBlueprint(blueprint);
+    const safeName = blueprint.blueprint.spaceDefinition.kind.replace(/[^a-z0-9]/gi, "-");
+    downloadJson(json, `blueprint-${safeName}-${Date.now()}.json`);
+    toast.success("Blueprint exported");
+  }, [blueprint]);
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground/50 text-[11px] py-4">
@@ -81,9 +223,12 @@ export default function BlueprintPanel({ uorAddress }: Props) {
 
   if (error || !blueprint) {
     return (
-      <div className="flex items-center gap-2 text-muted-foreground/40 text-[11px] py-3">
-        <AlertCircle className="w-3.5 h-3.5" />
-        {error || "No blueprint available"}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-muted-foreground/40 text-[11px] py-3">
+          <AlertCircle className="w-3.5 h-3.5" />
+          {error || "No blueprint available"}
+        </div>
+        <ImportDropZone onImported={load} />
       </div>
     );
   }
@@ -94,12 +239,22 @@ export default function BlueprintPanel({ uorAddress }: Props) {
 
   return (
     <div className="border-t border-border/20 mt-4 pt-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <Boxes className="w-3.5 h-3.5 text-primary/60" />
-        <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-          Object Blueprint
-        </span>
+      {/* Header + Export */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Boxes className="w-3.5 h-3.5 text-primary/60" />
+          <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+            Object Blueprint
+          </span>
+        </div>
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium
+                     bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+        >
+          <Download className="w-3 h-3" />
+          Export .json
+        </button>
       </div>
 
       {/* Space Definition */}
@@ -183,6 +338,9 @@ export default function BlueprintPanel({ uorAddress }: Props) {
           ))}
         </div>
       )}
+
+      {/* Import drop zone */}
+      <ImportDropZone onImported={load} />
     </div>
   );
 }
