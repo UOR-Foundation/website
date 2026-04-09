@@ -1,146 +1,152 @@
 
 
-## Plan: Universal Ingestion Pipeline — Seamless Structured + Unstructured Data
+## Plan: UOR-Native Personal Knowledge Graph with Full Offline/Online Computational Capability
 
-### Analysis: What ANIMA Does That We Don't
+### The Core Insight
 
-ANIMA's data engineering stack has a 4-phase pipeline that our OS currently lacks:
+The UOR framework already implements everything needed for a fully computational knowledge graph. Right now these capabilities are scattered across disconnected modules (`kg-store`, `code-kg`, `derivation`, `ring-core`, `canonicalization`, `jsonld`, `identity`, `triad`). The knowledge graph store (`kg-store/store.ts`) is Supabase-only — it requires auth and network. The file explorer's ingestion pipeline produces UOR addresses but never creates graph nodes or edges.
 
-```text
-ANIMA Pipeline:
-  Raw bytes → RawStore (immutable audit) → ADEE Engine → Knowledge Graph
-                                            ↓
-                                   AutoProfiler (learns structure)
-                                   ProcessingProfile (adaptive cleaning)
-                                   QualityScore (0.0–1.0)
-                                   LazyDataFrameRegistry (LRU, Parquet)
-                                   ProcessedDataPacket (lineage chain)
-```
+The fix: a **local-first Knowledge Graph** backed by IndexedDB (following the existing `weight-store.ts` pattern), where every ingested item becomes a graph node with typed edges, and the full UOR computational stack (ring arithmetic, term canonicalization, derivation, coherence verification, semantic similarity) operates entirely offline.
 
-```text
-Our Current Pipeline:
-  File → extractText() → plain text string → chunkText() → vault store
-                ↓
-         Everything becomes flat text.
-         CSV loses columns. Excel is unsupported.
-         No quality scoring. No schema inference.
-         No connection to universal-ingest.ts.
-```
+### What UOR Primitives We Already Have (and Will Leverage)
 
-**Critical gap**: We already have `universal-ingest.ts` — a beautifully designed format-detecting, content-addressing ingest function. But it's completely disconnected from the File Explorer and Sovereign Vault. Files dropped into the explorer go through `extractText()` which flattens everything to a text string, bypassing UOR entirely.
+| Module | Capability | KG Use |
+|--------|-----------|--------|
+| `ring-core/ring.ts` | 10 ring operations (neg, bnot, xor, and, or, succ, pred, add, sub, mul) | Compute over graph node values offline |
+| `ring-core/canonicalization.ts` | 7-rule term canonicalization to normal form | **Compression**: identical expressions reduce to same canonical form = same node |
+| `derivation/derivation.ts` | Auditable computation records with epistemic grading | Every graph transformation gets a Grade-A receipt |
+| `ring-core/coherence.ts` | 8-law exhaustive verification | Self-verifying graph: every node can prove its own integrity |
+| `ring-core/reasoning.ts` | Deductive/Inductive/Abductive reasoning primitives | Graph traversal with formal reasoning modes |
+| `ring-core/semantic-similarity.ts` | Trigram cosine similarity (<0.05ms) | Find related nodes without embeddings or network |
+| `identity/addressing.ts` | Lossless Braille bijection (byte ↔ glyph ↔ IRI) | Every node has a permanent, invertible address |
+| `uor-canonical.ts` | URDNA2015 → SHA-256 → 4 identity forms | Content-addressing for deduplication and integrity |
+| `jsonld/emitter.ts` | W3C JSON-LD 1.1 graph emission | Export/import graphs as standard linked data |
+| `triad/triad.ts` | Triadic decomposition (datum, stratum, spectrum) | Classify nodes by information density |
+| `ring-core/compose.ts` | Operation composition (f ∘ g) | Chain graph transformations |
 
-### The Fix: Connect Universal Ingest to the Vault Pipeline
-
-One new module (`ingest-pipeline`) that acts as the ADEE equivalent, sitting between file input and storage. It routes every file through `universal-ingest` for content-addressing, then applies format-specific processing before storage.
+### Architecture
 
 ```text
-New Pipeline:
-  File/URL/Paste
-       ↓
-  IngestPipeline.ingest(file)
-       ↓
-  ┌─────────────────────────────────┐
-  │ 1. Format Detection (magic bytes)│
-  │ 2. universal-ingest → UOR CID   │
-  │ 3. Format-specific extraction:   │
-  │    • CSV/TSV → parsed columns    │
-  │    • XLSX    → parsed sheets     │
-  │    • JSON    → structured object │
-  │    • PDF/DOCX → edge function    │
-  │    • Image   → metadata + OCR    │
-  │    • Text/MD → raw text          │
-  │ 4. Quality score (completeness)  │
-  │ 5. Chunk + store (vault or guest)│
-  └─────────────────────────────────┘
-       ↓
-  GuestContextItem now has:
-    - uorAddress (CID from universal-ingest)
-    - structuredData? (parsed columns/rows for tabular)
-    - qualityScore (0.0–1.0)
-    - format (detected ArtifactFormat)
-    - lineage[] (processing stages)
+┌──────────────────────────────────────────────────┐
+│              Explorer / Oracle / Apps             │
+├──────────────────────────────────────────────────┤
+│         useKnowledgeGraph() React Hook            │
+│    query · traverse · reason · export · sync      │
+├──────────────────────────────────────────────────┤
+│            KnowledgeGraphEngine                   │
+│  ┌────────┐ ┌──────────┐ ┌───────────────────┐  │
+│  │ Nodes  │ │  Edges   │ │   Derivations     │  │
+│  │ (IDB)  │ │  (IDB)   │ │   (IDB)           │  │
+│  └────────┘ └──────────┘ └───────────────────┘  │
+│  ┌──────────────────────────────────────────────┐│
+│  │         UOR Computational Layer              ││
+│  │  Ring Ops · Canonicalize · Derive · Verify   ││
+│  │  Reason (D/I/A) · Similarity · Compose       ││
+│  └──────────────────────────────────────────────┘│
+├──────────────────────────────────────────────────┤
+│  SyncBridge: IDB ↔ Cloud (when online + authed)  │
+└──────────────────────────────────────────────────┘
 ```
 
 ### Changes
 
-**1. New: `src/modules/sovereign-vault/lib/ingest-pipeline.ts`**
-The central orchestrator. One function: `ingestFile(file: File)` that:
-- Reads the file as ArrayBuffer
-- Calls `universal-ingest`'s `ingest()` to get the UOR CID and envelope
-- Routes to format-specific extractors based on detected format
-- For CSV/TSV: parses with a lightweight CSV parser (Papa Parse is already common, but we can use a simple split-based parser to avoid deps) — extracts column names, row count, data types, and a text representation
-- For XLSX: delegates to `parse-document` edge function, receives structured sheet data
-- For JSON: preserves structure, extracts keys as "columns"
-- Computes a quality score (% non-null cells for tabular, % non-empty chunks for text)
-- Returns an `IngestResult` with both the UOR identity and the extracted content
+**Phase 1: Local Knowledge Graph Store (IndexedDB)**
 
-**2. New: `src/modules/sovereign-vault/lib/structured-extractor.ts`**
-Handles structured data formats specifically:
-- `parseCSV(text: string)` → `{ columns: string[], rows: string[][], rowCount: number, dtypes: Record<string, string> }`
-- `parseJSON(text: string)` → flattened key paths for searchability
-- `computeQuality(data)` → completeness score
-- `toSearchableText(structured)` → generates a text representation that preserves column names and sample values for full-text search
+**New: `src/modules/knowledge-graph/local-store.ts`**
+IndexedDB-backed triple store following the `weight-store.ts` pattern:
+- Object stores: `nodes` (keyed by UOR address), `edges` (keyed by composite), `derivations` (keyed by derivation_id), `meta` (graph-level metadata)
+- `putNode(node)` — upsert by UOR address (same content = same node, automatic dedup)
+- `putEdge(subject, predicate, object)` — typed edges
+- `getNode(uorAddress)` — O(1) lookup
+- `queryByPredicate(pred)` — find all edges of a type
+- `queryBySubject(subjectAddr)` — fan-out from a node
+- `traverseBFS(startAddr, depth)` — breadth-first graph walk
+- `exportAsJsonLd()` — serialize entire graph as W3C JSON-LD using existing `emitter.ts`
+- `importFromJsonLd(doc)` — ingest a JSON-LD graph
+- `getStats()` — node count, edge count, derivation count
+- `clear()` — wipe local graph
 
-**3. Update: `src/modules/sovereign-vault/lib/guest-context.ts`**
-Extend `GuestContextItem` with:
-- `uorAddress?: string` — the CID from universal-ingest
-- `format?: ArtifactFormat` — detected format
-- `qualityScore?: number` — 0.0–1.0
-- `columns?: string[]` — for tabular data
-- `rowCount?: number` — for tabular data
-- `lineage?: { stage: string; timestamp: string }[]` — processing chain
+**Phase 2: Ingestion → Graph Bridge**
 
-Update `addFile()` to route through `ingestFile()` instead of raw `extractText()`.
+**New: `src/modules/knowledge-graph/ingest-bridge.ts`**
+Connects the existing ingestion pipeline to the knowledge graph:
+- When `ingestFile/ingestPaste/ingestUrl` completes, automatically create a graph node with:
+  - `@id`: the UOR address from the pipeline
+  - `@type`: detected format (csv, json, text, markdown, image)
+  - Properties: filename, size, quality score, stratum (from triad), format
+  - Structured data columns become edge targets (`node --hasColumn--> columnNode`)
+- For tabular data: each column becomes a sub-node, enabling queries like "show all files with a 'revenue' column"
+- For text: extract entities via simple NLP (proper nouns, URLs, emails) and create edges to shared entity nodes — this is where the graph becomes powerful: two documents mentioning "UOR" share a common node
+- Duplicate detection is free: same UOR address = same node, no extra work
 
-**4. Update: `src/modules/sovereign-vault/lib/extract.ts`**
-- Add CSV/TSV structured parsing (currently reads as raw text — loses all column info)
-- Add XLSX support via `parse-document` edge function (currently unsupported)
-- Add Excel MIME type detection
+**Phase 3: Computational Graph Operations**
 
-**5. Update: `src/modules/explorer/components/QuickLookModal.tsx`**
-- For tabular files (CSV, XLSX): render a table preview showing columns + first N rows instead of raw text
-- Show quality score badge
-- Show row/column count in metadata
+**New: `src/modules/knowledge-graph/graph-compute.ts`**
+Leverages the full UOR computational stack for offline graph operations:
 
-**6. Update: `src/modules/explorer/components/FileCard.tsx`**
-- Show format-specific icons (table icon for CSV/XLSX, code icon for JSON)
-- Display row count for tabular files ("1,247 rows · 12 columns")
-- Quality score as a subtle colored dot (green >0.8, yellow >0.5, red <0.5)
+1. **Canonicalization-based compression**: When two nodes contain equivalent expressions (detected via `canonicalize()` from `canonicalization.ts`), they collapse to the same canonical node. This is genuine data compression — not lossy, mathematically provable.
 
-**7. Large file handling**
-- For files >5MB: stream through the edge function instead of base64-encoding in browser memory
-- Add a progress callback to `ingestFile()` so the UI can show ingestion progress
-- Chunk large CSVs during parsing (process first 10K rows for preview, full file for storage)
+2. **Derivation chains**: Every graph transformation (merge, split, fork) creates a `Derivation` record via `derive()`. The graph carries its own audit trail. Any node can be re-derived and verified offline.
+
+3. **Semantic search via Hamming distance**: Use `inductiveStep()` from `reasoning.ts` to find nodes with similar ring values (content similarity without embeddings). Combined with `SemanticIndex` from `semantic-similarity.ts` for text-level similarity.
+
+4. **Graph reasoning**: 
+   - `deductiveStep()`: Given constraints, narrow which nodes satisfy a query
+   - `inductiveStep()`: Given an observation (new file), find the nearest existing node
+   - `abductiveStep()`: Detect gaps — "you have nodes A and B but no edge between them; based on content similarity, should there be one?"
+
+5. **Coherence verification**: `verifyQ0Exhaustive()` runs entirely offline, proving the ring substrate is sound. Every node's integrity can be verified by re-hashing its content.
+
+**Phase 4: React Integration**
+
+**New: `src/modules/knowledge-graph/hooks/useKnowledgeGraph.ts`**
+React hook exposing the graph to UI:
+- `nodes`, `edges`, `stats` — reactive state from IndexedDB
+- `query(pattern)` — SPARQL-like pattern matching over local triples
+- `findRelated(nodeAddr)` — semantic + structural similarity search
+- `reason(mode, params)` — execute deductive/inductive/abductive steps
+- `exportGraph()` — download as JSON-LD
+- `importGraph(file)` — load a JSON-LD graph file
+
+**Phase 5: Cloud Sync Bridge**
+
+**Update: `src/modules/knowledge-graph/sync-bridge.ts`**
+When authenticated and online:
+- Push local IndexedDB nodes/edges → `uor_triples` table (existing schema)
+- Pull cloud triples → local IndexedDB
+- Conflict resolution via UOR address comparison (same address = identical, skip)
+- Merge via `uor_triples` graph_iri namespacing (each device gets a named graph)
+
+**Phase 6: Explorer Integration**
+
+**Update: `src/modules/explorer/pages/FileExplorerPage.tsx`**
+- After successful file ingestion, call `ingestBridge.addToGraph(item)` 
+- Show graph node count in status bar: "12 files · 47 connections"
+- Add a "Graph" view toggle alongside Grid/List that shows a minimap of connected nodes
+
+**Update: `src/modules/sovereign-vault/lib/guest-context.ts`**
+- After `addFile/addPaste/addUrl`, invoke ingest-bridge to populate the local KG
+
+### Compression via UOR (the key differentiator)
+
+Traditional storage: 10 files × 1MB = 10MB. Each file is an opaque blob.
+
+UOR Knowledge Graph:
+1. **Content dedup**: Same paragraph in 3 documents = 1 node with 3 edges. Storage: ~1/3.
+2. **Term canonicalization**: `succ(succ(pred(x)))` and `succ(x)` are the same canonical form. Same derivation_id. One node.
+3. **Structural sharing**: CSV files with overlapping columns share column-definition nodes. 10 CSVs with "date, amount, category" share 3 column nodes instead of duplicating 30.
+4. **Triadic classification**: Stratum-based indexing (low/medium/high information density) enables efficient pruning — skip low-stratum nodes for detailed queries, skip high-stratum for overview queries.
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/sovereign-vault/lib/ingest-pipeline.ts` | New — central orchestrator connecting universal-ingest to vault |
-| `src/modules/sovereign-vault/lib/structured-extractor.ts` | New — CSV/JSON parsing + quality scoring |
-| `src/modules/sovereign-vault/lib/guest-context.ts` | Extended GuestContextItem + route through pipeline |
-| `src/modules/sovereign-vault/lib/extract.ts` | Add CSV structure + XLSX support |
-| `src/modules/explorer/components/QuickLookModal.tsx` | Table preview for tabular data |
-| `src/modules/explorer/components/FileCard.tsx` | Format-aware display + quality indicator |
-
-### What This Enables
-
-Once every file flows through universal-ingest:
-- **Duplicate detection works across formats**: Same CSV uploaded twice → same CID → detected
-- **Structured data is queryable**: Oracle can reason over column names and data types
-- **Quality is visible**: Users see data completeness at a glance
-- **The knowledge graph grows**: Every ingested file becomes a node with typed relationships
-- **LLM context is richer**: Instead of feeding flat text, we can feed column schemas and sample rows
-
-### ANIMA Patterns Adopted vs. Deferred
-
-| ANIMA Pattern | Status | Rationale |
-|---|---|---|
-| RawStore (immutable audit trail) | **Adopted** — universal-ingest's envelope IS the immutable record |
-| Format detection + adaptive parsing | **Adopted** — via detectFormat + structured-extractor |
-| Quality scoring | **Adopted** — completeness metric |
-| Processing lineage | **Adopted** — lightweight stage array |
-| AutoProfiler (learning profiles) | Deferred — requires multiple ingestions of same source to learn |
-| LazyDataFrameRegistry (LRU + Parquet) | Deferred — browser environment, no Parquet runtime |
-| EngineeringTuner (cognitive feedback loop) | Deferred — requires reasoning engine integration |
+| `src/modules/knowledge-graph/local-store.ts` | New — IndexedDB triple store |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | New — Pipeline → Graph node creation |
+| `src/modules/knowledge-graph/graph-compute.ts` | New — Offline computational operations |
+| `src/modules/knowledge-graph/hooks/useKnowledgeGraph.ts` | New — React hook |
+| `src/modules/knowledge-graph/sync-bridge.ts` | New — IDB ↔ Cloud sync |
+| `src/modules/knowledge-graph/index.ts` | New — Barrel export |
+| `src/modules/sovereign-vault/lib/guest-context.ts` | Wire ingest-bridge after file add |
+| `src/modules/explorer/pages/FileExplorerPage.tsx` | Graph stats in status bar |
 
