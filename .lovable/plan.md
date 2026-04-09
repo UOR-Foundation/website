@@ -1,67 +1,88 @@
 
 
-# VM-Style System Status Panel
+# Hypervisor-Style VM Status Console
 
 ## Concept
 
-Redesign the diagnostic panel to look like a **hypervisor management console** (think Proxmox, VMware, Hyper-V). Two distinct panes side-by-side on one screen — no scrolling:
+Redesign the EngineStatusIndicator panel to resemble a **hypervisor management console** (Proxmox/VMware/Hyper-V style). Two-column layout on one screen with clear VM vs Host separation. The copied report becomes a comprehensive self-improving technical document.
+
+## Visual Panel Design
+
+The panel widens to ~540px with a two-column grid layout. Everything fits on one screen — no scrolling.
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  ● Sealed                        Copy Report    │
-│  ⡧⠧⣇⢩⢜⡾⢮⡺⣬⡢⢙⠣⡅⠆⡗⣘⡌⡪⠩⠇⡸⠺⠸⠐⢄⣥⣣⢭⣟⠧⣌⢫  │
-├────────────────────────┬────────────────────────┤
-│  VIRTUAL MACHINE       │  HOST HARDWARE         │
-│                        │                        │
-│  OS      UOR/0.2.0     │  Projection  Remote    │
-│  Kernel  TS fallback   │  Hostname    *.lovable │
-│  Ring    Verified ✓    │  Cores       23        │
-│  Uptime  00:04:12      │  Memory      — GB      │
-│  Modules 23            │  GPU         —         │
-│  Seal    37ms          │  Screen      1920×1080 │
-│                        │  WASM        Yes       │
-│  KERNEL PRIMITIVES     │  SIMD        Yes       │
-│  P₀ encode   ●        │  SAB         No        │
-│  P₁ decode   ●        │  Touch       No        │
-│  P₂ compose  ●        │                        │
-│  P₃ store    ●        │  PROVENANCE            │
-│  P₄ resolve  ●        │  Context     Remote    │
-│  P₅ observe  ●        │  Hash        6727c7…   │
-│  P₆ seal     ●        │                        │
-│  7/7 verified          │                        │
-├────────────────────────┴────────────────────────┤
-│  STACK  21/23 operational                       │
-│  ⚠ WebAssembly SIMD (optional)                 │
-│  ⚠ SharedArrayBuffer (optional)                │
-├─────────────────────────────────────────────────┤
-│  Lattice-hash sealed · 128-bit preimage        │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  ● DEGRADED    UOR/0.2.0           [Copy Report]    │
+│  Glyph: ⡧⠧⣇⢩⢜⡾⢮⡺⣬⡢⢙⠣⡅⠆⡗⣘⡌⡪⠩⠇⡸⠺⠸⠐⢄⣥⣣⢭⣟⠧⣌⢫    │
+├──────────────────────────┬───────────────────────────┤
+│  VIRTUAL MACHINE         │  HOST DEVICE              │
+│                          │                           │
+│  Kernel    TS fallback   │  Projection  Remote       │
+│  Ring      Verified ✓    │  Origin      *.lovable    │
+│  Uptime    00:07:42      │  CPU         23 cores     │
+│  Boot      35ms          │  Memory      — GB         │
+│  Modules   23            │  GPU         —            │
+│  Stack     22/23 ✓       │  Display     1920×1080    │
+│                          │  WASM        ✓            │
+│  P₀ ENCODE     ●        │  SIMD        ✓            │
+│  P₁ DECODE     ●        │  SAB         ✗            │
+│  P₂ COMPOSE    ●        │  Touch       No           │
+│  P₃ STORE      ●        │                           │
+│  P₄ RESOLVE    ●        │  PROVENANCE                │
+│  P₅ OBSERVE    ●        │  Context     Remote       │
+│  P₆ SEAL       ●        │  Hash        6727c…       │
+│  7/7 verified            │                           │
+├──────────────────────────┴───────────────────────────┤
+│  ⚠ Compute Engine: WASM fallback to TypeScript       │
+│  ⚠ SharedArrayBuffer: unavailable (optional)         │
+├──────────────────────────────────────────────────────┤
+│  Lattice-hash sealed · 128-bit preimage              │
+└──────────────────────────────────────────────────────┘
 ```
 
-## Key Design Decisions
+### Key Design Decisions
+- **Two-column split**: Left = Virtual Machine (the OS), Right = Host Device (where it's projected from). Instantly familiar to hypervisor users
+- **Live uptime counter**: Ticks every second since boot, like a real VM console
+- **No scrolling**: Everything fits in one view with compact 9-10px monospace text
+- **Issues strip at bottom**: Full-width, only shows when degraded
+- **Status bar header**: Status dot + OS version + Copy Report button in one line
+- **No collapsible sections**: Everything visible at once
 
-- **Two-column layout** — left is the virtual OS, right is the host projecting it. Instantly familiar to anyone who's used a hypervisor
-- **No scrolling** — everything fits in one view by making font sizes compact (9-10px mono) and removing progressive disclosure toggles
-- **Uptime counter** — live ticking clock since boot, like a real VM console
-- **Projection label** — "Local" vs "Remote (hostname)" prominently shown on the hardware side, making it clear where the OS is being projected from
-- **Status bar footer** — stack health + issues in a single bottom strip
-- **Wider panel** — expand from `w-80` (320px) to `w-[520px]` to fit two columns comfortably
+## Enhanced Markdown Report (Clipboard)
 
-## Changes
+Add these sections to `formatMarkdownReport`:
+
+1. **Executive Summary**: One-paragraph plain-English system state
+2. **Kernel Functions table**: With ring basis and governed namespaces
+3. **Categorized tech stack**: Critical / Recommended / Optional groupings with selection criteria columns (license, standard, portability, adoption)
+4. **Timing Breakdown**: Boot time, seal time, uptime, verification interval
+5. **Environment Capabilities Matrix**: WASM, SIMD, SAB, Workers, SharedMemory as a table
+6. **Namespace Coverage**: Covered/uncovered with orphan details
+7. **Recommendations**: Per-degradation with severity, impact, and action
+
+### Self-Improvement Feature
+
+Add a `## System Self-Assessment` section at the end of the report where the system analyzes its own report and suggests improvements:
+
+- **Missing Metrics**: Identifies what the report doesn't yet measure (e.g., memory pressure, GC pauses, network latency to Supabase)
+- **Coverage Gaps**: Which kernel functions lack depth in reporting
+- **Suggested Enhancements**: Concrete additions the system recommends for future reports (e.g., "Add p95 seal verification latency", "Track IndexedDB storage quota usage")
+
+This is generated deterministically from the current data — no AI call needed. A `buildSelfAssessment()` function inspects the receipt and identifies gaps.
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/modules/boot/EngineStatusIndicator.tsx` | Full rewrite of the panel body: two-column grid layout, uptime counter, remove collapsible sections, flatten all info into one screen |
+| `src/modules/boot/EngineStatusIndicator.tsx` | Full rewrite: two-column hypervisor layout, live uptime, wider panel, enhanced `formatMarkdownReport` with executive summary + capabilities matrix + self-assessment section |
 
 ## Implementation Details
 
-- Replace the single-column `space-y-2.5` layout with a CSS grid: `grid-cols-2` with a divider
-- Add a `useEffect` interval for live uptime display (diff from `receipt.seal.bootedAt`)
-- Left column: Status, seal glyph, kernel info, P₀–P₆ primitives as a compact list with dots
-- Right column: All hardware/provenance data — cores, memory, GPU, screen, WASM/SIMD/SAB capabilities, execution context, provenance hash (truncated)
-- Bottom strip (full-width): Stack summary line + any failing components listed inline
-- Issues section stays but moves to the bottom strip area
-- Remove `showDetails` toggle entirely — everything is visible at once
-- `formatMarkdownReport` stays unchanged (already comprehensive)
-- Max height constraint: `max-h-[85vh]` with the layout designed to never need it
+- Panel width: `w-[540px]` with `grid grid-cols-2 gap-x-4`
+- Uptime: `useEffect` interval computing `Date.now() - bootedAtMs`, formatted as `HH:MM:SS`
+- Left column: VM identity (kernel, ring, uptime, boot, modules, stack summary, P₀–P₆ primitives)
+- Right column: Host hardware (projection type, hostname, cores, memory, GPU, screen, WASM/SIMD/SAB/Touch capabilities, provenance hash)
+- Bottom strip: Full-width issues (only shown when degraded)
+- `buildSelfAssessment(receipt)` returns an array of `{ metric: string, status: "measured" | "missing", suggestion: string }` entries by checking what data the receipt contains vs what could be tracked
+- No new dependencies
 
