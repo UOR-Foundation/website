@@ -528,15 +528,15 @@ function formatMarkdownReport(
     L.push("");
   }
 
-  const assessment = buildSelfAssessment(receipt);
+  const assessment = buildSelfAssessment(receipt, runtimeMetrics);
   L.push("## System Self-Assessment");
   L.push("");
-  L.push("| Metric | Coverage | Suggested Enhancement |");
-  L.push("|--------|----------|-----------------------|");
+  L.push("| Metric | Coverage | Live Value | Suggested Enhancement |");
+  L.push("|--------|----------|------------|-----------------------|");
   for (const item of assessment) {
     const icon =
       item.status === "measured" ? "✅" : item.status === "partial" ? "🟡" : "⬜";
-    L.push(`| ${item.metric} | ${icon} ${item.status} | ${item.suggestion} |`);
+    L.push(`| ${item.metric} | ${icon} ${item.status} | ${item.liveValue ?? "—"} | ${item.suggestion} |`);
   }
   L.push("");
   const measured = assessment.filter((i) => i.status === "measured").length;
@@ -547,9 +547,40 @@ function formatMarkdownReport(
   );
   L.push("");
 
+  // ── Module Architecture Summary ──────────────────────────────────
+  try {
+    const { pruningGate } = await import("@/modules/uns/core/pruning-gate");
+    const pruning = pruningGate();
+    L.push("## Module Architecture");
+    L.push("");
+    L.push("| Metric | Value |");
+    L.push("|--------|-------|");
+    L.push(`| Active Modules | ${pruning.metrics.activeModules} |`);
+    L.push(`| Absorbed Modules | ${pruning.metrics.absorbedModules} |`);
+    L.push(`| Total (active + absorbed) | ${pruning.metrics.totalModules} |`);
+    L.push(`| Consolidation Debt | ${pruning.metrics.consolidationDebt} |`);
+    L.push(`| Hygiene Score | ${pruning.score}/100 |`);
+    L.push(`| Projections | ${pruning.metrics.totalProjections} |`);
+    L.push(`| Synergy Chains | ${pruning.metrics.totalSynergyChains} |`);
+    L.push(`| Orphaned Projections | ${pruning.metrics.orphanedProjections} |`);
+    L.push("");
+
+    if (pruning.findings.length > 0) {
+      L.push("### Pruning Findings");
+      L.push("");
+      L.push("| Severity | Category | Detail |");
+      L.push("|----------|----------|--------|");
+      for (const f of pruning.findings) {
+        const icon = f.severity === "prune" ? "🔴" : f.severity === "simplify" ? "🟡" : "🔵";
+        L.push(`| ${icon} ${f.severity} | ${f.category} | ${f.title} |`);
+      }
+      L.push("");
+    }
+  } catch { /* pruning gate unavailable */ }
+
   L.push("---");
   L.push(
-    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v2.0*"
+    "*UOR Virtual OS · Lattice-hash sealed · 128-bit preimage resistance · Report v3.0*"
   );
 
   return L.join("\n");
