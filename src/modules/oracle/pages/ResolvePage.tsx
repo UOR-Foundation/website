@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useIsInsideWindow, useWindowInitialQuery } from "@/modules/desktop/WindowContext";
+import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 import { extractSemantics, parseWikipediaUrl, fetchWikiSummary, extractWikiInfobox } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
@@ -623,6 +624,7 @@ function ReaderFloatingBar({ onSearch, onOracleOpen }: { onSearch: (q: string) =
 const SearchPage = () => {
   const inWindow = useIsInsideWindow();
   const windowInitialQuery = useWindowInitialQuery();
+  const { isLight } = useDesktopTheme();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
@@ -676,7 +678,7 @@ const SearchPage = () => {
   const [forkNote, setForkNote] = useState("");
   const [forking, setForking] = useState(false);
   const { user } = useAuth();
-  const immersiveMode = true; // Immersive is now the permanent default
+  const immersiveMode = !isLight; // Immersive styling only on dark/immersive themes
   const showImmersiveBackdrop = immersiveMode && !inWindow;
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const [readerMode, setReaderMode] = useState(true);
