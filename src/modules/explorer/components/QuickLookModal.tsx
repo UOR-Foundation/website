@@ -72,7 +72,7 @@ function UorIdentitySection({ item }: { item: ContextItem }) {
           className="p-1 rounded hover:bg-muted/50 text-muted-foreground/40 hover:text-foreground transition-colors flex-shrink-0"
           title="Copy full address"
         >
-          {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
       <p className="text-[10px] text-muted-foreground/30 mt-1.5 italic">
