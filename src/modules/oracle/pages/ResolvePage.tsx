@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useIsInsideWindow, useWindowInitialQuery } from "@/modules/desktop/WindowContext";
+import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 import { extractSemantics, parseWikipediaUrl, fetchWikiSummary, extractWikiInfobox } from "@/modules/oracle/lib/semantic-extract";
 import SearchConstellationBg from "@/modules/oracle/components/SearchConstellationBg";
