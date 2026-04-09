@@ -66,13 +66,23 @@ function formatSize(bytes: number): string {
 
 export default function FileCard({ item, viewMode, onRemove, onSelect, tags = [], selected, onToggleSelect }: Props) {
   const { icon: Icon, color, label } = getFileIcon(item.filename, item.source);
-  const [uorAddr, setUorAddr] = useState<string | null>(null);
+  const [uorAddr, setUorAddr] = useState<string | null>(item.uorAddress || null);
 
   useEffect(() => {
-    if (item.text) {
+    if (item.uorAddress) {
+      setUorAddr(item.uorAddress);
+    } else if (item.text) {
       computeFileUorAddress(item.text).then(setUorAddr).catch(() => {});
     }
-  }, [item.text]);
+  }, [item.text, item.uorAddress]);
+
+  const qualityColor = item.qualityScore !== undefined
+    ? item.qualityScore >= 0.8 ? "hsl(140 60% 45%)" : item.qualityScore >= 0.5 ? "hsl(45 80% 50%)" : "hsl(0 65% 55%)"
+    : null;
+
+  const structuredInfo = item.structuredData
+    ? `${item.structuredData.rowCount.toLocaleString()} rows · ${item.structuredData.columns.length} cols`
+    : null;
 
   const handleClick = (e: React.MouseEvent) => {
     if (e.shiftKey || e.metaKey || e.ctrlKey) {
