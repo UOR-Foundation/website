@@ -62,6 +62,7 @@ function FullscreenToggle({ isLight }: { isLight: boolean }) {
   );
 }
 
+interface Props {
   activeWindowId: string | null;
   windows: WindowState[];
   onFocusWindow: (id: string) => void;
