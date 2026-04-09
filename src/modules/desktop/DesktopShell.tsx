@@ -5,6 +5,7 @@
 
 import { useCallback, useState, useMemo, useEffect } from "react";
 import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
+import VinylPlayer from "@/modules/desktop/components/VinylPlayer";
 import { getPhasePhotoDescription } from "@/modules/oracle/lib/immersive-photos";
 import TabBar from "@/modules/desktop/TabBar";
 import DesktopWindow from "@/modules/desktop/DesktopWindow";
@@ -160,6 +161,11 @@ function DesktopShellInner() {
           ))}
 
         <DesktopThemeDots windows={wm.windows} />
+
+        {/* Ambient SoundCloud vinyl player — bottom-right */}
+        <div className="fixed bottom-5 right-5 z-[8] pointer-events-auto">
+          <VinylPlayer />
+        </div>
 
         <SpotlightSearch
           open={spotlightOpen}
