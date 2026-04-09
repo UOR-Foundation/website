@@ -11,7 +11,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useAuth } from "@/hooks/use-auth";
@@ -152,7 +152,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
   const displayName = profile?.displayName || "Explorer";
-  const greetingText = `${getGreeting()}, ${displayName}.`;
+  // No trailing period — Apple-style
+  const greetingText = `${getGreeting()}, ${displayName}`;
 
   // Pretext-measured adaptive clock size
   const clockStyle = useMemo(() => {
@@ -208,38 +209,41 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
 
   // Theme-aware colors
   const isImmersive = theme === "immersive";
-  const clockColor = isImmersive ? "text-white/75" : isLight ? "text-black/70" : "text-white/75";
+  // Lighter clock — ethereal, weightless
+  const clockColor = isImmersive ? "text-white/70" : isLight ? "text-black/65" : "text-white/70";
   const clockShadow = isImmersive
-    ? "0 2px 40px rgba(0,0,0,0.4)"
-    : isLight ? "0 2px 24px rgba(0,0,0,0.06)" : "0 2px 24px rgba(0,0,0,0.3)";
-  const greetingColor = isImmersive ? "text-white/90" : isLight ? "text-black/35" : "text-white/40";
+    ? "0 2px 30px rgba(0,0,0,0.2)"
+    : isLight ? "0 2px 24px rgba(0,0,0,0.04)" : "0 2px 24px rgba(0,0,0,0.15)";
+  // Greeting defers to clock — lower opacity
+  const greetingColor = isImmersive ? "text-white/70" : isLight ? "text-black/30" : "text-white/35";
 
-  // Search bar styles
+  // Search bar styles — frosted glass
   const searchBg = isImmersive
-    ? "hsl(200 15% 16% / 0.9)"
+    ? "hsl(200 15% 16% / 0.55)"
     : isLight
       ? "rgba(0,0,0,0.04)"
       : "rgba(255,255,255,0.04)";
   const searchBorder = isImmersive
-    ? "1px solid hsl(0 0% 100% / 0.14)"
+    ? "1px solid hsl(0 0% 100% / 0.10)"
     : isLight
-      ? "1px solid rgba(0,0,0,0.08)"
-      : "1px solid rgba(255,255,255,0.08)";
+      ? "1px solid rgba(0,0,0,0.06)"
+      : "1px solid rgba(255,255,255,0.06)";
   const searchShadow = isImmersive
-    ? "0 12px 48px -12px hsl(200 40% 8% / 0.7), 0 4px 16px -4px hsl(200 50% 15% / 0.3)"
-    : isLight ? "0 4px 24px -8px rgba(0,0,0,0.08)" : "0 4px 24px -8px rgba(0,0,0,0.3)";
+    ? "none"
+    : isLight ? "0 4px 24px -8px rgba(0,0,0,0.06)" : "0 4px 24px -8px rgba(0,0,0,0.2)";
+  const searchBlur = isImmersive ? "blur(40px) saturate(1.4)" : "blur(12px)";
   const inputColor = isImmersive
     ? "hsl(0 0% 100% / 0.95)"
     : isLight
       ? "hsl(0 0% 0% / 0.85)"
       : "hsl(0 0% 100% / 0.9)";
-  const placeholderColor = isImmersive ? "hsl(0 0% 100% / 0.35)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.25)";
+  const placeholderColor = isImmersive ? "hsl(0 0% 100% / 0.30)" : isLight ? "hsl(0 0% 0% / 0.22)" : "hsl(0 0% 100% / 0.22)";
   const btnBgStyle = isImmersive
-    ? "hsl(0 0% 100% / 0.1)"
-    : isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)";
+    ? "hsl(0 0% 100% / 0.08)"
+    : isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)";
   const btnBorderStyle = isImmersive
-    ? "1px solid hsl(0 0% 100% / 0.12)"
-    : isLight ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(255,255,255,0.08)";
+    ? "1px solid hsl(0 0% 100% / 0.08)"
+    : isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.06)";
   const btnIconColor = isImmersive ? "text-white" : isLight ? "text-black/60" : "text-white/70";
 
   const widgetOpacity = hasMaximized ? 0 : 1;
@@ -249,13 +253,15 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
     <div
       className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
       style={{
-        paddingBottom: 60,
         opacity: widgetOpacity,
         transition: "opacity 300ms ease-out",
       }}
     >
-      <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center" style={{ marginTop: "22vh" }}>
-        {/* Clock — Pretext-measured adaptive sizing */}
+      {/* Golden-ratio vertical centering: top flex-[1.2], bottom flex-[1.618] */}
+      <div style={{ flex: "1.2" }} />
+
+      <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
+        {/* Clock — light weight, generous letter-spacing */}
         <div
           className="text-center mb-4"
           style={{
@@ -264,27 +270,29 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           }}
         >
           <h1
-            className={`${clockColor} font-bold tracking-tight leading-none select-none`}
+            className={`${clockColor} font-extralight leading-none select-none`}
             style={{
               ...clockStyle,
               fontFamily: "'DM Sans', -apple-system, sans-serif",
               textShadow: clockShadow,
+              letterSpacing: "0.08em",
               transition: "font-size 0.3s ease-out",
             }}
           >
             {clockStr}
           </h1>
-          {/* Greeting — BalancedBlock eliminates orphan words */}
-          <div className="mt-3">
+          {/* Greeting — more breathing room, no period, tracking-normal */}
+          <div className="mt-5">
             <BalancedBlock
               font={greetingFontInfo.font}
               lineHeight={greetingFontInfo.lineHeight}
               as="p"
-              className={`${greetingColor} font-medium tracking-wide select-none`}
+              className={`${greetingColor} font-normal select-none`}
               style={{
                 fontSize: greetingFontInfo.fontSize,
                 fontFamily: "'DM Sans', -apple-system, sans-serif",
-                textShadow: isImmersive ? "0 1px 20px rgba(0,0,0,0.3)" : "none",
+                textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
+                letterSpacing: "0",
               }}
               center
             >
@@ -293,8 +301,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           </div>
         </div>
 
-        {/* Search bar */}
-        <form onSubmit={handleSubmit} className="w-full mt-8">
+        {/* Search bar — tighter gap, frosted glass */}
+        <form onSubmit={handleSubmit} className="w-full mt-6">
           <div className="relative w-full group">
             <input
               ref={inputRef}
@@ -311,6 +319,8 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                 background: searchBg,
                 border: searchBorder,
                 boxShadow: searchShadow,
+                backdropFilter: searchBlur,
+                WebkitBackdropFilter: searchBlur,
                 color: inputColor,
                 caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
                 fontFamily: isAddress
@@ -335,7 +345,7 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
               onActiveIndexChange={setActiveIdx}
             />
 
-            {/* + button */}
+            {/* Context button — sparkle icon instead of ambiguous + */}
             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
               <button
                 ref={plusBtnRef}
@@ -343,13 +353,13 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
                 onClick={() => setContextMenuOpen((o) => !o)}
                 className="flex items-center justify-center transition-all relative p-1"
                 style={{
-                  color: isImmersive ? "hsl(0 0% 100% / 0.5)" : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.4)",
+                  color: isImmersive ? "hsl(0 0% 100% / 0.40)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.30)",
                 }}
                 title="Add context"
               >
-                <Plus className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
               </button>
-              {/* Context Menu anchored above the + button */}
+              {/* Context Menu anchored above the button */}
               <ContextMenu
                 open={contextMenuOpen}
                 onOpenChange={setContextMenuOpen}
@@ -396,6 +406,9 @@ export default function DesktopWidgets({ windows, onSearch }: Props) {
           </div>
         )}
       </div>
+
+      {/* Bottom spacer — golden ratio */}
+      <div style={{ flex: "1.618" }} />
 
       {/* Placeholder style for placeholders */}
       <style>{`
