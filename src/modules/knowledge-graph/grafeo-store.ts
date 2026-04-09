@@ -807,7 +807,3 @@ export const grafeoStore = {
   },
 };
 
-// ── Backward-compatible aliases ─────────────────────────────────────────────
-
-/** @deprecated Use grafeoStore — Oxigraph has been replaced by GrafeoDB */
-export const oxigraphStore = grafeoStore;

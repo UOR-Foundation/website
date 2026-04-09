@@ -1,14 +1,14 @@
 /**
  * type: namespace. unified barrel export.
  *
- * Consolidates: kg-store + code-kg
+ * Consolidates: knowledge-graph (formerly kg-store) + code-kg
  * User Space. knowledge graph storage and code-to-graph projection.
  *
  * @namespace type:
- * @version 2.0.0
+ * @version 2.1.0
  */
 
-// ── Knowledge Graph Store (from kg-store/) ─────────────────────────────────
+// ── Knowledge Graph Store (from knowledge-graph/) ──────────────────────────
 export {
   ingestDatum,
   ingestDatumBatch,
@@ -47,9 +47,9 @@ export type {
   SitemapEntry,
   SerializationFormat,
 } from "@/modules/knowledge-graph/schema-org";
-export { default as KnowledgeGraphPage } from "@/modules/kg-store/pages/KnowledgeGraphPage";
+export { default as KnowledgeGraphPage } from "@/modules/knowledge-graph/pages/KnowledgeGraphPage";
 
-// ── Code Knowledge Graph (from code-kg/) ───────────────────────────────────
+// ── Code Knowledge Graph (from code-kg/) ───────────────────────────────
 export { analyzeTypeScript } from "@/modules/code-kg/analyzer";
 export type { CodeEntity, CodeRelation, AnalysisResult, EntityType, RelationType } from "@/modules/code-kg/analyzer";
 export { ingestCodeGraph, exportToKgStore } from "@/modules/code-kg/bridge";
