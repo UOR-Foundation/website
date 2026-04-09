@@ -267,11 +267,21 @@ function buildSelfAssessment(
     status: "missing",
     suggestion: "Report SW registration state and cache hit ratio.",
   });
-  items.push({
-    metric: "Error Budget",
-    status: "missing",
-    suggestion: "Track seal verification failures as a percentage over rolling window.",
-  });
+  const errorBudget = getErrorBudget();
+  if (errorBudget.total > 0) {
+    items.push({
+      metric: "Error Budget",
+      status: "measured",
+      liveValue: `${errorBudget.successRate}% (${errorBudget.total - errorBudget.failures}/${errorBudget.total} checks passed)`,
+      suggestion: "Track seal verification failures as a percentage over rolling window.",
+    });
+  } else {
+    items.push({
+      metric: "Error Budget",
+      status: "missing",
+      suggestion: "Track seal verification failures as a percentage over rolling window.",
+    });
+  }
   items.push({
     metric: "WebWorker Pool",
     status: "missing",
