@@ -24,7 +24,7 @@ export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading 
   const [liveMode, setLiveMode] = useState(() => localStorage.getItem("uor-live-search") === "true");
   const inputRef = useRef<HTMLInputElement>(null);
   const liveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  
 
   const handleSubmit = () => {
     const trimmed = value.trim();
@@ -67,28 +67,20 @@ export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading 
         className="relative rounded-2xl border border-white/[0.1] bg-[hsl(0_0%_10%/0.95)] backdrop-blur-xl shadow-[0_-4px_40px_-8px_hsl(0_0%_0%/0.6)]"
       >
         <div className="flex items-center gap-1 px-2 py-1.5">
-          {/* Context menu trigger */}
+          {/* Open File Explorer */}
           <div className="relative shrink-0">
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => setPickerOpen((p) => !p)}
+              onClick={() => window.dispatchEvent(new CustomEvent("uor:open-app", { detail: "files" }))}
               className={`p-2.5 rounded-xl transition-colors ${
-                pickerOpen || ctx.contextItems.length > 0
+                ctx.contextItems.length > 0
                   ? "text-primary bg-primary/10"
                   : "text-muted-foreground/40 hover:text-foreground/60 active:bg-white/[0.06]"
               }`}
-              aria-label="Add context"
+              aria-label="Open File Explorer"
             >
-              <Plus className="w-5 h-5" />
+              <Upload className="w-5 h-5" />
             </motion.button>
-
-            <ContextMenu
-              open={pickerOpen}
-              onOpenChange={setPickerOpen}
-              ctx={ctx}
-              anchor="above"
-              className="bottom-12 left-0"
-            />
           </div>
 
           {/* Text input */}
