@@ -11,7 +11,7 @@ import {
   X, Plus, Search, User, Pin, Layers, SplitSquareHorizontal,
   Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
 } from "lucide-react";
-import uorWordmark from "@/assets/uor-wordmark.png";
+
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
@@ -439,15 +439,30 @@ export default function TabBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Center wordmark */}
-      <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center pointer-events-none z-[1]">
-        <img
-          src={uorWordmark}
-          alt="Universal Object Reference"
-          className="h-[16px] w-auto object-contain select-none"
-          style={{ opacity: isLight ? 0.7 : 0.55, imageRendering: "auto" }}
-          draggable={false}
-        />
+      {/* Center wordmark — vector logo + crisp text */}
+      <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center pointer-events-none z-[1] gap-[6px]">
+        {/* UOR glyph — inline SVG for crispness */}
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="shrink-0"
+          style={{ opacity: isLight ? 0.6 : 0.45 }}
+        >
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+          <line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+          <line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+          <line x1="2" y1="12" x2="8" y2="12" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+          <line x1="16" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1.5" className="text-foreground" />
+        </svg>
+        <span
+          className="text-[10.5px] font-medium tracking-[0.22em] uppercase select-none text-foreground"
+          style={{ opacity: isLight ? 0.6 : 0.45, letterSpacing: "0.22em" }}
+        >
+          Universal Object Reference
+        </span>
       </div>
 
       {/* Tabs with drag support */}
