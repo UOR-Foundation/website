@@ -1,126 +1,77 @@
 
 
-# Voice-to-Text Overhaul: Wispr Flow-Inspired Sovereign Dictation
+# Performance Audit & Optimization Plan
 
-## Current State Assessment
+## Bottlenecks Found
 
-After thorough evaluation, the existing voice system has **significant functionality gaps**:
+### 1. Window Drag/Resize: Synchronous State + localStorage on Every Pixel (CRITICAL)
 
-### What Exists
-1. **HologramSttEngine** — dual-strategy abstraction (Whisper ONNX local / native `SpeechRecognition` cloud)
-2. **VoiceInput** — small mic button embedded in search bars
-3. **VoiceOverlay** — full-screen dictation overlay with pulsing orb
-4. **AudioCaptureWorklet** — exists in `/public` but is **never imported or used** by any component
-5. **ElevenLabs connector** — API key is configured but only used for TTS, **not STT**
+`useWindowManager.ts` calls `setWindows()` + `saveWindows()` (which does `JSON.stringify` → `localStorage.setItem`) **on every single pointer move event** during drag/resize. At 60fps that's 60 JSON serializations + 60 localStorage writes per second. This is the single biggest source of UI jank.
 
-### Critical Problems
+**Fix:** Throttle `moveWindow` and `resizeWindow` using `requestAnimationFrame` gating. Debounce `saveWindows` to only persist on drag/resize end (already have `onDragEnd`/`onResizeEnd` events). During drag, update a ref and use `transform: translate3d()` CSS directly on the DOM node instead of React state, only committing final position on pointer-up.
 
-| Issue | Severity |
-|-------|----------|
-| **VoiceInput always calls `startContinuousNative` even when Whisper is selected** — the `autoSelect()` runs but the actual transcription path ignores it. Whisper path is never used in practice. | Critical |
-| **VoiceOverlay simulates audio levels with `Math.random()`** (line 82-84) instead of using the real AudioCaptureWorklet | Embarrassing |
-| **Voice only works in Oracle search** — not available in notes, code editor, vault, or any other text input across the OS | Major gap |
-| **No AI text cleanup** — raw transcript dumps directly into input; no filler removal, no punctuation correction, no tone adaptation (the core Wispr Flow feature) | Major gap |
-| **No ElevenLabs Scribe integration** — we have the API key for ElevenLabs which offers `scribe_v2_realtime` (ultra-low-latency streaming STT) but it's completely unused for transcription | Missed opportunity |
-| **No global hotkey activation** — Ring+V opens the overlay, but only on ResolvePage. Not system-wide. | UX gap |
-| **No dictation-into-focused-input mode** — Wispr Flow's killer feature is dictating directly into whatever text field you're in, not just a search bar | Missing |
+### 2. Boot Sequence Blocks Interaction for 5-10 Seconds (CRITICAL)
 
-## What Wispr Flow Gets Right (Our Design Targets)
+The boot sequence fetches WASM, hashes it with SHA-256, runs 256-element ring verification, validates the entire tech stack, computes 7+ cryptographic hashes sequentially, then **replays ~50 log lines with setTimeout delays of 75-200ms each**. Total visual replay alone: ~4-6 seconds of forced waiting.
 
-1. **Activate anywhere** — single hotkey, works in any text field on the OS
-2. **AI auto-edits** — raw speech is cleaned up by an LLM: filler words removed, punctuation added, tone matched to context
-3. **Streaming interim display** — see words appear as you speak, with a subtle waveform
-4. **Personal dictionary** — learns your names, jargon, acronyms
-5. **Context-aware tone** — adapts output style to where you're typing (email vs code comment vs chat)
-6. **Delightful UX** — minimal floating indicator, not a full-screen takeover for quick dictation
+**Fix:** 
+- Run `sovereignBoot()` in parallel with the UI — show the desktop immediately with a subtle "booting…" indicator instead of blocking.
+- Cache the boot receipt: if the seal hasn't changed (same WASM binary, same session), skip re-verification on soft navigations.
+- Reduce replay delays: use 30ms per line instead of 75-120ms, or let users click to skip.
 
-## Implementation Plan
+### 3. Backdrop-Blur Overuse (MODERATE — GPU compositor)
 
-### 1. Add ElevenLabs Scribe Realtime STT as Primary Engine
+13 files use `backdrop-blur` with values up to 48px. Each blur layer forces the GPU compositor to re-render everything behind it. With multiple windows open + TabBar + MenuBar + SnapOverlay + SpotlightSearch, you can have 4-6 concurrent blur layers. On integrated GPUs and mobile, this causes frame drops during any animation/scroll.
 
-Replace browser `SpeechRecognition` as the default cloud tier with ElevenLabs `scribe_v2_realtime`. This gives us:
-- Ultra-low latency streaming via WebSocket
-- 99+ languages with auto-detection
-- Far superior accuracy vs browser native STT
-- VAD (voice activity detection) built-in
+**Fix:** 
+- Replace `backdrop-blur` with solid semi-opaque backgrounds where blur adds no meaningful value (SnapOverlay, context menus, popover backgrounds).
+- Cap blur radius: use `blur(12px)` max instead of `blur(48px)` — perceptually similar but 4x cheaper.
+- Add `will-change: transform` to blurred elements and use `contain: layout style paint` to limit compositing cost.
+- Respect `prefers-reduced-motion` — disable blur entirely for users who request reduced motion.
 
-**New files:**
-- `src/modules/uns/core/hologram/elevenlabs-stt.ts` — WebSocket client for `scribe_v2_realtime` with token management
-- `supabase/functions/elevenlabs-scribe-token/index.ts` — Edge function to mint single-use tokens (keeps API key server-side)
+### 4. SSE Stream Parsing: String Concatenation Buffer (MODERATE)
 
-**Modify:**
-- `src/modules/uns/core/hologram/stt-engine.ts` — Add `"elevenlabs"` as third strategy tier: ElevenLabs (best quality) > Whisper ONNX (local/private) > Native (fallback)
+`stream-oracle.ts` and `stream-knowledge.ts` use string concatenation (`buffer += decoder.decode(value)`) then repeatedly `buffer.indexOf("\n")` and `buffer.slice()`. For long streams this creates O(n²) string copies.
 
-### 2. AI Text Cleanup Pipeline (The Wispr Flow Core)
+**Fix:** Use a `TextLineDecoder` pattern that splits on newlines during decode, avoiding repeated buffer slicing. Or accumulate into an array and join only when needed.
 
-After transcription, pass raw text through an AI model for cleanup: remove filler words, fix punctuation, adapt tone to context.
+### 5. `activeWindowId` Recomputed Every Render (MINOR)
 
-**New file:**
-- `src/modules/oracle/lib/voice-cleanup.ts` — Calls Lovable AI (gemini-2.5-flash) with a prompt like: "Clean up this dictated text. Remove filler words (um, uh, like, you know). Fix punctuation and grammar. Preserve meaning. Context: {appContext}. Output ONLY the cleaned text."
+Line 348-350 of `useWindowManager.ts` sorts and filters the windows array on every render to find the active window. This triggers re-renders of all children since the returned object identity changes.
 
-**How context-awareness works:** The cleanup prompt receives the active app ID (e.g., "notes", "code-editor", "chat") to adapt tone. Code context gets technical formatting; notes get natural prose; chat gets casual tone.
+**Fix:** Memoize `activeWindowId` with `useMemo`, or track it as explicit state updated only on focus/close/minimize events.
 
-### 3. Global Dictation Mode (Wispr Flow-style "Dictate Anywhere")
+### 6. Bus Middleware Chain Allocates Closures Per Call (MINOR)
 
-Instead of only working in the Oracle search bar, voice dictation should work in **any focused text input** across the OS.
+`bus.ts` creates a new `next()` closure chain for every `bus.call()`. For high-frequency local calls (e.g., `kernel/derive` during batch operations), this creates GC pressure.
 
-**New files:**
-- `src/modules/oracle/components/FloatingDictationPill.tsx` — Small floating pill that appears near the cursor/focused input when dictation is active. Shows waveform + interim text. Not a full-screen overlay.
-- `src/modules/oracle/hooks/useGlobalDictation.ts` — Hook that: detects the currently focused input element, captures audio via the existing AudioCaptureWorklet, streams to ElevenLabs Scribe, runs AI cleanup on the final result, and injects the cleaned text into the focused input
+**Fix:** Pre-compose the middleware chain at registration time instead of per-call. Store a single composed function.
 
-**Modify:**
-- `src/modules/desktop/DesktopShell.tsx` — Mount the global dictation provider at the shell level so it works everywhere
-- `src/modules/desktop/hooks/useDesktopShortcuts.ts` — Ring+V triggers global dictation (already wired, just needs to call the new global hook instead of the overlay-only one)
-- `src/modules/oracle/hooks/useVoiceShortcut.ts` — Extend to support both overlay mode (for search) and inline dictation mode (for any input)
+### 7. No Connection Pooling for Edge Function Calls (MODERATE)
 
-### 4. Real Audio Level Visualization
+Every `streamOracle`, `streamKnowledge`, and `voice-cleanup` call creates a new `fetch()` with no `keepalive` or connection reuse hints. On high-latency networks, TCP+TLS handshake adds 200-500ms per call.
 
-Replace the `Math.random()` fake levels with real audio data from `AudioCaptureWorklet`.
+**Fix:** Add `keepalive: true` to fetch options. For the bus remote gateway, use a single persistent connection via `fetch` with HTTP/2 multiplexing (already supported by the edge runtime).
 
-**Modify:**
-- `src/modules/oracle/components/VoiceOverlay.tsx` — Connect to real AudioWorklet for waveform data, fix the fake level simulation
-- `src/modules/oracle/components/FloatingDictationPill.tsx` — Use real audio levels for a mini waveform visualization
+## Implementation Summary
 
-### 5. Fix the Whisper ONNX Integration
+| File | Change | Impact |
+|------|--------|--------|
+| `useWindowManager.ts` | RAF-gated drag/resize, debounced persist, ref-based position during drag | Eliminates drag jank |
+| `DesktopWindow.tsx` | Use `transform: translate3d()` from ref during drag instead of React re-render | 60fps drag |
+| `DesktopShell.tsx` | Non-blocking boot — show desktop immediately, boot in background | 5s faster to interactive |
+| `BootSequence.tsx` | Add skip button, reduce replay delays to 30ms, show as overlay not blocker | Instant feel |
+| `stream-oracle.ts` | Replace string concat buffer with array-based line decoder | Faster long streams |
+| `stream-knowledge.ts` | Same buffer optimization | Faster long streams |
+| `bus.ts` | Pre-compose middleware chain at registration | Reduce GC pressure |
+| Desktop CSS/components (13 files) | Cap `backdrop-blur` at 12px, remove from non-essential elements, add `contain` hints | Smoother compositing |
+| `stream-oracle.ts`, `stream-knowledge.ts` | Add `keepalive: true` to fetch | Reduce connection overhead |
+| `useWindowManager.ts` | Memoize `activeWindowId` | Fewer re-renders |
 
-The VoiceInput component currently ignores the Whisper strategy even after selecting it. Fix the actual dispatch.
+## Estimated Impact
 
-**Modify:**
-- `src/modules/oracle/components/VoiceInput.tsx` — When strategy is `"whisper"`, capture audio via AudioWorklet, collect PCM samples, and call `stt.transcribeWhisper()` instead of always using `startContinuousNative()`
-
-### 6. STT Strategy Tier Update
-
-**Updated strategy priority:**
-
-```text
-1. ElevenLabs Scribe (best quality, streaming, 99+ languages)
-2. Whisper ONNX (on-device, private, requires 40MB model download)
-3. Native SpeechRecognition (zero-setup fallback)
-```
-
-User can override via a privacy preference: if they want fully sovereign/local, force Whisper. Otherwise ElevenLabs is default.
-
-## Files Summary
-
-| File | Action |
-|------|--------|
-| `src/modules/uns/core/hologram/elevenlabs-stt.ts` | Create — ElevenLabs Scribe WebSocket client |
-| `supabase/functions/elevenlabs-scribe-token/index.ts` | Create — Token minting edge function |
-| `src/modules/oracle/lib/voice-cleanup.ts` | Create — AI text cleanup pipeline |
-| `src/modules/oracle/components/FloatingDictationPill.tsx` | Create — Wispr Flow-style floating dictation UI |
-| `src/modules/oracle/hooks/useGlobalDictation.ts` | Create — System-wide dictation hook |
-| `src/modules/uns/core/hologram/stt-engine.ts` | Modify — Add ElevenLabs as primary strategy |
-| `src/modules/oracle/components/VoiceOverlay.tsx` | Modify — Real audio levels, connect to new engine |
-| `src/modules/oracle/components/VoiceInput.tsx` | Modify — Fix Whisper path, connect ElevenLabs |
-| `src/modules/desktop/DesktopShell.tsx` | Modify — Mount global dictation provider |
-| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Modify — Wire Ring+V to global dictation |
-| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Modify — Support inline + overlay modes |
-
-## What This Achieves
-
-- **Actually functional** STT that uses the best available engine (ElevenLabs Scribe) instead of broken browser native API
-- **Wispr Flow-quality UX** — dictate into any text field, see words stream in, get AI-cleaned output
-- **Three-tier privacy** — choose between cloud quality, on-device privacy, or zero-setup fallback
-- **Real audio visualization** instead of fake random noise
-- **System-wide availability** — voice input everywhere in the OS, not just Oracle search
+- **Boot to interactive**: 5-8s → <1s (background boot)
+- **Window drag**: Janky (60 localStorage writes/s) → Butter-smooth (0 writes during drag)
+- **Compositing cost**: 4-6 concurrent blur layers → 1-2 max
+- **Stream throughput**: ~15% faster for long AI responses (buffer optimization)
 
