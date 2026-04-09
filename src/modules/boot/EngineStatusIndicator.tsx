@@ -391,11 +391,33 @@ export default function EngineStatusIndicator({ isLight = false }: EngineStatusI
 
   const FANO_SUB = ["₀", "₁", "₂", "₃", "₄", "₅", "₆"];
 
+  // Drag state
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const dragStart = useRef<{ mx: number; my: number; wx: number; wy: number } | null>(null);
+
+  const onTitleBarPointerDown = useCallback((e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const wx = dragPos?.x ?? 0;
+    const wy = dragPos?.y ?? 0;
+    dragStart.current = { mx: e.clientX, my: e.clientY, wx, wy };
+  }, [dragPos]);
+
+  const onTitleBarPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragStart.current) return;
+    const dx = e.clientX - dragStart.current.mx;
+    const dy = e.clientY - dragStart.current.my;
+    setDragPos({ x: dragStart.current.wx + dx, y: dragStart.current.wy + dy });
+  }, []);
+
+  const onTitleBarPointerUp = useCallback(() => {
+    dragStart.current = null;
+  }, []);
+
   return (
     <div className="relative" ref={panelRef}>
       {/* Status dot trigger */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => { setOpen(!open); if (!open) setDragPos(null); }}
         className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150 ${isLight ? "bg-black/[0.08] hover:bg-black/[0.12] border border-black/[0.08]" : "bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08]"}`}
         title={`System: ${config.label}`}
       >
@@ -405,146 +427,199 @@ export default function EngineStatusIndicator({ isLight = false }: EngineStatusI
         </div>
       </button>
 
-      {/* Panel */}
+      {/* Modal Window */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className={`absolute right-0 top-8 z-[9000] w-[540px] rounded-lg border font-mono text-[9px] leading-snug ${bgPanel}`}
-            style={{ backdropFilter: "blur(24px)" }}
-          >
-            {/* ── Header Bar ── */}
-            <div className={`flex items-center justify-between px-3 py-2 border-b ${border}`}>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
-                  {config.pulse && <div className="absolute inset-0 w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: config.color, opacity: 0.3 }} />}
-                </div>
-                <span className={`font-bold text-[10px] tracking-wide ${txt}`}>{config.label}</span>
-                <span className={`text-[9px] ${txtSub}`}>UOR/{getEngine().version}</span>
-              </div>
-              <button
-                onClick={handleCopyReport}
-                className={`text-[9px] px-2 py-0.5 rounded ${isLight ? "bg-black/5 hover:bg-black/10 text-black/60" : "bg-white/5 hover:bg-white/10 text-white/60"} transition-colors`}
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className="fixed inset-0 z-[8999] bg-black/30"
+              style={{ backdropFilter: "blur(2px)" }}
+              onClick={() => setOpen(false)}
+            />
+
+            {/* Window */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.15 }}
+              className={`fixed z-[9000] w-[540px] rounded-lg border font-mono text-[9px] leading-snug overflow-hidden ${bgPanel}`}
+              style={{
+                top: "50%",
+                left: "50%",
+                transform: `translate(calc(-50% + ${dragPos?.x ?? 0}px), calc(-50% + ${dragPos?.y ?? 0}px))`,
+                backdropFilter: "blur(24px)",
+              }}
+            >
+              {/* ── OS Title Bar ── */}
+              <div
+                className={`flex items-center justify-between px-3 py-1.5 border-b ${border} cursor-default select-none`}
+                onPointerDown={onTitleBarPointerDown}
+                onPointerMove={onTitleBarPointerMove}
+                onPointerUp={onTitleBarPointerUp}
+                style={{ touchAction: "none" }}
               >
-                {copied ? "Copied ✓" : "Copy Report"}
-              </button>
-            </div>
-
-            {receipt ? (
-              <>
-                {/* ── Seal Glyph Strip ── */}
-                <div className={`px-3 py-1.5 text-center text-[11px] tracking-[0.15em] border-b ${border} ${txt}`}>
-                  {receipt.seal.glyph}
+                <div className="flex items-center gap-2">
+                  <div className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: config.color }} />
+                  <span className={`text-[10px] font-semibold ${txt}`}>UOR Virtual OS · System Status</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  {/* Minimize (decorative) */}
+                  <button
+                    className={`w-[14px] h-[14px] rounded-sm flex items-center justify-center text-[10px] leading-none transition-colors ${isLight ? "hover:bg-black/10 text-black/40" : "hover:bg-white/10 text-white/40"}`}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    title="Minimize"
+                  >
+                    <span className="mt-[-2px]">─</span>
+                  </button>
+                  {/* Maximize (decorative) */}
+                  <button
+                    className={`w-[14px] h-[14px] rounded-sm flex items-center justify-center text-[10px] leading-none transition-colors ${isLight ? "hover:bg-black/10 text-black/40" : "hover:bg-white/10 text-white/40"}`}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    title="Maximize"
+                  >
+                    □
+                  </button>
+                  {/* Close */}
+                  <button
+                    className={`w-[14px] h-[14px] rounded-sm flex items-center justify-center text-[10px] leading-none transition-colors hover:bg-red-500/80 hover:text-white ${isLight ? "text-black/40" : "text-white/40"}`}
+                    onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+                    title="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
-                {/* ── Two-Column Layout ── */}
-                <div className={`grid grid-cols-2 divide-x ${isLight ? "divide-black/[0.06]" : "divide-white/[0.06]"}`}>
-                  {/* ═══ LEFT: Virtual Machine ═══ */}
-                  <div className="px-3 py-2 space-y-2">
-                    <div className={sectionHead}>Virtual Machine</div>
+              {/* ── Status Header ── */}
+              <div className={`flex items-center justify-between px-3 py-2 border-b ${border}`}>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
+                    {config.pulse && <div className="absolute inset-0 w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: config.color, opacity: 0.3 }} />}
+                  </div>
+                  <span className={`font-bold text-[10px] tracking-wide ${txt}`}>{config.label}</span>
+                  <span className={`text-[9px] ${txtSub}`}>UOR/{getEngine().version}</span>
+                </div>
+                <button
+                  onClick={handleCopyReport}
+                  className={`text-[9px] px-2 py-0.5 rounded ${isLight ? "bg-black/5 hover:bg-black/10 text-black/60" : "bg-white/5 hover:bg-white/10 text-white/60"} transition-colors`}
+                >
+                  {copied ? "Copied ✓" : "Copy Report"}
+                </button>
+              </div>
 
-                    {/* VM Properties */}
-                    <div className="space-y-[3px]">
-                      <KVRow label="Kernel" value={receipt.engineType === "wasm" ? "WASM (native)" : "TS (fallback)"} isLight={isLight} />
-                      <KVRow label="Ring" value={ringOk ? "Verified ✓" : "FAILED ✗"} vColor={ringOk ? "#22c55e" : "#ef4444"} isLight={isLight} />
-                      <KVRow label="Uptime" value={formatUptime(uptimeMs)} isLight={isLight} />
-                      <KVRow label="Boot" value={`${receipt.bootTimeMs}ms`} isLight={isLight} />
-                      <KVRow label="Modules" value={String(receipt.moduleCount)} isLight={isLight} />
-                      {stackSummary && <KVRow label="Stack" value={`${stackSummary.available}/${stackSummary.total} ✓`} vColor={stackSummary.failing.length > 0 ? "#f59e0b" : "#22c55e"} isLight={isLight} />}
-                    </div>
+              {receipt ? (
+                <>
+                  {/* ── Seal Glyph Strip ── */}
+                  <div className={`px-3 py-1.5 text-center text-[11px] tracking-[0.15em] border-b ${border} ${txt}`}>
+                    {receipt.seal.glyph}
+                  </div>
 
-                    {/* Kernel Primitives */}
-                    <div>
-                      <div className={`${sectionHead} mb-1`}>Kernel Primitives</div>
-                      {kernelData ? (
-                        <div className="space-y-[2px]">
-                          {kernelData.table.map((fn, i) => {
-                            const ok = kernelData.verification.results.find(r => r.name === fn.name)?.ok ?? false;
-                            return (
-                              <div key={fn.name} className="flex items-center gap-1.5">
-                                <span className={`w-[18px] text-[8px] ${txtFaint}`}>P{FANO_SUB[i]}</span>
-                                <span className={`uppercase font-semibold flex-1 ${isLight ? "text-black/70" : "text-white/70"}`}>{fn.name}</span>
-                                <span className="w-[5px] h-[5px] rounded-full inline-block" style={{ backgroundColor: ok ? "#22c55e" : "#ef4444" }} />
-                              </div>
-                            );
-                          })}
-                          <div className={`text-[8px] mt-1 ${txtFaint}`}>
-                            {kernelData.verification.allPassed ? "7/7 verified ✓" : "Incomplete ✗"}
+                  {/* ── Two-Column Layout ── */}
+                  <div className={`grid grid-cols-2 divide-x ${isLight ? "divide-black/[0.06]" : "divide-white/[0.06]"}`}>
+                    {/* ═══ LEFT: Virtual Machine ═══ */}
+                    <div className="px-3 py-2 space-y-2">
+                      <div className={sectionHead}>Virtual Machine</div>
+
+                      <div className="space-y-[3px]">
+                        <KVRow label="Kernel" value={receipt.engineType === "wasm" ? "WASM (native)" : "TS (fallback)"} isLight={isLight} />
+                        <KVRow label="Ring" value={ringOk ? "Verified ✓" : "FAILED ✗"} vColor={ringOk ? "#22c55e" : "#ef4444"} isLight={isLight} />
+                        <KVRow label="Uptime" value={formatUptime(uptimeMs)} isLight={isLight} />
+                        <KVRow label="Boot" value={`${receipt.bootTimeMs}ms`} isLight={isLight} />
+                        <KVRow label="Modules" value={String(receipt.moduleCount)} isLight={isLight} />
+                        {stackSummary && <KVRow label="Stack" value={`${stackSummary.available}/${stackSummary.total} ✓`} vColor={stackSummary.failing.length > 0 ? "#f59e0b" : "#22c55e"} isLight={isLight} />}
+                      </div>
+
+                      <div>
+                        <div className={`${sectionHead} mb-1`}>Kernel Primitives</div>
+                        {kernelData ? (
+                          <div className="space-y-[2px]">
+                            {kernelData.table.map((fn, i) => {
+                              const ok = kernelData.verification.results.find(r => r.name === fn.name)?.ok ?? false;
+                              return (
+                                <div key={fn.name} className="flex items-center gap-1.5">
+                                  <span className={`w-[18px] text-[8px] ${txtFaint}`}>P{FANO_SUB[i]}</span>
+                                  <span className={`uppercase font-semibold flex-1 ${isLight ? "text-black/70" : "text-white/70"}`}>{fn.name}</span>
+                                  <span className="w-[5px] h-[5px] rounded-full inline-block" style={{ backgroundColor: ok ? "#22c55e" : "#ef4444" }} />
+                                </div>
+                              );
+                            })}
+                            <div className={`text-[8px] mt-1 ${txtFaint}`}>
+                              {kernelData.verification.allPassed ? "7/7 verified ✓" : "Incomplete ✗"}
+                            </div>
                           </div>
+                        ) : <div className={txtFaint}>Unavailable</div>}
+                      </div>
+                    </div>
+
+                    {/* ═══ RIGHT: Host Device ═══ */}
+                    <div className="px-3 py-2 space-y-2">
+                      <div className={sectionHead}>Host Device</div>
+
+                      <div className={`px-1.5 py-1 rounded text-[9px] font-semibold ${
+                        receipt.provenance.context === "local"
+                          ? isLight ? "bg-green-50 text-green-700" : "bg-green-900/30 text-green-400"
+                          : isLight ? "bg-blue-50 text-blue-700" : "bg-blue-900/30 text-blue-400"
+                      }`}>
+                        {receipt.provenance.context === "local" ? "⬤ Projected Locally" : `⬤ Projected from ${receipt.provenance.hostname}`}
+                      </div>
+
+                      <div className="space-y-[3px]">
+                        <KVRow label="CPU" value={`${receipt.provenance.hardware.cores} cores`} isLight={isLight} />
+                        <KVRow label="Memory" value={receipt.provenance.hardware.memoryGb ? `${receipt.provenance.hardware.memoryGb} GB` : "Restricted"} isLight={isLight} />
+                        <KVRow label="GPU" value={receipt.provenance.hardware.gpu ?? "Unknown"} isLight={isLight} />
+                        <KVRow label="Display" value={`${receipt.provenance.hardware.screenWidth}×${receipt.provenance.hardware.screenHeight}`} isLight={isLight} />
+                      </div>
+
+                      <div>
+                        <div className={`${sectionHead} mb-1`}>Capabilities</div>
+                        <div className="space-y-[2px]">
+                          <CapRow label="WASM" ok={receipt.provenance.hardware.wasmSupported} isLight={isLight} />
+                          <CapRow label="SIMD" ok={receipt.provenance.hardware.simdSupported} isLight={isLight} />
+                          <CapRow label="SAB" ok={typeof SharedArrayBuffer !== "undefined"} isLight={isLight} />
+                          <CapRow label="Workers" ok={typeof Worker !== "undefined"} isLight={isLight} />
+                          <CapRow label="Touch" ok={receipt.provenance.hardware.touchCapable} isLight={isLight} />
                         </div>
-                      ) : <div className={txtFaint}>Unavailable</div>}
-                    </div>
-                  </div>
-
-                  {/* ═══ RIGHT: Host Device ═══ */}
-                  <div className="px-3 py-2 space-y-2">
-                    <div className={sectionHead}>Host Device</div>
-
-                    {/* Projection context */}
-                    <div className={`px-1.5 py-1 rounded text-[9px] font-semibold ${
-                      receipt.provenance.context === "local"
-                        ? isLight ? "bg-green-50 text-green-700" : "bg-green-900/30 text-green-400"
-                        : isLight ? "bg-blue-50 text-blue-700" : "bg-blue-900/30 text-blue-400"
-                    }`}>
-                      {receipt.provenance.context === "local" ? "⬤ Projected Locally" : `⬤ Projected from ${receipt.provenance.hostname}`}
-                    </div>
-
-                    {/* Hardware */}
-                    <div className="space-y-[3px]">
-                      <KVRow label="CPU" value={`${receipt.provenance.hardware.cores} cores`} isLight={isLight} />
-                      <KVRow label="Memory" value={receipt.provenance.hardware.memoryGb ? `${receipt.provenance.hardware.memoryGb} GB` : "Restricted"} isLight={isLight} />
-                      <KVRow label="GPU" value={receipt.provenance.hardware.gpu ?? "Unknown"} isLight={isLight} />
-                      <KVRow label="Display" value={`${receipt.provenance.hardware.screenWidth}×${receipt.provenance.hardware.screenHeight}`} isLight={isLight} />
-                    </div>
-
-                    {/* Capabilities */}
-                    <div>
-                      <div className={`${sectionHead} mb-1`}>Capabilities</div>
-                      <div className="space-y-[2px]">
-                        <CapRow label="WASM" ok={receipt.provenance.hardware.wasmSupported} isLight={isLight} />
-                        <CapRow label="SIMD" ok={receipt.provenance.hardware.simdSupported} isLight={isLight} />
-                        <CapRow label="SAB" ok={typeof SharedArrayBuffer !== "undefined"} isLight={isLight} />
-                        <CapRow label="Workers" ok={typeof Worker !== "undefined"} isLight={isLight} />
-                        <CapRow label="Touch" ok={receipt.provenance.hardware.touchCapable} isLight={isLight} />
                       </div>
-                    </div>
 
-                    {/* Provenance */}
-                    <div>
-                      <div className={`${sectionHead} mb-1`}>Provenance</div>
-                      <div className="space-y-[2px]">
-                        <KVRow label="Context" value={receipt.provenance.context} isLight={isLight} />
-                        <KVRow label="Hash" value={receipt.provenance.provenanceHash.slice(0, 12) + "…"} isLight={isLight} mono />
+                      <div>
+                        <div className={`${sectionHead} mb-1`}>Provenance</div>
+                        <div className="space-y-[2px]">
+                          <KVRow label="Context" value={receipt.provenance.context} isLight={isLight} />
+                          <KVRow label="Hash" value={receipt.provenance.provenanceHash.slice(0, 12) + "…"} isLight={isLight} mono />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* ── Issues Strip (full width) ── */}
-                {isDegraded && degradationLog.length > 0 && (
-                  <div className={`px-3 py-1.5 border-t ${border} space-y-1`}>
-                    {degradationLog.map((entry, i) => (
-                      <div key={i} className={`flex items-start gap-1.5 text-[9px] ${isLight ? "text-amber-700" : "text-amber-400"}`}>
-                        <span className="shrink-0">⚠</span>
-                        <span><span className="font-semibold">{entry.component}:</span> {entry.issue}</span>
-                      </div>
-                    ))}
+                  {/* ── Issues Strip ── */}
+                  {isDegraded && degradationLog.length > 0 && (
+                    <div className={`px-3 py-1.5 border-t ${border} space-y-1`}>
+                      {degradationLog.map((entry, i) => (
+                        <div key={i} className={`flex items-start gap-1.5 text-[9px] ${isLight ? "text-amber-700" : "text-amber-400"}`}>
+                          <span className="shrink-0">⚠</span>
+                          <span><span className="font-semibold">{entry.component}:</span> {entry.issue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Footer ── */}
+                  <div className={`px-3 py-1.5 border-t ${border} text-[8px] ${txtFaint} text-center`}>
+                    Lattice-hash sealed · 128-bit preimage · Session {receipt.seal.sessionNonce.slice(0, 8)}
                   </div>
-                )}
-
-                {/* ── Footer ── */}
-                <div className={`px-3 py-1.5 border-t ${border} text-[8px] ${txtFaint} text-center`}>
-                  Lattice-hash sealed · 128-bit preimage · Session {receipt.seal.sessionNonce.slice(0, 8)}
-                </div>
-              </>
-            ) : (
-              <div className={`py-8 text-center ${txtSub}`}>Initializing…</div>
-            )}
-          </motion.div>
+                </>
+              ) : (
+                <div className={`py-8 text-center ${txtSub}`}>Initializing…</div>
+              )}
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
