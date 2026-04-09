@@ -377,6 +377,8 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
         </div>
       )}
 
+      {/* Bottom spacer — golden ratio complement */}
+      <div style={{ flex: "0.618" }} />
 
       {/* Placeholder style for placeholders */}
       <style>{`
