@@ -481,8 +481,8 @@ Deno.serve(async (req) => {
   const user = await getUser(authHeader).catch(() => null);
   const userId = user?.id ?? null;
 
-  // Introspection shortcut
-  if (!Array.isArray(body) && (body as any)?.method === "rpc/discover") {
+  // Introspection shortcuts
+  if (!Array.isArray(body) && ((body as any)?.method === "rpc/discover" || (body as any)?.method === "rpc/manifest")) {
     return new Response(
       JSON.stringify(discover()),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
