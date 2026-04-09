@@ -10,12 +10,6 @@ import { ingestFile, ingestPaste, ingestUrl, type PipelineResult, type LineageEn
 import type { ArtifactFormat } from "@/modules/uns/core/hologram/universal-ingest";
 import type { StructuredData } from "./structured-extractor";
 import { ingestBridge } from "@/modules/knowledge-graph";
-import type { GuestContextItem } from "./guest-context";
-
-/** Fire-and-forget KG population */
-function addToKnowledgeGraph(item: GuestContextItem): void {
-  ingestBridge.addToGraph(item).catch(() => {});
-}
 
 export interface GuestContextItem {
   id: string;
