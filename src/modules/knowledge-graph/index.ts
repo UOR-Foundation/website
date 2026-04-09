@@ -2,9 +2,10 @@
  * UOR Knowledge Graph — Barrel Export.
  *
  * CANONICAL: All graph operations go through the single GrafeoDB instance.
+ * Absorbs former kg-store module.
  */
 
-export { grafeoStore as localGraphStore, grafeoStore, oxigraphStore } from "./grafeo-store";
+export { grafeoStore as localGraphStore, grafeoStore } from "./grafeo-store";
 export type { KGNode, KGEdge, KGDerivation, KGStats } from "./types";
 export type { SparqlBinding } from "./grafeo-store";
 export { sparqlQuery, sparqlUpdate } from "./grafeo-store";
@@ -63,3 +64,49 @@ export type {
   CleaningAction,
   ProcessingProfile,
 } from "./data-engine";
+
+// ── Absorbed from kg-store ──────────────────────────────────────────────────
+
+export {
+  ingestDatum,
+  ingestDatumBatch,
+  ingestDerivation,
+  ingestCertificate,
+  ingestReceipt,
+  ingestTriples,
+  getDatum,
+  getDatumByValue,
+  getDerivation,
+} from "./store";
+
+export {
+  getGraphStats,
+  listGraphs,
+  getNamedGraphTripleCount,
+} from "./graph-manager";
+export type { GraphStats } from "./graph-manager";
+
+export { UnsGraph, ONTOLOGY_GRAPH, Q0_GRAPH } from "./uns-graph";
+export type { Quad } from "./uns-graph";
+export { generateVoID, CANONICAL_QUERIES } from "./void-descriptor";
+export type { VoIDDescriptor } from "./void-descriptor";
+
+export {
+  recordToSchemaOrg,
+  functionToSchemaOrg,
+  objectToSchemaOrg,
+  nodeToSchemaOrg,
+  negotiateFormat,
+  serializeSchemaOrg,
+  generateSitemap,
+  generateRobotsTxt,
+} from "./schema-org";
+export type {
+  SchemaOrgRecord,
+  SchemaOrgFunction,
+  SchemaOrgStoredObject,
+  SitemapEntry,
+  SerializationFormat,
+} from "./schema-org";
+
+export { default as KnowledgeGraphPage } from "./pages/KnowledgeGraphPage";
