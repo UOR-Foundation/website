@@ -1,42 +1,30 @@
 
 
-## Fix: QR Portal Panel Not Working
+## Plan: Add Self-Reflective LLM Prompts to System Health Report
 
-### Root Cause Analysis
+### What This Does
 
-The QR Portal panel code has several issues that prevent it from working on the published `uor.foundation` site:
-
-1. **`PUBLISHED_ORIGIN` is hardcoded** to `"https://univeral-coordinate-hub.lovable.app"` (line 54 in QrPortalPanel.tsx). When accessed from `uor.foundation`, the QR code would point to the wrong domain.
-
-2. **`VITE_SUPABASE_PROJECT_ID` may be undefined** on the GitHub Actions-deployed `uor.foundation` site, causing the authenticated edge function call to hit `https://undefined.supabase.co/...` and fail silently.
-
-3. **`supabase.auth.getSession()` may throw** on the external domain if the Supabase client is misconfigured for that origin, causing `generateToken` to fail before any UI state (loading/error/QR) is set.
-
-4. **No console logging** — errors are caught but only shown in the panel UI, making debugging impossible from the health report.
+Appends a new section at the end of the markdown report called **"AI Reflection Prompts"** containing strategic prompts that, when the report is pasted into an LLM conversation, give the LLM full context about what it's reading and ask it to suggest improvements across three dimensions: report presentation, system architecture, and self-healing capabilities.
 
 ### Changes
 
-**File: `src/modules/oracle/components/QrPortalPanel.tsx`**
+**File: `src/modules/boot/SystemMonitorApp.tsx`** — `formatMarkdownReport()` function
 
-- Replace hardcoded `PUBLISHED_ORIGIN` with `window.location.origin` so the QR always points to the current domain
-- Wrap `supabase.auth.getSession()` in a try-catch so it gracefully falls back to guest mode instead of throwing
-- Add `console.warn` to the error handler for debuggability
-- Use `VITE_SUPABASE_URL` (which is always available) instead of manually constructing the Supabase URL from project ID
+Insert a new section before the closing `---` line (around line 588) that adds:
+
+1. **Context preamble** — A paragraph explaining to the LLM what the UOR Virtual OS is, what each report section represents, and the system's design philosophy (sovereign client-side OS with Fano-plane kernel, ring algebra, lattice-hash seals, holographic module architecture)
+
+2. **Three strategic reflection prompts:**
+   - **Report Presentation** — "Given the data above, what changes to structure, grouping, visualization, or wording would make this report more actionable for both developers and non-technical stakeholders?"
+   - **System Architecture** — "Based on the degradation log, capability matrix, self-assessment gaps, and module architecture metrics, what are the highest-leverage improvements to make the system more robust, performant, and minimal?"
+   - **Self-Healing & Autonomy** — "What automated remediation, predictive monitoring, or feedback loops could the system implement so that future reports show measurable improvement without human intervention?"
+
+3. **A meta-prompt** asking the LLM to propose new self-assessment metrics that should be added to the coverage tracker, closing the feedback loop
 
 ### Technical Details
 
-```text
-Current flow:
-  click → setPortalOpen(true) → generateToken()
-    → supabase.auth.getSession()  ← may throw on uor.foundation
-    → fetch(...undefined.supabase.co...)  ← broken URL
-    → error swallowed, panel shows loading forever or empty
-
-Fixed flow:
-  click → setPortalOpen(true) → generateToken()
-    → try getSession(), catch → guest mode
-    → guest: use window.location.origin + targetUrl → QR generated
-    → auth: use VITE_SUPABASE_URL for edge function URL → QR generated
-    → console.warn on any error
-```
+- Purely additive — only the `formatMarkdownReport()` function is modified
+- No new dependencies, no backend changes
+- The prompts are part of the markdown output, so they travel with every copy of the report
+- Report version bumped from v3.0 to v3.1
 
