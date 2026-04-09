@@ -15,6 +15,7 @@ import SnapOverlay from "@/modules/desktop/SnapOverlay";
 import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
 import MobileShell from "@/modules/desktop/MobileShell";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -159,8 +160,10 @@ function DesktopShellInner() {
 
 export default function DesktopShell() {
   return (
-    <DesktopThemeProvider>
-      <DesktopShellInner />
-    </DesktopThemeProvider>
+    <PlatformProvider>
+      <DesktopThemeProvider>
+        <DesktopShellInner />
+      </DesktopThemeProvider>
+    </PlatformProvider>
   );
 }

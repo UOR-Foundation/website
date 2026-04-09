@@ -12,6 +12,7 @@ import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { smartTruncate, FONTS } from "@/modules/oracle/lib/pretext-layout";
 import { SPACE, TIMING } from "@/modules/desktop/lib/golden-ratio";
 import SnapLayoutPicker from "@/modules/desktop/SnapLayoutPicker";
@@ -57,6 +58,7 @@ export default function TabBar({
 }: Props) {
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
+  const { modKey } = usePlatform();
 
   // Drag state
   const [dragId, setDragId] = useState<string | null>(null);
@@ -276,7 +278,7 @@ export default function TabBar({
             <DropdownMenuItem className={menuItemClass} onSelect={onHideAll}>
               <EyeOff className="w-3.5 h-3.5 mr-2 opacity-50" />
               Hide All Windows
-              <span className="ml-auto text-[10px] opacity-40">⌘H</span>
+              <span className="ml-auto text-[10px] opacity-40">{modKey}H</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator className={isLight ? "bg-black/[0.05]" : "bg-white/[0.05]"} />
@@ -284,7 +286,7 @@ export default function TabBar({
             <DropdownMenuItem className={menuItemClass} onSelect={onSpotlight}>
               <Keyboard className="w-3.5 h-3.5 mr-2 opacity-50" />
               Search
-              <span className="ml-auto text-[10px] opacity-40">⌘K</span>
+              <span className="ml-auto text-[10px] opacity-40">{modKey}K</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem className={menuItemClass} disabled>
@@ -298,7 +300,7 @@ export default function TabBar({
       <button
         onClick={onSpotlight}
         className={`flex items-center justify-center w-[28px] h-[28px] rounded-md shrink-0 transition-colors duration-150 ${isLight ? "hover:bg-black/[0.05]" : "hover:bg-white/[0.06]"}`}
-        title="Search (⌘K)"
+        title={`Search (${modKey}K)`}
       >
         <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/40" : "text-white/40"}`} />
       </button>
@@ -430,7 +432,7 @@ export default function TabBar({
           `}
           style={{ marginTop: "auto", marginBottom: "auto" }}
           onClick={onSpotlight}
-          title="New tab (⌘K)"
+          title={`New tab (${modKey}K)`}
         >
           <Plus className="w-[16px] h-[16px]" />
         </button>

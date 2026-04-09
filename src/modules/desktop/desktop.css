@@ -3,6 +3,34 @@
    Golden ratio (φ = 1.618) proportioned shadows and spacing
    ═══════════════════════════════════════════════════════ */
 
+/* ── Platform-Adaptive CSS Properties ── */
+:root {
+  --os-corner-radius: 10px;
+  --os-font-stack: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --os-window-shadow-idle:
+    0 16px 26px -10px rgba(0, 0, 0, 0.35),
+    0 6px 16px -6px rgba(0, 0, 0, 0.20);
+  --os-window-shadow-active:
+    0 26px 42px -10px rgba(0, 0, 0, 0.50),
+    0 10px 26px -6px rgba(0, 0, 0, 0.30);
+}
+
+[data-platform="windows"] {
+  --os-corner-radius: 8px;
+  --os-font-stack: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --os-window-shadow-idle:
+    0 8px 20px -6px rgba(0, 0, 0, 0.28),
+    0 4px 12px -4px rgba(0, 0, 0, 0.18);
+  --os-window-shadow-active:
+    0 16px 32px -8px rgba(0, 0, 0, 0.40),
+    0 8px 20px -4px rgba(0, 0, 0, 0.25);
+}
+
+[data-platform="linux"] {
+  --os-corner-radius: 8px;
+  --os-font-stack: system-ui, 'Ubuntu', 'Cantarell', sans-serif;
+}
+
 /* ── Chrome Tab Strip ── */
 .chrome-tab {
   position: relative;
@@ -25,24 +53,18 @@
   background: inherit;
 }
 
-/* ── Window chrome — φ-proportioned shadows ── */
+/* ── Window chrome — platform-adaptive shadows ── */
 .desktop-window-chrome {
-  border-radius: 10px;
+  border-radius: var(--os-corner-radius);
   overflow: hidden;
   contain: layout paint;
   isolation: isolate;
-  /* φ-scale: 16→26 blur, 6→10 spread */
-  box-shadow:
-    0 16px 26px -10px rgba(0, 0, 0, 0.35),
-    0 6px 16px -6px rgba(0, 0, 0, 0.20);
+  box-shadow: var(--os-window-shadow-idle);
   transition: box-shadow 150ms ease-out, opacity 120ms ease-out;
 }
 
 .desktop-window-chrome.active {
-  /* φ-scale: 26→42 blur, 10→26 spread */
-  box-shadow:
-    0 26px 42px -10px rgba(0, 0, 0, 0.50),
-    0 10px 26px -6px rgba(0, 0, 0, 0.30);
+  box-shadow: var(--os-window-shadow-active);
 }
 
 .desktop-window-chrome.dragging {
@@ -78,4 +100,57 @@
 }
 .window-drag-strip:active {
   cursor: grabbing;
+}
+
+/* ── Platform-adaptive scrollbars ── */
+[data-platform="windows"] *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+[data-platform="windows"] *::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-platform="windows"] *::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.35);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+[data-platform="windows"] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.55);
+  background-clip: content-box;
+}
+
+[data-platform="linux"] *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[data-platform="linux"] *::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-platform="linux"] *::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 3px;
+}
+
+/* macOS: thin overlay scrollbars (browser default) — no override needed */
+
+/* ── Material ripple for Android mobile nav ── */
+.mobile-ripple {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.25);
+  transform: translate(-50%, -50%);
+  animation: ripple-expand 600ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple-expand {
+  to {
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+  }
 }

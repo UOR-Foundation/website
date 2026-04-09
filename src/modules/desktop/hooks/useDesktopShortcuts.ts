@@ -6,6 +6,7 @@
 
 import { useEffect } from "react";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 const THEME_ORDER: DesktopTheme[] = ["immersive", "dark", "light"];
 
@@ -18,10 +19,11 @@ interface Handlers {
 
 export function useDesktopShortcuts(handlers: Handlers) {
   const { theme, setTheme } = useDesktopTheme();
+  const { modKeyCode } = usePlatform();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const meta = e.metaKey || e.ctrlKey;
+      const meta = e[modKeyCode];
       if (!meta) return;
 
       if (e.key === "k") {
@@ -51,5 +53,5 @@ export function useDesktopShortcuts(handlers: Handlers) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handlers, theme, setTheme]);
+  }, [handlers, theme, setTheme, modKeyCode]);
 }

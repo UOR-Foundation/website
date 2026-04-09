@@ -13,6 +13,7 @@ import {
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp, DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme, type DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 interface Props {
   activeWindowId: string | null;
@@ -29,6 +30,7 @@ export default function DesktopMenuBar({
 }: Props) {
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
+  const { modKey } = usePlatform();
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 30_000);
@@ -96,7 +98,7 @@ export default function DesktopMenuBar({
             </MenubarSub>
             <MenubarSeparator className={separatorClass} />
             <MenubarItem className={menuItemClass} onSelect={onHideAll}>
-              Hide All <MenubarShortcut className={shortcutClass}>⌘H</MenubarShortcut>
+              Hide All <MenubarShortcut className={shortcutClass}>{modKey}H</MenubarShortcut>
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
@@ -108,10 +110,10 @@ export default function DesktopMenuBar({
             </MenubarTrigger>
             <MenubarContent className={`rounded-xl min-w-[160px] ${menuContentClass}`}>
               <MenubarItem className={menuItemClass} onSelect={onMinimizeWindow}>
-                Minimize <MenubarShortcut className={shortcutClass}>⌘M</MenubarShortcut>
+                Minimize <MenubarShortcut className={shortcutClass}>{modKey}M</MenubarShortcut>
               </MenubarItem>
               <MenubarItem className={menuItemClass} onSelect={onCloseWindow}>
-                Close Window <MenubarShortcut className={shortcutClass}>⌘W</MenubarShortcut>
+                Close Window <MenubarShortcut className={shortcutClass}>{modKey}W</MenubarShortcut>
               </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
@@ -133,7 +135,7 @@ export default function DesktopMenuBar({
               <>
                 <MenubarSeparator className={separatorClass} />
                 <MenubarItem className={menuItemClass} onSelect={onHideAll}>
-                  Hide All <MenubarShortcut className={shortcutClass}>⌘H</MenubarShortcut>
+                  Hide All <MenubarShortcut className={shortcutClass}>{modKey}H</MenubarShortcut>
                 </MenubarItem>
               </>
             )}
@@ -145,7 +147,7 @@ export default function DesktopMenuBar({
         <button
           onClick={onSpotlight}
           className={`p-0.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
-          title="Spotlight (⌘K)"
+          title={`Spotlight (${modKey}K)`}
         >
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>

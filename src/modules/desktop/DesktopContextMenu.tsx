@@ -16,6 +16,7 @@ import {
   ContextMenuCheckboxItem,
 } from "@/modules/core/ui/context-menu";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 
 interface Props {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export default function DesktopContextMenu({
   widgetsVisible = true,
 }: Props) {
   const { isLight, theme, setTheme } = useDesktopTheme();
+  const { modKey } = usePlatform();
 
   const contentClass = isLight
     ? "border-black/[0.08] bg-white/90 text-black/70 backdrop-blur-xl"
@@ -58,7 +60,7 @@ export default function DesktopContextMenu({
         </ContextMenuItem>
         <ContextMenuItem className={itemClass} onSelect={onSpotlight}>
           Spotlight
-          <ContextMenuShortcut className={shortcutClass}>⌘K</ContextMenuShortcut>
+          <ContextMenuShortcut className={shortcutClass}>{modKey}K</ContextMenuShortcut>
         </ContextMenuItem>
 
         <ContextMenuSeparator className={separatorClass} />
@@ -105,7 +107,7 @@ export default function DesktopContextMenu({
         {onHideAll && (
           <ContextMenuItem className={itemClass} onSelect={onHideAll}>
             Hide All Windows
-            <ContextMenuShortcut className={shortcutClass}>⌘H</ContextMenuShortcut>
+            <ContextMenuShortcut className={shortcutClass}>{modKey}H</ContextMenuShortcut>
           </ContextMenuItem>
         )}
 
