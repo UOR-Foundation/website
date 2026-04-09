@@ -223,11 +223,11 @@ export const TECH_STACK: readonly StackEntry[] = [
   },
   {
     name: "jsonld",
-    role: "URDNA2015 canonicalization — deterministic N-Quads for content addressing",
+    role: "URDNA2015 canonicalization — deterministic N-Quads morphism for content addressing",
     category: "canonical",
     criticality: "critical",
     fallback: "JSON.stringify sort-keys fallback (not W3C compliant)",
-    kernelFunction: "encode",
+    kernelFunction: "compose",
     criteria: {
       license: "BSD-3-Clause",
       standard: "W3C JSON-LD 1.1, W3C RDF Dataset Canonicalization",
