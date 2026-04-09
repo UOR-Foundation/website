@@ -1,245 +1,247 @@
 
 
-# Sovereign Messenger — Keet + Keybase Grade P2P Messaging & File Sharing
+# Sovereign Messenger — Keybase Feature Parity & Beyond
 
-## Assessment of Current State
+## Gap Analysis: Keybase Features vs Current State
 
-The existing messenger has strong cryptographic foundations but critical gaps that prevent it from functioning as a true Keet/Keybase-grade experience:
-
-**What works:**
-- UMP protocol: Kyber-1024 KEM + AES-256-GCM encryption pipeline (conduit.ts, messaging.ts)
-- Database schema: conduit_sessions, encrypted_messages, group_rekeys with proper RLS
-- Basic UI: ChatSidebar, ConversationView, MessageBubble, NewConversationDialog
-- Realtime subscriptions for message delivery
-
-**Critical gaps:**
-1. **No file transfer at all** — MessageInput has a Paperclip icon that does nothing. No file encryption, no chunked upload, no Keybase-style KBFS
-2. **No voice/video calls** — Keet's core feature (P2P WebRTC calls) is absent
-3. **No message types beyond text** — mock-data references image/voice types but the real pipeline only handles text
-4. **Peer profiles never resolve** — useConversations hardcodes `displayName: "User"` for all peers because RLS blocks cross-profile reads
-5. **No offline message queue** — if the network drops, messages are lost
-6. **No read receipts** — MessageBubble shows CheckCheck but it's purely decorative
-7. **No typing indicators** — the mock Contact type has `status: "typing"` but nothing drives it
-8. **No message search** — no way to find content across conversations
-9. **No threads or replies** — flat message list only
-10. **No disappearing messages** — no ephemeral mode like Signal
-11. **No P2P transport** — all messages route through Supabase; no direct WebRTC/Hyperswarm path
-
-## Design Philosophy
-
-Merge the best of three worlds:
-
-| Source | What we take |
-|--------|-------------|
-| **Keet** | True P2P (WebRTC data channels when direct), no-server fallback, streaming file transfers, audio/video calls |
-| **Keybase** | Cryptographic identity proofs, encrypted filesystem (KBFS → UOR Vault), team-based key management, signed chat history |
-| **UOR Framework** | Content-addressed message DAG, knowledge graph persistence, lattice-based PQ encryption, TrustGraph attestations for contact verification |
+| Keybase Feature | Current State | Priority |
+|----------------|---------------|----------|
+| **Group/Team conversations** | Schema supports `session_type: "group"` but UI is 100% direct-only. No group creation, no member management, no group avatars. | Critical |
+| **Channels within teams** | No concept exists | High |
+| **Disappearing messages UI** | `ephemeral.ts` + `ConversationInfo.tsx` show the TTL label but there is NO UI to change it. The `expires_after_seconds` column exists but is never written to. | Critical |
+| **Exploding messages (per-message timer)** | Only session-level TTL exists. No per-message ephemeral timers. | High |
+| **Encrypted filesystem (KBFS)** | `file-transfer.ts` exists for message attachments but there is no standalone file vault / shared folder concept. | High |
+| **Cryptographic identity proofs** | `TrustGraph` + `ceremony_cid` exist in `trusted_connections` but are not surfaced in the messenger. No social proof linking (Twitter, GitHub, domain). | Medium |
+| **Message pinning** | `Conversation.pinned` exists in types but pinning individual messages within a conversation does not. | Medium |
+| **Message editing & deletion** | No support. Once sent, messages are immutable with no edit or delete-for-everyone. | High |
+| **Reactions persisted** | `ReactionPicker` exists but `onReact` just `console.log`s. No database storage, no realtime sync. | High |
+| **Conversation muting** | `Conversation.muted` type exists but no UI or storage. | Medium |
+| **@mentions in groups** | No implementation. | Medium |
+| **Message forwarding** | Not implemented. | Low |
+| **Device key management** | No multi-device key sync. Session keys are in-memory only. | High |
+| **Notifications** | No push notifications, no desktop notifications. | High |
 
 ## Implementation Plan
 
-### 1. Fix Peer Profile Resolution (database function)
+### Phase 1: Group Conversations (The Core Keybase Feature)
 
-Create a `get_peer_profiles` SECURITY DEFINER function that returns display_name, handle, avatar_url, uor_glyph for a list of user IDs. This unblocks the conversation list showing real names.
-
-**Migration SQL:**
-```sql
-CREATE OR REPLACE FUNCTION public.get_peer_profiles(peer_ids uuid[])
-RETURNS TABLE(user_id uuid, display_name text, handle text, avatar_url text, uor_glyph text)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = 'public'
-AS $$
-  SELECT p.user_id, p.display_name, p.handle, p.avatar_url, p.uor_glyph
-  FROM public.profiles p WHERE p.user_id = ANY(peer_ids);
-$$;
-```
-
-**Modify:** `src/modules/messenger/lib/use-conversations.ts` — call `get_peer_profiles` RPC instead of hardcoding.
-
-### 2. Encrypted File Transfer (Keybase KBFS-inspired)
-
-Content-addressed, encrypted file sharing anchored to the knowledge graph.
+**Database migration:**
+- Create `group_metadata` table: `session_id` (FK), `name`, `description`, `avatar_url`, `created_by`, `is_public`
+- Create `group_members` table: `session_id`, `user_id`, `role` (admin/member), `joined_at`, `invited_by`, `muted_until`
+- Add RLS: members can read their groups; admins can update metadata and manage members
 
 **New files:**
-- `src/modules/messenger/lib/file-transfer.ts` — Chunked file encryption pipeline:
-  1. Hash file → UOR CID (content address)
-  2. Split into 256KB chunks
-  3. Encrypt each chunk with session AES-256-GCM key
-  4. Upload chunks to `encrypted-files` storage bucket
-  5. Send a `ump:FileManifest` message with chunk CIDs, filename, MIME type, size
-  6. Receiver downloads chunks, decrypts, reassembles, verifies CID
-- `src/modules/messenger/lib/types.ts` — Add `FileManifest`, `FileChunk`, `MessageType` union
-- `src/modules/messenger/components/FileMessage.tsx` — Renders file messages (preview for images, download for others, progress bar during transfer)
-- `src/modules/messenger/components/FilePickerButton.tsx` — Replaces the dead Paperclip button
-
-**Storage bucket:** Create `encrypted-files` (private) for chunk storage.
-
-**Migration:** Add `message_type` column to `encrypted_messages` (default `'text'`), add `file_manifest` JSONB column.
-
-### 3. Rich Message Types
-
-Extend the message pipeline to support multiple content types.
-
-**New types in `types.ts`:**
-```typescript
-type MessageType = "text" | "image" | "file" | "voice" | "video" | "system" | "reply";
-
-interface RichMessage extends DecryptedMessage {
-  messageType: MessageType;
-  replyTo?: string;          // messageHash of parent
-  fileManifest?: FileManifest;
-  voiceDuration?: number;
-  reactions?: Reaction[];
-}
-```
-
-**New components:**
-- `src/modules/messenger/components/VoiceMessage.tsx` — Record + play voice notes (MediaRecorder API → encrypt → upload)
-- `src/modules/messenger/components/ImageMessage.tsx` — Inline image preview with encrypted thumbnail
-- `src/modules/messenger/components/ReplyBubble.tsx` — Quoted reply header in message bubbles
+- `src/modules/messenger/components/NewGroupDialog.tsx` — Multi-select peer picker, group name/avatar, creates a `session_type: "group"` session + `group_metadata` + `group_members` rows
+- `src/modules/messenger/components/GroupInfoPanel.tsx` — Right panel for groups: member list, add/remove members, admin controls, shared media, group settings
+- `src/modules/messenger/components/GroupAvatar.tsx` — Stacked avatar composite or custom group icon
 
 **Modify:**
-- `MessageBubble.tsx` — Dispatch to the correct renderer based on `messageType`
-- `MessageInput.tsx` — Add voice record button, image paste support, reply-to state
-- `use-send-message.ts` — Handle file/voice/image payloads
+- `ChatList.tsx` — Render group conversations with group name/avatar instead of single peer
+- `ConversationView.tsx` — Show sender name above each bubble in group chats
+- `ContactHeader.tsx` — Show group name, member count, group typing indicators ("Alice is typing…")
+- `use-conversations.ts` — Fetch `group_metadata` for group sessions, resolve all member profiles
+- `use-presence.ts` — Track multiple peers in group channels
+- `MessageBubble.tsx` — Show sender name + mini avatar in group context
+- `types.ts` — Add `groupMeta` to `Conversation` type, add `GroupMember` interface
 
-### 4. Real-Time Presence & Typing Indicators
-
-**New file:**
-- `src/modules/messenger/lib/use-presence.ts` — Uses Supabase Realtime Presence to track:
-  - Online/offline status per user
-  - Typing indicators per session (debounced 3s timeout)
-  - Last seen timestamps
+### Phase 2: Disappearing Messages (Fully Functional)
 
 **Modify:**
-- `ContactHeader.tsx` — Show "online", "typing...", or "last seen" from presence
-- `ChatSidebar.tsx` — Show online dot on conversation list items
+- `ConversationInfo.tsx` — Add interactive TTL selector using `EPHEMERAL_PRESETS`. On selection, UPDATE `conduit_sessions.expires_after_seconds` via Supabase
+- `ConversationView.tsx` — Show ephemeral timer badge on each message when TTL is active, using `getTimeRemaining()`
+- `MessageBubble.tsx` — Show countdown indicator for messages nearing expiry
 
-### 5. Read Receipts & Delivery Status
+**New: Per-message ephemeral (Keybase "exploding messages")**
+- Add `self_destruct_seconds` column to `encrypted_messages` (nullable)
+- `MessageInput.tsx` — Add bomb/timer icon that lets sender set per-message TTL before sending
+- `ephemeral.ts` — Extend `filterExpiredMessages` to check both session TTL and per-message TTL
 
-**Migration:** Add `delivered_at` and `read_at` columns to `encrypted_messages`.
+**Edge function:**
+- `supabase/functions/purge-expired-messages/index.ts` — Cron job (runs every 60s) that DELETEs rows where `created_at + self_destruct_seconds < now()` OR session-level TTL expired. Ensures server-side cleanup even if client doesn't.
 
-**New file:**
-- `src/modules/messenger/lib/use-read-receipts.ts` — Marks messages as read when they scroll into view (IntersectionObserver). Sends read receipt as a lightweight UPDATE.
+### Phase 3: Reactions (Persisted + Realtime)
+
+**Database migration:**
+- Create `message_reactions` table: `message_id` (FK), `user_id`, `emoji`, `created_at`, UNIQUE(`message_id`, `user_id`, `emoji`)
+- RLS: session participants can CRUD reactions on messages in their sessions
+- Add to realtime publication
 
 **Modify:**
-- `MessageBubble.tsx` — Show single check (sent), double check (delivered), blue double check (read)
+- `ReactionPicker.tsx` — On react, INSERT/DELETE into `message_reactions`
+- `use-messages.ts` — Join reactions when fetching messages, subscribe to reaction changes
+- `MessageBubble.tsx` — Show real reaction counts with user attribution
 
-### 6. Offline Message Queue
+### Phase 4: Message Edit & Delete
 
-**New file:**
-- `src/modules/messenger/lib/offline-queue.ts` — IndexedDB-backed queue that:
-  - Stores sealed messages when offline
-  - Auto-flushes when connection resumes (navigator.onLine + Supabase realtime reconnect)
-  - Deduplicates by messageHash (content-addressed = idempotent)
-
-### 7. Message Search
-
-**New file:**
-- `src/modules/messenger/lib/use-message-search.ts` — Client-side search across decrypted message cache (since server only has ciphertext). Uses a lightweight in-memory index built from decrypted messages in the current session.
+**Database migration:**
+- Add `edited_at` timestamp column to `encrypted_messages`
+- Add `deleted_at` timestamp column (soft delete — shows "This message was deleted")
+- Add `edit_history` JSONB column (array of previous ciphertexts for auditability)
 
 **New component:**
-- `src/modules/messenger/components/SearchMessages.tsx` — Search bar in conversation header with highlight results
-
-### 8. Disappearing Messages (Signal-style)
-
-**Migration:** Add `expires_after_seconds` column to `conduit_sessions` (nullable).
-
-**New file:**
-- `src/modules/messenger/lib/ephemeral.ts` — Client-side timer that deletes messages from the local view after the configured TTL. Server-side: edge function cron job that purges expired encrypted_messages rows.
-
-### 9. P2P WebRTC Data Channel (Keet-inspired)
-
-When two peers are simultaneously online, establish a direct WebRTC data channel for zero-latency messaging, bypassing the cloud relay entirely.
-
-**New files:**
-- `src/modules/messenger/lib/p2p/webrtc-signaling.ts` — Uses Supabase Realtime as the signaling server for WebRTC offer/answer/ICE exchange
-- `src/modules/messenger/lib/p2p/data-channel.ts` — Wraps RTCDataChannel with UMP encryption (messages still sealed with session AES key)
-- `src/modules/messenger/lib/p2p/call-manager.ts` — Audio/video call setup via WebRTC with Kyber-encrypted SRTP key exchange
+- `src/modules/messenger/components/MessageContextMenu.tsx` — Long-press / right-click menu with: Reply, React, Copy, Edit (own messages only, within 15min), Delete for me, Delete for everyone (own messages, within 15min), Forward, Pin
 
 **Modify:**
-- `use-send-message.ts` — Check if P2P channel is open; if yes, send directly; otherwise fall back to cloud relay
-- `use-messages.ts` — Listen for messages from both Supabase realtime AND P2P data channel
+- `MessageBubble.tsx` — Show "(edited)" label when `edited_at` is set, show "This message was deleted" tombstone when `deleted_at` is set
+- `use-send-message.ts` — Add `editMessage()` and `deleteMessage()` functions
+- `use-messages.ts` — Filter soft-deleted messages, handle UPDATE realtime events
 
-### 10. Knowledge Graph Integration
+### Phase 5: Encrypted Shared Folders (KBFS-inspired)
 
-Anchor conversations and shared files into the knowledge graph for searchability and cross-reference.
+**Database migration:**
+- Create `shared_folders` table: `id`, `session_id` (FK), `name`, `created_by`, `encrypted_key` (per-folder AES key, encrypted with session key)
+- Create `folder_entries` table: `id`, `folder_id` (FK), `filename`, `file_cid`, `encrypted_manifest` (JSONB), `uploaded_by`, `created_at`, `size_bytes`
+- RLS: session participants only
+
+**New files:**
+- `src/modules/messenger/components/SharedFiles.tsx` — File browser panel showing all files shared in a conversation, organized by folder. Upload, download, preview.
+- `src/modules/messenger/components/FolderView.tsx` — Keybase-style folder tree with drag-and-drop upload
+
+**Modify:**
+- `ConversationInfo.tsx` — Add "Shared Files" section linking to the folder view
+- `file-transfer.ts` — Add `uploadToFolder()` variant that associates chunks with a folder entry
+
+### Phase 6: Desktop Notifications
 
 **New file:**
-- `src/modules/messenger/lib/kg-anchoring.ts` — After decrypting a message/file, optionally insert a triple into the user's personal graph:
-  ```
-  <urn:ump:msg:{hash}> <uor:sentBy> <urn:uor:{senderVid}> .
-  <urn:ump:msg:{hash}> <uor:inSession> <urn:ump:session:{sessionHash}> .
-  <urn:ump:msg:{hash}> <uor:mentions> <urn:uor:{entity}> .
-  ```
-  This enables Oracle to answer "What did Alice send me about quantum computing?" by querying the graph.
+- `src/modules/messenger/lib/notifications.ts` — Request `Notification` permission, show desktop notifications for new messages when the conversation isn't active. Respects `muted_until` from group_members.
 
-### 11. Social Platform Bridge (Future-Ready Scaffolding)
+**Modify:**
+- `use-messages.ts` — Trigger notification on new message from peer
+- `MessengerPage.tsx` — Request notification permission on mount
+
+### Phase 7: Conversation Management (Pin, Mute, Archive)
+
+**Database migration:**
+- Create `conversation_settings` table: `user_id`, `session_id`, `pinned`, `muted_until`, `archived`, UNIQUE(`user_id`, `session_id`)
+
+**Modify:**
+- `ChatList.tsx` — Add swipe actions: pin (moves to top), mute (shows bell-off icon), archive (hides from main list)
+- `use-conversations.ts` — Join `conversation_settings`, sort pinned first, filter archived
+- `ChatSidebar.tsx` — Add filter tabs: All / Unread / Archived
+
+### Phase 8: @Mentions in Groups
 
 **New file:**
-- `src/modules/messenger/lib/bridges/bridge-protocol.ts` — Abstract interface for protocol bridges:
-  ```typescript
-  interface MessageBridge {
-    platform: "whatsapp" | "telegram" | "signal" | "email";
-    sendMessage(to: string, content: EncryptedPayload): Promise<void>;
-    onMessage(handler: (msg: IncomingBridgeMessage) => void): void;
-    mapIdentity(externalId: string): Promise<UorCanonicalIdentity>;
-  }
-  ```
-- `src/modules/messenger/lib/bridges/whatsapp-bridge.ts` — Connects to existing WhatsApp Business API (already have credentials in secrets)
-- `src/modules/messenger/lib/bridges/email-bridge.ts` — SMTP/IMAP bridge that wraps email in UMP envelopes, enabling encrypted email through the same messenger UI
+- `src/modules/messenger/components/MentionAutocomplete.tsx` — Triggered by `@` in MessageInput, shows member list, inserts `@handle` with user ID reference
 
-### 12. UI Polish — WhatsApp-Grade Experience
+**Modify:**
+- `MessageInput.tsx` — Detect `@` trigger, show autocomplete popover
+- `MessageBubble.tsx` — Render `@mentions` as highlighted, tappable links
+- `notifications.ts` — Always notify on @mention even if conversation is muted
 
-**Modify existing components:**
-- `ChatSidebar.tsx` — Add swipe-to-archive, pin conversations, mute notifications, unread count badges
-- `ConversationView.tsx` — Add scroll-to-bottom FAB, date separators between message groups, "new messages" indicator
-- `MessageInput.tsx` — Multi-line input (textarea), @mentions autocomplete, emoji picker integration
-- `MessengerPage.tsx` — Three-panel layout on desktop (sidebar, chat, info panel)
+## Database Migration Summary
 
-**New components:**
-- `src/modules/messenger/components/ConversationInfo.tsx` — Right panel showing: session security info, shared media grid, shared files list, TrustGraph attestation score for contact
-- `src/modules/messenger/components/DateSeparator.tsx` — "Today", "Yesterday", date labels between message groups
-- `src/modules/messenger/components/ReactionPicker.tsx` — Long-press/hover reaction menu
+```sql
+-- 1. Group metadata
+CREATE TABLE public.group_metadata (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  name text NOT NULL,
+  description text,
+  avatar_url text,
+  created_by uuid NOT NULL,
+  is_public boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
 
-## Files Summary
+-- 2. Group members
+CREATE TABLE public.group_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
+  user_id uuid NOT NULL,
+  role text NOT NULL DEFAULT 'member',
+  joined_at timestamptz DEFAULT now(),
+  invited_by uuid,
+  muted_until timestamptz,
+  UNIQUE(session_id, user_id)
+);
 
-| File | Action |
-|------|--------|
-| `src/modules/messenger/lib/file-transfer.ts` | Create — chunked encrypted file transfer |
-| `src/modules/messenger/lib/use-presence.ts` | Create — realtime presence + typing |
-| `src/modules/messenger/lib/use-read-receipts.ts` | Create — read receipt tracking |
-| `src/modules/messenger/lib/offline-queue.ts` | Create — IndexedDB offline message queue |
-| `src/modules/messenger/lib/use-message-search.ts` | Create — client-side message search |
-| `src/modules/messenger/lib/ephemeral.ts` | Create — disappearing messages |
-| `src/modules/messenger/lib/p2p/webrtc-signaling.ts` | Create — WebRTC signaling via Realtime |
-| `src/modules/messenger/lib/p2p/data-channel.ts` | Create — encrypted P2P data channel |
-| `src/modules/messenger/lib/p2p/call-manager.ts` | Create — audio/video call manager |
-| `src/modules/messenger/lib/kg-anchoring.ts` | Create — knowledge graph message anchoring |
-| `src/modules/messenger/lib/bridges/bridge-protocol.ts` | Create — platform bridge interface |
-| `src/modules/messenger/lib/bridges/whatsapp-bridge.ts` | Create — WhatsApp bridge |
-| `src/modules/messenger/lib/bridges/email-bridge.ts` | Create — email bridge |
-| `src/modules/messenger/components/FileMessage.tsx` | Create — file message renderer |
-| `src/modules/messenger/components/FilePickerButton.tsx` | Create — file picker |
-| `src/modules/messenger/components/VoiceMessage.tsx` | Create — voice note recorder/player |
-| `src/modules/messenger/components/ImageMessage.tsx` | Create — encrypted image preview |
-| `src/modules/messenger/components/ReplyBubble.tsx` | Create — quoted reply |
-| `src/modules/messenger/components/ConversationInfo.tsx` | Create — info panel |
-| `src/modules/messenger/components/DateSeparator.tsx` | Create — date separators |
-| `src/modules/messenger/components/ReactionPicker.tsx` | Create — emoji reactions |
-| `src/modules/messenger/components/SearchMessages.tsx` | Create — message search |
-| `src/modules/messenger/lib/use-conversations.ts` | Modify — real peer profiles |
-| `src/modules/messenger/lib/use-send-message.ts` | Modify — multi-type + P2P path |
-| `src/modules/messenger/lib/use-messages.ts` | Modify — P2P + rich types |
-| `src/modules/messenger/lib/types.ts` | Modify — rich message types |
-| `src/modules/messenger/components/MessageBubble.tsx` | Modify — type dispatch + read receipts |
-| `src/modules/messenger/components/MessageInput.tsx` | Modify — voice, files, replies, multi-line |
-| `src/modules/messenger/components/ContactHeader.tsx` | Modify — presence + typing |
-| `src/modules/messenger/components/ChatSidebar.tsx` | Modify — presence dots, swipe actions |
-| `src/modules/messenger/pages/MessengerPage.tsx` | Modify — 3-panel layout, info panel |
+-- 3. Message reactions
+CREATE TABLE public.message_reactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id uuid REFERENCES encrypted_messages(id) ON DELETE CASCADE NOT NULL,
+  user_id uuid NOT NULL,
+  emoji text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(message_id, user_id, emoji)
+);
 
-**Database migrations:**
-1. `get_peer_profiles` function
-2. `message_type` + `file_manifest` columns on `encrypted_messages`
-3. `delivered_at` + `read_at` columns on `encrypted_messages`
-4. `expires_after_seconds` column on `conduit_sessions`
-5. `encrypted-files` storage bucket
+-- 4. Conversation settings
+CREATE TABLE public.conversation_settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
+  pinned boolean DEFAULT false,
+  muted_until timestamptz,
+  archived boolean DEFAULT false,
+  UNIQUE(user_id, session_id)
+);
+
+-- 5. Shared folders
+CREATE TABLE public.shared_folders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid REFERENCES conduit_sessions(id) ON DELETE CASCADE NOT NULL,
+  name text NOT NULL DEFAULT 'Shared Files',
+  created_by uuid NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE public.folder_entries (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  folder_id uuid REFERENCES shared_folders(id) ON DELETE CASCADE NOT NULL,
+  filename text NOT NULL,
+  file_cid text NOT NULL,
+  encrypted_manifest jsonb,
+  uploaded_by uuid NOT NULL,
+  size_bytes bigint DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+
+-- 6. Columns on existing tables
+ALTER TABLE public.encrypted_messages
+  ADD COLUMN IF NOT EXISTS self_destruct_seconds integer,
+  ADD COLUMN IF NOT EXISTS edited_at timestamptz,
+  ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
+  ADD COLUMN IF NOT EXISTS edit_history jsonb;
+
+-- 7. RLS on all new tables
+-- (group_members, message_reactions, conversation_settings, shared_folders, folder_entries)
+-- All scoped to session participants via is_session_participant()
+
+-- 8. Realtime for reactions
+ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
+```
+
+## New Files Summary
+
+| File | Purpose |
+|------|---------|
+| `NewGroupDialog.tsx` | Group creation with multi-select |
+| `GroupInfoPanel.tsx` | Group settings, members, shared media |
+| `GroupAvatar.tsx` | Composite avatar for groups |
+| `MessageContextMenu.tsx` | Edit, delete, forward, pin context menu |
+| `SharedFiles.tsx` | KBFS-style file browser |
+| `FolderView.tsx` | Folder tree with upload |
+| `MentionAutocomplete.tsx` | @mention picker in groups |
+| `notifications.ts` | Desktop notification system |
+| `purge-expired-messages/index.ts` | Cron for server-side message expiry |
+
+## Modified Files Summary
+
+| File | Changes |
+|------|---------|
+| `types.ts` | GroupMember, GroupMeta, expanded Conversation |
+| `ChatList.tsx` | Group rendering, swipe actions |
+| `ChatSidebar.tsx` | Filter tabs, archive view |
+| `ConversationView.tsx` | Group sender names, ephemeral badges |
+| `ConversationInfo.tsx` | Interactive TTL picker, shared files |
+| `ContactHeader.tsx` | Group name/count, group typing |
+| `MessageBubble.tsx` | Sender in groups, edit/delete states, real reactions |
+| `MessageInput.tsx` | Per-message timer, @mention trigger |
+| `ReactionPicker.tsx` | Persist to database |
+| `use-conversations.ts` | Group metadata, conversation settings |
+| `use-messages.ts` | Reactions join, soft-delete filter, notifications |
+| `use-send-message.ts` | Edit/delete functions |
+| `MessengerPage.tsx` | Notification permission request |
 
