@@ -6,7 +6,7 @@
  * This registry stores source objects + enriched receipts for cross-page lookup.
  */
 
-import * as bridge from "@/lib/wasm/uor-bridge";
+import { getEngine } from "@/modules/engine";
 import { singleProofHash, type SingleProofResult } from "@/lib/uor-canonical";
 import { canonicalToTriword, formatTriword, triwordBreakdown, isValidTriword, triwordToPrefix } from "@/lib/uor-triword";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,15 +86,16 @@ export function enrichWithWasm(proof: SingleProofResult): Omit<EnrichedReceipt, 
     hashHex: proof.hashHex,
     nquads: proof.nquads,
 
-    // WASM ring signature — every call goes through bridge → WASM if loaded
+    // Ring signature — every call goes through engine contract → WASM if loaded
+    const e = getEngine();
     ringByte,
-    ringPartition: bridge.classifyByte(ringByte),
-    ringFactors: bridge.factorize(ringByte),
-    ringCriticalIdentity: bridge.verifyCriticalIdentity(ringByte),
-    ringPopcount: bridge.bytePopcount(ringByte),
-    ringBasis: bridge.byteBasis(ringByte),
-    engine: bridge.engineType(),
-    crateVersion: bridge.crateVersion(),
+    ringPartition: e.classifyByte(ringByte),
+    ringFactors: e.factorize(ringByte),
+    ringCriticalIdentity: e.verifyCriticalIdentity(ringByte),
+    ringPopcount: e.bytePopcount(ringByte),
+    ringBasis: e.byteBasis(ringByte),
+    engine: e.engine,
+    crateVersion: e.version,
 
     // Triword address
     triword,
