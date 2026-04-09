@@ -2,14 +2,16 @@
  * COI Service Worker — enables cross-origin isolation (SharedArrayBuffer)
  * on hosting platforms that don't natively serve COOP/COEP headers.
  *
- * How it works:
- *   1. Registers itself as a service worker
- *   2. Intercepts all fetch responses
- *   3. Injects Cross-Origin-Opener-Policy & Cross-Origin-Embedder-Policy headers
- *   4. The browser sees the headers → sets crossOriginIsolated = true → unlocks SAB
+ * This worker intercepts navigation requests and adds the required headers:
+ *   - Cross-Origin-Opener-Policy: same-origin  
+ *   - Cross-Origin-Embedder-Policy: credentialless
  *
- * Using "credentialless" for COEP to allow cross-origin resources (images, scripts)
- * without requiring CORP headers on every third-party resource.
+ * Using "credentialless" (not "require-corp") so cross-origin resources
+ * like images, scripts, and iframes work without CORP headers.
+ *
+ * This SW is registered at /coi-serviceworker.js scope and only handles
+ * navigations — it does NOT interfere with the VitePWA service worker
+ * which handles caching at /sw.js.
  */
 
 /* eslint-disable no-restricted-globals */
@@ -23,26 +25,25 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const request = event.request;
+  // Only intercept navigations to inject isolation headers
+  if (event.request.mode !== "navigate") return;
 
-  // Only intercept same-origin navigations and subresources
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).then((response) => {
-        // Clone the response so we can modify headers
-        const newHeaders = new Headers(response.headers);
-        newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
-        newHeaders.set("Cross-Origin-Embedder-Policy", "credentialless");
+  event.respondWith(
+    fetch(event.request).then((response) => {
+      // If already cross-origin isolated, pass through
+      if (response.headers.get("Cross-Origin-Opener-Policy")) {
+        return response;
+      }
 
-        return new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: newHeaders,
-        });
-      }).catch((err) => {
-        console.error("[COI-SW] Navigation fetch failed:", err);
-        return fetch(request);
-      })
-    );
-  }
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+      newHeaders.set("Cross-Origin-Embedder-Policy", "credentialless");
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      });
+    }).catch(() => fetch(event.request))
+  );
 });
