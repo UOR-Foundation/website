@@ -11,7 +11,8 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
 
-const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || "";
+// Publishable App ID — safe for client-side code
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || "cmnryb25k00fk0cl1ry8fosrb";
 
 interface WalletContextValue {
   walletAddress: string | null;
