@@ -31,9 +31,10 @@ function splitFile(data: Uint8Array): Uint8Array[] {
 
 /** Encrypt a chunk with AES-256-GCM using the Web Crypto API. */
 async function encryptChunk(chunk: Uint8Array, keyBytes: Uint8Array): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", keyBytes.slice(0, 32), "AES-GCM", false, ["encrypt"]);
+  const rawKey = new Uint8Array(keyBytes.buffer, keyBytes.byteOffset, 32);
+  const key = await crypto.subtle.importKey("raw", rawKey.buffer as ArrayBuffer, "AES-GCM", false, ["encrypt"]);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, chunk);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, chunk.buffer as ArrayBuffer);
   // Prepend IV to ciphertext
   const result = new Uint8Array(12 + encrypted.byteLength);
   result.set(iv, 0);
@@ -43,7 +44,8 @@ async function encryptChunk(chunk: Uint8Array, keyBytes: Uint8Array): Promise<Ui
 
 /** Decrypt a chunk. */
 async function decryptChunk(data: Uint8Array, keyBytes: Uint8Array): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", keyBytes.slice(0, 32), "AES-GCM", false, ["decrypt"]);
+  const rawKey = new Uint8Array(keyBytes.buffer, keyBytes.byteOffset, 32);
+  const key = await crypto.subtle.importKey("raw", rawKey.buffer as ArrayBuffer, "AES-GCM", false, ["decrypt"]);
   const iv = data.slice(0, 12);
   const ciphertext = data.slice(12);
   const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
