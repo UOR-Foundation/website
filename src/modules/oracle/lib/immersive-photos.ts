@@ -22,9 +22,16 @@ const u = (id: string) => `https://images.unsplash.com/${id}${Q}`;
 interface PhotoEntry {
   url: string;
   description: string;
+  photographer: string;
+  unsplashUrl: string;
 }
 
-const p = (id: string, description: string): PhotoEntry => ({ url: u(id), description });
+const p = (id: string, description: string, photographer: string, unsplashUsername: string): PhotoEntry => ({
+  url: u(id),
+  description,
+  photographer,
+  unsplashUrl: `https://unsplash.com/@${unsplashUsername}?utm_source=uor_foundation&utm_medium=referral`,
+});
 
 /**
  * Curated Unsplash photos for each solar phase.
