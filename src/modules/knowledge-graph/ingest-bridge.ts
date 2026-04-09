@@ -15,6 +15,7 @@
 import { localGraphStore, type KGNode, type KGEdge, type KGDerivation } from "./local-store";
 import { sha256hex } from "@/lib/crypto";
 import type { GuestContextItem } from "@/modules/sovereign-vault/lib/guest-context";
+import { decomposeToBlueprint, serializeBlueprint } from "./blueprint";
 
 // ── Entity extraction (lightweight, zero-dependency NLP) ────────────────────
 
@@ -327,6 +328,19 @@ export const ingestBridge = {
 
     await localGraphStore.putNodes(nodesToPut);
     await localGraphStore.putEdges(edgesToPut);
+
+    // ── Generate and store blueprint (edge-defined node decomposition) ──
+    try {
+      const ground = await decomposeToBlueprint(nodeAddr);
+      const serialized = serializeBlueprint(ground);
+      await localGraphStore.putBlueprint(
+        nodeAddr,
+        serialized,
+        primaryNode.rdfType
+      );
+    } catch {
+      // Blueprint generation is best-effort; don't block ingestion
+    }
 
     return { nodeCount: nodesToPut.length, edgeCount: edgesToPut.length, derivationCount };
   },

@@ -76,12 +76,14 @@ export interface KGStats {
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const DB_NAME = "uor-knowledge-graph";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 const STORES = {
   nodes: "nodes",
   edges: "edges",
   derivations: "derivations",
   meta: "meta",
+  rawBytes: "raw-bytes",
+  blueprints: "blueprints",
 } as const;
 
 // ── IndexedDB Lifecycle ─────────────────────────────────────────────────────
@@ -128,6 +130,17 @@ function openDB(): Promise<IDBDatabase> {
       // Meta: key-value store for graph-level metadata
       if (!db.objectStoreNames.contains(STORES.meta)) {
         db.createObjectStore(STORES.meta, { keyPath: "key" });
+      }
+
+      // Raw-bytes audit store (v2+)
+      if (!db.objectStoreNames.contains(STORES.rawBytes)) {
+        db.createObjectStore(STORES.rawBytes, { keyPath: "uorAddress" });
+      }
+
+      // Blueprints store (v3+)
+      if (!db.objectStoreNames.contains(STORES.blueprints)) {
+        const bpStore = db.createObjectStore(STORES.blueprints, { keyPath: "address" });
+        bpStore.createIndex("by_rdfType", "rdfType", { unique: false });
       }
     };
 
@@ -562,17 +575,36 @@ export const localGraphStore = {
     return nodes.length;
   },
 
+  // ── Blueprint Operations ──────────────────────────────────────────────
+
+  async putBlueprint(address: string, blueprint: string, rdfType?: string): Promise<void> {
+    const t = await tx(STORES.blueprints, "readwrite");
+    const store = t.objectStore(STORES.blueprints);
+    await req(store.put({ address, blueprint, rdfType: rdfType || "unknown", updatedAt: Date.now() }));
+    emit();
+  },
+
+  async getBlueprint(address: string): Promise<string | undefined> {
+    const t = await tx(STORES.blueprints, "readonly");
+    const store = t.objectStore(STORES.blueprints);
+    const result = await req(store.get(address));
+    return result?.blueprint;
+  },
+
+  async getAllBlueprints(): Promise<Array<{ address: string; blueprint: string }>> {
+    const t = await tx(STORES.blueprints, "readonly");
+    const store = t.objectStore(STORES.blueprints);
+    return req(store.getAll());
+  },
+
   // ── Clear ─────────────────────────────────────────────────────────────
 
   async clear(): Promise<void> {
-    const t = await tx(
-      [STORES.nodes, STORES.edges, STORES.derivations, STORES.meta],
-      "readwrite"
-    );
-    t.objectStore(STORES.nodes).clear();
-    t.objectStore(STORES.edges).clear();
-    t.objectStore(STORES.derivations).clear();
-    t.objectStore(STORES.meta).clear();
+    const allStores = [STORES.nodes, STORES.edges, STORES.derivations, STORES.meta, STORES.rawBytes, STORES.blueprints];
+    const t = await tx(allStores, "readwrite");
+    for (const name of allStores) {
+      t.objectStore(name).clear();
+    }
     await new Promise<void>((resolve, reject) => {
       t.oncomplete = () => resolve();
       t.onerror = () => reject(t.error);
