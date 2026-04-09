@@ -19,11 +19,13 @@ function GraphEvents({
   onHoverNode,
   searchQuery,
   hiddenTypes,
+  selectedNode,
 }: {
   onClickNode: (nodeId: string) => void;
   onHoverNode: (nodeId: string | null) => void;
   searchQuery: string;
   hiddenTypes: Set<string>;
+  selectedNode: string | null;
 }) {
   const sigma = useSigma();
   const registerEvents = useRegisterEvents();
@@ -37,7 +39,7 @@ function GraphEvents({
     });
   }, [registerEvents, onClickNode, onHoverNode]);
 
-  // Apply node reducers for filtering & search highlighting
+  // Apply node reducers for filtering, search highlighting, and backlink visualization
   useEffect(() => {
     const graph = sigma.getGraph();
     const lowerQuery = searchQuery.toLowerCase();
@@ -46,6 +48,14 @@ function GraphEvents({
       const nt = (data.nodeType as string || "entity").toLowerCase();
       if (hiddenTypes.has(nt)) {
         return { ...data, hidden: true };
+      }
+      // Highlight backlinks when a node is selected
+      if (selectedNode && selectedNode !== node) {
+        const isBacklink = graph.hasEdge(node, selectedNode) || 
+          graph.someEdge(node, (_e, _a, source, target) => target === selectedNode);
+        if (isBacklink) {
+          return { ...data, color: "#f59e0b", zIndex: 2, size: Math.max(7, (data.size as number || 5) * 1.2) };
+        }
       }
       if (lowerQuery && !(data.label as string || "").toLowerCase().includes(lowerQuery)) {
         return { ...data, color: "#334155", size: Math.max(2, (data.size as number || 4) * 0.5), zIndex: 0 };
@@ -56,12 +66,24 @@ function GraphEvents({
       return data;
     });
 
-    sigma.setSetting("edgeReducer", (_edge, data) => {
+    sigma.setSetting("edgeReducer", (edge, data) => {
+      if (selectedNode) {
+        const source = graph.source(edge);
+        const target = graph.target(edge);
+        // Gold for incoming edges (backlinks), emerald for outgoing
+        if (target === selectedNode) {
+          return { ...data, color: "#f59e0b", size: 1.5 };
+        }
+        if (source === selectedNode) {
+          return { ...data, color: "#10b981", size: 1.5 };
+        }
+        return { ...data, color: "#1e293b", size: 0.3 };
+      }
       return data;
     });
 
     sigma.refresh();
-  }, [sigma, searchQuery, hiddenTypes]);
+  }, [sigma, searchQuery, hiddenTypes, selectedNode]);
 
   return null;
 }
@@ -216,6 +238,7 @@ export function SovereignGraphExplorer() {
             onHoverNode={onHoverNode}
             searchQuery={searchQuery}
             hiddenTypes={hiddenTypes}
+            selectedNode={selectedNode}
           />
         </SigmaContainer>
       )}
@@ -245,6 +268,7 @@ export function SovereignGraphExplorer() {
           attrs={selectedNodeData.attrs}
           edges={selectedNodeData.edges}
           onClose={() => setSelectedNode(null)}
+          onNavigateNode={(id) => setSelectedNode(id)}
         />
       )}
     </div>

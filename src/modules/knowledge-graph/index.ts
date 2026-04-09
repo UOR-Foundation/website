@@ -12,6 +12,12 @@ export { sparqlQuery, sparqlUpdate } from "./grafeo-store";
 
 export { ingestBridge } from "./ingest-bridge";
 
+export { getBacklinks, getBacklinkCount, invalidateBacklinks } from "./backlinks";
+export type { Backlink } from "./backlinks";
+
+export { parseWikiLinks, stripWikiLinks, hasWikiSyntax } from "./lib/wiki-links";
+export type { WikiLink, Hashtag, BlockRef, ParseResult } from "./lib/wiki-links";
+
 export { rawStore } from "./raw-store";
 export type { RawAuditRecord } from "./raw-store";
 
