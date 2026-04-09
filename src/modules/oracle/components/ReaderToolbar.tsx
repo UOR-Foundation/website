@@ -10,9 +10,7 @@ import {
   ArrowRight,
   RotateCcw,
   Home,
-  Shield,
   Star,
-  Info,
   Lock,
   Copy,
   Check,
@@ -311,7 +309,7 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </IconBtn>
         )}
-        <IconBtn onClick={onToggleDetails} title="Details"><Info className="w-3.5 h-3.5" /></IconBtn>
+        <IconBtn onClick={onToggleDetails} title="Data profile"><Lock className="w-3.5 h-3.5 text-emerald-400/80" /></IconBtn>
       </motion.div>
     );
   }
@@ -378,7 +376,9 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             boxShadow: immersive ? "inset 0 1px 3px rgba(0,0,0,0.12)" : "inset 0 1px 2px hsl(var(--background) / 0.25)",
           }}
         >
-          <Lock className={`w-3.5 h-3.5 shrink-0 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
+          <button onClick={onToggleDetails} title="View data profile" className="shrink-0 p-0.5 rounded transition-colors hover:opacity-80">
+            <Lock className={`w-3.5 h-3.5 ${immersive ? "text-emerald-400/80" : "text-emerald-500/70"}`} />
+          </button>
           {editing ? (
             <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
               <span className={`text-[13px] shrink-0 select-none ${immersive ? "text-white/35" : "text-muted-foreground/35"}`}>uor://</span>
@@ -422,11 +422,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             </button>
           )}
 
-          <Shield className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-            immersive
-              ? "text-white/20 group-hover:text-white/35"
-              : "text-muted-foreground/20 group-hover:text-muted-foreground/35"
-          }`} />
         </div>
 
         {/* ── Right-side actions ── */}
@@ -439,9 +434,6 @@ const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           </span>
           <IconBtn onClick={handleHistoryToggle} title="Search history">
             <Clock className={`w-4 h-4 ${historyOpen ? (immersive ? "text-white/80" : "text-foreground/80") : ""}`} />
-          </IconBtn>
-          <IconBtn onClick={onToggleDetails} title="Page info">
-            <Info className="w-4 h-4" />
           </IconBtn>
           <HistoryDropdown />
           <QrPortalPanel
