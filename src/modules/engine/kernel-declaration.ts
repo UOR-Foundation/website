@@ -9,9 +9,9 @@
  * Every higher-level operation is a composition of these primitives.
  * Each primitive derives from the engine's own ring operations in Z/256Z.
  *
- * This file is the ROOT AUTHORITY — every bus module, tech stack entry,
- * and system component must trace back to one of these 7 functions
- * or be explicitly tagged as `presentation` or `optimization`.
+ * KEY FIX: The kernel table is no longer cached with stale engine closures.
+ * It is rebuilt on every call to getKernelDeclaration() to always reflect
+ * the current engine state (WASM or TS fallback).
  *
  * @layer 0
  * @stability frozen (additive-only via Fano extension)
@@ -48,6 +48,7 @@ export interface KernelFunction {
 // ── The 7 Fano-Mapped Kernel Functions ───────────────────────────────────
 
 function buildKernelTable(): readonly KernelFunction[] {
+  // KEY FIX: resolve engine at call time, not at cache time
   const engine = getEngine();
 
   return Object.freeze([
@@ -138,15 +139,15 @@ function buildKernelTable(): readonly KernelFunction[] {
   ]);
 }
 
-// ── Cached kernel table ──────────────────────────────────────────────────
+// ── Public API (no caching — always uses current engine) ─────────────────
 
-let _kernelTable: readonly KernelFunction[] | null = null;
-
+/**
+ * Get the kernel declaration table.
+ * KEY FIX: No longer caches — always resolves the current engine so
+ * the table reflects WASM when available.
+ */
 export function getKernelDeclaration(): readonly KernelFunction[] {
-  if (!_kernelTable) {
-    _kernelTable = buildKernelTable();
-  }
-  return _kernelTable;
+  return buildKernelTable();
 }
 
 /**

@@ -107,9 +107,14 @@ function detectGpu(): string | null {
 }
 
 function detectSimd(): boolean {
+  // Unified SIMD detection — same test as wasm-cache.ts detectSimdSupport()
+  // Uses WebAssembly.validate for a synchronous check
   try {
     return WebAssembly.validate(
-      new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])
+      new Uint8Array([
+        0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10,
+        10, 1, 8, 0, 65, 0, 253, 17, 0, 0, 11,
+      ])
     );
   } catch {
     return false;
@@ -173,13 +178,24 @@ async function computeRingTableHash(): Promise<string> {
 }
 
 async function computeWasmBinaryHash(): Promise<string> {
-  // If WASM is loaded, hash the binary. Otherwise return a known fallback marker.
   const engine = getEngine();
   if (engine.engine === "typescript") {
     return "ts-fallback";
   }
-  // We can't directly access the WASM binary bytes after instantiation,
-  // but we can hash a canonical fingerprint of the loaded module
+  // Hash the actual WASM binary bytes for real integrity verification
+  try {
+    const response = await fetch("/wasm/uor_wasm_shim_bg.wasm");
+    if (response.ok) {
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      const digest = sha256(bytes);
+      return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+  } catch {
+    // Fall through to fingerprint
+  }
+  // Fallback: hash a canonical fingerprint of the loaded module
   const fingerprint = `wasm:${engine.version}:${engine.listNamespaces().length}:${engine.listEnums().length}`;
   return sha256hex(fingerprint);
 }
@@ -274,8 +290,14 @@ export async function sovereignBoot(
     onProgress?.({ phase: "device-fingerprint", progress: 0, detail: "Detecting device" });
     const provenance = await buildDeviceProvenance();
 
-    // Phase 0.5: Stack validation
-    onProgress?.({ phase: "stack-validation", progress: 0.1, detail: "Validating tech stack" });
+    // Phase 1: Engine init — MUST happen BEFORE stack validation
+    // KEY FIX: Previously validateStack() called getEngine() which permanently
+    // locked the system into TypeScript fallback before WASM had a chance to load.
+    onProgress?.({ phase: "engine-init", progress: 0.1, detail: "Loading engine" });
+    await initEngine();
+
+    // Phase 1.5: Stack validation (now safe — engine is committed)
+    onProgress?.({ phase: "stack-validation", progress: 0.2, detail: "Validating tech stack" });
     const stackHealth = await validateStack();
     const stackComponents: StackComponentStatus[] = stackHealth.results.map((r) => ({
       name: r.entry.name,
@@ -285,10 +307,6 @@ export async function sovereignBoot(
       criticality: r.entry.criticality,
       fallback: r.entry.fallback,
     }));
-
-    // Phase 1: Engine init
-    onProgress?.({ phase: "engine-init", progress: 0.2, detail: "Loading engine" });
-    await initEngine();
 
     // Phase 1.25: Kernel declaration verification — THE ENGINE ENFORCES ITSELF
     onProgress?.({ phase: "engine-init", progress: 0.3, detail: "Verifying kernel declaration" });

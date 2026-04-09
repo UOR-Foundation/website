@@ -35,12 +35,38 @@ interface DriftReport {
   actualVersion: string | null;
 }
 
+export type EngineMode = "loading" | "wasm" | "typescript-fallback";
+
+export interface WasmDiagnostics {
+  mode: EngineMode;
+  wasmUrl: string;
+  lastError: string | null;
+  loadTimeMs: number | null;
+  fetchStatus: number | null;
+  contentType: string | null;
+  cacheHit: boolean | null;
+}
+
 // ── Singleton state ──────────────────────────────────────────────────────
 
-let engine: UorEngineContract | null = null;
-let initPromise: Promise<UorEngineContract> | null = null;
+/** The active engine — only set to WASM after successful load, or TS after final failure */
+let _activeEngine: UorEngineContract | null = null;
+let _initPromise: Promise<UorEngineContract> | null = null;
 let _simdSupported: boolean | null = null;
 let _sharedMemory: boolean | null = null;
+let _diagnostics: WasmDiagnostics = {
+  mode: "loading",
+  wasmUrl: "/wasm/uor_wasm_shim_bg.wasm",
+  lastError: null,
+  loadTimeMs: null,
+  fetchStatus: null,
+  contentType: null,
+  cacheHit: null,
+};
+
+/** A non-persistent TS fallback used by getEngine() before init completes.
+ *  This is NEVER stored in _activeEngine so it cannot block WASM loading. */
+let _tempFallback: UorEngineContract | null = null;
 
 // ── SIMD bulk op names in WASM ───────────────────────────────────────────
 
@@ -202,14 +228,12 @@ function buildFromWasm(mod: WasmModule): UorEngineContract {
     };
 
   // ── Wire SIMD bulk ops ──────────────────────────────────────────────
-  // These map to auto-vectorized Rust SIMD128 exports (16 bytes/instruction)
 
   const wasmBulkApply = async (op: string, data: Uint8Array, operand?: number): Promise<Uint8Array> => {
     const bulkExportName = BULK_WASM_OPS[op];
     const bulkFn = bulkExportName ? (mod as any)[bulkExportName] : undefined;
 
     if (typeof bulkFn === "function") {
-      // SIMD path: 10-15x throughput via 128-bit lanes
       try {
         const result = operand !== undefined ? bulkFn(data, operand) : bulkFn(data);
         return result instanceof Uint8Array ? result : new Uint8Array(result);
@@ -218,7 +242,6 @@ function buildFromWasm(mod: WasmModule): UorEngineContract {
       }
     }
 
-    // Scalar WASM fallback: use individual ring ops
     const scalarFn = SCALAR_OPS[op];
     if (!scalarFn) throw new Error(`Unknown bulk op: ${op}`);
     const result = new Uint8Array(data.length);
@@ -233,11 +256,9 @@ function buildFromWasm(mod: WasmModule): UorEngineContract {
     if (typeof bulkVerifyFn === "function") {
       try {
         const rawResult = bulkVerifyFn();
-        // WASM returns packed results — adapt to contract shape
         if (rawResult && typeof rawResult === "object" && "allPassed" in rawResult) {
           return rawResult;
         }
-        // If it returns a boolean array or similar, normalize
         if (rawResult instanceof Uint8Array || Array.isArray(rawResult)) {
           const results = Array.from(rawResult).map(v => v === 1 || v === true);
           return { results, allPassed: results.every(Boolean) };
@@ -341,14 +362,21 @@ function buildFromTs(): UorEngineContract {
 
 /**
  * Initialize the engine. Attempts WASM first, falls back to TS.
- * Uses IndexedDB compile cache for repeat loads (~5-20ms vs ~100-500ms).
  * Safe to call multiple times — returns cached instance.
+ *
+ * KEY FIX: This no longer exits early if a temp TS fallback was served by getEngine().
+ * It only exits early if WASM was already successfully loaded or if a prior
+ * initEngine() call is in flight.
  */
 export async function initEngine(): Promise<UorEngineContract> {
-  if (engine) return engine;
-  if (initPromise) return initPromise;
+  // If WASM already loaded, return it
+  if (_activeEngine?.engine === "wasm") return _activeEngine;
+  // If already in-flight, return that promise
+  if (_initPromise) return _initPromise;
 
-  initPromise = (async () => {
+  _initPromise = (async () => {
+    const t0 = performance.now();
+
     // Detect capabilities in parallel
     const [simd, shared] = await Promise.all([
       detectSimdSupport(),
@@ -361,28 +389,54 @@ export async function initEngine(): Promise<UorEngineContract> {
       try {
         const mod = await import("@/lib/wasm/uor-foundation/uor_wasm_shim");
         await mod.default();
-        engine = buildFromWasm(mod);
+        const wasmEngine = buildFromWasm(mod);
+
+        // SUCCESS — commit to WASM
+        _activeEngine = wasmEngine;
+        _diagnostics = {
+          ..._diagnostics,
+          mode: "wasm",
+          lastError: null,
+          loadTimeMs: Math.round(performance.now() - t0),
+        };
+
+        // Invalidate stale kernel cache
+        _onEngineChange();
+
         const caps = [
           simd ? "SIMD" : null,
           shared ? "SharedMemory" : null,
         ].filter(Boolean).join(", ");
         console.log(
-          `[UOR Engine] WASM v${engine.version} loaded` +
-          ` (${Object.keys(engine.extensions).length} extensions` +
+          `[UOR Engine] WASM v${wasmEngine.version} loaded` +
+          ` (${Object.keys(wasmEngine.extensions).length} extensions` +
           `${caps ? `, caps: ${caps}` : ""})`
         );
-        return engine;
+        return wasmEngine;
       } catch (e) {
-        console.warn(`[UOR Engine] WASM attempt ${attempt + 1} failed:`, e);
+        const errMsg = e instanceof Error ? e.message : String(e);
+        console.warn(`[UOR Engine] WASM attempt ${attempt + 1} failed:`, errMsg);
+        _diagnostics = {
+          ..._diagnostics,
+          lastError: errMsg,
+        };
         if (attempt === 0) await new Promise(r => setTimeout(r, 500));
       }
     }
+
+    // All WASM attempts failed — commit to TS fallback
     console.info("[UOR Engine] Using TypeScript fallback (identical math)");
-    engine = buildFromTs();
-    return engine;
+    _activeEngine = buildFromTs();
+    _diagnostics = {
+      ..._diagnostics,
+      mode: "typescript-fallback",
+      loadTimeMs: Math.round(performance.now() - t0),
+    };
+    _onEngineChange();
+    return _activeEngine;
   })();
 
-  return initPromise;
+  return _initPromise;
 }
 
 /**
@@ -396,16 +450,26 @@ export function getCapabilities(): { simd: boolean; sharedMemory: boolean } {
 }
 
 /**
- * Get the current engine instance. Returns TS fallback if not yet initialized.
+ * Get the current engine instance.
+ *
+ * KEY FIX: If the engine has not been initialized yet, this returns a
+ * TEMPORARY TS fallback that is NOT stored in _activeEngine. This means
+ * calling getEngine() before initEngine() will NOT permanently lock
+ * the system into TypeScript mode.
+ *
  * For guaranteed WASM, call `await initEngine()` first.
  */
 export function getEngine(): UorEngineContract {
-  if (!engine) {
-    engine = buildFromTs();
-    // Kick off WASM load in background
+  // If we have a committed engine (WASM or final TS fallback), use it
+  if (_activeEngine) return _activeEngine;
+
+  // Return a non-persistent temp fallback — does not block WASM loading
+  if (!_tempFallback) {
+    _tempFallback = buildFromTs();
+    // Kick off WASM load in background (does not store result in _tempFallback)
     initEngine().catch(() => {});
   }
-  return engine;
+  return _tempFallback;
 }
 
 /**
@@ -420,4 +484,40 @@ export function engineType(): "wasm" | "typescript" {
  */
 export function crateVersion(): string {
   return getEngine().version;
+}
+
+/**
+ * Get WASM loading diagnostics for the system health report.
+ */
+export function getWasmDiagnostics(): WasmDiagnostics {
+  return { ..._diagnostics };
+}
+
+/**
+ * Check if the active engine is the committed one (not a temp fallback).
+ */
+export function isEngineReady(): boolean {
+  return _activeEngine !== null;
+}
+
+// ── Engine change notification ───────────────────────────────────────────
+
+type EngineChangeListener = () => void;
+const _engineChangeListeners: EngineChangeListener[] = [];
+
+/** Register a callback for when the engine changes (e.g. WASM finishes loading). */
+export function onEngineChange(fn: EngineChangeListener): () => void {
+  _engineChangeListeners.push(fn);
+  return () => {
+    const idx = _engineChangeListeners.indexOf(fn);
+    if (idx >= 0) _engineChangeListeners.splice(idx, 1);
+  };
+}
+
+function _onEngineChange() {
+  // Clear temp fallback so getEngine() returns the committed engine
+  _tempFallback = null;
+  for (const fn of _engineChangeListeners) {
+    try { fn(); } catch { /* listener error */ }
+  }
 }
