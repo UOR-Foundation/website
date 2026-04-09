@@ -190,7 +190,7 @@ async function collectRuntimeMetrics(): Promise<{
     const { getEngine } = await import("@/modules/engine");
     const eng = getEngine();
     const t0 = performance.now();
-    for (let i = 0; i < 1000; i++) eng.ring_add(i & 255, (i + 1) & 255);
+    for (let i = 0; i < 1000; i++) eng.add(i & 255, (i + 1) & 255);
     const elapsed = performance.now() - t0;
     ringOpsPerSec = elapsed > 0 ? Math.round(1000 / (elapsed / 1000)) : null;
   } catch { /* engine unavailable */ }
