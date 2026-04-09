@@ -30,12 +30,12 @@ import { singleProofHash } from "@/lib/uor-canonical";
 import { canonicalJsonLd } from "@/lib/uor-address";
 import { sha256hex } from "@/lib/crypto";
 import { initEngine, getEngine } from "@/modules/engine";
-import { verifyKernel } from "@/modules/engine/kernel-declaration";
+import { verifyKernel, auditNamespaceCoverage } from "@/modules/engine/kernel-declaration";
 import { bus } from "@/modules/bus";
-import { BUS_MANIFEST } from "@/modules/bus/manifest";
+import { BUS_MANIFEST, validateManifestTraceability } from "@/modules/bus/manifest";
 import { SystemEventBus } from "@/modules/observable/system-event-bus";
 import { startSealMonitor } from "./seal-monitor";
-import { validateStack } from "./tech-stack";
+import { validateStack, validateMinimality } from "./tech-stack";
 import type { StackComponentStatus } from "./types";
 
 // ── Module-private seal storage (Finding 2: closure, not sessionStorage) ──
@@ -205,14 +205,16 @@ async function computeSeal(
   deviceContextHash: string,
   sessionNonce: string,
   bootedAt: string,
+  kernelHash: string,
 ): Promise<UorSeal> {
-  // Build the seal input document
+  // Build the seal input document — kernel hash is now part of the cryptographic proof
   const sealInput = {
     "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
     "@type": "uor:SystemSeal",
     "uor:ringTableHash": ringTableHash,
     "uor:manifestHash": manifestHash,
     "uor:wasmBinaryHash": wasmBinaryHash,
+    "uor:kernelHash": kernelHash,
     "uor:sessionNonce": sessionNonce,
     "uor:deviceContext": deviceContextHash,
     "uor:bootedAt": bootedAt,
@@ -236,14 +238,13 @@ async function computeSeal(
     wasmBinaryHash,
     sessionNonce,
     deviceContextHash,
+    kernelHash,
     bootedAt,
     status,
     canonicalBytes: proof.canonicalBytes,
   };
 
   // Finding 7: Freeze critical objects
-  // Note: can't fully freeze because canonicalBytes is a Uint8Array (buffer)
-  // but we freeze the outer object
   return Object.freeze(seal);
 }
 
@@ -287,12 +288,26 @@ export async function sovereignBoot(
     onProgress?.({ phase: "engine-init", progress: 0.2, detail: "Loading engine" });
     await initEngine();
 
-    // Phase 1.25: Kernel declaration verification
+    // Phase 1.25: Kernel declaration verification — THE ENGINE ENFORCES ITSELF
     onProgress?.({ phase: "engine-init", progress: 0.3, detail: "Verifying kernel declaration" });
     const kernelResult = verifyKernel();
     if (!kernelResult.allPassed) {
       const failed = kernelResult.results.filter((r) => !r.ok).map((r) => r.name);
-      console.warn(`[Sovereign Boot] Kernel functions failed: ${failed.join(", ")}`);
+      throw new Error(`[Sovereign Boot] Kernel functions FAILED: ${failed.join(", ")} — boot cannot proceed with unsound primitives`);
+    }
+
+    // Phase 1.5: Namespace coverage audit — engine self-checks its declaration surface
+    const coverageAudit = auditNamespaceCoverage();
+    if (coverageAudit.uncovered.length > 0) {
+      console.warn(`[Sovereign Boot] Uncovered namespaces: ${coverageAudit.uncovered.join(", ")}`);
+    }
+
+    // Phase 1.75: Minimality enforcement — one framework per kernel function
+    const minimality = validateMinimality();
+    if (!minimality.isMinimal) {
+      for (const overlap of minimality.overlaps) {
+        console.warn(`[Sovereign Boot] Kernel overlap: "${overlap.kernelFunction}" served by [${overlap.frameworks.join(", ")}]`);
+      }
     }
 
     const ringTableHash = await computeRingTableHash();
@@ -304,7 +319,15 @@ export async function sovereignBoot(
     const manifestHash = await computeManifestHash();
     const moduleCount = BUS_MANIFEST.modules.length;
 
-    // Phase 3: Seal (now includes stack hash in seal input)
+    // Phase 2.5: Manifest traceability — every bus module must trace to a kernel primitive
+    const traceability = validateManifestTraceability();
+    if (!traceability.isTraceable) {
+      for (const orphan of traceability.orphans) {
+        console.warn(`[Sovereign Boot] Manifest orphan: "${orphan.ns}" has invalid kernelFunction "${orphan.invalidKernelFunction}"`);
+      }
+    }
+
+    // Phase 3: Seal (kernel hash is now part of the cryptographic proof)
     onProgress?.({ phase: "seal", progress: 0.7, detail: "Computing seal" });
     const sessionNonce = generateSessionNonce();
     const bootedAt = new Date().toISOString();
@@ -315,11 +338,12 @@ export async function sovereignBoot(
       provenance.provenanceHash,
       sessionNonce,
       bootedAt,
+      kernelResult.hash,
     );
 
     const bootTimeMs = Math.round(performance.now() - t0);
 
-    // Build receipt
+    // Build receipt — includes full kernel enforcement health
     const receipt: BootReceipt = {
       seal,
       provenance,
@@ -330,6 +354,18 @@ export async function sovereignBoot(
         components: stackComponents,
         allCriticalPresent: stackHealth.allCriticalPresent,
         stackHash: stackHealth.stackHash,
+      },
+      kernelHealth: {
+        allPassed: kernelResult.allPassed,
+        kernelHash: kernelResult.hash,
+        namespaceCoverage: {
+          covered: coverageAudit.covered.length,
+          uncovered: coverageAudit.uncovered.length,
+          total: coverageAudit.total,
+        },
+        isMinimal: minimality.isMinimal,
+        overlaps: minimality.overlaps,
+        manifestOrphans: traceability.orphans.map((o) => o.ns),
       },
       lastVerified: new Date().toISOString(),
     };
