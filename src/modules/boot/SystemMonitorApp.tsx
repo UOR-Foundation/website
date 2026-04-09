@@ -940,43 +940,26 @@ function GrafanaCard({
   thresholds?: { max: number; color: string }[];
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-2.5 space-y-1.5 relative overflow-hidden group hover:border-border transition-colors duration-200">
-      {/* Top accent */}
+    <div className="rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-colors duration-200">
       <div
         className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity"
         style={{ background: accent }}
       />
       <div className="flex items-center justify-between">
-        <span style={{ color: accent }} className="opacity-80">
-          {icon}
-        </span>
+        <span style={{ color: accent }} className="opacity-80">{icon}</span>
         {badge && (
           <span
-            className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full"
-            style={{
-              color: badgeColor,
-              backgroundColor: `${badgeColor}15`,
-              boxShadow: `0 0 8px ${badgeColor}10`,
-            }}
+            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+            style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
           >
             {badge}
           </span>
         )}
       </div>
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">
-        {title}
-      </div>
-      <div className="text-[11px] font-semibold text-foreground/90">
-        {value}
-      </div>
-      {/* Sparkline */}
+      <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{title}</div>
+      <div className="text-sm font-semibold text-foreground/90">{value}</div>
       {sparkData && sparkData.length > 0 && (
-        <MiniSparkline
-          data={sparkData}
-          color={sparkColor ?? accent}
-          thresholds={thresholds}
-          height={22}
-        />
+        <MiniSparkline data={sparkData} color={sparkColor ?? accent} thresholds={thresholds} height={28} />
       )}
     </div>
   );
