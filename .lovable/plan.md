@@ -1,80 +1,89 @@
 
+Evaluation of the live report
 
-## System Health Report Review & Lean Architecture Plan
+The published site’s degradation is most likely a client-side bootstrap bug, not a missing browser capability and not primarily a hosting problem.
 
-### What the Report Tells Us
+Key errors I found in the code:
+1. Permanent TS fallback lock-in
+   - `src/modules/engine/adapter.ts` makes `getEngine()` create and store the TypeScript engine immediately.
+   - That same `getEngine()` also kicks off `initEngine()`.
+   - But `initEngine()` exits early if any engine already exists.
+   - Result: the first pre-init caller can permanently prevent WASM from ever loading.
 
-The report is already strong — it covers seal integrity, kernel primitives, tech stack selection, hardware profiling, and degradation tracking. But it has two blind spots and the codebase has clear consolidation opportunities.
+2. Boot order triggers that bug on the live site
+   - `src/modules/boot/sovereign-boot.ts` runs `validateStack()` before `await initEngine()`.
+   - `src/modules/boot/tech-stack.ts` validates “UOR Foundation” by calling `getEngine()`.
+   - So boot itself is currently poisoning the engine into fallback mode before WASM gets a chance.
 
-### Key Findings from Codebase Audit
+3. Monitoring/report code can also freeze stale state
+   - `src/modules/engine/kernel-declaration.ts` caches a kernel table that captures whatever engine existed at first access.
+   - `SystemMonitorApp` reads kernel/report data early, so monitoring can preserve stale fallback behavior.
 
-**By the numbers:**
-- **40 module directories** on disk (target: ≤30)
-- **191,805 lines** of TypeScript across modules
-- Top 5 modules alone = **116,107 lines** (60% of total)
-- The pruning gate's `KNOWN_MODULES` list is **stale** — 17 real modules aren't tracked (atlas, quantum, desktop, boot, engine, audio, etc.)
-- The `CONSOLIDATION_MAP` references modules already absorbed but directories still exist on disk
+4. The report has several inaccurate signals
+   - “UOR Foundation: Active” can be true even when only TS fallback is running.
+   - “WebAssembly Compile Cache: Active” is misleading because `wasm-cache.ts` exists but is not actually used by `adapter.ts`.
+   - `computeWasmBinaryHash()` does not hash the actual `.wasm` bytes; it hashes a synthetic fingerprint or returns `ts-fallback`.
+   - SIMD status is inconsistent because there are two separate detection paths (`sovereign-boot.ts` vs `wasm-cache.ts`), which explains why one section says SIMD is supported while another says missing.
 
-**Immediate consolidation targets (small modules that belong inside parents):**
+Plan to fix it
 
-| Module | Lines | Absorb Into | Rationale |
-|--------|-------|-------------|-----------|
-| `triad` | 70 | `ring-core` | Already noted in CONSOLIDATION_MAP but dir still exists |
-| `donate` | 441 | `community` | Already noted but dir still exists |
-| `jsonld` | 1,767 | `knowledge-graph` | Already noted but dir still exists |
-| `shacl` | 1,906 | `sparql` | Already noted but dir still exists |
-| `qr-cartridge` | 958 | `identity` | Already noted but dir still exists |
-| `messenger` | 1,235 | `oracle` or `community` | Small chat UI, no unique kernel function |
-| `data-bank` | 2,438 | `sovereign-vault` | Both are storage-focused; merge |
+1. Refactor engine initialization so fallback does not poison WASM
+   - In `src/modules/engine/adapter.ts`, separate:
+     - a non-persistent synchronous TS fallback object
+     - the actual active engine state
+     - initialization status and last error
+   - Make `getEngine()` non-mutating.
+   - Make `initEngine()` attempt WASM unless native WASM is already loaded.
+   - Only commit to permanent TS fallback after the final WASM failure.
 
-**Large module review:**
-- `quantum` (13,422 lines) — only imported by 2 test files externally. Nearly self-contained. Consider if it should be a lazy-loaded extension rather than a core module.
-- `atlas` (26,776 lines) — heavily imported (55 files). Core mathematical layer. Keep, but audit for dead files.
+2. Reorder boot so native compute initializes first
+   - In `src/modules/boot/sovereign-boot.ts`, move engine initialization ahead of stack validation, or make stack validation use a read-only engine status API instead of `getEngine()`.
+   - This ensures the browser-native path is attempted before any reporting/telemetry code touches the engine.
 
-### Report Improvements — What to Add
+3. Add explicit WASM diagnostics instead of generic “check CORS”
+   - Track and expose:
+     - wasm URL
+     - fetch status
+     - content type
+     - cache hit/miss
+     - load time
+     - last init error
+     - final engine mode (`loading`, `wasm`, `typescript-fallback`, `failed`)
+   - Use this in the System Health Report so the degradation section names the real failure.
 
-**1. Pruning Gate Sync (fix the stale registry)**
-The `KNOWN_MODULES` array in `pruning-gate.ts` is missing 17 modules that actually exist on disk. This means the module count metric (showing ~37) is wrong — reality is 40. Fix by auto-deriving from the filesystem or maintaining the list accurately.
+4. Fix the report so it reflects reality
+   - In `src/modules/boot/tech-stack.ts` and `src/modules/boot/SystemMonitorApp.tsx`:
+     - mark UOR Foundation as native only when `engine === "wasm"`
+     - mark compile cache active only when it is actually wired in
+     - show the real runtime engine in the kernel/decode row
+     - replace the synthetic wasm hash with a true hash of `/wasm/uor_wasm_shim_bg.wasm`
 
-**2. Add "Module Weight" Section to the Report**
-Show lines-of-code per module so the report itself surfaces bloat. The top 5 modules are 60% of the codebase — the report should flag this.
+5. Unify SIMD detection
+   - Replace duplicate detection logic with one canonical helper shared by boot and reporting.
+   - This removes the current contradiction where the capability matrix says SIMD is available but the tech stack says it is missing.
 
-**3. Add "Consolidation Debt" Section**
-The CONSOLIDATION_MAP lists 10 modules as "absorbed" but their directories still exist. The report should track this debt and flag stale directories.
+6. Either wire in compile caching or simplify it away
+   - Since `src/modules/engine/wasm-cache.ts` already exists, the best path is to actually use it from the adapter.
+   - If that proves too invasive, remove/rename the report claim so the system stops overstating current behavior.
+   - Preference: wire it in, because it helps browser-only performance and keeps the implementation lean.
 
-**4. Implement the Missing Self-Assessment Metrics**
-The report lists 12 metrics, 10 untracked (13% coverage). Prioritize these 4 high-value, low-effort additions:
-- **IndexedDB Quota** — `navigator.storage.estimate()` (3 lines)
-- **JS Heap Usage** — `performance.memory` (already partially done in sparklines)
-- **Ring Operation Throughput** — time 1000 `add()` calls (5 lines)
-- **Boot Phase Timing** — break 750ms into stage-level detail
+7. Remove stale engine capture in kernel verification
+   - In `src/modules/engine/kernel-declaration.ts`, stop caching closures over the first engine instance.
+   - Resolve the current engine at verification time so reporting cannot hold onto an old fallback engine.
 
-**5. Add "Module Dependency Depth" Metric**
-Track how many cross-module imports each module has. Modules with >10 external imports are coupling risks.
+Files to update
+- `src/modules/engine/adapter.ts`
+- `src/modules/boot/sovereign-boot.ts`
+- `src/modules/boot/tech-stack.ts`
+- `src/modules/engine/kernel-declaration.ts`
+- `src/modules/boot/SystemMonitorApp.tsx`
+- likely `src/modules/engine/wasm-cache.ts`
 
-### Implementation Plan
-
-**Step 1 — Sync Pruning Gate Registry**
-Update `KNOWN_MODULES` in `pruning-gate.ts` to include all 40 actual modules. Remove references to modules that no longer exist. Mark absorbed modules.
-
-**Step 2 — Execute Consolidations (7 merges)**
-Move the 7 small modules listed above into their parent modules. Update all import paths. Delete empty directories. This removes ~8,815 lines of organizational overhead and reduces module count from 40 to 33.
-
-**Step 3 — Enhance Report Generation**
-Add to the System Monitor's "Export Report" function:
-- Module weight table (lines per module, sorted descending)
-- Consolidation debt tracker (absorbed modules with stale directories)
-- 4 new self-assessment metrics (heap, IndexedDB quota, ring throughput, boot phases)
-
-**Step 4 — Add Lazy Boundaries**
-Mark `quantum` and `atlas` as lazy-loaded — they should not increase boot time unless accessed. Verify they aren't imported in the boot path.
-
-### Technical Details
-
-Files to modify:
-- `src/modules/uns/core/pruning-gate.ts` — sync KNOWN_MODULES, add weight analysis
-- `src/modules/boot/SystemMonitorApp.tsx` — add new report sections
-- `src/modules/boot/useBootStatus.ts` — add heap/quota/throughput metrics
-- 7 module directories to merge (update imports across ~20 files)
-- `src/modules/bus/modules/index.ts` — remove absorbed module registrations if applicable
-
+Acceptance criteria after implementation
+- Published site reports `Engine Type: WASM`
+- `WASM Binary Hash` is a real hash, not `ts-fallback`
+- UOR Foundation no longer shows “active” when only TS fallback is running
+- SIMD status is consistent across all report sections
+- Compile cache status matches actual behavior
+- Monitoring/reporting code no longer changes engine state
+- Browser load remains fully client-side; no backend changes are needed for this fix
