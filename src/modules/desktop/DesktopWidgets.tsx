@@ -235,12 +235,15 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
 
   return (
     <div
-      className="fixed inset-0 z-[5] flex flex-col items-center justify-center pointer-events-none"
+      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
       style={{
         opacity: widgetOpacity,
         transition: "opacity 300ms ease-out",
       }}
     >
+      {/* Golden ratio: place visual center at ~38.2% from top (1/φ ≈ 0.618, so top = 1-0.618) */}
+      <div style={{ flex: "0.382" }} />
+
       <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
         {/* Day-progress ring clock */}
         <DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />
