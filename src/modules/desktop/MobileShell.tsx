@@ -1,109 +1,216 @@
 /**
- * MobileShell — Mobile-friendly OS layout using Vaul drawers.
- * Adapts to iOS (squircle dock, blur) and Android (Material nav, ripple).
+ * MobileShell — Minimal lock-screen-inspired mobile home.
+ *
+ * DayRingClock centered in the upper region, two corner icons
+ * at the bottom (menu + search), theme dots centered between them.
+ * Apps and search open via Vaul bottom-sheet drawers.
  */
 
-import { useState, useCallback, Suspense, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/modules/core/ui/drawer";
 import { DESKTOP_APPS, getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
-import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
-import DesktopWidgets from "@/modules/desktop/DesktopWidgets";
 import DesktopThemeDots from "@/modules/desktop/DesktopThemeDots";
+import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpaper";
+import DayRingClock from "@/modules/desktop/components/DayRingClock";
+import { Menu, Search, Mic } from "lucide-react";
 
 export default function MobileShell() {
   const { isLight, theme } = useDesktopTheme();
-  const { mobileNavStyle, isAndroid } = usePlatform();
   const [openAppId, setOpenAppId] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [appDrawerOpen, setAppDrawerOpen] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Live clock
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const openApp = useCallback((appId: string) => {
     setOpenAppId(appId);
-    setDrawerOpen(true);
+    setMenuDrawerOpen(false);
+    setSearchDrawerOpen(false);
+    setAppDrawerOpen(true);
   }, []);
 
-  const handleSearch = useCallback((query: string) => {
-    setOpenAppId("search");
-    setDrawerOpen(true);
-  }, []);
+  const handleSearchSubmit = useCallback(() => {
+    if (!searchQuery.trim()) return;
+    setSearchDrawerOpen(false);
+    openApp("oracle");
+  }, [searchQuery, openApp]);
+
+  // Auto-focus search input when drawer opens
+  useEffect(() => {
+    if (searchDrawerOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 300);
+    } else {
+      setSearchQuery("");
+    }
+  }, [searchDrawerOpen]);
 
   const app = openAppId ? getApp(openAppId) : null;
   const AppComponent = app?.component;
 
+  const visibleApps = useMemo(
+    () => DESKTOP_APPS.filter(a => !a.hidden),
+    [],
+  );
+
   const shellBg = theme === "light" ? "bg-white" : "bg-black";
-
-  // ── Platform-adaptive nav styling ──
-  const isMaterial = mobileNavStyle === "material";
-
-  const dockBg = isMaterial
-    ? (isLight ? "rgba(255,255,255,0.95)" : "rgba(28,28,30,0.95)")
-    : (isLight ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.40)");
-  const dockBorder = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)";
-  const iconBg = isMaterial
-    ? "transparent"
-    : (isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)");
-  const iconColor = isLight ? "text-black/50" : "text-white/60";
-  const labelColor = isLight ? "text-black/40" : "text-white/40";
+  const iconColor = isLight ? "text-black/30" : "text-white/30";
   const drawerBg = isLight ? "bg-[#f5f5f5] border-black/[0.08]" : "bg-[#191919] border-white/[0.08]";
   const titleColor = isLight ? "text-black/60" : "text-white/65";
 
-  const dockRadius = isMaterial ? "rounded-none" : "rounded-2xl";
-  const dockPosition = isMaterial ? "inset-x-0 bottom-0" : "bottom-4 inset-x-0 flex justify-center";
-  const dockBlur = isMaterial
-    ? "none"
-    : "blur(48px) saturate(1.4)";
-  const iconRadius = isMaterial ? "rounded-full" : "rounded-xl";
-
   return (
-    <div className={`fixed inset-0 ${shellBg} select-none`}>
-      {/* Widgets */}
-      <DesktopWidgets
-        windows={[]}
-        onSearch={handleSearch}
-        onOpenApp={openApp}
-      />
+    <div className={`fixed inset-0 ${shellBg} select-none overflow-hidden`}>
+      {/* ── Background ── */}
+      {theme === "immersive" && <DesktopImmersiveWallpaper />}
 
-      {/* Mobile Nav */}
-      <div className={`fixed z-[190] ${dockPosition}`}>
-        <div
-          className={`flex items-center gap-3 px-4 py-2.5 ${dockRadius}`}
-          style={{
-            background: dockBg,
-            backdropFilter: dockBlur,
-            WebkitBackdropFilter: dockBlur,
-            border: isMaterial ? "none" : `1px solid ${dockBorder}`,
-            borderTop: isMaterial ? `1px solid ${dockBorder}` : undefined,
-            width: isMaterial ? "100%" : undefined,
-            justifyContent: isMaterial ? "space-around" : undefined,
-          }}
-        >
-          {DESKTOP_APPS.map((a) => {
-            const Icon = a.icon;
-            return (
-              <RippleButton
-                key={a.id}
-                onClick={() => openApp(a.id)}
-                className="flex flex-col items-center gap-1"
-                aria-label={a.label}
-                enableRipple={isMaterial}
-              >
-                <div
-                  className={`w-11 h-11 ${iconRadius} flex items-center justify-center`}
-                  style={{ background: iconBg }}
-                >
-                  <Icon className={`w-5 h-5 ${iconColor}`} />
-                </div>
-                <span className={`text-[9px] font-medium ${labelColor}`}>{a.label}</span>
-              </RippleButton>
-            );
-          })}
+      {/* ── DayRingClock — centered upper area ── */}
+      <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center z-10 pointer-events-none">
+        {/* Spacer: push clock to ~18% from top */}
+        <div className="flex-[0_0_18%]" />
+        <div className="pointer-events-auto">
+          <DayRingClock time={time} theme={theme} isLight={isLight} opacity={1} />
         </div>
       </div>
 
-      <DesktopThemeDots windows={[]} />
+      {/* ── Bottom Controls ── */}
+      <div className="absolute inset-x-0 bottom-0 z-20 pb-2">
+        {/* Corner icons + theme dots */}
+        <div className="flex items-end justify-between px-6 pb-3">
+          {/* Menu icon */}
+          <button
+            onClick={() => setMenuDrawerOpen(true)}
+            className={`w-11 h-11 flex items-center justify-center rounded-full active:scale-90 transition-transform ${iconColor}`}
+            aria-label="Open menu"
+          >
+            <Menu size={22} strokeWidth={1.5} />
+          </button>
 
-      {/* App Drawer */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          {/* Theme dots — centered */}
+          <div className="flex-1 flex justify-center">
+            <DesktopThemeDots windows={[]} />
+          </div>
+
+          {/* Search icon */}
+          <button
+            onClick={() => setSearchDrawerOpen(true)}
+            className={`w-11 h-11 flex items-center justify-center rounded-full active:scale-90 transition-transform ${iconColor}`}
+            aria-label="Open search"
+          >
+            <Search size={22} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Home indicator pill */}
+        <div className="flex justify-center pb-1">
+          <div
+            className="rounded-full"
+            style={{
+              width: 134,
+              height: 5,
+              backgroundColor: isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── Menu Drawer (app grid) ── */}
+      <Drawer open={menuDrawerOpen} onOpenChange={setMenuDrawerOpen}>
+        <DrawerContent className={`max-h-[80vh] ${drawerBg}`}>
+          <DrawerHeader className="pb-0">
+            <DrawerTitle className={`text-sm font-semibold ${titleColor}`}>Apps</DrawerTitle>
+          </DrawerHeader>
+          <div className="grid grid-cols-3 gap-y-6 gap-x-2 px-6 py-6">
+            {visibleApps.map(a => {
+              const Icon = a.icon;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => openApp(a.id)}
+                  className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
+                >
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                    style={{
+                      backgroundColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <Icon className={`w-6 h-6 ${isLight ? "text-black/50" : "text-white/60"}`} />
+                  </div>
+                  <span className={`text-[11px] font-medium leading-tight text-center ${isLight ? "text-black/50" : "text-white/50"}`}>
+                    {a.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* ── Search Drawer ── */}
+      <Drawer open={searchDrawerOpen} onOpenChange={setSearchDrawerOpen}>
+        <DrawerContent className={`max-h-[80vh] ${drawerBg}`}>
+          <DrawerHeader className="pb-0">
+            <DrawerTitle className={`text-sm font-semibold ${titleColor}`}>Search</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-5 pt-3 pb-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 flex items-center gap-2 rounded-xl px-4 py-3"
+                style={{
+                  backgroundColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)",
+                }}
+              >
+                <Search size={16} className={isLight ? "text-black/30" : "text-white/30"} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSearchSubmit()}
+                  placeholder="Ask anything…"
+                  className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground/40"
+                />
+                <button
+                  onClick={() => {}}
+                  className={`shrink-0 ${isLight ? "text-black/25" : "text-white/25"}`}
+                  aria-label="Voice input"
+                >
+                  <Mic size={16} />
+                </button>
+              </div>
+            </div>
+            {/* Quick app suggestions */}
+            <div className="space-y-1">
+              {visibleApps.slice(0, 5).map(a => {
+                const Icon = a.icon;
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => openApp(a.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg active:scale-[0.98] transition-transform ${
+                      isLight ? "hover:bg-black/[0.03]" : "hover:bg-white/[0.03]"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isLight ? "text-black/40" : "text-white/40"}`} />
+                    <span className={`text-sm ${isLight ? "text-black/60" : "text-white/60"}`}>{a.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* ── App Drawer ── */}
+      <Drawer open={appDrawerOpen} onOpenChange={setAppDrawerOpen}>
         <DrawerContent className={`max-h-[85vh] ${drawerBg}`}>
           <DrawerHeader className="pb-0">
             <DrawerTitle className={`text-sm font-semibold ${titleColor}`}>
@@ -122,39 +229,5 @@ export default function MobileShell() {
         </DrawerContent>
       </Drawer>
     </div>
-  );
-}
-
-/** Material-style ripple wrapper — passthrough on iOS */
-function RippleButton({
-  children, onClick, className, enableRipple, ...props
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  className?: string;
-  enableRipple?: boolean;
-  "aria-label"?: string;
-}) {
-  const ref = useRef<HTMLButtonElement>(null);
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (enableRipple && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const ripple = document.createElement("span");
-      ripple.className = "mobile-ripple";
-      ripple.style.left = `${x}px`;
-      ripple.style.top = `${y}px`;
-      ref.current.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    }
-    onClick();
-  };
-
-  return (
-    <button ref={ref} onClick={handleClick} className={`relative overflow-hidden ${className || ""}`} {...props}>
-      {children}
-    </button>
   );
 }
