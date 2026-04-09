@@ -922,28 +922,28 @@ export default function SystemMonitorApp() {
         <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />} onClick={() => setActiveView("kernel")}>
           {kernelData ? (
             <>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                 {kernelData.table.map((fn, i) => {
                   const ok = kernelData.verification.results.find((r) => r.name === fn.name)?.ok ?? false;
                   return (
                     <div key={fn.name} className="flex items-center gap-3 group">
                       <div
-                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-shadow duration-300"
+                        className="w-3 h-3 rounded-full shrink-0 transition-shadow duration-300"
                         style={{
                           backgroundColor: ok ? "#22c55e" : "#ef4444",
                           boxShadow: ok ? "0 0 8px rgba(34,197,94,0.5)" : "0 0 8px rgba(239,68,68,0.5)",
                         }}
                       />
-                      <span className="text-muted-foreground text-xs tabular-nums font-mono w-6">P{FANO_SUB[i]}</span>
-                      <span className="text-foreground/90 text-sm font-medium group-hover:text-foreground transition-colors">{FANO_LABELS[i] ?? fn.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground/40 font-mono">{fn.framework.slice(0, 14)}</span>
+                      <span className="text-muted-foreground text-sm tabular-nums font-mono w-7">P{FANO_SUB[i]}</span>
+                      <span className="text-foreground/90 text-sm font-semibold group-hover:text-foreground transition-colors">{FANO_LABELS[i] ?? fn.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground/50 font-mono truncate max-w-[140px]">{fn.framework}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 flex items-center justify-between font-mono">
+              <div className="text-sm text-muted-foreground pt-3 border-t border-border/50 flex items-center justify-between font-mono">
                 <span>{kernelData.verification.allPassed ? "7/7 verified ✓" : `${kernelData.verification.results.filter((r) => r.ok).length}/7 verified`}</span>
-                <span className="opacity-50">{receipt.kernelHealth?.kernelHash?.slice(0, 14)}…</span>
+                <span className="opacity-50 text-xs">{receipt.kernelHealth?.kernelHash?.slice(0, 16)}…</span>
               </div>
             </>
           ) : (
