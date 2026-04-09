@@ -23,7 +23,7 @@ export interface UnsNodeConfig {
   enableStore: boolean;
   enableLedger: boolean;
   enableTrust: boolean;
-  enableSync: boolean;
+  enableSync?: boolean;
 }
 
 export interface ServiceStatus {
@@ -91,7 +91,7 @@ export class UnsNode {
     this._services.cache = this.config.enableStore; // Cache depends on store
     this._services.ledger = this.config.enableLedger;
     this._services.trust = this.config.enableTrust;
-    this._services.sync = this.config.enableSync;
+    this._services.sync = this.config.enableSync ?? false;
 
     this._running = true;
     this._startedAt = Date.now();
