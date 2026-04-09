@@ -8,9 +8,13 @@
  *
  * The spaceSecret is generated once by the space creator and
  * distributed to members via their public key (encrypted envelope).
+ *
+ * When running in Tauri, keys are persisted in the Stronghold vault
+ * for hardware-grade encryption at rest.
  */
 
 import { sha256bytes } from "@/lib/crypto";
+import { getKeyVault } from "@/modules/sovereign-spaces/keys/stronghold-adapter";
 
 // ── Key Derivation ─────────────────────────────────────────────────────────
 
@@ -83,9 +87,23 @@ export async function decryptPayload(
 
 /**
  * Generate a fresh space secret (32 random bytes).
+ * Optionally persists to the Stronghold vault under the given key name.
  */
-export function generateSpaceSecret(): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(32));
+export async function generateSpaceSecret(vaultKey?: string): Promise<Uint8Array> {
+  const secret = crypto.getRandomValues(new Uint8Array(32));
+  if (vaultKey) {
+    const vault = getKeyVault();
+    await vault.storeKey(vaultKey, secret);
+  }
+  return secret;
+}
+
+/**
+ * Retrieve a space secret from the key vault.
+ */
+export async function retrieveSpaceSecret(vaultKey: string): Promise<Uint8Array | null> {
+  const vault = getKeyVault();
+  return vault.retrieveKey(vaultKey);
 }
 
 // ── Encoding helpers ───────────────────────────────────────────────────────

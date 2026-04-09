@@ -40,3 +40,6 @@ import "./mcp";
 
 // ── Layer 3: Mesh Sync ───────────────────────────────────────────────
 import "./mesh-sync";
+
+// ── Layer 4: Sovereign Portal ────────────────────────────────────────
+import "./clipboard";

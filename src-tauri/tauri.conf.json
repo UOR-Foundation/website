@@ -53,6 +53,11 @@
         "allow": ["$APPDATA/**", "$HOME/.uor/**"],
         "deny": []
       }
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["uor"]
+      }
     }
   }
 }
