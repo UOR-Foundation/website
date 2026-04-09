@@ -236,4 +236,16 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   );
 };
 
+function QrGuestSignInHint() {
+  const { prompt: authPrompt } = useAuthPrompt();
+  return (
+    <button
+      onClick={() => authPrompt("transfer")}
+      className="text-[10px] text-amber-400/50 hover:text-amber-400/80 underline underline-offset-2 transition-colors"
+    >
+      Sign in for encrypted transfer
+    </button>
+  );
+}
+
 export default QrPortalPanel;
