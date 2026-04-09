@@ -229,7 +229,7 @@ export default function ContextMenu({ open, onOpenChange, ctx, anchor = "below",
                           Context is <span className="text-foreground/60 font-medium">session-only</span> for guests.
                         </p>
                         <p className="text-[10px] text-muted-foreground/30 mt-0.5">
-                          Create a Sovereign ID to persist your vault.
+                          Sign in to keep files across sessions.
                         </p>
                       </div>
                     </div>
