@@ -19,6 +19,10 @@ export const CRATE_MANIFEST = {
   /** All expected WASM function exports (sorted, snake_case) */
   expectedExports: [
     "bnot",
+    "bulk_ring_add",
+    "bulk_ring_neg",
+    "bulk_ring_xor",
+    "bulk_verify_all",
     "byte_basis",
     "byte_popcount",
     "classify_byte",
@@ -44,7 +48,10 @@ export const CRATE_MANIFEST = {
   ] as const,
 
   /** SHA-256 hex of sorted export names (for drift detection) */
-  exportHash: "81da89de628abb229597ecc7dca184053f7d0c908983db3df38e53a93efaa206",
+  exportHash: "simd128-rebuild-pending",
+
+  /** Build flags */
+  buildFlags: "RUSTFLAGS=\"-C target-feature=+simd128\"",
 
   /** Ontology counts (for type projection drift) */
   namespaceCount: 33,
