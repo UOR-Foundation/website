@@ -91,7 +91,7 @@ function TabBarConnectivity({ isLight }: { isLight: boolean }) {
 }
 
 
-  activeWindowId: string | null;
+  interface Props {
   windows: WindowState[];
   onFocusWindow: (id: string) => void;
   onCloseWindow: (id: string) => void;
