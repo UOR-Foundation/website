@@ -196,7 +196,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   // Theme-aware colors
   const isImmersive = theme === "immersive";
   // Lighter clock — ethereal, weightless
-  const clockColor = isImmersive ? "text-white/70" : isLight ? "text-black/65" : "text-white/70";
+  
   // Greeting defers to clock — lower opacity
   const greetingColor = isImmersive ? "text-white/70" : isLight ? "text-black/30" : "text-white/35";
 
