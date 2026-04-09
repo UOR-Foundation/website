@@ -2667,10 +2667,9 @@ const SearchPage = () => {
                       </div>
                     </motion.div>
                   ) : (
-                    /* Standard content — Human view only, with truncation */
-                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4">
-                      <p className="text-xs font-semibold text-primary/60 uppercase tracking-[0.15em]">Content</p>
-                      <ContentPreview
+                    /* Standard content — Human/Machine toggle */
+                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+                      <ContentSection
                         source={result.source}
                         synthesizing={result.synthesizing}
                         contextKeywords={contextKeywords}
@@ -2678,6 +2677,10 @@ const SearchPage = () => {
                         novelty={coherenceState?.novelty || null}
                         isReadableType={isReadableType}
                         onReadMore={() => setReaderMode(true)}
+                        contentViewMode={contentViewMode}
+                        setContentViewMode={setContentViewMode}
+                        onCopy={copy}
+                        copied={copied}
                       />
                     </motion.div>
                   )}
@@ -2690,40 +2693,6 @@ const SearchPage = () => {
                     className="mt-6"
                   >
                     <ProvenanceTree cid={result.receipt.cid} onNavigate={(cid) => { setInput(cid); clearResult(); setTimeout(() => handleSearch(cid), 50); }} />
-                  </CollapsibleSection>
-
-                  {/* ▸ View Source (collapsed) */}
-                  <CollapsibleSection
-                    title="View Source (JSON-LD)"
-                    icon={<Code2 className="w-3.5 h-3.5 text-primary/50" />}
-                    defaultOpen={false}
-                    className="mt-4"
-                    extra={<CopyBtn onClick={() => copy(JSON.stringify(result.source, null, 2), "json")} copied={copied === "json"} label="Copy" />}
-                  >
-                    {(() => {
-                      const raw = JSON.stringify(result.source, null, 2);
-                      const lines = raw.split("\n");
-                      return (
-                        <div className="space-y-2">
-                          <span className="text-xs font-mono text-muted-foreground/40">.json · {lines.length} lines</span>
-                          <div className="rounded-xl border border-border/15 bg-[hsl(var(--muted)/0.08)] overflow-hidden max-h-[50vh] overflow-y-auto" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace" }}>
-                            <div className="grid" style={{ gridTemplateColumns: "3.5rem 1fr" }}>
-                              {lines.map((line, i) => (
-                                <div key={i} className="contents group">
-                                  <div className="text-right pr-3 py-[1px] text-muted-foreground/20 text-sm select-none border-r border-border/10 bg-muted/5 leading-relaxed">{i + 1}</div>
-                                  <div className="pl-4 pr-4 py-[1px] text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                    {line.includes('": "') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*"(.*)"(,?)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-foreground/55">"{m[3]}"</span><span className="text-muted-foreground/20">{m[4]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
-                                    : line.includes('": ') ? (() => { const m = line.match(/^(\s*)"(.+?)":\s*(.+)$/); if (m) return <span><span className="text-foreground/25">{m[1]}</span><span className="text-primary/60">"{m[2]}"</span><span className="text-muted-foreground/30">: </span><span className="text-accent-foreground/60">{m[3]}</span></span>; return <span className="text-foreground/55">{line}</span>; })()
-                                    : line.trim() === "{" || line.trim() === "}" || line.trim() === "}," || line.trim() === "[" || line.trim() === "]" || line.trim() === "]," ? <span className="text-muted-foreground/30">{line}</span>
-                                    : <span className="text-foreground/50">{line}</span>}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </CollapsibleSection>
                 </div>
 
