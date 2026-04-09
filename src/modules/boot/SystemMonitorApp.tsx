@@ -659,12 +659,11 @@ export default function SystemMonitorApp() {
     : 0;
 
   return (
-    <div className="h-full flex flex-col bg-background text-foreground font-mono text-[11px] leading-relaxed select-none overflow-hidden">
-      {/* ── Top Metric Cards with Sparklines ── */}
-      <div className="grid grid-cols-5 gap-2 p-3 pb-0">
-        {/* Status */}
+    <div className="h-full flex flex-col bg-background text-foreground select-none overflow-y-auto overflow-x-hidden">
+      {/* ── Top Metric Cards ── */}
+      <div className="grid grid-cols-5 gap-3 p-4 pb-0">
         <GrafanaCard
-          icon={<IconServer size={14} />}
+          icon={<IconServer size={18} />}
           title="Virtual Machine"
           value="1 Running"
           accent={config.color}
@@ -673,10 +672,8 @@ export default function SystemMonitorApp() {
           sparkData={uptimeSparkline}
           sparkColor={config.color}
         />
-
-        {/* CPU */}
         <GrafanaCard
-          icon={<IconCpu size={14} />}
+          icon={<IconCpu size={18} />}
           title="Processors"
           value={`${hw.cores} vCPU`}
           accent="hsl(56, 80%, 55%)"
@@ -688,10 +685,8 @@ export default function SystemMonitorApp() {
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
         />
-
-        {/* Memory */}
         <GrafanaCard
-          icon={<IconDeviceDesktop size={14} />}
+          icon={<IconDeviceDesktop size={18} />}
           title="Memory"
           value={hw.memoryGb ? `${hw.memoryGb} GB` : "Restricted"}
           accent="hsl(210, 70%, 60%)"
@@ -703,29 +698,22 @@ export default function SystemMonitorApp() {
             { max: 100, color: "hsl(0, 70%, 55%)" },
           ]}
         />
-
-        {/* Modules */}
         <GrafanaCard
-          icon={<IconStack2 size={14} />}
+          icon={<IconStack2 size={18} />}
           title="Modules"
           value={`${receipt.moduleCount} loaded`}
           accent="hsl(270, 60%, 60%)"
           sparkData={moduleSparkline}
           sparkColor="hsl(270, 60%, 60%)"
         />
-
-        {/* Capabilities */}
         <GrafanaCard
-          icon={<IconActivity size={14} />}
+          icon={<IconActivity size={18} />}
           title="Capabilities"
           value={
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               <CapChip label="WASM" ok={hw.wasmSupported} />
               <CapChip label="SIMD" ok={hw.simdSupported} />
-              <CapChip
-                label="SAB"
-                ok={typeof SharedArrayBuffer !== "undefined"}
-              />
+              <CapChip label="SAB" ok={typeof SharedArrayBuffer !== "undefined"} />
             </div>
           }
           accent="hsl(var(--primary))"
@@ -733,134 +721,87 @@ export default function SystemMonitorApp() {
       </div>
 
       {/* ── Middle Row: Availability + Kernel ── */}
-      <div className="grid grid-cols-[280px_1fr] gap-2 p-3">
-        {/* Availability */}
-        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={12} />}>
-          <div className="flex items-center gap-4">
-            {/* Circular gauge with threshold ring */}
-            <div className="relative w-16 h-16 shrink-0">
-              <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
-                {/* Background track */}
+      <div className="grid grid-cols-[320px_1fr] gap-3 p-4">
+        {/* System Availability */}
+        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />}>
+          <div className="flex items-start gap-5">
+            {/* Availability ring */}
+            <div className="relative w-20 h-20 shrink-0">
+              <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                <circle cx="40" cy="40" r="34" fill="none" strokeWidth="5" className="stroke-muted/20" />
                 <circle
-                  cx="32" cy="32" r="28"
-                  fill="none" strokeWidth="4"
-                  className="stroke-muted/20"
-                />
-                {/* Threshold segments - green/amber/red */}
-                <circle
-                  cx="32" cy="32" r="28"
-                  fill="none" strokeWidth="4"
+                  cx="40" cy="40" r="34"
+                  fill="none" strokeWidth="5"
                   stroke={config.color}
-                  strokeDasharray={`${2 * Math.PI * 28}`}
-                  strokeDashoffset={`${2 * Math.PI * 28 * 0.001}`}
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * 0.001}`}
                   strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 4px ${config.color}40)` }}
+                  style={{ filter: `drop-shadow(0 0 6px ${config.color}50)` }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs font-bold" style={{ color: config.color }}>100%</span>
+                <span className="text-base font-bold font-mono" style={{ color: config.color }}>100%</span>
               </div>
             </div>
-            <div className="space-y-1.5 text-[10px] flex-1">
-              <GrafanaRow label="Status" color={config.color}>
-                {config.label}
-              </GrafanaRow>
-              <GrafanaRow label="Uptime">
-                <span className="tabular-nums">{formatUptime(uptimeMs)}</span>
-              </GrafanaRow>
-              <GrafanaRow label="Boot">
-                {receipt.bootTimeMs}ms
-              </GrafanaRow>
-              <GrafanaRow label="Engine">
-                {receipt.engineType === "wasm" ? "WASM" : "TS"}{" "}
-                {getEngine().version}
-              </GrafanaRow>
-              <GrafanaRow label="Ring" color={ringOk ? "#22c55e" : "#ef4444"}>
-                {ringOk ? "Verified ✓" : "Failed ✗"}
-              </GrafanaRow>
+            <div className="space-y-2 flex-1 pt-1">
+              <GrafanaRow label="Status" color={config.color}>{config.label}</GrafanaRow>
+              <GrafanaRow label="Uptime"><span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span></GrafanaRow>
+              <GrafanaRow label="Boot"><span className="font-mono">{receipt.bootTimeMs}ms</span></GrafanaRow>
+              <GrafanaRow label="Engine"><span className="font-mono">{receipt.engineType === "wasm" ? "WASM" : "TS"} {getEngine().version}</span></GrafanaRow>
+              <GrafanaRow label="Ring" color={ringOk ? "#22c55e" : "#ef4444"}>{ringOk ? "Verified ✓" : "Failed ✗"}</GrafanaRow>
             </div>
           </div>
         </GrafanaPanel>
 
         {/* Kernel Primitives */}
-        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={12} />}>
+        <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />}>
           {kernelData ? (
             <>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-[6px]">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                 {kernelData.table.map((fn, i) => {
-                  const ok =
-                    kernelData.verification.results.find(
-                      (r) => r.name === fn.name
-                    )?.ok ?? false;
+                  const ok = kernelData.verification.results.find((r) => r.name === fn.name)?.ok ?? false;
                   return (
-                    <div
-                      key={fn.name}
-                      className="flex items-center gap-2 group"
-                    >
+                    <div key={fn.name} className="flex items-center gap-3 group">
                       <div
-                        className="w-[7px] h-[7px] rounded-full shrink-0 transition-shadow duration-300"
+                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-shadow duration-300"
                         style={{
                           backgroundColor: ok ? "#22c55e" : "#ef4444",
-                          boxShadow: ok
-                            ? "0 0 6px rgba(34,197,94,0.4)"
-                            : "0 0 6px rgba(239,68,68,0.4)",
+                          boxShadow: ok ? "0 0 8px rgba(34,197,94,0.5)" : "0 0 8px rgba(239,68,68,0.5)",
                         }}
                       />
-                      <span className="text-muted-foreground w-[20px] text-[9px] tabular-nums">
-                        P{FANO_SUB[i]}
-                      </span>
-                      <span className="text-foreground/80 text-[10px] group-hover:text-foreground transition-colors">
-                        {FANO_LABELS[i] ?? fn.name}
-                      </span>
-                      <span className="ml-auto text-[8px] text-muted-foreground/50 font-mono">
-                        {fn.framework.slice(0, 12)}
-                      </span>
+                      <span className="text-muted-foreground text-xs tabular-nums font-mono w-6">P{FANO_SUB[i]}</span>
+                      <span className="text-foreground/90 text-sm font-medium group-hover:text-foreground transition-colors">{FANO_LABELS[i] ?? fn.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground/40 font-mono">{fn.framework.slice(0, 14)}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="text-[9px] text-muted-foreground pt-1.5 border-t border-border/50 flex items-center justify-between">
-                <span>
-                  {kernelData.verification.allPassed
-                    ? "7/7 verified ✓"
-                    : `${kernelData.verification.results.filter((r) => r.ok).length}/7 verified`}
-                </span>
-                <span className="opacity-60">
-                  {receipt.kernelHealth?.kernelHash?.slice(0, 12)}…
-                </span>
+              <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 flex items-center justify-between font-mono">
+                <span>{kernelData.verification.allPassed ? "7/7 verified ✓" : `${kernelData.verification.results.filter((r) => r.ok).length}/7 verified`}</span>
+                <span className="opacity-50">{receipt.kernelHealth?.kernelHash?.slice(0, 14)}…</span>
               </div>
             </>
           ) : (
-            <div className="text-muted-foreground text-[10px]">Unavailable</div>
+            <div className="text-muted-foreground text-sm">Unavailable</div>
           )}
         </GrafanaPanel>
       </div>
 
       {/* ── Bottom Row: Stack Health + Host Hardware ── */}
-      <div className="grid grid-cols-[280px_1fr] gap-2 px-3 pb-2">
+      <div className="grid grid-cols-[320px_1fr] gap-3 px-4 pb-3">
         {/* Stack Health */}
-        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={12} />}>
+        <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />}>
           {stackSummary && (
             <>
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-foreground/80">
-                  {stackSummary.available}/{stackSummary.total} operational
-                </span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-foreground/80 font-medium">{stackSummary.available}/{stackSummary.total} operational</span>
                 <span
-                  className="font-semibold tabular-nums text-[9px]"
-                  style={{
-                    color:
-                      stackPct === 100
-                        ? "#22c55e"
-                        : stackPct > 80
-                          ? "#f59e0b"
-                          : "#ef4444",
-                  }}
+                  className="font-bold tabular-nums text-sm font-mono"
+                  style={{ color: stackPct === 100 ? "#22c55e" : stackPct > 80 ? "#f59e0b" : "#ef4444" }}
                 >
                   {stackPct}%
                 </span>
               </div>
-              {/* Threshold bar */}
               <ThresholdBar
                 value={stackPct}
                 thresholds={[
@@ -870,19 +811,11 @@ export default function SystemMonitorApp() {
                 ]}
               />
               {stackSummary.failing.length > 0 && (
-                <div className="space-y-[3px] pt-1">
+                <div className="space-y-1 pt-1.5">
                   {stackSummary.failing.map((c) => (
-                    <div
-                      key={c.name}
-                      className="flex items-center gap-1.5 text-[9px]"
-                    >
-                      <IconAlertTriangle size={10} className="text-amber-500 shrink-0" />
-                      <span className="text-amber-500/90">
-                        {c.name}{" "}
-                        <span className="text-muted-foreground">
-                          ({c.criticality})
-                        </span>
-                      </span>
+                    <div key={c.name} className="flex items-center gap-2 text-xs">
+                      <IconAlertTriangle size={13} className="text-amber-500 shrink-0" />
+                      <span className="text-amber-500/90">{c.name} <span className="text-muted-foreground">({c.criticality})</span></span>
                     </div>
                   ))}
                 </div>
@@ -892,59 +825,41 @@ export default function SystemMonitorApp() {
         </GrafanaPanel>
 
         {/* Host Hardware */}
-        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={12} />}>
-          {/* Projection badge */}
+        <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />}>
           <div
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-semibold ${
-              receipt.provenance.context === "local"
-                ? "bg-green-500/10 text-green-500"
-                : "bg-blue-500/10 text-blue-500"
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${
+              receipt.provenance.context === "local" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
             }`}
           >
-            <PulseDot
-              color={receipt.provenance.context === "local" ? "#22c55e" : "#3b82f6"}
-              size={5}
-            />
-            {receipt.provenance.context === "local"
-              ? "Local Instance"
-              : `Remote · ${receipt.provenance.hostname}`}
+            <PulseDot color={receipt.provenance.context === "local" ? "#22c55e" : "#3b82f6"} size={6} />
+            {receipt.provenance.context === "local" ? "Local Instance" : `Remote · ${receipt.provenance.hostname}`}
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-[4px] text-[10px]">
-            <GrafanaRow label="Display">
-              {hw.screenWidth}×{hw.screenHeight}
-            </GrafanaRow>
-            <GrafanaRow label="GPU">{hw.gpu ?? "Unknown"}</GrafanaRow>
-            <GrafanaRow label="Touch">{hw.touchCapable ? "Yes" : "No"}</GrafanaRow>
-            <GrafanaRow label="Workers">
-              {typeof Worker !== "undefined" ? "Available" : "No"}
-            </GrafanaRow>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
+            <GrafanaRow label="Display"><span className="font-mono">{hw.screenWidth}×{hw.screenHeight}</span></GrafanaRow>
+            <GrafanaRow label="GPU"><span className="font-mono text-xs">{hw.gpu ?? "Unknown"}</span></GrafanaRow>
+            <GrafanaRow label="Touch"><span className="font-mono">{hw.touchCapable ? "Yes" : "No"}</span></GrafanaRow>
+            <GrafanaRow label="Workers"><span className="font-mono">{typeof Worker !== "undefined" ? "Available" : "No"}</span></GrafanaRow>
           </div>
 
-          <div className="text-[9px] text-muted-foreground/50 pt-1 border-t border-border/50 font-mono">
-            Provenance: {receipt.provenance.provenanceHash.slice(0, 20)}…
+          <div className="text-xs text-muted-foreground/50 pt-2 border-t border-border/50 font-mono">
+            Provenance: {receipt.provenance.provenanceHash.slice(0, 24)}…
           </div>
         </GrafanaPanel>
       </div>
 
-      {/* ── Issues Strip ── */}
+      {/* ── Active Alerts ── */}
       {isDegraded && degradationLog.length > 0 && (
-        <div className="px-3 pb-2">
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[9px] font-semibold text-amber-500 uppercase tracking-wider">
-              <IconAlertTriangle size={11} />
+        <div className="px-4 pb-3">
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider">
+              <IconAlertTriangle size={14} />
               Active Alerts
             </div>
             {degradationLog.map((entry, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 text-[10px] text-amber-400/90 pl-1"
-              >
-                <PulseDot color="#f59e0b" size={5} />
-                <span>
-                  <span className="font-semibold text-amber-500">{entry.component}:</span>{" "}
-                  {entry.issue}
-                </span>
+              <div key={i} className="flex items-start gap-2.5 text-sm text-amber-400/90 pl-1">
+                <PulseDot color="#f59e0b" size={6} />
+                <span><span className="font-semibold text-amber-500">{entry.component}:</span> {entry.issue}</span>
               </div>
             ))}
           </div>
@@ -952,36 +867,22 @@ export default function SystemMonitorApp() {
       )}
 
       {/* ── Footer ── */}
-      <div className="mt-auto border-t border-border/50 px-3 py-2 flex items-center justify-between text-[9px] text-muted-foreground">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <PulseDot color={config.color} size={4} />
-            <span className="tabular-nums">{formatUptime(uptimeMs)}</span>
+      <div className="mt-auto border-t border-border/50 px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <PulseDot color={config.color} size={5} />
+            <span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span>
           </div>
-          <span className="opacity-40">·</span>
-          <span className="tracking-[0.06em] opacity-50 max-w-[180px] truncate">
-            {receipt.seal.glyph}
-          </span>
-          <span className="opacity-40">·</span>
-          <span className="opacity-60">
-            Session {receipt.seal.sessionNonce.slice(0, 8)}
-          </span>
+          <span className="opacity-30">·</span>
+          <span className="tracking-[0.04em] opacity-40 max-w-[220px] truncate font-mono">{receipt.seal.glyph}</span>
+          <span className="opacity-30">·</span>
+          <span className="opacity-50 font-mono">Session {receipt.seal.sessionNonce.slice(0, 8)}</span>
         </div>
         <button
           onClick={handleCopyReport}
-          className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium bg-muted/30 hover:bg-muted/60 transition-all duration-150 text-foreground/60 hover:text-foreground border border-transparent hover:border-border/50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-muted/30 hover:bg-muted/60 transition-all duration-150 text-foreground/60 hover:text-foreground border border-transparent hover:border-border/50"
         >
-          {copied ? (
-            <>
-              <IconClipboardCheck size={12} />
-              Copied
-            </>
-          ) : (
-            <>
-              <IconCopy size={12} />
-              Export Report
-            </>
-          )}
+          {copied ? (<><IconClipboardCheck size={14} /> Copied</>) : (<><IconCopy size={14} /> Export Report</>)}
         </button>
       </div>
     </div>
@@ -1003,12 +904,11 @@ function GrafanaPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-3 space-y-2.5 relative overflow-hidden">
-      {/* Top accent line */}
+    <div className="rounded-lg border border-border/60 bg-card p-4 space-y-3 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         {icon && <span className="text-muted-foreground/60">{icon}</span>}
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
       </div>
@@ -1040,43 +940,26 @@ function GrafanaCard({
   thresholds?: { max: number; color: string }[];
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-2.5 space-y-1.5 relative overflow-hidden group hover:border-border transition-colors duration-200">
-      {/* Top accent */}
+    <div className="rounded-lg border border-border/60 bg-card p-3.5 space-y-2 relative overflow-hidden group hover:border-border transition-colors duration-200">
       <div
         className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity"
         style={{ background: accent }}
       />
       <div className="flex items-center justify-between">
-        <span style={{ color: accent }} className="opacity-80">
-          {icon}
-        </span>
+        <span style={{ color: accent }} className="opacity-80">{icon}</span>
         {badge && (
           <span
-            className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full"
-            style={{
-              color: badgeColor,
-              backgroundColor: `${badgeColor}15`,
-              boxShadow: `0 0 8px ${badgeColor}10`,
-            }}
+            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+            style={{ color: badgeColor, backgroundColor: `${badgeColor}15`, boxShadow: `0 0 8px ${badgeColor}10` }}
           >
             {badge}
           </span>
         )}
       </div>
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">
-        {title}
-      </div>
-      <div className="text-[11px] font-semibold text-foreground/90">
-        {value}
-      </div>
-      {/* Sparkline */}
+      <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">{title}</div>
+      <div className="text-sm font-semibold text-foreground/90">{value}</div>
       {sparkData && sparkData.length > 0 && (
-        <MiniSparkline
-          data={sparkData}
-          color={sparkColor ?? accent}
-          thresholds={thresholds}
-          height={22}
-        />
+        <MiniSparkline data={sparkData} color={sparkColor ?? accent} thresholds={thresholds} height={28} />
       )}
     </div>
   );
@@ -1173,81 +1056,42 @@ function ThresholdBar({
   }
 
   return (
-    <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden relative">
-      {/* Threshold markers */}
+    <div className="h-2 bg-muted/20 rounded-full overflow-hidden relative">
       {thresholds.slice(0, -1).map((t, i) => (
-        <div
-          key={i}
-          className="absolute top-0 bottom-0 w-[1px] opacity-20"
-          style={{ left: `${t.max}%`, backgroundColor: t.color }}
-        />
+        <div key={i} className="absolute top-0 bottom-0 w-[1px] opacity-20" style={{ left: `${t.max}%`, backgroundColor: t.color }} />
       ))}
       <div
         className="h-full rounded-full transition-all duration-700 ease-out"
-        style={{
-          width: `${Math.max(value, value > 0 ? 2 : 0)}%`,
-          backgroundColor: barColor,
-          boxShadow: `0 0 8px ${barColor}30`,
-        }}
+        style={{ width: `${Math.max(value, value > 0 ? 2 : 0)}%`, backgroundColor: barColor, boxShadow: `0 0 10px ${barColor}30` }}
       />
     </div>
   );
 }
 
 /** Animated pulsing status dot */
-function PulseDot({ color, size = 6 }: { color: string; size?: number }) {
+function PulseDot({ color, size = 7 }: { color: string; size?: number }) {
   return (
     <span className="relative inline-flex shrink-0" style={{ width: size * 2.5, height: size * 2.5 }}>
-      <span
-        className="absolute inset-0 rounded-full animate-ping opacity-30"
-        style={{ backgroundColor: color }}
-      />
-      <span
-        className="relative inline-flex rounded-full m-auto"
-        style={{
-          width: size,
-          height: size,
-          backgroundColor: color,
-          boxShadow: `0 0 6px ${color}60`,
-        }}
-      />
+      <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: color }} />
+      <span className="relative inline-flex rounded-full m-auto" style={{ width: size, height: size, backgroundColor: color, boxShadow: `0 0 8px ${color}60` }} />
     </span>
   );
 }
 
 function CapChip({ label, ok }: { label: string; ok: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded transition-colors ${
-        ok
-          ? "bg-green-500/10 text-green-500"
-          : "bg-red-500/10 text-red-400"
-      }`}
-    >
-      {ok ? <IconCheck size={9} /> : <IconX size={9} />}
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors ${ok ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-400"}`}>
+      {ok ? <IconCheck size={12} /> : <IconX size={12} />}
       {label}
     </span>
   );
 }
 
-function GrafanaRow({
-  label,
-  children,
-  color,
-}: {
-  label: string;
-  children: React.ReactNode;
-  color?: string;
-}) {
+function GrafanaRow({ label, children, color }: { label: string; children: React.ReactNode; color?: string }) {
   return (
-    <div className="flex justify-between items-center gap-2">
-      <span className="text-muted-foreground/70">{label}</span>
-      <span
-        className="text-right font-medium"
-        style={color ? { color } : undefined}
-      >
-        {children}
-      </span>
+    <div className="flex justify-between items-center gap-3">
+      <span className="text-muted-foreground/70 text-xs">{label}</span>
+      <span className="text-right font-semibold text-sm" style={color ? { color } : undefined}>{children}</span>
     </div>
   );
 }
