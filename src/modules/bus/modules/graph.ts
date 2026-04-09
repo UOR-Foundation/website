@@ -106,5 +106,41 @@ register({
       },
       description: "Generate a human-readable summary of the graph contents",
     },
+    sparql: {
+      handler: async (params: any) => {
+        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
+        if (!params?.query) throw new Error("Provide a SPARQL query string");
+        if (params.update) {
+          await oxigraphStore.sparqlUpdate(params.query);
+          return { ok: true, type: "update" };
+        }
+        return oxigraphStore.sparqlQuery(params.query);
+      },
+      description: "Execute a full SPARQL 1.1 query via Oxigraph native engine",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "SPARQL 1.1 query or update string" },
+          update: { type: "boolean", default: false, description: "If true, treat as SPARQL UPDATE" },
+        },
+        required: ["query"],
+      },
+    },
+    init: {
+      handler: async () => {
+        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
+        const result = await oxigraphStore.init();
+        return { ok: true, ...result };
+      },
+      description: "Initialize Oxigraph WASM engine and restore persisted quads",
+    },
+    flush: {
+      handler: async () => {
+        const { oxigraphStore } = await import("@/modules/knowledge-graph/oxigraph-store");
+        const count = await oxigraphStore.flush();
+        return { ok: true, quadsFlushed: count };
+      },
+      description: "Persist current graph state to IndexedDB as N-Quads",
+    },
   },
 });
