@@ -1,9 +1,9 @@
 /**
- * Symbolic Engine — executes UOR ring operations via WASM (Rust crate) or TS fallback.
- * The WASM module IS the uor-foundation crate compiled to WebAssembly.
+ * Symbolic Engine — executes UOR ring operations via the engine contract.
+ * The engine contract delegates to WASM (Rust crate) or TS fallback transparently.
  */
 
-import * as bridge from "@/lib/wasm/uor-bridge";
+import { getEngine } from "@/modules/engine";
 
 export interface SymbolicResult {
   expression: string;
@@ -31,17 +31,18 @@ const TRAIT_MAP: Record<string, { trait: string; url: string }> = {
 
 export function executeExpression(expr: string): SymbolicResult | null {
   const trimmed = expr.trim();
-  const engine = bridge.engineType();
+  const e = getEngine();
+  const engine = e.engine;
 
   // verify_critical_identity(x)
   const verifyMatch = trimmed.match(/^verify_critical_identity\((\d+)\)$/);
   if (verifyMatch) {
     const x = parseInt(verifyMatch[1]);
-    const holds = bridge.verifyCriticalIdentity(x);
+    const holds = e.verifyCriticalIdentity(x);
     const ref = TRAIT_MAP.verify_critical_identity;
     return {
       expression: trimmed, value: holds,
-      details: { x, neg_bnot: bridge.neg(bridge.bnot(x)), succ_x: bridge.succ(x), holds },
+      details: { x, neg_bnot: e.neg(e.bnot(x)), succ_x: e.succ(x), holds },
       traitRef: ref.trait, docsUrl: ref.url, engine,
     };
   }
@@ -50,22 +51,22 @@ export function executeExpression(expr: string): SymbolicResult | null {
   const classifyMatch = trimmed.match(/^classify_byte\((\d+)\)$/);
   if (classifyMatch) {
     const x = parseInt(classifyMatch[1]);
-    const component = bridge.classifyByte(x);
-    const factors = bridge.factorize(x);
+    const component = e.classifyByte(x);
+    const factors = e.factorize(x);
     const ref = TRAIT_MAP.classify_byte;
     return {
       expression: trimmed, value: component,
-      details: { x, component, factors: factors.join(" × "), popcount: bridge.bytePopcount(x), basis: bridge.byteBasis(x) },
+      details: { x, component, factors: factors.join(" × "), popcount: e.bytePopcount(x), basis: e.byteBasis(x) },
       traitRef: ref.trait, docsUrl: ref.url, engine,
     };
   }
 
-  // Try expression evaluation via WASM
-  const result = bridge.evaluateExpr(trimmed);
+  // Try expression evaluation via engine
+  const result = e.evaluateExpr(trimmed);
   if (result >= 0) {
     const funcName = trimmed.match(/^(\w+)\(/)?.[1] || "unknown";
     const ref = TRAIT_MAP[funcName] || { trait: "kernel::op", url: "https://docs.rs/uor-foundation/latest/uor_foundation/kernel/op/" };
-    const partition = bridge.classifyByte(result);
+    const partition = e.classifyByte(result);
     return {
       expression: trimmed, value: result,
       details: {
@@ -73,13 +74,13 @@ export function executeExpression(expr: string): SymbolicResult | null {
         binary: result.toString(2).padStart(8, "0"),
         hex: "0x" + result.toString(16).padStart(2, "0"),
         partition,
-        factors: bridge.factorize(result).join(" × ") || "—",
-        popcount: bridge.bytePopcount(result),
-        basis: bridge.byteBasis(result),
+        factors: e.factorize(result).join(" × ") || "—",
+        popcount: e.bytePopcount(result),
+        basis: e.byteBasis(result),
         criticalIdentity: {
-          neg_bnot: bridge.neg(bridge.bnot(result)),
-          succ: bridge.succ(result),
-          holds: bridge.verifyCriticalIdentity(result),
+          neg_bnot: e.neg(e.bnot(result)),
+          succ: e.succ(result),
+          holds: e.verifyCriticalIdentity(result),
         },
       },
       traitRef: ref.trait, docsUrl: ref.url, engine,

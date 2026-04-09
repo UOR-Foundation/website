@@ -1,201 +1,104 @@
 /**
- * UOR WASM Bridge — Lazy-loads the compiled uor-foundation WASM module.
- * Falls back to the TypeScript ring engine if WASM fails to load.
+ * UOR WASM Bridge
  *
- * The WASM binary is the actual Rust crate compiled to WebAssembly.
- * Every computation is canonically anchored to crates.io/crates/uor-foundation.
+ * @deprecated This module is superseded by `@/modules/engine`.
+ * All consumers should import from `@/modules/engine` instead:
+ *
+ *   import { getEngine, initEngine } from "@/modules/engine";
+ *   const e = getEngine();
+ *   e.neg(x);  // WASM or TS, transparently
+ *
+ * This file is retained only as a thin delegator for any remaining
+ * transitive imports. It will be removed in a future version.
  */
 
-import * as tsRing from "@/lib/uor-ring";
+import { getEngine, initEngine } from "@/modules/engine";
 
-type WasmModule = typeof import("@/lib/wasm/uor-foundation/uor_wasm_shim");
-
-let wasmModule: WasmModule | null = null;
-let wasmLoadPromise: Promise<WasmModule | null> | null = null;
-let wasmFailed = false;
-
-/** Load the WASM module. Returns null if loading fails. */
-export async function loadWasm(): Promise<WasmModule | null> {
-  if (wasmModule) return wasmModule;
-  if (wasmFailed) return null;
-  if (wasmLoadPromise) return wasmLoadPromise;
-
-  wasmLoadPromise = (async () => {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const mod = await import("@/lib/wasm/uor-foundation/uor_wasm_shim");
-        await mod.default();
-        wasmModule = mod;
-        console.log("[UOR] WASM engine loaded — uor-foundation v" + mod.crate_version());
-        return mod;
-      } catch (e) {
-        console.warn(`[UOR] WASM load attempt ${attempt + 1} failed:`, e);
-        if (attempt === 0) {
-          await new Promise(r => setTimeout(r, 500));
-        }
-      }
-    }
-    console.info("[UOR] WASM unavailable — using TypeScript engine (identical math)");
-    wasmFailed = true;
-    return null;
-  })();
-
-  return wasmLoadPromise;
+/** @deprecated Use `initEngine()` from `@/modules/engine` */
+export async function loadWasm(): Promise<unknown> {
+  await initEngine();
+  return {};
 }
 
-/** Check if WASM is loaded and ready */
+/** @deprecated Use `getEngine().engine` */
 export function isWasmReady(): boolean {
-  return wasmModule !== null;
+  return true; // engine is always ready after boot
 }
 
-/** Get the engine type currently in use */
+/** @deprecated Use `getEngine().engine` */
 export function engineType(): "wasm" | "typescript" {
-  return wasmModule ? "wasm" : "typescript";
+  return getEngine().engine;
 }
 
-/** Get crate version (WASM only) */
+/** @deprecated Use `getEngine().version` */
 export function crateVersion(): string | null {
-  return wasmModule?.crate_version() ?? null;
+  return getEngine().version;
 }
 
-// ── Ring operations — WASM with TS fallback ─────────────────────────
+// ── All ring operations delegate to engine contract ─────────────────
 
-export function neg(x: number): number {
-  return wasmModule ? wasmModule.neg(x) : tsRing.neg(x);
-}
+const e = () => getEngine();
 
-export function bnot(x: number): number {
-  return wasmModule ? wasmModule.bnot(x) : tsRing.bnot(x);
-}
+/** @deprecated Use `getEngine().neg()` */
+export const neg = (x: number) => e().neg(x);
+/** @deprecated Use `getEngine().bnot()` */
+export const bnot = (x: number) => e().bnot(x);
+/** @deprecated Use `getEngine().succ()` */
+export const succ = (x: number) => e().succ(x);
+/** @deprecated Use `getEngine().pred()` */
+export const pred = (x: number) => e().pred(x);
+/** @deprecated Use `getEngine().add()` */
+export const add = (a: number, b: number) => e().add(a, b);
+/** @deprecated Use `getEngine().sub()` */
+export const sub = (a: number, b: number) => e().sub(a, b);
+/** @deprecated Use `getEngine().mul()` */
+export const mul = (a: number, b: number) => e().mul(a, b);
+/** @deprecated Use `getEngine().xor()` */
+export const xor = (a: number, b: number) => e().xor(a, b);
+/** @deprecated Use `getEngine().and()` */
+export const and = (a: number, b: number) => e().and(a, b);
+/** @deprecated Use `getEngine().or()` */
+export const or = (a: number, b: number) => e().or(a, b);
+/** @deprecated Use `getEngine().verifyCriticalIdentity()` */
+export const verifyCriticalIdentity = (x: number) => e().verifyCriticalIdentity(x);
+/** @deprecated Use `getEngine().verifyAllCriticalIdentity()` */
+export const verifyAllCriticalIdentity = () => e().verifyAllCriticalIdentity();
+/** @deprecated Use `getEngine().bytePopcount()` */
+export const bytePopcount = (x: number) => e().bytePopcount(x);
+/** @deprecated Use `getEngine().byteBasis()` */
+export const byteBasis = (x: number) => e().byteBasis(x);
+/** @deprecated Use `getEngine().classifyByte()` */
+export const classifyByte = (x: number) => e().classifyByte(x);
+/** @deprecated Use `getEngine().factorize()` */
+export const factorize = (x: number) => e().factorize(x);
+/** @deprecated Use `getEngine().evaluateExpr()` */
+export const evaluateExpr = (expr: string) => e().evaluateExpr(expr);
+/** @deprecated Use `getEngine().listNamespaces()` */
+export const listNamespaces = () => JSON.stringify(e().listNamespaces());
+/** @deprecated Use `getEngine().listEnums()` */
+export const listEnums = () => JSON.stringify(e().listEnums());
 
-export function succ(x: number): number {
-  return wasmModule ? wasmModule.succ(x) : tsRing.succ(x);
-}
-
-export function pred(x: number): number {
-  return wasmModule ? wasmModule.pred(x) : tsRing.pred(x);
-}
-
-export function add(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_add(a, b) : tsRing.add(a, b);
-}
-
-export function sub(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_sub(a, b) : tsRing.sub(a, b);
-}
-
-export function mul(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_mul(a, b) : tsRing.mul(a, b);
-}
-
-export function xor(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_xor(a, b) : tsRing.xor(a, b);
-}
-
-export function and(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_and(a, b) : tsRing.and(a, b);
-}
-
-export function or(a: number, b: number): number {
-  return wasmModule ? wasmModule.ring_or(a, b) : tsRing.or(a, b);
-}
-
-export function verifyCriticalIdentity(x: number): boolean {
-  return wasmModule ? wasmModule.verify_critical_identity(x) : tsRing.verifyCriticalIdentity(x);
-}
-
-export function verifyAllCriticalIdentity(): boolean {
-  if (wasmModule) return wasmModule.verify_all_critical_identity();
-  const r = tsRing.verifyAllCriticalIdentity();
-  return r.verified;
-}
-
-export function bytePopcount(x: number): number {
-  return wasmModule ? wasmModule.byte_popcount(x) : tsRing.bytePopcount(x);
-}
-
-export function byteBasis(x: number): number[] {
-  if (wasmModule) return Array.from(wasmModule.byte_basis(x));
-  return tsRing.byteBasis(x);
-}
-
-export function classifyByte(x: number): string {
-  if (wasmModule) return wasmModule.classify_byte(x);
-  return tsRing.classifyByte(x, 8).component.replace("partition:", "");
-}
-
-export function factorize(x: number): number[] {
-  if (wasmModule) return Array.from(wasmModule.factorize(x));
-  // TS fallback
-  if (x < 2) return [];
-  let n = x;
-  const factors: number[] = [];
-  for (let d = 2; d * d <= n; d++) {
-    while (n % d === 0) { factors.push(d); n /= d; }
-  }
-  if (n > 1) factors.push(n);
-  return factors;
-}
-
-export function evaluateExpr(expr: string): number {
-  if (wasmModule) return wasmModule.evaluate_expr(expr);
-  // TS fallback: parse simple expressions
-  const match = expr.match(/^(\w+)\((\d+)(?:,\s*(\d+))?\)$/);
-  if (!match) return -1;
-  const [, op, a, b] = match;
-  const x = parseInt(a);
-  const y = b !== undefined ? parseInt(b) : undefined;
-  return (tsRing.compute(op as any, x, y) as number) ?? -1;
-}
-
-export function listNamespaces(): string {
-  return wasmModule?.list_namespaces() ?? "[]";
-}
-
-// ── v0.2.0 additions ────────────────────────────────────────────────
-
-/** List all v0.2.0 enum names as JSON array. */
-export function listEnums(): string {
-  if (wasmModule && typeof wasmModule.list_enums === "function") {
-    return wasmModule.list_enums();
-  }
-  // JS shim fallback handles this
-  const mod = wasmModule as any;
-  if (mod?.list_enums) return mod.list_enums();
-  return JSON.stringify([
-    "Space","PrimitiveOp","MetricAxis","FiberState","GeometricCharacter",
-  ]);
-}
-
-/** List all v0.2.0 enforcement struct names as JSON array. */
+/** @deprecated */
 export function listEnforcementStructs(): string {
-  if (wasmModule && typeof (wasmModule as any).list_enforcement_structs === "function") {
-    return (wasmModule as any).list_enforcement_structs();
-  }
   return "[]";
 }
 
 /**
- * Evaluate a ring operation by opcode in Z/256Z.
- * Op codes: 0=neg, 1=bnot, 2=succ, 3=pred, 4=add, 5=sub, 6=mul, 7=xor, 8=and, 9=or
+ * @deprecated Use getEngine() methods directly.
  */
 export function constRingEvalQ0(op: number, a: number, b: number = 0): number {
-  if (wasmModule && typeof (wasmModule as any).const_ring_eval_q0 === "function") {
-    return (wasmModule as any).const_ring_eval_q0(op, a, b);
-  }
-  // Pure TS fallback
-  const m = 256;
+  const eng = e();
   switch (op) {
-    case 0: return ((-a) & 0xFF) >>> 0;
-    case 1: return (~a & 0xFF) >>> 0;
-    case 2: return ((a + 1) % m);
-    case 3: return ((a - 1 + m) % m);
-    case 4: return ((a + b) % m);
-    case 5: return ((a - b + m) % m);
-    case 6: return ((a * b) % m);
-    case 7: return (a ^ b);
-    case 8: return (a & b);
-    case 9: return (a | b);
+    case 0: return eng.neg(a);
+    case 1: return eng.bnot(a);
+    case 2: return eng.succ(a);
+    case 3: return eng.pred(a);
+    case 4: return eng.add(a, b);
+    case 5: return eng.sub(a, b);
+    case 6: return eng.mul(a, b);
+    case 7: return eng.xor(a, b);
+    case 8: return eng.and(a, b);
+    case 9: return eng.or(a, b);
     default: return 0;
   }
 }

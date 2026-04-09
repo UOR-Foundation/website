@@ -33,7 +33,7 @@ import ReactMarkdown from "react-markdown";
 import HumanContentView from "@/modules/oracle/components/HumanContentView";
 import IdentityHub from "@/modules/oracle/components/IdentityHub";
 import confetti from "canvas-confetti";
-import { loadWasm } from "@/lib/wasm/uor-bridge";
+import { initEngine } from "@/modules/engine";
 import { TokenBuffer } from "@/modules/oracle/lib/token-buffer";
 import { encode, lookup, type EnrichedReceipt } from "@/lib/uor-codec";
 import { allEntries, lookupReceipt, rehydrateFromDb } from "@/modules/oracle/lib/receipt-registry";
@@ -799,7 +799,7 @@ const SearchPage = () => {
     handleSearch(triword);
   };
 
-  useEffect(() => { loadWasm().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
+  useEffect(() => { initEngine().then(async () => { setWasmReady(true); const { reEnrichAll } = await import("@/modules/oracle/lib/receipt-registry"); await reEnrichAll(); await encode(NEAR_INFINITE_CONCEPT); }); }, []);
   useEffect(() => { if (!result && !aiMode && window.innerWidth >= 768) inputRef.current?.focus(); }, [result, aiMode]);
 
   // Inject JSON-LD into <head> for AI agents and crawlers

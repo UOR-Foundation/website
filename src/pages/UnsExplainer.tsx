@@ -13,7 +13,7 @@ import {
   Search, Copy, Check, Shield, Database, Cpu, Lock, Radio, Bot, Layers,
 } from "lucide-react";
 import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
-import { loadWasm, engineType } from "@/lib/wasm/uor-bridge";
+import { initEngine, engineType } from "@/modules/engine";
 
 /* ── Comparison data ── */
 const DNS_VS_UNS = [
@@ -56,7 +56,7 @@ const UnsExplainer = () => {
   const [decodeResult, setDecodeResult] = useState<unknown | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+  useEffect(() => { initEngine().then(() => setWasmReady(true)); }, []);
 
   const handleEncode = async () => {
     setDemoLoading(true);

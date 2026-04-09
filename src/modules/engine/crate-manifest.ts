@@ -44,7 +44,7 @@ export const CRATE_MANIFEST = {
   ] as const,
 
   /** SHA-256 hex of sorted export names (for drift detection) */
-  exportHash: "pending-initial-sync",
+  exportHash: "81da89de628abb229597ecc7dca184053f7d0c908983db3df38e53a93efaa206",
 
   /** Ontology counts (for type projection drift) */
   namespaceCount: 33,

@@ -12,9 +12,8 @@ import {
   type EpistemicGrade,
   type NeuroSymbolicConfig,
 } from "@/modules/ring-core/neuro-symbolic";
-import { loadWasm } from "@/lib/wasm/uor-bridge";
+import { initEngine, getEngine } from "@/modules/engine";
 import { ArrowUp, Loader2, ChevronDown, ChevronRight, Shield, RefreshCw, Eye, Settings, X, Layers, ExternalLink, Link2 } from "lucide-react";
-import * as bridge from "@/lib/wasm/uor-bridge";
 import { encode, type EnrichedReceipt } from "@/lib/uor-codec";
 import { enrichWithWasm } from "@/modules/oracle/lib/receipt-registry";
 import { canonicalToTriword, formatTriword } from "@/lib/uor-triword";
@@ -127,7 +126,7 @@ function extractBlindSpots(
 
   for (const [word, context] of responseWords) {
     const wordRing = Array.from(word).reduce((acc, ch) => (acc + ch.charCodeAt(0)) & 0xFF, 0);
-    const dist = bridge.xor(queryComposite, wordRing);
+    const dist = getEngine().xor(queryComposite, wordRing);
     // Higher distance = more "surprising" concept
     if (dist > 40) {
       // Extract a meaningful snippet around this word
@@ -177,7 +176,7 @@ const OraclePage = () => {
 
   const temperature = 0.7 - (precision / 100) * 0.5;
 
-  useEffect(() => { loadWasm().then(() => setWasmReady(true)); }, []);
+  useEffect(() => { initEngine().then(() => setWasmReady(true)); }, []);
 
   // Keep newest messages visible — scroll to bottom when new content arrives during streaming
   useEffect(() => {
@@ -547,10 +546,11 @@ const OraclePage = () => {
                           {xrayOpen.has(i) && trustMap[i] && (() => {
                             const t = trustMap[i];
                             const compositeRing = t.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
-                            const partition = bridge.classifyByte(compositeRing);
-                            const popcount = bridge.bytePopcount(compositeRing);
-                            const factors = bridge.factorize(compositeRing);
-                            const critHolds = bridge.verifyCriticalIdentity(compositeRing);
+                            const _e = getEngine();
+                            const partition = _e.classifyByte(compositeRing);
+                            const popcount = _e.bytePopcount(compositeRing);
+                            const factors = _e.factorize(compositeRing);
+                            const critHolds = _e.verifyCriticalIdentity(compositeRing);
 
                             const backedCount = t.claims.filter(c => c.grade <= "B").length;
                             const r = t.receipts ?? {};
