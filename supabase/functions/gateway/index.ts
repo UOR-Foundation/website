@@ -198,6 +198,195 @@ const HANDLERS: Record<string, Record<string, Handler>> = {
       return resp.json();
     },
   },
+
+  audio: {
+    tts: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ text: params?.text, voice: params?.voice }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Audio TTS error: ${resp.status}`);
+      return resp.json();
+    },
+    transcribe: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/audio-transcribe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ audio: params?.audio, format: params?.format }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Audio transcribe error: ${resp.status}`);
+      return resp.json();
+    },
+    stream: async (params) => {
+      return { error: "audio/stream requires WebSocket — use direct edge function", method: "audio/stream" };
+    },
+  },
+
+  social: {
+    send: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/whatsapp-send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ to: params?.to, message: params?.message, platform: params?.platform }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Social send error: ${resp.status}`);
+      return resp.json();
+    },
+    webhook: async (params) => {
+      return { received: true, platform: params?.platform, timestamp: new Date().toISOString() };
+    },
+  },
+
+  continuity: {
+    save: async (params, userId) => {
+      if (!userId) throw new Error("continuity/save requires authentication");
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/continuity`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "save", userId, state: params?.state }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Continuity save error: ${resp.status}`);
+      return resp.json();
+    },
+    restore: async (params, userId) => {
+      if (!userId) throw new Error("continuity/restore requires authentication");
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/continuity`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "restore", userId, sessionId: params?.sessionId }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Continuity restore error: ${resp.status}`);
+      return resp.json();
+    },
+    chain: async (params, userId) => {
+      if (!userId) throw new Error("continuity/chain requires authentication");
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/continuity`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "chain", userId, parentId: params?.parentId, state: params?.state }),
+        },
+      );
+      if (!resp.ok) throw new Error(`Continuity chain error: ${resp.status}`);
+      return resp.json();
+    },
+  },
+
+  mcp: {
+    connect: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/uor-mcp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "connect", serverUrl: params?.serverUrl }),
+        },
+      );
+      if (!resp.ok) throw new Error(`MCP connect error: ${resp.status}`);
+      return resp.json();
+    },
+    call: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/uor-mcp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "call", tool: params?.tool, args: params?.args }),
+        },
+      );
+      if (!resp.ok) throw new Error(`MCP call error: ${resp.status}`);
+      return resp.json();
+    },
+    discover: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/uor-mcp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ action: "discover", serverUrl: params?.serverUrl }),
+        },
+      );
+      if (!resp.ok) throw new Error(`MCP discover error: ${resp.status}`);
+      return resp.json();
+    },
+  },
+
+  sparql: {
+    query: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/sparql-query`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ query: params?.query }),
+        },
+      );
+      if (!resp.ok) throw new Error(`SPARQL query error: ${resp.status}`);
+      return resp.json();
+    },
+    update: async (params) => {
+      const resp = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/sparql-query`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ query: params?.query, update: true }),
+        },
+      );
+      if (!resp.ok) throw new Error(`SPARQL update error: ${resp.status}`);
+      return resp.json();
+    },
+  },
 };
 
 // ── Dispatch ──────────────────────────────────────────────────────────────
