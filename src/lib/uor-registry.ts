@@ -22,7 +22,7 @@ import { generateCertificate, type UorCertificate } from "./uor-certificate";
 // Layer 0: Presentation & Shell
 import coreManifest from "@/modules/core/module.json";
 import landingManifest from "@/modules/landing/module.json";
-import frameworkManifest from "@/modules/framework/module.json";   // absorbs: ruliad, uor-terms
+import frameworkManifest from "@/modules/core/module.json";   // absorbs: ruliad, uor-terms, framework
 import communityManifest from "@/modules/community/module.json";  // absorbs: donate
 import projectsManifest from "@/modules/projects/module.json";
 import apiExplorerManifest from "@/modules/api-explorer/module.json";
@@ -33,7 +33,7 @@ import identityManifest from "@/modules/identity/module.json";    // absorbs: qr
 
 // Layer 2: Derivation & KG
 import derivationManifest from "@/modules/derivation/module.json";
-import kgStoreManifest from "@/modules/kg-store/module.json";     // absorbs: jsonld, semantic-index
+import kgStoreManifest from "@/modules/knowledge-graph/module.json";     // absorbs: jsonld, semantic-index, kg-store
 import epistemicManifest from "@/modules/epistemic/module.json";
 
 // Layer 3: Structure & Resolution
@@ -43,7 +43,7 @@ import morphismManifest from "@/modules/morphism/module.json";
 
 // Layer 4: Observability & State
 import observableManifest from "@/modules/observable/module.json";
-import traceManifest from "@/modules/trace/module.json";
+import traceManifest from "@/modules/verify/module.json";   // trace absorbed into verify
 import stateManifest from "@/modules/state/module.json";
 
 // Layer 5: Verification & Agent Tools
