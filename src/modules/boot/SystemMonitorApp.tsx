@@ -886,7 +886,7 @@ export default function SystemMonitorApp() {
       </div>
 
       {/* ── Middle Row: Availability + Kernel ── */}
-      <div className="grid grid-cols-[320px_1fr] gap-3 p-4">
+      <div className="grid grid-cols-2 gap-3 p-4">
         {/* System Availability */}
         <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
@@ -953,7 +953,7 @@ export default function SystemMonitorApp() {
       </div>
 
       {/* ── Bottom Row: Stack Health + Host Hardware ── */}
-      <div className="grid grid-cols-[320px_1fr] gap-3 px-4 pb-3">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-3">
         {/* Stack Health */}
         <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />} onClick={() => setActiveView("stack")}>
           {stackSummary && (
