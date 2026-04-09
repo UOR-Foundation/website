@@ -886,7 +886,7 @@ export default function SystemMonitorApp() {
       </div>
 
       {/* ── Middle Row: Availability + Kernel ── */}
-      <div className="grid grid-cols-[320px_1fr] gap-3 p-4">
+      <div className="grid grid-cols-2 gap-3 p-4">
         {/* System Availability */}
         <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
@@ -908,7 +908,7 @@ export default function SystemMonitorApp() {
                 <span className="text-base font-bold font-mono" style={{ color: config.color }}>100%</span>
               </div>
             </div>
-            <div className="space-y-2 flex-1 pt-1">
+            <div className="space-y-2.5 flex-1 pt-1">
               <GrafanaRow label="Status" color={config.color}>{config.label}</GrafanaRow>
               <GrafanaRow label="Uptime"><span className="tabular-nums font-mono">{formatUptime(uptimeMs)}</span></GrafanaRow>
               <GrafanaRow label="Boot"><span className="font-mono">{receipt.bootTimeMs}ms</span></GrafanaRow>
@@ -922,28 +922,28 @@ export default function SystemMonitorApp() {
         <GrafanaPanel title="Kernel Primitives — Fano Plane" icon={<IconCircleCheck size={15} />} onClick={() => setActiveView("kernel")}>
           {kernelData ? (
             <>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                 {kernelData.table.map((fn, i) => {
                   const ok = kernelData.verification.results.find((r) => r.name === fn.name)?.ok ?? false;
                   return (
                     <div key={fn.name} className="flex items-center gap-3 group">
                       <div
-                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-shadow duration-300"
+                        className="w-3 h-3 rounded-full shrink-0 transition-shadow duration-300"
                         style={{
                           backgroundColor: ok ? "#22c55e" : "#ef4444",
                           boxShadow: ok ? "0 0 8px rgba(34,197,94,0.5)" : "0 0 8px rgba(239,68,68,0.5)",
                         }}
                       />
-                      <span className="text-muted-foreground text-xs tabular-nums font-mono w-6">P{FANO_SUB[i]}</span>
-                      <span className="text-foreground/90 text-sm font-medium group-hover:text-foreground transition-colors">{FANO_LABELS[i] ?? fn.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground/40 font-mono">{fn.framework.slice(0, 14)}</span>
+                      <span className="text-muted-foreground text-sm tabular-nums font-mono w-7">P{FANO_SUB[i]}</span>
+                      <span className="text-foreground/90 text-sm font-semibold group-hover:text-foreground transition-colors">{FANO_LABELS[i] ?? fn.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground/50 font-mono truncate max-w-[140px]">{fn.framework}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 flex items-center justify-between font-mono">
+              <div className="text-sm text-muted-foreground pt-3 border-t border-border/50 flex items-center justify-between font-mono">
                 <span>{kernelData.verification.allPassed ? "7/7 verified ✓" : `${kernelData.verification.results.filter((r) => r.ok).length}/7 verified`}</span>
-                <span className="opacity-50">{receipt.kernelHealth?.kernelHash?.slice(0, 14)}…</span>
+                <span className="opacity-50 text-xs">{receipt.kernelHealth?.kernelHash?.slice(0, 16)}…</span>
               </div>
             </>
           ) : (
@@ -953,7 +953,7 @@ export default function SystemMonitorApp() {
       </div>
 
       {/* ── Bottom Row: Stack Health + Host Hardware ── */}
-      <div className="grid grid-cols-[320px_1fr] gap-3 px-4 pb-3">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-3">
         {/* Stack Health */}
         <GrafanaPanel title="Stack Health" icon={<IconStack2 size={15} />} onClick={() => setActiveView("stack")}>
           {stackSummary && (
@@ -978,8 +978,8 @@ export default function SystemMonitorApp() {
               {stackSummary.failing.length > 0 && (
                 <div className="space-y-1 pt-1.5">
                   {stackSummary.failing.map((c) => (
-                    <div key={c.name} className="flex items-center gap-2 text-xs">
-                      <IconAlertTriangle size={13} className="text-amber-500 shrink-0" />
+                    <div key={c.name} className="flex items-center gap-2 text-sm">
+                      <IconAlertTriangle size={14} className="text-amber-500 shrink-0" />
                       <span className="text-amber-500/90">{c.name} <span className="text-muted-foreground">({c.criticality})</span></span>
                     </div>
                   ))}
@@ -992,7 +992,7 @@ export default function SystemMonitorApp() {
         {/* Host Hardware */}
         <GrafanaPanel title="Host Hardware" icon={<IconDeviceDesktop size={15} />} onClick={() => setActiveView("hardware")}>
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold ${
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${
               receipt.provenance.context === "local" ? "bg-green-500/10 text-green-500" : "bg-blue-500/10 text-blue-500"
             }`}
           >
@@ -1000,14 +1000,14 @@ export default function SystemMonitorApp() {
             {receipt.provenance.context === "local" ? "Local Instance" : `Remote · ${receipt.provenance.hostname}`}
           </div>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2.5">
             <GrafanaRow label="Display"><span className="font-mono">{hw.screenWidth}×{hw.screenHeight}</span></GrafanaRow>
-            <GrafanaRow label="GPU"><span className="font-mono text-xs">{hw.gpu ?? "Unknown"}</span></GrafanaRow>
+            <GrafanaRow label="GPU"><span className="font-mono text-xs truncate max-w-[200px]">{hw.gpu ?? "Unknown"}</span></GrafanaRow>
             <GrafanaRow label="Touch"><span className="font-mono">{hw.touchCapable ? "Yes" : "No"}</span></GrafanaRow>
             <GrafanaRow label="Workers"><span className="font-mono">{typeof Worker !== "undefined" ? "Available" : "No"}</span></GrafanaRow>
           </div>
 
-          <div className="text-xs text-muted-foreground/50 pt-2 border-t border-border/50 font-mono">
+          <div className="text-sm text-muted-foreground/50 pt-3 border-t border-border/50 font-mono">
             Provenance: {receipt.provenance.provenanceHash.slice(0, 24)}…
           </div>
         </GrafanaPanel>
@@ -1272,8 +1272,8 @@ function CapChip({ label, ok }: { label: string; ok: boolean }) {
 
 function GrafanaRow({ label, children, color }: { label: string; children: React.ReactNode; color?: string }) {
   return (
-    <div className="flex justify-between items-center gap-3">
-      <span className="text-muted-foreground/70 text-xs">{label}</span>
+    <div className="flex justify-between items-center gap-4">
+      <span className="text-muted-foreground/80 text-sm">{label}</span>
       <span className="text-right font-semibold text-sm" style={color ? { color } : undefined}>{children}</span>
     </div>
   );
