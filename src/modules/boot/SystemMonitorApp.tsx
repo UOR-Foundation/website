@@ -290,14 +290,14 @@ function formatUptime(ms: number): string {
 
 // ── Full markdown report ───────────────────────────────────────
 
-function formatMarkdownReport(
+async function formatMarkdownReport(
   receipt: BootReceipt | null,
   status: SealStatus | "booting" | "failed",
   lastVerified: string | null,
   entries: DegradationEntry[],
   uptimeMs: number,
   runtimeMetrics?: Awaited<ReturnType<typeof collectRuntimeMetrics>>
-): string {
+): Promise<string> {
   const L: string[] = [];
   const now = new Date().toISOString();
 
