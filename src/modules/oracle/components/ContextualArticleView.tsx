@@ -51,6 +51,7 @@ interface ContextualArticleViewProps {
     model?: string;
     personalized?: boolean;
     personalizedTopics?: string[];
+    queryDomain?: string;
   };
   media?: MediaData;
   immersive?: boolean;
