@@ -31,6 +31,7 @@
          NIST SP 800-53 SI-10, SC-8, AC-17 / OWASP Top 10 A03, A05
          ─────────────────────────────────────────────────────────────────────
          script-src  'self'          — /spa-redirect.js served from origin
+                     'wasm-unsafe-eval' — allow WebAssembly compilation
                      https://donorbox.org — payment widget (no unsafe-inline)
          frame-src                   — only Donorbox embeds allowed
          style-src   'self' 'unsafe-inline' — required: Tailwind injects a
@@ -46,8 +47,9 @@
          ─────────────────────────────────────────────────────────────────────
          F3 FIXED: unsafe-inline removed from script-src (SPA script externalised)
          F4 OPEN:  unsafe-inline retained in style-src pending Tailwind CSS audit
+         F5 FIXED: wasm-unsafe-eval added to allow WebAssembly.instantiate/compile
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://donorbox.org; frame-src https://donorbox.org https://www.youtube.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.uor.foundation; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://donorbox.org; frame-src https://donorbox.org https://www.youtube.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.uor.foundation; object-src 'none'; base-uri 'self'; form-action 'self' https://donorbox.org; frame-ancestors 'self';">
 
     <!-- Donorbox widget — loaded as static script for Subresource Integrity eligibility -->
     <script src="https://donorbox.org/widgets.js" paypalExpress="false" defer></script>
