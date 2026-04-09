@@ -343,7 +343,7 @@ export function parseXML(text: string): StructuredData | null {
     }
 
     // If no repeated children, try one level deeper
-    let rowParent = root;
+    let rowParent: Element = root;
     let rowTag = "";
     let maxCount = 0;
     for (const [tag, count] of childCounts) {
