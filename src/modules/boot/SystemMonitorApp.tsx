@@ -13,6 +13,7 @@ import { useBootStatus } from "./useBootStatus";
 import type { SealStatus, BootReceipt } from "./types";
 import { getEngine, getWasmDiagnostics } from "@/modules/engine";
 import { TECH_STACK, SELECTION_POLICY } from "./tech-stack";
+import { getErrorBudget } from "./seal-error-budget";
 import {
   getKernelDeclaration,
   verifyKernel,
