@@ -12,7 +12,7 @@ import type { SolarPhase } from "@/modules/oracle/lib/solar-position";
 import VoiceInput from "./VoiceInput";
 import SoundCloudFab from "./SoundCloudFab";
 import ImmersiveQuote from "./ImmersiveQuote";
-import ContextMenu from "@/modules/sovereign-vault/components/ContextMenu";
+
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import { toast } from "sonner";
@@ -78,7 +78,7 @@ export default function ImmersiveSearchView({ onSearch, onExit, onEncode, onAiMo
   const [photoUrl, setPhotoUrl] = useState(() => getPhasePhoto());
   const phaseRef = useRef<SolarPhase>(getCurrentPhase());
   const [dragOver, setDragOver] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  
 
   // Solar-phase photo update
   useEffect(() => {
