@@ -11,13 +11,27 @@ interface ProvenanceBannerProps {
   model?: string;
   personalized?: boolean;
   personalizedTopics?: string[];
+  queryDomain?: string;
 }
+
+const DOMAIN_LABELS: Record<string, string> = {
+  biomedical: "🧬 Biomedical",
+  physics: "⚛️ Physics",
+  mathematics: "📐 Mathematics",
+  philosophy: "🏛️ Philosophy",
+  history: "📜 History",
+  law: "⚖️ Law",
+  technology: "💻 Technology",
+  environment: "🌍 Environment",
+  economics: "📊 Economics",
+};
 
 const ProvenanceBanner: React.FC<ProvenanceBannerProps> = ({
   sourceCount,
   model: _model,
   personalized = false,
   personalizedTopics = [],
+  queryDomain,
 }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -52,6 +66,16 @@ const ProvenanceBanner: React.FC<ProvenanceBannerProps> = ({
             <span className="inline-flex items-center gap-1 text-muted-foreground/60">
               <span style={{ fontSize: 12 }}>👤</span>
               <span className="font-medium">Personalized</span>
+            </span>
+          </>
+        )}
+
+        {/* Research domain */}
+        {queryDomain && DOMAIN_LABELS[queryDomain] && (
+          <>
+            <span className="text-border/30">·</span>
+            <span className="inline-flex items-center gap-1 text-muted-foreground/60">
+              <span className="font-medium">{DOMAIN_LABELS[queryDomain]}</span>
             </span>
           </>
         )}

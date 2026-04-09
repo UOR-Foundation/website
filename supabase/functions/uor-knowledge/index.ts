@@ -1340,6 +1340,7 @@ serve(async (req) => {
     const userContext = Array.isArray(context) ? context.filter((c: unknown) => typeof c === "string").slice(0, 20) : [];
     const activeLens = typeof lens === "string" ? lens : "encyclopedia";
     const blueprintParams = lensParams && typeof lensParams === "object" ? lensParams : null;
+    const queryDomain = classifyQueryDomain(term);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -1397,7 +1398,7 @@ serve(async (req) => {
       .filter((s, i, arr) => arr.findIndex(x => x.domain === s.domain) === i)
       .sort((a, b) => b.score - a.score);
 
-    console.log(`Sources for "${term}": ${sources.length} total (${auxSources.length} auxiliary, ${topSources.length} from Firecrawl)`);
+    console.log(`Sources for "${term}" [domain=${queryDomain}]: ${sources.length} total (${auxSources.length} auxiliary, ${topSources.length} from Firecrawl)`);
 
     // Build AI prompt — use blueprint params if available, otherwise use lens ID
     const systemPrompt = blueprintParams
@@ -1496,6 +1497,7 @@ serve(async (req) => {
             model: actualModel,
             personalized: isPersonalized,
             personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
+            queryDomain: queryDomain !== "general" ? queryDomain : undefined,
           })}\n\n`)
         );
 
@@ -1513,6 +1515,7 @@ serve(async (req) => {
                     model: "uor-synthesis",
                     personalized: isPersonalized,
                     personalizedTopics: isPersonalized ? userContext.slice(0, 5) : [],
+                    queryDomain: queryDomain !== "general" ? queryDomain : undefined,
                   })}\n\n`)
                 );
               } catch { /* stream may be closed */ }

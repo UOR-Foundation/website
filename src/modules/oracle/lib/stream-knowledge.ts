@@ -48,6 +48,7 @@ export interface ProvenanceMeta {
   model?: string;
   personalized?: boolean;
   personalizedTopics?: string[];
+  queryDomain?: string;
 }
 
 export async function streamKnowledge({
@@ -165,6 +166,7 @@ export async function streamKnowledge({
               model: parsed.model,
               personalized: parsed.personalized,
               personalizedTopics: parsed.personalizedTopics,
+              queryDomain: parsed.queryDomain,
             }
           );
         } else if (parsed.type === "media" && parsed.media) {
@@ -199,6 +201,7 @@ export async function streamKnowledge({
               model: parsed.model,
               personalized: parsed.personalized,
               personalizedTopics: parsed.personalizedTopics,
+              queryDomain: parsed.queryDomain,
             }
           );
         } else if (parsed.type === "media" && parsed.media) {
