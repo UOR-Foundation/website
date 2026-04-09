@@ -888,7 +888,7 @@ export default function SystemMonitorApp() {
       {/* ── Middle Row: Availability + Kernel ── */}
       <div className="grid grid-cols-[320px_1fr] gap-3 p-4">
         {/* System Availability */}
-        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />}>
+        <GrafanaPanel title="System Availability" icon={<IconHeartbeat size={15} />} onClick={() => setActiveView("availability")}>
           <div className="flex items-start gap-5">
             {/* Availability ring */}
             <div className="relative w-20 h-20 shrink-0">
