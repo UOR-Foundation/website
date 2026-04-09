@@ -19,9 +19,10 @@ register({
     },
     publish: {
       handler: async (params: any) => {
-        const { publishRecord, createRecord } = await import("@/modules/uns");
+        const { publishRecord, createRecord, generateKeypair } = await import("@/modules/uns");
         const record = await createRecord(params);
-        return publishRecord(record);
+        const keypair = params?.keypair ?? await generateKeypair();
+        return publishRecord(record, keypair);
       },
       description: "Publish a name binding to the name service",
     },
