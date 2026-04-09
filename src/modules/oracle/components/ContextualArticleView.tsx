@@ -51,6 +51,7 @@ interface ContextualArticleViewProps {
     model?: string;
     personalized?: boolean;
     personalizedTopics?: string[];
+    queryDomain?: string;
   };
   media?: MediaData;
   immersive?: boolean;
@@ -84,6 +85,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
           model={provenance?.model}
           personalized={provenance?.personalized}
           personalizedTopics={provenance?.personalizedTopics}
+          queryDomain={provenance?.queryDomain}
         />
       )}
 
