@@ -3,7 +3,8 @@
  * Uses pointer events for drag reorder; right-click context menu for pin/merge.
  */
 
-import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties } from "react";
+import SpaceSwitcher from "@/modules/sovereign-spaces/components/SpaceSwitcher";
+import SyncIndicator from "@/modules/sovereign-spaces/components/SyncIndicator";
 import { useAuth } from "@/hooks/use-auth";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
