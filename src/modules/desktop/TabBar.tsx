@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
+import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
   X, Plus, Search, User, Home, Pin, Layers, SplitSquareHorizontal,
   Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
@@ -61,6 +63,33 @@ function FullscreenToggle({ isLight }: { isLight: boolean }) {
     </button>
   );
 }
+/** Connectivity indicator for the tab bar */
+function TabBarConnectivity({ isLight }: { isLight: boolean }) {
+  const conn = useConnectivity();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  return (
+    <div className="relative flex items-center">
+      <button
+        onClick={() => setPopoverOpen(o => !o)}
+        className={`flex items-center justify-center w-[24px] h-[24px] rounded-full transition-all duration-150
+          ${isLight ? "hover:bg-black/[0.08]" : "hover:bg-white/[0.08]"}
+        `}
+        title={conn.online ? "Online" : "Offline"}
+      >
+        <span
+          className={`block w-[7px] h-[7px] rounded-full transition-colors ${
+            conn.online
+              ? "bg-emerald-500 shadow-[0_0_6px_1px_rgba(16,185,129,0.5)]"
+              : "bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.5)]"
+          }`}
+        />
+      </button>
+      <ConnectivityPopover open={popoverOpen} onClose={() => setPopoverOpen(false)} isLight={isLight} />
+    </div>
+  );
+}
+
 
 interface Props {
   activeWindowId: string | null;
@@ -479,7 +508,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Right: time + profile + fullscreen */}
+      {/* Right: time + profile + connectivity + fullscreen */}
       <div className="flex items-center shrink-0 pr-2.5 h-full" style={{ gap: `${SPACE.md}px` }}>
         <span
           className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
@@ -499,6 +528,7 @@ export default function TabBar({
         >
           <User className={`w-[13px] h-[13px] ${isLight ? "text-black/45" : "text-white/45"}`} />
         </button>
+        <TabBarConnectivity isLight={isLight} />
         <FullscreenToggle isLight={isLight} />
       </div>
     </div>
