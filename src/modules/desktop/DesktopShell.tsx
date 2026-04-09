@@ -114,14 +114,33 @@ function DesktopShellInner() {
                 style={{ background: "hsl(220 15% 8%)", opacity: 0.92 }}
               />
             )}
-            <div className="fixed bottom-8 right-4 z-[6] flex flex-col gap-0.5 transition-opacity duration-500"
-              style={{ opacity: 0, pointerEvents: "none" }}
+            <a
+              href={getPhasePhotoUnsplashUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="fixed bottom-10 left-4 z-[6] flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-500 group cursor-pointer"
+              style={{
+                opacity: 0.5,
+                background: "linear-gradient(135deg, hsl(0 0% 0% / 0.25), hsl(0 0% 0% / 0.15))",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid hsl(0 0% 100% / 0.06)",
+              }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
             >
-              <span className="text-white/20 text-[10px] leading-tight">{getPhasePhotoDescription()}</span>
-              <span className="text-white/12 text-[9px]">Photo · Unsplash</span>
-            </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-white/70 text-[10px] leading-tight group-hover:text-white/90 transition-colors">
+                  {getPhasePhotoDescription()}
+                </span>
+                <span className="text-white/40 text-[9px] group-hover:text-white/60 transition-colors">
+                  📷 {getPhasePhotoPhotographer()} · Unsplash
+                </span>
+              </div>
+              <svg className="w-3 h-3 text-white/20 group-hover:text-white/50 transition-colors shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M7 17L17 7M17 7H7M17 7V17" />
+              </svg>
+            </a>
           </>
         )}
         <DesktopWidgets
