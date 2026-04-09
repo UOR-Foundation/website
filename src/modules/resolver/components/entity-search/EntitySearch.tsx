@@ -10,7 +10,7 @@ export function EntitySearch() {
   const [index, setIndex] = useState<SemanticIndex | null>(null);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
-  const [resolution, setResolution] = useState<SemEntityResolution | null>(null);
+  const [resolution, setResolution] = useState<EntityResolution | null>(null);
   const [datumDetail, setDatumDetail] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
