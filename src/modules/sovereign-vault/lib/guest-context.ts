@@ -33,6 +33,10 @@ export interface GuestContextItem {
   /** Processing lineage */
   lineage?: LineageEntry[];
 }
+/** Fire-and-forget KG population */
+function addToKnowledgeGraph(item: GuestContextItem): void {
+  ingestBridge.addToGraph(item).catch(() => {});
+}
 
 let items: GuestContextItem[] = [];
 let listeners: Array<() => void> = [];
