@@ -86,9 +86,13 @@ function DesktopShellInner() {
                 style={{ background: "hsl(220 15% 8%)", opacity: 0.92 }}
               />
             )}
-            <div className="fixed bottom-8 left-4 z-[6] flex flex-col gap-0.5 pointer-events-none">
-              <span className="text-white/30 text-[11px] leading-tight">{getPhasePhotoDescription()}</span>
-              <span className="text-white/20 text-[10px]">Photo · Unsplash</span>
+            <div className="fixed bottom-8 right-4 z-[6] flex flex-col gap-0.5 transition-opacity duration-500"
+              style={{ opacity: 0, pointerEvents: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
+            >
+              <span className="text-white/20 text-[10px] leading-tight">{getPhasePhotoDescription()}</span>
+              <span className="text-white/12 text-[9px]">Photo · Unsplash</span>
             </div>
           </>
         )}
@@ -107,6 +111,7 @@ function DesktopShellInner() {
           onSpotlight={() => setSpotlightOpen(true)}
           onHideAll={handleHideAll}
           onOpenApp={handleOpenApp}
+          hideTime={!wm.windows.some(w => !w.minimized)}
         />
 
         <SnapOverlay zone={snapPreview} />

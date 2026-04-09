@@ -28,6 +28,7 @@ interface Props {
   onSpotlight?: () => void;
   onHideAll?: () => void;
   onOpenApp?: (appId: string) => void;
+  hideTime?: boolean;
 }
 
 const TAB_BAR_H = 38;
@@ -37,7 +38,7 @@ const TAB_PADDING = 44;  // icon + close button + padding
 
 export default function TabBar({
   activeWindowId, windows, onFocusWindow, onCloseWindow, onMinimizeWindow,
-  onSpotlight, onHideAll, onOpenApp,
+  onSpotlight, onHideAll, onOpenApp, hideTime,
 }: Props) {
   const [time, setTime] = useState(new Date());
   const { isLight, theme, setTheme } = useDesktopTheme();
@@ -208,7 +209,10 @@ export default function TabBar({
         >
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>
-        <span className={`text-[12px] ${clockColor} font-medium tabular-nums`}>
+        <span
+          className={`text-[12px] ${clockColor} font-medium tabular-nums transition-opacity duration-300`}
+          style={{ opacity: hideTime ? 0 : 1 }}
+        >
           {formatted}&ensp;{clock}
         </span>
       </div>
