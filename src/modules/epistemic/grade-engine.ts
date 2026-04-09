@@ -148,6 +148,24 @@ export async function deriveGradeA(
  */
 function verifyRingOperation(expr: string, expected: number): boolean {
   try {
+    const e = getEngine();
+    const evalQ0 = (op: number, a: number, b: number = 0): number => {
+      // Map opcodes to engine methods
+      switch (op) {
+        case 0: return e.neg(a);
+        case 1: return e.bnot(a);
+        case 2: return e.succ(a);
+        case 3: return e.pred(a);
+        case 4: return e.add(a, b);
+        case 5: return e.sub(a, b);
+        case 6: return e.mul(a, b);
+        case 7: return e.xor(a, b);
+        case 8: return e.and(a, b);
+        case 9: return e.or(a, b);
+        default: return 0;
+      }
+    };
+
     // Handle nested: neg(bnot(x))
     const nestedMatch = expr.match(/^(\w+)\((\w+)\((\d+)\)\)$/);
     if (nestedMatch) {
@@ -155,8 +173,8 @@ function verifyRingOperation(expr: string, expected: number): boolean {
       const innerOp = opNameToCode(inner);
       const outerOp = opNameToCode(outer);
       if (innerOp === null || outerOp === null) return false;
-      const intermediate = constRingEvalQ0(innerOp, parseInt(val));
-      const result = constRingEvalQ0(outerOp, intermediate);
+      const intermediate = evalQ0(innerOp, parseInt(val));
+      const result = evalQ0(outerOp, intermediate);
       return result === (expected & 0xFF);
     }
 
@@ -166,7 +184,7 @@ function verifyRingOperation(expr: string, expected: number): boolean {
       const [, op, a, b] = simpleMatch;
       const opCode = opNameToCode(op);
       if (opCode === null) return false;
-      const result = constRingEvalQ0(opCode, parseInt(a), b ? parseInt(b) : 0);
+      const result = evalQ0(opCode, parseInt(a), b ? parseInt(b) : 0);
       return result === (expected & 0xFF);
     }
 

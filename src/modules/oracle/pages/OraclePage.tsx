@@ -546,10 +546,11 @@ const OraclePage = () => {
                           {xrayOpen.has(i) && trustMap[i] && (() => {
                             const t = trustMap[i];
                             const compositeRing = t.termMap.reduce((acc, tm) => acc ^ tm.ringValue, 0) & 0xFF;
-                            const partition = bridge.classifyByte(compositeRing);
-                            const popcount = bridge.bytePopcount(compositeRing);
-                            const factors = bridge.factorize(compositeRing);
-                            const critHolds = bridge.verifyCriticalIdentity(compositeRing);
+                            const _e = getEngine();
+                            const partition = _e.classifyByte(compositeRing);
+                            const popcount = _e.bytePopcount(compositeRing);
+                            const factors = _e.factorize(compositeRing);
+                            const critHolds = _e.verifyCriticalIdentity(compositeRing);
 
                             const backedCount = t.claims.filter(c => c.grade <= "B").length;
                             const r = t.receipts ?? {};
