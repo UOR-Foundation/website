@@ -236,7 +236,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const [error, setError] = useState<string | null>(null);
   const [showDesktop, setShowDesktop] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
-  const cancelledRef = useRef(false);
+  
 
   // Auto-scroll
   useEffect(() => {
