@@ -78,6 +78,7 @@ const ContextualArticleView: React.FC<ContextualArticleViewProps> = ({
   provenance,
   media,
   immersive = false,
+  coherenceData,
 }) => {
   const navigate = useNavigate();
 
