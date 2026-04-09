@@ -1,44 +1,50 @@
 
 
-# Replace Home Screen Clock with Circular Day-Progress Ring
+# UOR System Architecture — 4-Layer Model
 
-## What Changes
+```text
+┌──────────────────────────────────────────────────────────┐
+│  Layer 3: UX/UI                                          │
+│  Imports ONLY from the Bus                               │
+└───────────────────────┬──────────────────────────────────┘
+                        │  bus.call("ns/op", payload)
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 2: Sovereign Bus (Single API surface)             │
+│  POST /bus → JSON-RPC 2.0 envelope                       │
+│  Local: kernel, graph, cert, data-engine, blueprint      │
+│  Remote: oracle, store, scrape, audio, social            │
+└───────────────────────┬──────────────────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 1: Knowledge Graph (Pluggable storage)            │
+│  IndexedDB triple store, Supabase tables, sync-bridge    │
+│  CONSUMES Layer 0 for addressing — never owns it         │
+└───────────────────────┬──────────────────────────────────┘
+                        │  kernel.derive() / kernel.verify()
+┌───────────────────────▼──────────────────────────────────┐
+│  Layer 0: UOR Engine (Pure computation, zero deps)       │
+│  src/modules/engine/                                     │
+│  singleProofHash, verifySingleProof, computeCid          │
+│  URDNA2015 → SHA-256 → derivation ID / CID / IPv6       │
+└──────────────────────────────────────────────────────────┘
+```
 
-Replace the current text-only clock (lines 264–302 in `DesktopWidgets.tsx`) with an SVG-based circular ring clock matching the uploaded design:
+## Layer 0: UOR Engine (`src/modules/engine/`)
 
-- **Time** centered in large font (HH:MM, 24h)
-- **Date** below in smaller text (e.g. "Apr 9")
-- **Circular arc** around the clock showing percentage of day elapsed (7:00 AM = 0%, 7:00 PM = 100%)
-- Arc animates smoothly as time progresses
-- Theme-aware (light/dark/immersive)
+Pure computational kernel. Zero storage, zero network, zero side-effects.
+One input → one hash → four derived identity forms.
 
-## Implementation
+Canonical entry point: `bus.call("kernel/derive", payload)`
 
-### 1. Create `src/modules/desktop/components/DayRingClock.tsx`
+## Layer 1: Knowledge Graph (`graph/*` bus namespace)
 
-A self-contained component:
+Pluggable storage layer. Any backend (IndexedDB, Supabase, Neo4j)
+that can call `kernel/derive` works as a Layer 1 provider.
 
-- SVG circle (stroke-dasharray/dashoffset technique) for the progress arc
-- Computes day progress: `clamp((now - 7:00) / (19:00 - 7:00), 0, 1)`
-  - Before 7 AM → 0%, after 7 PM → 100%
-- Ring rendered as a ~280° arc (matching the screenshot's gap at bottom-left)
-- Thin white/black stroke depending on theme
-- Time and date rendered as centered text inside the SVG
-- Updates every second via the `time` prop passed from parent
-- Accepts `opacity` and theme props for consistency
+## Layer 2: Sovereign Bus (`src/modules/bus/`)
 
-### 2. Update `src/modules/desktop/DesktopWidgets.tsx`
+Single API surface. JSON-RPC 2.0 envelope. All system calls route here.
 
-- Import `DayRingClock`
-- Replace lines 264–302 (the `<h1>` clock and greeting `<div>`) with `<DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />`
-- Keep the greeting text below the ring (repositioned with appropriate spacing)
-- Remove unused `CLOCK_SIZES`, `clockStyle`, `clockShadow` variables and the `measureLineCount`/`FONTS` imports if no longer needed elsewhere
+## Layer 3: UX/UI
 
-### Visual Spec (matching screenshot)
-
-- Ring size: ~200px diameter
-- Stroke width: ~2px, color white/70 (dark) or black/50 (light)
-- Gap in ring: starts at ~210° (bottom-left), arc sweeps clockwise
-- Time: ~40px font, extralight, centered
-- Date: ~16px font, muted opacity, below time
-
+React components. Import nothing from Layer 0/1 directly — only `bus.call()`.

@@ -13,6 +13,7 @@ import { register } from "../registry";
 register({
   ns: "graph",
   label: "Knowledge Graph",
+  layer: 1,
   operations: {
     put: {
       handler: async (params: any) => {

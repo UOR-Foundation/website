@@ -13,6 +13,7 @@ import { register } from "../registry";
 register({
   ns: "kernel",
   label: "UOR Engine",
+  layer: 0,
   operations: {
     encode: {
       handler: async (params: any) => {
