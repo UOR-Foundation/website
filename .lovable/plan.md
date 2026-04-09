@@ -1,152 +1,123 @@
 
 
-## Plan: UOR-Native Personal Knowledge Graph with Full Offline/Online Computational Capability
+## Plan: Native Device Adaptation — The OS Feels Like Yours
 
-### The Core Insight
+### The Insight
 
-The UOR framework already implements everything needed for a fully computational knowledge graph. Right now these capabilities are scattered across disconnected modules (`kg-store`, `code-kg`, `derivation`, `ring-core`, `canonicalization`, `jsonld`, `identity`, `triad`). The knowledge graph store (`kg-store/store.ts`) is Supabase-only — it requires auth and network. The file explorer's ingestion pipeline produces UOR addresses but never creates graph nodes or edges.
+Every hardcoded `⌘` symbol, every macOS-assumed border-radius, every Apple-centric animation timing — these are invisible friction points for Windows, Linux, and Android users. The fix: a single detection hook (`usePlatform`) that identifies the user's device once, then threads platform-aware values through every touchpoint — shortcuts, typography, chrome styling, interaction patterns, and mobile gestures.
 
-The fix: a **local-first Knowledge Graph** backed by IndexedDB (following the existing `weight-store.ts` pattern), where every ingested item becomes a graph node with typed edges, and the full UOR computational stack (ring arithmetic, term canonicalization, derivation, coherence verification, semantic similarity) operates entirely offline.
+### Detection Strategy
 
-### What UOR Primitives We Already Have (and Will Leverage)
-
-| Module | Capability | KG Use |
-|--------|-----------|--------|
-| `ring-core/ring.ts` | 10 ring operations (neg, bnot, xor, and, or, succ, pred, add, sub, mul) | Compute over graph node values offline |
-| `ring-core/canonicalization.ts` | 7-rule term canonicalization to normal form | **Compression**: identical expressions reduce to same canonical form = same node |
-| `derivation/derivation.ts` | Auditable computation records with epistemic grading | Every graph transformation gets a Grade-A receipt |
-| `ring-core/coherence.ts` | 8-law exhaustive verification | Self-verifying graph: every node can prove its own integrity |
-| `ring-core/reasoning.ts` | Deductive/Inductive/Abductive reasoning primitives | Graph traversal with formal reasoning modes |
-| `ring-core/semantic-similarity.ts` | Trigram cosine similarity (<0.05ms) | Find related nodes without embeddings or network |
-| `identity/addressing.ts` | Lossless Braille bijection (byte ↔ glyph ↔ IRI) | Every node has a permanent, invertible address |
-| `uor-canonical.ts` | URDNA2015 → SHA-256 → 4 identity forms | Content-addressing for deduplication and integrity |
-| `jsonld/emitter.ts` | W3C JSON-LD 1.1 graph emission | Export/import graphs as standard linked data |
-| `triad/triad.ts` | Triadic decomposition (datum, stratum, spectrum) | Classify nodes by information density |
-| `ring-core/compose.ts` | Operation composition (f ∘ g) | Chain graph transformations |
-
-### Architecture
+Use `navigator.userAgentData` (modern) with `navigator.platform` + `navigator.userAgent` fallback to classify into five platforms:
 
 ```text
-┌──────────────────────────────────────────────────┐
-│              Explorer / Oracle / Apps             │
-├──────────────────────────────────────────────────┤
-│         useKnowledgeGraph() React Hook            │
-│    query · traverse · reason · export · sync      │
-├──────────────────────────────────────────────────┤
-│            KnowledgeGraphEngine                   │
-│  ┌────────┐ ┌──────────┐ ┌───────────────────┐  │
-│  │ Nodes  │ │  Edges   │ │   Derivations     │  │
-│  │ (IDB)  │ │  (IDB)   │ │   (IDB)           │  │
-│  └────────┘ └──────────┘ └───────────────────┘  │
-│  ┌──────────────────────────────────────────────┐│
-│  │         UOR Computational Layer              ││
-│  │  Ring Ops · Canonicalize · Derive · Verify   ││
-│  │  Reason (D/I/A) · Similarity · Compose       ││
-│  └──────────────────────────────────────────────┘│
-├──────────────────────────────────────────────────┤
-│  SyncBridge: IDB ↔ Cloud (when online + authed)  │
-└──────────────────────────────────────────────────┘
+"macos" | "windows" | "linux" | "ios" | "android"
 ```
+
+Detection runs once at mount. Result is cached in a React context and exposed via `usePlatform()`. Every component that currently hardcodes `⌘` or assumes macOS behavior will consume this context instead.
 
 ### Changes
 
-**Phase 1: Local Knowledge Graph Store (IndexedDB)**
+**1. New: `src/modules/desktop/hooks/usePlatform.ts`**
+Platform detection + context provider. Exports:
+- `platform`: `"macos" | "windows" | "linux" | "ios" | "android"`
+- `isMac`: boolean (macOS or iOS)
+- `isWindows`: boolean
+- `isAndroid`: boolean
+- `isTouchDevice`: boolean (iOS or Android)
+- `modKey`: `"⌘"` on Mac, `"Ctrl"` on Windows/Linux
+- `modKeyCode`: `"metaKey"` on Mac, `"ctrlKey"` on Windows/Linux
+- `altKey`: `"⌥"` on Mac, `"Alt"` on Windows/Linux
+- `fontStack`: Platform-native system font string:
+  - macOS/iOS: `"-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui"`
+  - Windows: `"'Segoe UI Variable', 'Segoe UI', system-ui"`
+  - Linux: `"system-ui, 'Ubuntu', 'Cantarell'"`
+- `windowControls`: `"left"` on Mac, `"right"` on Windows/Linux — where close/minimize/maximize buttons go
+- `scrollbarStyle`: `"overlay"` on Mac (thin, auto-hiding), `"always"` on Windows/Linux
+- `cornerRadius`: Slightly different radii per platform feel (macOS: 10px rounded, Windows: 8px with sharper corners)
 
-**New: `src/modules/knowledge-graph/local-store.ts`**
-IndexedDB-backed triple store following the `weight-store.ts` pattern:
-- Object stores: `nodes` (keyed by UOR address), `edges` (keyed by composite), `derivations` (keyed by derivation_id), `meta` (graph-level metadata)
-- `putNode(node)` — upsert by UOR address (same content = same node, automatic dedup)
-- `putEdge(subject, predicate, object)` — typed edges
-- `getNode(uorAddress)` — O(1) lookup
-- `queryByPredicate(pred)` — find all edges of a type
-- `queryBySubject(subjectAddr)` — fan-out from a node
-- `traverseBFS(startAddr, depth)` — breadth-first graph walk
-- `exportAsJsonLd()` — serialize entire graph as W3C JSON-LD using existing `emitter.ts`
-- `importFromJsonLd(doc)` — ingest a JSON-LD graph
-- `getStats()` — node count, edge count, derivation count
-- `clear()` — wipe local graph
+**2. New: `src/modules/desktop/hooks/usePlatformShortcuts.ts`**
+Replaces `useDesktopShortcuts.ts` with platform-aware key binding:
+- On macOS: `⌘K` for Spotlight, `⌘W` close, `⌘M` minimize, `⌘H` hide all
+- On Windows/Linux: `Ctrl+K` for Spotlight, `Ctrl+W` close, `Ctrl+M` minimize (or `Win+D` for hide all on Windows)
+- All key bindings use `modKeyCode` from the platform context instead of `e.metaKey || e.ctrlKey` (which currently fires on both but displays wrong glyphs)
 
-**Phase 2: Ingestion → Graph Bridge**
+**3. Update: `src/modules/desktop/DesktopShell.tsx`**
+- Wrap with `PlatformProvider` alongside the existing `DesktopThemeProvider`
+- Pass platform context down
 
-**New: `src/modules/knowledge-graph/ingest-bridge.ts`**
-Connects the existing ingestion pipeline to the knowledge graph:
-- When `ingestFile/ingestPaste/ingestUrl` completes, automatically create a graph node with:
-  - `@id`: the UOR address from the pipeline
-  - `@type`: detected format (csv, json, text, markdown, image)
-  - Properties: filename, size, quality score, stratum (from triad), format
-  - Structured data columns become edge targets (`node --hasColumn--> columnNode`)
-- For tabular data: each column becomes a sub-node, enabling queries like "show all files with a 'revenue' column"
-- For text: extract entities via simple NLP (proper nouns, URLs, emails) and create edges to shared entity nodes — this is where the graph becomes powerful: two documents mentioning "UOR" share a common node
-- Duplicate detection is free: same UOR address = same node, no extra work
+**4. Update: `src/modules/desktop/TabBar.tsx`**
+All hardcoded `⌘` glyphs → `platform.modKey`:
+- Line 279: `⌘H` → `{modKey}H`
+- Line 287: `⌘K` → `{modKey}K`
+- Line 301: title `"Search (⌘K)"` → `"Search ({modKey}K)"`
+- Line 433: title `"New tab (⌘K)"` → `"New tab ({modKey}K)"`
+- System font applied to tab labels based on platform
 
-**Phase 3: Computational Graph Operations**
+**5. Update: `src/modules/desktop/DesktopMenuBar.tsx`**
+All `MenubarShortcut` text → platform-aware:
+- `⌘H` → `{modKey}H`
+- `⌘M` → `{modKey}M`
+- `⌘W` → `{modKey}W`
+- `⌘K` → `{modKey}K`
+- Title `"Spotlight (⌘K)"` → `"Spotlight ({modKey}K)"`
 
-**New: `src/modules/knowledge-graph/graph-compute.ts`**
-Leverages the full UOR computational stack for offline graph operations:
+**6. Update: `src/modules/desktop/DesktopContextMenu.tsx`**
+- `⌘K` → `{modKey}K`
+- `⌘H` → `{modKey}H`
 
-1. **Canonicalization-based compression**: When two nodes contain equivalent expressions (detected via `canonicalize()` from `canonicalization.ts`), they collapse to the same canonical node. This is genuine data compression — not lossy, mathematically provable.
+**7. Update: `src/modules/desktop/SpotlightSearch.tsx`**
+- Any `⌘K` references in placeholder or hints → platform-aware
 
-2. **Derivation chains**: Every graph transformation (merge, split, fork) creates a `Derivation` record via `derive()`. The graph carries its own audit trail. Any node can be re-derived and verified offline.
+**8. Update: `src/modules/oracle/components/VoiceInput.tsx` + `VoiceOverlay.tsx`**
+- `navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"` → `usePlatform().modKey`
 
-3. **Semantic search via Hamming distance**: Use `inductiveStep()` from `reasoning.ts` to find nodes with similar ring values (content similarity without embeddings). Combined with `SemanticIndex` from `semantic-similarity.ts` for text-level similarity.
+**9. Update: `src/modules/desktop/hooks/useDesktopShortcuts.ts`**
+- Replace `e.metaKey || e.ctrlKey` with platform-specific check: on macOS use `e.metaKey`, on Windows/Linux use `e.ctrlKey` — prevents Ctrl firing on Mac and Meta firing on Windows
 
-4. **Graph reasoning**: 
-   - `deductiveStep()`: Given constraints, narrow which nodes satisfy a query
-   - `inductiveStep()`: Given an observation (new file), find the nearest existing node
-   - `abductiveStep()`: Detect gaps — "you have nodes A and B but no edge between them; based on content similarity, should there be one?"
+**10. Update: `src/modules/desktop/desktop.css`**
+- Add platform-specific CSS custom properties applied via `data-platform` attribute on the root:
+  - `[data-platform="windows"]` — sharper corners (8px → 6px), visible scrollbars, Segoe UI font
+  - `[data-platform="macos"]` — current styling (already macOS-native)
+  - `[data-platform="linux"]` — slightly flatter chrome, system-ui font
 
-5. **Coherence verification**: `verifyQ0Exhaustive()` runs entirely offline, proving the ring substrate is sound. Every node's integrity can be verified by re-hashing its content.
+**11. Update: `src/modules/desktop/MobileShell.tsx`**
+- On iOS: bottom dock with rounded squircle icons (current — already Apple-like)
+- On Android: Material-style bottom navigation bar with slightly different styling:
+  - Less blur, more solid background
+  - Rounded rect icons instead of squircles
+  - Drawer pulls from bottom with Material motion curves (decelerationCurve: `cubic-bezier(0, 0, 0.2, 1)`)
+  - Status bar padding uses Android safe-area conventions
+  - Ripple-style touch feedback instead of opacity changes
 
-**Phase 4: React Integration**
+**12. Update: `src/modules/oracle/hooks/useVoiceShortcut.ts`**
+- Platform-aware modifier key detection (same fix as shortcuts)
 
-**New: `src/modules/knowledge-graph/hooks/useKnowledgeGraph.ts`**
-React hook exposing the graph to UI:
-- `nodes`, `edges`, `stats` — reactive state from IndexedDB
-- `query(pattern)` — SPARQL-like pattern matching over local triples
-- `findRelated(nodeAddr)` — semantic + structural similarity search
-- `reason(mode, params)` — execute deductive/inductive/abductive steps
-- `exportGraph()` — download as JSON-LD
-- `importGraph(file)` — load a JSON-LD graph file
-
-**Phase 5: Cloud Sync Bridge**
-
-**Update: `src/modules/knowledge-graph/sync-bridge.ts`**
-When authenticated and online:
-- Push local IndexedDB nodes/edges → `uor_triples` table (existing schema)
-- Pull cloud triples → local IndexedDB
-- Conflict resolution via UOR address comparison (same address = identical, skip)
-- Merge via `uor_triples` graph_iri namespacing (each device gets a named graph)
-
-**Phase 6: Explorer Integration**
-
-**Update: `src/modules/explorer/pages/FileExplorerPage.tsx`**
-- After successful file ingestion, call `ingestBridge.addToGraph(item)` 
-- Show graph node count in status bar: "12 files · 47 connections"
-- Add a "Graph" view toggle alongside Grid/List that shows a minimap of connected nodes
-
-**Update: `src/modules/sovereign-vault/lib/guest-context.ts`**
-- After `addFile/addPaste/addUrl`, invoke ingest-bridge to populate the local KG
-
-### Compression via UOR (the key differentiator)
-
-Traditional storage: 10 files × 1MB = 10MB. Each file is an opaque blob.
-
-UOR Knowledge Graph:
-1. **Content dedup**: Same paragraph in 3 documents = 1 node with 3 edges. Storage: ~1/3.
-2. **Term canonicalization**: `succ(succ(pred(x)))` and `succ(x)` are the same canonical form. Same derivation_id. One node.
-3. **Structural sharing**: CSV files with overlapping columns share column-definition nodes. 10 CSVs with "date, amount, category" share 3 column nodes instead of duplicating 30.
-4. **Triadic classification**: Stratum-based indexing (low/medium/high information density) enables efficient pruning — skip low-stratum nodes for detailed queries, skip high-stratum for overview queries.
+**13. Update: `src/index.css`**
+- Add `[data-platform]` CSS rules for platform-specific scrollbar styling:
+  - Windows: visible scrollbar with Fluent-style thin track
+  - macOS: overlay scrollbar (current)
+  - Linux: minimal scrollbar
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/modules/knowledge-graph/local-store.ts` | New — IndexedDB triple store |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | New — Pipeline → Graph node creation |
-| `src/modules/knowledge-graph/graph-compute.ts` | New — Offline computational operations |
-| `src/modules/knowledge-graph/hooks/useKnowledgeGraph.ts` | New — React hook |
-| `src/modules/knowledge-graph/sync-bridge.ts` | New — IDB ↔ Cloud sync |
-| `src/modules/knowledge-graph/index.ts` | New — Barrel export |
-| `src/modules/sovereign-vault/lib/guest-context.ts` | Wire ingest-bridge after file add |
-| `src/modules/explorer/pages/FileExplorerPage.tsx` | Graph stats in status bar |
+| `src/modules/desktop/hooks/usePlatform.ts` | New — Detection + context + platform values |
+| `src/modules/desktop/DesktopShell.tsx` | Add PlatformProvider, set `data-platform` on root |
+| `src/modules/desktop/hooks/useDesktopShortcuts.ts` | Platform-aware modifier key binding |
+| `src/modules/desktop/TabBar.tsx` | Dynamic shortcut glyphs, platform font |
+| `src/modules/desktop/DesktopMenuBar.tsx` | Dynamic shortcut glyphs |
+| `src/modules/desktop/DesktopContextMenu.tsx` | Dynamic shortcut glyphs |
+| `src/modules/desktop/SpotlightSearch.tsx` | Platform-aware hints |
+| `src/modules/desktop/MobileShell.tsx` | Android vs iOS differentiation |
+| `src/modules/desktop/desktop.css` | Platform-specific CSS custom properties |
+| `src/modules/oracle/components/VoiceInput.tsx` | Use `usePlatform()` |
+| `src/modules/oracle/components/VoiceOverlay.tsx` | Use `usePlatform()` |
+| `src/modules/oracle/hooks/useVoiceShortcut.ts` | Platform-aware modifier |
+| `src/index.css` | Platform scrollbar styles |
+
+### The Result
+
+A Windows user sees `Ctrl+K` in every tooltip, gets visible scrollbars, slightly sharper window corners, and a font stack that starts with Segoe UI. A Mac user sees `⌘K`, overlay scrollbars, and the familiar rounded chrome. An Android user gets Material-style bottom nav with ripple feedback. An iOS user gets the current squircle dock. Nobody notices the adaptation — it just feels right. That is the magic.
 
