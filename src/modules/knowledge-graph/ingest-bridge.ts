@@ -18,6 +18,8 @@ import { localGraphStore, type KGNode, type KGEdge, type KGDerivation } from "./
 import { singleProofHash } from "@/lib/uor-canonical";
 import type { GuestContextItem } from "@/modules/sovereign-vault/lib/guest-context";
 import { decomposeToBlueprint, serializeBlueprint } from "./blueprint";
+import { parseWikiLinks, hasWikiSyntax } from "./lib/wiki-links";
+import { invalidateBacklinks } from "./backlinks";
 
 // ── Entity extraction (lightweight, zero-dependency NLP) ────────────────────
 
@@ -298,6 +300,59 @@ export const ingestBridge = {
           syncState: "local",
         });
       }
+
+      // ── Wiki-links [[Page Name]] → shared page nodes ────────────────────
+      if (hasWikiSyntax(item.text)) {
+        try {
+          const parsed = await parseWikiLinks(item.text);
+
+          for (const wl of parsed.wikiLinks) {
+            nodesToPut.push({
+              uorAddress: wl.address,
+              label: wl.label,
+              nodeType: "entity",
+              rdfType: "schema:Thing",
+              properties: { wikiPage: true, value: wl.label },
+              createdAt: now,
+              updatedAt: now,
+              syncState: "local",
+            });
+            edgesToPut.push({
+              id: `${nodeAddr}|schema:mentions|${wl.address}`,
+              subject: nodeAddr,
+              predicate: "schema:mentions",
+              object: wl.address,
+              graphIri: "urn:uor:local",
+              createdAt: now,
+              syncState: "local",
+            });
+          }
+
+          for (const ht of parsed.hashtags) {
+            nodesToPut.push({
+              uorAddress: ht.address,
+              label: ht.label,
+              nodeType: "entity",
+              rdfType: "schema:DefinedTerm",
+              properties: { topic: true, tag: ht.tag },
+              createdAt: now,
+              updatedAt: now,
+              syncState: "local",
+            });
+            edgesToPut.push({
+              id: `${nodeAddr}|schema:about|${ht.address}`,
+              subject: nodeAddr,
+              predicate: "schema:about",
+              object: ht.address,
+              graphIri: "urn:uor:local",
+              createdAt: now,
+              syncState: "local",
+            });
+          }
+        } catch {
+          // Wiki-link parsing is best-effort
+        }
+      }
     }
 
     // ── Processing lineage → KG derivations ──────────────────────────────
@@ -332,6 +387,11 @@ export const ingestBridge = {
 
     await localGraphStore.putNodes(nodesToPut);
     await localGraphStore.putEdges(edgesToPut);
+
+    // Invalidate backlink cache for all referenced targets
+    for (const edge of edgesToPut) {
+      invalidateBacklinks(edge.object);
+    }
 
     // ── Generate and store blueprint (edge-defined node decomposition) ──
     try {

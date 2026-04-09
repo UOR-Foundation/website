@@ -1,12 +1,14 @@
 /**
  * NodeDetailSheet — Slide-over panel for inspecting a selected graph node.
  * Renders as a right sidebar on desktop, bottom sheet on mobile.
+ * Includes Roam-inspired "Linked References" backlinks panel.
  */
 
-import { X, ExternalLink, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { X, ExternalLink, Copy, Check, ArrowDownLeft, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { colorForType } from "../hooks/useGraphData";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getBacklinks, type Backlink } from "../backlinks";
 
 interface NodeAttrs {
   label?: string;
@@ -27,11 +29,29 @@ interface Props {
   attrs: NodeAttrs;
   edges: Array<{ source: string; target: string; predicate: string }>;
   onClose: () => void;
+  onNavigateNode?: (nodeId: string) => void;
 }
 
-export function NodeDetailSheet({ nodeId, attrs, edges, onClose }: Props) {
+export function NodeDetailSheet({ nodeId, attrs, edges, onClose, onNavigateNode }: Props) {
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
+  const [backlinks, setBacklinks] = useState<Backlink[]>([]);
+  const [backlinksLoading, setBacklinksLoading] = useState(true);
+
+  // Fetch backlinks when node changes
+  useEffect(() => {
+    let cancelled = false;
+    setBacklinksLoading(true);
+    getBacklinks(nodeId).then((bl) => {
+      if (!cancelled) {
+        setBacklinks(bl);
+        setBacklinksLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) setBacklinksLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [nodeId]);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(nodeId);
@@ -139,7 +159,7 @@ export function NodeDetailSheet({ nodeId, attrs, edges, onClose }: Props) {
           </div>
         </div>
 
-        {/* Connected Edges */}
+        {/* Connected Edges (outgoing) */}
         {edges.length > 0 && (
           <div className="space-y-2">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
@@ -147,9 +167,10 @@ export function NodeDetailSheet({ nodeId, attrs, edges, onClose }: Props) {
             </p>
             <div className="space-y-1 max-h-48 overflow-auto">
               {edges.map((e, i) => (
-                <div
+                <button
                   key={i}
-                  className="flex items-center gap-1.5 text-[10px] font-mono bg-muted/30 px-2 py-1 rounded"
+                  className="flex items-center gap-1.5 text-[10px] font-mono bg-muted/30 px-2 py-1 rounded w-full text-left hover:bg-muted/50 transition-colors"
+                  onClick={() => onNavigateNode?.(e.source === nodeId ? e.target : e.source)}
                 >
                   <span className="text-primary/80 truncate max-w-[80px]">
                     {e.source === nodeId ? "→" : "←"}
@@ -158,11 +179,53 @@ export function NodeDetailSheet({ nodeId, attrs, edges, onClose }: Props) {
                   <span className="text-foreground/60 truncate">
                     {(e.source === nodeId ? e.target : e.source).split("/").pop()}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
+
+        {/* Linked References (Roam-inspired backlinks) */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5">
+            <ArrowDownLeft className="w-3 h-3 text-amber-400/70" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+              Linked References
+              {!backlinksLoading && backlinks.length > 0 && (
+                <span className="ml-1 text-amber-400/80">({backlinks.length})</span>
+              )}
+            </p>
+          </div>
+          {backlinksLoading ? (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground py-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Loading backlinks…
+            </div>
+          ) : backlinks.length === 0 ? (
+            <p className="text-[10px] text-muted-foreground/60 italic py-1">
+              No pages link to this node yet
+            </p>
+          ) : (
+            <div className="space-y-1 max-h-48 overflow-auto">
+              {backlinks.map((bl, i) => (
+                <button
+                  key={i}
+                  className="flex items-center gap-1.5 text-[10px] font-mono bg-amber-500/5 border border-amber-500/10 px-2 py-1.5 rounded w-full text-left hover:bg-amber-500/10 transition-colors group"
+                  onClick={() => onNavigateNode?.(bl.source)}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: colorForType(bl.nodeType) }}
+                  />
+                  <span className="text-foreground/80 truncate flex-1 group-hover:text-foreground">
+                    {bl.label}
+                  </span>
+                  <span className="text-amber-400/60 shrink-0 text-[9px]">{bl.predicate.split(":").pop()}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Properties */}
         {attrs.properties && Object.keys(attrs.properties).length > 0 && (

@@ -142,5 +142,35 @@ register({
       },
       description: "Persist current graph state to IndexedDB",
     },
+    backlinks: {
+      handler: async (params: any) => {
+        const { getBacklinks } = await import("@/modules/knowledge-graph/backlinks");
+        if (!params?.address) throw new Error("Provide a node address");
+        return getBacklinks(params.address);
+      },
+      description: "Get all incoming references (backlinks) to a node — Roam-style reverse index",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          address: { type: "string", description: "UOR address of the target node" },
+        },
+        required: ["address"],
+      },
+    },
+    wikilink: {
+      handler: async (params: any) => {
+        const { parseWikiLinks } = await import("@/modules/knowledge-graph/lib/wiki-links");
+        if (!params?.text) throw new Error("Provide text to parse for wiki-links");
+        return parseWikiLinks(params.text);
+      },
+      description: "Parse text for [[wiki-links]] and #hashtags, resolve to UOR addresses",
+      paramsSchema: {
+        type: "object",
+        properties: {
+          text: { type: "string", description: "Text content to scan for wiki-link syntax" },
+        },
+        required: ["text"],
+      },
+    },
   },
 });
