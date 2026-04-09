@@ -332,10 +332,18 @@ export default function FileExplorerPage() {
 
         {/* Status bar */}
         <div className="flex items-center justify-between px-4 py-2 border-t border-border/30 text-[12px] text-muted-foreground/60">
-          <span>{filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}</span>
+          <div className="flex items-center gap-3">
+            <span>{filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}</span>
+            {kg.stats.nodeCount > 0 && (
+              <span className="flex items-center gap-1 text-primary/50">
+                <GitBranch className="w-3 h-3" />
+                {kg.stats.nodeCount} nodes · {kg.stats.edgeCount} connections
+              </span>
+            )}
+          </div>
           <span className="flex items-center gap-1.5">
             {ctx.isGuest ? (
-              <>Local session · not synced</>
+              <>Local session · KG persisted offline</>
             ) : (
               <>
                 <Lock className="w-3 h-3" />
