@@ -152,14 +152,14 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   const firstName = fullName.split(/\s+/)[0];
   const displayName = firstName || "explore";
   // No trailing period — Apple-style
-  const greetingText = `${getGreeting()}, ${displayName}`;
+  const greetingText = `${getGreeting()}, ${displayName}.`;
 
 
   // Pretext-measured adaptive greeting size
   const greetingFontInfo = useMemo(() => {
-    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 40);
-    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 40, fontSize: "30px" };
-    return { font: FONTS.osGreetingSm, lineHeight: 30, fontSize: "22px" };
+    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 48);
+    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 48, fontSize: "38px" };
+    return { font: FONTS.osGreetingSm, lineHeight: 36, fontSize: "28px" };
   }, [greetingText, containerWidth]);
 
   const handleSubmit = useCallback((e?: React.FormEvent) => {
