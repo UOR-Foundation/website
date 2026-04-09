@@ -112,6 +112,10 @@ export const WASM_TO_CONTRACT: Record<string, keyof UorEngineContract> = {
  * The adapter ignores these during auto-discovery.
  */
 export const WASM_INTERNAL_EXPORTS = new Set([
+  "__wbindgen_add_to_stack_pointer",
+  "__wbindgen_export",
+  "__wbindgen_export2",
+  "__wbindgen_export3",
   "__wbindgen_externrefs",
   "__wbindgen_free",
   "__wbindgen_malloc",
