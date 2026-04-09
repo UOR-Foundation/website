@@ -64,11 +64,6 @@ function getGreeting(): string {
 }
 
 /** Adaptive clock font sizes — Pretext picks the largest that fits on 1 line */
-const CLOCK_SIZES = [
-  { font: FONTS.osClock, lineHeight: 88, fontSize: "80px" },
-  { font: FONTS.osClockMd, lineHeight: 64, fontSize: "56px" },
-  { font: FONTS.osClockSm, lineHeight: 48, fontSize: "40px" },
-];
 
 export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) {
   const [time, setTime] = useState(new Date());
@@ -152,22 +147,11 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
     }
   }, []);
 
-  const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); // kept for suggestion engine
   const displayName = profile?.displayName || "friend";
   // No trailing period — Apple-style
   const greetingText = `${getGreeting()}, ${displayName}`;
 
-  // Pretext-measured adaptive clock size
-  const clockStyle = useMemo(() => {
-    for (const candidate of CLOCK_SIZES) {
-      const lines = measureLineCount(clockStr, candidate.font, containerWidth, candidate.lineHeight);
-      if (lines <= 1) {
-        return { fontSize: candidate.fontSize, lineHeight: `${candidate.lineHeight}px` };
-      }
-    }
-    const sm = CLOCK_SIZES[CLOCK_SIZES.length - 1];
-    return { fontSize: sm.fontSize, lineHeight: `${sm.lineHeight}px` };
-  }, [clockStr, containerWidth]);
 
   // Pretext-measured adaptive greeting size
   const greetingFontInfo = useMemo(() => {
@@ -213,9 +197,6 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   const isImmersive = theme === "immersive";
   // Lighter clock — ethereal, weightless
   const clockColor = isImmersive ? "text-white/70" : isLight ? "text-black/65" : "text-white/70";
-  const clockShadow = isImmersive
-    ? "0 2px 30px rgba(0,0,0,0.2)"
-    : isLight ? "0 2px 24px rgba(0,0,0,0.04)" : "0 2px 24px rgba(0,0,0,0.15)";
   // Greeting defers to clock — lower opacity
   const greetingColor = isImmersive ? "text-white/70" : isLight ? "text-black/30" : "text-white/35";
 
