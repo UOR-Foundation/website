@@ -1,30 +1,37 @@
 
 
-## Plan: Add Self-Reflective LLM Prompts to System Health Report
+## Plan: Implement Error Budget Metric as Live Self-Assessment
 
-### What This Does
+### Problem
 
-Appends a new section at the end of the markdown report called **"AI Reflection Prompts"** containing strategic prompts that, when the report is pasted into an LLM conversation, give the LLM full context about what it's reading and ask it to suggest improvements across three dimensions: report presentation, system architecture, and self-healing capabilities.
+The "Error Budget" self-assessment metric is hardcoded as `"missing"`. The seal monitor already emits `sovereignty` events (heartbeats and violations) via SystemEventBus, but nothing aggregates them into an error budget percentage. Additionally, SharedArrayBuffer remains ✗ Missing — this is a hosting environment limitation (Lovable preview doesn't serve the required COOP/COEP headers despite our vite config), not a code bug.
 
-### Changes
+### What Changes
 
-**File: `src/modules/boot/SystemMonitorApp.tsx`** — `formatMarkdownReport()` function
+**1. Create a seal-event tracker utility** — `src/modules/boot/seal-error-budget.ts`
 
-Insert a new section before the closing `---` line (around line 588) that adds:
+A small singleton that subscribes to `SystemEventBus.observe("sovereignty")` and tallies heartbeats vs. violations over a rolling window (last 100 events). Exposes:
+- `getErrorBudget()` → `{ total: number, failures: number, successRate: number }` where successRate is a percentage like `99.2%`
+- Auto-starts on first import
 
-1. **Context preamble** — A paragraph explaining to the LLM what the UOR Virtual OS is, what each report section represents, and the system's design philosophy (sovereign client-side OS with Fano-plane kernel, ring algebra, lattice-hash seals, holographic module architecture)
+**2. Wire error budget into self-assessment** — `src/modules/boot/SystemMonitorApp.tsx`
 
-2. **Three strategic reflection prompts:**
-   - **Report Presentation** — "Given the data above, what changes to structure, grouping, visualization, or wording would make this report more actionable for both developers and non-technical stakeholders?"
-   - **System Architecture** — "Based on the degradation log, capability matrix, self-assessment gaps, and module architecture metrics, what are the highest-leverage improvements to make the system more robust, performant, and minimal?"
-   - **Self-Healing & Autonomy** — "What automated remediation, predictive monitoring, or feedback loops could the system implement so that future reports show measurable improvement without human intervention?"
+- Import the tracker and call `getErrorBudget()` inside `collectRuntimeMetrics()`
+- Change the Error Budget item in `buildSelfAssessment()` from hardcoded `"missing"` to `"measured"` when data is available, displaying the live success rate percentage
+- Update the markdown report section to include the live value
 
-3. **A meta-prompt** asking the LLM to propose new self-assessment metrics that should be added to the coverage tracker, closing the feedback loop
+**3. SharedArrayBuffer status note**
+
+The SAB detection (`typeof SharedArrayBuffer !== "undefined"`) correctly reports ✗ because the Lovable preview host does not serve `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` response headers at the CDN level — our vite dev server headers only apply locally. This is an infrastructure constraint, not a code defect. The report already shows the correct fallback ("Transferable ArrayBuffer"). No code change needed; the system gracefully degrades as designed.
 
 ### Technical Details
 
-- Purely additive — only the `formatMarkdownReport()` function is modified
-- No new dependencies, no backend changes
-- The prompts are part of the markdown output, so they travel with every copy of the report
-- Report version bumped from v3.0 to v3.1
+- **seal-error-budget.ts**: ~40 lines. Subscribes to SystemEventBus on import, maintains a circular buffer of last 100 sovereignty events, classifies each as success (operation starts with "heartbeat" or "boot:") or failure (starts with "violation:")
+- **SystemMonitorApp.tsx**: ~15 lines changed in `buildSelfAssessment()` and `collectRuntimeMetrics()` to read from the tracker
+- The markdown report Error Budget row will show e.g. `100%` (98/98 checks passed) instead of `—`
+- Coverage Score will increase from 38% to 42% (5 measured out of 12)
+
+### Files Modified
+- `src/modules/boot/seal-error-budget.ts` (new)
+- `src/modules/boot/SystemMonitorApp.tsx` (update Error Budget item)
 
