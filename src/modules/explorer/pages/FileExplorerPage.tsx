@@ -2,13 +2,14 @@
  * FileExplorerPage — Sovereign file explorer for the UOR OS desktop.
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Upload, ClipboardPaste, Globe, Lock, ShieldCheck } from "lucide-react";
 import { useContextManager, type ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ExplorerSidebar, { type SidebarFilter } from "../components/ExplorerSidebar";
 import ExplorerToolbar, { type ViewMode } from "../components/ExplorerToolbar";
 import FileCard from "../components/FileCard";
 import QuickLookModal from "../components/QuickLookModal";
+import { tagStore } from "../lib/tags";
 import { toast } from "sonner";
 
 const VIEW_KEY = "uor:explorer-view";
@@ -28,8 +29,14 @@ export default function FileExplorerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [, setTagTick] = useState(0); // force re-render on tag changes
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedItem = selectedItemId ? ctx.contextItems.find(i => i.id === selectedItemId) ?? null : null;
+
+  // Subscribe to tag store changes
+  useEffect(() => {
+    return tagStore.subscribe(() => setTagTick(t => t + 1));
+  }, []);
 
   const handleViewModeChange = useCallback((v: ViewMode) => {
     setViewMode(v);
@@ -151,7 +158,14 @@ export default function FileExplorerPage() {
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-1 p-4">
               {filteredItems.map(item => (
-                <FileCard key={item.id} item={item} viewMode="grid" onRemove={ctx.remove} onSelect={setSelectedItemId} />
+                <FileCard
+                  key={item.id}
+                  item={item}
+                  viewMode="grid"
+                  onRemove={ctx.remove}
+                  onSelect={setSelectedItemId}
+                  tags={tagStore.getTagsForItem(item.id)}
+                />
               ))}
             </div>
           ) : (
@@ -163,7 +177,14 @@ export default function FileExplorerPage() {
                 <div className="w-9" />
               </div>
               {filteredItems.map(item => (
-                <FileCard key={item.id} item={item} viewMode="list" onRemove={ctx.remove} onSelect={setSelectedItemId} />
+                <FileCard
+                  key={item.id}
+                  item={item}
+                  viewMode="list"
+                  onRemove={ctx.remove}
+                  onSelect={setSelectedItemId}
+                  tags={tagStore.getTagsForItem(item.id)}
+                />
               ))}
             </div>
           )}
@@ -194,6 +215,13 @@ export default function FileExplorerPage() {
 }
 
 function filterItems(items: ContextItem[], filter: SidebarFilter): ContextItem[] {
+  // Handle tag filters
+  if (typeof filter === "string" && filter.startsWith("tag:")) {
+    const tagId = filter.slice(4);
+    const taggedIds = new Set(tagStore.getItemsWithTag(tagId));
+    return items.filter(i => taggedIds.has(i.id));
+  }
+
   switch (filter) {
     case "all":
     case "recents":
@@ -208,6 +236,8 @@ function filterItems(items: ContextItem[], filter: SidebarFilter): ContextItem[]
       return items.filter(i => i.source === "workspace");
     case "folders":
       return items.filter(i => i.source === "folder");
+    default:
+      return items;
   }
 }
 
@@ -227,7 +257,6 @@ function EmptyState({
   return (
     <div className="flex-1 flex items-center justify-center h-full p-8">
       <div className="flex flex-col items-center gap-6 max-w-md w-full">
-        {/* Main drop zone */}
         <button
           onClick={onUpload}
           className="flex flex-col items-center gap-5 p-12 rounded-2xl border-2 border-dashed border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-colors cursor-pointer group w-full"
@@ -245,7 +274,6 @@ function EmptyState({
           </div>
         </button>
 
-        {/* Quick action chips */}
         <div className="flex items-center gap-2.5 flex-wrap justify-center">
           <button
             onClick={onUpload}
