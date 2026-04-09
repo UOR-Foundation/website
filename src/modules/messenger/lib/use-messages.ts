@@ -1,15 +1,17 @@
 /**
  * useMessages — fetches encrypted_messages for a session,
  * subscribes to realtime inserts for live updates.
+ * Supports reactions, soft-delete, and group sender names.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { DecryptedMessage, MessageType, DeliveryStatus } from "./types";
+import type { DecryptedMessage, MessageType, DeliveryStatus, Reaction } from "./types";
 import { getCachedSession } from "./messaging-protocol";
 import { openMessage } from "@/modules/uns/trust/messaging";
 import { anchorMessage } from "./kg-anchoring";
+import { showMessageNotification } from "./notifications";
 
 export function useMessages(sessionId: string | null, sessionHash?: string) {
   const { user } = useAuth();
@@ -21,11 +23,46 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
 
     const { data, error } = await supabase
       .from("encrypted_messages")
-      .select("id, sender_id, ciphertext, created_at, message_hash, envelope_cid, parent_hashes, session_id, message_type, file_manifest, reply_to_hash, delivered_at, read_at")
+      .select("id, sender_id, ciphertext, created_at, message_hash, envelope_cid, parent_hashes, session_id, message_type, file_manifest, reply_to_hash, delivered_at, read_at, self_destruct_seconds, edited_at, deleted_at")
       .eq("session_id", sessionId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: true });
 
     if (error || !data) { setLoading(false); return; }
+
+    // Fetch reactions for all messages in this session
+    const messageIds = data.map((r: any) => r.id);
+    const reactionsMap = new Map<string, Reaction[]>();
+
+    if (messageIds.length > 0) {
+      const { data: reactions } = await supabase
+        .from("message_reactions")
+        .select("message_id, user_id, emoji, created_at")
+        .in("message_id", messageIds);
+
+      if (reactions) {
+        for (const r of reactions as any[]) {
+          const list = reactionsMap.get(r.message_id) ?? [];
+          list.push({ emoji: r.emoji, userId: r.user_id, createdAt: r.created_at });
+          reactionsMap.set(r.message_id, list);
+        }
+      }
+    }
+
+    // Resolve sender names for group chats
+    const senderIds = new Set(data.map((r: any) => r.sender_id).filter((id: string) => id !== user.id));
+    const senderNameMap = new Map<string, string>();
+
+    if (senderIds.size > 0) {
+      const { data: profiles } = await supabase.rpc("get_peer_profiles", {
+        peer_ids: Array.from(senderIds),
+      });
+      if (profiles) {
+        for (const p of profiles as any[]) {
+          senderNameMap.set(p.user_id, p.display_name ?? "User");
+        }
+      }
+    }
 
     const session = sessionHash ? getCachedSession(sessionHash) : undefined;
 
@@ -41,6 +78,7 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
         id: row.id,
         sessionId: row.session_id,
         senderId: row.sender_id,
+        senderName: sentByMe ? "You" : (senderNameMap.get(row.sender_id) ?? "User"),
         plaintext: "🔒 Encrypted",
         createdAt: row.created_at,
         messageHash: row.message_hash,
@@ -52,7 +90,10 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
         readAt: row.read_at,
         replyToHash: row.reply_to_hash,
         fileManifest: row.file_manifest,
-        reactions: [],
+        reactions: reactionsMap.get(row.id) ?? [],
+        selfDestructSeconds: row.self_destruct_seconds,
+        editedAt: row.edited_at,
+        deletedAt: row.deleted_at,
       };
     });
 
@@ -94,7 +135,7 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
     fetchMessages();
   }, [fetchMessages]);
 
-  // Realtime subscription for new messages
+  // Realtime subscription for new messages + reactions
   useEffect(() => {
     if (!sessionId || !user) return;
 
@@ -105,8 +146,16 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
         schema: "public",
         table: "encrypted_messages",
         filter: `session_id=eq.${sessionId}`,
-      }, () => {
+      }, (payload: any) => {
         fetchMessages();
+        // Show notification for messages from others
+        if (payload.new?.sender_id && payload.new.sender_id !== user.id) {
+          showMessageNotification(
+            "New message",
+            "Encrypted message",
+            sessionId,
+          );
+        }
       })
       .on("postgres_changes", {
         event: "UPDATE",
@@ -118,7 +167,22 @@ export function useMessages(sessionId: string | null, sessionHash?: string) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Subscribe to reactions
+    const reactionsChannel = supabase
+      .channel(`reactions-${sessionId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "message_reactions",
+      }, () => {
+        fetchMessages();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(reactionsChannel);
+    };
   }, [sessionId, user, fetchMessages]);
 
   return { messages, loading, refetch: fetchMessages };
