@@ -157,7 +157,7 @@ function ImportDropZone({ onImported }: { onImported: () => void }) {
           <Loader2 className="w-5 h-5 animate-spin text-primary/60" />
         ) : result ? (
           <>
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <CheckCircle2 className="w-5 h-5 text-primary" />
             <span className="text-[11px] text-foreground/70">{result.label}</span>
             <code className="text-[9px] font-mono text-muted-foreground/50">{result.address}</code>
           </>
