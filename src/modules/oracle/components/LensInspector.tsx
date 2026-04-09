@@ -30,6 +30,10 @@ interface LensInspectorProps {
   open: boolean;
   onClose: () => void;
   onApply: (bp: LensBlueprint) => void;
+  /** When provided, shows a Delete button (only for non-preset lenses) */
+  onDelete?: (id: string) => void;
+  /** When provided, makes the header label editable */
+  onRename?: (id: string, newName: string) => void;
 }
 
 /* ── Segmented control for parameter selection ── */
@@ -190,10 +194,15 @@ const LensInspector: React.FC<LensInspectorProps> = ({
   open,
   onClose,
   onApply,
+  onDelete,
+  onRename,
 }) => {
   const [bp, setBp] = useState<LensBlueprint>(() => cloneBlueprint(initialBlueprint));
   const [saveName, setSaveName] = useState("");
   const [showSave, setShowSave] = useState(false);
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelValue, setLabelValue] = useState("");
+  const labelInputRef = useRef<HTMLInputElement>(null);
 
   // Reset when blueprint changes
   useEffect(() => {
