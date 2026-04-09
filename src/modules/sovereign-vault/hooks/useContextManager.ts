@@ -5,6 +5,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useVault, type VaultHandle } from "./useVault";
 import { guestContext, type GuestContextItem } from "../lib/guest-context";
+import type { ArtifactFormat } from "@/modules/uns/core/hologram/universal-ingest";
+import type { StructuredData } from "../lib/structured-extractor";
+import type { LineageEntry } from "../lib/ingest-pipeline";
 
 export interface ContextItem {
   id: string;
@@ -14,6 +17,18 @@ export interface ContextItem {
   source: "file" | "paste" | "url" | "vault" | "workspace" | "folder";
   createdAt: number;
   size: number;
+  /** UOR content address */
+  uorAddress?: string;
+  /** UOR CID */
+  uorCid?: string;
+  /** Detected format */
+  format?: ArtifactFormat;
+  /** Quality score 0.0–1.0 */
+  qualityScore?: number;
+  /** Structured data for tabular/JSON */
+  structuredData?: StructuredData;
+  /** Processing lineage */
+  lineage?: LineageEntry[];
 }
 
 export interface ContextManagerHandle {
@@ -99,6 +114,12 @@ export function useContextManager(): ContextManagerHandle {
       source: g.source,
       createdAt: g.createdAt,
       size: g.size,
+      uorAddress: g.uorAddress,
+      uorCid: g.uorCid,
+      format: g.format,
+      qualityScore: g.qualityScore,
+      structuredData: g.structuredData,
+      lineage: g.lineage,
     })),
     ...vault.documents
       .filter((d) => selectedVaultIds.includes(d.id))

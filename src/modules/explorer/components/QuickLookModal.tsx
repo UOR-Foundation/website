@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { ExternalLink, ChevronLeft, ChevronRight, Fingerprint, ShieldCheck, Copy, Check } from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight, Fingerprint, ShieldCheck, Copy, Check, Table, BarChart3 } from "lucide-react";
 import { getFileIcon } from "../lib/file-icons";
 import type { ContextItem } from "@/modules/sovereign-vault/hooks/useContextManager";
 import {
@@ -38,14 +38,16 @@ function isImagePlaceholder(text: string): boolean {
 }
 
 function UorIdentitySection({ item }: { item: ContextItem }) {
-  const [address, setAddress] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(item.uorAddress || null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (item.text) {
+    if (item.uorAddress) {
+      setAddress(item.uorAddress);
+    } else if (item.text) {
       computeFileUorAddress(item.text).then(setAddress).catch(() => {});
     }
-  }, [item.text]);
+  }, [item.text, item.uorAddress]);
 
   if (!address) return null;
 
@@ -82,6 +84,64 @@ function UorIdentitySection({ item }: { item: ContextItem }) {
   );
 }
 
+function TabularPreview({ data }: { data: import("@/modules/sovereign-vault/lib/structured-extractor").StructuredData }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Stats bar */}
+      <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
+        <span className="flex items-center gap-1"><Table className="w-3.5 h-3.5" />{data.columns.length} columns</span>
+        <span className="flex items-center gap-1"><BarChart3 className="w-3.5 h-3.5" />{data.rowCount.toLocaleString()} rows</span>
+        <QualityDot score={data.qualityScore} />
+      </div>
+
+      {/* Table */}
+      <div className="overflow-auto rounded-lg border border-border/20 max-h-[50vh]">
+        <table className="text-[12px] w-full border-collapse">
+          <thead>
+            <tr className="bg-muted/40 sticky top-0">
+              {data.columns.map((col, i) => (
+                <th key={i} className="px-3 py-2 text-left font-medium text-foreground/70 border-b border-border/20 whitespace-nowrap">
+                  <span>{col}</span>
+                  {data.dtypes[col] && (
+                    <span className="ml-1.5 text-[9px] text-muted-foreground/40 font-normal">{data.dtypes[col]}</span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.rows.slice(0, 50).map((row, ri) => (
+              <tr key={ri} className="hover:bg-muted/20 transition-colors">
+                {data.columns.map((_, ci) => (
+                  <td key={ci} className="px-3 py-1.5 border-b border-border/10 text-foreground/80 whitespace-nowrap max-w-[200px] truncate">
+                    {row[ci] || <span className="text-muted-foreground/25">—</span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.rowCount > 50 && (
+        <p className="text-[10px] text-muted-foreground/40 text-center">
+          Showing 50 of {data.rowCount.toLocaleString()} rows
+        </p>
+      )}
+    </div>
+  );
+}
+
+function QualityDot({ score }: { score: number }) {
+  const color = score >= 0.8 ? "hsl(140 60% 45%)" : score >= 0.5 ? "hsl(45 80% 50%)" : "hsl(0 65% 55%)";
+  const label = score >= 0.8 ? "High" : score >= 0.5 ? "Medium" : "Low";
+  return (
+    <span className="flex items-center gap-1" title={`Quality: ${Math.round(score * 100)}%`}>
+      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+      <span>{label} quality</span>
+    </span>
+  );
+}
+
 function PreviewContent({ item }: { item: ContextItem }) {
   const text = item.text || "";
 
@@ -101,12 +161,17 @@ function PreviewContent({ item }: { item: ContextItem }) {
     );
   }
 
+  // Tabular data — render table preview
+  if (item.structuredData && item.structuredData.columns.length > 0) {
+    return <TabularPreview data={item.structuredData} />;
+  }
+
   // Image placeholder
   if (isImagePlaceholder(text)) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
-        <p className="text-sm">Image preview not available</p>
-        <p className="text-xs text-muted-foreground/50">File was added as metadata only</p>
+        <p className="text-sm">Preview not available</p>
+        <p className="text-xs text-muted-foreground/50">Metadata only</p>
       </div>
     );
   }

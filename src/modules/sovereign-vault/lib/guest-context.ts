@@ -1,9 +1,14 @@
 /**
  * Guest Context Store — Ephemeral in-memory context for unauthenticated users.
  * Items are lost on page refresh (by design).
+ *
+ * Now routes through the Universal Ingestion Pipeline for UOR identity,
+ * structured data extraction, and quality scoring.
  */
 
-import { extractText, extractFromUrl } from "./extract";
+import { ingestFile, ingestPaste, ingestUrl, type PipelineResult, type LineageEntry } from "./ingest-pipeline";
+import type { ArtifactFormat } from "@/modules/uns/core/hologram/universal-ingest";
+import type { StructuredData } from "./structured-extractor";
 
 export interface GuestContextItem {
   id: string;
@@ -14,6 +19,18 @@ export interface GuestContextItem {
   createdAt: number;
   size: number;
   source: "file" | "paste" | "url" | "workspace" | "folder";
+  /** UOR content address (hex) — same content = same address */
+  uorAddress?: string;
+  /** UOR CID */
+  uorCid?: string;
+  /** Detected artifact format */
+  format?: ArtifactFormat;
+  /** Data quality score 0.0–1.0 */
+  qualityScore?: number;
+  /** Structured data for tabular/JSON (columns, rows, dtypes) */
+  structuredData?: StructuredData;
+  /** Processing lineage */
+  lineage?: LineageEntry[];
 }
 
 let items: GuestContextItem[] = [];
@@ -43,9 +60,24 @@ export const guestContext = {
     return [...items];
   },
 
+  /**
+   * Check if an item with the same UOR address already exists (duplicate detection).
+   */
+  findByUorAddress(address: string): GuestContextItem | undefined {
+    return items.find((i) => i.uorAddress === address);
+  },
+
   async addFile(file: File): Promise<GuestContextItem> {
-    const { text } = await extractText(file);
+    // Route through Universal Ingestion Pipeline
+    let pipeline: PipelineResult | null = null;
+    try {
+      pipeline = await ingestFile(file);
+    } catch {
+      // Fallback: direct text read
+    }
+
     const now = Date.now();
+    const text = pipeline?.text || "";
     const item: GuestContextItem = {
       id: makeId(),
       filename: file.name,
@@ -55,6 +87,12 @@ export const guestContext = {
       createdAt: now,
       size: file.size || byteLength(text),
       source: "file",
+      uorAddress: pipeline?.uorAddress,
+      uorCid: pipeline?.uorCid,
+      format: pipeline?.format,
+      qualityScore: pipeline?.qualityScore,
+      structuredData: pipeline?.structuredData,
+      lineage: pipeline?.lineage,
     };
     items = [...items, item];
     emit();
@@ -75,21 +113,47 @@ export const guestContext = {
     };
     items = [...items, item];
     emit();
+
+    // Run pipeline async to enrich with UOR identity
+    ingestPaste(content, label).then((result) => {
+      const idx = items.findIndex((i) => i.id === item.id);
+      if (idx >= 0) {
+        items = items.map((i) =>
+          i.id === item.id
+            ? { ...i, uorAddress: result.uorAddress, uorCid: result.uorCid, format: result.format, qualityScore: result.qualityScore, structuredData: result.structuredData, lineage: result.lineage, text: result.text }
+            : i
+        );
+        emit();
+      }
+    }).catch(() => {});
+
     return item;
   },
 
   async addUrl(url: string): Promise<GuestContextItem> {
-    const { text, metadata } = await extractFromUrl(url);
+    let pipeline: PipelineResult | null = null;
+    try {
+      pipeline = await ingestUrl(url);
+    } catch {
+      // Fallback
+    }
+
     const now = Date.now();
+    const text = pipeline?.text || `[Could not fetch: ${url}]`;
     const item: GuestContextItem = {
       id: makeId(),
-      filename: metadata.title || url,
+      filename: pipeline?.metadata?.title || url,
       text,
       mimeType: "text/html",
       addedAt: new Date(now).toISOString(),
       createdAt: now,
       size: byteLength(text),
       source: "url",
+      uorAddress: pipeline?.uorAddress,
+      uorCid: pipeline?.uorCid,
+      format: pipeline?.format,
+      qualityScore: pipeline?.qualityScore,
+      lineage: pipeline?.lineage,
     };
     items = [...items, item];
     emit();

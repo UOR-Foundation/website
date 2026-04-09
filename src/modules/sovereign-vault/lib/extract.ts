@@ -49,12 +49,16 @@ export async function extractText(file: File): Promise<ExtractedContent> {
     return { text: stripHtml(html), metadata };
   }
 
-  // Binary documents (PDF, DOCX) — use edge function
+  // Binary documents (PDF, DOCX, XLSX) — use edge function
   if (
     type === "application/pdf" ||
     type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    type === "application/vnd.ms-excel" ||
     file.name.endsWith(".pdf") ||
-    file.name.endsWith(".docx")
+    file.name.endsWith(".docx") ||
+    file.name.endsWith(".xlsx") ||
+    file.name.endsWith(".xls")
   ) {
     try {
       const arrayBuffer = await file.arrayBuffer();
