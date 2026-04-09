@@ -137,7 +137,7 @@ export function useSocialData(cid: string, sort: SortMode = "best") {
   }, [cid, user, load]);
 
   const handleReaction = useCallback(async (reactionKey: string) => {
-    if (!user) { setAuthPromptCtx("react"); return; }
+    if (!user) { authPrompt("react"); return; }
     if (reacting) return;
     setReacting(true);
     const prevReaction = myReaction;
@@ -400,7 +400,7 @@ function CommentNodeView({
             score={node.score}
             myVote={myVotes[node.id] ?? null}
             onVote={(v) => {
-              if (!user) { setAuthPromptCtx("vote"); return; }
+              if (!user) { authPrompt("vote"); return; }
               onVote(node.id, v);
             }}
           />
