@@ -26,7 +26,7 @@ interface Props {
 export default function ConversationView({ conversation, onBack, onInfo }: Props) {
   const { user } = useAuth();
   const { messages, loading } = useMessages(conversation.id, conversation.sessionHash);
-  const { send, sending } = useSendMessage(conversation.id, conversation.sessionHash);
+  const { send, sending, editMessage, deleteMessage } = useSendMessage(conversation.id, conversation.sessionHash);
   const { peerPresence, setTyping } = usePresence(conversation.id);
   const { observeMessage } = useReadReceipts(messages, conversation.id);
   const search = useMessageSearch(messages);
@@ -34,6 +34,8 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isGroup = conversation.sessionType === "group";
 
   // Filter expired messages
   const visibleMessages = filterExpiredMessages(messages, conversation.expiresAfterSeconds);
@@ -64,12 +66,10 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
     if (!user) return;
     try {
       const session = getCachedSession(conversation.sessionHash);
-      const sessionKey = session?.symmetricKey ?? new Uint8Array(32); // fallback for demo
+      const sessionKey = session?.symmetricKey ?? new Uint8Array(32);
 
       toast.info(`Encrypting ${file.name}…`);
-      const manifest = await uploadEncryptedFile(file, user.id, sessionKey, (p) => {
-        // Could show progress here
-      });
+      const manifest = await uploadEncryptedFile(file, user.id, sessionKey, (p) => {});
 
       const messageType = file.type.startsWith("image/") ? "image" as const :
                           file.type.startsWith("audio/") ? "voice" as const : "file" as const;
@@ -82,7 +82,19 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
     }
   };
 
-  // Find reply-to message by hash
+  const handleEdit = useCallback((msg: DecryptedMessage) => {
+    const newText = prompt("Edit message:", msg.plaintext);
+    if (newText && newText !== msg.plaintext) {
+      editMessage(msg.id, newText);
+    }
+  }, [editMessage]);
+
+  const handleDelete = useCallback((msgId: string) => {
+    if (confirm("Delete this message for everyone?")) {
+      deleteMessage(msgId);
+    }
+  }, [deleteMessage]);
+
   const findReplyMessage = useCallback((hash: string | null | undefined) => {
     if (!hash) return undefined;
     return messages.find((m) => m.messageHash === hash);
@@ -148,7 +160,11 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
                 message={msg}
                 replyToMessage={findReplyMessage(msg.replyToHash)}
                 onReply={(m) => setReplyTo(m)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
                 observeRef={(el) => observeMessage(el, msg)}
+                isGroup={isGroup}
+                expiresAfterSeconds={conversation.expiresAfterSeconds}
               />
             ))}
           </div>
@@ -177,6 +193,8 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}
         onFileSelected={handleFileSelected}
+        members={conversation.members}
+        isGroup={isGroup}
       />
     </div>
   );

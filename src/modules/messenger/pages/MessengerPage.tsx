@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatSidebar from "../components/ChatSidebar";
 import ConversationView from "../components/ConversationView";
 import ConversationInfo from "../components/ConversationInfo";
+import GroupInfoPanel from "../components/GroupInfoPanel";
 import NewConversationDialog from "../components/NewConversationDialog";
+import NewGroupDialog from "../components/NewGroupDialog";
+import SharedFiles from "../components/SharedFiles";
 import { useConversations } from "../lib/use-conversations";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { startOfflineSync } from "../lib/offline-queue";
+import { requestNotificationPermission } from "../lib/notifications";
 import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
-import { useEffect } from "react";
 
 export default function MessengerPage() {
   const { user, loading: authLoading } = useAuth();
@@ -17,13 +20,19 @@ export default function MessengerPage() {
   const { conversations, loading: convosLoading, refetch } = useConversations();
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showSharedFiles, setShowSharedFiles] = useState(false);
   const isMobile = useIsMobile();
 
-  // Start offline sync on mount
-  useEffect(() => { startOfflineSync(); }, []);
+  // Start offline sync + request notification permission on mount
+  useEffect(() => {
+    startOfflineSync();
+    requestNotificationPermission();
+  }, []);
 
   const activeConvo = conversations.find((c) => c.id === activeConvoId);
+  const isGroupConvo = activeConvo?.sessionType === "group";
 
   const showList = isMobile ? !activeConvoId : true;
   const showConvo = isMobile ? !!activeConvoId : true;
@@ -71,8 +80,9 @@ export default function MessengerPage() {
           <ChatSidebar
             conversations={conversations}
             activeId={activeConvoId}
-            onSelect={(id) => { setActiveConvoId(id); setShowInfo(false); }}
+            onSelect={(id) => { setActiveConvoId(id); setShowInfo(false); setShowSharedFiles(false); }}
             onNewChat={() => setNewChatOpen(true)}
+            onNewGroup={() => setNewGroupOpen(true)}
             loading={convosLoading}
           />
         </div>
@@ -85,7 +95,7 @@ export default function MessengerPage() {
             <ConversationView
               conversation={activeConvo}
               onBack={isMobile ? () => setActiveConvoId(null) : undefined}
-              onInfo={() => setShowInfo(!showInfo)}
+              onInfo={() => { setShowInfo(!showInfo); setShowSharedFiles(false); }}
             />
           ) : (
             <div
@@ -113,9 +123,26 @@ export default function MessengerPage() {
       {/* Info panel (third panel) */}
       {showInfo && activeConvo && !isMobile && (
         <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
-          <ConversationInfo
-            conversation={activeConvo}
-            onClose={() => setShowInfo(false)}
+          {isGroupConvo ? (
+            <GroupInfoPanel
+              conversation={activeConvo}
+              onClose={() => setShowInfo(false)}
+            />
+          ) : (
+            <ConversationInfo
+              conversation={activeConvo}
+              onClose={() => setShowInfo(false)}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Shared files panel */}
+      {showSharedFiles && activeConvo && !isMobile && (
+        <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
+          <SharedFiles
+            sessionId={activeConvo.id}
+            onClose={() => setShowSharedFiles(false)}
           />
         </div>
       )}
@@ -124,6 +151,16 @@ export default function MessengerPage() {
       <NewConversationDialog
         open={newChatOpen}
         onClose={() => setNewChatOpen(false)}
+        onCreated={(id) => {
+          setActiveConvoId(id);
+          refetch();
+        }}
+      />
+
+      {/* New group dialog */}
+      <NewGroupDialog
+        open={newGroupOpen}
+        onClose={() => setNewGroupOpen(false)}
         onCreated={(id) => {
           setActiveConvoId(id);
           refetch();
