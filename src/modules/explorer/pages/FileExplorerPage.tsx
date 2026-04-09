@@ -8,6 +8,7 @@ import { useContextManager, type ContextItem } from "@/modules/sovereign-vault/h
 import ExplorerSidebar, { type SidebarFilter } from "../components/ExplorerSidebar";
 import ExplorerToolbar, { type ViewMode } from "../components/ExplorerToolbar";
 import FileCard from "../components/FileCard";
+import QuickLookModal from "../components/QuickLookModal";
 import { toast } from "sonner";
 
 const VIEW_KEY = "uor:explorer-view";
@@ -26,7 +27,9 @@ export default function FileExplorerPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(loadViewMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedItem = selectedItemId ? ctx.contextItems.find(i => i.id === selectedItemId) ?? null : null;
 
   const handleViewModeChange = useCallback((v: ViewMode) => {
     setViewMode(v);
@@ -148,7 +151,7 @@ export default function FileExplorerPage() {
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-1 p-4">
               {filteredItems.map(item => (
-                <FileCard key={item.id} item={item} viewMode="grid" onRemove={ctx.remove} />
+                <FileCard key={item.id} item={item} viewMode="grid" onRemove={ctx.remove} onSelect={setSelectedItemId} />
               ))}
             </div>
           ) : (
@@ -160,7 +163,7 @@ export default function FileExplorerPage() {
                 <div className="w-9" />
               </div>
               {filteredItems.map(item => (
-                <FileCard key={item.id} item={item} viewMode="list" onRemove={ctx.remove} />
+                <FileCard key={item.id} item={item} viewMode="list" onRemove={ctx.remove} onSelect={setSelectedItemId} />
               ))}
             </div>
           )}
@@ -181,6 +184,11 @@ export default function FileExplorerPage() {
           </span>
         </div>
       </div>
+
+      {/* Quick Look modal */}
+      {selectedItem && (
+        <QuickLookModal item={selectedItem} onClose={() => setSelectedItemId(null)} />
+      )}
     </div>
   );
 }
