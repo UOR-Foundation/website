@@ -1,90 +1,80 @@
 
 
-# System Monitor as a Desktop App Window
+## System Health Report Review & Lean Architecture Plan
 
-## Concept
+### What the Report Tells Us
 
-Transform the system monitor from a modal overlay into a **registered desktop app** that opens as a proper OS window — just like Oracle, Library, or Vault. The window will display a Hyper-V/Proxmox-inspired monitoring dashboard with metric cards, availability indicators, and live data, all wired to real system telemetry from the boot receipt.
+The report is already strong — it covers seal integrity, kernel primitives, tech stack selection, hardware profiling, and degradation tracking. But it has two blind spots and the codebase has clear consolidation opportunities.
 
-## Design (inspired by the Motadata reference)
+### Key Findings from Codebase Audit
 
-```text
-┌─── System Monitor ──────────────────────────────────────────────────┐
-│                                                                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-│  │ Virtual   │ │ CPU      │ │ Memory   │ │ Modules  │ │ Network  │ │
-│  │ Machine   │ │ 23 cores │ │ — GB     │ │ Loaded   │ │ Caps     │ │
-│  │  1   ●    │ │ ████ 90% │ │ Avail/Fr │ │  23      │ │ WASM ✓   │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
-│                                                                     │
-│  ┌─────────────────────┐ ┌──────────────────────────────────────┐  │
-│  │ System Availability  │ │ Kernel Primitives                    │  │
-│  │                      │ │                                      │  │
-│  │   ● Up 99.9%         │ │ P₀ encode  ●   P₁ decode  ●        │  │
-│  │   Uptime 00:12:34    │ │ P₂ compose ●   P₃ store   ●        │  │
-│  │   Boot   35ms        │ │ P₄ resolve ●   P₅ observe ●        │  │
-│  │   Seal   Verified    │ │ P₆ seal    ●   7/7 verified         │  │
-│  └─────────────────────┘ └──────────────────────────────────────┘  │
-│                                                                     │
-│  ┌─────────────────────┐ ┌──────────────────────────────────────┐  │
-│  │ Stack Health         │ │ Host Hardware                        │  │
-│  │ 22/23 operational    │ │ Projected from *.lovable.app         │  │
-│  │ ████████████████░ 96%│ │ Display 1920×1080 · Touch: No       │  │
-│  │ ⚠ SIMD (optional)   │ │ GPU: Unknown · WASM ✓ SIMD ✓ SAB ✗ │  │
-│  └─────────────────────┘ └──────────────────────────────────────┘  │
-│                                                                     │
-│  Lattice-hash sealed · 128-bit preimage · Session a7c2f…          │
-│                                                          [Copy Report] │
-└─────────────────────────────────────────────────────────────────────┘
-```
+**By the numbers:**
+- **40 module directories** on disk (target: ≤30)
+- **191,805 lines** of TypeScript across modules
+- Top 5 modules alone = **116,107 lines** (60% of total)
+- The pruning gate's `KNOWN_MODULES` list is **stale** — 17 real modules aren't tracked (atlas, quantum, desktop, boot, engine, audio, etc.)
+- The `CONSOLIDATION_MAP` references modules already absorbed but directories still exist on disk
 
-## Changes
+**Immediate consolidation targets (small modules that belong inside parents):**
 
-| File | Change |
-|------|--------|
-| `src/modules/boot/SystemMonitorApp.tsx` | **New file.** Full-page system monitor component with metric cards, availability ring, kernel primitives grid, stack health bar, host hardware section — all reading from `useBootStatus()`. Includes Copy Report button reusing the existing `formatMarkdownReport`. |
-| `src/modules/desktop/lib/desktop-apps.ts` | Register `"system-monitor"` app with `Activity` icon, `category: "OBSERVE"`, `defaultSize: { w: 820, h: 560 }`. |
-| `src/modules/desktop/lib/os-taxonomy.ts` | Add `"system-monitor"` to the `OBSERVE` category's `appIds` array. |
-| `src/modules/boot/EngineStatusIndicator.tsx` | Keep the status dot trigger, but instead of opening a modal, dispatch `window.dispatchEvent(new CustomEvent("uor:open-app", { detail: "system-monitor" }))` to open the desktop window. Remove the modal/backdrop/drag code entirely. |
+| Module | Lines | Absorb Into | Rationale |
+|--------|-------|-------------|-----------|
+| `triad` | 70 | `ring-core` | Already noted in CONSOLIDATION_MAP but dir still exists |
+| `donate` | 441 | `community` | Already noted but dir still exists |
+| `jsonld` | 1,767 | `knowledge-graph` | Already noted but dir still exists |
+| `shacl` | 1,906 | `sparql` | Already noted but dir still exists |
+| `qr-cartridge` | 958 | `identity` | Already noted but dir still exists |
+| `messenger` | 1,235 | `oracle` or `community` | Small chat UI, no unique kernel function |
+| `data-bank` | 2,438 | `sovereign-vault` | Both are storage-focused; merge |
 
-## Implementation Details
+**Large module review:**
+- `quantum` (13,422 lines) — only imported by 2 test files externally. Nearly self-contained. Consider if it should be a lazy-loaded extension rather than a core module.
+- `atlas` (26,776 lines) — heavily imported (55 files). Core mathematical layer. Keep, but audit for dead files.
 
-### Metric Cards Row (top)
-Six cards in a responsive grid, each with an icon, title, subtitle, and primary value:
-- **Virtual Machine**: Status dot + "1 Running" + seal status label
-- **CPU**: Core count + idle estimation bar (decorative — browser can't measure real CPU idle)
-- **Memory**: Available/Free from `performance.memory` if available, else "Restricted"
-- **Modules**: Count of loaded bus modules
-- **Stack**: X/Y operational with a mini progress bar
-- **Capabilities**: WASM/SIMD/SAB/Workers as compact check marks
+### Report Improvements — What to Add
 
-### Availability Section (middle-left)
-- Large circular availability indicator showing uptime percentage (computed from `uptimeMs / (uptimeMs + 0)` = 100% since boot — realistic for a single-session VM)
-- Live uptime counter ticking every second
-- Boot time in ms
-- Seal status with color
+**1. Pruning Gate Sync (fix the stale registry)**
+The `KNOWN_MODULES` array in `pruning-gate.ts` is missing 17 modules that actually exist on disk. This means the module count metric (showing ~37) is wrong — reality is 40. Fix by auto-deriving from the filesystem or maintaining the list accurately.
 
-### Kernel Primitives (middle-right)
-- 2-column grid of P₀–P₆ with dot indicators, compact and scannable
+**2. Add "Module Weight" Section to the Report**
+Show lines-of-code per module so the report itself surfaces bloat. The top 5 modules are 60% of the codebase — the report should flag this.
 
-### Stack Health (bottom-left)
-- Progress bar showing operational/total ratio
-- List of failing components (if any) with severity icons
+**3. Add "Consolidation Debt" Section**
+The CONSOLIDATION_MAP lists 10 modules as "absorbed" but their directories still exist. The report should track this debt and flag stale directories.
 
-### Host Hardware (bottom-right)
-- Projection badge (Local vs Remote)
-- Display, GPU, Touch, and capabilities matrix as compact rows
+**4. Implement the Missing Self-Assessment Metrics**
+The report lists 12 metrics, 10 untracked (13% coverage). Prioritize these 4 high-value, low-effort additions:
+- **IndexedDB Quota** — `navigator.storage.estimate()` (3 lines)
+- **JS Heap Usage** — `performance.memory` (already partially done in sparklines)
+- **Ring Operation Throughput** — time 1000 `add()` calls (5 lines)
+- **Boot Phase Timing** — break 750ms into stage-level detail
 
-### Footer
-- Seal hash info + Copy Report button
+**5. Add "Module Dependency Depth" Metric**
+Track how many cross-module imports each module has. Modules with >10 external imports are coupling risks.
 
-### Status Dot Behavior
-- The dot in the tab bar stays — clicking it now opens the System Monitor as a window via the existing `uor:open-app` event system
-- All modal/backdrop/drag code removed from `EngineStatusIndicator.tsx`, making it a thin trigger component
+### Implementation Plan
 
-### Styling
-- Dark theme by default (matching the OS dark mode), with theme-awareness via `useDesktopTheme`
-- Metric cards use subtle colored icons (green for healthy, amber for degraded)
-- Monospace for values, proportional for labels
-- No scrolling needed at 820×560
+**Step 1 — Sync Pruning Gate Registry**
+Update `KNOWN_MODULES` in `pruning-gate.ts` to include all 40 actual modules. Remove references to modules that no longer exist. Mark absorbed modules.
+
+**Step 2 — Execute Consolidations (7 merges)**
+Move the 7 small modules listed above into their parent modules. Update all import paths. Delete empty directories. This removes ~8,815 lines of organizational overhead and reduces module count from 40 to 33.
+
+**Step 3 — Enhance Report Generation**
+Add to the System Monitor's "Export Report" function:
+- Module weight table (lines per module, sorted descending)
+- Consolidation debt tracker (absorbed modules with stale directories)
+- 4 new self-assessment metrics (heap, IndexedDB quota, ring throughput, boot phases)
+
+**Step 4 — Add Lazy Boundaries**
+Mark `quantum` and `atlas` as lazy-loaded — they should not increase boot time unless accessed. Verify they aren't imported in the boot path.
+
+### Technical Details
+
+Files to modify:
+- `src/modules/uns/core/pruning-gate.ts` — sync KNOWN_MODULES, add weight analysis
+- `src/modules/boot/SystemMonitorApp.tsx` — add new report sections
+- `src/modules/boot/useBootStatus.ts` — add heap/quota/throughput metrics
+- 7 module directories to merge (update imports across ~20 files)
+- `src/modules/bus/modules/index.ts` — remove absorbed module registrations if applicable
 
