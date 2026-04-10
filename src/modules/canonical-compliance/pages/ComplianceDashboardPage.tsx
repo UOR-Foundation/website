@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, LayoutGrid, Share2, ChevronRight, Download } from "lucide-react";
 import { runAudit, type AuditFinding, type AuditReport } from "../audit";
@@ -8,6 +8,10 @@ import { exportMarkdown } from "../export";
 import AtomSidebar from "../components/AtomSidebar";
 import NodeDetailPanel, { type SelectedNode } from "../components/NodeDetailPanel";
 import ProvenanceGraph from "../components/ProvenanceGraph";
+import KnowledgeSidebar, { pushTrail, type BacklinkEntry } from "@/modules/knowledge-graph/components/KnowledgeSidebar";
+import ConceptMap, { type ConceptNode, type ConceptEdge } from "@/modules/knowledge-graph/components/ConceptMap";
+import StatBlock from "@/modules/core/components/StatBlock";
+import Breadcrumbs from "@/modules/core/components/Breadcrumbs";
 
 // ── Status Badge ────────────────────────────────────────────────
 
