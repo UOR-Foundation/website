@@ -88,8 +88,8 @@ export function onDeepLink(handler: DeepLinkHandler): () => void {
 export async function initDeepLinks(): Promise<void> {
   if (isLocal()) {
     try {
-      // @ts-ignore — Tauri plugin only available in desktop builds
-      const mod = await import("@tauri-apps/plugin-deep-link");
+      const deepLinkPath = "@tauri-apps/plugin-deep-link";
+      const mod = await import(/* @vite-ignore */ deepLinkPath);
       // Listen for incoming URLs
       await mod.onOpenUrl((urls: string[]) => {
         for (const url of urls) {
