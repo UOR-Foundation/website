@@ -10,7 +10,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import { ArrowRight, Upload } from "lucide-react";
+import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
@@ -364,6 +364,42 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
             <ContextPills items={ctx.contextItems} onRemove={ctx.remove} />
           </div>
         )}
+
+        {/* Quick-access dock — 5 core apps */}
+        <div
+          className="flex items-center justify-center gap-3 mt-6"
+          style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
+        >
+          {([
+            { id: "oracle", icon: Sparkles, label: "Oracle", color: "hsl(270 70% 65%)" },
+            { id: "messenger", icon: MessageCircle, label: "Messenger", color: "hsl(160 60% 50%)" },
+            { id: "library", icon: BookOpen, label: "Library", color: "hsl(35 90% 55%)" },
+            { id: "files", icon: FolderOpen, label: "Files", color: "hsl(45 80% 55%)" },
+            { id: "app-hub", icon: LayoutGrid, label: "Apps", color: "hsl(220 60% 55%)" },
+          ] as const).map(({ id, icon: Icon, label, color }) => (
+            <button
+              key={id}
+              onClick={() => onOpenApp?.(id)}
+              title={label}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95"
+              style={{
+                background: isImmersive
+                  ? "hsl(0 0% 100% / 0.06)"
+                  : isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)",
+                border: isImmersive
+                  ? "1px solid hsl(0 0% 100% / 0.08)"
+                  : isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <Icon
+                className="w-4 h-4"
+                style={{
+                  color: isImmersive ? color : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.45)",
+                }}
+              />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Offline banner — calm, reassuring */}
