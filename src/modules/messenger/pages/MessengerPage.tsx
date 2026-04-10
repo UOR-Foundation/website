@@ -17,7 +17,7 @@ import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { startOfflineSync } from "../lib/offline-queue";
 import { requestNotificationPermission } from "../lib/notifications";
-import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
+import { ShieldCheck, MessageSquare } from "lucide-react";
 
 type SidePanel = "inbox" | "contacts" | "calls" | "settings";
 
@@ -60,9 +60,9 @@ export default function MessengerPage() {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center mb-6">
           <ShieldCheck size={28} className="text-teal-400/70" />
         </div>
-        <h2 className="text-2xl text-white/90 font-light mb-3">Messages</h2>
-        <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-6">
-          Private conversations, end-to-end encrypted with post-quantum security. Sign in to continue.
+        <h2 className="text-2xl text-white/90 font-light mb-3">Inbox</h2>
+        <p className="text-base text-white/50 max-w-sm leading-relaxed mb-6">
+          Private, encrypted conversations. Sign in to continue.
         </p>
         <button
           onClick={() => authPrompt("messenger")}
@@ -71,12 +71,8 @@ export default function MessengerPage() {
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,1)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.92)"; }}
         >
-          Sign in to message
+          Sign in
         </button>
-        <div className="flex items-center gap-2 mt-6 text-white/25 text-xs">
-          <Lock size={11} />
-          <span>End-to-end encrypted · Post-quantum secure</span>
-        </div>
       </div>
     );
   }
@@ -120,14 +116,12 @@ export default function MessengerPage() {
 
   return (
     <div className="h-screen w-screen bg-slate-950 flex overflow-hidden" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}>
-      {/* Sidebar */}
       {showList && (
         <div className={`${isMobile ? "w-full" : "w-[320px] min-w-[280px] max-w-[380px]"} h-full flex-shrink-0 border-r border-white/[0.04] relative`}>
           {renderSidePanel()}
         </div>
       )}
 
-      {/* Conversation panel */}
       {showConvo && (
         <div className="flex-1 h-full min-w-0 relative">
           {activeConvo ? (
@@ -142,22 +136,17 @@ export default function MessengerPage() {
               style={{ background: "radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.04) 0%, transparent 70%)" }}
             >
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500/10 to-indigo-500/10 border border-white/[0.06] flex items-center justify-center mb-6">
-                <MessageSquare size={32} className="text-white/15" />
+                <MessageSquare size={32} className="text-white/20" />
               </div>
-              <h2 className="text-2xl text-white/80 font-light mb-3">Messages</h2>
-              <p className="text-sm text-white/30 max-w-md leading-relaxed">
-                Start a conversation. Everything here is private, end-to-end encrypted, and post-quantum secure.
+              <h2 className="text-2xl text-white/80 font-light mb-2">Inbox</h2>
+              <p className="text-base text-white/40">
+                Select a conversation or start a new one.
               </p>
-              <div className="flex items-center gap-2 mt-6 text-white/20 text-xs">
-                <Lock size={11} />
-                <span>Kyber-1024 + AES-256-GCM · Dilithium-3</span>
-              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Info panel */}
       {showInfo && activeConvo && !isMobile && (
         <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
           {isGroupConvo ? (
@@ -168,14 +157,12 @@ export default function MessengerPage() {
         </div>
       )}
 
-      {/* Shared files panel */}
       {showSharedFiles && activeConvo && !isMobile && (
         <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
           <SharedFiles sessionId={activeConvo.id} onClose={() => setShowSharedFiles(false)} />
         </div>
       )}
 
-      {/* Bridge connections panel */}
       {showBridges && !isMobile && (
         <div className="w-[320px] min-w-[280px] h-full flex-shrink-0">
           <BridgeConnectionPanel onClose={() => setShowBridges(false)} />
