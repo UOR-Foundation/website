@@ -58,7 +58,7 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Resolve",
     description: "Query resolution, search, and knowledge retrieval",
     uorModules: ["query", "resolver", "reduction"],
-    appIds: ["search", "oracle", "library"],
+    appIds: ["search", "oracle", "library", "app-hub"],
     userFacing: true,
   },
   IDENTITY: {
@@ -114,7 +114,7 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Structure",
     description: "Topological structure: homology, cohomology, operads",
     uorModules: ["homology", "cohomology", "operad", "region"],
-    appIds: ["files"],
+    appIds: ["files", "daily-notes"],
     userFacing: true,
   },
   FAILURE: {
