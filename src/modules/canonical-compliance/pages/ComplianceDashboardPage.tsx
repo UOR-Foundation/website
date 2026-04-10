@@ -40,24 +40,7 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
   Observable: "hsl(180 40% 50%)",
 };
 
-// ── Breadcrumb ──────────────────────────────────────────────────
-
-function Breadcrumb({ path }: { path: { label: string; action?: () => void }[] }) {
-  return (
-    <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
-      {path.map((p, i) => (
-        <span key={i} className="flex items-center gap-1">
-          {i > 0 && <ChevronRight size={8} className="text-zinc-700" />}
-          {p.action ? (
-            <button onClick={p.action} className="hover:text-zinc-300 transition-colors">{p.label}</button>
-          ) : (
-            <span className="text-zinc-400">{p.label}</span>
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
+// ── (Breadcrumbs now imported from core) ────────────────────────
 
 // ── Main Page ───────────────────────────────────────────────────
 
