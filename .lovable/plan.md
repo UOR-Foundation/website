@@ -1,117 +1,127 @@
 
-# Standardized App Build & Run Pipeline — Docker/K8s Aligned
 
-## Docker/K8s Alignment Audit
+# Compliance Zoom Engine — Layered Exploration with Zoom In/Out
 
-The pipeline must feel native to developers who know Docker + K8s. Here's the exact mapping:
+## Terminology Evaluation
 
-### Docker Build Phase
+The current terms "atoms," "modules," and "applications" are close but have gaps. Here's my assessment and recommendation:
 
-| Docker Command | Our Equivalent | Module | Status |
+**Current names → Proposed names:**
+
+| Current | Issue | Proposed | Why |
 |---|---|---|---|
-| `Dockerfile` | `Uorfile` | uns/build/uorfile.ts | ✅ exists |
-| `docker build -t myapp:1.0 .` | `buildImage(spec)` | uns/build/uorfile.ts | ✅ exists |
-| `docker tag` | `tagImage(id, tag)` | uns/build/registry.ts | ✅ exists |
-| `docker push` | `pushImage(id)` | uns/build/registry.ts | ✅ exists |
-| `docker pull` | `pullImage(tag)` | uns/build/registry.ts | ✅ exists |
-| `docker inspect <image>` | `inspectImage(id)` | uns/build/registry.ts | ✅ exists |
-| `docker history` | `imageHistory(id)` | uns/build/registry.ts | ✅ exists |
+| Atoms | Good — universally understood as "smallest unit" | **Primitives** | More self-descriptive for developers; "atom" overloaded in React/Jotai ecosystems. "Primitive" clearly says "this cannot be decomposed further." |
+| *(no name)* | The atom chains (pipelines) that form individual exports are invisible as a layer | **Pipelines** | Each export is built from a chain of atoms (e.g., `urdna2015 → sha256 → cid`). This is already in the data as the `pipeline` field. Developers know "pipeline" from CI/CD. |
+| Modules | Good — universal term | **Modules** | Keep as-is. Perfect mapping to npm packages, Rust crates, Go modules. |
+| *(no name)* | The provenance map already groups modules into layers (Engine, Name System, Build System, Services) but this isn't surfaced | **System** | The top-level view showing how layers compose into the full system. |
 
-### Docker Run Phase
+**Resulting 4-level zoom:**
 
-| Docker Command | Our Equivalent | Module | Status |
-|---|---|---|---|
-| `docker create --name app myapp:1.0` | `createContainer(config)` | uns/build/container.ts | ✅ exists |
-| `docker start app` | `startContainer(id)` | uns/build/container.ts | ✅ exists |
-| `docker stop app` | `stopContainer(id)` | uns/build/container.ts | ✅ exists |
-| `docker exec app cmd` | `execContainer(id, cmd)` | uns/build/container.ts | ✅ exists |
-| `docker inspect app` | `inspectContainer(id)` | uns/build/container.ts | ✅ exists |
-| `docker logs app` | `containerLogs(id)` | uns/build/container.ts | ✅ exists |
-| `docker pause/unpause` | `pauseContainer()/unpauseContainer()` | uns/build/container.ts | ✅ exists |
-| `docker rm` | `removeContainer(id)` | uns/build/container.ts | ✅ exists |
+```text
+Level 0: Primitives   — 86 atomic operations/types (the periodic table)
+Level 1: Pipelines    — 46 exports, each a chain of primitives
+Level 2: Modules      — 23 modules, each grouping related pipelines  
+Level 3: System       — 4 layers (Engine → Names → Build → Services)
+```
 
-### Kubernetes Orchestration Phase
+Zoom in = more granular (System → Modules → Pipelines → Primitives).
+Zoom out = more composed (Primitives → Pipelines → Modules → System).
 
-| K8s Concept | Our Equivalent | Module | Status |
-|---|---|---|---|
-| `Pod YAML` | `AppBlueprint` | compose/types.ts | ✅ exists |
-| `kubectl apply -f` | `orchestrator.launch(blueprint)` | compose/orchestrator.ts | ✅ exists |
-| Controller Manager | `SovereignReconciler` | compose/reconciler.ts | ✅ exists |
-| HPA | `SovereignAutoScaler` | compose/reconciler.ts | ✅ exists |
-| Rolling Update | `SovereignRollingUpdate` | compose/reconciler.ts | ✅ exists |
-| cgroup/namespace | `AppKernel` | compose/app-kernel.ts | ✅ exists |
-| `docker-compose.yml` | `ComposeSpec` | uns/build/compose.ts | ✅ exists |
-| `kubectl create secret` | `createSecret()` | uns/build/secrets.ts | ✅ exists |
-| `docker checkpoint` | `createSnapshot()` | uns/build/snapshot.ts | ✅ exists |
+This maps exactly to the existing data — the provenance map already has all four levels, they're just not navigable as discrete views.
 
-### Gap Analysis — What's Missing
+## UI Design
 
-All primitives exist. What's missing is the **unified pipeline controller** and **type alignment**:
+Replace the current Top↓/Bottom↑ toggle with a **zoom slider** (4 discrete stops). Each zoom level shows:
+- A **table view** appropriate to that granularity
+- A **graph view** appropriate to that granularity
+- HUD stats scoped to the current level
+- Click-to-zoom: clicking any row zooms into its children
 
-1. **No enforced pipeline** — apps can skip validation, skip image build, or bypass kernel isolation
-2. **Type mismatches** — orchestrator passes `memoryBytes` but container expects `memoryLimitMB`
-3. **No `restartPolicy`** on containers — Docker has `--restart=always|on-failure|no`
-4. **No serializable manifest** — no `docker inspect`-equivalent showing full running app anatomy
-5. **No pipeline status visibility** — System Monitor doesn't show build/ship/run phases
+```text
+┌──────────────────────────────────────────────────────┐
+│  [−]  ●───●───●───●  [+]     Primitives | Pipelines │
+│       P   Pl  M   S          | Modules  | System    │
+│                                                      │
+│  ── SYSTEM VIEW (zoomed all the way out) ──────────  │
+│                                                      │
+│  Layer          Modules  Pipelines  Grounded  Score  │
+│  ───────────────────────────────────────────────────  │
+│  Engine            5        17        17/17    100%  │
+│  Name System       3         5         5/5     100%  │
+│  Build System      5        12        12/12    100%  │
+│  Services          7        12         8/12     67%  │
+│                                                      │
+│  Click "Engine" → zooms to Module view filtered to   │
+│  Engine modules only                                 │
+│                                                      │
+│  ── MODULE VIEW ─────────────────────────────────── │
+│                                                      │
+│  Module              Pipelines  Grounded  Atoms Used │
+│  ───────────────────────────────────────────────────  │
+│  ring-core              4        4/4      Ring, Add  │
+│  uns/core/address        5        5/5      Address…  │
+│  uns/core/ring           4        4/4      Neg, Bnot │
+│                                                      │
+│  Click "ring-core" → zooms to Pipeline view          │
+│                                                      │
+│  ── PIPELINE VIEW ──────────────────────────────── │
+│                                                      │
+│  Export              Status     Atom Chain            │
+│  ───────────────────────────────────────────────────  │
+│  UORRing             GROUNDED   Ring→Add→Mul→Neg→Xor │
+│  Q0/Q1/Q2/Q3        GROUNDED   Ring→Add→Mul          │
+│                                                      │
+│  Click "UORRing" → zooms to Primitive view           │
+│                                                      │
+│  ── PRIMITIVE VIEW ─────────────────────────────── │
+│                                                      │
+│  The periodic table grid, filtered to atoms used by  │
+│  the selected pipeline. Click any atom → detail panel│
+└──────────────────────────────────────────────────────┘
+```
 
 ## Implementation
 
-### 1. `AppPipeline` — The `docker build && docker run` Equivalent
-**File:** `src/modules/compose/pipeline.ts` (~200 lines)
+### 1. Rewrite `ComplianceDashboardPage.tsx`
 
-Maps to Docker workflow:
-- `Dockerfile` → Uorfile (blueprint) — "what to build"
-- `docker build` → `AppPipeline.build()` — "create content-addressed image"
-- `docker create` → `AppPipeline.create()` — "instantiate container from image"
-- `docker start` → `AppPipeline.start()` — "start container + kernel isolation"
-- `kubectl apply` → `AppPipeline.deploy()` — "full pipeline: validate→build→create→start→reconcile"
+**Replace** the current flat table + Top↓/Bottom↑ toggle with:
 
-### 2. `BlueprintSchema` — The Admission Controller
-**File:** `src/modules/compose/schema.ts` (~80 lines)
+- **Zoom state**: `zoomLevel: 0|1|2|3` + `zoomContext: string | null` (which parent you zoomed into)
+- **Zoom controls**: A discrete 4-stop slider in the top bar, plus `[−]` `[+]` buttons. Keyboard: `-` and `+` keys.
+- **Click-to-zoom**: Clicking any row at levels 3/2/1 zooms in and sets `zoomContext` to filter children.
+- **Breadcrumb-as-zoom-out**: The breadcrumb path updates with each zoom. Clicking any breadcrumb segment zooms back to that level.
+- **Level-specific table renderers**: `SystemTable`, `ModuleTable`, `PipelineTable`, `PrimitiveGrid` — four small inline components, each showing the right columns for its level.
+- **Level-specific graph**: Pass zoom level to `ProvenanceGraph` so it renders the appropriate granularity (nodes = layers at L3, modules at L2, exports at L1, atoms at L0).
 
-K8s admission controllers reject malformed Pod specs before they reach the scheduler. This is our equivalent.
+### 2. Add layer metadata to `provenance-map.ts`
 
-### 3. `AppManifest` — The `docker inspect` / `kubectl describe` Equivalent
-**File:** `src/modules/compose/manifest.ts` (~60 lines)
+Add a `SYSTEM_LAYERS` constant that groups modules into their 4 layers (already implicit in comments — just formalize):
 
-Complete JSON description of a running workload: blueprint, image digest, container state, kernel config, resource usage, dependency graph.
+```typescript
+export const SYSTEM_LAYERS = [
+  { id: "engine", label: "Engine", modules: ["ring-core", "uns/core/address", "uns/core/ring", "uns/core/identity", "uns/core/keypair"] },
+  { id: "names", label: "Name System", modules: ["uns/core/record", "uns/core/resolver", "uns/core/dht"] },
+  { id: "build", label: "Build System", modules: ["uns/build/container", "uns/build/uorfile", "uns/build/registry", "uns/build/compose", "uns/build/secrets", "uns/build/snapshot"] },
+  { id: "services", label: "Services", modules: ["compose/orchestrator", "compose/app-kernel", "oracle", "identity", "messenger", "donate", "landing", "desktop", "app-store"] },
+];
+```
 
-### 4. Fix Orchestrator Type Alignment
-**File:** `src/modules/compose/orchestrator.ts` (update)
+### 3. Update `AtomSidebar.tsx`
 
-Wire `_startInstance` through `AppPipeline.deploy()`, fix type mismatches.
+Add the zoom level indicator and make the sidebar contextual — at System level show layer stats, at Module level show module list, at Pipeline level show exports, at Primitive level show the atom index (current behavior).
 
-### 5. Add `restartPolicy` to Container Config
-**File:** `src/modules/uns/build/container.ts` (update)
+### 4. Update `ProvenanceGraph.tsx`
 
-Add `--restart=always|unless-stopped|on-failure|no` equivalent.
+Accept a `zoomLevel` prop. At each level, render different node granularities — layer nodes at L3, module nodes at L2, export nodes at L1, atom nodes at L0.
 
-### 6. Pipeline Status in System Monitor
-**File:** `src/modules/boot/SystemMonitorApp.tsx` (update)
+## Files
 
-Per-app pipeline phases: `Validated ✓ → Built ✓ → Created ✓ → Running ✓ → Reconciled ✓`
-
-## Naming Convention — Docker/K8s Verbs
-
-Every public API uses verbs developers already know:
-- `build()` not `compile()` — matches `docker build`
-- `create()` not `instantiate()` — matches `docker create`
-- `start()`/`stop()` — matches `docker start/stop`
-- `deploy()` — matches `kubectl apply`
-- `inspect()` — matches `docker inspect`
-- `logs()` — matches `docker logs`
-- `exec()` — matches `docker exec`
-- `pull()`/`push()` — matches `docker pull/push`
-
-## Files Summary
-
-| File | Action | Docker/K8s Equivalent |
+| File | Action | Purpose |
 |---|---|---|
-| `src/modules/compose/pipeline.ts` | Create | `docker build && docker run` unified CLI |
-| `src/modules/compose/schema.ts` | Create | K8s Admission Controller |
-| `src/modules/compose/manifest.ts` | Create | `docker inspect` / `kubectl describe` |
-| `src/modules/compose/orchestrator.ts` | Update | Wire pipeline into scheduler |
-| `src/modules/uns/build/container.ts` | Update | Add `--restart` policy |
-| `src/modules/boot/SystemMonitorApp.tsx` | Update | Dashboard pipeline phase view |
+| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Rewrite | Zoom engine with 4-level navigation |
+| `src/modules/canonical-compliance/provenance-map.ts` | Update | Add `SYSTEM_LAYERS` constant |
+| `src/modules/canonical-compliance/components/AtomSidebar.tsx` | Update | Context-aware sidebar per zoom level |
+| `src/modules/canonical-compliance/components/ProvenanceGraph.tsx` | Update | Zoom-level-aware graph rendering |
 
-~340 lines new, ~100 lines updated. All UOR-rooted, all Docker/K8s-familiar.
+~400 lines rewritten, ~80 lines added/updated in supporting files.
+
