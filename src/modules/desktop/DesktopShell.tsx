@@ -35,6 +35,7 @@ import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
   const [booted, setBooted] = useState(false);
+  const [welcomed, setWelcomed] = useState(!shouldShowLocalTwinWelcome());
   const { theme } = useDesktopTheme();
   const wm = useWindowManager(theme);
   const isMobile = useIsMobile();
