@@ -1,67 +1,77 @@
 
 
-# Standardized Container-First Application Boot Sequence
+# Compliance Layer Naming — Developer-Aligned Refactor
 
-## Problem
+## Analysis
 
-1. **Build is broken**: `./container` cannot be resolved from `src/modules/uns/build/index.ts` — the file exists but Vite's module graph is stale.
-2. **No boot sequence**: `DesktopWindow.tsx` line 209 mounts `<AppComponent />` directly, bypassing the entire AppKernel/Container/Orchestrator pipeline that is fully built but unwired.
+**Current zoom levels** use UOR-internal jargon that would confuse a Red Hat / CNCF engineer:
+- L0: "Primitives" — ambiguous (language primitives? UOR primitives?)
+- L1: "Pipelines" — overloaded (CI/CD pipelines? data pipelines?)
+- L2: "Modules" — acceptable but generic
+- L3: "System" — too vague
 
-## Solution
+**Current system layers** (the L3 content) are missing Applications and Protocol:
+- Engine, Name System, Build System, Services (Applications are buried inside "Services")
 
-Wire the existing container infrastructure into the UI via a mandatory boot overlay that every application passes through before becoming interactive.
+**UOR crate structure** (`docs.rs/uor-foundation`): `kernel` → `bridge` → `user` → `enforcement`
 
-## Files
+## Proposed Naming
 
-| File | Action | Purpose |
-|---|---|---|
-| `src/modules/uns/build/index.ts` | Re-save (add trailing newline) | Fix stale module resolution |
-| `src/modules/desktop/components/ContainerBootOverlay.tsx` | **Create** | Terminal-style boot sequence overlay |
-| `src/modules/desktop/components/ContainerInspector.tsx` | **Create** | On-demand `docker inspect` popover |
-| `src/modules/desktop/DesktopWindow.tsx` | **Update** | Two-phase render: boot overlay then app mount |
-| `src/modules/desktop/hooks/useWindowManager.ts` | **Update** | Add `booted` flag to WindowState |
+### Zoom Levels (view granularity — how deep you're looking)
 
-## Implementation Details
+Mapped to how a systems engineer navigates any codebase:
 
-### 1. Fix Build (`index.ts`)
-Add a trailing newline/comment to force Vite to re-resolve the barrel file. The underlying `container.ts` file is intact with all exports.
+| Level | Current | Proposed | Description | Dev mental model |
+|-------|---------|----------|-------------|-----------------|
+| L0 | Primitives | **Operations** | Atomic ops, types, ring elements | syscalls, instructions |
+| L1 | Pipelines | **Exports** | Function chains and public APIs | exported symbols, endpoints |
+| L2 | Modules | **Packages** | Logical module groups | crates, npm packages |
+| L3 | System | **Architecture** | System-wide layer view | architecture diagram |
 
-### 2. ContainerBootOverlay (~180 lines)
-A dark terminal-style overlay that runs the **real** orchestrator pipeline:
+"Operations → Exports → Packages → Architecture" is exactly how a developer zooms: from individual function calls, to a module's public surface, to package boundaries, to the full system map.
+
+### System Layers (the L3 architectural tiers)
+
+Aligned with both UOR ontology and CNCF/infrastructure conventions:
+
+| Current | Proposed | UOR mapping | CNCF analog |
+|---------|----------|-------------|-------------|
+| Engine | **Kernel** | `kernel` (addressing, schema, ops) | Linux kernel |
+| Name System | **Protocol** | `bridge` (resolution, queries) | DNS / service discovery |
+| Build System | **Runtime** | `enforcement` (containers, images) | containerd / CRI-O |
+| Services | **Services** | orchestrator, kernel isolation | platform services |
+| *(missing)* | **Applications** | `user` (types, morphisms, state) | workloads / pods |
+
+This gives us 5 layers: **Kernel → Protocol → Runtime → Services → Applications**
+
+### Why this works for a skeptical CNCF engineer
+
+- "Kernel" — immediately understood as the foundation layer
+- "Protocol" — name resolution IS a protocol; maps to DNS/service discovery
+- "Runtime" — container lifecycle IS runtime; maps to containerd/CRI-O
+- "Services" — orchestration, isolation = platform services
+- "Applications" — the actual apps (oracle, desktop, landing, app-store)
+
+### Module redistribution for the new layers
 
 ```text
-Phase 1: INIT       → orchestrator.ensureRunning(appName)     ~10ms
-Phase 2: CONTAINER  → Reads container ID + state from kernel  ~8ms
-Phase 3: KERNEL     → Reads permissions, namespaces, ops      ~15ms
-Phase 4: MOUNT      → Triggers Suspense lazy-load             ~40ms
-Phase 5: SEAL       → kernel.seal() → content-addressed hash  ~20ms
-Phase 6: READY      → Overlay fades out, app is interactive
+Kernel:       ring-core, uns/core/address, uns/core/ring, uns/core/identity, uns/core/keypair
+Protocol:     uns/core/record, uns/core/resolver, uns/core/dht
+Runtime:      uns/build/container, uns/build/uorfile, uns/build/registry,
+              uns/build/compose, uns/build/secrets, uns/build/snapshot
+Services:     compose/orchestrator, compose/app-kernel, oracle, identity, messenger
+Applications: landing, desktop, app-store, donate
 ```
 
-Visual: monospace font, dark background matching window chrome, green checkmarks progressing through each phase with real timing. Shows container ID, image reference, kernel namespace count. Auto-dismisses after ~300-500ms total.
+## Files to Change
 
-### 3. ContainerInspector (~120 lines)
-A popover triggered by a small status pill in the window corner after boot completes. Shows:
-- **Container**: ID, state, uptime, image ref
-- **Kernel**: allowed ops, namespaces, call count, denied count, payload bytes
-- **Requires**: the app's `requires` list from its blueprint (atoms/pipelines/modules)
-- **Seal**: last seal hash
+| File | Change |
+|---|---|
+| `src/modules/canonical-compliance/components/ZoomControls.tsx` | Rename labels + descriptions |
+| `src/modules/canonical-compliance/provenance-map.ts` | 5 system layers with new names + module redistribution |
+| `src/modules/canonical-compliance/components/LevelTables.tsx` | Update L3 table column headers if needed |
+| `src/modules/canonical-compliance/components/ProvenanceGraph.tsx` | Update legend labels |
+| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Update any hardcoded label references |
 
-Supports two views: **list** (conventional table) and **graph** (tree showing namespace-to-operation hierarchy). Polls every 2s for live updates.
-
-### 4. DesktopWindow Update (lines 200-211)
-Replace the direct `<AppComponent />` mount with a two-phase render:
-- If `!win.booted`: render `<ContainerBootOverlay>` which calls `onBooted(win.id)` when done
-- If `win.booted`: render the existing `<Suspense>` + `<AppComponent>` with a subtle status pill overlay (bottom-left corner) that opens the ContainerInspector on click
-
-### 5. WindowState Update
-Add `booted: boolean` (default `false`) to the `WindowState` interface. Set to `true` after boot completes. Already-open windows skip boot on re-focus. Persisted to localStorage so reopened windows from a saved session also skip.
-
-## Design Principles
-
-- **No exceptions** — every app, same sequence, always
-- **Real operations** — `orchestrator.ensureRunning()` + `kernel.seal()` are called, not simulated
-- **Fast** — total ~300-500ms; the overlay auto-dismisses
-- **Inspectable** — click the status pill anytime for full container/kernel transparency
-- **Familiar** — phases map directly to Docker/K8s concepts; all labels use standard DevOps terminology
+All changes are label/data renames — no structural or logic changes needed.
 
