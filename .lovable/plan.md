@@ -1,90 +1,136 @@
 
 
-# Unified Feature Discovery — App Hub + Contextual Surfacing
+# Messenger UX Polish — Responsiveness, Snappiness & Full Wiring
 
-## Problem
+## Critical Issues Found
 
-The OS has 8 desktop apps, but the system contains 40+ modules with capabilities that are invisible to users. Features are only reachable through Spotlight search (if you know the name) or right-click context menus. Users who don't explore will never find Messenger, Graph Explorer, Daily Notes, or the bridge/identity features built into them.
+### 1. Performance: N+1 Query Problem in `use-conversations.ts`
+Lines 133-150 execute **two sequential database queries per conversation** (latest message + unread count) inside a `for` loop. With 20 conversations, that's 40 sequential network requests on every load AND on every realtime event (new message, session update). This is the single biggest performance killer.
 
-## Solution: Three-Layer Discovery
+### 2. Performance: Full Refetch on Every Realtime Event
+Both `use-conversations.ts` and `use-messages.ts` call their full `fetch` function on every INSERT/UPDATE event. A single new message triggers a full re-fetch of all conversations (including the N+1 loop above), plus a full re-fetch of all messages + reactions + profiles.
 
-```text
-Layer 1: App Hub (dedicated window)
-  └─ Full catalog of apps, grouped by OS taxonomy category
-  └─ App cards with icon, name, 1-line description, quick-launch
-  └─ Featured/new section at top for recently added capabilities
+### 3. Scroll Jank
+`handleScroll` in `ConversationView.tsx` (line 76) calls `setShowScrollBottom` on every scroll event with no throttle — causes re-renders during scrolling.
 
-Layer 2: Home Screen Quick-Access Row
-  └─ Below the search bar: 4-5 subtle icon buttons for core apps
-  └─ Replaces the current "nothing visible" state
-  └─ Always visible on the home screen (not in a menu)
+### 4. Unwired Buttons & Dead Ends
+- **Video/Audio call buttons** in `ContactHeader.tsx` (lines 74-85): `onCall` is never passed from `ConversationView.tsx` — buttons do nothing
+- **"Forward" option** listed in `MessageContextMenu.tsx` import but not used
+- **"New Channel"** in `SidebarMenu.tsx` (line 31): `action` just closes the menu, does nothing
+- **Privacy & Security** and **Chat Settings** in `SettingsPanel.tsx`: no actions, just dead buttons
+- **Bridge Connections** button in Settings: `onOpenBridges` is passed but the bridges panel can't open from Settings because the sidebar panel replaces the inbox view
 
-Layer 3: Contextual App Suggestions (KG-powered)
-  └─ Spotlight/search suggests relevant apps based on query context
-  └─ e.g. typing "message" surfaces Messenger; "graph" surfaces Graph Explorer
-  └─ Powered by keyword matching against app metadata
-```
+### 5. Emoji Search is Broken
+`EmojiPanel.tsx` line 61: search filter is `filter(() => true)` — it returns ALL emojis regardless of search query, just sliced to 100.
 
-## Implementation
+### 6. Missing Touch Feedback
+No `active:` states on interactive elements — on mobile, taps feel unresponsive because there's no visual feedback.
 
-### 1. App Hub Window (new desktop app)
+### 7. Edit Uses `prompt()`, Delete Uses `confirm()`
+`ConversationView.tsx` lines 99-106: uses browser `prompt()` and `confirm()` dialogs — breaks the premium feel completely.
 
-**New file: `src/modules/desktop/components/AppHub.tsx`**
-- A dedicated window/app registered in `desktop-apps.ts` with id `"app-hub"`, category `"RESOLVE"`
-- Layout: A clean grid organized by OS taxonomy categories (Resolve, Identity, Exchange, Observe, Structure)
-- Each app card: icon (from existing `DesktopApp.icon`), label, a short description (new `description` field on `DesktopApp`), and accent color indicator
-- Clicking a card launches the app via `window.dispatchEvent(new CustomEvent("uor:open-app", { detail: appId }))`
-- A "Featured" section at the top highlights 2-3 apps with slightly larger cards
-- Non-user-facing categories (Compute, Transform, Failure) are hidden
-- Clean, minimal grid — no marketing, just functional catalog
+## Implementation Plan
 
-**Modify: `src/modules/desktop/lib/desktop-apps.ts`**
-- Add `description: string` to `DesktopApp` interface
-- Add short descriptions to each existing app (e.g., Oracle: "AI-powered knowledge assistant", Messenger: "Sovereign encrypted messaging")
-- Register `app-hub` as a new app with `Grid3X3` icon, label "Apps", category "RESOLVE"
-- Add apps currently missing from the desktop: a `"wallet"` app pointing to identity/wallet
+### Phase 1: Fix the N+1 Query (biggest performance win)
 
-### 2. Home Screen Quick-Access Dock
+**Modify: `use-conversations.ts`**
+- Replace the per-conversation loop with two batch queries:
+  - One query using a window function or `DISTINCT ON` to get the latest message per session
+  - One query using `GROUP BY` to get unread counts per session
+- Result: 5-6 total queries instead of 2N+4
 
-**Modify: `src/modules/desktop/DesktopWidgets.tsx`**
-- Below the search bar (after context pills), add a row of 5 subtle circular icon buttons for the most-used apps: Oracle, Messenger, Library, Files, Apps (App Hub)
-- Icons use the same frosted-glass treatment as the search bar
-- Clicking any icon opens that app
-- Row fades with the rest of the home screen when windows are open
-- On mobile (`MobileShell.tsx`): the existing menu drawer grid already handles this
+### Phase 2: Optimistic Realtime Updates
 
-### 3. Enhanced Spotlight with App-Context Suggestions
+**Modify: `use-messages.ts`**
+- On realtime INSERT: append the new message to local state immediately instead of refetching everything
+- Only do a full refetch for UPDATE events (edits/deletes)
+- On reaction changes: patch the specific message's reactions array locally
 
-**Modify: `src/modules/desktop/SpotlightSearch.tsx`**
-- Add keyword-to-app mapping: each `DesktopApp` gets a `keywords: string[]` field (e.g., Messenger: ["chat", "message", "send", "whatsapp", "telegram"])
-- When typing, if the query matches app keywords, that app is promoted to the top of the results with a "Launch" indicator
-- This uses the existing `filter` function in cmdk — no KG query needed for this layer
+**Modify: `use-conversations.ts`**
+- On new message INSERT: update only the affected conversation's `lastMessage` and `unread` count locally
+- Debounce full refetch to max once per 5 seconds as a consistency check
 
-**Modify: `src/modules/desktop/lib/desktop-apps.ts`**
-- Add `keywords: string[]` to `DesktopApp` for richer search matching
+### Phase 3: Scroll & Render Performance
 
-### 4. OS Taxonomy Polish
+**Modify: `ConversationView.tsx`**
+- Throttle `handleScroll` with `requestAnimationFrame` 
+- Use `will-change: transform` on the scroll container for GPU compositing
+- Wrap the scroll-to-bottom FAB in a CSS transition instead of conditional render (avoids layout shift)
 
-**Modify: `src/modules/desktop/lib/os-taxonomy.ts`**
-- Update `appIds` arrays to include the new `app-hub` and `wallet` entries
-- Ensure Graph Explorer appears under OBSERVE (already does)
+### Phase 4: Wire All Dead Buttons
+
+**Modify: `ConversationView.tsx`**
+- Call buttons → show a toast: "Sovereign voice/video calls — coming soon"
+- Pass `onCall` to `ContactHeader`
+
+**Modify: `SidebarMenu.tsx`**
+- "New Channel" → show toast: "Channels — coming soon"
+
+**Modify: `SettingsPanel.tsx`**
+- Privacy & Security → show toast: "Coming soon"
+- Chat Settings → show toast: "Coming soon"
+- Make Bridge Connections navigate back to inbox first, then open bridges
+
+### Phase 5: Fix Emoji Search
+
+**Modify: `EmojiPanel.tsx`**
+- Implement actual Unicode name-based search using a lightweight emoji name map
+- Filter emojis whose names contain the search query
+
+### Phase 6: Replace `prompt()`/`confirm()` with In-App Modals
+
+**Create: `EditMessageModal.tsx`**
+- Clean inline edit UI that appears in-place or as a minimal bottom sheet
+- Pre-filled textarea, Cancel/Save buttons, matches messenger aesthetic
+
+**Create: `ConfirmDialog.tsx`**
+- Reusable confirmation dialog with the frosted-glass treatment
+- Used for delete confirmation
+
+**Modify: `ConversationView.tsx`**
+- Replace `prompt()` call with `EditMessageModal`
+- Replace `confirm()` call with `ConfirmDialog`
+
+### Phase 7: Touch & Interaction Polish
+
+**Modify across all interactive components:**
+- Add `active:scale-[0.97]` to chat list items, buttons, and menu items for instant tap feedback
+- Add `active:bg-white/[0.06]` to all tappable elements
+- Ensure all `transition-` durations are `100ms` or `75ms` for snappiness
+- Add `touch-action: manipulation` to prevent 300ms tap delay on mobile
+- Add `select-none` to interactive elements to prevent text selection on long press
+
+### Phase 8: Visual Micro-Polish
+
+**Modify: `MessageBubble.tsx`**
+- Add a subtle `animate-in` for new messages (fade + slight slide up, 100ms)
+
+**Modify: `ConversationView.tsx`**
+- Typing indicator: use a more refined dot animation (opacity pulse instead of bounce, which feels janky)
+
+**Modify: `ChatList.tsx`**
+- Add `will-change: transform` for smooth scroll
+- Avatar: add a subtle ring for online contacts
 
 ## Files Summary
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `desktop/components/AppHub.tsx` | Create | Full app catalog window |
-| `desktop/lib/desktop-apps.ts` | Modify | Add descriptions, keywords, new app entries |
-| `desktop/DesktopWidgets.tsx` | Modify | Quick-access icon row on home screen |
-| `desktop/SpotlightSearch.tsx` | Modify | Keyword-boosted app suggestions |
-| `desktop/lib/os-taxonomy.ts` | Modify | Update app registrations |
+| `lib/use-conversations.ts` | Modify | Batch queries, optimistic realtime |
+| `lib/use-messages.ts` | Modify | Optimistic inserts, debounced refetch |
+| `ConversationView.tsx` | Modify | Scroll throttle, wire calls, replace prompt/confirm, typing animation |
+| `MessageBubble.tsx` | Modify | Entry animation, touch states |
+| `ChatList.tsx` | Modify | Touch feedback, online ring, scroll perf |
+| `ContactHeader.tsx` | Modify | Wire call buttons with toast |
+| `SidebarMenu.tsx` | Modify | Wire New Channel toast |
+| `SettingsPanel.tsx` | Modify | Wire dead buttons with toasts, fix bridges flow |
+| `EmojiPanel.tsx` | Modify | Fix search to actually filter by emoji name |
+| `EditMessageModal.tsx` | Create | In-app message edit UI |
+| `ConfirmDialog.tsx` | Create | Reusable confirmation dialog |
+| `UnifiedInbox.tsx` | Modify | Touch states on filter tabs |
+| `MessageInput.tsx` | Modify | Touch manipulation, active states |
+| `MessageContextMenu.tsx` | Modify | Active states on menu items |
+| `MessengerPage.tsx` | Modify | Minor touch-action CSS |
 
-No database migrations needed. No new dependencies. Pure UI/UX layer.
-
-## Why This Works
-
-- **App Hub** = a single place to see everything (solves "I didn't know that existed")
-- **Home screen dock** = zero-tap access to the 5 core apps (solves "too many clicks")
-- **Smart Spotlight** = type naturally, get the right app (solves "I forgot the name")
-- Everything routes through the existing `openApp()` → `useWindowManager` pipeline — no new state management
+No database migrations needed.
 
