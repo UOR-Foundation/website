@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import SovereignEditor, { type SovereignEditorHandle } from "@/modules/core/editor/SovereignEditor";
 import { format, subDays, addDays } from "date-fns";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { localGraphStore } from "@/modules/knowledge-graph/local-store";
@@ -58,7 +59,7 @@ export default function DailyNotes() {
   const [noteAddress, setNoteAddress] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const inputRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
+  const inputRefs = useRef<Map<string, SovereignEditorHandle>>(new Map());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dateStr = useMemo(() => format(currentDate, "yyyy-MM-dd"), [currentDate]);
@@ -354,23 +355,25 @@ export default function DailyNotes() {
                   style={{ paddingLeft: `${block.indent * 24}px` }}
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 mt-[11px] mr-2 shrink-0 group-hover:bg-primary/50 transition-colors" />
-                  <textarea
-                    ref={(el) => {
-                      if (el) inputRefs.current.set(block.id, el);
+                  <SovereignEditor
+                    ref={(handle) => {
+                      if (handle) inputRefs.current.set(block.id, handle);
                       else inputRefs.current.delete(block.id);
                     }}
                     value={block.content}
-                    onChange={(e) => updateBlock(block.id, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, block.id)}
-                    placeholder="Type here... Use [[wiki-links]] and #hashtags"
-                    className="flex-1 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/30 py-1.5 min-h-[32px]"
-                    rows={1}
-                    style={{ height: "auto" }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = "auto";
-                      target.style.height = `${target.scrollHeight}px`;
+                    onChange={(text) => updateBlock(block.id, text)}
+                    onEnter={() => { addBlockAfter(block.id); return true; }}
+                    onEscape={() => {}}
+                    onTab={(delta) => indentBlock(block.id, delta)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace" && block.content === "") {
+                        e.preventDefault();
+                        removeBlock(block.id);
+                      }
                     }}
+                    placeholder="Type here... Use [[wiki-links]] and #hashtags"
+                    className="flex-1 bg-transparent text-foreground py-1.5"
+                    minHeight="32px"
                   />
                 </div>
               ))}
