@@ -1,7 +1,7 @@
 /**
- * MediaPlayer — Video streaming via edge-function-hosted YouTube player.
- * Thumbnails proxied through our edge function for reliable loading.
- * Player page served from our edge function to bypass X-Frame-Options.
+ * MediaPlayer — Video streaming via web-proxy for YouTube embeds.
+ * Thumbnails proxied through video-stream edge function.
+ * YouTube embeds proxied through web-proxy to bypass X-Frame-Options.
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
@@ -19,11 +19,13 @@ import {
   type VideoCategory,
 } from "@/modules/media/lib/video-catalog";
 
-/* ── Edge function URL builder ───────────────────────────────── */
+/* ── URL builders ────────────────────────────────────────────── */
 
-function getPlayerUrl(videoId: string): string {
+function getEmbedUrl(videoId: string): string {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "erwfuxphwcvynxhfbvql";
-  return `https://${projectId}.supabase.co/functions/v1/video-stream?id=${videoId}`;
+  const ytUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&color=white&playsinline=1`;
+  // Route through web-proxy to strip X-Frame-Options
+  return `https://${projectId}.supabase.co/functions/v1/web-proxy?url=${encodeURIComponent(ytUrl)}`;
 }
 
 /* ── Video Card ──────────────────────────────────────────────── */
@@ -155,16 +157,15 @@ export default function MediaPlayer() {
 
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col min-w-0">
-            {/* Player iframe — our edge function serves the player page which embeds YouTube */}
             <div className="w-full aspect-video bg-black flex-shrink-0 relative">
               <iframe
                 key={playing.id}
-                src={getPlayerUrl(playing.id)}
+                src={getEmbedUrl(playing.id)}
                 title={playing.title}
                 className="w-full h-full absolute inset-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
               />
             </div>
             <div className="p-4 flex-shrink-0">
