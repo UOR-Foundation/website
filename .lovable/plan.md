@@ -1,130 +1,132 @@
 
 
-# Tailslayer Analysis & Knowledge Graph Compression Opportunities
+# Time Machine — Continuous Auto-Save & System Rollback
 
-## What Tailslayer Actually Does
+## Context
 
-Tailslayer is **not** a compression library. It is a **tail-latency elimination** tool for DRAM reads. Its core technique:
+The system already has strong building blocks:
+- **SessionSnapshot** (session-state.ts): captures window layout, app buffers, theme, scroll positions — but only keeps 10 in a ring buffer
+- **GrafeoDB**: persists the knowledge graph to IndexedDB with export/import (N-Quads, JSON-LD)
+- **SovereignStore**: KV persistence (Tauri or localStorage)
+- **Orchestrator**: tracks all running app instances and their state
+- **AppKernel.seal()**: content-addresses runtime state
 
-1. **Redundant replication** — every datum is copied N times across independent DRAM channels
-2. **Hedged reads** — N workers (pinned to separate CPU cores) race to read the same logical index from different physical channels
-3. **First-responder wins** — whichever channel is NOT in a DRAM refresh cycle responds first, eliminating the ~300ns stall
+What's missing is a **unified checkpoint** that captures *everything* atomically — desktop state, knowledge graph, orchestrator, vault state, and user settings — with configurable auto-save intervals and effortless rollback.
 
-Key implementation insights from the source:
-- Hugepage allocation (1GB `MAP_HUGETLB`) eliminates TLB misses
-- Channel-aware addressing via bit manipulation (`channel_bit`, `chunk_shift`, `chunk_mask`) ensures replicas land on different physical DRAM channels
-- All hot-path functions are `[[gnu::always_inline]]` — zero call overhead
-- Precomputed stride arithmetic avoids any division/modulo in the read path
-- `mlock()` prevents the OS from paging out the data
-
-## Applicable Insights for Our System
-
-### 1. Hedged Reads for Knowledge Graph (Latency, Not Compression)
-
-**Principle**: When the graph is stored in both GrafeoDB WASM (IndexedDB) and an in-memory cache, issue reads to both and take whichever responds first. This eliminates IndexedDB I/O tail latency (~5-50ms spikes).
-
-**Implementation**: Add a `hedgedGet` to `grafeo-store.ts` that queries both the WASM engine and a lightweight `Map<string, KGNode>` LRU cache in parallel, resolving with whichever returns first.
-
-### 2. Hot-Path Inlining (Already Designed)
-
-The `callDirect()` fast-path in AppKernel (from the previous plan) is the exact browser analog of Tailslayer's `always_inline` pattern — bypass middleware overhead for performance-critical operations.
-
-### 3. Precomputed Address Tables
-
-Tailslayer precomputes `chunk_shift_`, `chunk_mask_`, and `stride_in_elements_` at construction time. We should do the same for UOR addresses: maintain a precomputed `Map<string, number>` index of node addresses to internal IDs, avoiding repeated string hashing during graph traversals.
-
----
-
-## Compression Opportunities (Lossless, Zero Fidelity Loss)
-
-These are the significant space-saving opportunities identified from analyzing the knowledge graph storage layer:
-
-### A. IRI Prefix Interning (40-60% quad storage reduction)
-
-**Problem**: Every quad stores full IRI strings like `https://uor.foundation/schema/nodeType` repeatedly. A node with 10 properties generates 10 quads, each repeating `https://uor.foundation/` as a prefix.
-
-**Solution**: Maintain a prefix table (like SPARQL's `PREFIX` declarations but at the storage level). Store integer prefix IDs + suffix instead of full IRIs. This is standard in RDF databases (HDT format does exactly this).
+## Architecture
 
 ```text
-Before: <https://uor.foundation/schema/qualityScore> = 47 bytes per occurrence
-After:  prefix_id=2, suffix="qualityScore" = ~14 bytes
-Savings: ~70% on predicate storage alone
+┌────────────────────────────────────────────────────────────────┐
+│  Time Machine App (standalone desktop app)                      │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Visual Timeline · Checkpoint List · Settings Panel      │  │
+│  │  [Rewind Slider] ─────●────────── [Now]                  │  │
+│  │  #14 Today 3:42pm  ●  Auto-save                          │  │
+│  │  #13 Today 3:27pm  ●  Auto-save                          │  │
+│  │  #12 Today 3:12pm  ●  Manual checkpoint                  │  │
+│  │  ...                                                      │  │
+│  │  [Restore]  [Fork from here]  [Compare]                  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-### B. Property Map Columnar Compression
+## What a Checkpoint Captures (Exhaustive)
 
-**Problem**: `node.properties` is stored as `JSON.stringify(properties)` — a single literal blob per node. Two nodes with `{format: "csv", size: 1024}` and `{format: "csv", size: 2048}` store redundant schema structure.
+| Layer | Data Captured | Method |
+|-------|--------------|--------|
+| Desktop | Window positions, sizes, z-order, active window, theme | `useWindowManager` state |
+| App Buffers | Scroll positions, draft content, cursor, active tabs | `AppBufferState[]` from continuity |
+| Knowledge Graph | Full N-Quads dump (all quads, all graphs) | `grafeoStore.dumpNQuads()` |
+| Orchestrator | Running instances, call counts, sealed hashes | `orchestrator.state()` snapshot |
+| User Settings | Theme, autosave interval, preferences | SovereignStore KV dump |
+| Vault Metadata | Encrypted file index (not raw files — those are immutable CID blobs) | Vault slot manifest |
 
-**Solution**: Extract the property schema (key set) as a content-addressed template. Store only the values array per node, referencing the shared schema by CID.
+A checkpoint is content-addressed via `singleProofHash`, producing a verifiable CID. Checkpoints form a chain (each references its parent CID), enabling both linear rollback and forking.
 
-```text
-Before: {"format":"csv","size":1024,"columns":5} = 38 bytes × N nodes
-After:  schema_cid + [csv, 1024, 5] = ~15 bytes × N nodes  (schema stored once)
-```
+## Storage Strategy (Minimizing Overhead)
 
-### C. Canonical Form Deduplication (Already Exists — Enhance It)
+- **Incremental by default**: The first checkpoint stores the full N-Quads dump. Subsequent auto-save checkpoints store only a **delta** — the quads added/removed since the last checkpoint — computed by comparing quad counts and tracking change events.
+- **Full snapshot on demand**: Manual "Create Checkpoint" always stores the full state for maximum safety.
+- **Retention policy**: User-configurable max checkpoints (default 50). Oldest auto-saves are pruned first; manual checkpoints are never auto-pruned.
+- **Storage**: IndexedDB via a dedicated `uor-time-machine` store (separate from the graph DB). Each checkpoint is ~10-50KB for desktop state + delta quads; full snapshots scale with graph size.
 
-**Current**: `compressGraph()` merges nodes with identical `canonicalForm`. But it only runs on-demand.
+## Rollback Mechanics
 
-**Enhancement**: Make it incremental — on every `putNode()`, check if a node with the same canonical form already exists before inserting. This prevents duplicates from ever entering the graph, rather than cleaning them up after the fact.
+**Restore** replaces the current system state with the checkpoint:
+1. Pause the auto-save timer
+2. Clear the knowledge graph (`grafeoStore.clear()`)
+3. Reload N-Quads from the checkpoint (reconstructed from base + deltas)
+4. Restore window layout via `useWindowManager` state injection
+5. Restore orchestrator instance states
+6. Resume auto-save timer with a fresh checkpoint as the new head
 
-### D. Structural Sharing for Subgraphs (Content-Addressed DAG)
-
-**Principle**: When two subgraphs are structurally identical (same predicate/object patterns, different subjects), store the pattern once and reference it. This is the graph equivalent of Git's tree objects.
-
-**Example**: If 100 dataset nodes all have the same edge pattern (`hasColumn → revenue`, `hasColumn → date`, `hasFormat → csv`), store that pattern as a single content-addressed "subgraph template" and link each node to it.
-
-### E. Vault Chunk Deduplication
-
-**Problem**: `vault-store.ts` chunks documents and stores each chunk separately. If two documents share paragraphs (e.g., versioned docs), identical chunks are stored twice.
-
-**Solution**: Before writing a chunk to the Data Bank, check if a chunk with the same CID already exists. The CID is already computed — just add a lookup step. This gives automatic cross-document deduplication with zero fidelity loss.
-
----
+**Fork** creates a branch: the current state is preserved as a named branch, and the system restores to the selected checkpoint. The user can switch branches later.
 
 ## Implementation Plan
 
-### Files Created/Modified
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/modules/time-machine/types.ts` | `SystemCheckpoint`, `CheckpointMeta`, `TimeMachineConfig` types |
+| `src/modules/time-machine/checkpoint-store.ts` | IndexedDB-backed checkpoint storage with retention policy |
+| `src/modules/time-machine/checkpoint-capture.ts` | Captures full system state into a `SystemCheckpoint` |
+| `src/modules/time-machine/checkpoint-restore.ts` | Restores system state from a checkpoint (graph, desktop, orchestrator) |
+| `src/modules/time-machine/auto-save.ts` | Interval-based auto-save engine with user-configurable timing |
+| `src/modules/time-machine/hooks.ts` | `useTimeMachine()`, `useCheckpointList()`, `useAutoSave()` React hooks |
+| `src/modules/time-machine/index.ts` | Barrel export |
+| `src/modules/time-machine/pages/TimeMachinePage.tsx` | Standalone app UI: timeline, restore, fork, settings |
+
+### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/modules/knowledge-graph/lib/iri-intern.ts` | Create — IRI prefix interning table with bidirectional lookup |
-| `src/modules/knowledge-graph/lib/hedged-read.ts` | Create — parallel read from WASM + LRU cache, first-responder wins |
-| `src/modules/knowledge-graph/lib/schema-templates.ts` | Create — content-addressed property schema extraction and sharing |
-| `src/modules/knowledge-graph/grafeo-store.ts` | Modify — integrate IRI interning on insert/query, add incremental dedup on `putNode`, add hedged reads for `getNode` |
-| `src/modules/sovereign-vault/lib/vault-store.ts` | Modify — add CID-based chunk dedup check before `writeSlot` |
-| `src/modules/knowledge-graph/graph-compute.ts` | Modify — add subgraph template detection to `compressGraph()` |
+| `src/modules/compose/static-blueprints.ts` | Add Time Machine blueprint (category OBSERVE, icon Clock) |
+| `src/modules/desktop/lib/desktop-apps.ts` | Add `Clock` to icon map |
 
-### Step 1: IRI Prefix Interning (`iri-intern.ts`)
+### Key Type: SystemCheckpoint
 
-A singleton that maintains a bidirectional prefix table. On first use, registers the 8-10 standard prefixes (`uor:`, `rdf:`, `rdfs:`, `schema:`, etc.). Every quad insert compresses IRIs to `[prefixId, suffix]` before storage. Every query expands them back. Fully lossless — the prefix table is persisted alongside the graph.
+```typescript
+interface SystemCheckpoint {
+  id: string;                    // Content-addressed CID
+  sequence: number;              // Monotonic sequence number
+  parentId: string | null;       // Previous checkpoint CID (chain)
+  branchName: string;            // "main" or user-defined fork name
+  timestamp: string;             // ISO creation time
+  type: "auto" | "manual";       // How it was created
+  label?: string;                // User-defined label for manual checkpoints
 
-### Step 2: Hedged Read Layer (`hedged-read.ts`)
+  desktop: SessionSnapshot;      // Full desktop state
+  graphNQuads: string;           // Full or delta N-Quads
+  isDelta: boolean;              // If true, graphNQuads is a delta
+  baseCheckpointId?: string;     // If delta, the full snapshot it's relative to
+  orchestratorState: object;     // Serialized orchestrator instances
+  settings: Record<string, unknown>; // User preferences KV
+  sealHash: string;              // singleProofHash of the entire checkpoint
+}
+```
 
-An LRU cache (configurable size, default 500 nodes) that sits alongside GrafeoDB. On `getNode()`, both the cache and WASM are queried via `Promise.race()`. Cache is populated on every successful read and invalidated on writes. This eliminates IndexedDB tail latency for hot nodes.
+### Auto-Save Engine
 
-### Step 3: Property Schema Templates (`schema-templates.ts`)
+- Default interval: 15 minutes (user-configurable: 5min / 10min / 15min / 30min / 1hr)
+- Only saves if state has actually changed (compares seal hash of current state vs last checkpoint)
+- Skips save during active drag/resize operations to avoid capturing transient state
+- Emits a subtle toast notification ("Checkpoint saved") with no interruption
 
-On `putNode()`, extract the property key set, sort it, hash it via `singleProofHash()` to get a schema CID. If the schema CID already exists, store only the values array. If new, register the schema. On `getNode()`, reconstruct the full properties object from schema + values.
+### Time Machine App UI
 
-### Step 4: Incremental Canonical Dedup
+A standalone desktop app with:
+- **Timeline view**: Vertical list of checkpoints, newest first, with sequence number, timestamp, and type badge (auto/manual)
+- **Rewind slider**: Drag to scrub through checkpoints visually
+- **Restore button**: One-click rollback with confirmation dialog
+- **Fork button**: Creates a named branch from the selected checkpoint
+- **Compare view**: Side-by-side diff of two checkpoints (quad count changes, window layout changes)
+- **Settings panel**: Auto-save interval, max checkpoints, retention rules
 
-In `grafeoStore.putNode()`, before inserting, check if any existing node shares the same `canonicalForm`. If so, merge properties and skip the insert. This makes `compressGraph()` unnecessary for new data.
+### Performance Guardrails
 
-### Step 5: Vault Chunk Dedup
-
-In `vaultStore.ingestDocument()`, before calling `writeSlot()` for each chunk, check if a slot with key `vault:*:chunk:*` having the same CID already exists. If so, store a reference (pointer) instead of duplicating the encrypted blob.
-
-## Compression Impact Estimate
-
-| Technique | Expected Savings | Fidelity Loss |
-|-----------|-----------------|---------------|
-| IRI interning | 40-60% on quad storage | Zero |
-| Property schema templates | 30-50% on property blobs | Zero |
-| Incremental canonical dedup | Prevents unbounded growth | Zero |
-| Vault chunk dedup | Variable (high for versioned docs) | Zero |
-| Subgraph templates | 20-40% on edge storage | Zero |
-| **Combined** | **~50% overall graph size reduction** | **Zero** |
-
-All techniques are fully reversible and lossless — they exploit structural redundancy in how RDF data is represented, not in the information itself.
+- Auto-save runs in a `requestIdleCallback` to avoid blocking the UI
+- N-Quads dump is the most expensive operation (~50-200ms for a large graph); only done for full snapshots
+- Delta computation uses a lightweight change counter, not a full diff
+- Checkpoint storage is in a separate IndexedDB database, so it doesn't compete with GrafeoDB I/O
 
