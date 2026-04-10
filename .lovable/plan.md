@@ -1,87 +1,123 @@
 
 
-# Canonical Compliance Engine — Provenance Audit from UOR Atoms to Every Module
+# Library Redesign — Blas.com-Powered Immersive Reading Experience
 
-## The Problem
+## Overview
 
-The system has ~37 active modules, 200+ exported functions, and 100+ types. There is currently no automated way to verify that every upstream operation traces back to a declared UOR Foundation primitive. The `pruning-gate.ts` checks module count hygiene, but not **type-level provenance**.
+Transform the Library page from a functional ingestion tool into a delightful, media-player-style experience modeled after the existing MediaPlayer component's aesthetic (dark cinema UI, category tabs, card grid, immersive player view). Auto-populate with ~100 book summaries scraped from blas.com, and add a book reader view with knowledge graph integration.
 
-## The Solution: Three Enforcement Layers
+## Architecture
 
-### Layer 1 — Static Provenance Registry (`src/modules/canonical-compliance/`)
-
-A new module that declares the complete "periodic table" of UOR atoms and maps every module's exports to them.
-
-**`atoms.ts`** — The 4 atomic categories from `uor-foundation/`:
-- **10 PrimitiveOps**: Neg, Bnot, Succ, Pred, Add, Sub, Mul, Xor, And, Or
-- **3 Spaces**: Kernel, Bridge, User
-- **Core Types**: Address, Datum, Triad, Operation, Morphism (Transform/Isometry/Embedding/Action), Proof, Certificate, Derivation, Observable, Query, Resolver, Context, Session, Effect, Stream, Predicate, Region
-- **Core Identity Pipeline**: URDNA2015 → SHA-256 → CID → IPv6 → Braille
-
-**`provenance-map.ts`** — A machine-readable registry mapping every module export to its UOR atom lineage:
 ```text
-module: "uns/trust/auth"
-  export: "UnsAuthServer"
-  traces-to: [Address, Certificate, Proof, Session]
-  pipeline: "encode → derive → certify → bind-session"
-
-module: "compose/orchestrator"  
-  export: "SovereignReconciler"
-  traces-to: [Context, Transition, Effect, Observable]
-  pipeline: "observe → predicate-dispatch → effect-chain → reduce"
+┌─────────────────────────────────────────────────┐
+│            LibraryPage (rewrite)                │
+│  ┌───────────────────────────────────────────┐  │
+│  │  Browse View (grid + categories + search) │  │
+│  │  - Hero shelf (featured books carousel)   │  │
+│  │  - Category pills (domain tabs)           │  │
+│  │  - Book card grid (covers + titles)       │  │
+│  └───────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────┐  │
+│  │  Reader View (when book clicked)          │  │
+│  │  - Book header (cover, title, metadata)   │  │
+│  │  - Rendered markdown (beautiful prose)    │  │
+│  │  - Related books sidebar                  │  │
+│  └───────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────┐  │
+│  │  Resonance View (existing, refined)       │  │
+│  │  - Graph + invariant cards                │  │
+│  └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
 ```
 
-**`audit.ts`** — Runtime audit function that:
-1. Walks the provenance map
-2. Checks that every referenced UOR atom actually exists in `uor-foundation/`
-3. Flags any module export with no provenance chain (an "ungrounded" export)
-4. Computes a **Grounding Score** (0–100): percentage of exports with complete provenance
+## What Changes
 
-### Layer 2 — Knowledge Graph Projection
+### 1. Hardcoded Book Catalog (~50 books from blas.com)
 
-**`provenance-graph.ts`** — Ingests the provenance map into the knowledge graph as triples:
-- Each UOR atom → KGNode (type: `uor:Atom`)
-- Each module export → KGNode (type: `uor:DerivedOperation`)  
-- Each provenance link → KGEdge (predicate: `uor:derivedFrom`)
-- The graph becomes navigable in the existing Sovereign Graph Explorer
+Create `src/modules/oracle/lib/book-catalog.ts` — a static catalog of ~50 curated books from blas.com with:
+- Title, author, domain/category, cover URL (from blas.com wp-content), source URL, tags
+- Short summary text (1-2 sentences from the page)
+- Key takeaways array
 
-This means you can visually trace from any module function all the way down to the ring operations it's built on.
+This mirrors the MediaPlayer's `video-catalog.ts` pattern — no API call needed for initial load. The existing ingestion system remains for adding more books dynamically.
 
-### Layer 3 — Export as Machine-Readable Artifact
+Categories derived from blas.com's tag system: Business, Philosophy, Psychology, Science, Technology, History, Finance, Self-Improvement, Leadership, Biography, Literature.
 
-**`export.ts`** — Generates three output formats:
-1. **Markdown** — A structured audit document with tables showing every module → atom chain
-2. **JSON-LD** — Machine-readable provenance graph (importable by any RDF tool)
-3. **N-Quads** — For SPARQL querying of the provenance tree
+### 2. LibraryPage Rewrite
 
-### Layer 4 — UI: Compliance Dashboard
+Complete rewrite of `src/modules/oracle/pages/LibraryPage.tsx` following the MediaPlayer's three-state pattern:
 
-A new page/panel (accessible from the App Store under a "System" category) showing:
-- The Grounding Score prominently (Algebrica-style stat block)
-- A searchable table of all module exports with their provenance chains
-- Visual indicators: grounded (green), partial (amber), ungrounded (red)
-- One-click export to Markdown or JSON-LD
+**Browse State:**
+- Dark cinema background (`hsl(220 15% 6%)`) matching MediaPlayer
+- Search bar (rounded pill, same styling)
+- Category tabs (horizontal scrollable pills)
+- Book card grid: cover image with subtle hover scale, title overlay at bottom, domain badge
+- "Featured" hero row at top (3 large cards for highlighted books)
+- Book count + selected count in header
+- Fuse/Discover buttons preserved
 
-## Build Error Fix
+**Reader State** (new — triggered on book click):
+- Back button header (like MediaPlayer's player view)
+- Left column: rendered book summary markdown with beautiful typography (serif fonts, generous line-height, proper headings)
+- Right sidebar: book cover, metadata (author, domain, tags), key takeaways, "Related Books" list (same-domain books), link to source on blas.com
+- Smooth transition in/out
 
-The `container.ts` file exists with all required exports. The build error is likely a stale cache or a file that was created but not flushed. The fix is to trigger a clean rebuild — no code changes needed to the file itself.
+**Resonance State** (existing — refined styling):
+- Keep ResonanceGraph and InvariantCard
+- Match dark cinema aesthetic
+
+### 3. BookCard Component Rewrite
+
+Rewrite `src/modules/oracle/components/BookCard.tsx`:
+- Larger, more visual card focused on the cover image
+- Cover fills most of the card (like a real bookshelf)
+- Title and author below in clean typography
+- Subtle domain color accent (thin top border or badge)
+- Hover: gentle lift + shadow + "Read" overlay
+- Selection mode: checkbox overlay for fuse operations
+
+### 4. BookReader Component (New)
+
+Create `src/modules/oracle/components/BookReader.tsx`:
+- Immersive reading layout with max-width prose container
+- Markdown rendered with `react-markdown` + `remark-gfm` (already available)
+- Typography: larger font, serif option, generous spacing
+- Book cover displayed alongside title/metadata
+- Key takeaways as styled callout cards
+- "Related Books" section at bottom
+- Back-to-grid navigation
+
+### 5. Edge Function Enhancement
+
+Add a `"get"` action to `supabase/functions/book-resonance/index.ts`:
+- Accepts `bookId` parameter
+- Returns full book data including `summary_markdown`
+- Used by the reader view
+
+### 6. Auto-Population Strategy
+
+The existing ingestion system already works with blas.com. The hardcoded catalog provides instant load without waiting for scraping. When the user clicks "Ingest" for the first time, the edge function crawls blas.com and fills the `book_summaries` table. The static catalog is used as fallback/seed data.
+
+### 7. Knowledge Graph Mapping
+
+Add a small bridge in `src/modules/oracle/lib/book-graph-bridge.ts`:
+- On book load, emit KG triples: `book → uor:hasDomain → domain`, `book → uor:hasTag → tag`
+- When invariants are discovered, emit: `invariant → uor:connectsBook → book`
+- This makes the entire library navigable in the Sovereign Graph Explorer
 
 ## Files to Create/Modify
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/canonical-compliance/atoms.ts` | Create | Declare all UOR atomic primitives |
-| `src/modules/canonical-compliance/provenance-map.ts` | Create | Map every module export → UOR atoms |
-| `src/modules/canonical-compliance/audit.ts` | Create | Runtime grounding audit + score |
-| `src/modules/canonical-compliance/provenance-graph.ts` | Create | Ingest provenance into KG as triples |
-| `src/modules/canonical-compliance/export.ts` | Create | Markdown / JSON-LD / N-Quads export |
-| `src/modules/canonical-compliance/index.ts` | Create | Barrel export |
-| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Create | Visual audit dashboard |
-| `src/App.tsx` | Modify | Add `/compliance` route |
-| `src/modules/cncf-compat/categories.ts` | Modify | Add "System Audit" category |
-| `src/modules/uns/build/index.ts` | Verify | Ensure container.ts resolves (rebuild) |
+| `src/modules/oracle/lib/book-catalog.ts` | Create | Static catalog of ~50 blas.com books |
+| `src/modules/oracle/pages/LibraryPage.tsx` | Rewrite | Three-state cinema-style library |
+| `src/modules/oracle/components/BookCard.tsx` | Rewrite | Visual cover-focused book cards |
+| `src/modules/oracle/components/BookReader.tsx` | Create | Immersive reading view |
+| `src/modules/oracle/components/BookGrid.tsx` | Rewrite | Category tabs + search + grid |
+| `src/modules/oracle/lib/book-graph-bridge.ts` | Create | KG triple emission for books |
+| `supabase/functions/book-resonance/index.ts` | Modify | Add "get" action for single book |
 
 ## Estimated Scope
 
-~600-700 lines across 8 files. The provenance map is the largest piece (~200 lines) since it catalogs every module. The audit logic and KG projection are compact (~100 lines each).
+~1200 lines across 7 files. The book catalog (~400 lines) and LibraryPage rewrite (~350 lines) are the largest pieces. The reader component is ~200 lines.
 
