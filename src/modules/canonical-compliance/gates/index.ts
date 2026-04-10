@@ -24,6 +24,9 @@ import "../../ontology/gate";
 // SKOS W3C Conformance gate
 import "./skos-conformance-gate";
 
+// Schema.org Conformance gate
+import "./schema-org-conformance-gate";
+
 // Axioms gate is registered via the axioms module barrel
 import "../../axioms/gate";
 
