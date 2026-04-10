@@ -76,7 +76,7 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
           vx: 0, vy: 0, r: 24,
         });
       }
-      // Connect layers sequentially (Engine → Names → Build → Services)
+      // Connect layers sequentially (Kernel → Protocol → Runtime → Services → Applications)
       for (let i = 0; i < SYSTEM_LAYERS.length - 1; i++) {
         e.push({ source: `layer:${SYSTEM_LAYERS[i].id}`, target: `layer:${SYSTEM_LAYERS[i + 1].id}`, predicate: "feeds" });
       }
