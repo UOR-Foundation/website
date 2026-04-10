@@ -1,61 +1,115 @@
 
 
-# CNCF Terminology Alignment + Build Fix
+# Knowledge Graph-First OS Conformance — Analysis & Plan
 
-## Two tasks
+## Current State Assessment
 
-### 1. Fix the build error (blocking)
+The system is **architecturally sound** but has **execution gaps** between the KG-first aspiration and current reality:
 
-The file `src/modules/uns/build/container.ts` exists (221 lines, valid TypeScript) but the build sandbox cannot resolve `"./container"` from `index.ts`. This is a known Vite/Rollup sandbox caching issue. The fix is to add a trivial trailing comment to `container.ts` to force the build system to re-index it. If that fails, we add an explicit `.ts` extension in the import path in `index.ts` (i.e., `from "./container.ts"`).
+### What's Already Working (Strengths)
+- **GrafeoDB (WASM)** is the single canonical graph engine with IndexedDB persistence
+- **PersistenceProvider interface** abstracts backend (Supabase, local, bundle) — truly agnostic
+- **anchor()** API exists for fire-and-forget graph writes from any module
+- **Graph Anchor Gate** checks coverage of user-facing modules
+- **UNS Graph** stores ring operations, ontology, and Q0 data as quads
+- **Store module** ingests datums, derivations, certificates as graph triples
+- **Bus module** exposes SPARQL query/update via `graph/sparql`
+- **Sync bridge** handles push/pull between local graph and remote persistence
 
-### 2. Update doc comments and display strings to CNCF terminology
+### Gaps — Where the OS Bypasses the Graph
 
-The ontology in `vocabulary.ts` already defines the canonical CNCF labels (e.g., "Service Mesh" not "Sovereign Bus", "Container Runtime" not "AppKernel"). But ~57 files still use the legacy "Sovereign" naming in doc comments, JSDoc headers, and UI-facing strings. The plan:
+1. **Static data arrays** (`src/data/`) — 24 files of hardcoded constants (nav items, app store entries, team members, framework layers, etc.) are imported directly by React components. These define what the OS "knows" but exist outside the graph.
 
-**What changes (doc comments and string literals only — no renames of exports/classes/filenames):**
+2. **Boot sequence** does NOT anchor its results into the graph — the seal, kernel hash, device provenance, and tech stack verification live in a closure variable (`_receipt`) rather than being written as graph triples.
 
-| Legacy term (in comments/strings) | CNCF term (from ontology) | Ontology ID |
+3. **Bus module registry** — registered operations and their metadata (descriptions, layers, namespaces) live in a `Map<string, OperationDescriptor>` in memory. The graph has no record of what operations exist or their relationships.
+
+4. **Ontology vocabulary** (`vocabulary.ts`) — SKOS concepts and profile labels are TypeScript objects, not graph quads. The "Ontology Panel" reads from TS arrays, not from a SPARQL query.
+
+5. **Zero user-facing modules** actually call `anchor()` — the search found 0 imports of `useGraphAnchor` or `anchor` outside the knowledge-graph module itself. The gate would report 0% coverage.
+
+6. **Ingest bridge** still imports from deprecated `local-store.ts` instead of canonical `grafeo-store`.
+
+7. **No graph-projection pattern** — UI components read hardcoded data; there's no `useGraphProjection()` hook that queries the graph and projects results into React state.
+
+## Plan
+
+### Task 1: Graph Seed Layer — Ingest Static Data into KG on Boot
+**File: `src/modules/knowledge-graph/seed.ts`** (new)
+
+Create a `seedStaticData()` function that runs once after GrafeoDB init. It imports each `src/data/*.ts` file, wraps each entry in JSON-LD with `@type` from schema.org types registry, runs `singleProofHash()` for content addressing, and writes the result as graph triples via `grafeoStore.putNode()`. This makes nav items, app store entries, team members, etc. all queryable via SPARQL.
+
+### Task 2: Boot Anchoring — Write Seal + Provenance into Graph
+**File: `src/modules/boot/sovereign-boot.ts`** (update)
+
+After the seal is computed, call `anchor("boot", "seal:created", { ... })` with the full seal data (kernel hash, derivation ID, device provenance, stack components). This makes the boot receipt a first-class graph citizen, queryable and auditable.
+
+### Task 3: Graph Projection Hook — `useGraphProjection()`
+**File: `src/modules/knowledge-graph/hooks/useGraphProjection.ts`** (new)
+
+A React hook that takes a SPARQL query or graph pattern and returns reactive state. Components can progressively migrate from `import { navItems } from "@/data/nav-items"` to `useGraphProjection("SELECT ?item WHERE { ?item a schema:SiteNavigationElement }")`. Includes a fallback to static data if graph isn't ready yet.
+
+### Task 4: Bus Registry Graph Sync
+**File: `src/modules/bus/registry.ts`** (update)
+
+After each `register()` call, fire-and-forget write the operation descriptor as a graph triple: `<urn:bus:ns/op> a uor:Operation ; rdfs:label "..." ; uor:layer N`. This makes the full API surface discoverable via SPARQL.
+
+### Task 5: Ontology Vocabulary Graph Materialization
+**File: `src/modules/ontology/vocabulary.ts`** (update)
+
+Add a `materializeToGraph()` function that writes all SKOS concepts as proper `skos:Concept` triples into the ontology named graph. The OntologyPanel can then optionally query the graph instead of reading TS arrays.
+
+### Task 6: KG Substrate Conformance Gate
+**File: `src/modules/knowledge-graph/graph-anchor-gate.ts`** (update)
+
+Expand the existing gate with three new checks:
+- **Substrate Coverage**: Verify that static data files have corresponding graph nodes (checks seed completeness)
+- **Boot Anchoring**: Verify that a boot seal triple exists in the graph
+- **Bus Registry Sync**: Verify that registered bus operations have corresponding graph triples
+- **Ontology Materialization**: Verify SKOS concepts exist as graph quads
+
+Score deductions for each missing substrate layer.
+
+### Task 7: Fix Ingest Bridge Import
+**File: `src/modules/knowledge-graph/ingest-bridge.ts`** (update)
+
+Replace deprecated `local-store.ts` import with canonical `grafeo-store` import.
+
+## File Summary
+
+| File | Action | Purpose |
 |---|---|---|
-| "Sovereign Bus" | "Service Mesh" | `uor:ServiceMesh` |
-| "Sovereign Reconciler" | "Reconciliation Controller" | `uor:Reconciler` |
-| "Sovereign Boot" | "Init System" | `uor:InitSystem` |
-| "Sovereign Compose" | "Scheduling & Orchestration" | `uor:Scheduler` |
-| "AppKernel" (in descriptions) | "Container Runtime" | `uor:ContainerRuntime` |
-| "Sovereign Auto-Scaler" | "Horizontal Pod Autoscaler" | `uor:HPA` |
+| `src/modules/knowledge-graph/seed.ts` | Create | Ingest all static data into KG on boot |
+| `src/modules/knowledge-graph/hooks/useGraphProjection.ts` | Create | SPARQL-to-React-state projection hook |
+| `src/modules/boot/sovereign-boot.ts` | Update | Anchor seal into graph post-boot |
+| `src/modules/bus/registry.ts` | Update | Sync registrations to graph |
+| `src/modules/ontology/vocabulary.ts` | Update | Materialize SKOS to graph |
+| `src/modules/knowledge-graph/graph-anchor-gate.ts` | Update | KG Substrate Conformance checks |
+| `src/modules/knowledge-graph/ingest-bridge.ts` | Update | Fix deprecated import |
 
-**What does NOT change:** Class names (`AppKernel`, `SovereignReconciler`), function names (`sovereignBoot`), file names, and export signatures. These stay stable. The legacy names are already listed as `skos:altLabel` in the ontology, so they remain valid aliases.
+## Architecture After Implementation
 
-**How it links to the ontology:** Each updated comment will include the ontology `@id` (e.g., `@see uor:ServiceMesh`) so the terminology is machine-traceable to its canonical definition. When the user switches ontology profile, the UI-facing labels automatically change via `labelForProfile()`.
-
-**Files to update (~20 highest-impact files):**
-
-- `src/modules/bus/registry.ts` — header: "Sovereign Bus" → "Service Mesh (uor:ServiceMesh)"
-- `src/modules/bus/types.ts` — header
-- `src/modules/bus/client.ts` — header
-- `src/modules/bus/middleware.ts` — header
-- `src/modules/bus/modules/index.ts` — header
-- `src/modules/bus/modules/*.ts` (~15 files) — headers: "Sovereign Bus — X Module" → "Service Mesh — X Module"
-- `src/modules/compose/reconciler.ts` — header + class doc
-- `src/modules/compose/app-kernel.ts` — header + class doc
-- `src/modules/compose/orchestrator.ts` — AppKernel references in comments
-- `src/modules/boot/sovereign-boot.ts` — header
-- `src/modules/boot/types.ts` — header
-- `src/modules/desktop/BootSequence.tsx` — comment references
-- `src/modules/cncf-compat/gateway.ts` — "Sovereign Bus operations" → "Service Mesh operations"
-- `src/modules/uns/build/index.ts` — orchestration table comments
-- `src/modules/namespace-registry.ts` — "Sovereign Bus namespace" → "Service Mesh namespace"
-
-Each header update follows the pattern:
-```
-// Before:
-/**
- * Sovereign Bus — Vault Module.
-
-// After:
-/**
- * Service Mesh — Vault Module.
- * @ontology uor:ServiceMesh
+```text
+┌─────────────────────────────────────────────────┐
+│              React UI Components                │
+│    useGraphProjection()  ←──  SPARQL queries     │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│           GrafeoDB (WASM + IndexedDB)           │
+│   ┌─────────┬──────────┬──────────┬──────────┐  │
+│   │ Static  │  Boot    │  Bus     │ Ontology │  │
+│   │ Seed    │  Seal    │  Registry│ SKOS     │  │
+│   │ Data    │  Anchors │  Triples │ Concepts │  │
+│   └─────────┴──────────┴──────────┴──────────┘  │
+│              Named Graphs (SPARQL 1.1)          │
+└──────────────────────┬──────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────┐
+│         PersistenceProvider (agnostic)           │
+│   Supabase │ Local │ Edge │ Mobile │ Bundle     │
+└─────────────────────────────────────────────────┘
 ```
 
-This ensures every module's documentation is canonically linked to the ontology, making it trivial to audit which terms are in use and swap them by changing the active profile.
+Every piece of data the OS displays originates from or is materialized into the single KG instance. The gate enforces this conformance continuously.
 
