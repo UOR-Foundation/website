@@ -4,17 +4,22 @@
  *
  * Small pill that appears when global dictation is active.
  * Shows waveform visualization, interim text, and privacy badge.
- * Minimal, non-intrusive — not a full-screen overlay.
+ * Extended for voice-to-voice: shows speaking state + reply toggle.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, X } from "lucide-react";
+import { Mic, Loader2, X, Volume2 } from "lucide-react";
+import type { VoicePhase } from "@/modules/oracle/hooks/useVoiceToVoice";
 import type { DictationState } from "@/modules/oracle/hooks/useGlobalDictation";
 
 interface Props {
   state: DictationState;
+  phase?: VoicePhase;
+  responseText?: string;
+  voiceReplyEnabled?: boolean;
   onStop: () => void;
   onCancel: () => void;
+  onToggleVoiceReply?: (enabled: boolean) => void;
 }
 
 /** Mini waveform bars driven by audio level */
@@ -40,12 +45,57 @@ function WaveformBars({ level, active }: { level: number; active: boolean }) {
   );
 }
 
-export default function FloatingDictationPill({ state, onStop, onCancel }: Props) {
-  const { active, interim, committed, level, engine, cleaning } = state;
-  const show = active || cleaning;
+/** Speaker waveform for TTS playback */
+function SpeakerWaveform() {
+  const bars = 4;
+  return (
+    <div className="flex items-center gap-[2px] h-4">
+      {Array.from({ length: bars }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-[2px] rounded-full bg-accent"
+          animate={{
+            height: [4, 10 + Math.random() * 6, 4],
+          }}
+          transition={{
+            duration: 0.6 + i * 0.1,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.12,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
-  const displayText = interim || committed;
-  const privacyLabel = engine === "whisper" ? "On-device" : engine === "elevenlabs" ? "ElevenLabs" : "Browser";
+export default function FloatingDictationPill({
+  state,
+  phase = "idle",
+  responseText,
+  voiceReplyEnabled,
+  onStop,
+  onCancel,
+  onToggleVoiceReply,
+}: Props) {
+  const { active, interim, committed, level, engine, cleaning } = state;
+  const isSpeaking = phase === "speaking";
+  const isProcessing = phase === "processing" && !cleaning;
+  const show = active || cleaning || isSpeaking || isProcessing;
+
+  const displayText = isSpeaking
+    ? responseText
+    : isProcessing
+    ? "Thinking…"
+    : interim || committed;
+
+  const privacyLabel = isSpeaking
+    ? "ElevenLabs"
+    : engine === "whisper"
+    ? "On-device"
+    : engine === "elevenlabs"
+    ? "ElevenLabs"
+    : "Browser";
 
   return (
     <AnimatePresence>
@@ -68,8 +118,10 @@ export default function FloatingDictationPill({ state, onStop, onCancel }: Props
             }}
           >
             {/* Status indicator */}
-            {cleaning ? (
+            {cleaning || isProcessing ? (
               <Loader2 size={16} className="text-primary animate-spin shrink-0" />
+            ) : isSpeaking ? (
+              <Volume2 size={16} className="text-accent shrink-0" />
             ) : (
               <div className="relative shrink-0">
                 <Mic size={16} className="text-primary" />
@@ -78,7 +130,11 @@ export default function FloatingDictationPill({ state, onStop, onCancel }: Props
             )}
 
             {/* Waveform */}
-            {!cleaning && <WaveformBars level={level} active={active} />}
+            {isSpeaking ? (
+              <SpeakerWaveform />
+            ) : !cleaning && !isProcessing ? (
+              <WaveformBars level={level} active={active} />
+            ) : null}
 
             {/* Text display */}
             <div className="flex-1 min-w-0">
@@ -96,9 +152,24 @@ export default function FloatingDictationPill({ state, onStop, onCancel }: Props
               {privacyLabel}
             </span>
 
+            {/* Voice reply toggle */}
+            {onToggleVoiceReply && (active || isSpeaking) && (
+              <button
+                onClick={() => onToggleVoiceReply(!voiceReplyEnabled)}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors ${
+                  voiceReplyEnabled
+                    ? "bg-accent/20 text-accent"
+                    : "bg-muted/20 text-muted-foreground/40"
+                }`}
+                title={voiceReplyEnabled ? "Voice reply on" : "Voice reply off"}
+              >
+                {voiceReplyEnabled ? "V2V" : "V2V"}
+              </button>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
-              {active && (
+              {(active || isSpeaking) && (
                 <button
                   onClick={onStop}
                   className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
@@ -123,7 +194,7 @@ export default function FloatingDictationPill({ state, onStop, onCancel }: Props
             transition={{ delay: 0.5 }}
           >
             <span className="text-[10px] text-muted-foreground/20 font-mono">
-              Esc to cancel
+              {isSpeaking ? "Press again to stop" : "Esc to cancel · ⌘⇧V to toggle"}
             </span>
           </motion.div>
         </motion.div>
