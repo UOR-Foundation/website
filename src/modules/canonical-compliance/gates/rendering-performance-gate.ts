@@ -87,7 +87,7 @@ registerGate((): GateResult => {
   } else {
     score -= 10;
     findings.push({
-      severity: "warn",
+      severity: "warning",
       title: "Framer Motion in Boot Path",
       detail: "BootSequence still imports framer-motion — migrate to CSS animations.",
       file: "desktop/BootSequence.tsx",
