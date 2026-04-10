@@ -27,7 +27,6 @@ export const supabaseProvider: PersistenceProvider = {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Parse N-Quads into triple rows
     const lines = nquads.split("\n").filter(l => l.trim() && !l.trim().startsWith("#"));
     const triples: Array<{ subject: string; predicate: string; object: string; graph_iri: string }> = [];
 
@@ -43,7 +42,6 @@ export const supabaseProvider: PersistenceProvider = {
       }
     }
 
-    // Batch insert
     const BATCH = 100;
     for (let i = 0; i < triples.length; i += BATCH) {
       const batch = triples.slice(i, i + BATCH);
@@ -72,7 +70,7 @@ export const supabaseProvider: PersistenceProvider = {
     if (!session) return;
 
     for (const change of changes) {
-      await supabase.from("uor_transactions").upsert({
+      await (supabase.from("uor_transactions" as any) as any).upsert({
         transaction_cid: change.changeCid,
         user_id: session.user.id,
         namespace: change.namespace,
@@ -84,8 +82,7 @@ export const supabaseProvider: PersistenceProvider = {
 
   async pullChanges(sinceVersion: number): Promise<ChangeEntry[]> {
     const since = new Date(sinceVersion).toISOString();
-    const { data, error } = await supabase
-      .from("uor_transactions")
+    const { data, error } = await (supabase.from("uor_transactions" as any) as any)
       .select("*")
       .gte("committed_at", since)
       .order("committed_at", { ascending: true })
@@ -93,7 +90,7 @@ export const supabaseProvider: PersistenceProvider = {
 
     if (error || !data) return [];
 
-    return data.map(row => ({
+    return (data as any[]).map((row: any) => ({
       changeCid: row.transaction_cid,
       namespace: row.namespace,
       payload: JSON.stringify(row.mutations),
@@ -104,14 +101,13 @@ export const supabaseProvider: PersistenceProvider = {
   },
 
   async getVersion(): Promise<number> {
-    const { data, error } = await supabase
-      .from("uor_transactions")
+    const { data, error } = await (supabase.from("uor_transactions" as any) as any)
       .select("committed_at")
       .order("committed_at", { ascending: false })
       .limit(1);
 
-    if (error || !data || data.length === 0) return 0;
-    return new Date(data[0].committed_at).getTime();
+    if (error || !data || (data as any[]).length === 0) return 0;
+    return new Date((data as any[])[0].committed_at).getTime();
   },
 
   async exportBundle(): Promise<SovereignBundle> {
@@ -119,7 +115,6 @@ export const supabaseProvider: PersistenceProvider = {
     const nquads = await grafeoStore.dumpNQuads();
     const quadCount = await grafeoStore.quadCount();
 
-    // Compute a simple seal from the N-Quads content
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(nquads));
     const hashArray = Array.from(new Uint8Array(hashBuffer));
