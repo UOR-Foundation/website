@@ -1,5 +1,6 @@
 import type { EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
 import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
+import { pushReflection } from "@/modules/boot/reflection-chain";
 
 export type Msg = { role: "user" | "assistant"; content: string; proof?: EnrichedReceipt };
 
@@ -64,6 +65,7 @@ export async function streamOracle({
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let carry = "";
+  let accumulated = "";
   let done = false;
 
   while (!done) {
@@ -85,7 +87,7 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) { ttft.markFirstToken(); onDelta(content); }
+        if (content) { ttft.markFirstToken(); accumulated += content; onDelta(content); }
       } catch {
         // Incomplete JSON — will be handled in next chunk
       }
@@ -104,9 +106,16 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) { ttft.markFirstToken(); onDelta(content); }
+        if (content) { ttft.markFirstToken(); accumulated += content; onDelta(content); }
       } catch { /* ignore */ }
     }
+  }
+
+  // Auto-inject reflection for the Reflection Gate
+  if (accumulated.length > 20) {
+    const userQuery = messages.filter((m) => m.role === "user").pop()?.content ?? "";
+    const snippet = accumulated.slice(0, 300);
+    pushReflection(userQuery, snippet).catch(() => {/* non-critical */});
   }
 
   onDone();

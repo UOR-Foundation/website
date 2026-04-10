@@ -35,19 +35,43 @@ export interface GateReport {
 }
 
 export type Gate = () => GateResult;
+export type AsyncGate = () => Promise<GateResult>;
 
 // ── Registry ──────────────────────────────────────────────────────────────
 
 const GATE_REGISTRY: Gate[] = [];
+const ASYNC_GATE_REGISTRY: AsyncGate[] = [];
 
-/** Register a gate function. */
+/** Register a synchronous gate function. */
 export function registerGate(gate: Gate): void {
   GATE_REGISTRY.push(gate);
 }
 
-/** Run all registered gates and produce a combined report. */
+/** Register an async gate function (e.g. IndexedDB readers). */
+export function registerAsyncGate(gate: AsyncGate): void {
+  ASYNC_GATE_REGISTRY.push(gate);
+}
+
+/** Run all registered gates (sync only) and produce a combined report. */
 export function runAllGates(): GateReport {
   const gates = GATE_REGISTRY.map((g) => g());
+  const compositeScore =
+    gates.length > 0
+      ? Math.round(gates.reduce((sum, g) => sum + g.score, 0) / gates.length)
+      : 100;
+
+  return {
+    timestamp: new Date().toISOString(),
+    gates,
+    compositeScore,
+  };
+}
+
+/** Run all gates (sync + async) and produce a combined report. */
+export async function runAllGatesAsync(): Promise<GateReport> {
+  const syncResults = GATE_REGISTRY.map((g) => g());
+  const asyncResults = await Promise.all(ASYNC_GATE_REGISTRY.map((g) => g()));
+  const gates = [...syncResults, ...asyncResults];
   const compositeScore =
     gates.length > 0
       ? Math.round(gates.reduce((sum, g) => sum + g.score, 0) / gates.length)
