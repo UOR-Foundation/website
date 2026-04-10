@@ -18,8 +18,10 @@ import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpap
 import DayRingClock from "@/modules/desktop/components/DayRingClock";
 import { Menu, Search, Mic } from "lucide-react";
 
+import type { DesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+
 // ── Isolated clock component — ticks without re-rendering the shell ──
-function MobileClock({ theme, isLight }: { theme: string; isLight: boolean }) {
+function MobileClock({ theme, isLight }: { theme: DesktopTheme; isLight: boolean }) {
   const [time, setTime] = useState(new Date());
   useEffect(() => {
     const id = setInterval(() => setTime(new Date()), 1000);
