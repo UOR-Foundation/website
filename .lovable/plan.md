@@ -1,95 +1,123 @@
 
 
-# DevOps Alignment Gate — Terminology Standardization & Wiring Verification
+# Docker-Style Container Boot UX + Runtime Inspector
 
-## Audit Summary
+## What We're Building
 
-After evaluating the system from a DevOps perspective, the architecture is remarkably well-mapped to CNCF/K8s patterns. The `cncf-compat/categories.ts` already defines a 22-category mapping. However, there are concrete gaps between the system's *internal terminology* and what a DevOps engineer would expect, plus several wiring issues where subsystems aren't connected to the canonical pipelines they claim to use.
+Two interconnected improvements:
 
-### Key Findings
+1. **Rewrite `ContainerBootOverlay`** to feel like watching `docker run` — slower, readable terminal output with Docker-exact terminology (pulling image, creating container, attaching volumes, starting process)
+2. **Upgrade `ContainerStatusPill` + `ContainerInspector`** to be a delightful, always-visible runtime metadata panel — one click to see everything about the running container (like `docker inspect` meets Kubernetes dashboard)
 
-**Terminology Misalignments** (confusing for experienced DevOps engineers):
+## Current Problems
 
-| Current Term | Standard DevOps Term | Impact |
-|---|---|---|
-| `Sovereign Bus` | **Service Mesh / Message Bus** | "Sovereign" is opaque; experienced devs won't find it via search |
-| `AppKernel` | **Container Runtime** / **Sidecar Proxy** | Conflates two concepts — it's actually the isolation + proxy layer |
-| `Sovereign Reconciler` | **Reconciliation Controller** | Fine, but comments say "K8s equivalent" — just call the concepts what they are |
-| `AppBlueprint` | **Pod Spec / Deployment Manifest** | "Blueprint" is fine but comments should cross-reference K8s terms consistently |
-| `Sovereign Boot` | **Init System / systemd** | "Boot" is close, but the init sequence is really systemd-equivalent |
-| `UorContainer` | **Container** | Correct, but no `docker`-style CLI help text in the system monitor |
-| `SealStatus` | **Integrity Attestation** | "Seal" maps to Sigstore/cosign attestation — label it so |
-| `useConnectivity` features | **Liveness Probes / Readiness Probes** | The 6 service checks are exactly K8s health probes — label them |
-| `ComposeEvent` | **Cluster Event** | Matches `kubectl get events` — surface it as such |
-| `error budget` | **SLO Error Budget** | Correct term, but not labeled as SLO anywhere |
+- Boot sequence completes in ~50-150ms total — too fast to read anything
+- Terminology is internal ("INIT", "KERNEL", "SEAL") — meaningless to Docker/K8s developers
+- The status pill after boot is tiny (10px text, 50% opacity) — users don't notice it
+- Inspector panel lacks health indicators and graph/package visibility
 
-**Wiring Gaps** (subsystems not connected to canonical infrastructure):
+## Design
 
-1. **`useConnectivity` features are not registered as bus operations** — The 6 service probes (oracle, kgSync, dataBank, webBridge, voice, auth) are computed client-side but never emit health events to the `SystemEventBus`, meaning the reconciler can't act on them.
+### Boot Overlay — Docker `run` Terminal
 
-2. **CNCF category maturity claims are unverified** — `categories.ts` marks 14 categories as "complete" but there's no gate checking whether the referenced `uorModules` actually exist and export the claimed interfaces.
-
-3. **Observability gap** — The OTLP adapter (`cncf-compat/otlp.ts`) creates spans but nothing collects them. The `SystemEventBus` emits events but they're not formatted as CloudEvents despite the adapter existing.
-
-4. **Pipeline module is "planned" but exists** — `cncf-compat/pipeline.ts` exports `createPipeline` and `executePipeline` but the category registry marks CI/CD as "planned".
-
-5. **No health endpoint convention** — Each service has its own health check pattern. K8s uses `/healthz`, `/readyz`, `/livez`. The bus should expose `*/healthz` for every registered module.
-
-## Proposal: DevOps Alignment Gate + Terminology Glossary
-
-### 1. New Gate: `devops-alignment-gate.ts` (~100 lines)
-**File**: `src/modules/canonical-compliance/gates/devops-alignment-gate.ts`
-
-A compliance gate that verifies:
-- **CNCF category integrity**: For each category marked "complete", verify that every listed `uorModule` path resolves to a real module with exports
-- **Health probe coverage**: Check that every registered bus module has a healthcheck operation registered (or is explicitly exempt)
-- **Event bus wiring**: Verify that connectivity features emit to `SystemEventBus` (check for `SystemEventBus.emit` calls in connectivity-related modules)
-- **Maturity accuracy**: Flag categories marked "complete" or "partial" where the referenced module paths don't exist
-- **Terminology consistency**: Static list of internal→standard term mappings, flagging any module docstring that uses non-standard terminology without a cross-reference
-
-Scoring: Each missing health probe = -2, each broken module reference = -5, each maturity mismatch = -8.
-
-### 2. DevOps Glossary Registry (~60 lines)
-**File**: `src/modules/canonical-compliance/devops-glossary.ts`
-
-A canonical mapping of internal terms → standard DevOps/CNCF terms, consumed by:
-- The gate (for verification)
-- The System Monitor (for tooltip labels)
-- Future documentation generation
-
-```typescript
-const DEVOPS_GLOSSARY: GlossaryEntry[] = [
-  { internal: "Sovereign Bus", standard: "Service Mesh / Message Bus", k8s: "kube-apiserver", cncf: "Istio/Linkerd" },
-  { internal: "AppKernel", standard: "Container Runtime + Sidecar", k8s: "containerd + envoy", cncf: "containerd" },
-  { internal: "Reconciler", standard: "Reconciliation Controller", k8s: "kube-controller-manager", cncf: "Kubernetes" },
-  { internal: "AppBlueprint", standard: "Deployment Manifest", k8s: "Deployment/Pod spec", cncf: "Helm chart" },
-  { internal: "Sovereign Boot", standard: "Init System", k8s: "kubelet bootstrap", cncf: "systemd" },
-  { internal: "UorContainer", standard: "Container", k8s: "Pod/Container", cncf: "containerd/CRI-O" },
-  { internal: "UOR Seal", standard: "Integrity Attestation", k8s: "admission webhook", cncf: "Sigstore/cosign" },
-  { internal: "Connectivity Probes", standard: "Liveness/Readiness Probes", k8s: "livenessProbe/readinessProbe" },
-  { internal: "ComposeEvent", standard: "Cluster Event", k8s: "kubectl get events" },
-  { internal: "Error Budget", standard: "SLO Error Budget", k8s: "N/A", cncf: "OpenSLO" },
-  { internal: "Bus Manifest", standard: "Service Registry", k8s: "endpoints/services", cncf: "CoreDNS/etcd" },
-  { internal: "DHT", standard: "Service Discovery", k8s: "kube-dns", cncf: "CoreDNS" },
-  { internal: "Conduit", standard: "mTLS Tunnel", k8s: "N/A", cncf: "SPIFFE/SPIRE" },
-  { internal: "Shield", standard: "Runtime Security", k8s: "PodSecurityPolicy", cncf: "Falco/OPA" },
-];
+```text
+┌──────────────────────────────────────────────────┐
+│  ▸ docker run bp:messenger                        │
+│                                                    │
+│  Pulling image bp:messenger:1.0.0...         done  │
+│  ├─ Layer 1/4: base runtime              ████ 0ms  │
+│  ├─ Layer 2/4: kernel permissions         ████ 0ms  │
+│  ├─ Layer 3/4: bus namespaces             ████ 0ms  │
+│  └─ Layer 4/4: component bundle           ████ 0ms  │
+│  Image digest: sha256:a1b2c3d4...                  │
+│                                                    │
+│  Creating container uor:messenger-ct...      done  │
+│  Attaching volumes: 4 ns · 12 ops            done  │
+│  Starting process...                          done  │
+│  Sealing runtime: sha256:e5f6...              done  │
+│                                                    │
+│  ● Container messenger is running (238ms)          │
+└──────────────────────────────────────────────────┘
 ```
 
-### 3. Update `gates/index.ts` to register the new gate
+Key UX decisions:
+- **Minimum display time: 1.2s** — each phase gets at least 180ms so users can read it
+- **Progressive reveal** — lines appear one at a time with a typewriter feel
+- **Real data** — container IDs, namespace counts, seal hashes are live
+- **Green monospace terminal** aesthetic on dark background
 
-Auto-registers via side-effect import, same pattern as existing gates.
+### Runtime Inspector — "Container Details" Pill
 
-### 4. Fix Maturity Mismatch in `cncf-compat/categories.ts` (~3 lines)
+After boot, a refined status pill (bottom-left) shows:
+```
+● messenger  running  4ns · 12ops  ⓘ
+```
 
-Change CI/CD category from `"planned"` to `"partial"` since `pipeline.ts` already exports working functions.
+Clicking opens a **3-tab inspector panel**:
 
-## Files
+**Tab 1: Overview** (docker inspect)
+- Container ID, Image, State, Uptime, Created
+- Seal hash, Boot time
+- Resource usage (calls, denied, payload bytes)
 
-| File | Action | Lines |
+**Tab 2: Packages** (docker image layers / npm ls)  
+- Kernel namespaces as "packages" with operation counts
+- Permission grants per namespace
+- Expandable operation list per namespace
+
+**Tab 3: Graph** (knowledge graph context)
+- Node/relation counts
+- 1-hop concept map (existing GraphQuickView inline)
+- "Open Full Graph" action
+
+### New Compliance Gate
+
+A **Container Boot Integrity Gate** added to the compliance system:
+- Verifies all blueprints resolve to valid components
+- Checks that every boot phase produces real data (not fallback stubs)
+- Flags boot times >2s as degraded
+- Reports container seal coverage
+
+## Implementation
+
+### Files
+
+| File | Action | Purpose |
 |---|---|---|
-| `src/modules/canonical-compliance/devops-glossary.ts` | Create | ~60 |
-| `src/modules/canonical-compliance/gates/devops-alignment-gate.ts` | Create | ~100 |
-| `src/modules/canonical-compliance/gates/index.ts` | Update | ~2 lines (add import) |
-| `src/modules/cncf-compat/categories.ts` | Update | ~1 line (fix maturity) |
+| `src/modules/desktop/components/ContainerBootOverlay.tsx` | **Rewrite** | Docker-style terminal boot with phased timing |
+| `src/modules/desktop/components/ContainerInspector.tsx` | **Rewrite** | 3-tab inspector with Packages + Graph tabs |
+| `src/modules/canonical-compliance/gates/container-boot-gate.ts` | **Create** | Boot integrity compliance gate |
+| `src/modules/canonical-compliance/gates/index.ts` | **Update** | Register new gate |
+
+### ContainerBootOverlay Rewrite (~220 lines)
+
+- Replace 6 generic phases with Docker-mapped steps:
+  - `pull` → "Pulling image bp:{appId}:{version}" — calls `getBlueprint()`, shows 4 sub-layers (runtime, permissions, namespaces, bundle)
+  - `create` → "Creating container uor:{containerId}" — calls `orchestrator.ensureRunning()`
+  - `attach` → "Attaching volumes: {N} ns · {M} ops" — reads kernel permissions
+  - `start` → "Starting process..." — component ready
+  - `seal` → "Sealing runtime: sha256:{hash}" — calls `kernel.seal()`
+  - `ready` → "● Container {name} is running ({totalMs}ms)"
+- Each step renders as a terminal line with left-aligned label and right-aligned status
+- Sub-layers under "pull" show progress bars (4 small bars that fill sequentially)
+- Minimum 180ms per step, total minimum 1.2s display time
+- Image digest shown after pull completes
+- Monospace font, dark terminal background, green/white/dim-gray palette
+
+### ContainerInspector Rewrite (~280 lines)
+
+- **Pill redesign**: Slightly larger (12px text), 70% opacity default, green dot + app name + state + counts
+- **Panel**: 320px wide, 3 tabs at top (Overview / Packages / Graph)
+  - Overview: existing metrics + boot receipt data in labeled rows
+  - Packages: namespace tree with op counts, expandable (reuses existing graph view data)
+  - Graph: inline ConceptMap (reuses GraphQuickView logic without the overlay)
+- Panel slides up from pill position with subtle animation
+
+### Container Boot Gate (~80 lines)
+
+Checks:
+- All `STATIC_BLUEPRINTS` have valid `name` and `requires` fields
+- Blueprint count matches expected active module count
+- Boot phase naming follows Docker convention (pull/create/attach/start/seal)
+- Reports coverage: X/Y blueprints have complete permission declarations
 
