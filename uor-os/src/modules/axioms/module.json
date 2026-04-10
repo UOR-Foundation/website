@@ -1,0 +1,22 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "axioms",
+  "version": "1.0.0",
+  "description": "Declarative design axioms as content-addressed blueprints. Defines the Algebrica design system and enforces compliance via a health gate.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["axiom/"],
+  "exports": [
+    "ALGEBRICA",
+    "ALGEBRICA_AXIOMS",
+    "resolveAxiom",
+    "useAxiom",
+    "useDesignSystem",
+    "exportAxiomsMarkdown"
+  ],
+  "dependencies": {
+    "canonical-compliance": "^1.0.0"
+  },
+  "routes": [],
+  "assets": []
+}

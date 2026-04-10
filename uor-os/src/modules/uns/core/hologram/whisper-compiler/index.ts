@@ -1,0 +1,110 @@
+/**
+ * Whisper Compiler + Inference Engine. Module Barrel
+ * ════════════════════════════════════════════════════
+ *
+ * Complete ONNX → Hologram pipeline:
+ *   Phase 1: Compile ONNX → content-addressed weights
+ *   Phase 2: WGSL compute kernels
+ *   Phase 3: Inference engine (mel → encoder → decoder → tokens)
+ *
+ * Usage:
+ *   import { compileWhisperModel, getWhisperEngine } from "./whisper-compiler";
+ *
+ *   // One-time compilation
+ *   await compileWhisperModel({ onProgress: console.log });
+ *
+ *   // Inference
+ *   const engine = getWhisperEngine();
+ *   await engine.init();
+ *   const tokens = await engine.transcribe(audioFloat32);
+ *
+ * @module uns/core/hologram/whisper-compiler
+ */
+
+// Compiler entry points
+export {
+  compileWhisperModel,
+  isWhisperCompiled,
+  loadCompiledWhisper,
+  deleteCompiledWhisper,
+  MODEL_VARIANT_INFO,
+} from "./compiler";
+export type { CompileOptions, ModelVariant } from "./compiler";
+
+// Inference engine (Phase 3)
+export { WhisperEngine, getWhisperEngine } from "./inference-engine";
+export type { InferenceProgress } from "./inference-engine";
+
+// Mel spectrogram
+export {
+  computeMelSpectrogram,
+  resampleTo16kHz,
+  SAMPLE_RATE,
+  N_MELS,
+  N_FRAMES,
+  HOP_LENGTH,
+} from "./mel-spectrogram";
+
+// ONNX parser (exposed for debugging / inspection)
+export { parseOnnxModel, summarizeModel } from "./onnx-parser";
+
+// Weight store
+export { HologramWeightStore, getWeightStore } from "./weight-store";
+
+// Tokenizer (decode token IDs → text)
+export { WhisperTokenizer, getWhisperTokenizer } from "./tokenizer";
+export type { TokenizerInfo } from "./tokenizer";
+
+// GPU dispatch (Phase 4) + KV-cache
+export { GpuDispatch, getGpuDispatch, createKvCache } from "./gpu-dispatch";
+export type { GpuDispatchStats, KvCache } from "./gpu-dispatch";
+
+// Proto decoder (exposed for testing)
+export { ProtoReader } from "./proto-decoder";
+
+// WGSL inference kernels (Whisper + Diffusion)
+export {
+  WHISPER_KERNELS,
+  DIFFUSION_KERNELS,
+  WGSL_MATMUL,
+  WGSL_LAYER_NORM,
+  WGSL_GELU,
+  WGSL_SOFTMAX,
+  WGSL_SDPA,
+  WGSL_CONV1D,
+  WGSL_MEL_SPEC,
+  WGSL_FUSED_ATTN,
+  WGSL_BATCHED_FUSED_ATTN,
+  WGSL_CONV2D,
+  WGSL_GROUP_NORM,
+  WGSL_SILU,
+  WGSL_UPSAMPLE2X,
+  cpuMatmul,
+  cpuLayerNorm,
+  cpuGelu,
+  cpuSoftmax,
+  cpuScaledDotProductAttention,
+  cpuConv1d,
+  cpuFusedAttention,
+  cpuBatchedFusedAttention,
+  cpuConv2d,
+  cpuGroupNorm,
+  cpuSilu,
+  cpuUpsample2x,
+} from "./wgsl-kernels";
+export type { WhisperKernelName, DiffusionKernelName } from "./wgsl-kernels";
+
+// Types
+export type {
+  OnnxTensor,
+  OnnxAttribute,
+  OnnxNode,
+  OnnxGraph,
+  OnnxModel,
+  OnnxExternalData,
+  HologramTensorDescriptor,
+  HologramComputeNode,
+  HologramCompiledModel,
+  CompileProgress,
+} from "./types";
+export { OnnxDataType, DTYPE_BYTE_SIZE, DTYPE_NAME } from "./types";
