@@ -91,7 +91,7 @@ function deriveDesktopApp(bp: AppBlueprint): DesktopApp {
   }
 
   const LABEL_OVERRIDES: Record<string, string> = {
-    "app-hub": "App Store",
+    "app-hub": "Apps",
   };
 
   return {
