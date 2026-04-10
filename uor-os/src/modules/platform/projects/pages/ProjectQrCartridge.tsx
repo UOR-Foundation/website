@@ -1,4 +1,4 @@
-import ProjectDetailLayout from "@/modules/projects/components/ProjectDetailLayout";
+import ProjectDetailLayout from "@/modules/platform/projects/components/ProjectDetailLayout";
 import projectImg from "@/assets/project-qr-cartridge.jpg";
 import { Link } from "react-router-dom";
 

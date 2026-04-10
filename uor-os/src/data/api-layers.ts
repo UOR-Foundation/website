@@ -2,7 +2,7 @@
  * API layer and endpoint data. serializable for UOR certification.
  * Icons are mapped at the component level by iconKey.
  */
-import type { Endpoint, V2Stub, DiscoveryEndpoint } from "@/modules/api-explorer/types";
+import type { Endpoint, V2Stub, DiscoveryEndpoint } from "@/modules/interoperability/api-explorer/types";
 
 /** Display URL used in curl snippets and documentation */
 export const API_BASE_URL = "https://api.uor.foundation/v1";
