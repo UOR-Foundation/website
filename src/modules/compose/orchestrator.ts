@@ -95,6 +95,9 @@ class Orchestrator {
     }
 
     this._ready = true;
+
+    // Start the Sovereign Reconciler (K8s control plane)
+    this.startReconciler();
   }
 
   // ── Instance Lifecycle ────────────────────────────────────────────────
