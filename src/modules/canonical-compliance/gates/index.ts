@@ -16,6 +16,7 @@ import "./container-boot-gate";
 import "./rendering-performance-gate";
 import "./pattern-sentinel-gate";
 import "./reflection-gate";
+import "./blueprint-conformance-gate";
 
 // Ontology gate is registered via the ontology module barrel
 import "../../ontology/gate";
