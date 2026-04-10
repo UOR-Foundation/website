@@ -36,3 +36,16 @@ export {
   useOntologyLabel,
 } from "../ontology";
 export type { SkosConcept, OntologyProfile, ResolvedTerm } from "../ontology";
+
+// Axioms re-exports for convenience
+export {
+  ALGEBRICA,
+  ALGEBRICA_AXIOMS,
+  resolveAxiom,
+  useAxiom,
+  useDesignSystem,
+  exportAxiomsMarkdown,
+  getActiveDesignSystem,
+  setActiveDesignSystem,
+} from "../axioms";
+export type { DesignAxiom, DesignSystem, AxiomCategory } from "../axioms";
