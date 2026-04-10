@@ -1,5 +1,4 @@
 import { ShieldCheck, ShieldAlert, ShieldX, Shield, Lock, Key } from "lucide-react";
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { ENCRYPTION_LABEL, SIGNATURE_LABEL, UMP_VERSION } from "../lib/messaging-protocol";
 
@@ -40,22 +39,17 @@ export default function SessionBadge({ status, sessionHash, participantCount, co
     <div className="relative">
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors ${config.color} bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.06]`}
+        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors duration-75 ${config.color} bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.06]`}
       >
         <Icon size={13} />
         <span>{config.label}</span>
       </button>
 
       {expanded && (
-        <motion.div
-          initial={{ opacity: 0, y: -4, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -4 }}
-          className="absolute top-full right-0 mt-1 z-50 w-[280px] bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl p-3"
-        >
+        <div className="absolute top-full right-0 mt-1 z-50 w-[280px] bg-slate-900/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl p-3 sov-scale-in">
           <div className="space-y-2.5">
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center`}>
+              <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center">
                 <Icon size={16} className={config.color} />
               </div>
               <div>
@@ -104,7 +98,7 @@ export default function SessionBadge({ status, sessionHash, participantCount, co
               <span className="text-[10px] text-teal-400/60 font-medium">Post-Quantum Secure</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

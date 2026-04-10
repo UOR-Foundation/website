@@ -4,7 +4,7 @@
  * v0.3.0: Adds predictive search suggestions from history + context + Wikipedia.
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, startTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from "@/modules/core/ui/command";
 import { DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
@@ -186,7 +186,7 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
                 <Search className={`w-4 h-4 ${isLight ? "text-black/25" : "text-white/35"}`} />
                 <CommandInput
                   value={query}
-                  onValueChange={setQuery}
+                  onValueChange={(v) => startTransition(() => setQuery(v))}
                   placeholder="Search apps and queries…"
                   className={`flex-1 bg-transparent text-[15px] ${inputText} outline-none font-medium h-auto py-0 border-0`}
                   style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}
