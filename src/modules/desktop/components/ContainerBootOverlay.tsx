@@ -220,7 +220,8 @@ export default function ContainerBootOverlay({ appId, appLabel, onReady }: Props
 
       const create = await timedPhase(async () => {
         if (instanceId) {
-          const { getContainer } = await import("@/modules/uns/build/container");
+          const containerPath = "@/modules/uns/build/container";
+          const { getContainer } = await import(/* @vite-ignore */ containerPath);
           const c = getContainer(instanceId);
           if (c) {
             containerId = c.id;
