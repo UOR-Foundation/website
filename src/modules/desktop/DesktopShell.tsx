@@ -113,7 +113,7 @@ function DesktopShellInner() {
       onSpotlight={() => setSpotlightOpen(true)}
       onHideAll={handleHideAll}
     >
-      <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`} style={{ fontFamily: "var(--uor-font-stack)" }}>
+      <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`} style={{ fontFamily: fontStack, ["--uor-corner-radius" as string]: `${cornerRadius}px` }}>
         {theme === "immersive" && (
           <>
             <DesktopImmersiveWallpaper />
