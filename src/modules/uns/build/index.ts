@@ -54,7 +54,7 @@ export {
   getContainer,
   linkContainerToKernel,
   clearContainers,
-} from "./container";
+} from "./container.ts";
 export type {
   ContainerState,
   ContainerPortMapping,
@@ -67,7 +67,7 @@ export type {
   UorContainer,
   ContainerInspection,
   ExecResult,
-} from "./container";
+} from "./container.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // IMAGE BUILD (docker build / Dockerfile)
@@ -78,7 +78,7 @@ export {
   parseDockerfile,
   buildImage,
   serializeUorfile,
-} from "./uorfile";
+} from "./uorfile.ts";
 export type {
   UorfileDirective,
   UorfileInstruction,
@@ -87,7 +87,7 @@ export type {
   UorfileHealthcheck,
   UorImage,
   UorImageLayer,
-} from "./uorfile";
+} from "./uorfile.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // DOCKER COMPATIBILITY (docker image wrapping / Dockerfile translation)
@@ -100,14 +100,14 @@ export {
   generateCompatReport,
   DOCKER_FEATURE_MAP,
   DOCKER_VERB_MAP,
-} from "./docker-compat";
+} from "./docker-compat.ts";
 export type {
   DockerImageRef,
   WrappedDockerImage,
   DockerCompatStatus,
   DockerFeatureMapping,
   DockerVerbMapping,
-} from "./docker-compat";
+} from "./docker-compat.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // IMAGE REGISTRY (docker tag / push / pull / inspect / history)
@@ -126,13 +126,13 @@ export {
   removeImage,
   searchImages,
   clearImageRegistry,
-} from "./registry";
+} from "./registry.ts";
 export type {
   ImageTag,
   PushResult,
   PullResult,
   ImageHistoryEntry,
-} from "./registry";
+} from "./registry.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // COMPOSE (docker compose up / down / ps / scale)
@@ -147,7 +147,7 @@ export {
   getComposeApp,
   listComposeApps,
   clearComposeApps,
-} from "./compose";
+} from "./compose.ts";
 export type {
   ComposeService,
   ComposeBuildConfig,
@@ -159,7 +159,7 @@ export type {
   ComposeSpec,
   ComposeApp,
   ComposeServiceStatus,
-} from "./compose";
+} from "./compose.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECRETS MANAGER (docker secret create / ls / inspect / rm)
@@ -173,12 +173,12 @@ export {
   removeSecret,
   injectSecrets,
   clearSecrets,
-} from "./secrets";
+} from "./secrets.ts";
 export type {
   UorSecret,
   SecretValue,
   SecretWriteResult,
-} from "./secrets";
+} from "./secrets.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // DEPLOYMENT SNAPSHOTS (docker checkpoint — unified versioning gate)
@@ -191,12 +191,12 @@ export {
   hashComponentBytes,
   buildSnapshotChain,
   SnapshotRegistry,
-} from "./snapshot";
+} from "./snapshot.ts";
 export type {
   SnapshotComponent,
   DeploymentSnapshot,
   SnapshotInput,
   SnapshotDiff,
-} from "./snapshot";
+} from "./snapshot.ts";
 
 /* end of barrel – v2.0.4 */
