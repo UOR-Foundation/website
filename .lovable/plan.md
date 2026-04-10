@@ -1,78 +1,169 @@
 
 
-# Complete uor-os/ for Standalone Lovable Deployment
+# Tidy Up uor-os/ — Clean Structure, Clear Labels, Polished README
 
-## Problem
+## Current State
 
-The `uor-os/` folder is missing several files needed for Lovable compatibility and standalone deployment:
+The `uor-os/` folder has **50 modules** dumped flat under `src/modules/`, mixing foundational kernel logic with UI shells, cloud functions, compliance tools, and experimental research modules. Several modules are "absorbed" (consolidated into others but still present as separate directories): `triad`, `jsonld`, `shacl`, `data-bank`, `qr-cartridge`, `messenger`. The README is functional but generic.
 
-1. **Build error**: The PWA `injectManifest` Rollup pass fails because it cannot resolve `@/modules/uns/build/container` — this is a path alias issue in the PWA's separate Rollup build. The `globIgnores` pattern should exclude the file from processing entirely.
-2. **Missing Lovable files**: `lovable-tagger` dev dependency, `componentTagger()` plugin in vite.config, `components.json`, `.gitignore`, split tsconfig files (`tsconfig.app.json`, `tsconfig.node.json`), `eslint.config.js`, `vitest.config.ts`
-3. **Missing supabase/**: Edge functions, migrations, and `config.toml` are not in `uor-os/`
-4. **Missing Apache 2.0 LICENSE file**
-5. **Missing .env handling**: Lovable auto-generates `.env` but the new repo needs awareness of it
+## Proposed Directory Structure
 
-## Plan
+Reorganize `src/modules/` into **6 labeled subsystem directories**, each with a short `README.md` explaining its purpose. No import paths change — only the physical folder layout shifts, and every `@/modules/...` alias is updated to `@/modules/<subsystem>/...`.
 
-### Step 1 — Fix the Build Error
-
-The PWA `injectManifest` uses a separate Rollup build that does not understand Vite's `@/` alias. The `globIgnores` only affects precache listing, not import resolution. The actual fix: make the dynamic import in `ContainerBootOverlay.tsx` conditional so the PWA Rollup pass does not try to resolve it. Wrap it in a try/catch with a runtime-only path — OR — add the container module path to `build.rollupOptions.external` in the vite config so the SW build skips it entirely.
-
-Simplest fix: the `injectManifest` rollup config needs the same `alias` and `external` settings. Since we can't easily configure the inner Rollup, the pragmatic fix is to make `ContainerBootOverlay.tsx` not statically analyzable by Rollup's SW pass — use a variable for the import path:
-
-```typescript
-const mod = "@/modules/uns/build/container";
-const { getContainer } = await import(/* @vite-ignore */ mod);
+```text
+uor-os/
+├── README.md                    ← Complete rewrite (see below)
+├── LICENSE                      ← Apache 2.0 (already present)
+├── ARCHITECTURE.md              ← Technical deep-dive for contributors
+├── docs/
+│   └── EDGE-FUNCTIONS.md        ← Index of all 47 cloud functions
+│
+├── src/
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── index.css
+│   ├── custom-sw.ts
+│   │
+│   ├── modules/
+│   │   ├── kernel/              ← "Layer 0 — Computation & Algebra"
+│   │   │   ├── README.md
+│   │   │   ├── engine/          ← Ring R₈ computation engine + WASM
+│   │   │   ├── ring-core/       ← Algebraic ring, proofs, reasoning
+│   │   │   ├── axioms/          ← Axiom registry & verification
+│   │   │   ├── derivation/      ← Auditable derivation chains
+│   │   │   ├── resolver/        ← Entity resolution & partition
+│   │   │   ├── morphism/        ← Structure-preserving transforms
+│   │   │   ├── state/           ← State machine & type system
+│   │   │   └── observable/      ← Observer pattern & event streams
+│   │   │
+│   │   ├── identity/            ← "Layer 1 — Naming & Addressing"
+│   │   │   ├── README.md
+│   │   │   ├── uns/             ← Universal Name System (DNS-equivalent)
+│   │   │   ├── addressing/      ← (current identity/ module)
+│   │   │   ├── certificate/     ← X.509 / DID / Verifiable Credentials
+│   │   │   └── qr-cartridge/    ← QR encoding of UOR addresses
+│   │   │
+│   │   ├── platform/            ← "Layer 2 — OS Shell & Services"
+│   │   │   ├── README.md
+│   │   │   ├── desktop/         ← Desktop shell, dock, windows, themes
+│   │   │   ├── boot/            ← Sovereign boot sequence
+│   │   │   ├── bus/             ← Service mesh / RPC bus
+│   │   │   ├── compose/         ← App orchestrator (Docker-equivalent)
+│   │   │   ├── app-store/       ← Application marketplace
+│   │   │   ├── app-builder/     ← Docker-style build pipeline
+│   │   │   ├── auth/            ← Authentication providers
+│   │   │   ├── core/            ← Design system & UI primitives
+│   │   │   ├── landing/         ← Download / landing page
+│   │   │   └── ontology/        ← SKOS vocabulary registry
+│   │   │
+│   │   ├── data/                ← "Layer 3 — Storage & Knowledge"
+│   │   │   ├── README.md
+│   │   │   ├── knowledge-graph/ ← Local SQLite + GrafeoDB
+│   │   │   ├── sovereign-vault/ ← AES-256-GCM encrypted storage
+│   │   │   ├── sovereign-spaces/← P2P sync & collaboration
+│   │   │   ├── sparql/          ← SPARQL query engine
+│   │   │   ├── jsonld/          ← JSON-LD emission & validation
+│   │   │   ├── code-kg/         ← Code knowledge graph
+│   │   │   ├── takeout/         ← Data export / portability
+│   │   │   └── time-machine/    ← Checkpoint & restore
+│   │   │
+│   │   ├── intelligence/        ← "Layer 4 — AI, Agents & Comms"
+│   │   │   ├── README.md
+│   │   │   ├── oracle/          ← AI assistant + search + library
+│   │   │   ├── agent-tools/     ← 5 canonical MCP agent tools
+│   │   │   ├── mcp/             ← Model Context Protocol gateway
+│   │   │   ├── messenger/       ← Post-quantum encrypted messaging
+│   │   │   ├── epistemic/       ← Knowledge grading engine
+│   │   │   ├── media/           ← Audio/video streaming
+│   │   │   └── audio/           ← Audio engine & voice
+│   │   │
+│   │   ├── research/            ← "Layer 5 — Experimental & Advanced"
+│   │   │   ├── README.md
+│   │   │   ├── quantum/         ← Quantum circuit simulation
+│   │   │   ├── atlas/           ← Mathematical atlas & topology
+│   │   │   ├── qsvg/            ← Quantum SVG / proof-of-thought
+│   │   │   ├── shacl/           ← SHACL conformance testing
+│   │   │   └── canonical-compliance/ ← Compliance dashboard
+│   │   │
+│   │   ├── interoperability/    ← Stays (CNCF compat, API explorer)
+│   │   │   ├── cncf-compat/
+│   │   │   ├── api-explorer/
+│   │   │   └── README.md
+│   │   │
+│   │   ├── uor-sdk/             ← Stays at top level (developer SDK)
+│   │   ├── verify/              ← Stays at top level (audit & verification)
+│   │   └── namespace-registry.ts
+│   │
+│   ├── lib/                     ← Shared utilities (no change)
+│   ├── types/                   ← UOR Foundation types (no change)
+│   ├── hooks/                   ← App-level React hooks (no change)
+│   ├── components/              ← Shared components (no change)
+│   ├── integrations/            ← Backend client (no change)
+│   ├── assets/                  ← Images & icons (no change)
+│   └── test/                    ← Test setup (no change)
+│
+├── supabase/                    ← Cloud functions & migrations (no change)
+├── src-tauri/                   ← Rust desktop backend (no change)
+└── public/                      ← Static assets (no change)
 ```
 
-This prevents Rollup from resolving the import at build time.
+## What Gets Removed
 
-### Step 2 — Add Apache 2.0 LICENSE
+The following "absorbed" modules become re-export stubs (1-2 lines pointing to their new home) to avoid breaking any lingering imports:
+- `triad/` → already consolidated into `ring-core/`
+- `data-bank/` → already consolidated into `sovereign-vault/`
+- `ceremony/` → single file, move into `boot/`
 
-Create `uor-os/LICENSE` with the standard Apache License, Version 2.0 text.
+## README.md — Complete Rewrite
 
-### Step 3 — Add Lovable-Specific Files
+The new README follows the Why → How → What narrative structure, targeting experienced open-source developers. Sections:
 
-| File | Purpose |
-|------|---------|
-| `uor-os/components.json` | shadcn/ui config (aliases point to `@/modules/core`) |
-| `uor-os/.gitignore` | Standard Vite gitignore |
-| `uor-os/tsconfig.app.json` | App-level TS config with vitest globals |
-| `uor-os/tsconfig.node.json` | Node-level TS config for vite.config |
-| `uor-os/eslint.config.js` | ESLint flat config |
-| `uor-os/vitest.config.ts` | Vitest configuration |
+1. **One-liner** — What UOR OS is in a single sentence
+2. **Why** — The problem it solves (2 paragraphs)
+3. **How It Works** — Architecture overview with the layered diagram above
+4. **Quick Start** — Web and Desktop in 4 lines each
+5. **Module Index** — Table of all subsystems with one-line descriptions
+6. **Cloud Functions** — Reference to `docs/EDGE-FUNCTIONS.md`
+7. **Configuration** — Environment variables, Tauri config
+8. **Contributing** — Where to start, how modules are structured
+9. **License** — Apache 2.0
 
-Update `uor-os/tsconfig.json` to use project references (matching the parent repo pattern).
+## ARCHITECTURE.md — New File
 
-Update `uor-os/vite.config.ts` to include `lovable-tagger` (`componentTagger()` plugin in dev mode).
+A technical companion document covering:
+- The Tri-Space ontology (Kernel / Bridge / User)
+- Ring R₈ and why it matters
+- Content addressing model (CID → IPv6 → Braille → Glyph)
+- Module lifecycle (boot → bus registration → lazy load)
+- WASM integration strategy
 
-Update `uor-os/package.json` to add `lovable-tagger` to devDependencies.
+## docs/EDGE-FUNCTIONS.md — New File
 
-### Step 4 — Copy Supabase Directory
+A table of all 47 edge functions with name, purpose, and auth requirements.
 
-Copy the entire `supabase/` directory (config.toml, migrations/, functions/) into `uor-os/supabase/`. This includes all 47 edge functions, all migrations, and the config.
+## Implementation Steps
 
-### Step 5 — Fix the Same Build Error in Main Repo
+| Step | Description |
+|------|-------------|
+| 1 | Create subsystem directories (`kernel/`, `identity/`, `platform/`, `data/`, `intelligence/`, `research/`) with README.md files |
+| 2 | Move each module into its subsystem directory |
+| 3 | Update every `@/modules/...` import across all source files to reflect new paths |
+| 4 | Convert absorbed modules (`triad`, `data-bank`, `ceremony`) to re-export stubs |
+| 5 | Write the new `README.md` |
+| 6 | Write `ARCHITECTURE.md` |
+| 7 | Write `docs/EDGE-FUNCTIONS.md` |
+| 8 | Update `App.tsx`, `main.tsx`, `namespace-registry.ts`, and `bus/modules/` to use new paths |
+| 9 | Verify build passes |
 
-Apply the same `/* @vite-ignore */` fix to `src/modules/desktop/components/ContainerBootOverlay.tsx` and `src/modules/compose/orchestrator.ts` in the main repo to resolve the current build failure.
+## Risk
 
-## Files Created/Modified
+This is a large-scale path refactor (~200+ files with import changes). The mechanical work is straightforward but volume is high. Every `@/modules/X` import becomes `@/modules/<subsystem>/X`. The `@/` alias resolution in Vite means only the path segment after `modules/` changes.
 
-| File | Action |
-|------|--------|
-| `uor-os/LICENSE` | New: Apache 2.0 |
-| `uor-os/components.json` | New: shadcn config |
-| `uor-os/.gitignore` | New: standard Vite ignore |
-| `uor-os/tsconfig.json` | Update: project references |
-| `uor-os/tsconfig.app.json` | New: app TS config |
-| `uor-os/tsconfig.node.json` | New: node TS config |
-| `uor-os/eslint.config.js` | New: ESLint config |
-| `uor-os/vitest.config.ts` | New: Vitest config |
-| `uor-os/vite.config.ts` | Update: add lovable-tagger |
-| `uor-os/package.json` | Update: add lovable-tagger |
-| `uor-os/supabase/` | New: full copy of supabase dir |
-| `src/modules/desktop/components/ContainerBootOverlay.tsx` | Fix: `@vite-ignore` on dynamic import |
-| `src/modules/compose/orchestrator.ts` | Fix: `@vite-ignore` on dynamic import |
-| `uor-os/src/modules/desktop/components/ContainerBootOverlay.tsx` | Fix: same |
-| `uor-os/src/modules/compose/orchestrator.ts` | Fix: same |
+## What Does NOT Change
+
+- No logic changes to any module
+- No dependency changes
+- No Vite/Tailwind/TypeScript config changes
+- `src/lib/`, `src/types/`, `src/hooks/`, `src/integrations/` stay exactly where they are
+- `supabase/`, `src-tauri/`, `public/` untouched
 
