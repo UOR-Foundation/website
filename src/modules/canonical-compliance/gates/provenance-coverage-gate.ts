@@ -66,7 +66,7 @@ function provenanceCoverageGate() {
 
   return buildGateResult(
     "provenance-coverage",
-    "Provenance Coverage Gate",
+    "Provenance Gate",
     findings,
     { error: 8, warning: 2, info: 0 },
   );

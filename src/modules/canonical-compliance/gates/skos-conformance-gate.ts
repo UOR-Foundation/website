@@ -217,7 +217,7 @@ registerGate(() => {
     detail: `${ALL_CONCEPTS.length} concepts, ${rootConcepts.length} roots, ${notationCount} notations, ${schemeTops.size} declared top concepts.`,
   });
 
-  return buildGateResult("skos-w3c-conformance", "SKOS W3C Conformance", findings, {
+  return buildGateResult("skos-w3c-conformance", "SKOS Gate", findings, {
     error: 10,
     warning: 4,
     info: 0,

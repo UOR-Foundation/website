@@ -88,7 +88,7 @@ function duplicateDetectionGate() {
       .join(", "),
   });
 
-  return buildGateResult("duplicate-detection", "Duplicate Detection Gate", findings);
+  return buildGateResult("duplicate-detection", "Duplicates Gate", findings);
 }
 
 registerGate(duplicateDetectionGate);

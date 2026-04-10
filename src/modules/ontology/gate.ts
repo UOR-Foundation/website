@@ -121,7 +121,7 @@ registerGate((): GateResult => {
 
   return {
     id: "ontology-consistency",
-    name: "Ontology Consistency",
+    name: "Ontology Gate",
     status,
     score: Math.max(0, score),
     findings,

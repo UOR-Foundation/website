@@ -78,7 +78,7 @@ function canonicalPipelineGate() {
     });
   }
 
-  return buildGateResult("canonical-pipeline", "Canonical Pipeline Gate", findings);
+  return buildGateResult("canonical-pipeline", "Pipeline Gate", findings);
 }
 
 registerGate(canonicalPipelineGate);

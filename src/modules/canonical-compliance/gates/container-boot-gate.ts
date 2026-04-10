@@ -72,7 +72,7 @@ registerGate((): GateResult => {
 
   return {
     id: "container-boot",
-    name: "Container Boot Integrity",
+    name: "Boot Gate",
     status,
     score,
     findings,

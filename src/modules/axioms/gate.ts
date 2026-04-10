@@ -139,7 +139,7 @@ function axiomsComplianceGate() {
 
   return buildGateResult(
     "axioms-compliance",
-    `Design Axioms Compliance (${ds.label})`,
+    "Axioms Gate",
     allFindings,
   );
 }
