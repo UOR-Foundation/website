@@ -24,7 +24,7 @@ import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet"
 import BootSequence from "@/modules/desktop/BootSequence";
 import LocalTwinWelcome, { shouldShowLocalTwinWelcome } from "@/modules/desktop/components/LocalTwinWelcome";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
-import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
+import { PlatformProvider, usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
