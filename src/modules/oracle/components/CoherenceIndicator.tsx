@@ -4,10 +4,11 @@
  * A thin gradient bar at the top of the immersive view that shifts
  * from cool blue (scattered) → warm gold (deep focus).
  * No numbers, no text — purely ambient, like breathing rhythm.
+ *
+ * Migrated from framer-motion to CSS animations for zero JS overhead.
  */
 
 import React from "react";
-import { motion } from "framer-motion";
 
 interface CoherenceIndicatorProps {
   /** 0 = scattered, 1 = deeply focused */
@@ -15,7 +16,6 @@ interface CoherenceIndicatorProps {
 }
 
 function getCoherenceGradient(c: number): string {
-  // Blue (scattered) → Teal → Gold (focused)
   if (c >= 0.7) return "linear-gradient(90deg, hsl(38, 90%, 55%), hsl(45, 95%, 60%), hsl(38, 90%, 55%))";
   if (c >= 0.4) return "linear-gradient(90deg, hsl(180, 60%, 45%), hsl(160, 50%, 50%), hsl(180, 60%, 45%))";
   return "linear-gradient(90deg, hsl(210, 70%, 55%), hsl(220, 60%, 60%), hsl(210, 70%, 55%))";
@@ -23,10 +23,8 @@ function getCoherenceGradient(c: number): string {
 
 const CoherenceIndicator: React.FC<CoherenceIndicatorProps> = ({ coherence }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1, delay: 0.5 }}
+    <div
+      className="sov-fade-in"
       style={{
         position: "fixed",
         top: 0,
@@ -38,16 +36,9 @@ const CoherenceIndicator: React.FC<CoherenceIndicatorProps> = ({ coherence }) =>
         transition: "background 2s ease",
       }}
     >
-      {/* Subtle pulse animation */}
-      <motion.div
-        animate={{
-          opacity: [0.3, 0.6, 0.3],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+      {/* Subtle pulse animation — pure CSS */}
+      <div
+        className="sov-coherence-pulse"
         style={{
           position: "absolute",
           inset: 0,
@@ -55,7 +46,7 @@ const CoherenceIndicator: React.FC<CoherenceIndicatorProps> = ({ coherence }) =>
           filter: "blur(4px)",
         }}
       />
-    </motion.div>
+    </div>
   );
 };
 

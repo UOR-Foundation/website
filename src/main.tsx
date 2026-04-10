@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import "./modules/core/styles/transitions.css";
 
 /**
  * Environment detection — skip PWA service workers in iframes / editor previews.
