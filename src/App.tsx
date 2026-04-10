@@ -100,7 +100,7 @@ const App = () => {
               <Route path="/resolve" element={<SearchPage />} />
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
-              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/library" element={<Layout><LibraryPage /></Layout>} />
               <Route path="/app-store" element={<AppStorePage />} />
               <Route path="/compliance" element={<ComplianceDashboardPage />} />
               <Route path="/desktop" element={<Navigate to="/os" replace />} />

@@ -5,7 +5,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Zap, Loader2, BookOpen, ArrowLeft, Library } from "lucide-react";
-import Layout from "@/modules/core/components/Layout";
+
 import BookGrid from "@/modules/oracle/components/BookGrid";
 import BookReader from "@/modules/oracle/components/BookReader";
 import ResonanceGraph from "@/modules/oracle/components/ResonanceGraph";
@@ -274,6 +274,6 @@ export default function LibraryPage() {
           </AnimatePresence>
         </section>
       </div>
-    </Layout>
+    </>
   );
 }
