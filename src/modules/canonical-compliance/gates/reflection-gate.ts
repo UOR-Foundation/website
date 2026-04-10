@@ -150,7 +150,7 @@ registerAsyncGate(async () => {
   }
 
   if (reflections.length === 0) {
-    return buildGateResult("reflection-sentinel", "Reflection Sentinel", [
+    return buildGateResult("reflection-sentinel", "Reflection Gate", [
       {
         severity: "info",
         title: "No reflections yet",
@@ -168,5 +168,5 @@ registerAsyncGate(async () => {
     detail: `${findings.filter((f) => f.severity !== "info").length} patterns above threshold. System is self-monitoring conversation quality.`,
   });
 
-  return buildGateResult("reflection-sentinel", "Reflection Sentinel", findings);
+  return buildGateResult("reflection-sentinel", "Reflection Gate", findings);
 });
