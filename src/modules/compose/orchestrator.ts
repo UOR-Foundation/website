@@ -451,7 +451,7 @@ class Orchestrator {
 
     const kernel = new AppKernel(instanceId, bp);
 
-    // Worker pool governance: reserve slots
+    // Worker pool governance: reserve slots (kernel::parallel::DisjointBudget)
     const requestedWorkers = bp.resources.workers ?? 0;
     const allocated = this._reserveWorkerSlots(instanceId, requestedWorkers);
     kernel.setWorkersAllocated(allocated);
@@ -463,6 +463,13 @@ class Orchestrator {
 
     this._kernels.set(instanceId, kernel);
     this._byName.set(bp.name, instanceId);
+
+    // ── Container bridge ──────────────────────────────────────────────
+    // Create a UorContainer that links the image artifact to this kernel.
+    // This closes the Docker mental model:
+    //   Blueprint → Image → Container → Kernel → Reconciler
+    //   (what)      (how)   (instance)  (isolation) (control)
+    this._createContainerForInstance(instanceId, bp);
 
     // Start healthcheck timer if defined
     if (bp.healthcheck) {
@@ -479,6 +486,72 @@ class Orchestrator {
     });
 
     return instanceId;
+  }
+
+  /**
+   * Bridge: create a UorContainer for a running AppKernel instance.
+   *
+   * This is the glue between the Build layer (uns/build) and the Run layer (compose).
+   * The container holds the image reference, runtime config, and lifecycle state.
+   * The AppKernel provides isolation. The Reconciler provides orchestration.
+   */
+  private _createContainerForInstance(instanceId: string, bp: AppBlueprint): void {
+    // Lazy import to avoid circular dependency
+    import("@/modules/uns/build/container").then(
+      ({ createContainer, startContainer, linkContainerToKernel }) => {
+        // Build a synthetic UorImage from the blueprint metadata
+        const syntheticImage = {
+          canonicalId: bp.canonicalId ?? `bp:${bp.name}`,
+          cid: bp.canonicalId ?? "",
+          ipv6: "",
+          spec: {
+            directives: [],
+            from: { type: "uor" as const, reference: bp.name, tag: bp.version },
+            env: {},
+            args: {},
+            ports: bp.morphisms?.map((_, i) => 8000 + i) ?? [],
+            volumes: [],
+            entrypoint: [],
+            cmd: [],
+            healthcheck: null,
+            labels: { "uor.name": bp.name, "uor.version": bp.version },
+            workdir: "/",
+            copies: [],
+            runCommands: [],
+            trustRequirements: [],
+            shieldLevel: "standard" as const,
+            maintainer: "",
+          },
+          sizeBytes: 0,
+          builtAt: new Date().toISOString(),
+          builderCanonicalId: "",
+          tags: [bp.version, "latest"],
+          layers: [],
+        };
+
+        createContainer(syntheticImage, {
+          name: bp.name,
+          env: {},
+          resources: {
+            memoryBytes: 0,
+            cpuShares: 0,
+            workerSlots: bp.resources.workers ?? 1,
+          },
+          labels: { "uor.managed-by": "orchestrator", "uor.instance": instanceId },
+          restartPolicy: bp.autoStart !== false ? "always" : "on-failure",
+        })
+          .then((container) => {
+            startContainer(container.id);
+            linkContainerToKernel(container.id, instanceId);
+          })
+          .catch((err) => {
+            // Non-fatal: container bridge is observability, not critical path
+            console.debug(`[Orchestrator] Container bridge skipped for ${bp.name}:`, err?.message);
+          });
+      },
+    ).catch(() => {
+      // Module not available — silent fallback
+    });
   }
 
   private async _runHealthcheck(instanceId: string): Promise<void> {

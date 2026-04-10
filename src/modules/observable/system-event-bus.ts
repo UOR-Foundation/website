@@ -24,7 +24,7 @@ import { Observable } from "@okikio/observables";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type SystemEventSource = "ring" | "identity" | "hologram" | "certificate" | "sovereignty";
+export type SystemEventSource = "ring" | "identity" | "hologram" | "certificate" | "sovereignty" | "container";
 
 export interface SystemEvent {
   readonly source: SystemEventSource;
