@@ -18,10 +18,11 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
 };
 
 const LAYER_COLORS: Record<string, string> = {
-  engine: "hsl(160 40% 45%)",
-  names: "hsl(210 50% 50%)",
-  build: "hsl(35 60% 50%)",
+  kernel: "hsl(160 40% 45%)",
+  protocol: "hsl(210 50% 50%)",
+  runtime: "hsl(35 60% 50%)",
   services: "hsl(270 40% 55%)",
+  applications: "hsl(340 45% 55%)",
 };
 
 interface GraphNode {
