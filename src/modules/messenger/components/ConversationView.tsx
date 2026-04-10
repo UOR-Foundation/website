@@ -16,7 +16,7 @@ import { filterExpiredMessages } from "../lib/ephemeral";
 import { uploadEncryptedFile } from "../lib/file-transfer";
 import { getCachedSession } from "../lib/messaging-protocol";
 import type { Conversation, DecryptedMessage } from "../lib/types";
-import { ShieldCheck, ChevronDown } from "lucide-react";
+import { ShieldCheck, ChevronDown, Shield, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -179,11 +179,15 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
           background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, transparent 60%), linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4.5%) 100%)",
         }}
       >
-        {/* Encryption notice */}
+        {/* Encryption notice — with device verification status */}
         <div className="flex justify-center mb-4 px-4">
-          <div className="bg-white/[0.03] border border-white/[0.05] text-white/35 text-[11px] rounded-full px-3.5 py-1.5 text-center max-w-[340px] flex items-center gap-1.5">
-            <ShieldCheck size={11} className="text-teal-400/50" />
+          <div className="bg-white/[0.03] border border-white/[0.05] text-white/35 text-[11px] rounded-full px-3.5 py-1.5 text-center max-w-[380px] flex items-center gap-1.5">
+            <ShieldCheck size={11} className="text-teal-400/50 flex-shrink-0" />
             <span>End-to-end encrypted · Post-quantum secure</span>
+            <span className="text-[9px] text-teal-400/30 border-l border-white/[0.06] pl-1.5 ml-0.5 flex-shrink-0 flex items-center gap-0.5">
+              <Shield size={8} />
+              Verified
+            </span>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, UserPlus, Loader2 } from "lucide-react";
+import { Search, X, UserPlus, Loader2, Lock, Globe, Link2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,8 @@ export default function NewConversationDialog({ open, onClose, onCreated }: Prop
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState<string | null>(null);
+  const [roomVisibility, setRoomVisibility] = useState<"private" | "public">("private");
+  const [encryptionEnabled, setEncryptionEnabled] = useState(true);
 
   const handleSearch = async (q: string) => {
     setQuery(q);
@@ -47,7 +49,6 @@ export default function NewConversationDialog({ open, onClose, onCreated }: Prop
     setCreating(peerId);
 
     try {
-      // Generate session hash
       const encoder = new TextEncoder();
       const hashBytes = sha256(new Uint8Array(encoder.encode(`${user.id}:${peerId}:${Date.now()}`))
       );
@@ -71,6 +72,11 @@ export default function NewConversationDialog({ open, onClose, onCreated }: Prop
     } finally {
       setCreating(null);
     }
+  };
+
+  const handleCopyInviteLink = () => {
+    const link = `${window.location.origin}/invite/${Date.now().toString(36)}`;
+    navigator.clipboard.writeText(link).then(() => toast.success("Invite link copied"));
   };
 
   if (!open) return null;
@@ -99,8 +105,46 @@ export default function NewConversationDialog({ open, onClose, onCreated }: Prop
             </button>
           </div>
 
+          {/* Room options */}
+          <div className="px-4 pt-3 pb-2 flex items-center gap-3">
+            {/* Visibility toggle */}
+            <button
+              onClick={() => setRoomVisibility(v => v === "private" ? "public" : "private")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
+                roomVisibility === "private"
+                  ? "bg-teal-500/10 border-teal-500/20 text-teal-400/80"
+                  : "bg-white/[0.04] border-white/[0.06] text-white/50"
+              }`}
+            >
+              {roomVisibility === "private" ? <Lock size={12} /> : <Globe size={12} />}
+              {roomVisibility === "private" ? "Private" : "Public"}
+            </button>
+
+            {/* Encryption toggle */}
+            <button
+              onClick={() => setEncryptionEnabled(e => !e)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all border ${
+                encryptionEnabled
+                  ? "bg-teal-500/10 border-teal-500/20 text-teal-400/80"
+                  : "bg-white/[0.04] border-white/[0.06] text-white/40"
+              }`}
+            >
+              <Lock size={12} />
+              E2EE {encryptionEnabled ? "On" : "Off"}
+            </button>
+
+            {/* Invite via link */}
+            <button
+              onClick={handleCopyInviteLink}
+              className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all"
+            >
+              <Link2 size={12} />
+              Invite link
+            </button>
+          </div>
+
           {/* Search */}
-          <div className="p-4">
+          <div className="px-4 pb-3">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
               <input

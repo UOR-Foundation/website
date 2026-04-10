@@ -1,5 +1,5 @@
 /**
- * UNS Build. Module Barrel Export
+ * UNS Build — Module Barrel Export
  * ═════════════════════════════════════════════════════════════════
  *
  * Complete Build → Ship → Run system.

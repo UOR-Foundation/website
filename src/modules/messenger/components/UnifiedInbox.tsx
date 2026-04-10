@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Menu, Plus } from "lucide-react";
+import { Search, Menu, Plus, Shield, ShieldCheck, MessageSquare, Send, Hash, Briefcase, Mail, Gamepad2, Lock } from "lucide-react";
 import ChatList from "./ChatList";
 import SidebarMenu from "./SidebarMenu";
 import type { Conversation, BridgePlatform } from "../lib/types";
@@ -19,16 +19,31 @@ interface Props {
 
 type PlatformFilter = "all" | BridgePlatform | "matrix" | "native";
 
-const PLATFORM_FILTERS: Array<{ id: PlatformFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "native", label: "🛡️" },
-  { id: "whatsapp", label: "💬" },
-  { id: "telegram", label: "✈️" },
-  { id: "signal", label: "🔐" },
-  { id: "discord", label: "🎮" },
-  { id: "slack", label: "💼" },
-  { id: "email", label: "✉️" },
-  { id: "matrix", label: "🟢" },
+interface PlatformFilterDef {
+  id: PlatformFilter;
+  label: string;
+  icon: typeof Shield;
+}
+
+const PLATFORM_FILTERS: PlatformFilterDef[] = [
+  { id: "all", label: "All", icon: MessageSquare },
+  { id: "native", label: "Sovereign", icon: ShieldCheck },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
+  { id: "telegram", label: "Telegram", icon: Send },
+  { id: "signal", label: "Signal", icon: Lock },
+  { id: "discord", label: "Discord", icon: Gamepad2 },
+  { id: "slack", label: "Slack", icon: Briefcase },
+  { id: "email", label: "Email", icon: Mail },
+  { id: "matrix", label: "Matrix", icon: Hash },
+];
+
+type SpaceFilter = "all" | "personal" | "work" | "bridges";
+
+const SPACE_FILTERS: Array<{ id: SpaceFilter; label: string }> = [
+  { id: "all", label: "All Spaces" },
+  { id: "personal", label: "Personal" },
+  { id: "work", label: "Work" },
+  { id: "bridges", label: "Bridges" },
 ];
 
 export default function UnifiedInbox({
@@ -40,6 +55,7 @@ export default function UnifiedInbox({
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterTab, setFilterTab] = useState<"all" | "unread" | "archived">("all");
+  const [spaceFilter, setSpaceFilter] = useState<SpaceFilter>("all");
 
   const platformCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -51,18 +67,29 @@ export default function UnifiedInbox({
   }, [conversations]);
 
   const filteredConversations = useMemo(() => {
-    if (platformFilter === "all") return conversations;
-    return conversations.filter((c) => {
-      const platform = (c as any).sourcePlatform ?? "native";
-      return platform === platformFilter;
-    });
-  }, [conversations, platformFilter]);
+    let filtered = conversations;
+    if (platformFilter !== "all") {
+      filtered = filtered.filter((c) => {
+        const platform = (c as any).sourcePlatform ?? "native";
+        return platform === platformFilter;
+      });
+    }
+    // Space filter: bridges = any non-native platform
+    if (spaceFilter === "bridges") {
+      filtered = filtered.filter(c => {
+        const platform = (c as any).sourcePlatform ?? "native";
+        return platform !== "native";
+      });
+    }
+    return filtered;
+  }, [conversations, platformFilter, spaceFilter]);
 
   const activeFilters = PLATFORM_FILTERS.filter(
     (f) => f.id === "all" || (platformCounts.get(f.id) ?? 0) > 0,
   );
 
   const unreadCount = conversations.filter(c => c.unread > 0).length;
+  const verifiedCount = conversations.filter(c => c.sessionType === "direct" || c.sessionType === "group").length;
 
   return (
     <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-sm touch-manipulation">
@@ -109,6 +136,23 @@ export default function UnifiedInbox({
         )}
       </div>
 
+      {/* Spaces strip */}
+      <div className="flex px-2 pt-1.5 pb-0.5 gap-1 border-b border-white/[0.03]">
+        {SPACE_FILTERS.map((space) => (
+          <button
+            key={space.id}
+            onClick={() => setSpaceFilter(space.id)}
+            className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-100 select-none active:scale-[0.95] ${
+              spaceFilter === space.id
+                ? "bg-teal-500/15 text-teal-400/90"
+                : "text-white/30 hover:text-white/50 hover:bg-white/[0.03]"
+            }`}
+          >
+            {space.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filter tabs */}
       <div className="flex px-2 pt-1.5 pb-0.5 gap-1">
         {(["all", "unread", "archived"] as const).map((tab) => (
@@ -117,33 +161,40 @@ export default function UnifiedInbox({
             onClick={() => setFilterTab(tab)}
             className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-100 select-none active:scale-[0.95] ${
               filterTab === tab
-                ? "bg-teal-500/15 text-teal-400/90"
+                ? "bg-white/[0.06] text-white/70"
                 : "text-white/35 hover:text-white/55 hover:bg-white/[0.03] active:bg-white/[0.05]"
             }`}
           >
             {tab === "all" ? "All Chats" : tab === "unread" ? `Unread${unreadCount > 0 ? ` (${unreadCount})` : ""}` : "Archived"}
           </button>
         ))}
+        {/* Verified count badge */}
+        <div className="ml-auto flex items-center gap-1 px-2 text-[10px] text-teal-400/40">
+          <ShieldCheck size={11} />
+          <span>{verifiedCount} verified</span>
+        </div>
       </div>
 
-      {/* Platform filter tabs */}
+      {/* Platform filter chips */}
       {activeFilters.length > 2 && (
-        <div className="flex px-2 pt-1 pb-0.5 gap-0.5 overflow-x-auto scrollbar-none">
+        <div className="flex px-2 pt-1 pb-0.5 gap-1 overflow-x-auto scrollbar-none">
           {activeFilters.map((filter) => {
             const count = filter.id === "all" ? conversations.length : (platformCounts.get(filter.id) ?? 0);
+            const Icon = filter.icon;
             return (
               <button
                 key={filter.id}
                 onClick={() => setPlatformFilter(filter.id)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-all duration-100 whitespace-nowrap select-none active:scale-[0.93] ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] transition-all duration-100 whitespace-nowrap select-none active:scale-[0.93] border ${
                   platformFilter === filter.id
-                    ? "bg-white/[0.08] text-white/70"
-                    : "text-white/25 hover:text-white/45 hover:bg-white/[0.03]"
+                    ? "bg-white/[0.08] text-white/70 border-white/[0.1]"
+                    : "text-white/25 hover:text-white/45 hover:bg-white/[0.03] border-transparent"
                 }`}
               >
-                {filter.label}
+                <Icon size={11} />
+                <span>{filter.label}</span>
                 {count > 0 && filter.id !== "all" && (
-                  <span className="text-[9px] text-white/20">{count}</span>
+                  <span className="text-[9px] text-white/20 bg-white/[0.05] rounded-full px-1.5">{count}</span>
                 )}
               </button>
             );

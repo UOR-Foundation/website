@@ -1,4 +1,4 @@
-import { Check, CheckCheck, Lock, Reply, Timer } from "lucide-react";
+import { Check, CheckCheck, Lock, Reply, Timer, Shield, ShieldCheck, MessageSquare, Send, Briefcase, Gamepad2, Mail, Hash } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +28,16 @@ interface Props {
   isLastInGroup?: boolean;
 }
 
+const PLATFORM_MINI_ICONS: Record<string, typeof Shield> = {
+  whatsapp: MessageSquare,
+  telegram: Send,
+  signal: Lock,
+  discord: Gamepad2,
+  slack: Briefcase,
+  email: Mail,
+  matrix: Hash,
+};
+
 function senderColor(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = ((hash << 5) - hash + userId.charCodeAt(i)) | 0;
@@ -46,6 +56,7 @@ export default function MessageBubble({
   const { user } = useAuth();
   const sent = message.sentByMe;
   const isEncrypted = message.plaintext === "🔒 Encrypted";
+  const isDecrypting = message.plaintext === "🔒 Encrypted";
   const [showReactions, setShowReactions] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ show: boolean; x: number; y: number }>({ show: false, x: 0, y: 0 });
 
@@ -54,6 +65,10 @@ export default function MessageBubble({
   const isDeletable = sent && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
   const ttl = message.selfDestructSeconds ?? expiresAfterSeconds;
   const timeRemaining = getTimeRemaining(message.createdAt, ttl);
+
+  // Platform icon for bridged messages
+  const bridgePlatform = message.sourcePlatform && message.sourcePlatform !== "native" ? message.sourcePlatform : null;
+  const BridgeIcon = bridgePlatform ? (PLATFORM_MINI_ICONS[bridgePlatform] ?? null) : null;
 
   const nameColor = useMemo(() => {
     if (!isGroup || sent) return "";
@@ -99,11 +114,13 @@ export default function MessageBubble({
     : `6px ${isFirstInGroup ? "18px" : "6px"} ${isLastInGroup ? "18px" : "6px"} 6px`;
 
   const renderContent = () => {
-    if (isEncrypted) {
+    // Decrypting skeleton state
+    if (isDecrypting) {
       return (
-        <span className="text-sm leading-relaxed flex items-center gap-1.5 text-white/40">
-          <Lock size={12} /> Encrypted message
-        </span>
+        <div className="flex items-center gap-2 py-1">
+          <div className="w-4 h-4 border border-white/15 border-t-white/40 rounded-full animate-spin flex-shrink-0" />
+          <span className="text-sm text-white/30">Decrypting…</span>
+        </div>
       );
     }
     switch (message.messageType) {
@@ -156,43 +173,59 @@ export default function MessageBubble({
             setContextMenu({ show: true, x: e.clientX, y: e.clientY });
           }}
         >
+          {/* Sender name with platform icon and verification shield */}
           {isGroup && !sent && isFirstInGroup && message.senderName && (
             <p className={`text-[12px] font-semibold mb-0.5 truncate flex items-center gap-1 ${nameColor}`}>
-              {message.sourcePlatform && message.sourcePlatform !== "native" && (
-                <PlatformBadge platform={message.sourcePlatform} size="sm" />
+              {bridgePlatform && BridgeIcon && (
+                <BridgeIcon size={10} className="text-white/30 flex-shrink-0" />
+              )}
+              {!bridgePlatform && (
+                <PlatformBadge platform={message.sourcePlatform ?? "native"} size="sm" />
               )}
               {message.senderName}
+              {!bridgePlatform && (
+                <ShieldCheck size={9} className="text-teal-400/40 flex-shrink-0" />
+              )}
             </p>
           )}
-          {!isGroup && message.sourcePlatform && message.sourcePlatform !== "native" && !sent && isFirstInGroup && (
-            <div className="mb-0.5"><PlatformBadge platform={message.sourcePlatform} size="sm" showLabel /></div>
+          {!isGroup && bridgePlatform && BridgeIcon && !sent && isFirstInGroup && (
+            <div className="mb-0.5 flex items-center gap-1">
+              <BridgeIcon size={10} className="text-white/30" />
+              <span className="text-[10px] text-white/25">{bridgePlatform}</span>
+            </div>
           )}
 
           {replyToMessage && <ReplyBubble replyTo={replyToMessage} />}
 
           {renderContent()}
 
+          {/* Reactions as pills */}
           {reactionCounts.size > 0 && (
-            <div className="flex flex-wrap gap-0.5 mt-1">
+            <div className="flex flex-wrap gap-1 mt-1.5 -mb-0.5">
               {Array.from(reactionCounts.entries()).map(([emoji, { count, byMe }]) => (
                 <button
                   key={emoji}
                   onClick={() => handleReact(emoji)}
-                  className={`text-xs rounded-full px-1.5 py-0.5 transition-all duration-75 active:scale-[0.9] ${
+                  className={`text-xs rounded-full px-2 py-0.5 transition-all duration-75 active:scale-[0.9] flex items-center gap-0.5 ${
                     byMe ? "bg-teal-500/15 border border-teal-500/20" : "bg-white/[0.06] border border-white/[0.04] hover:bg-white/[0.1]"
                   }`}
                 >
-                  {emoji}{count > 1 && <span className="text-[10px] ml-0.5 text-white/40">{count}</span>}
+                  <span>{emoji}</span>
+                  {count > 1 && <span className="text-[10px] text-white/40">{count}</span>}
                 </button>
               ))}
             </div>
           )}
 
+          {/* Time + status + verification */}
           <span className="float-right mt-0.5 ml-3 flex items-center gap-1 text-[10px] text-white/25 leading-none translate-y-0.5 select-none">
             {timeRemaining && !timeRemaining.expired && (
               <span className="flex items-center gap-0.5 text-amber-400/50 mr-0.5">
                 <Timer size={9} />{timeRemaining.label}
               </span>
+            )}
+            {!bridgePlatform && !sent && (
+              <Shield size={8} className="text-teal-400/30" />
             )}
             {time}
             <StatusIcon />

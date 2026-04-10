@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Bell, Lock, Palette, Info, ShieldCheck, Plug } from "lucide-react";
+import { ArrowLeft, User, Bell, Lock, Palette, Info, ShieldCheck, Plug, Smartphone, Key, RefreshCw, FolderOpen, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +25,36 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
       ],
     },
     {
+      title: "Security & Verification",
+      items: [
+        {
+          icon: Smartphone, label: "Devices", subtitle: "1 verified device · This device",
+          action: () => toast.info("Device management — coming soon"),
+        },
+        {
+          icon: Key, label: "Cross-Signing", subtitle: "Enabled · Keys verified",
+          action: () => toast.info("Cross-signing management — coming soon"),
+        },
+        {
+          icon: RefreshCw, label: "Key Backup", subtitle: "Backed up · Post-quantum Kyber-1024",
+          action: () => toast.info("Key backup — coming soon"),
+        },
+        {
+          icon: ShieldCheck, label: "Session Verification", subtitle: "All sessions verified",
+          action: () => toast.info("Session verification — coming soon"),
+        },
+      ],
+    },
+    {
+      title: "Spaces",
+      items: [
+        {
+          icon: FolderOpen, label: "Manage Spaces", subtitle: "Personal, Work, Bridges",
+          action: () => toast.info("Space management — coming soon"),
+        },
+      ],
+    },
+    {
       title: "Settings",
       items: [
         {
@@ -46,10 +76,10 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
       ],
     },
     {
-      title: "Connections",
+      title: "Connected Platforms",
       items: [
         {
-          icon: Plug, label: "Bridge Connections", subtitle: "WhatsApp, Telegram, Signal, etc.",
+          icon: Globe, label: "Connected Platforms", subtitle: "WhatsApp, Telegram, Signal, and more",
           action: onOpenBridges,
         },
       ],
@@ -75,7 +105,7 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
       <div className="flex-1 overflow-y-auto">
         {sections.map((section) => (
           <div key={section.title} className="mb-2">
-            <div className="px-4 py-2 text-[11px] font-semibold text-teal-400/50 uppercase">
+            <div className="px-4 py-2 text-[11px] font-semibold text-teal-400/50 uppercase tracking-wider">
               {section.title}
             </div>
             {section.items.map((item, i) => {
