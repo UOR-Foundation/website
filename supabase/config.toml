@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.matrix-bridge-gateway]
 verify_jwt = false
+
+[functions.video-stream]
+verify_jwt = false
