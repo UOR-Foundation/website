@@ -89,3 +89,10 @@ export function getThumbnail(id: string, quality: "default" | "mq" | "hq" | "max
   const qualityMap = { default: "default", mq: "mqdefault", hq: "hqdefault", maxres: "maxresdefault" };
   return `https://img.youtube.com/vi/${id}/${qualityMap[quality]}.jpg`;
 }
+
+/** Piped-proxied thumbnail via our edge function */
+export function getPipedThumbnail(id: string): string {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "erwfuxphwcvynxhfbvql";
+  return `https://${projectId}.supabase.co/functions/v1/video-stream?id=${id}&thumb=1`;
+}
+
