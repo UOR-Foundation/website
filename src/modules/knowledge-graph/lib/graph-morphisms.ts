@@ -63,7 +63,7 @@ export async function applyMorphism(
 
   const sourceValue = sourceDatum["schema:value"];
   const resultQuantum = computeOp(op, sourceValue, operand);
-  const resultDatum = makeDatum(resultQuantum, DEFAULT_RING);
+  const resultDatum = makeDatum(resultQuantum, DEFAULT_Q);
 
   // Content-address the result
   const resultIdentity = await singleProofHash({
@@ -116,7 +116,7 @@ export async function composeMorphisms(
     lastDatum = result.datum;
   }
 
-  const finalDatum = lastDatum ?? makeDatum(0, DEFAULT_RING);
+  const finalDatum = lastDatum ?? makeDatum(0, DEFAULT_Q);
   return { finalDatum, finalIri: currentIri, chain };
 }
 
@@ -151,21 +151,21 @@ async function retrieveDatum(iri: string): Promise<Datum | null> {
       const qVal = results[0]["?q"] || results[0].q;
       if (qVal) {
         const quantum = parseInt(String(qVal), 10);
-        if (!isNaN(quantum)) return makeDatum(quantum, DEFAULT_RING);
+        if (!isNaN(quantum)) return makeDatum(quantum, DEFAULT_Q);
       }
     }
   } catch { /* node may not have quantum property */ }
 
   // Try to extract value from IRI pattern
   const match = iri.match(/quantum[:/](\d+)/);
-  if (match) return makeDatum(parseInt(match[1], 10), DEFAULT_RING);
+  if (match) return makeDatum(parseInt(match[1], 10), DEFAULT_Q);
 
   return null;
 }
 
 function computeOp(op: PrimitiveOp, a: number, b?: number): number {
   if (op === "neg" || op === "bnot" || op === "succ" || op === "pred") {
-    return compute(op, a);
+    return compute(op, a, 0);
   }
   if (b === undefined) {
     throw new Error(`[Morphism] Binary operation '${op}' requires an operand`);
