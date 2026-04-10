@@ -8,7 +8,7 @@
  */
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfigured } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { runFoundingCeremony } from "@/modules/platform/ceremony/founding-forge";
 
