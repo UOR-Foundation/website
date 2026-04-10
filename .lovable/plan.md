@@ -1,83 +1,127 @@
 
 
-# Messenger — Fix Build, Ensure One-Click Launch, Align with Matrix UX
+# Standardized Application Boot Sequence — Container-First Launch
 
-## Build Fix
+## Current State
 
-The build error `Could not resolve "./container" from "src/modules/uns/build/index.ts"` is a stale module resolution issue. The file `container.ts` exists and has all required exports. The fix is to re-save `index.ts` with no changes (or a trivial whitespace change) to bust the Vite cache.
+The infrastructure is fully built but **not wired to the UI**:
+- **AppKernel** exists (`compose/app-kernel.ts`) — per-app unikernel with permissions, rate limiting, call budgets, circuit breakers, and seal verification.
+- **UorContainer** exists (`uns/build/container.ts`) — Docker-equivalent lifecycle (create → start → running).
+- **Orchestrator** exists (`compose/orchestrator.ts`) — Kubernetes-equivalent scheduler that creates containers and kernels via `_startInstance()`.
 
-## One-Click Launch Verification
+But `DesktopWindow.tsx` line 209 simply does `{AppComponent && <AppComponent />}` — it mounts the React component directly, bypassing the entire container/kernel pipeline.
 
-The launch path is:
-1. Dock/Spotlight/Widget → `handleOpenApp("messenger")` → `getApp("messenger")` → blueprint lookup → lazy-loads `MessengerPage`
-2. MessengerPage checks auth → shows sign-in gate or conversation list
+## Solution
 
-This chain is correctly wired. The blueprint exists in `static-blueprints.ts`, the component map in `desktop-apps.ts` has the lazy import, and the dock includes it. No code changes needed for launch — just verify it opens after the build fix.
+Insert a **Container Boot Overlay** between window creation and component mounting. Every app launch goes through the same deterministic sequence — visible to the user as a brief boot animation, and wired to real orchestrator/kernel/container operations.
 
-## Matrix Alignment — UX Improvements
+### Boot Sequence (per application)
 
-The Matrix/Element paradigm centers on: **Rooms, Spaces, Direct Messages, Threads, E2EE verification, Federation indicators, and device trust.** Our Messenger has most primitives but the UX doesn't surface them coherently. Here's what to improve:
+```text
+Phase 1: INIT        → Orchestrator.ensureRunning(appName)
+Phase 2: CONTAINER   → createContainer() + startContainer()
+Phase 3: KERNEL      → AppKernel.start() (permissions, rate limits)
+Phase 4: MOUNT       → Load React component (existing Suspense)
+Phase 5: SEAL        → Kernel runtime seal verification
+Phase 6: READY       → Overlay fades, app is interactive
+```
 
-### 1. Fix Build (`src/modules/uns/build/index.ts`)
-- Re-export with a trivial touch to clear the module resolution cache
+Each phase takes ~50-100ms of real work. The overlay shows a compact terminal-style log with green dots progressing through each phase — identical for every app, creating the standardized experience.
 
-### 2. Conversation List UX — Align with Element's "Rooms" Pattern
-**File: `src/modules/messenger/components/UnifiedInbox.tsx`**
-- Replace emoji-based platform filters with proper icon pills (Element uses labeled filter chips)
-- Add a "Spaces" concept at the top — group conversations by context (Work, Personal, Bridges) like Element's Space sidebar
-- Show encryption verification badges per conversation (green shield = verified, orange = unverified)
-- Add last message preview with proper sender name for groups (Element shows "Alice: Hey...")
-- Show typing indicators in the conversation list (not just inside chat)
+### On-Demand Introspection
 
-### 3. Conversation View — Align with Element's Chat UX
-**File: `src/modules/messenger/components/ConversationView.tsx`**
-- Add thread support: long-press/right-click a message to "Reply in Thread" (Element's signature feature)
-- Show device verification status in the encryption banner (currently just says "End-to-end encrypted")
-- Add message read receipts as small avatars at the bottom-right of messages (Element pattern)
-- Show "decrypting..." skeleton states instead of "🔒 Encrypted" placeholder while async decrypt runs
+After boot completes, a small status pill appears in the app window corner (e.g., "● oracle — 6 ops · 3 ns"). Clicking it reveals the **Container Inspector** — showing:
+- Container ID, state, image, uptime
+- Kernel: allowed operations, namespaces, call count, denied count
+- Modules/pipelines/atoms the app is using (from blueprint `requires`)
+- Live call rate and payload accounting
 
-### 4. Contact Header — Federation & Bridge Awareness
-**File: `src/modules/messenger/components/ContactHeader.tsx`**
-- Show the source platform badge prominently (WhatsApp, Telegram, native Matrix, etc.)
-- Display homeserver/federation info for Matrix contacts
-- Add call buttons with proper disabled states and tooltips
+This mirrors `docker inspect` / `kubectl describe pod`.
 
-### 5. Settings — Matrix-Aligned Security Panel
-**File: `src/modules/messenger/components/SettingsPanel.tsx`**
-- Add "Security & Verification" section showing:
-  - Device list with verification status
-  - Cross-signing status
-  - Session key backup status
-- Add "Spaces" management section
-- Rename "Bridge Connections" to "Connected Platforms" (more intuitive)
+## Implementation
 
-### 6. New Conversation — Room Creation Alignment
-**File: `src/modules/messenger/components/NewConversationDialog.tsx`**
-- Add room visibility option (Private/Public) like Element
-- Add encryption toggle (on by default, matches Element)
-- Add "Invite via link" option
+### 1. Fix Build Error (`src/modules/uns/build/index.ts`)
+Add a trivial whitespace change to force Vite module re-resolution for `./container`.
 
-### 7. Message Bubbles — Verification & Platform Indicators
-**File: `src/modules/messenger/components/MessageBubble.tsx`**
-- Show a small platform icon for bridged messages
-- Show verification shield on messages from verified devices
-- Improve reaction display (Element shows reactions as pills below the message)
+### 2. Create `ContainerBootOverlay.tsx` (~180 lines)
+New component in `src/modules/desktop/components/`.
 
-## Files Summary
+- Accepts `appId`, `blueprint`, `onReady` callback
+- Runs the real boot sequence:
+  1. Calls `orchestrator.ensureRunning(appName)` — this creates the AppKernel + UorContainer
+  2. Reads container state and kernel metrics
+  3. Computes a runtime seal hash
+- Renders a compact terminal overlay showing each phase with timing
+- Auto-dismisses after boot completes (~300-500ms total)
+- Stores boot receipt in state for the inspector
+
+```text
+┌─────────────────────────────────────────┐
+│  ▸ Booting oracle                       │
+│                                         │
+│  ✓ init         orchestrator    12ms    │
+│  ✓ container    uor:oracle-1    8ms    │
+│  ✓ kernel       3 ns · 7 ops   15ms    │
+│  ✓ mount        OraclePage      45ms    │
+│  ● seal         verifying...            │
+│                                         │
+│  Container: oracle-1                    │
+│  Image: bp:oracle                       │
+│  Kernel: AppKernel [3 namespaces]       │
+└─────────────────────────────────────────┘
+```
+
+### 3. Create `ContainerInspector.tsx` (~120 lines)
+New component in `src/modules/desktop/components/`.
+
+- Small popover triggered by the status pill
+- Shows container details: ID, state, uptime, image reference
+- Shows kernel details: allowed ops, namespaces, call count, denied calls, payload bytes
+- Shows the app's `requires` list mapped to atom/pipeline/module levels (using provenance-map data if available)
+- Real-time updates via polling kernel metrics
+
+### 4. Update `DesktopWindow.tsx` (~40 lines changed)
+Replace the direct `<Suspense>` mount with a two-phase render:
+
+```typescript
+// Phase 1: Boot overlay (runs orchestrator + container + kernel)
+// Phase 2: App component (after boot completes)
+const [booted, setBooted] = useState(false);
+
+{!booted && app && (
+  <ContainerBootOverlay
+    appId={win.appId}
+    blueprint={app.blueprint}
+    onReady={() => setBooted(true)}
+  />
+)}
+{booted && (
+  <Suspense fallback={<Spinner />}>
+    <ContainerInspectorProvider appId={win.appId}>
+      {AppComponent && <AppComponent />}
+    </ContainerInspectorProvider>
+  </Suspense>
+)}
+```
+
+### 5. Update `useWindowManager.ts` (~10 lines)
+Add `booted: boolean` to `WindowState` so boot state persists across re-renders. When a window is re-focused (already open), skip boot.
+
+## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/uns/build/index.ts` | Touch/re-save | Fix module resolution cache |
-| `src/modules/messenger/components/UnifiedInbox.tsx` | Update | Space-based filtering, verification badges, typing in list |
-| `src/modules/messenger/components/ConversationView.tsx` | Update | Thread support, decrypt skeleton, read receipt avatars |
-| `src/modules/messenger/components/ContactHeader.tsx` | Update | Federation/bridge awareness, platform badge |
-| `src/modules/messenger/components/SettingsPanel.tsx` | Update | Security panel, spaces management |
-| `src/modules/messenger/components/NewConversationDialog.tsx` | Update | Room visibility, encryption toggle |
-| `src/modules/messenger/components/MessageBubble.tsx` | Update | Platform icons, verification shields |
+| `src/modules/uns/build/index.ts` | Touch | Fix stale module resolution |
+| `src/modules/desktop/components/ContainerBootOverlay.tsx` | Create | Standardized boot sequence UI |
+| `src/modules/desktop/components/ContainerInspector.tsx` | Create | On-demand container/kernel introspection |
+| `src/modules/desktop/DesktopWindow.tsx` | Update | Two-phase render: boot → mount |
+| `src/modules/desktop/hooks/useWindowManager.ts` | Update | Add `booted` to WindowState |
 
-## Priority Order
-1. **Build fix** (unblocks everything)
-2. **UnifiedInbox + ConversationView** (highest UX impact)
-3. **ContactHeader + MessageBubble** (polish)
-4. **Settings + NewConversation** (secondary flows)
+## Design Principles
+
+- **Every app, same sequence** — no exceptions, no shortcuts
+- **Real operations** — not simulated; the orchestrator actually creates kernels and containers
+- **Fast** — total boot ~300-500ms; overlay auto-dismisses
+- **Inspectable on demand** — the status pill is always there, click to see the "docker inspect" view
+- **Familiar to DevOps** — phases map to Docker/K8s concepts (init → container → runtime → seal)
 
