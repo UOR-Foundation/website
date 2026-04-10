@@ -222,7 +222,7 @@ export const CANONICAL_NAMESPACES: readonly NamespaceDescriptor[] = [
     label: "Trusted Execution Environment",
     space: "bridge",
     modules: ["tee-bridge"],
-    barrel: "@/hologram/kernel/tee-bridge",
+    barrel: "@/modules/kernel/engine",
     depth: 3,
     icon: "🔐",
     crateModule: "bridge/",

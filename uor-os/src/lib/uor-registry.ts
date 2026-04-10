@@ -23,8 +23,8 @@ import { generateCertificate, type UorCertificate } from "./uor-certificate";
 import coreManifest from "@/modules/platform/core/module.json";
 import landingManifest from "@/modules/platform/landing/module.json";
 import frameworkManifest from "@/modules/platform/core/module.json";   // absorbs: ruliad, uor-terms, framework
-import communityManifest from "@/modules/community/module.json";  // absorbs: donate
-import projectsManifest from "@/modules/projects/module.json";
+import communityManifest from "@/modules/platform/community/module.json";  // absorbs: donate
+import projectsManifest from "@/modules/platform/projects/module.json";
 import apiExplorerManifest from "@/modules/interoperability/api-explorer/module.json";
 
 // Layer 1: Algebraic CPU

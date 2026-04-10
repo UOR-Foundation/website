@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import ProjectDetailLayout from "@/modules/projects/components/ProjectDetailLayout";
+import ProjectDetailLayout from "@/modules/platform/projects/components/ProjectDetailLayout";
 import heroImg from "@/assets/project-uor-privacy.jpg";
 
 const ProjectUorTerms = () => (
