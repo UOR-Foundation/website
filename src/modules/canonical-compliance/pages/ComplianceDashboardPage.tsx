@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect, lazy, Suspense } from "react";
-import { Download, LayoutGrid, Share2, ShieldCheck } from "lucide-react";
+import { Download, LayoutGrid, Share2, ShieldCheck, BookOpen } from "lucide-react";
 import { runAudit, type AuditFinding, type AuditReport } from "../audit";
 import { ALL_ATOMS, ATOM_INDEX, type AtomCategory, type UorAtom, FIRMWARE_VERSION } from "../atoms";
 import { PROVENANCE_REGISTRY, SYSTEM_LAYERS, type SystemLayer } from "../provenance-map";
