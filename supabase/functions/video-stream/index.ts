@@ -3,7 +3,7 @@
  * via Piped and Invidious public APIs.
  *
  * GET /video-stream?id=VIDEO_ID          → JSON { streamUrl, thumbnailUrl, title }
- * GET /video-stream?id=VIDEO_ID&thumb=1  → 302 redirect to proxied thumbnail
+ * GET /video-stream?id=VIDEO_ID&thumb=1  → proxy thumbnail image
  */
 
 const corsHeaders: Record<string, string> = {
@@ -44,12 +44,12 @@ async function tryPiped(videoId: string): Promise<StreamResult | null> {
   for (const instance of PIPED_INSTANCES) {
     try {
       const resp = await fetch(`${instance}/streams/${videoId}`, {
-        headers: { "User-Agent": "UOR-MediaPlayer/1.0" },
-        signal: AbortSignal.timeout(6000),
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+        signal: AbortSignal.timeout(8000),
       });
-      if (!resp.ok) { await resp.text(); continue; }
+      if (!resp.ok) { await resp.text(); console.log(`Piped ${instance}: ${resp.status}`); continue; }
       const data = await resp.json();
-      if (!data?.videoStreams) continue;
+      if (!data?.videoStreams?.length) { console.log(`Piped ${instance}: no streams`); continue; }
 
       const combined = data.videoStreams
         .filter((s: any) => !s.videoOnly && s.mimeType?.startsWith("video/"))
@@ -61,15 +61,13 @@ async function tryPiped(videoId: string): Promise<StreamResult | null> {
         ? data.audioStreams.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0].url
         : null;
 
+      console.log(`Piped ${instance}: resolved, streamUrl=${!!streamUrl}`);
       return {
-        streamUrl,
-        audioStreamUrl,
+        streamUrl, audioStreamUrl,
         thumbnailUrl: data.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-        title: data.title || "",
-        uploader: data.uploader || "",
-        duration: data.duration || 0,
+        title: data.title || "", uploader: data.uploader || "", duration: data.duration || 0,
       };
-    } catch { /* next */ }
+    } catch (e) { console.log(`Piped ${instance}: ${e}`); }
   }
   return null;
 }
@@ -80,42 +78,36 @@ async function tryInvidious(videoId: string): Promise<StreamResult | null> {
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
       const resp = await fetch(`${instance}/api/v1/videos/${videoId}`, {
-        headers: { "User-Agent": "UOR-MediaPlayer/1.0" },
-        signal: AbortSignal.timeout(6000),
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+        signal: AbortSignal.timeout(8000),
       });
-      if (!resp.ok) { await resp.text(); continue; }
+      if (!resp.ok) { await resp.text(); console.log(`Invidious ${instance}: ${resp.status}`); continue; }
       const data = await resp.json();
 
-      // Invidious provides formatStreams (combined a/v) and adaptiveFormats
-      const formats = (data.formatStreams || []).concat(data.adaptiveFormats || []);
-      const videoStreams = formats
-        .filter((f: any) => f.type?.startsWith("video/") && f.url)
-        .sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0));
-      const audioStreams = formats
-        .filter((f: any) => f.type?.startsWith("audio/") && f.url)
-        .sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0));
+      // formatStreams = combined a/v, adaptiveFormats = separate
+      const combined = (data.formatStreams || []).filter((f: any) => f.url);
+      const adaptive = (data.adaptiveFormats || []).filter((f: any) => f.url && f.type?.startsWith("video/"));
+      const audio = (data.adaptiveFormats || []).filter((f: any) => f.url && f.type?.startsWith("audio/"));
 
-      // Prefer combined streams (formatStreams)
-      const combined = (data.formatStreams || [])
-        .filter((f: any) => f.url)
-        .sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0));
+      const streamUrl = combined.length
+        ? combined.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0].url
+        : adaptive.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0]?.url || null;
 
-      const streamUrl = combined[0]?.url || videoStreams[0]?.url || null;
-      const audioStreamUrl = audioStreams[0]?.url || null;
+      const audioStreamUrl = audio.length
+        ? audio.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0].url
+        : null;
 
       const thumb = data.videoThumbnails?.find((t: any) => t.quality === "medium")?.url
         || data.videoThumbnails?.[0]?.url
         || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
+      console.log(`Invidious ${instance}: resolved, streamUrl=${!!streamUrl}, combined=${combined.length}, adaptive=${adaptive.length}`);
       return {
-        streamUrl,
-        audioStreamUrl,
+        streamUrl, audioStreamUrl,
         thumbnailUrl: thumb,
-        title: data.title || "",
-        uploader: data.author || "",
-        duration: data.lengthSeconds || 0,
+        title: data.title || "", uploader: data.author || "", duration: data.lengthSeconds || 0,
       };
-    } catch { /* next */ }
+    } catch (e) { console.log(`Invidious ${instance}: ${e}`); }
   }
   return null;
 }
@@ -127,7 +119,6 @@ async function resolveVideo(videoId: string): Promise<StreamResult | null> {
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
 
-  // Try Piped first, then Invidious
   const result = await tryPiped(videoId) || await tryInvidious(videoId);
   if (result) cache.set(cacheKey, { data: result, ts: Date.now() });
   return result;
@@ -152,9 +143,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Thumbnail-only: try Invidious proxy thumbnail directly (fast)
+    // Thumbnail proxy
     if (thumbOnly) {
-      // Try Invidious thumbnail proxy first (doesn't need full stream resolution)
       for (const inst of INVIDIOUS_INSTANCES) {
         try {
           const thumbResp = await fetch(`${inst}/vi/${videoId}/mqdefault.jpg`, {
@@ -173,7 +163,6 @@ Deno.serve(async (req: Request) => {
           await thumbResp.text();
         } catch { /* next */ }
       }
-      // Fallback: YouTube direct
       return new Response(null, {
         status: 302,
         headers: { ...corsHeaders, Location: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` },
