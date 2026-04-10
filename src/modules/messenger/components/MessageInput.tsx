@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Send, Smile, Mic, X, Square, Timer } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import FilePickerButton from "./FilePickerButton";
 import MentionAutocomplete from "./MentionAutocomplete";
 import EmojiPanel from "./EmojiPanel";
+import SovereignEditor, { type SovereignEditorHandle } from "@/modules/core/editor/SovereignEditor";
 import type { DecryptedMessage, MessageType, FileManifest, GroupMember } from "../lib/types";
 import { EPHEMERAL_PRESETS } from "../lib/ephemeral";
 
@@ -27,49 +28,42 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<SovereignEditorHandle>(null);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (!text.trim() || disabled) return;
     onSend(text.trim(), { replyToHash: replyTo?.messageHash, selfDestructSeconds });
     setText("");
+    editorRef.current?.clear();
     setShowEmoji(false);
     onCancelReply?.();
-  };
+  }, [text, disabled, onSend, replyTo, selfDestructSeconds, onCancelReply]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    onTyping?.();
-  };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
+  const handleTextChange = useCallback((value: string) => {
     setText(value);
+    onTyping?.();
     if (isGroup && members && members.length > 0) {
-      const cursorPos = e.target.selectionStart;
-      const textBefore = value.slice(0, cursorPos);
-      const mentionMatch = textBefore.match(/@(\w*)$/);
+      const mentionMatch = value.match(/@(\w*)$/);
       setMentionQuery(mentionMatch ? mentionMatch[1] : null);
     }
-  };
+  }, [onTyping, isGroup, members]);
 
   const handleMentionSelect = (member: GroupMember) => {
-    const cursorPos = inputRef.current?.selectionStart ?? text.length;
-    const textBefore = text.slice(0, cursorPos);
-    const textAfter = text.slice(cursorPos);
-    const mentionMatch = textBefore.match(/@(\w*)$/);
+    const mentionMatch = text.match(/@(\w*)$/);
     if (mentionMatch) {
-      setText(textBefore.slice(0, mentionMatch.index!) + `@${member.handle ?? member.displayName} ` + textAfter);
+      const newText = text.slice(0, mentionMatch.index!) + `@${member.handle ?? member.displayName} `;
+      setText(newText);
+      editorRef.current?.setText(newText);
     }
     setMentionQuery(null);
-    inputRef.current?.focus();
+    editorRef.current?.focus();
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    const cursorPos = inputRef.current?.selectionStart ?? text.length;
-    const newText = text.slice(0, cursorPos) + emoji + text.slice(cursorPos);
+    const newText = text + emoji;
     setText(newText);
-    inputRef.current?.focus();
+    editorRef.current?.setText(newText);
+    editorRef.current?.focus();
   };
 
   const startRecording = async () => {
@@ -105,7 +99,7 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
             <p className="text-[11px] text-teal-400/60 font-medium">Replying to {replyTo.sentByMe ? "yourself" : (replyTo.senderName ?? "message")}</p>
             <p className="text-[12px] text-white/30 truncate">{replyTo.plaintext}</p>
           </div>
-          <button onClick={onCancelReply} className="text-white/25 hover:text-white/50 active:scale-[0.9] transition-all duration-100"><X size={14} /></button>
+          <button onClick={onCancelReply} className="text-white/25 hover:text-white/50 active:scale-[0.9] transition-all duration-75"><X size={14} /></button>
         </div>
       )}
 
@@ -124,7 +118,7 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
       </AnimatePresence>
 
       {showTimerPicker && (
-        <div className="absolute bottom-full mb-1 left-4 bg-slate-900/95 backdrop-blur-md border border-white/[0.1] rounded-xl shadow-xl z-50 py-1 min-w-[140px]">
+        <div className="absolute bottom-full mb-1 left-4 bg-slate-900/95 backdrop-blur-md border border-white/[0.1] rounded-xl shadow-xl z-50 py-1 min-w-[140px] sov-scale-in">
           {EPHEMERAL_PRESETS.filter(p => p.seconds !== null).map((preset) => (
             <button
               key={preset.label}
@@ -150,22 +144,22 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
       <div className="h-[56px] flex items-center px-3 gap-1.5">
         <button
           onClick={() => setShowEmoji(!showEmoji)}
-          className={`p-2 rounded-lg transition-all duration-100 active:scale-[0.9] ${showEmoji ? "text-teal-400/80" : "text-white/20 hover:text-white/40"}`}
+          className={`p-2 rounded-lg transition-all duration-75 active:scale-[0.9] ${showEmoji ? "text-teal-400/80" : "text-white/20 hover:text-white/40"}`}
         >
           <Smile size={22} />
         </button>
 
         <div className="flex-1">
-          <textarea
-            ref={inputRef}
+          <SovereignEditor
+            ref={editorRef}
             value={text}
             onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
+            onEnter={() => { handleSend(); return true; }}
             placeholder="Message"
+            singleLine
             disabled={disabled || recording}
-            rows={1}
-            className="w-full h-[38px] rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/90 text-[15px] px-4 py-2 outline-none placeholder:text-white/25 focus:border-teal-500/30 transition-all duration-100 disabled:opacity-40 resize-none overflow-hidden"
-            style={{ lineHeight: "1.25rem" }}
+            className="w-full h-[38px] rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/90 text-[15px] px-4 py-2 focus:border-teal-500/30 transition-all duration-75 overflow-hidden"
+            minHeight="38px"
           />
         </div>
 
@@ -173,13 +167,13 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
 
         <button
           onClick={() => setShowTimerPicker(!showTimerPicker)}
-          className={`p-2 transition-all duration-100 active:scale-[0.9] ${selfDestructSeconds ? "text-amber-400/70" : "text-white/15 hover:text-white/35"}`}
+          className={`p-2 transition-all duration-75 active:scale-[0.9] ${selfDestructSeconds ? "text-amber-400/70" : "text-white/15 hover:text-white/35"}`}
         >
           <Timer size={18} />
         </button>
 
         {text.trim() ? (
-          <button onClick={handleSend} disabled={disabled} className="w-10 h-10 rounded-full bg-teal-500/90 hover:bg-teal-500 flex items-center justify-center text-white transition-all duration-100 active:scale-[0.9]">
+          <button onClick={handleSend} disabled={disabled} className="w-10 h-10 rounded-full bg-teal-500/90 hover:bg-teal-500 flex items-center justify-center text-white transition-all duration-75 active:scale-[0.9]">
             <Send size={18} className="translate-x-[1px]" />
           </button>
         ) : recording ? (
@@ -187,7 +181,7 @@ export default function MessageInput({ onSend, onTyping, disabled, replyTo, onCa
             <Square size={20} />
           </button>
         ) : (
-          <button onClick={startRecording} disabled={disabled} className="p-2 text-white/15 hover:text-white/40 transition-all duration-100 active:scale-[0.9]">
+          <button onClick={startRecording} disabled={disabled} className="p-2 text-white/15 hover:text-white/40 transition-all duration-75 active:scale-[0.9]">
             <Mic size={22} />
           </button>
         )}

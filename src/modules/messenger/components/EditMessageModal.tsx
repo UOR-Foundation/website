@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
+import SovereignEditor, { type SovereignEditorHandle } from "@/modules/core/editor/SovereignEditor";
 
 interface Props {
   open: boolean;
@@ -11,12 +12,12 @@ interface Props {
 
 export default function EditMessageModal({ open, initialText, onSave, onClose }: Props) {
   const [text, setText] = useState(initialText);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<SovereignEditorHandle>(null);
 
   useEffect(() => {
     if (open) {
       setText(initialText);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => editorRef.current?.focus(), 50);
     }
   }, [open, initialText]);
 
@@ -24,11 +25,6 @@ export default function EditMessageModal({ open, initialText, onSave, onClose }:
     const trimmed = text.trim();
     if (trimmed && trimmed !== initialText) onSave(trimmed);
     onClose();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave(); }
-    if (e.key === "Escape") onClose();
   };
 
   return (
@@ -57,26 +53,28 @@ export default function EditMessageModal({ open, initialText, onSave, onClose }:
               </button>
             </div>
             <div className="p-4">
-              <textarea
-                ref={inputRef}
+              <SovereignEditor
+                ref={editorRef}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                rows={3}
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/90 text-[14px] px-4 py-3 outline-none placeholder:text-white/25 focus:border-teal-500/30 transition-colors resize-none"
+                onChange={setText}
+                onEnter={() => { handleSave(); return true; }}
+                onEscape={onClose}
+                autoFocus
+                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/90 text-[14px] px-4 py-3 focus:border-teal-500/30 transition-colors"
+                minHeight="72px"
               />
             </div>
             <div className="flex justify-end gap-2 px-4 pb-4">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-[13px] text-white/50 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-100 active:scale-[0.97]"
+                className="px-4 py-2 rounded-lg text-[13px] text-white/50 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-75 active:scale-[0.97]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!text.trim() || text.trim() === initialText}
-                className="px-4 py-2 rounded-lg text-[13px] font-medium bg-teal-500/90 text-white hover:bg-teal-500 transition-all duration-100 disabled:opacity-30 disabled:pointer-events-none active:scale-[0.97] flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg text-[13px] font-medium bg-teal-500/90 text-white hover:bg-teal-500 transition-all duration-75 disabled:opacity-30 disabled:pointer-events-none active:scale-[0.97] flex items-center gap-1.5"
               >
                 <Check size={14} />
                 Save

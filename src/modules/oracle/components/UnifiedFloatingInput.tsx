@@ -30,7 +30,7 @@ export default function UnifiedFloatingInput({ onRefine, streaming = false, onCa
     if (!text.trim()) return;
     debounceRef.current = setTimeout(() => {
       onRefine(text.trim());
-    }, 600);
+    }, 300);
   }, [onRefine]);
 
   const handleChange = useCallback((newVal: string) => {
@@ -67,7 +67,7 @@ export default function UnifiedFloatingInput({ onRefine, streaming = false, onCa
   const showLive = streaming || (focused && value.trim().length > 0);
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-[60] flex justify-center pb-10 px-4 pointer-events-none ${className}`}>
+    <div className={`fixed bottom-0 left-0 right-0 z-[60] flex justify-center pb-10 px-4 pointer-events-none ${className}`} style={{ willChange: "transform" }}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
