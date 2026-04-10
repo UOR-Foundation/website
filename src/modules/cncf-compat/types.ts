@@ -36,7 +36,8 @@ export type CncfCategory =
   | "Remote Procedure Call"
   | "ML Serving"
   | "Continuous Optimization"
-  | "Feature Flagging";
+  | "Feature Flagging"
+  | "System Audit";
 
 /**
  * Descriptor mapping a CNCF category to the UOR modules that implement it.

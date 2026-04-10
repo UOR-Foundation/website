@@ -191,6 +191,14 @@ export const CNCF_CATEGORIES: CncfCategoryDescriptor[] = [
     uorMaturity: "planned",
     iconKey: "ToggleRight",
   },
+  {
+    category: "System Audit",
+    description: "Canonical compliance audit tracing every module export to UOR atomic primitives",
+    uorModules: ["canonical-compliance"],
+    cncfProjects: ["OPA", "Falco"],
+    uorMaturity: "complete",
+    iconKey: "ShieldCheck",
+  },
 ];
 
 /** Lookup a CNCF category descriptor by name. */
