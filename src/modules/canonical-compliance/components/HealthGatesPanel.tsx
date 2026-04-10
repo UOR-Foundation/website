@@ -3,9 +3,9 @@
  * ══════════════════════════════════════════════════
  */
 
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { Download, ChevronDown, ChevronRight } from "lucide-react";
-import { runAllGates, exportGatesMarkdown, type GateResult, type GateFinding } from "../gates";
+import { runAllGatesAsync, exportGatesMarkdown, type GateResult, type GateFinding, type GateReport } from "../gates";
 
 // ── Status dot ────────────────────────────────────────────────────────────
 
