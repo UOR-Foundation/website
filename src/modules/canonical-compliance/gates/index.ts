@@ -15,6 +15,7 @@ import "./devops-alignment-gate";
 import "./container-boot-gate";
 import "./rendering-performance-gate";
 import "./pattern-sentinel-gate";
+import "./reflection-gate";
 
 // Ontology gate is registered via the ontology module barrel
 import "../../ontology/gate";
@@ -23,5 +24,5 @@ import "../../ontology/gate";
 import "../../axioms/gate";
 
 // Re-export the runner
-export { runAllGates, exportGatesMarkdown } from "./gate-runner";
-export type { GateResult, GateFinding, GateReport, Gate } from "./gate-runner";
+export { runAllGates, runAllGatesAsync, exportGatesMarkdown } from "./gate-runner";
+export type { GateResult, GateFinding, GateReport, Gate, AsyncGate } from "./gate-runner";
