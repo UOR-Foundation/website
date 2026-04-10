@@ -194,6 +194,14 @@ export default function ComplianceDashboardPage() {
               >
                 <ShieldCheck size={11} />
               </button>
+              <button
+                onClick={() => setView("ontology")}
+                className={`px-2.5 py-1.5 text-xs font-mono flex items-center gap-1 transition-colors ${
+                  view === "ontology" ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <BookOpen size={11} />
+              </button>
             </div>
 
             <button
@@ -220,7 +228,11 @@ export default function ComplianceDashboardPage() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          {view === "gates" ? (
+          {view === "ontology" ? (
+            <Suspense fallback={<div className="p-5 text-xs font-mono text-zinc-500">Loading ontology…</div>}>
+              <OntologyPanel />
+            </Suspense>
+          ) : view === "gates" ? (
             <Suspense fallback={<div className="p-5 text-xs font-mono text-zinc-500">Loading gates…</div>}>
               <HealthGatesPanel />
             </Suspense>
