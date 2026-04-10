@@ -10,7 +10,7 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { DESKTOP_APPS } from "@/modules/desktop/lib/desktop-apps";
 import { OS_TAXONOMY, type OsCategory } from "@/modules/desktop/lib/os-taxonomy";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
-import { Search, Clock, Compass } from "lucide-react";
+import { Search, Clock, Compass, Rocket } from "lucide-react";
 import { CONTENT, SPACE, RADIUS, TIMING } from "@/modules/desktop/lib/golden-ratio";
 import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/lib/search-suggestions";
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
@@ -86,6 +86,15 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
     }
     return groups;
   }, []);
+
+  // Keyword-boosted app matches — apps whose keywords match the current query
+  const keywordMatchedApps = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return DESKTOP_APPS.filter(
+      a => !a.hidden && a.keywords.some(k => k.includes(q) || q.includes(k)),
+    );
+  }, [query]);
 
   useEffect(() => {
     if (open) { setQuery(""); setSuggestions([]); }
