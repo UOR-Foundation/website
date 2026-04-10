@@ -278,4 +278,31 @@ export const STATIC_BLUEPRINTS: AppBlueprint[] = [
     iconName: "PackageOpen",
     resources: {},
   },
+
+  // ── TIME MACHINE ───────────────────────────────────────────────────────
+
+  {
+    "@context": CTX,
+    "@type": TYPE,
+    name: "time-machine",
+    version: "1.0.0",
+    requires: [
+      "store/get", "store/put", "store/list",
+      "graph/query", "kernel/derive",
+    ],
+    permissions: ["store/", "graph/", "kernel/"],
+    morphisms: [
+      { method: "store/put", description: "Save system checkpoint" },
+      { method: "store/get", description: "Restore system checkpoint" },
+    ],
+    autoStart: false,
+    ui: { component: "@/modules/time-machine/pages/TimeMachinePage", lazy: true },
+    defaultSize: { w: 920, h: 600 },
+    color: "hsl(200 75% 55%)",
+    category: "OBSERVE",
+    description: "Continuous auto-save, rollback, and fork your entire system state",
+    keywords: ["time", "machine", "checkpoint", "save", "restore", "rollback", "fork", "undo", "history", "backup"],
+    iconName: "Clock",
+    resources: {},
+  },
 ];
