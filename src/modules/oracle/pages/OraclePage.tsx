@@ -411,7 +411,7 @@ const OraclePage = () => {
             if (proofCid) {
               await localGraphStore.putNode({
                 uorAddress: proofCid,
-                label: `Query: ${(prompt || "").slice(0, 40)}`,
+                label: `Query: ${(text || "").slice(0, 40)}`,
                 nodeType: "query",
                 properties: { grade, converged: report.converged, claimCount: report.annotations.length },
                 createdAt: now, updatedAt: now, syncState: "local" as const,
