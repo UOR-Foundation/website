@@ -11,6 +11,9 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
   IdentityPipeline: "hsl(35 60% 55%)",
   Morphism: "hsl(270 25% 60%)",
   Algebraic: "hsl(340 30% 55%)",
+  Enforcement: "hsl(200 50% 55%)",
+  Certificate: "hsl(45 70% 55%)",
+  Observable: "hsl(180 40% 50%)",
 };
 
 interface GraphNode {

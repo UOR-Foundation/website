@@ -38,7 +38,7 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
 
 // ── Breadcrumb ──────────────────────────────────────────────────
 
-function Breadcrumb({ path, onNavigate }: { path: { label: string; action?: () => void }[]; onNavigate?: () => void }) {
+function Breadcrumb({ path }: { path: { label: string; action?: () => void }[] }) {
   return (
     <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
       {path.map((p, i) => (
