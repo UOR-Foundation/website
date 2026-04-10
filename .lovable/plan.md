@@ -1,115 +1,67 @@
 
 
-# Design Axioms Module — Declarative System Design Parameters
+# Messenger UX Polish — Crisp, Personal, Full-Screen
 
-## Concept
+## Issues Identified (from screenshot + code)
 
-The system already enforces **terminology** (ontology module) and **tech selection** (tech-stack.ts) as declarative, auditable registries. What's missing is a third pillar: **design axioms** — the philosophical and aesthetic constraints that make this system feel like itself.
+1. **Header says "MESSAGES"** — impersonal, all-caps, feels like a system label
+2. **Too many filter rows** — Spaces strip + filter tabs + platform chips = 3 rows of chrome before any content. Cluttered for an empty inbox
+3. **Text too small / low contrast** — filter labels at `text-[11px]`/`text-[12px]` with `text-white/25`-`/30` opacity. Hard to read
+4. **"0 verified" badge** — noise when there are zero conversations
+5. **Empty state has verbose text** — "Kyber-1024 + AES-256-GCM · Dilithium-3" is engineer jargon, not user-facing
+6. **Right panel empty state also verbose** — same crypto spec text repeated
+7. **Scroll needed** — the filter rows push content down unnecessarily
 
-Each axiom is a content-addressed JSON-LD blueprint (like an `AppBlueprint` but for design) that declares a constraint, its rationale, enforcement criteria, and how to verify compliance. Axioms are grouped into swappable **design systems** (e.g., "Algebrica", "Foundation", "Custom") so users can eventually switch or extend them.
+## Changes
 
-## Algebrica Design Axioms (Extracted from Codebase)
+### 1. Rename header: "Messages" → "Inbox"
+Short, personal, universally understood. The security is implied by the shield icon already present in the sidebar and conversation view.
 
-From the existing implementation, these are the core Algebrica design principles already embedded but never formally declared:
+### 2. Collapse filter chrome when inbox is empty
+- Hide Spaces strip, platform chips, and "verified" badge when `conversations.length === 0`
+- Keep only the All/Unread/Archived tabs (they serve as navigation)
+- Increase filter tab text to `text-[14px]` with `text-white/50` (from `text-[13px]`/`text-white/35`)
 
-| # | Axiom | Constraint | Currently Enforced? |
-|---|---|---|---|
-| A1 | **Monochrome Substrate** | All chrome uses zinc-scale (#0c0c0c → #fafafa). Color is reserved for semantic signals only (error=red, success=green, identity=gold). | No — scattered as inline values |
-| A2 | **Golden Ratio Rhythm** | All spacing follows phi-scaled steps (1.618). Already in CSS vars but not enforced. | Partially (CSS vars exist) |
-| A3 | **Prime-Based Spacing** | Micro-spacing uses prime numbers (2,3,5,7,11,13...) for non-repeating visual rhythm. | Partially (holo-space vars) |
-| A4 | **Content-Addressed Identity** | Every renderable object must have a derivable UOR address. No opaque IDs. | Yes (via singleProofHash) |
-| A5 | **Raw Numbers, No Chrome** | Stats display as bold value + tiny label. No cards, no borders, no decorative containers around data. | Informally (StatBlock pattern) |
-| A6 | **Radial Topology** | Knowledge visualizations use radial 1-hop layouts with center-focused composition. No force-directed chaos. | Informally (ConceptMap) |
-| A7 | **Compositor-First Animation** | All animations use `transform` and `opacity` only (GPU-composited). No layout-triggering properties. | Partially (performance gate) |
-| A8 | **Terminal Aesthetic for System Operations** | System-level operations (boot, deploy, inspect) use monospace terminal UI. | Yes (ContainerBootOverlay) |
-| A9 | **One Framework Per Function** | No overlapping responsibilities in the stack. Already in tech-stack.ts. | Yes (selection policy) |
-| A10 | **Declarative Over Imperative** | All system state is described declaratively (JSON-LD blueprints), never constructed imperatively. | Mostly (AppBlueprints) |
-| A11 | **Protective Stillness** | UI reduces visual noise proportional to focus depth. Deep work = less chrome. | Yes (FocusVignette) |
-| A12 | **Self-Declaring System** | The system describes its own architecture at boot. No hidden configuration. | Yes (tech-stack manifest) |
+### 3. Improve text sizes and contrast throughout
+- Header title: `text-[18px]` (from `text-[17px]`)
+- Space filter labels: `text-[13px]` with `text-white/40` active → `text-white/60`
+- Filter tabs: `text-[14px]` with improved active/inactive contrast
+- Chat list name: `text-[16px]` (from `text-[15px]`)
+- Chat list preview: `text-[14px] text-white/40` (from `text-[13px] text-white/30`)
+- Empty state text: `text-base text-white/50` (from `text-sm text-white/20`)
 
-## Architecture
+### 4. Clean up empty states
+- **Sidebar empty**: "No conversations yet" (remove "— start one!")
+- **Right panel empty**: Remove crypto spec line ("Kyber-1024 + AES-256-GCM..."). Keep just the icon + "Inbox" + one-liner "Select a conversation or start a new one"
+- **Sign-in screen**: Simplify to "Private, encrypted conversations. Sign in to continue." Remove crypto spec.
 
-```text
-src/modules/axioms/
-├── types.ts              ← DesignAxiom + DesignSystem types
-├── registry.ts           ← The canonical axiom registry (Algebrica defaults)
-├── resolve.ts            ← Lookup, filter, query axioms
-├── gate.ts               ← Compliance gate: verify axiom adherence
-├── index.ts              ← Barrel export
-└── module.json           ← Module manifest
-```
+### 5. Remove "0 verified" badge
+Only show the verified count badge when `verifiedCount > 0`
 
-### DesignAxiom Type (the Blueprint)
+### 6. Right panel empty state — simpler
+Replace the current verbose empty state with just the icon and a short prompt. Remove the Lock + crypto spec footer.
 
-```typescript
-interface DesignAxiom {
-  "@id": string;                    // "axiom:MonochromeSubstrate"
-  "@type": "uor:DesignAxiom";
-  
-  // Identity
-  label: string;                    // "Monochrome Substrate"
-  category: AxiomCategory;         // "visual" | "interaction" | "architecture" | "data"
-  
-  // Philosophy  
-  principle: string;               // One-sentence law
-  rationale: string;               // WHY this constraint exists
-  
-  // Enforcement
-  constraint: AxiomConstraint;     // Machine-readable rule
-  verification: VerificationSpec;  // How the gate checks it
-  
-  // Lineage
-  "uor:derivedFrom"?: string;     // Link to UOR axiom
-  "skos:related"?: string[];      // Ontology concept links
-  
-  // Versioning
-  version: string;
-  supersedes?: string;             // Previous axiom @id
-}
-```
+### 7. Ensure full-screen fit (no scroll)
+The messenger already uses `h-screen w-screen overflow-hidden`. The fix is reducing the filter chrome rows so the chat list has maximum vertical space.
 
-### DesignSystem (Swappable Axiom Bundle)
+## Testing with Two Users
 
-```typescript
-interface DesignSystem {
-  "@id": string;                   // "ds:Algebrica"
-  "@type": "uor:DesignSystem";
-  label: string;
-  version: string;
-  axioms: DesignAxiom[];
-  cssTokens: Record<string, string>;  // Maps to CSS custom properties
-  extends?: string;                   // Parent design system
-}
-```
+To test the messenger with two different users on two devices:
 
-### Compliance Gate
+1. **Open the published app** on Device A (e.g. your laptop): `https://univeral-coordinate-hub.lovable.app`
+2. **Sign up** with Email A — this creates User A
+3. **Open the same URL** on Device B (e.g. your phone or incognito browser)
+4. **Sign up** with Email B — this creates User B
+5. On Device A, tap the **+** FAB → search for User B's handle → start a conversation
+6. Messages will appear in real-time on both devices via the existing Supabase realtime subscription
 
-The `axioms-compliance-gate.ts` checks:
-- **Visual axioms**: CSS token coverage (are golden-ratio vars present? are monochrome values used correctly?)
-- **Architecture axioms**: Module patterns (does every module have a manifest? are blueprints declarative?)
-- **Interaction axioms**: Animation property validation (only transform/opacity?)
-- **Data axioms**: Content-addressing coverage
+No code changes needed for testing — the messenger already supports real-time messaging between authenticated users.
 
-Each axiom's `verification` field contains a machine-readable spec that the gate interprets — pattern checks, CSS var presence, import analysis.
+## Files to Modify
 
-## How It Works End-to-End
-
-1. **Define**: Axioms are declared in `registry.ts` as a `DesignSystem` — content-addressed, versioned, swappable
-2. **Store**: Lives in `src/modules/axioms/` as pure TypeScript (serializable to JSON-LD for the knowledge graph)
-3. **Present**: Axioms are queryable via `resolveAxiom()` and renderable via a React hook `useAxiom(id)`
-4. **Enforce**: The compliance gate runs all axiom verification specs and reports violations with specific file + line references
-5. **Extend**: New axioms are added to the registry; new design systems can extend Algebrica or replace it entirely
-
-## Files
-
-| File | Action | Purpose |
-|---|---|---|
-| `src/modules/axioms/types.ts` | Create | DesignAxiom, DesignSystem, AxiomCategory, VerificationSpec types |
-| `src/modules/axioms/registry.ts` | Create | Algebrica design system with 12 axioms |
-| `src/modules/axioms/resolve.ts` | Create | Lookup, filter, React hook |
-| `src/modules/axioms/gate.ts` | Create | Compliance gate verifying axiom adherence |
-| `src/modules/axioms/index.ts` | Create | Barrel export + gate registration |
-| `src/modules/axioms/module.json` | Create | Module manifest |
-| `src/modules/canonical-compliance/gates/index.ts` | Update | Register axiom gate |
-| `src/modules/canonical-compliance/index.ts` | Update | Re-export axiom types |
+| File | Changes |
+|---|---|
+| `src/modules/messenger/components/UnifiedInbox.tsx` | Rename header to "Inbox", increase text sizes/contrast, hide empty-state chrome, remove "0 verified" |
+| `src/modules/messenger/pages/MessengerPage.tsx` | Simplify right-panel empty state and sign-in screen text |
+| `src/modules/messenger/components/ChatList.tsx` | Increase text sizes, simplify empty message |
 
