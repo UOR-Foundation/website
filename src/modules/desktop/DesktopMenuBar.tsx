@@ -163,22 +163,6 @@ export default function DesktopMenuBar({
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>
         <Volume2 className={`w-3.5 h-3.5 ${iconMuted}`} />
-        <div className="relative flex items-center">
-          <button
-            onClick={toggleStatus}
-            className={`relative p-1.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
-            title={online ? "Online — click for details" : "Offline — click for details"}
-          >
-            <span
-              className={`block w-[7px] h-[7px] rounded-full transition-colors ${
-                online
-                  ? "bg-emerald-500 shadow-[0_0_6px_1px_rgba(16,185,129,0.5)]"
-                  : "bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.5)]"
-              }`}
-            />
-          </button>
-          <ConnectivityPopover open={statusOpen} onClose={() => setStatusOpen(false)} isLight={isLight} />
-        </div>
         <span className={`text-[12px] ${clockColor} font-medium tabular-nums`}>
           {formatted}&ensp;{clock}
         </span>
