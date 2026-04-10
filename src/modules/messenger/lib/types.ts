@@ -87,6 +87,8 @@ export interface Conversation {
     sentByMe: boolean;
     createdAt: string;
     messageType?: MessageType;
+    senderName?: string;
+    deliveryStatus?: DeliveryStatus;
   };
   unread: number;
   pinned?: boolean;
