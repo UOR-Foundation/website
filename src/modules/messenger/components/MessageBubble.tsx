@@ -1,5 +1,5 @@
 import { Check, CheckCheck, Lock, Reply, Timer } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { DecryptedMessage } from "../lib/types";
@@ -20,12 +20,30 @@ interface Props {
   onReply?: (msg: DecryptedMessage) => void;
   onEdit?: (msg: DecryptedMessage) => void;
   onDelete?: (msgId: string) => void;
+  onPin?: (msg: DecryptedMessage) => void;
   observeRef?: (el: HTMLDivElement | null) => void;
   isGroup?: boolean;
   expiresAfterSeconds?: number | null;
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
 }
 
-export default function MessageBubble({ message, replyToMessage, onReply, onEdit, onDelete, observeRef, isGroup, expiresAfterSeconds }: Props) {
+// Deterministic color from userId for group sender names
+function senderColor(userId: string): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = ((hash << 5) - hash + userId.charCodeAt(i)) | 0;
+  const colors = [
+    "text-teal-400", "text-indigo-400", "text-pink-400", "text-amber-400",
+    "text-emerald-400", "text-violet-400", "text-rose-400", "text-cyan-400",
+    "text-orange-400", "text-lime-400", "text-fuchsia-400", "text-sky-400",
+  ];
+  return colors[Math.abs(hash) % colors.length];
+}
+
+export default function MessageBubble({
+  message, replyToMessage, onReply, onEdit, onDelete, onPin, observeRef,
+  isGroup, expiresAfterSeconds, isFirstInGroup = true, isLastInGroup = true,
+}: Props) {
   const { user } = useAuth();
   const sent = message.sentByMe;
   const isEncrypted = message.plaintext === "🔒 Encrypted";
@@ -33,42 +51,29 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
   const [contextMenu, setContextMenu] = useState<{ show: boolean; x: number; y: number }>({ show: false, x: 0, y: 0 });
 
   const time = new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-  // Check if message is editable (own message, within 15 minutes)
   const isEditable = sent && !isEncrypted && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
   const isDeletable = sent && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
-
-  // Ephemeral timer
   const ttl = message.selfDestructSeconds ?? expiresAfterSeconds;
   const timeRemaining = getTimeRemaining(message.createdAt, ttl);
+
+  const nameColor = useMemo(() => {
+    if (!isGroup || sent) return "";
+    return senderColor(message.senderId ?? "");
+  }, [isGroup, sent, message.senderId]);
 
   const handleReact = useCallback(async (emoji: string) => {
     if (!user) return;
     try {
-      // Check if already reacted with this emoji
       const existing = message.reactions?.find(r => r.userId === user.id && r.emoji === emoji);
       if (existing) {
-        await supabase
-          .from("message_reactions")
-          .delete()
-          .eq("message_id", message.id)
-          .eq("user_id", user.id)
-          .eq("emoji", emoji);
+        await supabase.from("message_reactions").delete()
+          .eq("message_id", message.id).eq("user_id", user.id).eq("emoji", emoji);
       } else {
-        await supabase
-          .from("message_reactions")
-          .insert({
-            message_id: message.id,
-            user_id: user.id,
-            emoji,
-          } as any);
+        await supabase.from("message_reactions").insert({ message_id: message.id, user_id: user.id, emoji } as any);
       }
-    } catch (err) {
-      toast.error("Failed to react");
-    }
+    } catch { toast.error("Failed to react"); }
   }, [user, message.id, message.reactions]);
 
-  // Aggregate reactions for display
   const reactionCounts = new Map<string, { count: number; byMe: boolean }>();
   if (message.reactions) {
     for (const r of message.reactions) {
@@ -79,63 +84,44 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
     }
   }
 
-  // Delivery status icon
   const StatusIcon = () => {
     if (!sent) return null;
     switch (message.deliveryStatus) {
-      case "read":
-        return <CheckCheck size={14} className="text-teal-400/80 ml-0.5" />;
-      case "delivered":
-        return <CheckCheck size={14} className="text-white/30 ml-0.5" />;
-      case "sent":
-        return <Check size={14} className="text-white/30 ml-0.5" />;
-      case "sending":
-        return <div className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin ml-0.5" />;
-      default:
-        return <Check size={14} className="text-white/30 ml-0.5" />;
+      case "read": return <CheckCheck size={13} className="text-teal-400/80" />;
+      case "delivered": return <CheckCheck size={13} className="text-white/30" />;
+      case "sent": return <Check size={13} className="text-white/30" />;
+      case "sending": return <div className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />;
+      default: return <Check size={13} className="text-white/30" />;
     }
   };
+
+  // Bubble border radius — Telegram-style grouping
+  const borderRadius = sent
+    ? `${isFirstInGroup ? "18px" : "6px"} 6px 6px ${isLastInGroup ? "18px" : "6px"}`
+    : `6px ${isFirstInGroup ? "18px" : "6px"} ${isLastInGroup ? "18px" : "6px"} 6px`;
 
   const renderContent = () => {
     if (isEncrypted) {
       return (
         <span className="text-sm leading-relaxed flex items-center gap-1.5 text-white/40">
-          <Lock size={12} />
-          Encrypted message
+          <Lock size={12} /> Encrypted message
         </span>
       );
     }
-
     switch (message.messageType) {
       case "file":
-        if (message.fileManifest) {
-          return <FileMessage manifest={message.fileManifest} sentByMe={sent} />;
-        }
-        return <span className="text-sm">📎 File attachment</span>;
-
+        return message.fileManifest ? <FileMessage manifest={message.fileManifest} sentByMe={sent} /> : <span className="text-sm">📎 File attachment</span>;
       case "image":
-        if (message.fileManifest) {
-          return (
-            <ImageMessage
-              filename={message.fileManifest.filename}
-              sizeLabel={formatFileSize(message.fileManifest.sizeBytes)}
-              sentByMe={sent}
-              thumbnailUrl={message.fileManifest.thumbnailUrl}
-            />
-          );
-        }
-        return <span className="text-sm">📷 Image</span>;
-
+        return message.fileManifest ? (
+          <ImageMessage filename={message.fileManifest.filename} sizeLabel={formatFileSize(message.fileManifest.sizeBytes)} sentByMe={sent} thumbnailUrl={message.fileManifest.thumbnailUrl} />
+        ) : <span className="text-sm">📷 Image</span>;
       case "voice":
         return <VoiceMessage sentByMe={sent} duration={30} />;
-
       default:
         return (
-          <span className="text-sm leading-relaxed">
+          <span className="text-[14.5px] leading-[1.45]">
             {message.plaintext}
-            {message.editedAt && (
-              <span className="text-[10px] text-white/25 ml-1.5 italic">(edited)</span>
-            )}
+            {message.editedAt && <span className="text-[10px] text-white/25 ml-1 italic">(edited)</span>}
           </span>
         );
     }
@@ -144,16 +130,15 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
   return (
     <div
       ref={observeRef}
-      className={`flex ${sent ? "justify-end" : "justify-start"} mb-1 px-[6%] group relative`}
+      className={`flex ${sent ? "justify-end" : "justify-start"} ${isLastInGroup ? "mb-2" : "mb-[2px]"} px-[5%] group relative`}
       onDoubleClick={() => onReply?.(message)}
     >
-      {/* Reaction picker trigger area */}
-      <div className="relative max-w-[75%]">
-        {/* Reply button on hover */}
+      <div className="relative max-w-[70%]">
+        {/* Reply hover button */}
         {onReply && !isEncrypted && (
           <button
             onClick={() => onReply(message)}
-            className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-white/20 hover:text-white/50 ${
+            className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-100 text-white/15 hover:text-white/40 ${
               sent ? "-left-8" : "-right-8"
             }`}
           >
@@ -162,50 +147,43 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
         )}
 
         <div
-          className={`
-            relative max-w-full min-w-[80px] rounded-2xl px-3.5 pt-2 pb-2 
-            ${sent
-              ? "bg-indigo-500/15 border border-indigo-400/10 text-white/90"
-              : "bg-white/[0.06] border border-white/[0.06] text-white/85"
-            }
-          `}
-          style={{ wordBreak: "break-word" }}
+          className={`relative max-w-full min-w-[72px] px-3 pt-1.5 pb-1.5 ${
+            sent
+              ? "bg-[hsl(237,40%,22%)] text-white/90"
+              : "bg-white/[0.07] text-white/87"
+          }`}
+          style={{ borderRadius, wordBreak: "break-word" }}
           onContextMenu={(e) => {
             e.preventDefault();
             setContextMenu({ show: true, x: e.clientX, y: e.clientY });
           }}
         >
-          {/* Sender name in group chats + platform badge for bridged messages */}
-          {isGroup && !sent && message.senderName && (
-            <p className="text-[11px] font-medium text-teal-400/60 mb-0.5 truncate flex items-center gap-1">
+          {/* Sender name in groups */}
+          {isGroup && !sent && isFirstInGroup && message.senderName && (
+            <p className={`text-[12px] font-semibold mb-0.5 truncate flex items-center gap-1 ${nameColor}`}>
               {message.sourcePlatform && message.sourcePlatform !== "native" && (
                 <PlatformBadge platform={message.sourcePlatform} size="sm" />
               )}
               {message.senderName}
             </p>
           )}
-          {!isGroup && message.sourcePlatform && message.sourcePlatform !== "native" && !sent && (
-            <div className="mb-0.5">
-              <PlatformBadge platform={message.sourcePlatform} size="sm" showLabel />
-            </div>
+          {!isGroup && message.sourcePlatform && message.sourcePlatform !== "native" && !sent && isFirstInGroup && (
+            <div className="mb-0.5"><PlatformBadge platform={message.sourcePlatform} size="sm" showLabel /></div>
           )}
 
-          {/* Reply reference */}
           {replyToMessage && <ReplyBubble replyTo={replyToMessage} />}
 
           {renderContent()}
 
-          {/* Reactions display */}
+          {/* Reactions */}
           {reactionCounts.size > 0 && (
             <div className="flex flex-wrap gap-0.5 mt-1">
               {Array.from(reactionCounts.entries()).map(([emoji, { count, byMe }]) => (
                 <button
                   key={emoji}
                   onClick={() => handleReact(emoji)}
-                  className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
-                    byMe
-                      ? "bg-teal-500/15 border border-teal-500/20"
-                      : "bg-white/[0.06] border border-white/[0.04] hover:bg-white/[0.1]"
+                  className={`text-xs rounded-full px-1.5 py-0.5 transition-colors duration-100 ${
+                    byMe ? "bg-teal-500/15 border border-teal-500/20" : "bg-white/[0.06] border border-white/[0.04] hover:bg-white/[0.1]"
                   }`}
                 >
                   {emoji}{count > 1 && <span className="text-[10px] ml-0.5 text-white/40">{count}</span>}
@@ -214,27 +192,20 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
             </div>
           )}
 
-          {/* Timestamp + delivery status + timer */}
-          <span className="float-right mt-0.5 ml-2 flex items-center gap-0.5 text-[10px] text-white/30 leading-none translate-y-0.5">
+          {/* Inline timestamp + status (Telegram-style, floated bottom-right) */}
+          <span className="float-right mt-0.5 ml-3 flex items-center gap-1 text-[10px] text-white/25 leading-none translate-y-0.5 select-none">
             {timeRemaining && !timeRemaining.expired && (
-              <span className="flex items-center gap-0.5 text-amber-400/50 mr-1">
-                <Timer size={9} />
-                {timeRemaining.label}
+              <span className="flex items-center gap-0.5 text-amber-400/50 mr-0.5">
+                <Timer size={9} />{timeRemaining.label}
               </span>
             )}
             {time}
             <StatusIcon />
           </span>
 
-          {/* Reaction picker */}
-          <ReactionPicker
-            show={showReactions}
-            onClose={() => setShowReactions(false)}
-            onReact={handleReact}
-          />
+          <ReactionPicker show={showReactions} onClose={() => setShowReactions(false)} onReact={handleReact} />
         </div>
 
-        {/* Context menu */}
         <MessageContextMenu
           show={contextMenu.show}
           message={message}
@@ -244,6 +215,7 @@ export default function MessageBubble({ message, replyToMessage, onReply, onEdit
           onCopy={() => toast.success("Copied")}
           onEdit={isEditable ? () => onEdit?.(message) : undefined}
           onDelete={isDeletable ? () => onDelete?.(message.id) : undefined}
+          onPin={() => onPin?.(message)}
           onReact={() => setShowReactions(true)}
           canEdit={isEditable}
           canDelete={isDeletable}
