@@ -1,77 +1,70 @@
 
 
-# Pattern Sentinel Gate — Self-Discovering Anti-Pattern Detector
+# Reflection Gate — LLM Feedback Pattern Recognizer
 
 ## Concept
 
-Today, gates like the Canonical Pipeline Gate exist because you manually spotted the "bypass" pattern. The **Pattern Sentinel Gate** automates that discovery: it scans the codebase for recurring terms, idioms, and anti-patterns that appear across multiple files, then surfaces clusters that warrant their own dedicated gate.
-
-This creates a feedback loop:
+The Reflection Gate reads the existing **reflection chain** (IndexedDB store of LLM self-reflections) and applies pattern recognition to surface recurring themes: verbosity, redundancy, clutter, security gaps, imprecise output, and performance concerns. Unlike the Pattern Sentinel (which scans source code), this gate scans **LLM conversation feedback** to find what the AI keeps getting wrong.
 
 ```text
-Codebase → Pattern Sentinel (meta-scan)
-         → Surfaces recurring cluster (e.g. "TODO", "any", "eslint-disable")
-         → You promote cluster → New atomic gate
-         → Pattern Sentinel stops reporting it (handled by dedicated gate)
+Oracle conversation → onDone callback → pushReflection()
+                                        ↓
+                    Reflection Chain (IndexedDB, up to 20 entries)
+                                        ↓
+                    Reflection Gate reads chain → pattern match
+                                        ↓
+                    Findings in Health Gates Panel
 ```
 
-The system becomes self-discovering: the Sentinel finds the patterns, you decide which ones matter, and each promoted pattern becomes an enforceable, auditable gate.
+## How It Activates Automatically
 
-## Architecture
+The gate runs in two modes:
 
-### 1. Pattern Registry (`pattern-registry.ts`)
-A declarative list of anti-pattern signatures to scan for, each with:
-- `id`: unique key (e.g. `"unsafe-any"`)
-- `pattern`: regex or literal string to match
-- `fileGlob`: which files to scan (e.g. `*.ts,*.tsx`)
-- `severity`: `"error" | "warning" | "info"`
-- `threshold`: how many hits before it becomes a finding (e.g. 3+)
-- `description`: why this matters
-- `promotedToGate`: optional — when set, the Sentinel skips it (a dedicated gate now handles it)
+1. **Passive (every health check)** — When the Health Gates Panel renders, the Reflection Gate reads the latest reflections from IndexedDB and scores them. Zero LLM calls needed — pure pattern matching on stored text.
 
-Ships with ~10 starter patterns:
-- `bypass` (already has a gate → pre-promoted)
-- `as any` / `: any` (type safety erosion)
-- `eslint-disable` / `@ts-ignore` (suppressed warnings)
-- `TODO` / `FIXME` / `HACK` (unfinished work)
-- `console.log` in non-debug files (debug leaks)
-- `localStorage.getItem` without try/catch (crash risk)
-- `dangerouslySetInnerHTML` (XSS surface)
-- `setTimeout` / `setInterval` without cleanup (memory leaks)
-- `import.*from ['"]\.\.\/\.\.\/\.\.\/` (deep relative imports)
+2. **Active (after every Oracle conversation)** — A small hook in the Oracle's `onDone` callback automatically pushes a micro-reflection summary into the chain. This means every conversation with the Oracle feeds the gate with fresh signal. No manual action required.
 
-### 2. Codebase Scanner (`pattern-scanner.ts`)
-A function that, given the pattern registry, performs an in-memory scan of known module file paths (static list, same approach as other gates) and returns match counts per pattern per file. This is a static registry approach consistent with the existing gate design — no filesystem access at runtime.
+The key insight: the reflection chain already exists and already stores LLM output. The gate simply reads it and applies pattern detectors — the same approach as the Pattern Sentinel but targeting conversation content instead of source code.
 
-### 3. Pattern Sentinel Gate (`pattern-sentinel-gate.ts`)
-Consumes scanner results and produces `GateFinding[]`:
-- Each pattern exceeding its threshold becomes a finding
-- Clusters (3+ patterns co-occurring in the same file) get an additional "hotspot" finding
-- Already-promoted patterns are skipped
-- Score: starts at 100, deducts per finding based on severity
+## Pattern Detectors
 
-### 4. Promotion Workflow
-When you decide a pattern warrants its own gate:
-1. Set `promotedToGate: "gate-id"` in the registry entry
-2. Create the new atomic gate (just like canonical-pipeline-gate)
-3. The Sentinel automatically stops reporting that pattern
+Each detector is a regex + weight pair scanning reflection text for known anti-patterns in LLM output:
+
+| Pattern | What It Catches | Severity |
+|---|---|---|
+| Verbosity markers | "verbose", "too long", "wordy", "unnecessary text" | warning |
+| Redundancy | "redundant", "duplicate", "already exists", "repeated" | warning |
+| Clutter | "clutter", "noisy", "too many", "overwhelming" | warning |
+| Precision gaps | "imprecise", "vague", "unclear", "ambiguous" | warning |
+| Security concerns | "unsafe", "vulnerability", "exposed", "leak" | error |
+| Performance issues | "slow", "laggy", "memory", "timeout", "heavy" | warning |
+| UX friction | "confusing", "unintuitive", "hard to find", "scroll" | info |
+| Code bloat | "too much code", "overengineered", "simpler", "leaner" | info |
+
+When a pattern appears in 3+ reflections, it becomes a finding. Frequency and recency are weighted — recent reflections score higher.
+
+## Auto-Injection Hook
+
+To ensure the gate gets fresh data without manual effort, we add a lightweight post-conversation hook to the Oracle stream. When `onDone` fires, a one-line summary of the conversation is pushed to the reflection chain. This is ~5 lines of code in the existing `streamOracle` function — not a new system, just a tap on an existing pipe.
 
 ## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/canonical-compliance/gates/pattern-registry.ts` | Create | Declarative anti-pattern definitions with ~10 starters |
-| `src/modules/canonical-compliance/gates/pattern-scanner.ts` | Create | Static scanner that counts pattern hits across known files |
-| `src/modules/canonical-compliance/gates/pattern-sentinel-gate.ts` | Create | Gate that surfaces recurring patterns + hotspots as findings |
-| `src/modules/canonical-compliance/gates/index.ts` | Update | Import sentinel gate for side-effect registration |
+| `src/modules/canonical-compliance/gates/reflection-gate.ts` | Create | Async gate that reads reflection chain, applies pattern detectors, produces findings |
+| `src/modules/canonical-compliance/gates/gate-runner.ts` | Update | Add support for async gates (the reflection gate reads IndexedDB) |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | Register reflection gate |
+| `src/modules/oracle/lib/stream-oracle.ts` | Update | Add post-conversation reflection push in `onDone` |
 
 ## How It Shows Up
 
-The Pattern Sentinel Gate appears alongside all other gates in the existing **Health Gates Panel** on the Compliance Dashboard — one unified view. Its findings look like:
+In the Health Gates Panel alongside all other gates:
 
-- **🟡 "as any" appears in 14 files** — Type safety erosion across the codebase. Consider creating a dedicated Type Safety Gate.
-- **🟡 "TODO" appears in 23 files** — 23 unfinished work markers. Track via a dedicated Tech Debt Gate.
-- **🔵 Hotspot: `oracle/bridge.ts`** — 4 different anti-patterns co-occur in this file.
+- **warning "Verbosity" detected in 5/8 recent reflections** — LLM responses are consistently flagged as too long. Consider tightening system prompts.
+- **warning "Redundancy" detected in 4/8 recent reflections** — Repeated content across responses. Review for deduplication.
+- **info Reflection Gate tracking 8 entries, 3 patterns above threshold** — System is self-monitoring conversation quality.
 
-Each finding includes a `recommendation` field suggesting whether to promote to a dedicated gate or resolve inline.
+## Technical Detail
+
+The gate runner currently expects synchronous gates (`() => GateResult`). The reflection gate needs async IndexedDB access. We add a parallel `AsyncGate` type and `runAllGatesAsync()` that awaits async gates alongside sync ones. The Health Gates Panel switches to the async runner.
 
