@@ -209,10 +209,10 @@ export default function MigratePanel() {
               />
               <button
                 onClick={handleErase}
-                disabled={confirmText !== SAFETY_PHRASE || phase === "erasing"}
+                disabled={confirmText !== SAFETY_PHRASE || (phase as MigrationPhase) === "erasing"}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 disabled:opacity-30 disabled:pointer-events-none transition-all"
               >
-                {phase === "erasing" ? (
+                {(phase as MigrationPhase) === "erasing" ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Trash2 className="w-3.5 h-3.5" />
