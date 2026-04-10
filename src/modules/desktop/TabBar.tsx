@@ -441,11 +441,8 @@ export default function TabBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Center wordmark — space switcher + logo + sync indicator */}
+      {/* Center wordmark — logo + wordmark only */}
       <div className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center z-[1] gap-[6px]">
-        {/* Space Switcher */}
-        <SpaceSwitcher isLight={isLight} />
-
         {/* UOR glyph — inline SVG for crispness */}
         <svg
           width="14"
@@ -468,9 +465,6 @@ export default function TabBar({
         >
           Universal Object Reference
         </span>
-
-        {/* Sync Status Indicator */}
-        <SyncIndicator isLight={isLight} />
       </div>
 
       {/* Tabs with drag support */}
