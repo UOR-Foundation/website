@@ -355,6 +355,14 @@ export function useWindowManager() {
     });
   }, []);
 
+  const bootWindow = useCallback((id: string) => {
+    setWindows(prev => {
+      const next = prev.map(w => w.id === id ? { ...w, booted: true } : w);
+      saveWindowsImmediate(next);
+      return next;
+    });
+  }, []);
+
   // Memoize activeWindowId to avoid recomputing on every render
   const activeWindowId = useMemo(() => {
     let maxZ = -1;
@@ -386,5 +394,6 @@ export function useWindowManager() {
     mergeTabs,
     unmergeTabs,
     snapMultiple,
+    bootWindow,
   };
 }
