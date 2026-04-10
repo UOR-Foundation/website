@@ -196,10 +196,7 @@ export default function ComplianceDashboardPage() {
             { label: "Longest Chain", value: longestChain },
             { label: "Firmware", value: `v${FIRMWARE_VERSION}` },
           ].map((s) => (
-            <div key={s.label} className="flex items-baseline gap-1.5">
-              <span className="text-sm font-bold text-zinc-200 tabular-nums">{s.value}</span>
-              <span className="text-[8px] font-mono uppercase tracking-widest text-zinc-600">{s.label}</span>
-            </div>
+            <StatBlock key={s.label} value={s.value} label={s.label} />
           ))}
 
           {/* Filter pills */}
