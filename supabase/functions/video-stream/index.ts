@@ -1,9 +1,10 @@
 /**
- * video-stream — Resolves YouTube video IDs into direct stream URLs
- * via Piped and Invidious public APIs.
+ * video-stream — Serves a lightweight YouTube player page and proxies thumbnails.
+ * Bypasses X-Frame-Options by being the direct iframe host for YouTube embeds.
  *
- * GET /video-stream?id=VIDEO_ID          → JSON { streamUrl, thumbnailUrl, title }
- * GET /video-stream?id=VIDEO_ID&thumb=1  → proxy thumbnail image
+ * GET /video-stream?id=VIDEO_ID               → HTML player page (embeddable)
+ * GET /video-stream?id=VIDEO_ID&thumb=1       → proxy thumbnail image
+ * GET /video-stream?id=VIDEO_ID&info=1        → JSON metadata via oEmbed
  */
 
 const corsHeaders: Record<string, string> = {
@@ -12,116 +13,108 @@ const corsHeaders: Record<string, string> = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const PIPED_INSTANCES = [
-  "https://pipedapi.kavin.rocks",
-  "https://pipedapi.adminforge.de",
-  "https://pipedapi.in.projectsegfau.lt",
-];
+/* ── Thumbnail proxy ─────────────────────────────────────────── */
 
-const INVIDIOUS_INSTANCES = [
-  "https://inv.nadeko.net",
-  "https://invidious.nerdvpn.de",
-  "https://iv.melmac.space",
-  "https://invidious.privacyredirect.com",
-  "https://yewtu.be",
-];
-
-const cache = new Map<string, { data: StreamResult; ts: number }>();
-const CACHE_TTL = 1000 * 60 * 30;
-
-interface StreamResult {
-  streamUrl: string | null;
-  audioStreamUrl: string | null;
-  thumbnailUrl: string;
-  title: string;
-  uploader: string;
-  duration: number;
-}
-
-/* ── Piped ────────────────────────────────────────────────────── */
-
-async function tryPiped(videoId: string): Promise<StreamResult | null> {
-  for (const instance of PIPED_INSTANCES) {
+async function proxyThumbnail(videoId: string): Promise<Response> {
+  const qualities = ["maxresdefault", "hqdefault", "mqdefault", "default"];
+  for (const q of qualities) {
     try {
-      const resp = await fetch(`${instance}/streams/${videoId}`, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-        signal: AbortSignal.timeout(8000),
+      const resp = await fetch(`https://i.ytimg.com/vi/${videoId}/${q}.jpg`, {
+        signal: AbortSignal.timeout(5000),
+        headers: { "User-Agent": "Mozilla/5.0" },
       });
-      if (!resp.ok) { await resp.text(); console.log(`Piped ${instance}: ${resp.status}`); continue; }
-      const data = await resp.json();
-      if (!data?.videoStreams?.length) { console.log(`Piped ${instance}: no streams`); continue; }
-
-      const combined = data.videoStreams
-        .filter((s: any) => !s.videoOnly && s.mimeType?.startsWith("video/"))
-        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
-      const streamUrl = combined[0]?.url
-        || data.videoStreams.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0]?.url
-        || null;
-      const audioStreamUrl = data.audioStreams?.length
-        ? data.audioStreams.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0].url
-        : null;
-
-      console.log(`Piped ${instance}: resolved, streamUrl=${!!streamUrl}`);
-      return {
-        streamUrl, audioStreamUrl,
-        thumbnailUrl: data.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-        title: data.title || "", uploader: data.uploader || "", duration: data.duration || 0,
-      };
-    } catch (e) { console.log(`Piped ${instance}: ${e}`); }
+      if (resp.ok) {
+        const ct = resp.headers.get("content-type") || "image/jpeg";
+        // Check it's not a placeholder (YouTube returns 120x90 for missing)
+        const cl = parseInt(resp.headers.get("content-length") || "0");
+        if (q === "maxresdefault" && cl < 5000) {
+          await resp.arrayBuffer(); // consume
+          continue; // likely placeholder
+        }
+        return new Response(resp.body, {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": ct,
+            "Cache-Control": "public, max-age=86400",
+          },
+        });
+      }
+      await resp.text();
+    } catch { /* next quality */ }
   }
-  return null;
+  // Final fallback — redirect
+  return new Response(null, {
+    status: 302,
+    headers: { ...corsHeaders, Location: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` },
+  });
 }
 
-/* ── Invidious ────────────────────────────────────────────────── */
+/* ── oEmbed metadata ─────────────────────────────────────────── */
 
-async function tryInvidious(videoId: string): Promise<StreamResult | null> {
-  for (const instance of INVIDIOUS_INSTANCES) {
-    try {
-      const resp = await fetch(`${instance}/api/v1/videos/${videoId}`, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!resp.ok) { await resp.text(); console.log(`Invidious ${instance}: ${resp.status}`); continue; }
+async function getVideoInfo(videoId: string): Promise<Response> {
+  try {
+    const resp = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (resp.ok) {
       const data = await resp.json();
-
-      // formatStreams = combined a/v, adaptiveFormats = separate
-      const combined = (data.formatStreams || []).filter((f: any) => f.url);
-      const adaptive = (data.adaptiveFormats || []).filter((f: any) => f.url && f.type?.startsWith("video/"));
-      const audio = (data.adaptiveFormats || []).filter((f: any) => f.url && f.type?.startsWith("audio/"));
-
-      const streamUrl = combined.length
-        ? combined.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0].url
-        : adaptive.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0]?.url || null;
-
-      const audioStreamUrl = audio.length
-        ? audio.sort((a: any, b: any) => (parseInt(b.bitrate) || 0) - (parseInt(a.bitrate) || 0))[0].url
-        : null;
-
-      const thumb = data.videoThumbnails?.find((t: any) => t.quality === "medium")?.url
-        || data.videoThumbnails?.[0]?.url
-        || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-
-      console.log(`Invidious ${instance}: resolved, streamUrl=${!!streamUrl}, combined=${combined.length}, adaptive=${adaptive.length}`);
-      return {
-        streamUrl, audioStreamUrl,
-        thumbnailUrl: thumb,
-        title: data.title || "", uploader: data.author || "", duration: data.lengthSeconds || 0,
-      };
-    } catch (e) { console.log(`Invidious ${instance}: ${e}`); }
-  }
-  return null;
+      return new Response(JSON.stringify({
+        title: data.title,
+        uploader: data.author_name,
+        thumbnailUrl: data.thumbnail_url,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    await resp.text();
+  } catch { /* fall through */ }
+  return new Response(JSON.stringify({ title: "", uploader: "" }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
-/* ── Combined resolver ───────────────────────────────────────── */
+/* ── Embeddable player page ──────────────────────────────────── */
 
-async function resolveVideo(videoId: string): Promise<StreamResult | null> {
-  const cacheKey = `v:${videoId}`;
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
+function playerPage(videoId: string): Response {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+iframe{width:100%;height:100%;border:none}
+</style>
+</head>
+<body>
+<iframe
+  id="player"
+  src="https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&color=white&playsinline=1&enablejsapi=1"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowfullscreen
+></iframe>
+<script>
+// Post messages to parent for state sync
+window.addEventListener('message', function(e) {
+  if (e.source === document.getElementById('player').contentWindow) {
+    window.parent.postMessage(e.data, '*');
+  }
+});
+</script>
+</body>
+</html>`;
 
-  const result = await tryPiped(videoId) || await tryInvidious(videoId);
-  if (result) cache.set(cacheKey, { data: result, ts: Date.now() });
-  return result;
+  return new Response(html, {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+      // Allow our page to be embedded anywhere
+      "X-Frame-Options": "ALLOWALL",
+    },
+  });
 }
 
 /* ── Handler ─────────────────────────────────────────────────── */
@@ -135,6 +128,7 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const videoId = url.searchParams.get("id");
     const thumbOnly = url.searchParams.get("thumb") === "1";
+    const infoOnly = url.searchParams.get("info") === "1";
 
     if (!videoId || !/^[a-zA-Z0-9_-]{6,15}$/.test(videoId)) {
       return new Response(
@@ -143,44 +137,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Thumbnail proxy
-    if (thumbOnly) {
-      for (const inst of INVIDIOUS_INSTANCES) {
-        try {
-          const thumbResp = await fetch(`${inst}/vi/${videoId}/mqdefault.jpg`, {
-            signal: AbortSignal.timeout(4000),
-            redirect: "follow",
-          });
-          if (thumbResp.ok && thumbResp.headers.get("content-type")?.startsWith("image/")) {
-            return new Response(thumbResp.body, {
-              headers: {
-                ...corsHeaders,
-                "Content-Type": thumbResp.headers.get("content-type") || "image/jpeg",
-                "Cache-Control": "public, max-age=86400",
-              },
-            });
-          }
-          await thumbResp.text();
-        } catch { /* next */ }
-      }
-      return new Response(null, {
-        status: 302,
-        headers: { ...corsHeaders, Location: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` },
-      });
-    }
-
-    const data = await resolveVideo(videoId);
-    if (!data) {
-      return new Response(
-        JSON.stringify({ error: "Could not resolve video from any instance" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (thumbOnly) return await proxyThumbnail(videoId);
+    if (infoOnly) return await getVideoInfo(videoId);
+    return playerPage(videoId);
   } catch (err) {
     console.error("video-stream error:", err);
     return new Response(
