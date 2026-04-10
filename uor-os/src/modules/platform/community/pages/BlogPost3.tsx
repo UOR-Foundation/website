@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink, Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 import coverImage from "@/assets/blog-uor-framework-launch.png";

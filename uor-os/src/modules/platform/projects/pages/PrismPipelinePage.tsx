@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Play, CheckCircle2, XCircle, Clock, Loader2, Copy, Download } from "lucide-react";
 
 const API = "https://api.uor.foundation/v1";

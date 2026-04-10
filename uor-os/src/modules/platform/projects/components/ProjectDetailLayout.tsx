@@ -1,17 +1,17 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
 import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
-import { verifyCertificateFull, type FullVerificationResult } from "@/modules/certificate/verify";
+import { verifyCertificateFull, type FullVerificationResult } from "@/modules/identity/certificate/verify";
 import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/modules/core/ui/dialog";
+} from "@/modules/platform/core/ui/dialog";
 
 export interface ProjectSection {
   heading: string;

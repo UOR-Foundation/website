@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Heart, ExternalLink, ChevronDown, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { donationProjects, type DonationProject } from "@/data/donation-projects";

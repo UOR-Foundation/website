@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag } from "lucide-react";
 import { DISCORD_URL } from "@/data/external-links";

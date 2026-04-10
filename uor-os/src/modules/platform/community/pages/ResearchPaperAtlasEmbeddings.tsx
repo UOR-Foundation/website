@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, FileText, Users, Calendar, BookOpen, CheckCircle, FlaskConical, Lightbulb, Quote } from "lucide-react";
 import { GITHUB_ATLAS_URL, GITHUB_ATLAS_LEAN4_URL } from "@/data/external-links";

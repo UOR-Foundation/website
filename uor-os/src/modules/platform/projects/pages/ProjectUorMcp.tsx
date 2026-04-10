@@ -1,6 +1,6 @@
 import ProjectDetailLayout from "../components/ProjectDetailLayout";
 import heroImg from "@/assets/project-uor-mcp.jpg";
-import SetupGuide from "@/modules/mcp/components/SetupGuide";
+import SetupGuide from "@/modules/intelligence/mcp/components/SetupGuide";
 
 const ProjectUorMcp = () => (
   <ProjectDetailLayout

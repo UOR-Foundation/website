@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/modules/core/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/modules/platform/core/ui/dialog";
 import { Heart, Copy, Check, Wallet, Bitcoin, ShieldCheck, X, Eye } from "lucide-react";
 import qrBitcoin from "@/assets/qr-bitcoin.png";
 import qrEthereum from "@/assets/qr-ethereum.png";

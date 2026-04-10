@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
 import coverImage from "@/assets/blog-golden-seed-vector.png";

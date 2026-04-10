@@ -5,7 +5,7 @@
  * Designed for clarity, impact, and exploration.
  */
 
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowRight, ExternalLink, ChevronRight, Sparkles, Layers, Cpu, Code2, Globe } from "lucide-react";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";

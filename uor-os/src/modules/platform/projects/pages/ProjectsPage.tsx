@@ -1,4 +1,4 @@
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ExternalLink, ChevronRight, Send, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
