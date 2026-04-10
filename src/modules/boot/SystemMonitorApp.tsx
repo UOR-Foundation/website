@@ -528,8 +528,26 @@ async function formatMarkdownReport(
     `| WASM SIMD | ${receipt.provenance.hardware.simdSupported ? "✓" : "✗"} | ${receipt.provenance.hardware.simdSupported ? "128-bit vector operations" : "Scalar fallback"} |`
   );
   const sab = typeof SharedArrayBuffer !== "undefined";
+  const coi = !!(window as unknown as { crossOriginIsolated?: boolean }).crossOriginIsolated;
+  const swCtrl = !!navigator.serviceWorker?.controller;
+  const coiReload = !!sessionStorage.getItem("coi-reload-attempted");
+  const sabNote = sab
+    ? "Cross-origin isolated"
+    : !("serviceWorker" in navigator)
+      ? "No SW support — COOP/COEP cannot be injected"
+      : !swCtrl
+        ? "SW not controlling page — reload required"
+        : coiReload
+          ? "SW active, reloaded, but host may be stripping COOP/COEP headers"
+          : "SW active but page not yet reloaded through it";
   L.push(
-    `| SharedArrayBuffer | ${sab ? "✓" : "✗"} | ${sab ? "Cross-origin isolated" : "COOP/COEP headers required"} |`
+    `| SharedArrayBuffer | ${sab ? "✓" : "✗"} | ${sabNote} |`
+  );
+  L.push(
+    `| Cross-Origin Isolation | ${coi ? "✓" : "✗"} | ${coi ? "COOP: same-origin, COEP: credentialless" : "Not isolated — " + sabNote} |`
+  );
+  L.push(
+    `| SW Controller | ${swCtrl ? "✓" : "✗"} | ${swCtrl ? "Service worker controlling page" : "No active controller"} |`
   );
   const workers = typeof Worker !== "undefined";
   L.push(

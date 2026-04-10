@@ -505,20 +505,46 @@ function ModulesDetail({ receipt, onBack }: DetailViewProps) {
 function CapabilitiesDetail({ receipt, onBack }: DetailViewProps) {
   const hw = receipt.provenance.hardware;
 
+  const sabAvailable = typeof SharedArrayBuffer !== "undefined";
+  const coiActive = !!(window as unknown as { crossOriginIsolated?: boolean }).crossOriginIsolated;
+  const swSupported = "serviceWorker" in navigator;
+  const swController = !!navigator.serviceWorker?.controller;
+  const coiReloadAttempted = !!sessionStorage.getItem("coi-reload-attempted");
+
+  // Build a diagnostic reason for SAB unavailability
+  const sabDiagnostic = sabAvailable
+    ? "Active — zero-copy worker transfers enabled"
+    : !swSupported
+      ? "No Service Worker support in this browser"
+      : !swController
+        ? "SW registered but not yet controlling — reload may resolve"
+        : coiReloadAttempted
+          ? "SW controlling but COI headers not applied after reload — host may strip headers"
+          : "SW controlling but page not yet reloaded through it";
+
+  const coiDiagnostic = coiActive
+    ? "Active — COOP: same-origin, COEP: credentialless"
+    : !swSupported
+      ? "Requires Service Worker for header injection"
+      : !swController
+        ? "Waiting for SW to claim page and inject headers"
+        : "SW active but isolation headers not effective";
+
   const caps = useMemo(() => [
     { name: "WebAssembly", ok: hw.wasmSupported, method: "typeof WebAssembly !== 'undefined'", fallback: "TypeScript interpreted engine" },
     { name: "WASM SIMD (v128)", ok: hw.simdSupported, method: "WebAssembly.validate(simd_test_bytes)", fallback: "Scalar arithmetic fallback" },
-    { name: "SharedArrayBuffer", ok: typeof SharedArrayBuffer !== "undefined", method: "typeof SharedArrayBuffer !== 'undefined'", fallback: "Single-threaded execution" },
+    { name: "SharedArrayBuffer", ok: sabAvailable, method: "typeof SharedArrayBuffer !== 'undefined'", fallback: sabDiagnostic },
     { name: "Web Workers", ok: typeof Worker !== "undefined", method: "typeof Worker !== 'undefined'", fallback: "Main-thread computation only" },
-    { name: "Service Worker", ok: "serviceWorker" in navigator, method: "'serviceWorker' in navigator", fallback: "No offline caching" },
-    { name: "Cross-Origin Isolation", ok: (window as unknown as { crossOriginIsolated?: boolean }).crossOriginIsolated === true, method: "self.crossOriginIsolated", fallback: "No SharedArrayBuffer" },
+    { name: "Service Worker", ok: swSupported, method: "'serviceWorker' in navigator", fallback: "No offline caching" },
+    { name: "SW Controller", ok: swController, method: "navigator.serviceWorker.controller", fallback: "SW not controlling this page" },
+    { name: "Cross-Origin Isolation", ok: coiActive, method: "self.crossOriginIsolated", fallback: coiDiagnostic },
     { name: "WebGPU", ok: "gpu" in navigator, method: "'gpu' in navigator", fallback: "CPU-only rendering" },
     { name: "Crypto.subtle", ok: !!crypto?.subtle, method: "crypto.subtle !== undefined", fallback: "Software hash fallback" },
     { name: "IndexedDB", ok: typeof indexedDB !== "undefined", method: "typeof indexedDB !== 'undefined'", fallback: "In-memory storage only" },
     { name: "Performance API", ok: typeof performance !== "undefined" && !!performance.now, method: "performance.now()", fallback: "Date.now() timing" },
     { name: "WebSocket", ok: typeof WebSocket !== "undefined", method: "typeof WebSocket !== 'undefined'", fallback: "HTTP polling" },
     { name: "Clipboard API", ok: !!navigator.clipboard, method: "navigator.clipboard", fallback: "document.execCommand('copy')" },
-  ], [hw]);
+  ], [hw, sabAvailable, coiActive, swSupported, swController, sabDiagnostic, coiDiagnostic]);
 
   const supported = caps.filter(c => c.ok).length;
 
