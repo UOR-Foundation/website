@@ -85,13 +85,13 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
       }}
     >
       <div
-        className="pointer-events-auto flex items-center gap-4 py-2 px-4 rounded-full relative"
+        className="pointer-events-auto flex items-center gap-3 py-1.5 px-3 rounded-full relative"
         style={{
           pointerEvents: hasVisibleWindows ? "none" : "auto",
-          background: "rgba(0,0,0,0.15)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.12)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.04)",
         }}
       >
         {DOTS.map(dot => {
@@ -101,15 +101,14 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
             <div key={dot.id} className="relative flex flex-col items-center">
               {/* Hover label */}
               <span
-                className="absolute -top-7 text-white/60 text-[11px] font-medium whitespace-nowrap select-none pointer-events-none"
+                className="absolute -top-6 text-white/50 text-[10px] tracking-wide font-medium whitespace-nowrap select-none pointer-events-none"
                 style={{
                   opacity: hovered ? 1 : 0,
-                  transform: hovered ? "translateY(0)" : "translateY(4px)",
-                  transition: "opacity 150ms ease-out, transform 150ms ease-out",
+                  transform: hovered ? "translateY(0)" : "translateY(3px)",
+                  transition: "opacity 200ms ease-out, transform 200ms ease-out",
                 }}
               >
                 {dot.label}
-                <span className="ml-1 text-white/30 text-[10px]">{dot.key}</span>
               </span>
               <button
                 onClick={() => setTheme(dot.id)}
@@ -117,15 +116,16 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
                 onMouseLeave={() => setHoveredDot(null)}
                 aria-label={`${dot.label} (${dot.key})`}
                 title={`${dot.label} — press ${dot.key}`}
-                className="rounded-full transition-all duration-300 ease-out"
+                className="rounded-full"
                 style={{
-                  width: active ? 16 : 12,
-                  height: active ? 16 : 12,
+                  width: active ? 10 : 8,
+                  height: active ? 10 : 8,
                   background: dot.colors.fill,
                   boxShadow: active ? dot.colors.glow : "none",
-                  outline: active ? `2px solid ${dot.colors.ring}` : "2px solid transparent",
+                  outline: active ? `1.5px solid ${dot.colors.ring}` : "1.5px solid transparent",
                   outlineOffset: 2,
-                  transform: hovered && !active ? "scale(1.2)" : "scale(1)",
+                  transform: hovered && !active ? "scale(1.25)" : "scale(1)",
+                  transition: "all 300ms cubic-bezier(0.16, 1, 0.3, 1)",
                   cursor: "pointer",
                 }}
               />
