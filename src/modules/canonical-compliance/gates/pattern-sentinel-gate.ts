@@ -40,7 +40,7 @@ function patternSentinelGate() {
   }
 
   // ── Hotspot findings ──────────────────────────────────────────
-  for (const [file, distinctPatterns] of scan.filePatternCounts) {
+  for (const [file, distinctPatterns] of Array.from(scan.filePatternCounts.entries())) {
     if (distinctPatterns >= HOTSPOT_THRESHOLD) {
       findings.push({
         severity: "warning",
