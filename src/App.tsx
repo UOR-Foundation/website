@@ -42,6 +42,7 @@ const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
 const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
+const AppStorePage = lazy(() => import("@/modules/app-store/pages/AppStorePage"));
 
 
 const queryClient = new QueryClient({
@@ -99,6 +100,7 @@ const App = () => {
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
               <Route path="/library" element={<LibraryPage />} />
+              <Route path="/app-store" element={<AppStorePage />} />
               <Route path="/desktop" element={<Navigate to="/os" replace />} />
               <Route path="/search" element={<Navigate to="/os" replace />} />
 
