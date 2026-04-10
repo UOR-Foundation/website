@@ -4,14 +4,14 @@
  *
  * Kubernetes-inspired lifecycle manager for AppBlueprints.
  *
- * Responsibilities:
- *   - Desired-state reconciliation (blueprints → running instances)
- *   - Dependency resolution (topological sort on requires)
- *   - Health monitoring (periodic healthchecks per app)
- *   - Resource accounting (call counts, denied counts per app)
- *   - Event emission for UI reactivity
+ * v2 additions (Unikraft-inspired):
+ *   - Lazy start: only autoStart apps boot during init()
+ *   - Per-app boot timing (sub-ms target)
+ *   - Worker pool governance with slot reservation
+ *   - Circuit breaker: auto-stop after N consecutive healthcheck failures
+ *   - Exponential backoff restart
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { AppKernel } from "./app-kernel";
@@ -29,6 +29,17 @@ import type {
   ComposeEventType,
 } from "./types";
 
+// ── Constants ────────────────────────────────────────────────────────────
+
+/** Max consecutive healthcheck failures before circuit breaker trips. */
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+
+/** Default total worker slots available across all apps. */
+const DEFAULT_WORKER_POOL_SIZE = 8;
+
+/** Base delay for exponential backoff restart (ms). */
+const RESTART_BASE_DELAY_MS = 1000;
+
 // ── Event Emitter ─────────────────────────────────────────────────────────
 
 type EventListener = (event: ComposeEvent) => void;
@@ -44,19 +55,28 @@ class Orchestrator {
   private _ready = false;
   private _idCounter = 0;
 
+  // ── Worker Pool Governance ────────────────────────────────────────────
+  private _workerSlotsTotal = DEFAULT_WORKER_POOL_SIZE;
+  private _workerAllocations = new Map<string, number>(); // instanceId → slots
+
+  // ── Circuit Breaker / Restart State ───────────────────────────────────
+  private _restartAttempts = new Map<string, number>(); // blueprintName → attempt count
+
   // ── Initialization ────────────────────────────────────────────────────
 
   /**
    * Initialize the orchestrator with a set of static blueprints.
-   * Registers all blueprints and starts instances for each.
+   * Only starts apps with autoStart !== false (lazy start for others).
    */
   async init(blueprints: AppBlueprint[]): Promise<void> {
     // Register all blueprints (computes canonical IDs)
     await Promise.all(blueprints.map((bp) => registerBlueprint(bp)));
 
-    // Start an instance for each blueprint
+    // Start only autoStart apps (default true for backward compat)
     for (const bp of allBlueprints()) {
-      this._startInstance(bp);
+      if (bp.autoStart !== false) {
+        this._startInstance(bp);
+      }
     }
 
     this._ready = true;
@@ -73,6 +93,27 @@ class Orchestrator {
   }
 
   /**
+   * Ensure an app is running — start it lazily if not yet started.
+   * Returns the kernel for the app.
+   */
+  ensureRunning(name: string): AppKernel | undefined {
+    const existingId = this._byName.get(name);
+    if (existingId) {
+      const kernel = this._kernels.get(existingId);
+      if (kernel && (kernel.state === "running" || kernel.state === "degraded")) {
+        return kernel;
+      }
+    }
+
+    // Lazy start
+    const bp = getBlueprint(name);
+    if (!bp) return undefined;
+
+    const id = this._startInstance(bp);
+    return this._kernels.get(id);
+  }
+
+  /**
    * Stop a running instance by name.
    */
   stop(name: string): boolean {
@@ -84,23 +125,40 @@ class Orchestrator {
 
     kernel.stop();
     this._clearHealthTimer(instanceId);
+    this._releaseWorkerSlots(instanceId);
     this._emit("instance:stopped", instanceId, name);
 
     return true;
   }
 
   /**
-   * Restart a stopped or crashed instance.
+   * Restart a stopped or crashed instance with exponential backoff.
    */
   restart(name: string): boolean {
     const bp = getBlueprint(name);
     if (!bp) return false;
 
+    // Track restart attempts for exponential backoff
+    const attempts = this._restartAttempts.get(name) || 0;
+    this._restartAttempts.set(name, attempts + 1);
+
     // Stop existing instance if any
     this.stop(name);
 
-    // Start fresh
-    this._startInstance(bp);
+    // Apply exponential backoff delay
+    const delay = Math.min(RESTART_BASE_DELAY_MS * Math.pow(2, attempts), 30000);
+
+    if (delay > RESTART_BASE_DELAY_MS) {
+      setTimeout(() => {
+        this._startInstance(bp);
+        // Reset attempts on successful restart
+        this._restartAttempts.set(name, 0);
+      }, delay);
+    } else {
+      this._startInstance(bp);
+      this._restartAttempts.set(name, 0);
+    }
+
     return true;
   }
 
@@ -128,13 +186,20 @@ class Orchestrator {
     let totalCalls = 0;
     let totalDenied = 0;
     let runningCount = 0;
+    let totalPayloadBytes = 0;
 
     for (const kernel of this._kernels.values()) {
       totalCalls += kernel.callCount;
       totalDenied += kernel.deniedCount;
+      totalPayloadBytes += kernel.payloadBytes;
       if (kernel.state === "running" || kernel.state === "degraded") {
         runningCount++;
       }
+    }
+
+    let workerSlotsUsed = 0;
+    for (const slots of this._workerAllocations.values()) {
+      workerSlotsUsed += slots;
     }
 
     return {
@@ -143,6 +208,9 @@ class Orchestrator {
       totalCalls,
       totalDenied,
       uptimeMs: Date.now() - this._startedAt,
+      totalPayloadBytes,
+      workerSlotsUsed,
+      workerSlotsTotal: this._workerSlotsTotal,
     };
   }
 
@@ -185,9 +253,19 @@ class Orchestrator {
 
   private _startInstance(bp: AppBlueprint): string {
     const instanceId = `${bp.name}-${++this._idCounter}`;
+    const t0 = performance.now();
 
     const kernel = new AppKernel(instanceId, bp);
+
+    // Worker pool governance: reserve slots
+    const requestedWorkers = bp.resources.workers ?? 0;
+    const allocated = this._reserveWorkerSlots(instanceId, requestedWorkers);
+    kernel.setWorkersAllocated(allocated);
+
     kernel.start();
+
+    const bootMs = performance.now() - t0;
+    console.debug(`[Orchestrator] ${bp.name} booted in ${bootMs.toFixed(2)}ms`);
 
     this._kernels.set(instanceId, kernel);
     this._byName.set(bp.name, instanceId);
@@ -201,7 +279,11 @@ class Orchestrator {
       this._healthTimers.set(instanceId, timer);
     }
 
-    this._emit("instance:started", instanceId, bp.name);
+    this._emit("instance:started", instanceId, bp.name, {
+      bootTimeMs: bootMs,
+      workersAllocated: allocated,
+    });
+
     return instanceId;
   }
 
@@ -210,10 +292,60 @@ class Orchestrator {
     if (!kernel) return;
 
     const healthy = await kernel.healthcheck();
+
+    // Circuit breaker: auto-stop after N consecutive failures
+    if (!healthy && kernel.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+      const name = kernel.blueprint.name;
+      kernel.crash(`Circuit breaker tripped after ${CIRCUIT_BREAKER_THRESHOLD} consecutive failures`);
+      this._clearHealthTimer(instanceId);
+      this._releaseWorkerSlots(instanceId);
+      this._emit("instance:crashed", instanceId, name, {
+        reason: "circuit_breaker",
+        consecutiveFailures: kernel.consecutiveFailures,
+      });
+
+      // Auto-restart with exponential backoff
+      this.restart(name);
+      return;
+    }
+
     this._emit("instance:healthcheck", instanceId, kernel.blueprint.name, {
       healthy,
+      consecutiveFailures: kernel.consecutiveFailures,
     });
   }
+
+  // ── Worker Pool ───────────────────────────────────────────────────────
+
+  private _reserveWorkerSlots(instanceId: string, requested: number): number {
+    if (requested === 0) return 0;
+
+    let used = 0;
+    for (const slots of this._workerAllocations.values()) {
+      used += slots;
+    }
+
+    const available = this._workerSlotsTotal - used;
+    const allocated = Math.min(requested, available);
+
+    if (allocated > 0) {
+      this._workerAllocations.set(instanceId, allocated);
+    }
+
+    if (allocated < requested) {
+      console.warn(
+        `[Orchestrator] Worker pool: requested ${requested}, allocated ${allocated} (${available} available)`,
+      );
+    }
+
+    return allocated;
+  }
+
+  private _releaseWorkerSlots(instanceId: string): void {
+    this._workerAllocations.delete(instanceId);
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────────────
 
   private _clearHealthTimer(instanceId: string): void {
     const timer = this._healthTimers.get(instanceId);

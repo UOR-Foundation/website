@@ -6,11 +6,12 @@
  * and orchestrator state types.
  *
  * Inspired by:
- *   Docker  → content-addressed layered images
+ *   Docker   → content-addressed layered images
  *   Unikraft → single-purpose kernels with minimal attack surface
- *   K8s     → declarative desired-state reconciliation
+ *   K8s      → declarative desired-state reconciliation
+ *   FlexOS   → fine-grained compartmentalization & call budgets
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import type { ComponentType } from "react";
@@ -28,6 +29,14 @@ export interface MorphismInterface {
   paramsSchema?: Record<string, unknown>;
 }
 
+/** Call-rate budget for FlexOS-style compartmentalization. */
+export interface CallBudget {
+  /** Max calls per second (sliding window). Exceeding degrades the kernel. */
+  maxPerSecond?: number;
+  /** Max total calls over the kernel's lifetime. Exceeding stops the kernel. */
+  maxTotal?: number;
+}
+
 /** Resource constraints for a running app instance. */
 export interface AppResources {
   /** Max JS heap hint (e.g. "64mb") — advisory, not enforced in browser */
@@ -36,6 +45,8 @@ export interface AppResources {
   workers?: number;
   /** Whether this app needs SharedArrayBuffer */
   requiresSAB?: boolean;
+  /** Call-rate budget (FlexOS compartmentalization) */
+  callBudget?: CallBudget;
 }
 
 /** Health check definition. */
@@ -73,6 +84,22 @@ export interface AppBlueprint {
   /** Morphisms this app exposes to other apps */
   morphisms: MorphismInterface[];
 
+  // ── Performance ──────────────────────────────────────────────────────
+
+  /**
+   * Operations eligible for fast-path dispatch (bypass bus middleware).
+   * Only local, non-remote operations should be listed here.
+   * Inspired by Unikraft's zero-overhead syscall inlining.
+   */
+  fastPath?: string[];
+
+  /**
+   * Whether to start this app during orchestrator.init().
+   * false = lazy start on first access (sub-ms boot).
+   * Default: true for backward compat.
+   */
+  autoStart?: boolean;
+
   // ── UI ────────────────────────────────────────────────────────────────
 
   /** Lazy-loaded React component path */
@@ -109,12 +136,13 @@ export interface AppBlueprint {
 
 /** Lifecycle state of an app instance. */
 export type AppInstanceState =
-  | "pending"     // blueprint accepted, deps resolving
-  | "starting"    // UI component loading
-  | "running"     // active and healthy
-  | "degraded"    // healthcheck failing but still rendering
-  | "stopped"     // intentionally stopped
-  | "crashed";    // unrecoverable error
+  | "pending"            // blueprint accepted, deps resolving
+  | "starting"           // UI component loading
+  | "running"            // active and healthy
+  | "degraded"           // healthcheck failing but still rendering
+  | "stopped"            // intentionally stopped
+  | "crashed"            // unrecoverable error
+  | "callBudgetExhausted";  // rate-limited, no further calls accepted
 
 /** Runtime metadata for a running app instance. */
 export interface AppInstance {
@@ -134,6 +162,19 @@ export interface AppInstance {
   deniedCount: number;
   /** Error message if crashed */
   error?: string;
+
+  // ── Unikraft-inspired additions ────────────────────────────────────
+
+  /** Time in ms from schedule to running state */
+  bootTimeMs?: number;
+  /** Cumulative serialized payload bytes across all calls */
+  payloadBytes: number;
+  /** Number of Web Worker slots allocated from the pool */
+  workersAllocated: number;
+  /** Content-addressed hash of the last runtime-state seal */
+  lastSealHash?: string;
+  /** Consecutive healthcheck failures (circuit breaker counter) */
+  consecutiveFailures: number;
 }
 
 // ── Orchestrator State ───────────────────────────────────────────────────
@@ -150,6 +191,15 @@ export interface OrchestratorMetrics {
   totalDenied: number;
   /** Uptime in ms */
   uptimeMs: number;
+
+  // ── Unikraft-inspired additions ────────────────────────────────────
+
+  /** Sum of payloadBytes across all instances */
+  totalPayloadBytes: number;
+  /** Worker slots currently in use */
+  workerSlotsUsed: number;
+  /** Total worker slots available in the pool */
+  workerSlotsTotal: number;
 }
 
 /** The full orchestrator state, exposed to UI via hooks. */
@@ -173,6 +223,8 @@ export type ComposeEventType =
   | "instance:stopped"
   | "instance:crashed"
   | "instance:healthcheck"
+  | "instance:sealed"
+  | "instance:budgetExhausted"
   | "kernel:call"
   | "kernel:denied";
 
