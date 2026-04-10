@@ -1,123 +1,69 @@
 
 
-# Library Redesign — Blas.com-Powered Immersive Reading Experience
+# Compliance App — Algebrica-Inspired Provenance Explorer
 
 ## Overview
 
-Transform the Library page from a functional ingestion tool into a delightful, media-player-style experience modeled after the existing MediaPlayer component's aesthetic (dark cinema UI, category tabs, card grid, immersive player view). Auto-populate with ~100 book summaries scraped from blas.com, and add a book reader view with knowledge graph integration.
+Rewrite the Compliance Dashboard as a standalone full-screen application (no Layout wrapper) inspired by Algebrica's design language: left sidebar for navigation/discovery, main content area with a toggle between **Table View** and **Graph View**, and a right detail panel that slides in when any node is selected. The app opens in a new browser window via `window.open`.
 
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────┐
-│            LibraryPage (rewrite)                │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Browse View (grid + categories + search) │  │
-│  │  - Hero shelf (featured books carousel)   │  │
-│  │  - Category pills (domain tabs)           │  │
-│  │  - Book card grid (covers + titles)       │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Reader View (when book clicked)          │  │
-│  │  - Book header (cover, title, metadata)   │  │
-│  │  - Rendered markdown (beautiful prose)    │  │
-│  │  - Related books sidebar                  │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Resonance View (existing, refined)       │  │
-│  │  - Graph + invariant cards                │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  Compliance App (standalone, full-screen, dark background)           │
+│                                                                      │
+│  ┌─────────────┐  ┌─────────────────────────────────────┐  ┌──────┐ │
+│  │  LEFT SIDEBAR│  │  MAIN CONTENT                       │  │DETAIL│ │
+│  │             │  │                                      │  │PANEL │ │
+│  │ RAS Crate   │  │  [Table View] [Graph View] toggle   │  │      │ │
+│  │  v1.0.0     │  │                                      │  │ Name │ │
+│  │ Components  │  │  TABLE: atom grid + findings table   │  │ Type │ │
+│  │  42         │  │    OR                                │  │ Cat  │ │
+│  │ Score Ring  │  │  GRAPH: force-directed SVG           │  │ Chain│ │
+│  │             │  │  (atoms → modules → exports)         │  │ Refs │ │
+│  │ ─────────── │  │                                      │  │      │ │
+│  │ Atom Index  │  │  Click any node to open detail →     │  │      │ │
+│  │  PrimitiveOp│  │                                      │  │      │ │
+│  │  Space      │  │                                      │  │      │ │
+│  │  CoreType   │  │                                      │  │      │ │
+│  │  Morphism   │  │                                      │  │      │ │
+│  │  Pipeline   │  │                                      │  │      │ │
+│  │  Algebraic  │  │                                      │  │      │ │
+│  │ ─────────── │  │                                      │  │      │ │
+│  │ Most Used   │  │                                      │  │      │ │
+│  │  Address 12 │  │                                      │  │      │ │
+│  │  Effect  9  │  │                                      │  │      │ │
+│  │ ─────────── │  │                                      │  │      │ │
+│  │ Export .md  │  │                                      │  │      │ │
+│  │ Export .nq  │  │                                      │  │      │ │
+│  └─────────────┘  └─────────────────────────────────────┘  └──────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-## What Changes
+## Design (Algebrica-Inspired)
 
-### 1. Hardcoded Book Catalog (~50 books from blas.com)
+- **Left sidebar**: Permanent. Contains RAS crate version + component count inputs, score ring, atom category index (clickable to filter), "Most Referenced" atoms list (like Algebrica's "Most Explored"), and export buttons
+- **Main content**: Toggle between Table View and Graph View
+  - **Table View**: Score stats bar (Nodes/Relations/Longest Chain like Algebrica), search bar, category filter pills, atom periodic table grid, then findings table with atom chains shown as `→` daisy chains
+  - **Graph View**: Force-directed SVG. Atoms = small filled circles (by category color), Modules = medium rounded nodes, Exports = smaller diamonds. Edges for `derivedFrom` and `belongsTo`. Click any node to select. Zoom/pan. Search highlights matching nodes
+- **Right detail panel**: Slides in on node click. Shows full metadata: name, type, category, description, foundation path, upstream atoms (for exports/modules), downstream modules (for atoms), pipeline description, health status badge
 
-Create `src/modules/oracle/lib/book-catalog.ts` — a static catalog of ~50 curated books from blas.com with:
-- Title, author, domain/category, cover URL (from blas.com wp-content), source URL, tags
-- Short summary text (1-2 sentences from the page)
-- Key takeaways array
-
-This mirrors the MediaPlayer's `video-catalog.ts` pattern — no API call needed for initial load. The existing ingestion system remains for adding more books dynamically.
-
-Categories derived from blas.com's tag system: Business, Philosophy, Psychology, Science, Technology, History, Finance, Self-Improvement, Leadership, Biography, Literature.
-
-### 2. LibraryPage Rewrite
-
-Complete rewrite of `src/modules/oracle/pages/LibraryPage.tsx` following the MediaPlayer's three-state pattern:
-
-**Browse State:**
-- Dark cinema background (`hsl(220 15% 6%)`) matching MediaPlayer
-- Search bar (rounded pill, same styling)
-- Category tabs (horizontal scrollable pills)
-- Book card grid: cover image with subtle hover scale, title overlay at bottom, domain badge
-- "Featured" hero row at top (3 large cards for highlighted books)
-- Book count + selected count in header
-- Fuse/Discover buttons preserved
-
-**Reader State** (new — triggered on book click):
-- Back button header (like MediaPlayer's player view)
-- Left column: rendered book summary markdown with beautiful typography (serif fonts, generous line-height, proper headings)
-- Right sidebar: book cover, metadata (author, domain, tags), key takeaways, "Related Books" list (same-domain books), link to source on blas.com
-- Smooth transition in/out
-
-**Resonance State** (existing — refined styling):
-- Keep ResonanceGraph and InvariantCard
-- Match dark cinema aesthetic
-
-### 3. BookCard Component Rewrite
-
-Rewrite `src/modules/oracle/components/BookCard.tsx`:
-- Larger, more visual card focused on the cover image
-- Cover fills most of the card (like a real bookshelf)
-- Title and author below in clean typography
-- Subtle domain color accent (thin top border or badge)
-- Hover: gentle lift + shadow + "Read" overlay
-- Selection mode: checkbox overlay for fuse operations
-
-### 4. BookReader Component (New)
-
-Create `src/modules/oracle/components/BookReader.tsx`:
-- Immersive reading layout with max-width prose container
-- Markdown rendered with `react-markdown` + `remark-gfm` (already available)
-- Typography: larger font, serif option, generous spacing
-- Book cover displayed alongside title/metadata
-- Key takeaways as styled callout cards
-- "Related Books" section at bottom
-- Back-to-grid navigation
-
-### 5. Edge Function Enhancement
-
-Add a `"get"` action to `supabase/functions/book-resonance/index.ts`:
-- Accepts `bookId` parameter
-- Returns full book data including `summary_markdown`
-- Used by the reader view
-
-### 6. Auto-Population Strategy
-
-The existing ingestion system already works with blas.com. The hardcoded catalog provides instant load without waiting for scraping. When the user clicks "Ingest" for the first time, the edge function crawls blas.com and fills the `book_summaries` table. The static catalog is used as fallback/seed data.
-
-### 7. Knowledge Graph Mapping
-
-Add a small bridge in `src/modules/oracle/lib/book-graph-bridge.ts`:
-- On book load, emit KG triples: `book → uor:hasDomain → domain`, `book → uor:hasTag → tag`
-- When invariants are discovered, emit: `invariant → uor:connectsBook → book`
-- This makes the entire library navigable in the Sovereign Graph Explorer
-
-## Files to Create/Modify
+## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/oracle/lib/book-catalog.ts` | Create | Static catalog of ~50 blas.com books |
-| `src/modules/oracle/pages/LibraryPage.tsx` | Rewrite | Three-state cinema-style library |
-| `src/modules/oracle/components/BookCard.tsx` | Rewrite | Visual cover-focused book cards |
-| `src/modules/oracle/components/BookReader.tsx` | Create | Immersive reading view |
-| `src/modules/oracle/components/BookGrid.tsx` | Rewrite | Category tabs + search + grid |
-| `src/modules/oracle/lib/book-graph-bridge.ts` | Create | KG triple emission for books |
-| `supabase/functions/book-resonance/index.ts` | Modify | Add "get" action for single book |
+| `src/modules/uns/build/container.ts` | Delete + recreate | Fix persistent build resolution error (fresh write) |
+| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Rewrite | Standalone three-panel Algebrica-inspired app |
+| `src/modules/canonical-compliance/components/ProvenanceGraph.tsx` | Create | Force-directed SVG knowledge graph |
+| `src/modules/canonical-compliance/components/NodeDetailPanel.tsx` | Create | Right-side detail panel for selected nodes |
+| `src/modules/canonical-compliance/components/AtomSidebar.tsx` | Create | Left sidebar with RAS metadata, atom index, exports |
 
-## Estimated Scope
+## Technical Details
 
-~1200 lines across 7 files. The book catalog (~400 lines) and LibraryPage rewrite (~350 lines) are the largest pieces. The reader component is ~200 lines.
+- Force simulation uses vanilla `requestAnimationFrame` physics (repulsion + attraction + centering) — no d3-force dependency needed
+- Three node types with distinct visual sizes and shapes, colored by category (zinc scale matching Algebrica's monochrome palette)
+- Graph data sourced from existing `buildProvenanceTriples()` and `buildProvenanceAdjacency()`
+- RAS crate version defaults to `1.0.0`, component count auto-computed from `ALL_ATOMS.length`
+- "Open in New Window" button: `window.open('/compliance', '_blank', 'width=1400,height=900')`
+- Container.ts will be deleted and rewritten byte-clean to resolve the persistent Rollup module resolution failure
 
