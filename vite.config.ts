@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
       devOptions: { enabled: false },
       includeAssets: ["favicon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       injectManifest: {
-        globIgnores: ["**/*.wasm"],
+        globIgnores: ["**/*.wasm", "**/modules/uns/build/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {

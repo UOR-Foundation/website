@@ -22,6 +22,7 @@ import MobileShell from "@/modules/desktop/MobileShell";
 import RingIndicator from "@/modules/desktop/components/RingIndicator";
 import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
 import BootSequence from "@/modules/desktop/BootSequence";
+import LocalTwinWelcome, { shouldShowLocalTwinWelcome } from "@/modules/desktop/components/LocalTwinWelcome";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
@@ -34,6 +35,7 @@ import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
   const [booted, setBooted] = useState(false);
+  const [welcomed, setWelcomed] = useState(!shouldShowLocalTwinWelcome());
   const { theme } = useDesktopTheme();
   const wm = useWindowManager(theme);
   const isMobile = useIsMobile();
@@ -226,6 +228,9 @@ function DesktopShellInner() {
 
         {/* Boot overlay — renders on top, fades away when done. Desktop is interactive underneath. */}
         {!booted && <BootSequence onComplete={() => setBooted(true)} />}
+
+        {/* Local twin welcome — shows once on first Tauri launch, after boot completes */}
+        {booted && !welcomed && <LocalTwinWelcome onComplete={() => setWelcomed(true)} />}
       </div>
     </DesktopContextMenu>
   );
