@@ -10,6 +10,7 @@ export interface WindowState {
   minimized: boolean;
   maximized: boolean;
   pinned: boolean;
+  booted: boolean;
   mergedChildren?: string[];
   mergedParent?: string;
   preSnap?: { position: { x: number; y: number }; size: { w: number; h: number } } | null;
