@@ -123,10 +123,10 @@ export default function LibraryPage() {
   })), [books]);
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen" style={{ background: "hsl(220 15% 6%)" }}>
         {/* Header */}
-        <section className="pt-24 pb-8 px-6 max-w-7xl mx-auto">
+        <section className="pt-6 pb-8 px-6 max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
