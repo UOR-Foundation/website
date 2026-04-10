@@ -3,22 +3,37 @@
  * ═════════════════════════════════════════════════════════════════
  *
  * Generate machine-readable audit artifacts:
- *   1. Markdown — human-readable provenance tables
+ *   1. Markdown — human-readable provenance tables with firmware version
  *   2. JSON-LD  — RDF-compatible linked data
  *   3. N-Quads  — SPARQL-queryable triples
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { type AuditReport } from "./audit";
 import { buildProvenanceTriples } from "./provenance-graph";
 import { PROVENANCE_REGISTRY } from "./provenance-map";
+import { ALL_ATOMS, FIRMWARE_VERSION } from "./atoms";
+import { CRATE_MANIFEST } from "@/modules/engine/crate-manifest";
 
 // ── Markdown Export ─────────────────────────────────────────────
 
 export function exportMarkdown(report: AuditReport): string {
   const lines: string[] = [
     "# UOR Canonical Compliance Audit",
+    "",
+    "## Firmware",
+    "",
+    `| Property | Value |`,
+    `|----------|-------|`,
+    `| **Crate** | \`uor-foundation\` |`,
+    `| **Version** | \`${FIRMWARE_VERSION}\` |`,
+    `| **Namespaces** | ${CRATE_MANIFEST.namespaceCount} |`,
+    `| **Classes** | ${CRATE_MANIFEST.classCount} |`,
+    `| **Properties** | ${CRATE_MANIFEST.propertyCount} |`,
+    `| **Atoms Synced** | ${ALL_ATOMS.length} |`,
+    "",
+    "---",
     "",
     `**Generated**: ${report.timestamp}`,
     `**Grounding Score**: ${report.groundingScore}%`,
@@ -27,9 +42,24 @@ export function exportMarkdown(report: AuditReport): string {
     "",
     "---",
     "",
-    "## Module Provenance",
+    "## Atom Registry",
     "",
+    "| ID | Label | Category | Rust Type | TS Projection | Referenced By |",
+    "|-----|-------|----------|-----------|---------------|---------------|",
   ];
+
+  for (const ac of report.atomCoverage) {
+    const a = ac.atom;
+    lines.push(
+      `| \`${a.id}\` | ${a.label} | ${a.category} | \`${a.crateNamespace}::${a.rustType}\` | \`${a.tsProjection}\` | ${ac.referencedBy} |`,
+    );
+  }
+
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## Module Provenance");
+  lines.push("");
 
   for (const mod of PROVENANCE_REGISTRY) {
     lines.push(`### ${mod.module}`);
@@ -45,17 +75,6 @@ export function exportMarkdown(report: AuditReport): string {
     lines.push("");
   }
 
-  lines.push("## Atom Coverage");
-  lines.push("");
-  lines.push("| Atom | Category | Referenced By |");
-  lines.push("|------|----------|---------------|");
-  for (const ac of report.atomCoverage) {
-    lines.push(
-      `| \`${ac.atom.id}\` | ${ac.atom.category} | ${ac.referencedBy} |`,
-    );
-  }
-
-  lines.push("");
   lines.push("## Findings");
   lines.push("");
   for (const f of report.findings) {
@@ -65,6 +84,10 @@ export function exportMarkdown(report: AuditReport): string {
       );
     }
   }
+
+  lines.push("");
+  lines.push("---");
+  lines.push(`*Firmware: uor-foundation v${FIRMWARE_VERSION} | Generated: ${new Date().toISOString()}*`);
 
   return lines.join("\n");
 }
@@ -81,6 +104,7 @@ export function exportJsonLd(report: AuditReport): string {
       rdfs: "http://www.w3.org/2000/01/rdf-schema#",
     },
     "@type": "uor:ComplianceAudit",
+    "uor:firmwareVersion": FIRMWARE_VERSION,
     "uor:groundingScore": report.groundingScore,
     "uor:timestamp": report.timestamp,
     "@graph": triples.map((t) => ({
