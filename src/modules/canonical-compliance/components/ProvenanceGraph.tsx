@@ -332,9 +332,9 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
         {(zoomLevel === 3
           ? SYSTEM_LAYERS.map((l) => ({ label: l.label, color: LAYER_COLORS[l.id] }))
           : [
-              { label: "Primitive", color: "hsl(160 30% 50%)" },
-              { label: "Module", color: "hsl(210 20% 50%)" },
-              { label: "Pipeline", color: "hsl(0 0% 45%)" },
+              { label: "Operation", color: "hsl(160 30% 50%)" },
+              { label: "Package", color: "hsl(210 20% 50%)" },
+              { label: "Export", color: "hsl(0 0% 45%)" },
             ]
         ).map((l) => (
           <div key={l.label} className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500">
