@@ -41,6 +41,7 @@ const StandardPage = lazy(() => import("@/modules/core/pages/StandardPage"));
 const SemanticWebPage = lazy(() => import("@/modules/core/pages/SemanticWebPage"));
 const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
 const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
+const DownloadPage = lazy(() => import("@/modules/landing/pages/DownloadPage"));
 const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
 const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
 const AppStorePage = lazy(() => import("@/modules/app-store/pages/AppStorePage"));
@@ -96,6 +97,7 @@ const App = () => {
               <Route path="/research" element={<Navigate to="/community" replace />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/donate" element={<DonatePage />} />
+              <Route path="/download" element={<DownloadPage />} />
               <Route path="/oracle" element={<OraclePage />} />
               <Route path="/os" element={<DesktopSearch />} />
               <Route path="/resolve" element={<SearchPage />} />

@@ -58,11 +58,11 @@ const HeroSection = () => {
             <ArrowRight size={14} />
           </a>
           <a
-            href={`/releases/${file}`}
+            href="/os"
             className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] border border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
           >
-            <Download size={13} />
-            Download for {os}
+            Try It Now
+            <ArrowRight size={13} />
           </a>
         </div>
 
@@ -147,7 +147,7 @@ const HeroSection = () => {
               <ArrowRight size={15} />
             </a>
             <a
-              href={`/releases/${file}`}
+              href="/download"
               className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.25rem,1.5vw,2rem)] py-[clamp(0.65rem,0.85vw,1rem)] text-[clamp(12px,0.85vw,15px)] font-semibold uppercase tracking-[0.18em] border border-foreground/25 text-foreground/70 hover:border-foreground/50 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
             >
               <Download size={14} />
