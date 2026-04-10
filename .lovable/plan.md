@@ -1,45 +1,61 @@
 
 
-# Ontology Profile Switcher — Live Persona Showcase
+# CNCF Terminology Alignment + Build Fix
 
-## What We're Building
+## Two tasks
 
-A new **Ontology tab** in the Compliance Dashboard (alongside Table, Graph, Gates) that provides:
+### 1. Fix the build error (blocking)
 
-1. **Profile Switcher** — Three toggle buttons (Developer / User / Scientist) at the top. Clicking one instantly re-renders all terminology in the selected persona.
+The file `src/modules/uns/build/container.ts` exists (221 lines, valid TypeScript) but the build sandbox cannot resolve `"./container"` from `index.ts`. This is a known Vite/Rollup sandbox caching issue. The fix is to add a trivial trailing comment to `container.ts` to force the build system to re-index it. If that fails, we add an explicit `.ts` extension in the import path in `index.ts` (i.e., `from "./container.ts"`).
 
-2. **Live Vocabulary Table** — Shows every SKOS concept with columns: `@id`, current profile label, definition, UOR namespace, and schema.org mapping. The label column updates instantly when switching profiles, making the translation layer visible and auditable.
+### 2. Update doc comments and display strings to CNCF terminology
 
-3. **Active Profile Indicator** — A small chip in the Compliance Dashboard top bar showing the current profile (e.g. "Profile: Developer") so it's always visible regardless of which tab you're on.
+The ontology in `vocabulary.ts` already defines the canonical CNCF labels (e.g., "Service Mesh" not "Sovereign Bus", "Container Runtime" not "AppKernel"). But ~57 files still use the legacy "Sovereign" naming in doc comments, JSDoc headers, and UI-facing strings. The plan:
 
-4. **Diff Preview** — When hovering or clicking a concept row, a mini panel shows all three profile labels side-by-side so you can see exactly how the same concept translates across audiences.
+**What changes (doc comments and string literals only — no renames of exports/classes/filenames):**
 
-## Why This Architecture
-
-- **Single input**: The vocabulary in `vocabulary.ts` remains the sole source. The UI only reads from `ALL_CONCEPTS` and calls `labelForProfile()`.
-- **No duplication**: No new data structures — the existing `SkosConcept.uor:profileLabels` is the complete translation layer.
-- **Swappable**: Because every label resolves through `labelForProfile()`, adding a 4th profile (e.g. "executive") is a single type extension + vocabulary update — the UI auto-adapts.
-- **Globally wirable**: The profile selector can later be lifted to a React context, making `useOntologyLabel` profile-aware across the entire system.
-
-## Files
-
-| File | Action | Purpose |
+| Legacy term (in comments/strings) | CNCF term (from ontology) | Ontology ID |
 |---|---|---|
-| `src/modules/canonical-compliance/components/OntologyPanel.tsx` | Create | Profile switcher + live vocabulary table + diff preview |
-| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Update | Add 4th view tab ("Ontology" with BookOpen icon), render OntologyPanel, add profile indicator chip |
+| "Sovereign Bus" | "Service Mesh" | `uor:ServiceMesh` |
+| "Sovereign Reconciler" | "Reconciliation Controller" | `uor:Reconciler` |
+| "Sovereign Boot" | "Init System" | `uor:InitSystem` |
+| "Sovereign Compose" | "Scheduling & Orchestration" | `uor:Scheduler` |
+| "AppKernel" (in descriptions) | "Container Runtime" | `uor:ContainerRuntime` |
+| "Sovereign Auto-Scaler" | "Horizontal Pod Autoscaler" | `uor:HPA` |
 
-## Implementation Detail
+**What does NOT change:** Class names (`AppKernel`, `SovereignReconciler`), function names (`sovereignBoot`), file names, and export signatures. These stay stable. The legacy names are already listed as `skos:altLabel` in the ontology, so they remain valid aliases.
 
-**OntologyPanel.tsx**: 
-- State: `profile: OntologyProfile` (default "developer")
-- Renders 3 profile toggle buttons with `describeProfile()` tooltips
-- Maps `ALL_CONCEPTS` into a table with sortable columns
-- Label column calls `labelForProfile(concept, profile)` reactively
-- Row expansion shows all 3 labels + `skos:exactMatch` + `skos:closeMatch` links
-- Search filter across `@id`, prefLabel, altLabels
+**How it links to the ontology:** Each updated comment will include the ontology `@id` (e.g., `@see uor:ServiceMesh`) so the terminology is machine-traceable to its canonical definition. When the user switches ontology profile, the UI-facing labels automatically change via `labelForProfile()`.
 
-**ComplianceDashboardPage.tsx**:
-- Add `"ontology"` to the view union type
-- Add BookOpen icon tab button next to the gates tab
-- Render `<OntologyPanel />` when view === "ontology"
+**Files to update (~20 highest-impact files):**
+
+- `src/modules/bus/registry.ts` — header: "Sovereign Bus" → "Service Mesh (uor:ServiceMesh)"
+- `src/modules/bus/types.ts` — header
+- `src/modules/bus/client.ts` — header
+- `src/modules/bus/middleware.ts` — header
+- `src/modules/bus/modules/index.ts` — header
+- `src/modules/bus/modules/*.ts` (~15 files) — headers: "Sovereign Bus — X Module" → "Service Mesh — X Module"
+- `src/modules/compose/reconciler.ts` — header + class doc
+- `src/modules/compose/app-kernel.ts` — header + class doc
+- `src/modules/compose/orchestrator.ts` — AppKernel references in comments
+- `src/modules/boot/sovereign-boot.ts` — header
+- `src/modules/boot/types.ts` — header
+- `src/modules/desktop/BootSequence.tsx` — comment references
+- `src/modules/cncf-compat/gateway.ts` — "Sovereign Bus operations" → "Service Mesh operations"
+- `src/modules/uns/build/index.ts` — orchestration table comments
+- `src/modules/namespace-registry.ts` — "Sovereign Bus namespace" → "Service Mesh namespace"
+
+Each header update follows the pattern:
+```
+// Before:
+/**
+ * Sovereign Bus — Vault Module.
+
+// After:
+/**
+ * Service Mesh — Vault Module.
+ * @ontology uor:ServiceMesh
+```
+
+This ensures every module's documentation is canonically linked to the ontology, making it trivial to audit which terms are in use and swap them by changing the active profile.
 
