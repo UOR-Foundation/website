@@ -154,6 +154,7 @@ export function useWindowManager() {
         minimized: false,
         maximized: shouldMaximize,
         pinned: false,
+        booted: false,
         preSnap: null,
       };
       const next = [...prev, newWin];
