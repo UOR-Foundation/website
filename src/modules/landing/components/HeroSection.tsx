@@ -14,7 +14,7 @@ function useOSDownload() {
 }
 const HeroSection = () => {
   const isMobile = useIsMobile();
-
+  const { os, file } = useOSDownload();
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
       {/* Living prime number field. desktop only */}
@@ -58,11 +58,11 @@ const HeroSection = () => {
             <ArrowRight size={14} />
           </a>
           <a
-            href={`/releases/${useOSDownload().file}`}
+            href={`/releases/${file}`}
             className="pointer-events-auto inline-flex items-center gap-3 px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] border border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
           >
             <Download size={13} />
-            Download for {useOSDownload().os}
+            Download for {os}
           </a>
         </div>
 
