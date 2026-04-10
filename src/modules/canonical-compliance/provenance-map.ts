@@ -218,6 +218,46 @@ export const PROVENANCE_REGISTRY: ModuleProvenance[] = [
   },
 ];
 
+// ── System Layers ───────────────────────────────────────────────
+
+export interface SystemLayer {
+  id: string;
+  label: string;
+  description: string;
+  modules: string[];
+}
+
+/**
+ * SYSTEM_LAYERS — top-level architectural groupings.
+ * Each layer contains one or more modules from the PROVENANCE_REGISTRY.
+ */
+export const SYSTEM_LAYERS: SystemLayer[] = [
+  {
+    id: "engine",
+    label: "Engine",
+    description: "Algebraic foundation, content-addressing, identity, and cryptographic primitives",
+    modules: ["ring-core", "uns/core/address", "uns/core/ring", "uns/core/identity", "uns/core/keypair"],
+  },
+  {
+    id: "names",
+    label: "Name System",
+    description: "Name records, resolution engine, and distributed hash table",
+    modules: ["uns/core/record", "uns/core/resolver", "uns/core/dht"],
+  },
+  {
+    id: "build",
+    label: "Build System",
+    description: "Container runtime, image build, registry, compose, secrets, and snapshots",
+    modules: ["uns/build/container", "uns/build/uorfile", "uns/build/registry", "uns/build/compose", "uns/build/secrets", "uns/build/snapshot"],
+  },
+  {
+    id: "services",
+    label: "Services",
+    description: "Orchestration, kernel isolation, oracle, identity, messaging, and applications",
+    modules: ["compose/orchestrator", "compose/app-kernel", "oracle", "identity", "messenger", "donate", "landing", "desktop", "app-store"],
+  },
+];
+
 /**
  * Flatten all entries into a single list for audit traversal.
  */
