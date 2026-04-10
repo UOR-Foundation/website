@@ -22,6 +22,7 @@ import MobileShell from "@/modules/desktop/MobileShell";
 import RingIndicator from "@/modules/desktop/components/RingIndicator";
 import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
 import BootSequence from "@/modules/desktop/BootSequence";
+import LocalTwinWelcome, { shouldShowLocalTwinWelcome } from "@/modules/desktop/components/LocalTwinWelcome";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
