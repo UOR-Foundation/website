@@ -238,8 +238,42 @@ export default function SpotlightSearch({ open, onClose, onOpenApp, onSearch }: 
                   </CommandGroup>
                 )}
 
-                {suggestions.length > 0 && query.trim() && (
+                {(suggestions.length > 0 || keywordMatchedApps.length > 0) && query.trim() && (
                   <CommandSeparator className={isLight ? "bg-black/[0.06]" : "bg-white/[0.06]"} />
+                )}
+
+                {keywordMatchedApps.length > 0 && query.trim() && (
+                  <>
+                    <CommandGroup
+                      heading="Launch App"
+                      className={`[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:${headingColor} [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5`}
+                    >
+                      {keywordMatchedApps.map((app) => {
+                        const Icon = app.icon;
+                        return (
+                          <CommandItem
+                            key={`kw-${app.id}`}
+                            value={`app:${app.label}`}
+                            onSelect={() => handleSelect(`app:${app.id}`)}
+                            className={`flex items-center gap-3 px-4 py-2 mx-0 rounded-none cursor-default ${itemText} data-[selected=true]:${selectedBg}`}
+                          >
+                            <div
+                              className="w-7 h-7 rounded-lg flex items-center justify-center"
+                              style={{ background: `${app.color.replace(")", " / 0.15)")}` }}
+                            >
+                              <Icon className="w-3.5 h-3.5" style={{ color: app.color }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[13px] font-medium">{app.label}</span>
+                              <span className={`text-[11px] ml-2 ${isLight ? "text-black/25" : "text-white/25"}`}>{app.description}</span>
+                            </div>
+                            <Rocket className={`w-3 h-3 ${isLight ? "text-black/20" : "text-white/20"}`} />
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                    <CommandSeparator className={isLight ? "bg-black/[0.06]" : "bg-white/[0.06]"} />
+                  </>
                 )}
 
                 {Object.entries(groupedApps).map(([groupLabel, apps]) => (
