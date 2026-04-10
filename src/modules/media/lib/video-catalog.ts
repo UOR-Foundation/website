@@ -89,3 +89,37 @@ export function getThumbnail(id: string, quality: "default" | "mq" | "hq" | "max
   const qualityMap = { default: "default", mq: "mqdefault", hq: "hqdefault", maxres: "maxresdefault" };
   return `https://img.youtube.com/vi/${id}/${qualityMap[quality]}.jpg`;
 }
+
+/** Piped-proxied thumbnail via our edge function */
+export function getPipedThumbnail(id: string): string {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "erwfuxphwcvynxhfbvql";
+  return `https://${projectId}.supabase.co/functions/v1/video-stream?id=${id}&thumb=1`;
+}
+
+/** Resolve a YouTube video ID into a direct stream URL via our edge function */
+export async function resolveStream(id: string): Promise<{
+  streamUrl: string | null;
+  audioStreamUrl: string | null;
+  thumbnailUrl: string;
+  title: string;
+  uploader: string;
+  duration: number;
+} | null> {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "erwfuxphwcvynxhfbvql";
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  try {
+    const resp = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/video-stream?id=${id}`,
+      {
+        headers: {
+          "apikey": anonKey,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
